@@ -1,0 +1,101 @@
+<html><head><meta http-equiv="content-type" content="text/html; charset=UTF-8"> <style>
+	.KEYW {color: #933;}
+	.COMM {color: #bbb; font-style: italic;}
+	.NUMB {color: #393;}
+	.STRN {color: #393;}
+	.REGX {color: #339;}
+	.line {border-right: 1px dotted #666; color: #666; font-style: normal;}
+	</style></head><body><pre><span class='line'>  1</span> <span class="PUNC">(</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">jigLib</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>  2</span> </span><span class="WHIT">	</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">Vector3DUtil</span><span class="PUNC">=</span><span class="NAME">jigLib.Vector3DUtil</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>  3</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>  4</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>  5</span> 	 * @author Muzer(muzerly@gmail.com)
+<span class='line'>  6</span> 	 * 
+<span class='line'>  7</span> 	 * @name JNumber3D
+<span class='line'>  8</span> 	 * @class JNumber3D
+<span class='line'>  9</span> 	 * @requires Vector3DUtil
+<span class='line'> 10</span> 	 * @constant {number} NUM_TINY
+<span class='line'> 11</span> 	 * @constant {number} NUM_HUGE
+<span class='line'> 12</span> 	 * @constructor
+<span class='line'> 13</span> 	 **/</span><span class="WHIT">
+<span class='line'> 14</span> </span><span class="WHIT">	</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">JNumber3D</span><span class="PUNC">=</span><span class="PUNC">{</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 15</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'> 16</span> </span><span class="WHIT">	</span><span class="NAME">JNumber3D.NUM_TINY</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NUMB">0.00001</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 17</span> </span><span class="WHIT">	</span><span class="NAME">JNumber3D.NUM_HUGE</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NUMB">100000</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 18</span> 
+<span class='line'> 19</span> </span><span class="WHIT">	</span><span class="COMM">/* this method is redundant since we are already using arrays for 3D Vector storage
+<span class='line'> 20</span> 	JNumber3D.toArray=function(v){
+<span class='line'> 21</span> 		return v;//[v[0], v[1], v[2]];
+<span class='line'> 22</span> 	};
+<span class='line'> 23</span> 	*/</span><span class="WHIT">
+<span class='line'> 24</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'> 25</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'> 26</span> 	 * @function getScaleVector clones a 3D vector and scales it's elements by s
+<span class='line'> 27</span> 	 * @param {array} v a 3D vector
+<span class='line'> 28</span> 	 * @param {number} s the scale to apply
+<span class='line'> 29</span> 	 * @type array
+<span class='line'> 30</span> 	 **/</span><span class="WHIT">
+<span class='line'> 31</span> </span><span class="WHIT">	</span><span class="NAME">JNumber3D.getScaleVector</span><span class="PUNC">=</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">v</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">s</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 32</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="PUNC">[</span><span class="NAME">v</span><span class="PUNC">[</span><span class="NUMB">0</span><span class="PUNC">]</span><span class="PUNC">*</span><span class="NAME">s</span><span class="PUNC">,</span><span class="NAME">v</span><span class="PUNC">[</span><span class="NUMB">1</span><span class="PUNC">]</span><span class="PUNC">*</span><span class="NAME">s</span><span class="PUNC">,</span><span class="NAME">v</span><span class="PUNC">[</span><span class="NUMB">2</span><span class="PUNC">]</span><span class="PUNC">*</span><span class="NAME">s</span><span class="PUNC">,</span><span class="NAME">v</span><span class="PUNC">[</span><span class="NUMB">3</span><span class="PUNC">]</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 33</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 34</span> 
+<span class='line'> 35</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'> 36</span> 	 * @function getScaleVector clones a a 3D vector and divides it's elements by w
+<span class='line'> 37</span> 	 * @param {array} v a 3D vector
+<span class='line'> 38</span> 	 * @param {number} w the divisor
+<span class='line'> 39</span> 	 * @type array
+<span class='line'> 40</span> 	 **/</span><span class="WHIT">
+<span class='line'> 41</span> </span><span class="WHIT">	</span><span class="NAME">JNumber3D.getDivideVector</span><span class="PUNC">=</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">v</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">w</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 42</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">w</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">?</span><span class="WHIT"> </span><span class="PUNC">[</span><span class="NAME">v</span><span class="PUNC">[</span><span class="NUMB">0</span><span class="PUNC">]</span><span class="WHIT"> </span><span class="PUNC">/</span><span class="WHIT"> </span><span class="NAME">w</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">v</span><span class="PUNC">[</span><span class="NUMB">1</span><span class="PUNC">]</span><span class="WHIT"> </span><span class="PUNC">/</span><span class="WHIT"> </span><span class="NAME">w</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">v</span><span class="PUNC">[</span><span class="NUMB">2</span><span class="PUNC">]</span><span class="WHIT"> </span><span class="PUNC">/</span><span class="WHIT"> </span><span class="NAME">w</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NUMB">0</span><span class="PUNC">]</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="PUNC">[</span><span class="NUMB">0</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NUMB">0</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NUMB">0</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NUMB">0</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 43</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 44</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'> 45</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'> 46</span> 	 * @function getNormal
+<span class='line'> 47</span> 	 * @param {array} v0 a 3D vector
+<span class='line'> 48</span> 	 * @param {array} v1 a 3D vector
+<span class='line'> 49</span> 	 * @param {array} v2 a 3D vector
+<span class='line'> 50</span> 	 * @type array
+<span class='line'> 51</span> 	 **/</span><span class="WHIT">
+<span class='line'> 52</span> </span><span class="WHIT">	</span><span class="NAME">JNumber3D.getNormal</span><span class="PUNC">=</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">v0</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">v1</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">v2</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 53</span> </span><span class="WHIT">		</span><span class="COMM">// Vector3DUtil.subtract is non-destructive so we don't need to clone here...</span><span class="WHIT">
+<span class='line'> 54</span> </span><span class="WHIT">		</span><span class="COMM">// var E = v1.slice(0);</span><span class="WHIT">
+<span class='line'> 55</span> </span><span class="WHIT">		</span><span class="COMM">// var F = v2.slice(0);</span><span class="WHIT">
+<span class='line'> 56</span> </span><span class="WHIT">		</span><span class="WHIT">
+<span class='line'> 57</span> </span><span class="WHIT">		</span><span class="COMM">// replacing with a 1 liner...</span><span class="WHIT">
+<span class='line'> 58</span> </span><span class="WHIT">		</span><span class="COMM">// var N = Vector3DUtil.crossProduct(Vector3DUtil.subtract(v1, v0), Vector3DUtil.subtract(v2, v1));</span><span class="WHIT">
+<span class='line'> 59</span> </span><span class="WHIT">		</span><span class="COMM">// Vector3DUtil.normalize(N);</span><span class="WHIT">
+<span class='line'> 60</span> </span><span class="WHIT">		</span><span class="COMM">// return N;</span><span class="WHIT">
+<span class='line'> 61</span> </span><span class="WHIT">		</span><span class="WHIT">
+<span class='line'> 62</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">Vector3DUtil.normalize</span><span class="PUNC">(</span><span class="NAME">Vector3DUtil.crossProduct</span><span class="PUNC">(</span><span class="NAME">Vector3DUtil.subtract</span><span class="PUNC">(</span><span class="NAME">v1</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">v0</span><span class="PUNC">)</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">Vector3DUtil.subtract</span><span class="PUNC">(</span><span class="NAME">v2</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">v1</span><span class="PUNC">)</span><span class="PUNC">)</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 63</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 64</span> 
+<span class='line'> 65</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'> 66</span> 	 * @function copyFromArray copies an array into a 3D vector
+<span class='line'> 67</span> 	 * @deprecated JigLibJS uses array for 3D vector storage so this method is redundant - use array.slice(0) instead
+<span class='line'> 68</span> 	 * @param {array} v a 3D vector
+<span class='line'> 69</span> 	 * @param {array} arr the array to copy to v
+<span class='line'> 70</span> 	 * @type void
+<span class='line'> 71</span> 	 **/</span><span class="WHIT">
+<span class='line'> 72</span> </span><span class="WHIT">	</span><span class="NAME">JNumber3D.copyFromArray</span><span class="PUNC">=</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">v</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">arr</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 73</span> </span><span class="WHIT">		</span><span class="KEYW">if</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">arr.length</span><span class="WHIT"> </span><span class="PUNC">>=</span><span class="WHIT"> </span><span class="NUMB">3</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="NAME">v</span><span class="PUNC">=</span><span class="NAME">arr.slice</span><span class="PUNC">(</span><span class="NUMB">0</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 74</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 75</span> 
+<span class='line'> 76</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'> 77</span> 	 * @function getLimiteNumber ensures num falls between min and max
+<span class='line'> 78</span> 	 * @param {number} num the number to limit
+<span class='line'> 79</span> 	 * @param {number} min the minimum allowable value for num
+<span class='line'> 80</span> 	 * @param {number} max the maximum allowable value for num
+<span class='line'> 81</span> 	 * @type number
+<span class='line'> 82</span> 	 **/</span><span class="WHIT">
+<span class='line'> 83</span> </span><span class="WHIT">	</span><span class="NAME">JNumber3D.getLimiteNumber</span><span class="PUNC">=</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">num</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">min</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">max</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 84</span> </span><span class="WHIT">		</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">n</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">num</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 85</span> </span><span class="WHIT">		</span><span class="KEYW">if</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">n</span><span class="WHIT"> </span><span class="PUNC">&lt;</span><span class="WHIT"> </span><span class="NAME">min</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="NAME">n</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">min</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 86</span> </span><span class="WHIT">		</span><span class="KEYW">else</span><span class="WHIT"> </span><span class="KEYW">if</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">n</span><span class="WHIT"> </span><span class="PUNC">></span><span class="WHIT"> </span><span class="NAME">max</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="NAME">n</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">max</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 87</span> 
+<span class='line'> 88</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">n</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 89</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 90</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'> 91</span> </span><span class="WHIT">	</span><span class="NAME">jigLib.JNumber3D</span><span class="PUNC">=</span><span class="NAME">JNumber3D</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 92</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'> 93</span> </span><span class="PUNC">}</span><span class="PUNC">)</span><span class="PUNC">(</span><span class="NAME">jigLib</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 94</span> </span></pre></body></html>

@@ -1,0 +1,69 @@
+<html><head><meta http-equiv="content-type" content="text/html; charset=UTF-8"> <style>
+	.KEYW {color: #933;}
+	.COMM {color: #bbb; font-style: italic;}
+	.NUMB {color: #393;}
+	.STRN {color: #393;}
+	.REGX {color: #339;}
+	.line {border-right: 1px dotted #666; color: #666; font-style: normal;}
+	</style></head><body><pre><span class='line'>  1</span> <span class="PUNC">(</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">jigLib</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>  2</span> </span><span class="WHIT">	</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">Vector3DUtil</span><span class="PUNC">=</span><span class="NAME">jigLib.Vector3DUtil</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>  3</span> </span><span class="WHIT">	
+<span class='line'>  4</span> 	</span><span class="COMM">/**
+<span class='line'>  5</span> 	 * @author Jim Sangwine
+<span class='line'>  6</span> 	 * 
+<span class='line'>  7</span> 	 * @name Wind
+<span class='line'>  8</span> 	 * @class Wind a wind effect
+<span class='line'>  9</span> 	 * This effect has global influence - All objects that are movable in the scene will be affected, apart from those added to the exclusions array. 
+<span class='line'> 10</span> 	 * This effect will be applied continuously as long as it is enabled
+<span class='line'> 11</span> 	 * 
+<span class='line'> 12</span> 	 * @extends JEffect
+<span class='line'> 13</span> 	 * @requires Vector3DUtil
+<span class='line'> 14</span> 	 * @property {array} direction a 3D vector defining the force of the effect in each axis
+<span class='line'> 15</span> 	 * @property {array} exclusions optional - a list of bodies to be excluded from the effect
+<span class='line'> 16</span> 	 * @constructor
+<span class='line'> 17</span> 	 * @param {array} _direction a 3D vector defining the force of the effect in each axis
+<span class='line'> 18</span> 	 * @param {array} _exclusions optional - a list of bodies to be excluded from the effect
+<span class='line'> 19</span> 	 **/</span><span class="WHIT">
+<span class='line'> 20</span> </span><span class="WHIT">	</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">Wind</span><span class="PUNC">=</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">_direction</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">_exclusions</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 21</span> </span><span class="WHIT">		</span><span class="NAME">this.Super</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 22</span> </span><span class="WHIT">		</span><span class="NAME">this.direction</span><span class="PUNC">=</span><span class="NAME">_direction</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 23</span> </span><span class="WHIT">		</span><span class="KEYW">if</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">_exclusions</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="NAME">this.exclusions</span><span class="PUNC">=</span><span class="NAME">_exclusions</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 24</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 25</span> </span><span class="WHIT">	</span><span class="NAME">jigLib.extend</span><span class="PUNC">(</span><span class="NAME">Wind</span><span class="PUNC">,</span><span class="NAME">jigLib.JEffect</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 26</span> 
+<span class='line'> 27</span> </span><span class="WHIT">	</span><span class="NAME">Wind.prototype.direction</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">null</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 28</span> </span><span class="WHIT">	</span><span class="NAME">Wind.prototype.exclusions</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="PUNC">[</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 29</span> </span><span class="WHIT">	
+<span class='line'> 30</span> 	</span><span class="COMM">/**
+<span class='line'> 31</span> 	 * @function isExcluded checks if a given body is in the exclusions list
+<span class='line'> 32</span> 	 * @param {RigidBody} body the body to check for
+<span class='line'> 33</span> 	 * @type boolean
+<span class='line'> 34</span> 	 */</span><span class="WHIT">
+<span class='line'> 35</span> </span><span class="WHIT">	</span><span class="NAME">Wind.prototype.isExcluded</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">body</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 36</span> </span><span class="WHIT">		</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">i</span><span class="PUNC">=</span><span class="NAME">this.exclusions.length</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 37</span> </span><span class="WHIT">		</span><span class="KEYW">while</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">i</span><span class="PUNC">--</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT"> </span><span class="KEYW">if</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">this.exclusions</span><span class="PUNC">[</span><span class="NAME">i</span><span class="PUNC">]</span><span class="WHIT"> </span><span class="PUNC">==</span><span class="WHIT"> </span><span class="NAME">body</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="KEYW">return</span><span class="WHIT"> </span><span class="KEYW">true</span><span class="PUNC">;</span><span class="WHIT"> </span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'> 38</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="KEYW">false</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 39</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 40</span> </span><span class="WHIT">	
+<span class='line'> 41</span> 	</span><span class="COMM">/**
+<span class='line'> 42</span> 	 * @function Apply applies the effect to the relevant bodies
+<span class='line'> 43</span> 	 * @see JEffect.Apply
+<span class='line'> 44</span> 	 * @type void
+<span class='line'> 45</span> 	 **/</span><span class="WHIT">
+<span class='line'> 46</span> </span><span class="WHIT">	</span><span class="NAME">Wind.prototype.Apply</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 47</span> </span><span class="WHIT">		</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">system</span><span class="PUNC">=</span><span class="NAME">jigLib.PhysicsSystem.getInstance</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 48</span> </span><span class="WHIT">		</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">bodies</span><span class="PUNC">=</span><span class="NAME">system.get_bodies</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 49</span> </span><span class="WHIT">		</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">i</span><span class="PUNC">=</span><span class="NAME">bodies.length</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 50</span> </span><span class="WHIT">		</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">curBody</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 51</span> </span><span class="WHIT">		
+<span class='line'> 52</span> 		</span><span class="NAME">this._affectedBodies</span><span class="PUNC">=</span><span class="PUNC">[</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 53</span> </span><span class="WHIT">		</span><span class="KEYW">while</span><span class="PUNC">(</span><span class="NAME">i</span><span class="PUNC">--</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 54</span> </span><span class="WHIT">			</span><span class="NAME">curBody</span><span class="PUNC">=</span><span class="NAME">bodies</span><span class="PUNC">[</span><span class="NAME">i</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 55</span> </span><span class="WHIT">			</span><span class="KEYW">if</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="PUNC">!</span><span class="NAME">curBody.get_movable</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">||</span><span class="WHIT"> </span><span class="NAME">this.isExcluded</span><span class="PUNC">(</span><span class="NAME">curBody</span><span class="PUNC">)</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="KEYW">continue</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 56</span> </span><span class="WHIT">			</span><span class="NAME">system.activateObject</span><span class="PUNC">(</span><span class="NAME">curBody</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 57</span> </span><span class="WHIT">			</span><span class="NAME">curBody.applyWorldImpulse</span><span class="PUNC">(</span><span class="NAME">this.direction</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">curBody.get_position</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 58</span> </span><span class="WHIT">		</span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'> 59</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 60</span> </span><span class="WHIT">	
+<span class='line'> 61</span> 	</span><span class="NAME">jigLib.Wind</span><span class="PUNC">=</span><span class="NAME">Wind</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 62</span> </span><span class="PUNC">}</span><span class="PUNC">)</span><span class="PUNC">(</span><span class="NAME">jigLib</span><span class="PUNC">)</span><span class="PUNC">;</span></pre></body></html>

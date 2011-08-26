@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="YUICompression" basedir="../">
+	<target name="default" description="YUICompresses, makes a concatenated version and outputs JSDoc documentation">
+		
+		<!-- YUICompress -->
+		
+		<delete dir="${basedir}/build/output/code" />
+		<mkdir dir="${basedir}/build/output/code" />
+		
+		<taskdef name="yuicompress"
+			classname="com.yahoo.platform.yui.compressor.YUICompressTask">
+			<classpath>
+				<pathelement path="${basedir}/build/tasks/YUICompress/yuicompressor-2.4.2.jar" />
+				<pathelement path="${basedir}/build/tasks/YUICompress/YUIAnt.jar" />
+			</classpath>
+		</taskdef>
+		<yuicompress linebreak="16000" warn="false" munge="yes"
+			preserveallsemicolons="true" outputfolder="${basedir}/build/output/code/">
+			<fileset dir="${basedir}">
+				<exclude name="build/**" />
+				<exclude name="test/**" />
+				<exclude name="official_demos/**" />
+				<include name="**/*.js" />
+				<!--include name="**/*.css" / -->
+			</fileset>
+		</yuicompress>
+		
+		<!-- Concatenated versions -->
+					
+		<delete file="${basedir}/build/output/jiglib.all.min.js" />
+			
+		<concat destfile="${basedir}/build/output/jiglib.all.min.js">
+			<filelist dir="${basedir}/build/output/code" files="jiglib.js" />
+			<fileset dir="${basedir}/build/output/code/cof" includes="*.js" />
+			<filelist dir="${basedir}/build/output/code/events" files="JEvent.js" />
+			<fileset dir="${basedir}/build/output/code/events" includes="*.js" excludes="JEvent.js" />
+			<filelist dir="${basedir}/build/output/code/maths" files="glmatrix.js,vector3dutil.js,matrix3d.js,jnumber3d.js,jmatrix3d.js,jmaths3d.js" />
+			<filelist dir="${basedir}/build/output/code/data" files="colloutdata.js" />
+			<fileset dir="${basedir}/build/output/code/data" includes="*.js" excludes="colloutdata.js" />
+			<fileset dir="${basedir}/build/output/code/plugins" includes="*.js" />
+			<filelist dir="${basedir}/build/output/code/geometry" files="jaabox.js" />
+			<fileset dir="${basedir}/build/output/code/physics" includes="*.js" excludes="hingejoint.js,physicssystem.js" />
+			<filelist dir="${basedir}/build/output/code/physics/effect" files="jeffect.js" />
+			<fileset dir="${basedir}/build/output/code/physics/effect" includes="*.js" excludes="jeffect.js" />
+			<fileset dir="${basedir}/build/output/code/geometry" includes="*.js" excludes="jaabox.js" />
+			<filelist dir="${basedir}/build/output/code/collision" files="collpointinfo.js,collisioninfo.js,colldetectinfo.js,colldetectfunctor.js" />
+			<fileset dir="${basedir}/build/output/code/collision" includes="colldetect*.js" />
+			<filelist dir="${basedir}/build/output/code/collision" files="collisionsystem.js,collisionsystemabstract.js,collisionsystembrute.js,collisionsystemgrid.js" />
+			<fileset dir="${basedir}/build/output/code/physics/constraint" includes="*.js" />
+			<filelist dir="${basedir}/build/output/code/physics" files="hingejoint.js" />
+			<filelist dir="${basedir}/build/output/code/physics" files="physicssystem.js" />
+			<fileset dir="${basedir}/build/output/code/vehicles" includes="*.js" />
+		</concat>
+		
+		<delete file="${basedir}/build/output/jiglib.all.full.js" />
+					
+		<concat destfile="${basedir}/build/output/jiglib.all.full.js">
+			<filelist dir="${basedir}" files="jiglib.js" />
+			<fileset dir="${basedir}/cof" includes="*.js" />
+			<filelist dir="${basedir}/events" files="JEvent.js" />
+			<fileset dir="${basedir}/events" includes="*.js" excludes="JEvent.js" />
+			<filelist dir="${basedir}/maths" files="glmatrix.js,vector3dutil.js,matrix3d.js,jnumber3d.js,jmatrix3d.js,jmaths3d.js" />
+			<filelist dir="${basedir}/data" files="CollOutData.js" />
+			<fileset dir="${basedir}/data" includes="*.js" excludes="colloutdata.js" />
+			<fileset dir="${basedir}/plugins" includes="*.js" />
+			<filelist dir="${basedir}/geometry" files="jaabox.js" />
+			<fileset dir="${basedir}/physics" includes="*.js" excludes="hingejoint.js,physicssystem.js" />
+			<filelist dir="${basedir}/physics/effect" files="jeffect.js" />
+			<fileset dir="${basedir}/physics/effect" includes="*.js" excludes="jeffect.js" />
+			<fileset dir="${basedir}/geometry" includes="*.js" excludes="jaabox.js" />
+			<filelist dir="${basedir}/collision" files="collpointinfo.js,collisioninfo.js,colldetectinfo.js,colldetectfunctor.js" />
+			<fileset dir="${basedir}/collision" includes="colldetect*.js" />
+			<filelist dir="${basedir}/collision" files="collisionsystem.js,collisionsystemabstract.js,collisionsystembrute.js,collisionsystemgrid.js" />
+			<fileset dir="${basedir}/physics/constraint" includes="*.js" />
+			<filelist dir="${basedir}/physics" files="hingejoint.js" />
+			<filelist dir="${basedir}/physics" files="physicssystem.js" />
+			<fileset dir="${basedir}/vehicles" includes="*.js" />
+		</concat>
+		
+		<!-- JSDoc Documentation -->
+		
+		<delete dir="${basedir}/build/output/docs" />
+		<mkdir dir="${basedir}/build/output/docs" />
+		
+		<taskdef name="jsdoctoolkit" classname="uk.co.darrenhurley.ant.tasks.JsDocToolkit">
+			<classpath>
+				<pathelement path="${basedir}/build/tasks/JSDoc/jsdoctoolkit-ant-task-1.0.2.jar" />
+				<pathelement path="${basedir}/build/tasks/JSDoc/js_rhino_17R2.jar" />
+				<pathelement path="${basedir}/build/tasks/JSDoc/jsdoc-toolkit-2.4.0/jsrun.jar" />
+			</classpath>
+		</taskdef>
+		<jsdoctoolkit jsdochome="${basedir}/build/tasks/JSDoc/jsdoc-toolkit-2.4.0/" 
+					  template="jsdoc" 
+					  outputdir="${basedir}/build/output/docs/"
+					  includeundocumented="false">
+			<fileset dir="${basedir}">
+				<exclude name="build/**" />
+				<exclude name="test/**" />
+				<exclude name="official_demos/**" />
+				<include name="**/*.js" />
+			</fileset>
+		</jsdoctoolkit>
+	</target>
+</project>

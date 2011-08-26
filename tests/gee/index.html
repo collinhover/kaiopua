@@ -1,0 +1,210 @@
+<html>
+<head>
+<!--
+/*
+ * MyFonts Webfont Build ID 745351, 2011-04-06T13:18:59-0400
+ * 
+ * The fonts listed in this notice are subject to the End User License
+ * Agreement(s) entered into by the website owner. All other parties are 
+ * explicitly restricted from using the Licensed Webfonts(s).
+ * 
+ * You may obtain a valid license at the URLs below.
+ * 
+ * Webfont: Croog Bold
+ * URL: http://new.myfonts.com/fonts/tipografiaramis/croog/bold/
+ * Foundry: TipografiaRamis
+ * Copyright: Copyright (c) 2009 by TipografiaRamis. All rights reserved.
+ * License: http://www.myfonts.com/viewlicense?1056
+ * Licensed pageviews: 10,000/month
+ * CSS font-family: Croog-Bold
+ * CSS font-weight: normal
+ * 
+ * (c) 2011 Bitstream, Inc
+*/
+-->
+<script type="text/javascript">
+var myfont_webfont_test = false;
+var woffEnabled = true;
+var customPath = "docs/";
+</script>
+<title>gee.js</title>
+<link href="docs/style.css" media="screen" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="docs/MyFontsWebfontsKit.js"></script>
+<script type="text/javascript" src="src/gee.js"></script> 
+<script type="text/javascript" src="docs/demo.js"></script>
+<script type="text/javascript" src="docs/prettify.js"></script>
+<script type="text/javascript">
+window.onload = function() {
+
+	prettyPrint();
+	var g = new GEE( { width: 513, height: 513, container:  document.getElementById('canvas-holder') } );
+
+	demo(g);
+	
+}
+</script>
+</head>
+<body>
+<div id="container">
+
+<div id="canvas-holder">
+
+</div>
+
+<p><strong>gee.js</strong> is a library that makes it quick to start sketching with the HTML5 <code>&lt;canvas&gt;</code>.</p>
+
+<ul>
+	<li><a href="build/gee.min.js"><strong>Download the minified source</strong></a> <small>[2kb]</small></li>
+	<li><a href="template/fullscreen.html">Download a fullscreen template with HTML5 boilerplate code</a></li>
+	<li><a href="http://github.com/georgealways/gee">Contribute on GitHub!</a></li>
+</ul>
+
+<h2>Creating a fullscreen 2D <code>&lt;canvas&gt;</code></h2>
+<pre class="prettyprint">&lt;script type="text/javascript" src="gui.min.js"&gt;&lt;/script&gt;
+&lt;script type="text/javascript"&gt;
+ 
+window.onload = function() {
+ 
+   var g = new <code>GEE</code>( { fullscreen: true } );
+   
+   g.draw = function() {
+   
+      g.ctx.clearRect( 0, 0, g.width, g.height );
+      g.ctx.fillText( g.frameCount, 10, 10 );
+      
+   };
+   
+   g.mousedrag = function() {
+   	
+      g.ctx.beginPath();
+      g.ctx.moveTo( g.pmouseX, g.pmouseY );
+      g.ctx.lineTo( g.mouseX, g.mouseY );
+      g.ctx.stroke();
+   	
+   };
+
+};
+
+&lt;/script&gt;</pre> 
+
+<p>
+Passing the parameter <code>fullscreen:true</code> to <code>GEE</code>'s constructor automatically removes padding/margin from the HTML document and appends a <code>&lt;canvas&gt;</code> to the body that scales with the window.</p><p>You can override event properties such as <code>draw</code> and <code>mousedrag</code> to implement the behavior of your choosing. <a href="#props">A complete list</a> of <code>GEE</code>'s properties are below.</p>
+</p>
+
+<hr/>
+
+<h2>Parameters for <code>GEE</code>'s constructor</h2>
+
+<pre class="prettyprint">
+var g = new GEE( { width: 600, height: 480, container: document.body } );
+
+// &hellip; does the same thing as &hellip;
+
+var g = new GEE( { width: 600, height: 480 } );
+document.body.appendChild( g.domElement );
+</pre>
+
+<pre class="prettyprint">
+var g = new GEE( { width: 200, 
+                   height: 200, 
+                   context: 'experimental-webgl',
+                   container: document.getElementById( 'canvas-holder' ),
+                   fallback: function() { alert( "You don't have WebGL." ) }
+                   } );
+</pre>
+<dl>
+<dt class="string">context</dt><dd>type of rendering context<span class="hint">e.g. '2d' or 'experimental-webgl' &mdash; defaults to '2d'</span></dd>
+<dt class="boolean">fullscreen</dt><dd>if true, automatically removes padding/margin from the HTML document and appends a <code>&lt;canvas&gt;</code> to the body that scales with the window.<span class="hint">If true, ignores following parameters  &mdash; defaults to false</span></dd>
+<hr/>
+<dt class="dom">container</dt><dd>DOM element to which we append the <code>&lt;canvas&gt;</code> element<span class="hint">If you don't specify this parameter, you need to manually append the <code>GEE</code> domElement property to another DOM element on the page.</span></dd>
+<dt class="number">width</dt><dd>initial width of the <code>&lt;canvas&gt;</code> element</dd>
+<dt class="number">height</dt><dd>initial height of the <code>&lt;canvas&gt;</code> element</dd>
+<dt class="function">fallback</dt><dd>fires if something goes wrong</dd>
+</dl>
+<div class="clear"></div>
+<hr/>
+<h2><a name="props"></a>Properties of a <code>GEE</code> object</h2>
+
+<pre class="prettyprint">
+// a GEE object has lots of properties.
+
+// Some you can set &hellip;
+g.frameRate = 30;
+g.height = 200;
+g.mousedown = function() { console.log( 'You pressed the canvas' ) };
+g.keydown = function() { console.log( 'You pressed ' + g.key ) };
+g.loop = false;
+
+
+g.draw = function() {
+
+   // Some you just read &hellip;
+   
+   if ( g.mouseX > g.width/2 ) {
+      g.ctx.fillRect( g.mouseX, g.mouseY, 10, 10 );
+   }
+	
+}
+</pre>
+
+<p>Below is a list of all of <code>GEE</code>'s properties. The &nbsp;<img src="docs/lock.gif" alt="lock" />&nbsp; indicates that a property is read-only.</p>
+
+<dl id="doc">
+<dt class="special readonly">ctx</dt>	<dd>current rendering context</dd>
+<dt class="dom readonly">domElement</dt>	<dd>the DOM <code>&lt;canvas&gt;</code> element</dd>
+
+<hr/>
+
+<dt class="number">width</dt>	<dd>current width of the <code>&lt;canvas&gt;</code> element</dd>
+<dt class="number">height</dt>	<dd>current height of the <code>&lt;canvas&gt;</code> element</dd>
+
+<dt class="number">frameRate</dt>	<dd>sets desired frames per second<br/>
+										returns actual frames per second</dd>
+										
+<dt class="number">frameTime</dt>	<dd>sets desired milliseconds per frame<br/>
+										returns actual milliseconds per frame</dd>
+
+<dt class="number readonly">frameCount</dt>	<dd>number of frames drawn</dd>
+<hr/>
+
+<dt class="function">draw</dt>	<dd>fires every frame, as long as the <code>&lt;canvas&gt;</code> is visible</dd>
+
+<dt class="function">mousedown</dt>	<dd>fires when the mouse is pressed on the <code>&lt;canvas&gt;</code></dd>
+<dt class="function">mouseup</dt>	<dd>fires when the mouse is released from the <code>&lt;canvas&gt;</code></dd>
+
+<dt class="function">mousemove</dt>	<dd>fires while the mouse is moving over the <code>&lt;canvas&gt;</code></dd>
+<dt class="function">mousedrag</dt>	<dd>fires while the mouse is dragged over the <code>&lt;canvas&gt;</code></dd>
+
+<dt class="function">mouseover</dt>	<dd>fires once the mouse enters the <code>&lt;canvas&gt;</code></dd>
+<dt class="function">mouseout</dt>	<dd>fires once the mouse exits the <code>&lt;canvas&gt;</code></dd>
+
+<dt class="function">keydown</dt>	<dd>fires while a key is supressed <span class="hint">If the key is held down then keydown will execute repeatedly.</span></dd>
+<dt class="function">keyup</dt>	<dd>fires when a key is released</dd>
+
+<hr/>
+
+<dt class="number readonly">mouseX</dt>	<dd>the x position of the mouse<span class="hint">0 is the left side of the <code>&lt;canvas&gt;</code> element.</span></dd>
+<dt class="number readonly">mouseY</dt>	<dd>the y position of the mouse<span class="hint">0 is the top of the <code>&lt;canvas&gt;</code> element.</span></dd>
+<dt class="number readonly">pmouseX</dt>	<dd>the previous x position of the mouse</dd>
+<dt class="number readonly">pmouseY</dt>	<dd>the previous y position of the mouse</dd>
+
+<hr/>
+
+<dt class="string readonly">key</dt>	<dd>the character that was last pressed</dd>
+<dt class="number readonly">keyCode</dt>	<dd>the integer that represents the key that was last pressed</dd>
+
+<hr/>
+
+<dt class="boolean readonly">keyPressed</dt>	<dd>true if a key is pressed</dd>
+<dt class="boolean readonly">mousePressed</dt>	<dd>true if the mouse is pressed</dd>
+
+<hr/>
+
+<dt class="boolean">loop</dt>	<dd>if true, draw is fired repeatedly <span class="hint"><code>loop</code> is true by default.</span></dd>
+
+</dl>
+<div class="clear"></div>
+<footer>By <a href="http://georgemichaelbrower.com/">George Michael Brower</a> and <a href="http://jonobr1.com/">Jono Brandel</a> of the Data Arts Team, Google Creative Lab.</footer>
+</div>
+</body>
+</html>

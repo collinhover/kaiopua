@@ -1,0 +1,89 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+	<title>Line2D - Intersection - toxiclibs.js examples</title>
+	<meta name="author" content="Kyle Phillips">
+	<!-- Date: 2011-01-09 -->
+	<script type="text/javascript" src="../build/toxiclibs.js"></script>
+	<script type="text/javascript" src="js/processing.js"></script>
+	<link href="css/style.css" rel="stylesheet" type="text/css" media="screen">
+</head>
+<body class="container_12">
+	<header class="grid_12">
+		<hgroup>
+			<h1>Line2D Intersection</h1><h2>w/ <a href="http://processingjs.org">Processing.js</a>
+		</hgroup>
+	</header>
+<script type="text/processing" data-processing-target="myCanvas"> 
+/*
+ * Copyright (c) 2010 Karsten Schmidt
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * http://creativecommons.org/licenses/LGPL/2.1/
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
+ 
+void setup() {
+  size(700,382);
+  smooth();
+  textSize(9);
+
+}
+ 
+void draw() {
+  background(240);
+  toxi.Line2D l=new toxi.Line2D(new toxi.Vec2D(250,50), new toxi.Vec2D(450,350));
+  toxi.Line2D m=new toxi.Line2D(new toxi.Vec2D(450,200), new toxi.Vec2D(mouseX,mouseY));
+  toxi.Line2D.LineIntersection isec=l.intersectLine(m);
+  if (isec.getType()==toxi.Line2D.LineIntersection.Type.INTERSECTING) {
+    toxi.Vec2D pos=isec.getPos();
+    stroke(255,0,192);
+    fill(255,0,192);
+    ellipse(pos.x,pos.y,5,5);
+    textAlign(pos.x>width/2 ? RIGHT : LEFT);
+    text(pos.toString(),pos.x,pos.y-10);
+  } else {
+    stroke(0);
+  }
+  line(l.a.x,l.a.y,l.b.x,l.b.y);
+  line(m.a.x,m.a.y,m.b.x,m.b.y);
+}
+
+</script>
+
+<canvas id="myCanvas" width="200" height="200">
+	your browser doesnt support canvas
+</canvas>
+<section class="grid_12" id="details">
+<aside id="authors" class="grid_6">
+<p>original example by <a href="http://postspectacular.com">Karsten Schmidt</a><br/>
+	Toxiclibs ported to js by <a href="http://workofkylephillips.com">Kyle Phillips</a></p>
+</aside>
+<aside id="usage" class="grid_6">
+	 <p><strong>Usage:</strong><br><ul>
+	 <li>move mouse to move endpoint of line</li>
+	</ul></p>
+</aside>
+<article id="description" class="grid_12">
+<p>
+ In this example we calculate the intersection point of two lines, one of which
+ can be moved by user interactively.
+ </p>
+ </article>
+</section>
+</body>
+</html>

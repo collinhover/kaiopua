@@ -1,0 +1,135 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+	<title>Draggable Particles - toxiclibs.js examples</title>
+	<meta name="author" content="Kyle Phillips">
+	<!-- Date: 2011-01-09 -->
+	<script type="text/javascript" src="../build/toxiclibs.js"></script>
+	<script type="text/javascript" src="js/processing.js"></script>
+	<link href="css/style.css" rel="stylesheet" type="text/css" media="screen">
+</head>
+<body class="container_12">
+	<header class="grid_12">
+		<hgroup>
+			<h1>Draggable Particles</h1><h2>w/ <a href="http://processingjs.org">Processing.js</a>
+		</hgroup>
+	</header>
+<script type="text/processing" data-processing-target="myCanvas">
+/* 
+ * Copyright (c) 2010 Karsten Schmidt
+ * 
+ * This demo & library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * http://creativecommons.org/licenses/LGPL/2.1/
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
+import toxi.geom.*;
+import toxi.physics2d.*;
+
+VerletPhysics2D physics;
+VerletParticle2D selected=null;
+
+// squared snap distance for picking particles
+float snapDist=10*10;
+
+void setup() {
+  size(600,600);
+  physics=new toxi.physics2d.VerletPhysics2D();
+  physics.setWorldBounds(new toxi.Rect(0,0,width,height));
+  // create 10 particle strings of 20 particles each
+  for(int i=0; i<10; i++) {
+    ParticleString2D s = new toxi.physics2d.ParticleString2D(physics,new toxi.Vec2D(width/2,height/2),toxi.Vec2D.fromTheta(i*0.1*TWO_PI).scaleSelf(10),20,1,0.5);
+  }
+}
+
+void draw() {
+  background(245);
+  noFill();
+  physics.update();
+  // draw all springs
+  int springLen = physics.springs.length;
+  for(int i =0;i < springLen; i++) {
+    VerletSpring2D s = physics.springs[i];
+    line(s.a.x,s.a.y,s.b.x,s.b.y);
+  }
+  // draw all particles
+  int partLen = physics.particles.length;
+  for(int i = 0;i<partLen; i++) {
+    VerletParticle2D p= physics.particles[i];
+    // selected particle in cyan, all others in black
+    stroke(p==selected ? 0xff00ffff : 0xff000000);
+    ellipse(p.x,p.y,5,5);
+  }
+}
+
+// check all particles if mouse pos is less than snap distance
+void mousePressed() {
+  selected=null;
+  Vec2D mousePos=new toxi.Vec2D(mouseX,mouseY);
+  int partLen = physics.particles.length;
+  for(int i = 0;i<partLen;i++) {
+    VerletParticle2D p= physics.particles[i];
+    // if mouse is close enough, keep a reference to
+    // the selected particle and lock it (becomes unmovable by physics)
+    if (p.distanceToSquared(mousePos)<snapDist) {
+      selected=p;
+      selected.lock();
+      break;
+    }
+  }
+}
+
+// only react to mouse dragging events if we have a selected particle
+void mouseDragged() {
+  if (selected!=null) {
+    selected.set(mouseX,mouseY);
+  }
+}
+
+// if we had a selected particle unlock it again and kill reference
+void mouseReleased() {
+  if (selected!=null) {
+    selected.unlock();
+    selected=null;
+  }
+}
+
+</script>
+
+<canvas id="myCanvas" width="200" height="200">
+	your browser doesnt support canvas
+</canvas>
+<section class="grid_12" id="details">
+<aside id="authors" class="grid_6">
+<p>original example by <a href="http://postspectacular.com">Karsten Schmidt</a><br/>
+	Toxiclibs ported to js by <a href="http://workofkylephillips.com">Kyle Phillips</a></p>
+</aside>
+<aside id="usage" class="grid_6">
+	 <p><strong>Usage:</strong><br><ul>
+	 <li>Click and drag the particles</li>
+	</ul></p>
+</aside>
+<article id="description" class="grid_12">
+<p>Draggable particle demo showing how to handle mouse events on
+particles and allow them to be dragged around with the mouse.
+ <p>See original discussion at:
+ <a href="http://processing.org/discourse/yabb2/YaBB.pl?num=1266335586">http://processing.org/discourse/yabb2/YaBB.pl?num=1266335586</a>
+ </p>
+</p>
+ </article>
+</section>
+</body>
+</html>

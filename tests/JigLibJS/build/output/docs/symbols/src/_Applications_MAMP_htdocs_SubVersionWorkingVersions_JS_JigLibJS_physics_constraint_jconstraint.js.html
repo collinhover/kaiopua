@@ -1,0 +1,119 @@
+<html><head><meta http-equiv="content-type" content="text/html; charset=UTF-8"> <style>
+	.KEYW {color: #933;}
+	.COMM {color: #bbb; font-style: italic;}
+	.NUMB {color: #393;}
+	.STRN {color: #393;}
+	.REGX {color: #339;}
+	.line {border-right: 1px dotted #666; color: #666; font-style: normal;}
+	</style></head><body><pre><span class='line'>  1</span> <span class="COMM">/*
+<span class='line'>  2</span>    Copyright (c) 2007 Danny Chapman
+<span class='line'>  3</span>    http://www.rowlhouse.co.uk
+<span class='line'>  4</span> 
+<span class='line'>  5</span>    This software is provided 'as-is', without any express or implied
+<span class='line'>  6</span>    warranty. In no event will the authors be held liable for any damages
+<span class='line'>  7</span>    arising from the use of this software.
+<span class='line'>  8</span>    Permission is granted to anyone to use this software for any purpose,
+<span class='line'>  9</span>    including commercial applications, and to alter it and redistribute it
+<span class='line'> 10</span>    freely, subject to the following restrictions:
+<span class='line'> 11</span>    1. The origin of this software must not be misrepresented; you must not
+<span class='line'> 12</span>    claim that you wrote the original software. If you use this software
+<span class='line'> 13</span>    in a product, an acknowledgment in the product documentation would be
+<span class='line'> 14</span>    appreciated but is not required.
+<span class='line'> 15</span>    2. Altered source versions must be plainly marked as such, and must not be
+<span class='line'> 16</span>    misrepresented as being the original software.
+<span class='line'> 17</span>    3. This notice may not be removed or altered from any source
+<span class='line'> 18</span>    distribution.
+<span class='line'> 19</span>  */</span><span class="WHIT">
+<span class='line'> 20</span> 
+<span class='line'> 21</span> </span><span class="PUNC">(</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">jigLib</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 22</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'> 23</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'> 24</span> 	 * @author Muzer(muzerly@gmail.com)
+<span class='line'> 25</span> 	 * 
+<span class='line'> 26</span> 	 * @name JConstraint
+<span class='line'> 27</span> 	 * @class JConstraint the base class for constraints
+<span class='line'> 28</span> 	 * @property {boolean} _satisfied flag indicating whether this constraint has been satisfied
+<span class='line'> 29</span> 	 * @property {boolean} _constraintEnabled flag indicating whether this constraint is registered with the physics system
+<span class='line'> 30</span> 	 * @constructor
+<span class='line'> 31</span> 	 **/</span><span class="WHIT">
+<span class='line'> 32</span> </span><span class="WHIT">	</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">JConstraint</span><span class="PUNC">=</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 33</span> </span><span class="WHIT">		</span><span class="NAME">this._constraintEnabled</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">false</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 34</span> </span><span class="WHIT">		</span><span class="NAME">this.enableConstraint</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 35</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 36</span> </span><span class="WHIT">	</span><span class="NAME">JConstraint.prototype._satisfied</span><span class="PUNC">=</span><span class="KEYW">null</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 37</span> </span><span class="WHIT">	</span><span class="NAME">JConstraint.prototype._constraintEnabled</span><span class="PUNC">=</span><span class="KEYW">null</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 38</span> 
+<span class='line'> 39</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'> 40</span> 	 * @function set_satisfied setter for the _satisfied flag
+<span class='line'> 41</span> 	 * @param {boolean} s
+<span class='line'> 42</span> 	 * @type void
+<span class='line'> 43</span> 	 **/</span><span class="WHIT">
+<span class='line'> 44</span> </span><span class="WHIT">	</span><span class="NAME">JConstraint.prototype.set_satisfied</span><span class="PUNC">=</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">s</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 45</span> </span><span class="WHIT">		</span><span class="NAME">this._satisfied</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">s</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 46</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 47</span> 
+<span class='line'> 48</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'> 49</span> 	 * @function get_satisfied getter for the _satisfied flag
+<span class='line'> 50</span> 	 * @type boolean
+<span class='line'> 51</span> 	 **/</span><span class="WHIT">
+<span class='line'> 52</span> </span><span class="WHIT">	</span><span class="NAME">JConstraint.prototype.get_satisfied</span><span class="PUNC">=</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 53</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">this._satisfied</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 54</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 55</span> 
+<span class='line'> 56</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'> 57</span> 	 * @function preApply prepare for applying constraints - subsequent calls to
+<span class='line'> 58</span> 	 * apply will all occur with a constant position i.e. precalculate everything possible 
+<span class='line'> 59</span> 	 * @param {number} dt a UNIX timestamp
+<span class='line'> 60</span> 	 * @type void
+<span class='line'> 61</span> 	 **/</span><span class="WHIT">
+<span class='line'> 62</span> </span><span class="WHIT">	</span><span class="NAME">JConstraint.prototype.preApply</span><span class="PUNC">=</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">dt</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 63</span> </span><span class="WHIT">		</span><span class="NAME">this._satisfied</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">false</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 64</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 65</span> 
+<span class='line'> 66</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'> 67</span> 	 * @function apply enforces the constraint using impulses. Return value
+<span class='line'> 68</span> 	 * indicates if any impulses were applied. If impulses were applied
+<span class='line'> 69</span> 	 * the derived class should call SetConstraintsUnsatisfied() on each
+<span class='line'> 70</span> 	 * body that is involved.
+<span class='line'> 71</span> 	 * @param {number} dt a UNIX timestamp
+<span class='line'> 72</span> 	 * @type boolean
+<span class='line'> 73</span> 	 **/</span><span class="WHIT">
+<span class='line'> 74</span> </span><span class="WHIT">	</span><span class="NAME">JConstraint.prototype.apply</span><span class="PUNC">=</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">dt</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 75</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="KEYW">false</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 76</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 77</span> 
+<span class='line'> 78</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'> 79</span> 	 * @function enableConstraint registers this constraint with the physics system
+<span class='line'> 80</span> 	 * @type void
+<span class='line'> 81</span> 	 **/</span><span class="WHIT">
+<span class='line'> 82</span> </span><span class="WHIT">	</span><span class="NAME">JConstraint.prototype.enableConstraint</span><span class="PUNC">=</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 83</span> </span><span class="WHIT">		</span><span class="KEYW">if</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">this._constraintEnabled</span><span class="PUNC">)</span><span class="WHIT">
+<span class='line'> 84</span> </span><span class="WHIT">			</span><span class="KEYW">return</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 85</span> </span><span class="WHIT">		</span><span class="WHIT">
+<span class='line'> 86</span> </span><span class="WHIT">		</span><span class="NAME">this._constraintEnabled</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">true</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 87</span> </span><span class="WHIT">		</span><span class="NAME">jigLib.PhysicsSystem.getInstance</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">.</span><span class="NAME">addConstraint</span><span class="PUNC">(</span><span class="KEYW">this</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 88</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 89</span> 
+<span class='line'> 90</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'> 91</span> 	 * @function disableConstraint de-registers this constraint from the physics system
+<span class='line'> 92</span> 	 * @type void
+<span class='line'> 93</span> 	 **/</span><span class="WHIT">
+<span class='line'> 94</span> </span><span class="WHIT">	</span><span class="NAME">JConstraint.prototype.disableConstraint</span><span class="PUNC">=</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 95</span> </span><span class="WHIT">		</span><span class="KEYW">if</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="PUNC">!</span><span class="NAME">this._constraintEnabled</span><span class="PUNC">)</span><span class="WHIT">
+<span class='line'> 96</span> </span><span class="WHIT">			</span><span class="KEYW">return</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 97</span> </span><span class="WHIT">		</span><span class="WHIT">
+<span class='line'> 98</span> </span><span class="WHIT">		</span><span class="NAME">this._constraintEnabled</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">false</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 99</span> </span><span class="WHIT">		</span><span class="NAME">jigLib.PhysicsSystem.getInstance</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">.</span><span class="NAME">removeConstraint</span><span class="PUNC">(</span><span class="KEYW">this</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>100</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>101</span> 
+<span class='line'>102</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>103</span> 	 * @function get_constraintEnabled determines whether this constraint is registered with the physics system
+<span class='line'>104</span> 	 * @type boolean
+<span class='line'>105</span> 	 **/</span><span class="WHIT">
+<span class='line'>106</span> </span><span class="WHIT">	</span><span class="NAME">JConstraint.prototype.get_constraintEnabled</span><span class="PUNC">=</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>107</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">this._constraintEnabled</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>108</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>109</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>110</span> </span><span class="WHIT">	</span><span class="NAME">jigLib.JConstraint</span><span class="PUNC">=</span><span class="NAME">JConstraint</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>111</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>112</span> </span><span class="PUNC">}</span><span class="PUNC">)</span><span class="PUNC">(</span><span class="NAME">jigLib</span><span class="PUNC">)</span><span class="PUNC">;</span></pre></body></html>

@@ -1,0 +1,188 @@
+<html><head><meta http-equiv="content-type" content="text/html; charset=UTF-8"> <style>
+	.KEYW {color: #933;}
+	.COMM {color: #bbb; font-style: italic;}
+	.NUMB {color: #393;}
+	.STRN {color: #393;}
+	.REGX {color: #339;}
+	.line {border-right: 1px dotted #666; color: #666; font-style: normal;}
+	</style></head><body><pre><span class='line'>  1</span> <span class="PUNC">(</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">jigLib</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>  2</span> </span><span class="WHIT">	</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">Vector3DUtil</span><span class="PUNC">=</span><span class="NAME">jigLib.Vector3DUtil</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>  3</span> </span><span class="WHIT">	</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">Matrix3D</span><span class="PUNC">=</span><span class="NAME">jigLib.Matrix3D</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>  4</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>  5</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>  6</span> 	 * @author Muzer(muzerly@gmail.com)
+<span class='line'>  7</span> 	 * 
+<span class='line'>  8</span> 	 * @name JMatrix3D
+<span class='line'>  9</span> 	 * @class JMatrix3D
+<span class='line'> 10</span> 	 * @requires Vector3DUtil
+<span class='line'> 11</span> 	 * @requires Matrix3D
+<span class='line'> 12</span> 	 * @constructor
+<span class='line'> 13</span> 	 **/</span><span class="WHIT">
+<span class='line'> 14</span> </span><span class="WHIT">	</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">JMatrix3D</span><span class="PUNC">=</span><span class="PUNC">{</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 15</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'> 16</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'> 17</span> 	 * @function getTranslationMatrix returns a translate matrix
+<span class='line'> 18</span> 	 * @param {number} x translation amount in the X axis
+<span class='line'> 19</span> 	 * @param {number} y translation amount in the Y axis
+<span class='line'> 20</span> 	 * @param {number} z translation amount in the Z axis
+<span class='line'> 21</span> 	 * @type Matrix3D
+<span class='line'> 22</span> 	 **/</span><span class="WHIT">
+<span class='line'> 23</span> </span><span class="WHIT">	</span><span class="NAME">JMatrix3D.getTranslationMatrix</span><span class="PUNC">=</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">x</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">y</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">z</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 24</span> </span><span class="WHIT">		</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">matrix3D</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">new</span><span class="WHIT"> </span><span class="NAME">Matrix3D</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 25</span> </span><span class="WHIT">		</span><span class="NAME">matrix3D.appendTranslation</span><span class="PUNC">(</span><span class="NAME">x</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">y</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">z</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 26</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">matrix3D</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 27</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 28</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'> 29</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'> 30</span> 	 * @function getScaleMatrix returns a scale matrix
+<span class='line'> 31</span> 	 * @param {number} x scale amount in the X axis
+<span class='line'> 32</span> 	 * @param {number} y scale amount in the Y axis
+<span class='line'> 33</span> 	 * @param {number} z scale amount in the Z axis
+<span class='line'> 34</span> 	 * @type Matrix3D
+<span class='line'> 35</span> 	 **/</span><span class="WHIT">
+<span class='line'> 36</span> </span><span class="WHIT">	</span><span class="NAME">JMatrix3D.getScaleMatrix</span><span class="PUNC">=</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">x</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">y</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">z</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 37</span> </span><span class="WHIT">		</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">matrix3D</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">new</span><span class="WHIT"> </span><span class="NAME">Matrix3D</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 38</span> </span><span class="WHIT">		</span><span class="NAME">matrix3D.prependScale</span><span class="PUNC">(</span><span class="NAME">x</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">y</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">z</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 39</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">matrix3D</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 40</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 41</span> </span><span class="WHIT">				</span><span class="WHIT">
+<span class='line'> 42</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'> 43</span> 	 * @function getRotationMatrix returns a rotation matrix
+<span class='line'> 44</span> 	 * @param {number} x axis X
+<span class='line'> 45</span> 	 * @param {number} y axis Y
+<span class='line'> 46</span> 	 * @param {number} z axis Z
+<span class='line'> 47</span> 	 * @param {number} degree rotation amount in degrees
+<span class='line'> 48</span> 	 * @param {array} pivotPoint the pivot point expressed as a 3D vector
+<span class='line'> 49</span> 	 * @type Matrix3D
+<span class='line'> 50</span> 	 **/</span><span class="WHIT">
+<span class='line'> 51</span> </span><span class="WHIT">	</span><span class="NAME">JMatrix3D.getRotationMatrix</span><span class="PUNC">=</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">x</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">y</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">z</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">degree</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">pivotPoint</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 52</span> </span><span class="WHIT">		</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">matrix3D</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">new</span><span class="WHIT"> </span><span class="NAME">Matrix3D</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 53</span> </span><span class="WHIT">		</span><span class="NAME">matrix3D.appendRotation</span><span class="PUNC">(</span><span class="NAME">degree</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">Vector3DUtil.create</span><span class="PUNC">(</span><span class="NAME">x</span><span class="PUNC">,</span><span class="NAME">y</span><span class="PUNC">,</span><span class="NAME">z</span><span class="PUNC">,</span><span class="NUMB">0</span><span class="PUNC">)</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">pivotPoint</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 54</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">matrix3D</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 55</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 56</span> </span><span class="WHIT">				</span><span class="WHIT">
+<span class='line'> 57</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'> 58</span> 	 * @function getInverseMatrix returns an inverted clone of a given Matrix3D
+<span class='line'> 59</span> 	 * @param {Matrix3D} m the matrix to invert
+<span class='line'> 60</span> 	 * @type Matrix3D
+<span class='line'> 61</span> 	 **/</span><span class="WHIT">
+<span class='line'> 62</span> </span><span class="WHIT">	</span><span class="NAME">JMatrix3D.getInverseMatrix</span><span class="PUNC">=</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">m</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 63</span> </span><span class="WHIT">		</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">matrix3D</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">m.clone</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 64</span> </span><span class="WHIT">		</span><span class="NAME">matrix3D.invert</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 65</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">matrix3D</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 66</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 67</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'> 68</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'> 69</span> 	 * @function getTransposeMatrix returns a transposed clone of a given Matrix3D
+<span class='line'> 70</span> 	 * @param {Matrix3D} m the matrix to transpose
+<span class='line'> 71</span> 	 * @type Matrix3D
+<span class='line'> 72</span> 	 **/</span><span class="WHIT">
+<span class='line'> 73</span> </span><span class="WHIT">	</span><span class="NAME">JMatrix3D.getTransposeMatrix</span><span class="PUNC">=</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">m</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 74</span> </span><span class="WHIT">		</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">matrix3D</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">m.clone</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 75</span> </span><span class="WHIT">		</span><span class="NAME">matrix3D.transpose</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 76</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">matrix3D</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 77</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 78</span> 
+<span class='line'> 79</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'> 80</span> 	 * @function getAppendMatrix3D returns the result of one matrix appended to another
+<span class='line'> 81</span> 	 * @param {Matrix3D} a the original matrix
+<span class='line'> 82</span> 	 * @param {Matrix3D} b the matrix to append to a
+<span class='line'> 83</span> 	 * @type Matrix3D
+<span class='line'> 84</span> 	 **/</span><span class="WHIT">
+<span class='line'> 85</span> </span><span class="WHIT">	</span><span class="NAME">JMatrix3D.getAppendMatrix3D</span><span class="PUNC">=</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">a</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">b</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 86</span> </span><span class="WHIT">		</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">matrix3D</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">a.clone</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 87</span> </span><span class="WHIT">		</span><span class="NAME">matrix3D.append</span><span class="PUNC">(</span><span class="NAME">b</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 88</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">matrix3D</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 89</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 90</span> 
+<span class='line'> 91</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'> 92</span> 	 * @function getPrependMatrix returns the result of one matrix prepended to another
+<span class='line'> 93</span> 	 * @param {Matrix3D} a the original matrix
+<span class='line'> 94</span> 	 * @param {Matrix3D} b the matrix to prepend to a
+<span class='line'> 95</span> 	 * @type Matrix3D
+<span class='line'> 96</span> 	 **/</span><span class="WHIT">
+<span class='line'> 97</span> </span><span class="WHIT">	</span><span class="NAME">JMatrix3D.getPrependMatrix</span><span class="PUNC">=</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">a</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">b</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 98</span> </span><span class="WHIT">		</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">matrix3D</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">a.clone</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 99</span> </span><span class="WHIT">		</span><span class="NAME">matrix3D.prepend</span><span class="PUNC">(</span><span class="NAME">b</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>100</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">matrix3D</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>101</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>102</span> </span><span class="WHIT">				</span><span class="WHIT">
+<span class='line'>103</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>104</span> 	 * @function getSubMatrix returns the result of one matrix subtracted from another
+<span class='line'>105</span> 	 * @param {Matrix3D} a the original matrix
+<span class='line'>106</span> 	 * @param {Matrix3D} b the matrix to subtract from a
+<span class='line'>107</span> 	 * @type Matrix3D
+<span class='line'>108</span> 	 **/</span><span class="WHIT">
+<span class='line'>109</span> </span><span class="WHIT">	</span><span class="NAME">JMatrix3D.getSubMatrix</span><span class="PUNC">=</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">a</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">b</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>110</span> </span><span class="WHIT">		</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">num</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="PUNC">[</span><span class="NUMB">16</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>111</span> </span><span class="WHIT">		</span><span class="KEYW">for</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">i</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NUMB">0</span><span class="PUNC">;</span><span class="WHIT"> </span><span class="NAME">i</span><span class="WHIT"> </span><span class="PUNC">&lt;</span><span class="WHIT"> </span><span class="NUMB">16</span><span class="PUNC">;</span><span class="WHIT"> </span><span class="NAME">i</span><span class="PUNC">++</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>112</span> </span><span class="WHIT">			</span><span class="NAME">num</span><span class="PUNC">[</span><span class="NAME">i</span><span class="PUNC">]</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">a.glmatrix</span><span class="PUNC">[</span><span class="NAME">i</span><span class="PUNC">]</span><span class="WHIT"> </span><span class="PUNC">-</span><span class="WHIT"> </span><span class="NAME">b.glmatrix</span><span class="PUNC">[</span><span class="NAME">i</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>113</span> </span><span class="WHIT">		</span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>114</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="KEYW">new</span><span class="WHIT"> </span><span class="NAME">Matrix3D</span><span class="PUNC">(</span><span class="NAME">num</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>115</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>116</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>117</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>118</span> 	 * @function getRotationMatrixAxis generates a rotation matrix for a given axis and amount
+<span class='line'>119</span> 	 * @param {number} degree the rotation amount in degrees
+<span class='line'>120</span> 	 * @param {array} rotateAxis the rotation axis
+<span class='line'>121</span> 	 * @type Matrix3D
+<span class='line'>122</span> 	 **/</span><span class="WHIT">
+<span class='line'>123</span> </span><span class="WHIT">	</span><span class="NAME">JMatrix3D.getRotationMatrixAxis</span><span class="PUNC">=</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">degree</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">rotateAxis</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>124</span> </span><span class="WHIT">				</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">matrix3D</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">new</span><span class="WHIT"> </span><span class="NAME">Matrix3D</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>125</span> </span><span class="WHIT">				</span><span class="NAME">matrix3D.appendRotation</span><span class="PUNC">(</span><span class="NAME">degree</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">rotateAxis</span><span class="PUNC">?</span><span class="NAME">rotateAxis</span><span class="PUNC">:</span><span class="NAME">Vector3DUtil.X_AXIS</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>126</span> </span><span class="WHIT">				</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">matrix3D</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>127</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>128</span> </span><span class="WHIT">				</span><span class="WHIT">
+<span class='line'>129</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>130</span> 	 * @function getCols returns the columns Matrix3D in a multidimensional array
+<span class='line'>131</span> 	 * @param {Matrix3D} matrix3D the Matrix3D
+<span class='line'>132</span> 	 * @type array
+<span class='line'>133</span> 	 **/</span><span class="WHIT">
+<span class='line'>134</span> </span><span class="WHIT">	</span><span class="NAME">JMatrix3D.getCols</span><span class="PUNC">=</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">matrix3D</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>135</span> </span><span class="WHIT">		</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">_rawData</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT">  </span><span class="NAME">matrix3D.glmatrix</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>136</span> </span><span class="WHIT">		</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">cols</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="PUNC">[</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>137</span> </span><span class="WHIT">						</span><span class="WHIT">
+<span class='line'>138</span> </span><span class="WHIT">		</span><span class="COMM">/*
+<span class='line'>139</span> 		cols[0] = Vector3DUtil.create(_rawData[0], _rawData[1], _rawData[2], 0);
+<span class='line'>140</span> 		cols[1] = Vector3DUtil.create(_rawData[4], _rawData[5], _rawData[6], 0);
+<span class='line'>141</span> 		cols[2] = Vector3DUtil.create(_rawData[8], _rawData[9], _rawData[10], 0);
+<span class='line'>142</span> 		
+<span class='line'>143</span> 		*/</span><span class="WHIT">
+<span class='line'>144</span> </span><span class="WHIT">		</span><span class="NAME">cols</span><span class="PUNC">[</span><span class="NUMB">0</span><span class="PUNC">]</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">Vector3DUtil.create</span><span class="PUNC">(</span><span class="NAME">_rawData</span><span class="PUNC">[</span><span class="NUMB">0</span><span class="PUNC">]</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">_rawData</span><span class="PUNC">[</span><span class="NUMB">4</span><span class="PUNC">]</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">_rawData</span><span class="PUNC">[</span><span class="NUMB">8</span><span class="PUNC">]</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NUMB">0</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>145</span> </span><span class="WHIT">		</span><span class="NAME">cols</span><span class="PUNC">[</span><span class="NUMB">1</span><span class="PUNC">]</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">Vector3DUtil.create</span><span class="PUNC">(</span><span class="NAME">_rawData</span><span class="PUNC">[</span><span class="NUMB">1</span><span class="PUNC">]</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">_rawData</span><span class="PUNC">[</span><span class="NUMB">5</span><span class="PUNC">]</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">_rawData</span><span class="PUNC">[</span><span class="NUMB">9</span><span class="PUNC">]</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NUMB">0</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>146</span> </span><span class="WHIT">		</span><span class="NAME">cols</span><span class="PUNC">[</span><span class="NUMB">2</span><span class="PUNC">]</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">Vector3DUtil.create</span><span class="PUNC">(</span><span class="NAME">_rawData</span><span class="PUNC">[</span><span class="NUMB">2</span><span class="PUNC">]</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">_rawData</span><span class="PUNC">[</span><span class="NUMB">6</span><span class="PUNC">]</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">_rawData</span><span class="PUNC">[</span><span class="NUMB">10</span><span class="PUNC">]</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NUMB">0</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>147</span> </span><span class="WHIT">						</span><span class="WHIT">
+<span class='line'>148</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">cols</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>149</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>150</span> 
+<span class='line'>151</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>152</span> 	 * @function multiplyVector performs in-place multiplication of a 3D vector by a given Matrix3D
+<span class='line'>153</span> 	 * @param {Matrix3D} matrix3D the Matrix3D to use in multiplying the vector
+<span class='line'>154</span> 	 * @param {array} v the 3D vector to multiply
+<span class='line'>155</span> 	 * @type void
+<span class='line'>156</span> 	 **/</span><span class="WHIT">
+<span class='line'>157</span> </span><span class="WHIT">	</span><span class="NAME">JMatrix3D.multiplyVector</span><span class="PUNC">=</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">matrix3D</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">v</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>158</span> </span><span class="WHIT">		</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">vx</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">v</span><span class="PUNC">[</span><span class="NUMB">0</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>159</span> </span><span class="WHIT">		</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">vy</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">v</span><span class="PUNC">[</span><span class="NUMB">1</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>160</span> </span><span class="WHIT">		</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">vz</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">v</span><span class="PUNC">[</span><span class="NUMB">2</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>161</span> 
+<span class='line'>162</span> </span><span class="WHIT">		</span><span class="KEYW">if</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">vx</span><span class="WHIT"> </span><span class="PUNC">==</span><span class="WHIT"> </span><span class="NUMB">0</span><span class="WHIT"> </span><span class="PUNC">&&</span><span class="WHIT"> </span><span class="NAME">vy</span><span class="WHIT"> </span><span class="PUNC">==</span><span class="WHIT"> </span><span class="NUMB">0</span><span class="WHIT"> </span><span class="PUNC">&&</span><span class="WHIT"> </span><span class="NAME">vz</span><span class="WHIT"> </span><span class="PUNC">==</span><span class="WHIT"> </span><span class="NUMB">0</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT"> </span><span class="KEYW">return</span><span class="PUNC">;</span><span class="WHIT"> </span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>163</span> </span><span class="WHIT">						</span><span class="WHIT">
+<span class='line'>164</span> </span><span class="WHIT">		</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">_rawData</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT">  </span><span class="NAME">matrix3D.glmatrix</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>165</span> </span><span class="WHIT">		</span><span class="WHIT">
+<span class='line'>166</span> </span><span class="WHIT">		</span><span class="COMM">/*
+<span class='line'>167</span> 		How did this work in AS3? it looks wrong!
+<span class='line'>168</span> 		v[0] = vx * _rawData[0] + vy * _rawData[4] + vz * _rawData[8]  + _rawData[12];
+<span class='line'>169</span> 		v[1] = vx * _rawData[1] + vy * _rawData[5] + vz * _rawData[9]  + _rawData[13];
+<span class='line'>170</span> 		v[2] = vx * _rawData[2] + vy * _rawData[6] + vz * _rawData[10] + _rawData[14];
+<span class='line'>171</span> 		 */</span><span class="WHIT">
+<span class='line'>172</span> </span><span class="WHIT">		</span><span class="WHIT">
+<span class='line'>173</span> </span><span class="WHIT">		</span><span class="NAME">v</span><span class="PUNC">[</span><span class="NUMB">0</span><span class="PUNC">]</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">vx</span><span class="WHIT"> </span><span class="PUNC">*</span><span class="WHIT"> </span><span class="NAME">_rawData</span><span class="PUNC">[</span><span class="NUMB">0</span><span class="PUNC">]</span><span class="WHIT"> </span><span class="PUNC">+</span><span class="WHIT"> </span><span class="NAME">vy</span><span class="WHIT"> </span><span class="PUNC">*</span><span class="WHIT"> </span><span class="NAME">_rawData</span><span class="PUNC">[</span><span class="NUMB">1</span><span class="PUNC">]</span><span class="WHIT"> </span><span class="PUNC">+</span><span class="WHIT"> </span><span class="NAME">vz</span><span class="WHIT"> </span><span class="PUNC">*</span><span class="WHIT"> </span><span class="NAME">_rawData</span><span class="PUNC">[</span><span class="NUMB">2</span><span class="PUNC">]</span><span class="WHIT">  </span><span class="PUNC">+</span><span class="WHIT"> </span><span class="NAME">_rawData</span><span class="PUNC">[</span><span class="NUMB">3</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>174</span> </span><span class="WHIT">		</span><span class="NAME">v</span><span class="PUNC">[</span><span class="NUMB">1</span><span class="PUNC">]</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">vx</span><span class="WHIT"> </span><span class="PUNC">*</span><span class="WHIT"> </span><span class="NAME">_rawData</span><span class="PUNC">[</span><span class="NUMB">4</span><span class="PUNC">]</span><span class="WHIT"> </span><span class="PUNC">+</span><span class="WHIT"> </span><span class="NAME">vy</span><span class="WHIT"> </span><span class="PUNC">*</span><span class="WHIT"> </span><span class="NAME">_rawData</span><span class="PUNC">[</span><span class="NUMB">5</span><span class="PUNC">]</span><span class="WHIT"> </span><span class="PUNC">+</span><span class="WHIT"> </span><span class="NAME">vz</span><span class="WHIT"> </span><span class="PUNC">*</span><span class="WHIT"> </span><span class="NAME">_rawData</span><span class="PUNC">[</span><span class="NUMB">6</span><span class="PUNC">]</span><span class="WHIT">  </span><span class="PUNC">+</span><span class="WHIT"> </span><span class="NAME">_rawData</span><span class="PUNC">[</span><span class="NUMB">7</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>175</span> </span><span class="WHIT">		</span><span class="NAME">v</span><span class="PUNC">[</span><span class="NUMB">2</span><span class="PUNC">]</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">vx</span><span class="WHIT"> </span><span class="PUNC">*</span><span class="WHIT"> </span><span class="NAME">_rawData</span><span class="PUNC">[</span><span class="NUMB">8</span><span class="PUNC">]</span><span class="WHIT"> </span><span class="PUNC">+</span><span class="WHIT"> </span><span class="NAME">vy</span><span class="WHIT"> </span><span class="PUNC">*</span><span class="WHIT"> </span><span class="NAME">_rawData</span><span class="PUNC">[</span><span class="NUMB">9</span><span class="PUNC">]</span><span class="WHIT"> </span><span class="PUNC">+</span><span class="WHIT"> </span><span class="NAME">vz</span><span class="WHIT"> </span><span class="PUNC">*</span><span class="WHIT"> </span><span class="NAME">_rawData</span><span class="PUNC">[</span><span class="NUMB">10</span><span class="PUNC">]</span><span class="WHIT"> </span><span class="PUNC">+</span><span class="WHIT"> </span><span class="NAME">_rawData</span><span class="PUNC">[</span><span class="NUMB">11</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>176</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>177</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>178</span> </span><span class="WHIT">	</span><span class="NAME">jigLib.JMatrix3D</span><span class="PUNC">=</span><span class="NAME">JMatrix3D</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>179</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>180</span> </span><span class="PUNC">}</span><span class="PUNC">)</span><span class="PUNC">(</span><span class="NAME">jigLib</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>181</span> </span><span class="WHIT">	</span></pre></body></html>

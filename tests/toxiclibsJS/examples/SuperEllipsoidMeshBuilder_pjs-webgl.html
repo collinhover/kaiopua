@@ -1,0 +1,196 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+	<title>Super-Ellipsoid Mesh Builder - PJS + WebGL - toxiclibs.js examples</title>
+	<meta name="author" content="Kyle Phillips">
+	<link href="css/style.css" rel="stylesheet" type="text/css">
+	<!-- Date: 2011-01-09 -->
+	<script type="text/javascript" src="../build/toxiclibs.js"></script>
+	<script type="text/javascript" src="js/processing.js"></script>
+</head>
+<body class="container_12">
+	<header class="grid_12">
+		<hgroup>
+			<h1>Super-Ellipsoid Mesh Builder</h1><h2>w/ <a href="http://processingjs.org">Processing.js</a></h2>
+		</hgroup>
+	</header>
+<script type="text/processing" data-processing-target="myCanvas">
+/* 
+ * Copyright (c) 2010 Karsten Schmidt
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * http://creativecommons.org/licenses/LGPL/2.1/
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
+
+toxi.TriangleMesh mesh = new toxi.TriangleMesh();
+
+toxi.AbstractWave modX, modY;
+
+boolean isWireFrame;
+boolean showNormals;
+
+
+void setup() {
+  size(800,480, OPENGL);
+  isWireFrame = true;
+  modX = new toxi.SineWave(0, 0.01f, 2.5f, 2.5f);
+  modY = new toxi.SineWave(PI, 0.017f, 2.5f, 2.5f);
+}
+
+void draw() {
+  toxi.SurfaceFunction functor=new toxi.SuperEllipsoid(modX.update(), modY.update());
+  toxi.SurfaceMeshBuilder b = new toxi.SurfaceMeshBuilder(functor);
+  mesh = (toxi.TriangleMesh)b.createMesh(undefined,20, 80);
+  mesh.computeVertexNormals();
+  background(0);
+  lights();
+  translate(width / 2, height / 2, 0);
+  rotateX(mouseY * 0.01f);
+  rotateY(mouseX * 0.01f);
+  //gfx.origin(300);
+  
+  //origin implementation
+  
+  toxi.Vec3D o = new toxi.Vec3D();
+  float len = 300;
+  float x = o.x;
+  float y = o.y;
+  float z = o.z;
+  stroke(255, 0, 0);
+  line(x, y, z, x + len, y, z);
+  stroke(0, 255, 0);
+  line(x, y, z, x, y + len, z);
+  stroke(0, 0, 255);
+  line(x, y, z, x, y, z + len);
+  if (isWireFrame) {
+    noFill();
+    stroke(255);
+  } 
+  else {
+    fill(255);
+    noStroke();
+  }
+  scale(2);
+  int i;
+  int normalLength = (showNormals) ? 10 : 0;
+  beginShape(TRIANGLES);
+  Face[] faces = mesh.getFaces();
+  int numFaces = faces.length;
+  if(!isWireFrame)
+  {
+	  for(i=0;i<numFaces;i++)
+	  {
+	  	Face f = faces[i];
+	  	toxi.Vec3D a = f.a;
+	  	toxi.Vec3D b = f.b;
+	  	toxi.Vec3D c = f.c;
+	  	normal(a.normal.x,a.normal.y,a.normal.z);
+	  	vertex(a.x,a.y,a.z);
+	  	normal(b.normal.x,b.normal.y,b.normal.z);
+	  	vertex(b.x,b.y,b.z);
+	  	normal(c.normal.x,c.normal.y,c.normal.z);
+	  	vertex(c.x,c.y,c.z);
+	  }
+	}
+	else
+	{
+		for(i=0;i<numFaces;i++)
+		{
+			toxi.Face f = faces[i];
+			toxi.Vec3D n = f.normal;
+			toxi.Vec3D a = f.a;
+			toxi.Vec3D b = f.b;
+			toxi.Vec3D c = f.c;
+			normal(n.x,n.y,n.z);
+			vertex(a.x,a.y,a.z);
+			vertex(b.x,b.y,b.z);
+			vertex(c.x,c.y,c.z);
+		}
+	}
+	endShape();
+	
+	if(len>0){
+		int strokeCol = 0;
+
+		int j;
+		if (!isWireFrame) {
+				toxi.Vertex[] vertices = mesh.getVertices();
+				int numVertices = vertices.length;
+			for (j=0;j<numVertices;j++) {
+                	toxi.Vertex v = vertices[j];
+                    toxi.Vec3D w = v.add(v.normal.scale(normalLength));
+                    toxi.Vec3D n = v.normal.scale(127);
+                    stroke(n.x + 128, n.y + 128, n.z + 128);
+                    line(v.x, v.y, v.z, w.x, w.y, w.z);
+                }
+            } else {
+                float third = 1.0 / 3;
+                
+                for (j=0;j<numFaces;j++) {
+                	toxi.Face f = faces[j];
+                    toxi.Vec3D c = f.a.add(f.b).addSelf(f.c).scaleSelf(third);
+                    toxi.Vec3D d = c.add(f.normal.scale(normalLength));
+                    toxi.Vec3D n = f.normal.scale(127);
+                    stroke(n.x + 128, n.y + 128, n.z + 128);
+                    line(c.x, c.y, c.z, d.x, d.y, d.z);
+                }
+            }
+        }
+}
+
+
+void keyPressed() {
+  if (key == 'w') {
+    isWireFrame = !isWireFrame;
+  }
+  if (key == 'n') {
+    showNormals = !showNormals;
+  }
+  /*if (key == 's') {
+    mesh.saveAsSTL(sketchPath("superellipsoid-"+(System.currentTimeMillis()/1000)+".stl"));
+  }*/
+}
+</script>
+
+<canvas id="myCanvas" width="200" height="200">
+	your browser doesnt support canvas
+</canvas>
+<section id="details" class="grid_12">
+<aside id="authors" class="grid_6">
+<p>original example by <a href="http://postspectacular.com">Karsten Schmidt</a><br/>
+	Toxiclibs ported to js by <a href="http://workofkylephillips.com">Kyle Phillips</a></p>
+</aside>
+<aside id="usage" class="grid_6">
+<p><strong>Usage:</strong>
+ <ul>
+ <li>w: toggle wireframe on/off <strong>Currently very slow</strong></li>
+ <li>n: toggle normal vector display on/off</li>
+  </ul></p>
+</aside>
+<article id="description" class="grid_9">
+ <p>SuperEllipsoidMeshBuilder demonstrates how to use the SurfaceMeshBuilder class
+ in conjunction with a SuperEllipsoid function to dynamically create a variety
+ of useful geometric forms. The super ellipsoid is described in detail on Paul
+ Bourke's website. In this demo 2 out-of-sync sine waves are used to animate
+ the ellipsoid parameters. Included is also a re-usable function for displaying
+ a generic TriangleMesh instance, incl. the display of surface normals useful for
+ debug purposes.</p>
+ </article>
+ </section>
+</body>
+</html>
