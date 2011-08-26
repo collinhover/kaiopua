@@ -1,0 +1,152 @@
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+		<title>three.js webgl - sprites</title>
+		<meta charset="utf-8">
+		<style type="text/css">
+			body {
+				background:#fff;
+				padding:0;
+				margin:0;
+				font-weight: bold;
+				overflow:hidden;
+			}
+		</style>
+	</head>
+
+	<body>
+		<script type="text/javascript" src="../build/Three.js"></script>
+		<script type="text/javascript" src="js/RequestAnimationFrame.js"></script>
+		<script type="text/javascript" src="js/Stats.js"></script>
+
+		<script type="text/javascript">
+
+			var container, stats;
+
+			var camera, scene, renderer;
+
+			var group;
+			var time = 0;
+
+			var mouseX = 0, mouseY = 0;
+
+			var windowHalfX = window.innerWidth / 2;
+			var windowHalfY = window.innerHeight / 2;
+
+			init();
+			animate();
+
+			function init() {
+
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+
+				camera = new THREE.Camera( 60, window.innerWidth / window.innerHeight, 1, 10000 );
+				camera.position.z = 1500;
+
+				scene = new THREE.Scene();
+
+				// create sprites
+
+				var amount = 200;
+				var radius = 500;
+				var mapA = THREE.ImageUtils.loadTexture( "textures/sprite0.png" );
+				var mapB = THREE.ImageUtils.loadTexture( "textures/sprite1.png" );
+
+				group = new THREE.Object3D();
+
+				for( var a = 0; a < amount; a++ ) {
+
+					var sprite = new THREE.Sprite( { map: mapA, useScreenCoordinates: false } );
+					sprite.position.set( Math.random() - 0.5,
+					                     Math.random() - 0.5,
+					                     Math.random() - 0.5 );
+
+					if( sprite.position.z < 0 ) {
+
+						sprite.map = mapB;
+
+					}
+
+					sprite.position.normalize();
+					sprite.position.multiplyScalar( radius );
+
+					group.addChild( sprite );
+				}
+
+				scene.addChild( group );
+
+				// add 2d-sprites
+
+				sprite = new THREE.Sprite( { map: mapA, alignment:THREE.SpriteAlignment.topLeft } );
+				sprite.position.set( 100, 100, 0 );
+				sprite.opacity = 0.25;
+				scene.addChild( sprite );
+
+				sprite = new THREE.Sprite( { map: mapA, alignment:THREE.SpriteAlignment.topLeft } );
+				sprite.position.set( 150, 150, 2 );
+				sprite.opacity = 0.5;
+				scene.addChild( sprite );
+
+				sprite = new THREE.Sprite( { map: mapA, alignment:THREE.SpriteAlignment.topLeft } );
+				sprite.position.set( 200, 200, 3 );
+				sprite.opacity = 1;
+				scene.addChild( sprite );
+
+				// renderer
+
+				renderer = new THREE.WebGLRenderer();
+				renderer.setClearColorHex( 0x000000, 1 );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+				container.appendChild( renderer.domElement );
+
+				stats = new Stats();
+				stats.domElement.style.position = 'absolute';
+				stats.domElement.style.top = '0px';
+				stats.domElement.style.zIndex = 100;
+				container.appendChild( stats.domElement );
+
+			}
+
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+
+				render();
+				stats.update();
+
+			}
+
+			function render() {
+
+				for ( var c = 0; c < group.children.length; c++ ) {
+
+					var sprite = group.children[ c ];
+					var scale = Math.sin( time + sprite.position.x * 0.01 ) * 0.3 + 1.0;
+
+					sprite.rotation += 0.1 * ( c / group.children.length );
+					sprite.scale.set( scale, scale, 1.0 );
+					sprite.opacity = Math.sin( time + sprite.position.x * 0.01 ) * 0.4 + 0.6;
+				}
+
+				group.rotation.x = time * 0.5;
+				group.rotation.y = time * 0.75;
+				group.rotation.z = time * 1.0;
+
+				time += 0.02;
+
+				renderer.render( scene, camera );
+
+			}
+
+			function log( text ) {
+
+				var e = document.getElementById("log");
+				e.innerHTML = text + "<br/>" + e.innerHTML;
+
+			}
+		</script>
+	</body>
+</html>
