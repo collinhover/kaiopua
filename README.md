@@ -30,6 +30,6 @@ Javascript, WebGL, Three.js
 
 #### Extra credits
 
-Seiji Ikeda
-Tuan Ho
-Robert Hower
+Seiji Ikeda  
+Tuan Ho  
+Robert Hower  
