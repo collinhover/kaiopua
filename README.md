@@ -15,11 +15,15 @@ See [full project plan](https://github.com/collinhover/kaiopua/blob/master/src/R
 
 #### Code
 
-Collin Hover
+Collin Hover  
+Joshua Wilson
 
-#### Modelling / Animation
+#### Modelling / Texturing / Animation
 
-Collin Hover
+Collin Hover  
+Ian Wilson  
+Kevin Ly  
+Houston Hardaway  
 
 #### Music
 
