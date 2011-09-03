@@ -1,4 +1,4 @@
-PROJECT PLAN
+Project Plan
 ============
 ##Collin Hover, Graduate Thesis: Kaiopua
 
@@ -14,11 +14,17 @@ Kaiopua
 ####Game Summary
 Science fiction builder puzzle game, in which the player assumes the role of a simple boy named Kai. Kai is stranded on a moon sized worm-like creature named Opua, who is broken and needs help to restore power to his life systems. The game will be accessible and playable via website, and will not require any third party plug-ins or software beyond the web browser of player’s choice.
 
+![visual_style_001](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_visual_style_001.jpg "Opua")
+
 ####Setting
 The game takes place on a moon sized worm-like creature named Opua, which begins as a newborn or seedling. Opua is a giant white worm, split into a face with two eyes, a mouth, and a blowhole, and a stubby tail at the back. Between the face and tail are the individual levels of the game in the form of rings, containing all the puzzles and majority of the gameplay. The player may be gated or hindered from accessing some rings at any time during the game. The head serves three purposes: (a) it is the starting point of the game, (b) it may speak to the player to provide story or hints, and (c) it is the where a player may feed Opua combinable objects that have been found while exploring.
 
+![world_001](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_world_001.jpg "Opua")
+
 ####Plot
 Kai, a simple boy with a rice farmer’s pack basket on his pack, finds himself in a small cave with no way out but up. After exploring, Kai realizes that the hole in the roof is too high up for him to jump to, so he must find another way to solve the puzzle. The only things in the room are a massive ooze plugging a hole in the floor, a large cinnamon bun, and a small flaming splinter stuck in the wall. Taking the cinnamon bun, Kai gets his first ability object, ‘Feed Bun’, which gives him the ability to feed something a cinnamon bun. If fed to the flaming splinter, his ‘Feed Bun’ turns into a ‘Flaming Bun’, which can be thrown at things to set them on fire. Once Kai sets the ooze on fire, the entire cave starts to shake and Kai is shot out of the top of the cave by a massive geyser. Landing on the wrong side of his face, Kai is surprised to find himself standing on the giant sleeping face of a moon sized worm. Woken by the sudden explosion, the creature is also surprised to find Kai standing on its face, but that surprise quickly turns to sadness. As the creature begins to talk, Kai realizes that the creature’s language is very similar to whale sounds, and that he keeps hearing the word ‘Opua’. Kai decides that he will call this creature Opua, and that he will find out what is making Opua so sad.
+
+![character_003](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_character_003.jpg "Characters")
 
 ####Gameplay
 The gameplay of Kaiopua consists of a third-person journey through a growing moon sized worm called Opua. The player can explore by pressing and holding the WASD or arrow keys to move, while using the mouse to select and interact with objects. Players begin their journey in the blowhole of Opua, a small cave structure that later serves as a fast travel system throughout the game. At this starting location, players will find a basic puzzle that serves as a tutorial on movement, turning, looking, interacting with objects, and solving problems.
@@ -39,12 +45,17 @@ The player is given very little background before starting. At the beginning of 
 *   Fast travel through worm’s blowhole
 *   Player solves puzzles and collects objects in a cycle
 
+![world_002](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_world_002.jpg "Opua")
+
 ####Player
 *   Simple boy with a rice farmer’s pack basket on back (inventory)
 *   All white body, with two black eyes (near top of head) and black mouth
 *   Large head, long arms (almost to ground), short legs
 *   All units in game based on player character, which has bounds of 1 W x 2 H x 1 D
 *   Head = 1 W/H/D, body = 0.8 W, 1 H, 0.5 D
+
+![character_001](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_character_001.jpg "Kai Front")
+![character_002](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_character_002.jpg "Kai Side")
 
 ####Levels
 *   Cylinder / ring shape, gravity at center
@@ -60,6 +71,9 @@ The player is given very little background before starting. At the beginning of 
 *   Total Angle change for objects that cross multiple squares:
 *   (# of squares - 1) x base angle change per square
 
+![world_003](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_world_003.jpg "Levels")
+![environment_001](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_environment_001.jpg "Environment")
+
 ####Overall Objective
 *   Fix the worm
 *   Fix each ring
@@ -67,6 +81,8 @@ The player is given very little background before starting. At the beginning of 
 *   Use ability objects to get to power source and restore it
 *   Once a ring is restored, it grows a pair of fins (and/or begins to spin?)
 *   As worm gets fixed, major parts grow (like fins and tail propellor) and start to work
+
+![puzzle_001](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_puzzles_001.jpg "Power Source")
 
 ####Object Types
 *   Ability objects solve puzzles
@@ -93,14 +109,20 @@ The player is given very little background before starting. At the beginning of 
 *   Buffs change character appearance
 *   These function as an alternative objective and reward system in the game
 
+![upgrades_001](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_upgrades_001.jpg "Upgrades")
+![upgrades_002](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_upgrades_002.jpg "Upgrades")
+![upgrades_003](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_upgrades_003.jpg "Upgrades")
+
 ####User Interface
 The gameplay will take place from a 3D perspective and exploration view. In the 3D perspective and exploration view, players will see the world in 3D from a third person / over the shoulder viewpoint with minimal or no GUI interaction. In this mode, players can explore the world physically, interact with the objects, feed Opua, battle creatures, and most importantly solve puzzles.  
   
 Once the game starts, the player gains the ability to examine any object they are currently holding. This examination creates a radial context menu based on the object being examined, which shows simple icon flowchart for the current object and what sort of abilities it has. Key objects always show the ability to restore a part. Combine objects show only an icon for the area of the character’s body that they will visually modify. Ability objects show icons for each possible function they may be used for in puzzle solving.
 
+![ui_001](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_ui_001.jpg "UI")
+![ui_002](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_ui_002.jpg "UI")
 
 ##Game Mechanics
-####BASICS  
+####Basics
 *   Game style: Puzzle / Builder
 *   Perspective: First-person
 *   Visuals:
@@ -124,7 +146,7 @@ Once the game starts, the player gains the ability to examine any object they ar
 *   Character Customization: (Min priority) Player will find objects that may modify his/her character’s appearance in game.
 *   Leveling Up / Stats: Not planned for implementation.
 *   Achievements: (Min priority) If time permits, limited social media based achievements may be implemented.
-*   HUD	(High priority): Heads up display (HUD) will be minimal by default, with most information derived from visual based queues instead, but exceptions will be made:
+*   HUD  (High priority): Heads up display (HUD) will be minimal by default, with most information derived from visual based queues instead, but exceptions will be made:
     * Lifebar will be shown
     * Ability Objects as list (scrollable / selectable)
     * Options / Menu buttons (pause on use)
@@ -132,11 +154,20 @@ Once the game starts, the player gains the ability to examine any object they ar
 *   Saving: May be added if time permits.
 *   Loading: May be added if time permits.
 
-####PROGRESSION	
+####Progression
 *   Physical Combat: Physical combat will be a part of the game in a simple format similar to Mario, Zelda, or Megaman.
 *   Puzzle Solving: Mental or thought based situations will be the primary progression method, and will require the player to think creatively to solve a single complex design problem by solving increasingly advanced smaller problems.
 *   Building: Puzzles may be solved through the combination and use of objects to build solutions.
 
-####NPC INTERACTION	
-*   Presence: There will likely be minimal non-player characters (NPCs) aside from the organism itself, as their presence will not be necessary for players to progress and complete the game.
+####NPC Interaction	
+*   Presence: There will likely be minimal non-player characters (NPCs) aside from the organism itself, as their presence may not be necessary for players to progress and complete the game.
 *   Dialogue: (Medium Priority) Minor dialogue and voice acting may be added if time permits.
+
+##Visual Style
+
+The following are examples of the visual style of the game.
+
+![visual_style_003](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_visual_style_003.jpg "Visual Style")
+![visual_style_004](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_visual_style_004.jpg "Visual Style")
+![visual_style_005](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_visual_style_005.jpg "Visual Style")
+![visual_style_002](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_visual_style_002.jpg "Visual Style")
