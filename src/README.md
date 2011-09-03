@@ -12,35 +12,35 @@ MFA Graduate Thesis in epistemic gaming based visual communication and learning
 Kaiopua
 
 ####Game Summary
-Science fiction builder puzzle game, in which the player assumes the role of a simple boy named Kai. Kai is stranded on a moon sized worm-like creature named Opua, who is broken and needs help to restore power to his life systems. The game will be accessible and playable via website, and will not require any third party plug-ins or software beyond the web browser of player’s choice.
+Science fiction builder puzzle game, in which the player assumes the role of a simple boy named Kai. Kai is stranded on a moon sized worm-like creature named Opua, who is broken and needs help to restore power to his life systems. The game will be accessible and playable via website, and will not require any third party plug-ins or software beyond the web browser of playerâ€™s choice.
 
 ####Setting
 The game takes place on a moon sized worm-like creature named Opua, which begins as a newborn or seedling. Opua is a giant white worm, split into a face with two eyes, a mouth, and a blowhole, and a stubby tail at the back. Between the face and tail are the individual levels of the game in the form of rings, containing all the puzzles and majority of the gameplay. The player may be gated or hindered from accessing some rings at any time during the game. The head serves three purposes: (a) it is the starting point of the game, (b) it may speak to the player to provide story or hints, and (c) it is the where a player may feed Opua combinable objects that have been found while exploring.
 
 ####Plot
-Kai, a simple boy with a rice farmer’s pack basket on his pack, finds himself in a small cave with no way out but up. After exploring, Kai realizes that the hole in the roof is too high up for him to jump to, so he must find another way to solve the puzzle. The only things in the room are a massive ooze plugging a hole in the floor, a large cinnamon bun, and a small flaming splinter stuck in the wall. Taking the cinnamon bun, Kai gets his first ability object, ‘Feed Bun’, which gives him the ability to feed something a cinnamon bun. If fed to the flaming splinter, his ‘Feed Bun’ turns into a ‘Flaming Bun’, which can be thrown at things to set them on fire. Once Kai sets the ooze on fire, the entire cave starts to shake and Kai is shot out of the top of the cave by a massive geyser. Landing on the wrong side of his face, Kai is surprised to find himself standing on the giant sleeping face of a moon sized worm. Woken by the sudden explosion, the creature is also surprised to find Kai standing on its face, but that surprise quickly turns to sadness. As the creature begins to talk, Kai realizes that the creature’s language is very similar to whale sounds, and that he keeps hearing the word ‘Opua’. Kai decides that he will call this creature Opua, and that he will find out what is making Opua so sad.
+Kai, a simple boy with a rice farmerâ€™s pack basket on his pack, finds himself in a small cave with no way out but up. After exploring, Kai realizes that the hole in the roof is too high up for him to jump to, so he must find another way to solve the puzzle. The only things in the room are a massive ooze plugging a hole in the floor, a large cinnamon bun, and a small flaming splinter stuck in the wall. Taking the cinnamon bun, Kai gets his first ability object, â€˜Feed Bunâ€™, which gives him the ability to feed something a cinnamon bun. If fed to the flaming splinter, his â€˜Feed Bunâ€™ turns into a â€˜Flaming Bunâ€™, which can be thrown at things to set them on fire. Once Kai sets the ooze on fire, the entire cave starts to shake and Kai is shot out of the top of the cave by a massive geyser. Landing on the wrong side of his face, Kai is surprised to find himself standing on the giant sleeping face of a moon sized worm. Woken by the sudden explosion, the creature is also surprised to find Kai standing on its face, but that surprise quickly turns to sadness. As the creature begins to talk, Kai realizes that the creatureâ€™s language is very similar to whale sounds, and that he keeps hearing the word â€˜Opuaâ€™. Kai decides that he will call this creature Opua, and that he will find out what is making Opua so sad.
 
 ####Gameplay
 The gameplay of Kaiopua consists of a third-person journey through a growing moon sized worm called Opua. The player can explore by pressing and holding the WASD or arrow keys to move, while using the mouse to select and interact with objects. Players begin their journey in the blowhole of Opua, a small cave structure that later serves as a fast travel system throughout the game. At this starting location, players will find a basic puzzle that serves as a tutorial on movement, turning, looking, interacting with objects, and solving problems.
 
-To complete the game, players must explore Opua’s surface, collect objects, solve puzzles, fix Opua’s power sources, and battle creatures. Player’s overall objective is to fix the worm, and to do so they must fix each of the rings between its head and tail. To fix each ring, the player will need to restore its power source by finding specific ‘ability’ objects located in that ring. Ability objects serve several purposes in the game: (a) they grant the player an ability to use in solving puzzles, and (b) they are used to restore a ring’s power source. As the power is restored in a ring, it will begin to rotate faster. As each of the rings gets fixed and begins to rotate faster, Opua becomes happier, grows whale fins, grows a tail, and finally is able to use his fins and tail to fly through space.
+To complete the game, players must explore Opuaâ€™s surface, collect objects, solve puzzles, fix Opuaâ€™s power sources, and battle creatures. Playerâ€™s overall objective is to fix the worm, and to do so they must fix each of the rings between its head and tail. To fix each ring, the player will need to restore its power source by finding specific â€˜abilityâ€™ objects located in that ring. Ability objects serve several purposes in the game: (a) they grant the player an ability to use in solving puzzles, and (b) they are used to restore a ringâ€™s power source. As the power is restored in a ring, it will begin to rotate faster. As each of the rings gets fixed and begins to rotate faster, Opua becomes happier, grows whale fins, grows a tail, and finally is able to use his fins and tail to fly through space.
 
-To solve puzzles, players will need to use ability objects to activate and change the environment in order to release or access further ability objects. Each ability object will exist in the game from the beginning, but only one will be accessible to the player initially on each ring. The player will begin each ring by solving an exploration puzzle, which will require no abilities, to find the first ability object. Then the player will solve puzzles by using and finding further ability objects. The power source itself is always unreachable by a player until they’ve found the final ability object on a ring. Once the player reaches the power source, they will only need to activate it to restore power and complete the ring.
+To solve puzzles, players will need to use ability objects to activate and change the environment in order to release or access further ability objects. Each ability object will exist in the game from the beginning, but only one will be accessible to the player initially on each ring. The player will begin each ring by solving an exploration puzzle, which will require no abilities, to find the first ability object. Then the player will solve puzzles by using and finding further ability objects. The power source itself is always unreachable by a player until theyâ€™ve found the final ability object on a ring. Once the player reaches the power source, they will only need to activate it to restore power and complete the ring.
 
-While solving puzzles, players may unlock ‘collectible’ or ‘combine’ objects instead of ability or key objects. Combine objects serve no direct purpose in solving puzzles or restoring parts, but instead allow the player to feed combine objects to Opua three at a time to receive a buff. These buffs enhance a player’s basic movement / abilities as well as visually modifying the character, and are intended to reward the player for exploration and travel.
+While solving puzzles, players may unlock â€˜collectibleâ€™ or â€˜combineâ€™ objects instead of ability or key objects. Combine objects serve no direct purpose in solving puzzles or restoring parts, but instead allow the player to feed combine objects to Opua three at a time to receive a buff. These buffs enhance a playerâ€™s basic movement / abilities as well as visually modifying the character, and are intended to reward the player for exploration and travel.
 
-The player is given very little background before starting. At the beginning of the game no obvious goals or objectives are laid out, which means that players must simply begin to explore Opua. As the player quickly discovers, there is no time within which the player must complete the game, and so the game unfolds at the player’s pace and is solved through a combination of observation, experimentation, creativity, and logical thinking.
+The player is given very little background before starting. At the beginning of the game no obvious goals or objectives are laid out, which means that players must simply begin to explore Opua. As the player quickly discovers, there is no time within which the player must complete the game, and so the game unfolds at the playerâ€™s pace and is solved through a combination of observation, experimentation, creativity, and logical thinking.
 
 ##Game Details
 ####Setting
 *   Giant space worm made of face, tail, and variable number of rings.
 *   Face and tail are pre-modeled/animated
 *   Rings are made of generated grid + pre-modeled/animated objects.
-*   Fast travel through worm’s blowhole
+*   Fast travel through wormâ€™s blowhole
 *   Player solves puzzles and collects objects in a cycle
 
 ####Player
-*   Simple boy with a rice farmer’s pack basket on back (inventory)
+*   Simple boy with a rice farmerâ€™s pack basket on back (inventory)
 *   All white body, with two black eyes (near top of head) and black mouth
 *   Large head, long arms (almost to ground), short legs
 *   All units in game based on player character, which has bounds of 1 W x 2 H x 1 D
@@ -88,7 +88,7 @@ The player is given very little background before starting. At the beginning of 
 
 ####Combine Objects
 *   Certain objects are collectable
-*   These objects don’t solve puzzles
+*   These objects donâ€™t solve puzzles
 *   Player can feed 3 of these objects to Opua at a time to receive a buff
 *   Buffs change character appearance
 *   These function as an alternative objective and reward system in the game
@@ -96,11 +96,11 @@ The player is given very little background before starting. At the beginning of 
 ####User Interface
 The gameplay will take place from a 3D perspective and exploration view. In the 3D perspective and exploration view, players will see the world in 3D from a third person / over the shoulder viewpoint with minimal or no GUI interaction. In this mode, players can explore the world physically, interact with the objects, feed Opua, battle creatures, and most importantly solve puzzles.  
   
-Once the game starts, the player gains the ability to examine any object they are currently holding. This examination creates a radial context menu based on the object being examined, which shows simple icon flowchart for the current object and what sort of abilities it has. Key objects always show the ability to restore a part. Combine objects show only an icon for the area of the character’s body that they will visually modify. Ability objects show icons for each possible function they may be used for in puzzle solving.
+Once the game starts, the player gains the ability to examine any object they are currently holding. This examination creates a radial context menu based on the object being examined, which shows simple icon flowchart for the current object and what sort of abilities it has. Key objects always show the ability to restore a part. Combine objects show only an icon for the area of the characterâ€™s body that they will visually modify. Ability objects show icons for each possible function they may be used for in puzzle solving.
 
 
 ##Game Mechanics
-####BASICS	
+####BASICS  
 *   Game style: Puzzle / Builder
 *   Perspective: First-person
 *   Visuals:
@@ -109,7 +109,7 @@ Once the game starts, the player gains the ability to examine any object they ar
     * Visuals should draw from influences such as ROME (ro.me), Legend of Zelda: The Wind Waker, Legend of Zelda: Phantom Hourglass, Super Paper Mario, and Okami.
     * Expected to include: multiple lights, normal mapping, cel-shading, depth of field (dof).
     * And as performance allows and aesthetic direction suggests, may additionally include: ambient occlusion (ao, if not handled by textures), texture filters, vertex colors / shading, displacement mapping.
-*   Difficulty: Mid range, allow for reasonable failure and don’t punish player by adding time wasters such as long runs, grind based goals (i.e. repetitive and dull tasks), and overpriced progression.
+*   Difficulty: Mid range, allow for reasonable failure and donâ€™t punish player by adding time wasters such as long runs, grind based goals (i.e. repetitive and dull tasks), and overpriced progression.
 *   Pace: Do not artificially extend the time players spend in game. The game pace should be constant and exciting, but not pushy (i.e. no count-down timers) or irritating (i.e. player should not fail because of a random number generator).
 *   Resolution: Dynamic based on frames per second (fps) achieved by player computer. If player can meet or exceed 20 fps, the game will be rendered at the full size of the browser window. If player drops below this, game will be rendered at a reduced size and scaled up to match browser window, resulting in pixellated visuals.
 *   Frames per second: Default and maximum is 60, with minimum at 20. Below min, warn player and reduce quality.
@@ -121,14 +121,14 @@ Once the game starts, the player gains the ability to examine any object they ar
 *   Task / Quest Log: Not planned for implementation.
 *   Inventory: Objects collected by player will be organized by type in an easy to use interface.
 *   Equipment: Not planned for implementation.
-*   Character Customization: (Min priority) Player will find objects that may modify his/her character’s appearance in game.
+*   Character Customization: (Min priority) Player will find objects that may modify his/her characterâ€™s appearance in game.
 *   Leveling Up / Stats: Not planned for implementation.
 *   Achievements: (Min priority) If time permits, limited social media based achievements may be implemented.
 *   HUD	(High priority): Heads up display (HUD) will be minimal by default, with most information derived from visual based queues instead, but exceptions will be made:
     * Lifebar will be shown
     * Ability Objects as list (scrollable / selectable)
     * Options / Menu buttons (pause on use)
-*   Life and Death: (High priority) The player will be able to die in game but will never get a game over. Instead, upon dieing the player will be spit out of the world’s mouth.
+*   Life and Death: (High priority) The player will be able to die in game but will never get a game over. Instead, upon dieing the player will be spit out of the worldâ€™s mouth.
 *   Saving: May be added if time permits.
 *   Loading: May be added if time permits.
 
