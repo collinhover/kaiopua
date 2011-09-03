@@ -9,6 +9,8 @@ The aim of the project is to create an epistemic game to teach players how to th
 
 Kaiopua is a science fiction builder / puzzle game, in which the player assumes the role of a simple boy named Kai. Kai is stranded on a moon sized worm-like creature named Opua, who is broken and needs help to restore power to his life systems. The game will be accessible and playable via website, and will not require any third party plug-ins or software beyond the web browser of player's choice.
 
+See [full project plan](https://github.com/collinhover/kaiopua/blob/master/src/README.md "Project Plan") - README file in 'src' directory.
+
 ## Contributors
 
 #### Code
