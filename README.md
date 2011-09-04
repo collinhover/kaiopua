@@ -24,6 +24,7 @@ Collin Hover
 Ian Wilson  
 Kevin Ly  
 Houston Hardaway  
+Amanda Nicole East  
 
 #### Music
 
