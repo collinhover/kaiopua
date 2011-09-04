@@ -12,10 +12,12 @@ The name Kai’Opua comes from Hawaiian culture, known as the opua or pink cumul
 *   First ring of Opua, starting from head. 
 *   Environment is composed of water, sand, clouds, and wind. 
 *   The player can walk safely on the clouds and islands.
-*   All clouds are 1 W x 1 H x 1 D (cube) unit blocks, and larger clouds are just collections of single unit block clouds.
-*   Some clouds are usable (generated) while others are static (pre-modeled).
-*   If player falls off a cloud into the water, they will be eaten by a large worm and returned to the beginning of the level. 
 *   Clouds and wind will be used both by the environment and player in puzzles.
+*   Some clouds are pre-modeled static clouds, while others are usable (code generated).
+*   All usable clouds are 1 W x 1 H x 1 D (cube) unit blocks.
+*   Larger usable clouds are just collections of single unit block clouds.
+*   If player falls off a cloud into the water, they will be eaten by a large worm and returned to the last checkpoint.
+*   Checkpoints will be located at each of the islands.
 
 ##Abilities
 ####Ability Object 1: Bottle of Sunshine
@@ -26,13 +28,13 @@ The name Kai’Opua comes from Hawaiian culture, known as the opua or pink cumul
 ####Ability Object 2: Conch Shell
 *   Found on first small island.
 *   Object is a small conch shell that fits in the player’s hand like a megaphone.
-*   Player can blow conch to launch self 3 blocks in opposite direction.
-*   Usable clouds form in trail of player’s flight.
+*   Player can blow conch to launch self 4 blocks in opposite direction.
+*   Usable clouds form along trail of player’s flight.
 
 ####Ability Object 3: Puffer Fish
 *   Found on second small island.
 *   Object is a small puffer fish that fits in the player’s hand.
-*   Allows the player to manipulate the position of clouds.
+*   Allows the player to manipulate the position of usable clouds.
 *   The puffer fish can be pointed at a usable cloud at any distance and will inhale that cloud.
 *   The puffer fish can exhale an inhaled cloud at any location directly around the player.
 
