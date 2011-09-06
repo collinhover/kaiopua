@@ -1,4 +1,5 @@
-# TODO
+# TODO  
+  
 #### Collin
 * Setup placeholder splash page for site while building
   * Functions as loader
