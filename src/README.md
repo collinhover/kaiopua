@@ -124,7 +124,7 @@ Once the game starts, the player gains the ability to examine any object they ar
 ##Game Mechanics
 ####Basics
 *   Game style: Puzzle / Builder
-*   Perspective: First-person
+*   Perspective: Third-person
 *   Visuals:
     * Low-poly models with textures doing a lot of the heavy lifting.
     * Visuals will be playful and vibrant, and should attempt to stay away from the brown/dead feel of games attempting realism. 
