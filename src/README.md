@@ -14,6 +14,8 @@ Kaiopua
 ####Game Summary
 Science fiction builder puzzle game, in which the player assumes the role of a simple boy named Kai. Kai is stranded on a moon sized worm-like creature named Opua, who is broken and needs help to restore power to his life systems. The game will be accessible and playable via website, and will not require any third party plug-ins or software beyond the web browser of player’s choice.
 
+Level plans: [Level 1](https://github.com/collinhover/kaiopua/blob/master/src/plans/PLAN_LEVEL_001.md) - [Level 2](https://github.com/collinhover/kaiopua/blob/master/src/plans/PLAN_LEVEL_002.md) - [Level 3](https://github.com/collinhover/kaiopua/blob/master/src/plans/PLAN_LEVEL_003.md) - [Level 4](https://github.com/collinhover/kaiopua/blob/master/src/plans/PLAN_LEVEL_004.md)
+
 ![visual_style_001](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_visual_style_001.jpg "Opua")
 
 ####Setting
