@@ -14,12 +14,12 @@ Kaiopua
 ####Game Summary
 Science fiction builder puzzle game, in which the player assumes the role of a simple boy named Kai. Kai is stranded on a moon sized worm-like creature named Opua, who is broken and needs help to restore power to his life systems. The game will be accessible and playable via website, and will not require any third party plug-ins or software beyond the web browser of player’s choice.
 
-Level plans: [Level 1](https://github.com/collinhover/kaiopua/blob/master/src/plans/PLAN_LEVEL_001.md) - [Level 2](https://github.com/collinhover/kaiopua/blob/master/src/plans/PLAN_LEVEL_002.md) - [Level 3](https://github.com/collinhover/kaiopua/blob/master/src/plans/PLAN_LEVEL_003.md) - [Level 4](https://github.com/collinhover/kaiopua/blob/master/src/plans/PLAN_LEVEL_004.md)
-
 ![visual_style_001](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_visual_style_001.jpg "Opua")
 
 ####Setting
 The game takes place on a moon sized worm-like creature named Opua, which begins as a newborn or seedling. Opua is a giant white worm, split into a face with two eyes, a mouth, and a blowhole, and a stubby tail at the back. Between the face and tail are the individual levels of the game in the form of rings, containing all the puzzles and majority of the gameplay. The player may be gated or hindered from accessing some rings at any time during the game. The head serves three purposes: (a) it is the starting point of the game, (b) it may speak to the player to provide story or hints, and (c) it is the where a player may feed Opua combinable objects that have been found while exploring.
+
+Level plans: [Level 1](https://github.com/collinhover/kaiopua/blob/master/src/plans/PLAN_LEVEL_001.md) - [Level 2](https://github.com/collinhover/kaiopua/blob/master/src/plans/PLAN_LEVEL_002.md) - [Level 3](https://github.com/collinhover/kaiopua/blob/master/src/plans/PLAN_LEVEL_003.md) - [Level 4](https://github.com/collinhover/kaiopua/blob/master/src/plans/PLAN_LEVEL_004.md)
 
 ![world_001](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_world_001.jpg "Opua")
 
