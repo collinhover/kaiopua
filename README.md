@@ -23,7 +23,10 @@ Joshua Wilson
 Collin Hover  
 Ian Wilson  
 Kevin Ly  
-Houston Hardaway  
+Houston Hardaway
+
+#### Concept Illustration
+Collin Hover
 Amanda Nicole East  
 
 #### Music
