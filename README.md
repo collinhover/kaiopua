@@ -38,7 +38,7 @@ Amanda Nicole East
 HTML5 < canvas >, < video >, < audio >  
 Javascript, WebGL, Three.js
 
-#### Extra credits
+#### Concept and Design Assistance
 
 Seiji Ikeda  
 Tuan Ho  
