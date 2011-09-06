@@ -28,7 +28,7 @@ Amanda Nicole East
 
 #### Music
 
-(none)
+(none yet - TBA)
 
 #### Technology
 
