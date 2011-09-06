@@ -26,7 +26,7 @@ Kevin Ly
 Houston Hardaway
 
 #### Concept Illustration
-Collin Hover
+Collin Hover  
 Amanda Nicole East  
 
 #### Music
