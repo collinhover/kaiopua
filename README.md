@@ -1,7 +1,6 @@
 Kaiopua
 ========
 ##Collin Hover, Graduate Thesis: Kaiopua
-Contact info located at www.collinhover.com
 
 #### Web-native science fiction builder / puzzle game
 
@@ -45,3 +44,5 @@ Javascript, WebGL, Three.js
 Seiji Ikeda  
 Tuan Ho  
 Robert Hower  
+  
+Copyright (C) 2011 Collin Hover & Kaiopua Authors. For full license and information, see LICENSE and COPYING.
