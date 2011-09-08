@@ -3,7 +3,7 @@ kaiopua
 
 #### Web-native science fiction builder / puzzle game
 
-The aim of the project is to create an epistemic game to teach players how to think like a creative professional in web or game design. As noted by epistemicgames.org:
+The aim of the project is to create an epistemic game to teach players how to think like a creative professional in web or game design. Tangentially, also about Hawaii! As noted by epistemicgames.org:
 
 *"Creative professionals learn innovative thinking through training that is very different from traditional academic classrooms because innovative thinking means more than just knowing the right answers on a test. It also means having real-world skills, high standards and professional values, and a particular way of thinking about problems and justifying solutions."*
 
