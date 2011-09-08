@@ -12,6 +12,13 @@
   * Descriptions
   * Abilities
   * Puzzles
+* Complete INDEX.html meta tags & supporting info
+  * google-site-verification
+  * favicon
+  * apple-touch-icon
+  * google analytics
+* Get domain name and hosting
+* Speak to Hawaiian natives about concepts that derive from Hawaiian culture
 
 #### Joshua
 * Teach self Javascript
