@@ -47,4 +47,4 @@ Robert Hower
 ---
   
 *Copyright (C) 2011 Collin Hover & Kaiopua Authors.*  
-*For full license and information, see LICENSE and COPYING.*  
+*For full license and information, see [LICENSE](https://github.com/collinhover/kaiopua/blob/master/LICENSE) and [COPYING](https://github.com/collinhover/kaiopua/blob/master/COPYING).*  
