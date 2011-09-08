@@ -1,4 +1,4 @@
-﻿Level Design: Kane's Spirit Forest (003)
+Level Design: Kane's Spirit Forest (003)
 ========
 ##Collin Hover, Graduate Thesis: Kaiopua
 
@@ -9,7 +9,7 @@
 Kane, the Hawaiian god of the life and spirit, will be host for a forest ring. The Hawaiian islands receive most of their rain on the north and east sides due to the trade winds. This ring will respect the rainfall patterns of the islands by having abundant plant life on the north and east sides, while the south and west sides will have more clearings. Forest areas on the ring will act like mazes while also blocking the light, and will be home to many spirits. The player will use light and spirits to solve puzzles and work their way from the start of the ring around to the power source.
 
 ####Level Summary
-*   Third ring of Opua, starting from head. 
+*   Third ring of world, starting from head. 
 *   Environment is composed of grass, trees, and rock. 
 *   The player can walk safely on all elements.
 *   Light and spirits will be used both by the environment and player in puzzles.

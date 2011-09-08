@@ -25,23 +25,23 @@
 * Setup basic 3D scene with WebGL/ThreeJS
 
 #### Ian
-* Model player character Kai
-* Texture player character Kai
-* Animate player character Kai
+* Model player character Opua
+* Texture player character Opua
+* Animate player character Opua
   * Run cycle
   * Pick up object
   * Activate / shoot generic object
 
 #### Kevin
-* Model worm Opua face
-* Texture worm Opua face
+* Model worm Kai face
+* Texture worm Kai face
 
 #### Houston
-* Model worm Opua tail
-* Texture worm Opua tail
+* Model worm Kai tail
+* Texture worm Kai tail
 
 #### Amanda
-* Illustrate scenes with character Kai doing something from first level
+* Illustrate scenes with character Opua doing something from first level
 * Color each scene in several different ways to analyze color schemes
 
 #### Sound Artist

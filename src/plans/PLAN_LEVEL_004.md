@@ -1,4 +1,4 @@
-﻿Level Design: Pele's Living Rock (004)
+Level Design: Pele's Living Rock (004)
 ========
 ##Collin Hover, Graduate Thesis: Kaiopua
 
@@ -9,7 +9,7 @@
 Pele, the goddess of fire and volcanoes, will be host to a ring of rock and lava. The player will use rocks and lava to solve puzzles and work their way from the start of the ring around to the power source.
 
 ####Level Summary
-*   Fourth ring of Opua, starting from head. 
+*   Fourth ring of world, starting from head. 
 *   Environment is composed of rock and lava. 
 *   The player can walk safely on the rocks.
 *   Rocks and lava will be used both by the environment and player in puzzles.

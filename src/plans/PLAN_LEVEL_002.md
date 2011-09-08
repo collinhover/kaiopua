@@ -1,4 +1,4 @@
-﻿Level Design: Laka's Hula Wreath (002)
+Level Design: Laka's Hula Wreath (002)
 ========
 ##Collin Hover, Graduate Thesis: Kaiopua
 
@@ -9,7 +9,7 @@
 Laka, the Hawaiian god of song and dance, will be the hostess for a ring made of flowers. While dancing and singing, performers often wear many flower wreaths known as lei(s). As noted by Wikipedia, "A lei (nā lei is the plural in the Hawaiian language) may be composed of a pattern or series of just about anything, but most commonly consists of fresh natural foliage such as flowers, leaves, vines, fern fronds, and seeds. The most commonly used flowers are those of plumerias, ʻōhiʻa lehua, orchids, and pikake, though maile leaves, ferns, and ti leaves are extremely popular as well as traditional among hula dancers." The player will use music and dance to solve puzzles and work their way from the start of the ring around to the power source.
 
 ####Level Summary
-*   Second ring of Opua, starting from head. 
+*   Second ring of world, starting from head. 
 *   Environment is composed of rock, flowers, and leaves. 
 *   The player can walk safely on all elements.
 *   Song and dance will be used both by the environment and player in puzzles.

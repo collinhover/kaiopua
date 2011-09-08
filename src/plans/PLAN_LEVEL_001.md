@@ -1,4 +1,4 @@
-﻿Level Design: Lono's Clouds over the Ocean (001)
+Level Design: Lono's Clouds over the Ocean (001)
 ========
 ##Collin Hover, Graduate Thesis: Kaiopua
 
@@ -9,7 +9,7 @@
 The name Kai’Opua comes from Hawaiian culture, known as the opua or pink cumulus cloud formations that hang low over ‘kai’, the ocean. These clouds are regarded as omens of good fortune and good weather, and in Hawaii Lono is the god that controls storms and rain. The player will begin their journey here, on the ring that is a physical recreation of the game's name. On this ring there are four islands: one large, one medium, and two small. The large island is the player’s starting location, on which is located the travel blowhole and a small beach-shack with the player’s first ability object. Within sight of this island is a medium sized island with the ring’s power source and a small pink/purple air balloon. The two small islands are around the ring by 135 and 225 degrees from the starting island, and are each locations of the second and third ability objects. In this ring, the clouds float low enough that the two small islands appear to be flat topped mountains rising through the cloud line. The player will use the clouds and wind to solve puzzles and work their way from the starting island around to find the second and third ability objects, and use all three ability objects to reach the power source.
 
 ####Level Summary
-*   First ring of Opua, starting from head. 
+*   First ring of world, starting from head. 
 *   Environment is composed of water, sand, clouds, and wind. 
 *   The player can walk safely on the clouds and islands.
 *   Clouds and wind will be used both by the environment and player in puzzles.

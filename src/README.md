@@ -1,7 +1,6 @@
 Project Plan
 ============
 ##Collin Hover, Graduate Thesis: Kaiopua
-Contact info located at www.collinhover.com
 
 ####Plan Version
 4.0.08.30.2011
