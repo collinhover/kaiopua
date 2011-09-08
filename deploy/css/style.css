@@ -123,11 +123,15 @@ button {width: auto; overflow: visible;}
 /* Ok, this is where the fun starts.
 -------------------------------------------------------------------------------*/
 
-/* new Linux- and Windows-friendly sans-serif font stack: http://mky.be/fontstack */
-body {font: 13px Helmet, Freesans, sans-serif;}
+@font-face {
+  font-family: "SilkscreenNormal";
+  src: url("slkscr-webfont.eot");
+  src: url("slkscr-webfont.eot?#iefix") format("eot"), url("slkscr-webfont.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal; }
 
-/* using local fonts? make sure to read up on Paul Irish's 
-	Bulletproof @font-face syntax: http://mky.be/font-face/bulletproof/ */
+/* new Linux- and Windows-friendly sans-serif font stack: http://mky.be/fontstack */
+body {font: 13px 'Open Sans', Helmet, Freesans, sans-serif;}
 
 /* we like off-black for text */
 body, select, input, textarea {color: #333;}
@@ -145,15 +149,11 @@ a:link {-webkit-tap-highlight-color: #fcd700;}
 ins {background-color: #fcd700; color: #000; text-decoration: none;}
 mark {background-color: #fcd700; color: #000; font-style: italic; font-weight: bold;}
 
-
-
-
+h1 {font: 36px 'SilkscreenNormal', 'Coustard', Georgia, serif;}
 
 /* Print styles!
 -------------------------------------------------------------------------------*/
 @media print {
-
-
 
 }
 
