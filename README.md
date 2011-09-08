@@ -1,6 +1,5 @@
 Kaiopua
 ========
-###Collin Hover | Graduate Thesis
 
 #### Web-native science fiction builder / puzzle game
 
@@ -45,4 +44,7 @@ Seiji Ikeda
 Tuan Ho  
 Robert Hower  
   
-*Copyright (C) 2011 Collin Hover & Kaiopua Authors. For full license and information, see LICENSE and COPYING.
+---
+  
+*Copyright (C) 2011 Collin Hover & Kaiopua Authors.*  
+*For full license and information, see LICENSE and COPYING.*  
