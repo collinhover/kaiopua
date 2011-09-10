@@ -123,10 +123,15 @@ button {width: auto; overflow: visible;}
 /* Ok, this is where the fun starts.
 -------------------------------------------------------------------------------*/
 
+/* Fonts used: 
+   Sans-serif > "Open Sans" (Google Web Font), Helmet, Freesans, sans-serif
+   Serif > Georgia, serif
+   Display > Coustard (Google Web Font), "SilkscreenNormal" (Local), Georgia, serif  */
+
 @font-face {
   font-family: "SilkscreenNormal";
-  src: url("slkscr-webfont.eot");
-  src: url("slkscr-webfont.eot?#iefix") format("eot"), url("slkscr-webfont.ttf") format("truetype");
+  src: url("fonts/slkscr-webfont.eot");
+  src: url("fonts/slkscr-webfont.eot?#iefix") format("eot"), url("fonts/slkscr-webfont.ttf") format("truetype");
   font-weight: normal;
   font-style: normal; }
 
@@ -149,7 +154,24 @@ a:link {-webkit-tap-highlight-color: #fcd700;}
 ins {background-color: #fcd700; color: #000; text-decoration: none;}
 mark {background-color: #fcd700; color: #000; font-style: italic; font-weight: bold;}
 
-h1 {font: 36px 'SilkscreenNormal', 'Coustard', Georgia, serif;}
+/* General styles!
+-------------------------------------------------------------------------------*/
+
+/* headers */
+h1 {font: 36px 'Coustard', 'SilkscreenNormal', Georgia, serif;}
+h2 {font: 18px 'SilkscreenNormal', Georgia, serif;}
+h3 {font: 18px Georgia, serif;}
+h4 {font: italic 18px Georgia, serif;}
+
+/* body copy */
+p {line-height: 1.5em;}
+
+/* hidden elements */
+.hideme {display: none;}
+
+nav li {display:inline;}
+
+header, nav, article, aside, footer {padding:20px;}
 
 /* Print styles!
 -------------------------------------------------------------------------------*/

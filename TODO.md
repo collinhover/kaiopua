@@ -17,6 +17,8 @@
   * favicon
   * apple-touch-icon
   * google analytics
+  * Facebook share url to domain name
+  * Twitter share url to domain name
 * Get domain name and hosting
 * Speak to Hawaiian natives about concepts that derive from Hawaiian culture
 
