@@ -54,9 +54,6 @@
 		 - size: 57x57 for older iPhones, 72x72 for iPads, 114x114 for iPhone4's retina display (IMHO, just go ahead and use the biggest one)
 		 - To prevent iOS from applying its styles to the icon name it thusly: apple-touch-icon-precomposed.png
 		 - Transparency is not recommended (iOS will put a black BG behind the icon) -->
-	
-    <!-- Google Web Fonts embed, keep before stylesheet -->
-    <link href='http://fonts.googleapis.com/css?family=Open+Sans|Coustard' rel='stylesheet' type='text/css'>
     
 	<!-- CSS: screen, mobile & print are all in the same file -->
 	<link rel="stylesheet" href="css/style.css">
@@ -68,10 +65,10 @@
 
 <body>
 
-<div class="wrapper"><!-- not needed? up to you: http://camendesign.com/code/developpeurs_sans_frontieres -->
+<div class="wrapper">
     
     <!-- game section -->
-    <section id="game">
+    <section id="game" class="unselectable">
         
         <!-- game section header -->
         <header class="hideme">
@@ -83,7 +80,7 @@
     </section>
     
     <!-- noscript section -->
-    <section class="error" id="noscript">
+    <section id="noscript" class="error unselectable">
         
         <header>
              
@@ -104,7 +101,7 @@
 <!-- end wrapper -->
 
 <!-- footer with navigation and copyright -->
-<footer>
+<footer class="unselectable">
 
     <!-- navigation area -->
     <nav>
@@ -130,15 +127,7 @@
 	
 </footer>
 
-<!-- here comes the javascript -->
-
-<!-- Grab Google CDN's jQuery. fall back to local if necessary -->
-<!--
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
-<script>window.jQuery || document.write("<script src='_/js/jquery-1.5.1.min.js'>\x3C/script>")</script>
--->
-
-<!-- custom javascript -->
+<!-- javascript -->
 
 
 <!-- google analytics -->
