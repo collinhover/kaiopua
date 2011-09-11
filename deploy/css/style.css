@@ -141,21 +141,24 @@ body {font: 13px 'Open Sans', Helmet, Freesans, sans-serif;}
 /* we like off-black for text */
 body, select, input, textarea {color: #333;}
 
-a {color: #03f;}
-a:hover {color: #69f;}
-
 /* Custom text-selection colors (remove any text shadows: twitter.com/miketaylr/status/12228805301) */
 ::-moz-selection{background: #fcd700; color: #fff; text-shadow: none;}
 ::selection {background: #fcd700; color: #fff; text-shadow: none;} 
 
-/*	j.mp/webkit-tap-highlight-color */
-a:link {-webkit-tap-highlight-color: #fcd700;} 
+/*    j.mp/webkit-tap-highlight-color */
+a:link {-webkit-tap-highlight-color: #fcd700;}
 
 ins {background-color: #fcd700; color: #000; text-decoration: none;}
 mark {background-color: #fcd700; color: #000; font-style: italic; font-weight: bold;}
 
 /* General styles!
 -------------------------------------------------------------------------------*/
+
+/* body */
+html, body {height: 100%;}
+
+/* wrapper */
+.wrapper {min-height: 100%;}
 
 /* headers */
 h1 {font: 36px 'Coustard', 'SilkscreenNormal', Georgia, serif;}
@@ -166,12 +169,29 @@ h4 {font: italic 18px Georgia, serif;}
 /* body copy */
 p {line-height: 1.5em;}
 
+/* link styles */
+a, a:visited {color: #535353; text-decoration: none;}
+a:hover, a:active {color: black;}
+
+/* errors */
+.error {width: 400px; height: 230px; overflow: auto; position:absolute; left:50%; top:50%; margin:-150px 0 0 -200px; background:#333; color: #fff;}
+.error a, .error a:visited {color: #fcd700;}
+.error a:hover, .error a:active {color: #fee972;}
+.error header {padding: 20px 20px 5px 20px;}
+.error_explanation {padding: 10px 20px 20px 20px;}
+
 /* hidden elements */
 .hideme {display: none;}
 
-nav li {display:inline;}
+/* footer */
+footer {width: 380px; margin: 0 auto; position: relative; margin-top: -95px; height: 95px; clear:both;}
 
-header, nav, article, aside, footer {padding:20px;}
+footer header {float: left;}
+footer nav {overflow: auto; width: 360px; margin: 0 auto;}
+footer nav ul {float: left; margin-top: 18px;}
+footer nav li {float: left; padding-left: 10px; margin-left: 10px; border-left: 1px solid #A0A0A0;}
+footer nav .last_nav {padding: 0; border: none;}
+footer .copyright {clear:both; text-align: center;}
 
 /* Print styles!
 -------------------------------------------------------------------------------*/

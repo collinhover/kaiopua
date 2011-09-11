@@ -17,6 +17,7 @@
   * favicon
   * apple-touch-icon
   * google analytics
+  * Facebook metadata icon/thumbnail
   * Facebook share url to domain name
   * Twitter share url to domain name
 * Get domain name and hosting

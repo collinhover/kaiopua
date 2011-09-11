@@ -17,7 +17,7 @@
 	<title>Kaiopua</title>
 	
 	<meta name="title" content="Kaiopua">
-	<meta name="description" content="Kaiopua: a web-native science fiction puzzle game to teach players how to think like a creative professional in web or game design. Tangentially, also about Hawaii!">
+	<meta name="description" content="Kaiopua: an interactive moon-sized Hawaiian space worm that will teach you to be a better web/game designer!">
 	
 	<!-- <meta name="google-site-verification" content="GIKqHfXMgpKkS1uNiZLSOHiU8GnsHeZhfPwBGZq71pc" /> -->
 	<!-- Speaking of Google, don't forget to set your site up: http://google.com/webmasters -->
@@ -27,8 +27,13 @@
 
 	<!-- Dublin Core Metadata : http://dublincore.org/ -->
 	<meta name="DC.title" content="Kaiopua">
-	<meta name="DC.subject" content="Kaiopua: a web-native science fiction puzzle game to teach players how to think like a creative professional in web or game design. Tangentially, also about Hawaii!">
+	<meta name="DC.subject" content="Kaiopua: an interactive moon-sized Hawaiian space worm that will teach you to be a better web/game designer!">
 	<meta name="DC.creator" content="Collin Hover">
+    
+    <!-- Facebook metadata: http://developers.facebook.com/docs/share/ -->
+    <meta property="og:title" content="Kaiopua" />
+    <meta property="og:description" content="Kaiopua: an interactive moon-sized Hawaiian space worm that will teach you to be a better web/game designer!" />
+    <meta property="og:image" content="img/" />
 	
 	<!--  Mobile Viewport Fix
 	j.mp/mobileviewport & davidbcalhoun.com/2010/viewport-metatag 
@@ -77,60 +82,53 @@
         
     </section>
     
-    <!-- static (non-js) elements -->
-    <section id="static">
+    <!-- noscript section -->
+    <section class="error" id="noscript">
         
-        <!-- page header and intro -->
-        <header class="hideme">
-            
-            <h1>Kaiopua: Navigation and Copyright</h1>
+        <header>
+             
+            <h3>Oops, Javascript disabled!</h3>
             
         </header>
-        
-        <!-- noscript section -->
-        <section id="noscript">
-        
-            <header>
-                 
-                <h3>Javascript Required!</h3>
-                
-            </header>
-    	    
-            <p>We are sorry, but it appears that your browser does not support Javascript. Please enable JavaScript or upgrade to a Javascript-capable browser such as <a href="http://www.google.com/chrome/" target="_blank">Chrome</a>, <a href="http://www.mozilla.org/firefox/" target="_blank">Firefox</a>, or <a href="http://www.apple.com/safari/" target="_blank">Safari</a> and try launching this site again. If you are unable to install a new web browser, you can try downloading the <a href="http://www.google.com/chromeframe" target="_blank">Google Chrome Frame plugin</a> instead.</p>
-            
-        </section>
-        
-        <!-- footer with navigation and copyright -->
-    	<footer>
-            
-            <!-- game logo -->
-            <header>
-                
-                <h1>Kaiopua</h1>
-                
-            </header>
-            
-            <!-- navigation area -->
-            <nav>
-                
-        		<ul>
-        			<li><a href="https://github.com/collinhover/kaiopua" target="_blank">Source Code</a></li>
-        			<li>Share</li>
-        			<li><a href="http://www.facebook.com/sharer.php?u=http://collinhover.com?fb=1" target="_blank"><img src="img/fb-trans.png" alt="Facebook" border="0"></a></li>
-        		    <li><a href="http://twitter.com/share?text=Kaiopua: an interactive moon-sized Hawaiian space worm that will teach you to be a better web/game designer! http://collinhover.com&url=http://collinhover.com" target="_blank"><img src="img/twitter-trans.png" alt="Twitter" border="0"></a></li>   
-        		</ul>
-        	    
-        	</nav>
-    		
-    		<p><small>&copy; Copyright Collin Hover & Kaiopua Authors 2011. All Rights Reserved.</small></p>
-    		
-    	</footer>
+	    
+        <article class="error_explanation">
+            <p>We are sorry, but it appears that you (or your browser) are not allowing Javascript.</p>
+            <br />
+            <p>Alternatively, you may need to upgrade to a Javascript capable browser such as <a href="http://www.google.com/chrome/" target="_blank">Chrome</a>, <a href="http://www.mozilla.org/firefox/" target="_blank">Firefox</a>, or <a href="http://www.apple.com/safari/" target="_blank">Safari</a> and try launching this site again. If you are unable to install a new web browser, try downloading the <a href="http://www.google.com/chromeframe" target="_blank">Google Chrome Frame</a> plugin instead.</p>
+        </article>
         
     </section>
     <!-- end static -->
     
 </div>
 <!-- end wrapper -->
+
+<!-- footer with navigation and copyright -->
+<footer>
+
+    <!-- navigation area -->
+    <nav>
+    
+        <!-- page header and intro -->
+        <header>
+            
+            <h1>Kaiopua</h1>
+            
+        </header>
+        
+        <!-- links -->
+    	<ul>
+			<li><a href="https://github.com/collinhover/kaiopua" target="_blank">Source Code</a></li>
+			<li>Share</li>
+			<li class="last_nav"><a href="http://www.facebook.com/sharer.php?u=http%3A%2F%2Fcollinhover.com&t=Kaiopua%3A%20an%20interactive%20moon-sized%20Hawaiian%20space%20worm%20that%20will%20teach%20you%20to%20be%20a%20better%20web%2Fgame%20designer!" target="_blank"><img src="img/fb-trans.png" alt="Facebook" border="0"></a></li>
+		    <li class="last_nav"><a href="http://twitter.com/share?url=http%3A%2F%2Fcollinhover.com&text=Kaiopua%3A%20an%20interactive%20moon-sized%20Hawaiian%20space%20worm%20that%20will%20teach%20you%20to%20be%20a%20better%20web%2Fgame%20designer!" target="_blank"><img src="img/twitter-trans.png" alt="Twitter" border="0"></a></li>   
+		</ul>
+	    
+	</nav>
+	
+	<p class="copyright"><small>&copy; Copyright Collin Hover & Kaiopua Authors 2011. All Rights Reserved.</small></p>
+	
+</footer>
 
 <!-- here comes the javascript -->
 
