@@ -7,12 +7,14 @@ define(["lib/jquery-1.6.3.min",
         "lib/requestAnimFrame", 
         "lib/requestInterval", 
         "lib/requestTimeout",
-        "utils/Shared",
         "lib/Logger",
         "lib/Stats",
-        "lib/DAT.GUI"],
-function(Shared) {
-    var domElement, container, stats, logger, gui, guiContainer, guiHeight, frameRate, refreshInt, statsUpdateHandle;
+        "lib/DAT.GUI",
+        "utils/Shared",
+        "utils/DevCommands"],
+function() {
+    var shared = require('utils/Shared'), devCommands = require('utils/DevCommands'), 
+        domElement, container, stats, logger, gui, guiContainer, guiHeight, frameRate, refreshInt, statsUpdateHandle;
     
     frameRate = 60;
     refreshInt = 1000 / frameRate;
@@ -45,12 +47,15 @@ function(Shared) {
     
     // logger
     logger = new Logger();
-    logger.domElement.style.position = 'absolute';
-    logger.domElement.style.overflow = 'auto';
-    logger.domElement.style.padding = '0';
-    logger.domElement.style.opacity = '0.8';
-    logger.domElement.style.backgroundColor = '#333';
-    logger.domElement.style.color = '#fff';
+    $(logger.domElement).css({
+       position: 'absolute',
+       overflow: 'auto',
+       padding: '0',
+       opacity: '0.8',
+       backgroundColor: '#333',
+       color: '#fcd700',
+       'font-size': '13px'
+    });
     
     // gui
     // DAT.GUI hacked to add property to disable drag
@@ -59,30 +64,16 @@ function(Shared) {
     gui.domElement.style.margin = '0';
     
     // gui elements
+    gui.add(devCommands, 'current').name('CMD?').onFinishChange(function (newCmd) {
+        logger.log('[DEV CMD] ' + newCmd);
+        devCommands.execute(newCmd);
+    });
     gui.add(logger, 'clear').name('Clear Log');
     
     // force the gui to calculate the correct height
     // - sure there must be a better way :-/
     gui.toggle();
     gui.toggle();
-    
-    // add listeners to gui toggle
-    gui.toggleButton.addEventListener('mouseup', function(e) {
-        // turn logger and stats off
-        $(logger.domElement).toggle();
-        $(stats.domElement).toggle();
-        
-        // start stats
-        if (typeof statsUpdateHandle !== 'undefined') {
-            stats_start();
-        }
-        else {
-           stats_stop();     
-        }
-        
-        e.preventDefault();
-        return false;
-    }, false);
     
     // set logger height explicitly to gui height
     // DAT.GUI hacked to add property totalHeight and targetHeight
@@ -100,6 +91,9 @@ function(Shared) {
     container.appendChild( stats.domElement );
     $(container).append( guiContainer );
     
+    // add dev utils to window
+    document.body.appendChild( container );
+    
     // resize dev utils
     function resize (W, H) {
         var statsDE = stats.domElement,
@@ -115,7 +109,7 @@ function(Shared) {
         guiContainer.css({
             right: spaceW,
             top: spaceH
-		});
+    	});
         
         // stats
         $(statsDE).css({
@@ -132,14 +126,43 @@ function(Shared) {
     }
     resize( $(document).width(), $(document).height() );
     
-    // add dev utils to window
-    document.body.appendChild( container );
+    // self toggle on/off
+    function togglePanel (e) {
+        // close gui if open
+        if (typeof e === 'undefined' || (typeof e === 'undefined' && gui.appearanceVars()[0] === true)) {
+            gui.toggle();
+        }
+        
+        // turn logger and stats off
+        $(logger.domElement).toggle();
+        $(stats.domElement).toggle();
+        
+        // start stats
+        if (typeof statsUpdateHandle !== 'undefined') {
+            stats_start();
+        }
+        else {
+           stats_stop();     
+        }
+    }
+    
+    // add listeners to gui toggle
+    gui.toggleButton.addEventListener('mouseup', function (e) {
+        togglePanel(e);
+        e.preventDefault();
+        return false;
+    }, false);
+
+    // turn dev off initially
+    togglePanel();
+    
+    // add dev commands
+    devCommands.add({logme: function (message) { logger.log('Logging: ' + message); }});
     
     // return an object to define module
     return {
+        toggle: togglePanel,
         resize: resize,
-        domElement: container,
-        stats_stop: stats_stop,
-        stats_start: stats_start
+        domElement: container
     };
 });

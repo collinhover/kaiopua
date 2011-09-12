@@ -1307,7 +1307,8 @@ DAT.GUI.ControllerString = function() {
   // TODO: getting messed up on ctrl a
   input.addEventListener('keyup', function(e) {
     if (e.keyCode == 13 && _this.finishChangeFunction != null) {
-      _this.finishChangeFunction.call(this, _this.getValue());
+        // uncommenting below line causes double fire
+      //_this.finishChangeFunction.call(this, _this.getValue());
       input.blur();
     }
     _this.setValue(input.value);
