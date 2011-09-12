@@ -44,19 +44,31 @@ DAT.GUI = function(parameters) {
   var open = true;
   
   var width = 280;
-  if (parameters.width != undefined) {
-  	width = parameters.width;
+  if (parameters.width !== undefined) {
+      width = parameters.width;
   }
-
+  
+  // do we allow drag?
+  var dragAllowed = true;
+  if (parameters.dragAllowed !== undefined) {
+      dragAllowed = parameters.dragAllowed;
+  }
+  
   // Prevents checkForOverflow bug in which loaded gui appearance
   // settings are not respected by presence of scrollbar.
-  var explicitOpenHeight = false;
+  var explicitOpenHeight = paramsExplicitHeight;
 
   // How big we get when we open
-  var openHeight;
-
+  var openHeight = parameters.height;
+  
   var closeString = 'Close Controls';
   var openString = 'Open Controls';
+  if (parameters.closeString !== undefined) {
+      closeString = parameters.closeString;
+  }
+  if (parameters.openString !== undefined) {
+      openString = parameters.openString;
+  }
 
   var name;
 
@@ -67,7 +79,7 @@ DAT.GUI = function(parameters) {
   this.domElement.setAttribute('class', 'guidat');
   this.domElement.style.width = width + 'px';
 
-  var curControllerContainerHeight = parameters.height;
+  var curControllerContainerHeight = openHeight;
   var controllerContainer = document.createElement('div');
   controllerContainer.setAttribute('class', 'guidat-controllers');
   controllerContainer.style.height = curControllerContainerHeight + 'px';
@@ -98,7 +110,8 @@ DAT.GUI = function(parameters) {
   toggleButton.setAttribute('class', 'guidat-toggle');
   toggleButton.setAttribute('href', '#');
   toggleButton.innerHTML = open ? closeString : openString;
-
+  this.toggleButton = toggleButton;
+  
   var toggleDragged = false;
   var dragDisplacementY = 0;
   var dragDisplacementX = 0;
@@ -117,7 +130,10 @@ DAT.GUI = function(parameters) {
     if (!open) {
       if (dmy > 0) {
         open = true;
-        curControllerContainerHeight = openHeight = 1;
+        if (!explicitOpenHeight) {
+            openHeight = 1;
+        }
+        curControllerContainerHeight = 1;
         toggleButton.innerHTML = name || closeString;
       } else {
         return;
@@ -150,6 +166,15 @@ DAT.GUI = function(parameters) {
 
   };
 
+
+    toggleButton.addEventListener('click', function(e) {
+        e.preventDefault();
+        return false;
+    }, false);
+
+// if drag resizing allowed
+if (dragAllowed) {
+
   toggleButton.addEventListener('mousedown', function(e) {
     pmy = my = e.pageY;
     pmx = mx = e.pageX;
@@ -160,11 +185,6 @@ DAT.GUI = function(parameters) {
     document.addEventListener('mousemove', resize, false);
     return false;
 
-  }, false);
-
-  toggleButton.addEventListener('click', function(e) {
-    e.preventDefault();
-    return false;
   }, false);
 
   document.addEventListener('mouseup', function(e) {
@@ -211,6 +231,19 @@ DAT.GUI = function(parameters) {
     return false;
 
   }, false);
+}
+else {
+    toggleButton.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        return false;
+    }, false);
+    
+    toggleButton.addEventListener('mouseup', function(e) {
+        _this.toggle();
+        e.preventDefault();
+        return false;
+    }, false);
+}
 
   this.domElement.appendChild(controllerContainer);
   this.domElement.appendChild(toggleButton);
@@ -364,13 +397,13 @@ DAT.GUI = function(parameters) {
 
     // Compute sum height of controllers.
     checkForOverflow();
-
+    
     // Prevents checkForOverflow bug in which loaded gui appearance
     // settings are not respected by presence of scrollbar.
     if (!explicitOpenHeight) {
       openHeight = controllerHeight;
     }
-
+    
     // Let's see if we're doing this on onload and lets *try* to guess how
     // big you want the damned box.
     if (!paramsExplicitHeight) {
@@ -378,7 +411,7 @@ DAT.GUI = function(parameters) {
 
         // Probably a better way to do this
         var caller = arguments.callee.caller;
-
+        
         if (caller == window['onload']) {
           curControllerContainerHeight = resizeTo = openHeight =
               controllerHeight;
@@ -396,8 +429,9 @@ DAT.GUI = function(parameters) {
   var checkForOverflow = function() {
     controllerHeight = 0;
     for (var i in controllers) {
-      controllerHeight += controllers[i].domElement.offsetHeight;
+        controllerHeight += controllers[i].domElement.offsetHeight;
     }
+    
     if (controllerHeight - 1 > openHeight) {
       controllerContainer.style.overflowY = 'auto';
     } else {
@@ -418,7 +452,7 @@ DAT.GUI = function(parameters) {
         // apply to each controller
         DAT.GUI.allControllers[i].reset();
     }
-  }
+  };
 
   this.toggle = function() {
     open ? this.close() : this.open();
@@ -426,38 +460,40 @@ DAT.GUI = function(parameters) {
 
   this.open = function() {
     toggleButton.innerHTML = name || closeString;
-    resizeTo = openHeight;
+    this.targetHeight = resizeTo = openHeight;
+    this.totalHeight = this.targetHeight + toggleButton.offsetHeight;
     clearTimeout(resizeTimeout);
     beginResize();
     adaptToScrollbar();
     open = true;
-  }
+  };
 
   this.close = function() {
     toggleButton.innerHTML = name || openString;
-    resizeTo = 0;
+    this.targetHeight = resizeTo = 0;
+    this.totalHeight = this.targetHeight + toggleButton.offsetHeight;
     clearTimeout(resizeTimeout);
     beginResize();
     adaptToScrollbar();
     open = false;
-  }
+  };
 
   this.name = function(n) {
     name = n;
     toggleButton.innerHTML = n;
-  }
+  };
 
   // used in saveURL
   this.appearanceVars = function() {
     return [open, width, openHeight, controllerContainer.scrollTop]
-  }
+  };
 
   var beginResize = function() {
-
+    
     curControllerContainerHeight = controllerContainer.offsetHeight;
     curControllerContainerHeight += (resizeTo - curControllerContainerHeight)
         * 0.6;
-
+        
     if (Math.abs(curControllerContainerHeight - resizeTo) < 1) {
       curControllerContainerHeight = resizeTo;
     } else {

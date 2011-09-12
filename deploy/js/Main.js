@@ -1,4 +1,4 @@
-define(["lib/jquery-1.6.2.min", 
+define(["lib/jquery-1.6.3.min", 
         "lib/signals.min", 
         "lib/requestAnimFrame", 
         "lib/requestInterval", 
@@ -7,7 +7,7 @@ define(["lib/jquery-1.6.2.min",
         "utils/Shared", 
         "utils/Dev"], 
     function() {
-        alert("main");
+        
         // return an object to define module
         return {};
     }
