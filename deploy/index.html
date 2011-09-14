@@ -71,7 +71,7 @@
     <section id="game" class="unselectable">
         
         <!-- game section header -->
-        <header class="hideme">
+        <header class="hidden">
             
             <h1>Kaiopua: an interactive moon-sized Hawaiian space worm that will teach you to be a better web/game designer!</h1>
             
@@ -79,23 +79,20 @@
         
     </section>
     
-    <!-- noscript section -->
-    <section id="noscript" class="error unselectable">
-        
-        <header>
-             
-            <h3>Oops, Javascript disabled!</h3>
+    <!-- errors section -->
+    <section id="error_container">
+        <article id="noscript" class="error unselectable">
             
-        </header>
-	    
-        <article class="error_explanation">
-            <p>We are sorry, but it appears that you (or your browser) are not allowing Javascript.</p>
-            <br />
-            <p>Alternatively, you may need to upgrade to a Javascript capable browser such as <a href="http://www.google.com/chrome/" target="_blank">Chrome</a>, <a href="http://www.mozilla.org/firefox/" target="_blank">Firefox</a>, or <a href="http://www.apple.com/safari/" target="_blank">Safari</a> and try launching this site again. If you are unable to install a new web browser, try downloading the <a href="http://www.google.com/chromeframe" target="_blank">Google Chrome Frame</a> plugin instead.</p>
+            <header>Oops, Javascript disabled!</header>
+            
+            <p class="error_explanation">
+                We are sorry, but it appears that you (or your browser) are not allowing Javascript.
+                <br /><br />
+                Alternatively, you may need to upgrade to a Javascript capable browser such as <a href="http://www.google.com/chrome/" target="_blank">Chrome</a>, <a href="http://www.mozilla.org/firefox/" target="_blank">Firefox</a>, or <a href="http://www.apple.com/safari/" target="_blank">Safari</a> and try launching this site again. If you are unable to install a new web browser, try downloading the <a href="http://www.google.com/chromeframe" target="_blank">Google Chrome Frame</a> plugin instead.
+            </p>
+            
         </article>
-        
     </section>
-    <!-- end static -->
     
 </div>
 <!-- end wrapper -->
@@ -109,7 +106,7 @@
         <!-- page header and intro -->
         <header>
             
-            <h1>Kaiopua</h1>
+            <h1>Kai 'Opua</h1>
             
         </header>
         
@@ -123,7 +120,7 @@
 	    
 	</nav>
 	
-	<p class="copyright"><small>&copy; Copyright Collin Hover & Kaiopua Authors 2011. All Rights Reserved.</small></p>
+	<p class="copyright"><small>&copy; Copyright <a href="http://www.collinhover.com/" target="_blank">Collin Hover</a> & Kaiopua Authors 2011. All Rights Reserved.</small></p>
 	
 </footer>
 
@@ -144,6 +141,12 @@
   })();
 
 </script>
+
+<!-- Prompt IE 6 users to install Chrome Frame. chromium.org/developers/how-tos/chrome-frame-getting-started -->
+  <!--[if lt IE 7 ]>
+    <script src="//ajax.googleapis.com/ajax/libs/chrome-frame/1.0.3/CFInstall.min.js"></script>
+    <script>window.attachEvent('onload',function(){CFInstall.check({mode:'overlay'})})</script>
+  <![endif]-->
   
 </body>
 </html>

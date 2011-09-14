@@ -25,7 +25,7 @@ var Logger = function () {
 			}
 
 		}
-
+        
 	};
 
 	this.clear = function () {

@@ -3,7 +3,7 @@ Dev Commands
 Call using require('utils/DevCommands').functionName()
 */
 define([], function () {
-    var commands = [], callbacks = {}, current = "", entered = [];
+    var commands = [], callbacks = {}, current = "", history = [];
     
     // add list of commands
     // cmds can be an object with any number of name + callback pairs
@@ -45,33 +45,18 @@ define([], function () {
     // assumes cmd is a single string of comma separated values
     // anything before first comma is command, all following are arguments
     function execute ( cmd ) {
-        var i, l, cmdParts, cmdPiece, reResult, command, args = [], callback;
+        var i, l, cmdParts, cmdPiece, command, args = [], callback;
         if ( typeof cmd === 'string' ) {
             // parse cmd
             cmdParts = cmd.split(",");
             
+            // remove all non-essential white spaces in each part of cmd
             for (i = 0, l = cmdParts.length; i < l; i += 1) {
-                cmdPiece = cmdParts[i];
-                
-                // remove all white space chars until first valid char
-                reResult = cmdPiece.search(/\S/);
-                if (reResult > 0) {
-                    cmdPiece = cmdPiece.slice(reResult, cmdPiece.length);
-                }
-                
-                // remove all white space chars after last valid char
-                reResult = cmdPiece.search(/(\S)(?!\S)/);
-                alert(reResult);
-                if (reResult !== -1 && reResult < cmdPiece.length - 1) {
-                    cmdPiece = cmdPiece.slice(0, reResult + 1);
-                }
-                
-                // store new cmd piece
-                cmdParts[i] = cmdPiece;
+                cmdParts[i] = cmdParts[i].replace(/(^\s*)|(\s*$)/gi,"");
             }
             
             // store command
-            command = cmdParts[0];
+            history[history.length] = command = cmdParts[0];
             
             // store args
             args = cmdParts.slice(1);
@@ -96,7 +81,9 @@ define([], function () {
     return {
         current: current,
         add: add,
-        execute: execute
+        execute: execute,
+        get_history: function () {return history.slice(0);},
+        clear_history: function () {history = [];}
     };
 
 });
