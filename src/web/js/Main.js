@@ -7,10 +7,10 @@ define(["lib/jquery-1.6.3.min",
         "lib/signals.min", 
         "lib/requestAnimFrame", 
         "lib/requestInterval", 
-        "lib/requestTimeout", 
-        "utils/Error", 
+        "lib/requestTimeout",
         "utils/Shared", 
-        "utils/Dev"], 
+        "utils/Dev",
+        "utils/Error"], 
     function() {
         var shared = require('utils/Shared'),
             dev = require('utils/Dev');
