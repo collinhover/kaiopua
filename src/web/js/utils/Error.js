@@ -13,15 +13,19 @@ define(["lib/jquery-1.6.3.min",
             errorMessages = {
                 general: {
                     header: "Oops! That wasn't supposed to happen!",
-                    message: "Something broke and we're very sorry about that. No worries though, any progress you've made has been saved. All you need to do is reload the page!"
+                    message: "Something broke and we're very sorry about that. No worries though, if you were playing any progress you've made has been saved. All you need to do is reload the page!"
                 },
                 webgl: {
-                    header: "Oops! We need WebGL!",
+                    header: "Hey! We need WebGL!",
                     message: "We are sorry, but it appears that your browser does not support WebGL. This could be due to a number of different reasons. For more information visit the <a href='http://get.webgl.org/troubleshooting/' target='_blank'>WebGL troubleshooting</a> page."
                 },
                 fourohfour: {
                     header: "Oops! Not found!",
                     message: "Sorry, but the page you were trying to view does not exist. This is probably the result of either a mistyped address or an out-of-date link."
+                },
+                forbidden: {
+                    header: "We're afraid we can't let you do that.",
+                    message: "Sorry, but the page you were trying to view is locked or hidden for a reason we can't tell you."
                 }
             };
         
