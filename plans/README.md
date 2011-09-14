@@ -14,20 +14,20 @@ Kaiopua
 ####Game Summary
 Science fiction builder puzzle game, in which the player assumes the role of a simple boy named Iki. Iki is stranded on a moon sized worm-like creature named Kaiopua, who is broken and needs help to restore power to his life systems. The game will be accessible and playable via website, and will not require any third party plug-ins or software beyond the web browser of player’s choice.
 
-![visual_style_001](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_visual_style_001.jpg "Game Visual Style")
+![visual_style_001](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_visual_style_001.jpg "Game Visual Style")
 
 ####Setting
 The game takes place on a moon sized worm-like creature named Kaiopua, which begins as a newborn or seedling. Kaiopua is a giant white worm, split into a face with two eyes, a mouth, and a blowhole, and a stubby tail at the back. Between the face and tail are the individual levels of the game in the form of rings, containing all the puzzles and majority of the gameplay. The player may be gated or hindered from accessing some rings at any time during the game. The head serves three purposes: (a) it is the starting point of the game, (b) it may speak to the player to provide story or hints, and (c) it is the where a player may feed combinable objects that have been found while exploring.
 
-Level plans: [Level 1](https://github.com/collinhover/kaiopua/blob/master/src/plans/PLAN_LEVEL_001.md) - [Level 2](https://github.com/collinhover/kaiopua/blob/master/src/plans/PLAN_LEVEL_002.md) - [Level 3](https://github.com/collinhover/
-opua/blob/master/src/plans/PLAN_LEVEL_003.md) - [Level 4](https://github.com/collinhover/kaiopua/blob/master/src/plans/PLAN_LEVEL_004.md)
+Level plans: [Level 1](https://github.com/collinhover/kaiopua/blob/master/plans/levels/PLAN_LEVEL_001.md) - [Level 2](https://github.com/collinhover/kaiopua/blob/master/plans/levels/PLAN_LEVEL_002.md) - [Level 3](https://github.com/collinhover/
+opua/blob/master/plans/levels/PLAN_LEVEL_003.md) - [Level 4](https://github.com/collinhover/kaiopua/blob/master/plans/levels/PLAN_LEVEL_004.md)
 
-![world_001](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_world_001.jpg "Game World")
+![world_001](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_world_001.jpg "Game World")
 
 ####Plot
 Iki, a simple boy with a rice farmer’s pack basket on his pack, finds himself in a small cave with no way out but up. After exploring, Iki realizes that the hole in the roof is too high up for him to jump to, so he must find another way to solve the puzzle. The only things in the room are a massive ooze plugging a hole in the floor, a large cinnamon bun, and a small flaming splinter stuck in the wall. Taking the cinnamon bun, the player gets their first ability object, ‘Feed Bun’, which gives them the ability to feed something a cinnamon bun. If fed to the flaming splinter, the ‘Feed Bun’ turns into a ‘Flaming Bun’, which can be thrown at things to set them on fire. Once the player sets the ooze on fire, the entire cave starts to shake and the player is shot out of the top of the cave by a massive geyser. Landing on the wrong side of his face, Iki is surprised to find himself standing on the giant sleeping face of a moon sized worm. Woken by the sudden explosion, the creature is also surprised to find Iki standing on its face, but that surprise quickly turns to sadness. As the creature begins to talk, Iki realizes that the creature’s language is very similar to whale sounds, and that he keeps hearing the word ‘Kaiopua’. Iki decides that he will call this creature Kaiopua, and that he will find out what is making Kaiopua so sad.
 
-![character_003](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_character_003.jpg "Characters")
+![character_003](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_character_003.jpg "Characters")
 
 ####Gameplay
 The gameplay of Kaiopua consists of a third-person journey through a growing moon sized worm called Kaiopua. The player can explore by pressing and holding the WASD or arrow keys to move, while using the mouse to select and interact with objects. Players begin their journey in the blowhole of Kaiopua, a small cave structure that later serves as a fast travel system throughout the game. At this starting location, players will find a basic puzzle that serves as a tutorial on movement, turning, looking, interacting with objects, and solving problems.
@@ -48,7 +48,7 @@ The player is given very little background before starting. At the beginning of 
 *   Fast travel through worm’s blowhole
 *   Player solves puzzles and collects objects in a cycle
 
-![world_002](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_world_002.jpg "World")
+![world_002](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_world_002.jpg "World")
 
 ####Player
 *   Simple boy with a rice farmer’s pack basket on back (inventory)
@@ -57,8 +57,8 @@ The player is given very little background before starting. At the beginning of 
 *   All units in game based on player character, which has bounds of 1 W x 2 H x 1 D
 *   Head = 1 W/H/D, body = 0.8 W, 1 H, 0.5 D
 
-![character_001](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_character_001.jpg "Character Front")
-![character_002](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_character_002.jpg "Character Side")
+![character_001](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_character_001.jpg "Character Front")
+![character_002](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_character_002.jpg "Character Side")
 
 ####Levels
 *   Cylinder / ring shape, gravity at center
@@ -74,8 +74,8 @@ The player is given very little background before starting. At the beginning of 
 *   Total Angle change for objects that cross multiple squares:
 *   (# of squares - 1) x base angle change per square
 
-![world_003](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_world_003.jpg "Levels")
-![environment_001](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_environment_001.jpg "Environment")
+![world_003](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_world_003.jpg "Levels")
+![environment_001](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_environment_001.jpg "Environment")
 
 ####Overall Objective
 *   Fix the worm
@@ -85,7 +85,7 @@ The player is given very little background before starting. At the beginning of 
 *   Once a ring is restored, it grows a pair of fins (and/or begins to spin?)
 *   As worm gets fixed, major parts grow (like fins and tail propellor) and start to work
 
-![puzzle_001](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_puzzles_001.jpg "Power Source")
+![puzzle_001](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_puzzles_001.jpg "Power Source")
 
 ####Object Types
 *   Ability objects solve puzzles
@@ -112,17 +112,17 @@ The player is given very little background before starting. At the beginning of 
 *   Buffs change character appearance
 *   These function as an alternative objective and reward system in the game
 
-![upgrades_001](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_upgrades_001.jpg "Upgrades")
-![upgrades_002](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_upgrades_002.jpg "Upgrades")
-![upgrades_003](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_upgrades_003.jpg "Upgrades")
+![upgrades_001](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_upgrades_001.jpg "Upgrades")
+![upgrades_002](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_upgrades_002.jpg "Upgrades")
+![upgrades_003](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_upgrades_003.jpg "Upgrades")
 
 ####User Interface
 The gameplay will take place from a 3D perspective and exploration view. In the 3D perspective and exploration view, players will see the world in 3D from a third person / over the shoulder viewpoint with minimal or no GUI interaction. In this mode, players can explore the world physically, interact with the objects, feed the world, battle creatures, and most importantly solve puzzles.  
   
 Once the game starts, the player gains the ability to examine any object they are currently holding. This examination creates a radial context menu based on the object being examined, which shows simple icon flowchart for the current object and what sort of abilities it has. Key objects always show the ability to restore a part. Combine objects show only an icon for the area of the character’s body that they will visually modify. Ability objects show icons for each possible function they may be used for in puzzle solving.
 
-![ui_001](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_ui_001.jpg "UI")
-![ui_002](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_ui_002.jpg "UI")
+![ui_001](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_ui_001.jpg "UI")
+![ui_002](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_ui_002.jpg "UI")
 
 ##Game Mechanics
 ####Basics
@@ -170,7 +170,7 @@ Once the game starts, the player gains the ability to examine any object they ar
 
 The following are examples of the visual style of the game.
 
-![visual_style_003](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_visual_style_003.jpg "Visual Style")
-![visual_style_004](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_visual_style_004.jpg "Visual Style")
-![visual_style_005](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_visual_style_005.jpg "Visual Style")
-![visual_style_002](https://github.com/collinhover/kaiopua/raw/master/src/concepts/kaiopua_sketch_visual_style_002.jpg "Visual Style")
+![visual_style_003](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_visual_style_003.jpg "Visual Style")
+![visual_style_004](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_visual_style_004.jpg "Visual Style")
+![visual_style_005](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_visual_style_005.jpg "Visual Style")
+![visual_style_002](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_visual_style_002.jpg "Visual Style")
