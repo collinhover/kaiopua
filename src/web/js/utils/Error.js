@@ -8,15 +8,16 @@ define(["lib/jquery-1.6.3.min",
     function () {
         var shared = require('utils/Shared'),
             errorContainer = $('#error_container'),
+            errorCurrent,
             errorID = 'error',
             errorHash = 'error=',
-            errorMessages = {
+            errorTypes = {
                 general: {
                     header: "Oops! That wasn't supposed to happen!",
                     message: "Something broke and we're very sorry about that. No worries though, if you were playing any progress you've made has been saved. All you need to do is reload the page!"
                 },
                 webgl: {
-                    header: "Hey! We need WebGL!",
+                    header: "Oops! We need WebGL!",
                     message: "We are sorry, but it appears that your browser does not support WebGL. This could be due to a number of different reasons. For more information visit the <a href='http://get.webgl.org/troubleshooting/' target='_blank'>WebGL troubleshooting</a> page."
                 },
                 fourohfour: {
@@ -36,20 +37,61 @@ define(["lib/jquery-1.6.3.min",
         
         // show error to user
         function show ( id ) {
-            var section, header, article;
+            var header, explanation, article, articleHeight, footerModifier = 0, animSpeed = 300;
             
+            // does id not match a specific error
+            if (errorTypes.hasOwnProperty(id) === false) {
+               id = 'general';
+            }
+        
             // header
+            header = document.createElement('header');
+            $(header).html(errorTypes[id].header);
+            
+            // explanation
+            explanation = document.createElement('p');
+            $(explanation).addClass("error_explanation");
+            $(explanation).html(errorTypes[id].message)
             
             // article
+            article = document.createElement('article');
+            $(article).addClass("error unselectable");
+            $(article).attr('id', id);
+            
+            // add to display
+            $(article).append(header);
+            $(article).append(explanation);
+            errorContainer.append(article);
+            
+            // store
+            errorCurrent = {article: article, header: header, explanation: explanation};
+            
+            // set height and negative margin-top
+            // no need to position, css top/left at 50%
+            if(typeof errorCurrent !== 'undefined' && typeof errorContainer !== 'undefined' && $.contains(errorContainer, errorCurrent.article) === true) {
+                article = errorCurrent.article, header = errorCurrent.header, explanation = errorCurrent.explanation;
+                articleHeight = $(header).outerHeight() + $(explanation).outerHeight();
+                if (typeof $('footer') !== 'undefined') {
+                    footerModifier = $('footer').outerHeight() * 0.5;   
+                }
+                
+                // fade and slide smoothly to new values
+                $(header).fadeOut(0).fadeIn(animSpeed);
+                $(explanation).fadeOut(0).fadeIn(animSpeed);
+                $(article).animate({'height': articleHeight, 'margin-top': Math.round(-((articleHeight * 0.5) + footerModifier))}, animSpeed);
+            }
         }
         
         // check for internal errors
         function check () {
             var webgl;
             
+            // clear current errors
+            clear();
+            
             // webgl check
             webgl = has_webgl();
-            if (webgl === true) {
+            if (webgl === false) {
                 window.location.hash = errorHash + 'webgl';
             }
             
@@ -68,16 +110,11 @@ define(["lib/jquery-1.6.3.min",
                 // get error type
                 errorType = hashError.replace(/error=/i, '');
                 
-                // does error type match a specific errors?
-                if (errorMessages.hasOwnProperty(errorType)) {
-                    alert(errorMessages[errorType].message);
-                }
-                // else trigger general error
-                else {
-                    alert(errorMessages.general.message);
-                }
+                // tell user why shit just got real
+                show(errorType);
                 
-                // clear hash out with history states
+                // set url back to origin link with history states
+                // always hide unnecessary information from users
                 history.pushState( { "pState": shared.originLink }, '', shared.originLink );
             }
         }
@@ -91,9 +128,6 @@ define(["lib/jquery-1.6.3.min",
                 return false;
             }
         }
-        
-        // clear error container
-        clear();
         
         // check once
         check();

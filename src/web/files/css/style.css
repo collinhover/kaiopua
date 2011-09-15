@@ -201,13 +201,13 @@ a:hover, a:active {
 /* errors 
 -------------------------*/
 .error {
-    width: 400px; 
-    height: 230px; 
+    width: 540px; 
+    height: 136px; 
     overflow: auto; 
     position: absolute; 
     left: 50%; 
     top: 50%;
-    margin: -150px 0 0 -200px; 
+    margin: -115px 0 0 -270px;
     background: #333; 
     color: #fff;
 }
