@@ -18,7 +18,7 @@ function() {
     
     /*===================================================
     
-    functions
+    init
     
     =====================================================*/
     
@@ -42,7 +42,11 @@ function() {
     // resize once
     onWindowResize();
     
-    // listener functions
+    /*===================================================
+    
+    functions
+    
+    =====================================================*/
     
     function onDocumentMouseDown( e ) {
             shared.signals.mousedown.dispatch( e );
