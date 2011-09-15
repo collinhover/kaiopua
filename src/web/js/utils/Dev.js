@@ -19,7 +19,12 @@ function() {
         frameRate = 60, refreshInt = 1000 / frameRate,
         statsUpdateHandle;
     
-    // init
+    /*===================================================
+    
+    init
+    
+    =====================================================*/
+    
     // stats
     stats = new Stats();
     stats.domElement.style.position = 'absolute';
@@ -110,6 +115,12 @@ function() {
             }
         }
     });
+    
+    /*===================================================
+    
+    functions
+    
+    =====================================================*/
     
     // stats functions
     function stats_start() {

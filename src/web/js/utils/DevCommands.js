@@ -2,7 +2,8 @@
 Dev Commands
 Call using require('utils/DevCommands').functionName()
 */
-define([], function () {
+define([], 
+function () {
     var commands = [], callbacks = {}, current = "", history = [];
     
     // add list of commands
@@ -85,5 +86,4 @@ define([], function () {
         get_history: function () {return history.slice(0);},
         clear_history: function () {history = [];}
     };
-
 });
