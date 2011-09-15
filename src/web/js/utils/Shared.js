@@ -3,7 +3,7 @@ Shared.js
 Initializes an object that contains shared information across modules. (thanks > ro.me)
 */
 
-define(['lib/signals.min'],
+define(["lib/signals.min"],
     function () {
         // return something to define module
         // shared is intended to be all public properties

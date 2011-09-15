@@ -10,7 +10,8 @@ define(["lib/jquery-1.6.3.min",
         "lib/requestTimeout",
         "utils/Shared", 
         "utils/Dev",
-        "utils/Error"], 
+        "utils/Error",
+        "game/Game"], 
     function() {
         var shared = require('utils/Shared'),
             dev = require('utils/Dev');
@@ -31,6 +32,9 @@ define(["lib/jquery-1.6.3.min",
         $(window).bind( 'resize', onWindowResize );
         
         window.onerror = onWindowError;
+        
+        // resize once
+        onWindowResize();
         
         // listener functions
         
@@ -138,13 +142,15 @@ define(["lib/jquery-1.6.3.min",
         }
 
         function onWindowResize( e ) {
-                shared.screenWidth = window.innerWidth;
-                shared.screenHeight = window.innerHeight;
+                shared.screenWidth = $(window).width();
+                shared.screenHeight = $(window).height();
                 
-                shared.signals.windowresized.dispatch();
+                shared.signals.windowresized.dispatch(shared.screenWidth, shared.screenHeight);
                 
-                e.preventDefault();
-                e.stopPropagation();
+                if (typeof e !== 'undefined') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
                 return false;
         }
         

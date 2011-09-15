@@ -14,35 +14,16 @@ define(["lib/jquery-1.6.3.min",
 function() {
     var shared = require('utils/Shared'),
         devCommands = require('utils/DevCommands'),
-        domElement, isOpen = true, container, stats, logger, 
+        domElement, isOpen = true, stats, logger, 
         gui, guiContainer, guiHeight, 
         frameRate = 60, refreshInt = 1000 / frameRate,
         statsUpdateHandle;
-
+    
+    // init
     // stats
     stats = new Stats();
     stats.domElement.style.position = 'absolute';
-
-    // stats functions
-    function stats_start() {
-        // if stats already exists, reset
-        stats_stop();
-
-        // start stats updating
-        statsUpdateHandle = requestInterval(function() {
-
-            stats.update();
-
-        }, refreshInt);
-    }
-
-    function stats_stop() {
-        if (typeof statsUpdateHandle !== 'undefined') {
-            clearRequestInterval(statsUpdateHandle);
-            statsUpdateHandle = undefined;
-        }
-    }
-
+    
     // logger
     logger = new Logger();
     $(logger.domElement).css({
@@ -83,19 +64,66 @@ function() {
     logger.domElement.style.height = gui.totalHeight + 'px';
 
     // container
-    container = document.createElement('div');
-    container.id = 'dev_utils';
-    container.style.position = 'absolute';
-    container.style.left = '0px';
-    container.style.top = '0px';
+    domElement = document.createElement('div');
+    domElement.id = 'dev_utils';
+    domElement.style.position = 'absolute';
+    domElement.style.left = '0px';
+    domElement.style.top = '0px';
 
     // add all dev utils to container
-    container.appendChild(logger.domElement);
-    container.appendChild(stats.domElement);
-    $(container).append(guiContainer);
+    domElement.appendChild(logger.domElement);
+    domElement.appendChild(stats.domElement);
+    $(domElement).append(guiContainer);
 
     // add dev utils to window
-    document.body.appendChild(container);
+    document.body.appendChild(domElement);
+    
+    // add listeners to gui toggle
+    gui.toggleButton.addEventListener('mouseup', function(e) {
+        togglePanel(e);
+        e.preventDefault();
+        return false;
+    }, false);
+
+    // turn dev off initially
+    togglePanel();
+    
+    // resize signal
+    shared.signals.windowresized.add(resize);
+
+    // add dev commands
+    devCommands.add({
+        cmd_hist: function(modifier) {
+            if (modifier === 'clear') {
+                logger.log('Cleared dev cmd history!');
+                devCommands.clear_history();
+            }
+            else {
+                logger.log('Showing dev cmd history:');
+                logger.log(devCommands.get_history(), true);
+            }
+        }
+    });
+    
+    // stats functions
+    function stats_start() {
+        // if stats already exists, reset
+        stats_stop();
+
+        // start stats updating
+        statsUpdateHandle = requestInterval(function() {
+
+            stats.update();
+
+        }, refreshInt);
+    }
+
+    function stats_stop() {
+        if (typeof statsUpdateHandle !== 'undefined') {
+            clearRequestInterval(statsUpdateHandle);
+            statsUpdateHandle = undefined;
+        }
+    }
     
     // resize dev utils
     function resize(W, H) {
@@ -130,7 +158,6 @@ function() {
         });
         $(logDE).width(W - (spaceW * 3) - $(guiDE).width());
     }
-    resize($(document).width(), $(document).height());
 
     // self toggle on/off
     function togglePanel(e) {
@@ -154,35 +181,11 @@ function() {
             stats_stop();
         }
     }
-
-    // add listeners to gui toggle
-    gui.toggleButton.addEventListener('mouseup', function(e) {
-        togglePanel(e);
-        e.preventDefault();
-        return false;
-    }, false);
-
-    // turn dev off initially
-    togglePanel();
-
-    // add dev commands
-    devCommands.add({
-        cmd_hist: function(modifier) {
-            if (modifier === 'clear') {
-                logger.log('Cleared dev cmd history!');
-                devCommands.clear_history();
-            }
-            else {
-                logger.log('Showing dev cmd history:');
-                logger.log(devCommands.get_history(), true);
-            }
-        }
-    });
     
     // return an object to define module
     return {
         toggle: togglePanel,
-        log: logger.log,
+        log: function (msg, expand) { logger.log(msg, expand); },
         log_error: function (error, url, lineNumber) {
             logger.log('[ERROR] ' + error);
             logger.log('[ERROR] in file: ' + url);
@@ -191,6 +194,6 @@ function() {
         add_command: devCommands.add,
         resize: resize,
         isOpen: function () {return isOpen;},
-        domElement: container
+        domElement: domElement
     };
 });
