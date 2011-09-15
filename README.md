@@ -36,7 +36,13 @@ Amanda Nicole East
 #### Technology
 
 HTML5 < canvas >, < video >, < audio >  
-Javascript, WebGL, Three.js
+Javascript, WebGL  
+
+#### Libraries & Concepts
+
+jQuery, ThreeJS, RequireJS + CommonJS    
+SignalsJS, Modernizr, HTML5-Reset, RequestAnimFrame  
+(+ development: DAT-GUI, StatsJS, LoggerJS)  
 
 #### Concept and Design Assistance
 
