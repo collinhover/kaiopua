@@ -35,6 +35,12 @@ function() {
         color: '#fcd700',
         'font-size': '13px'
     });
+    // override log function to autoscroll to bottom of domElement
+    logger.oldLog = logger.log;
+    logger.log = function (msg, expand) {
+        logger.oldLog(msg, expand);
+        logger.domElement.scrollTop = logger.domElement.scrollHeight;
+    };
 
     // gui
     // DAT.GUI hacked to add property to disable drag
