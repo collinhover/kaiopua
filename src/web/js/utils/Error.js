@@ -7,7 +7,7 @@ define(["lib/jquery-1.6.3.min",
         "utils/Shared"],
     function () {
         var shared = require('utils/Shared'),
-            errorContainer = $('#error_container'),
+            domElement = $('#error_container'),
             errorCurrent,
             errorID = 'error',
             errorHash = 'error=',
@@ -32,7 +32,7 @@ define(["lib/jquery-1.6.3.min",
         
         // remove all error dom elements
         function clear () {
-            errorContainer.empty();
+            domElement.empty();
         }
         
         // show error to user
@@ -61,14 +61,14 @@ define(["lib/jquery-1.6.3.min",
             // add to display
             $(article).append(header);
             $(article).append(explanation);
-            errorContainer.append(article);
+            domElement.append(article);
             
             // store
             errorCurrent = {article: article, header: header, explanation: explanation};
             
             // set height and negative margin-top
             // no need to position, css top/left at 50%
-            if(typeof errorCurrent !== 'undefined' && typeof errorContainer !== 'undefined' && $.contains(errorContainer, errorCurrent.article) === true) {
+            if(typeof errorCurrent !== 'undefined' && typeof domElement !== 'undefined' && $.contains(domElement, errorCurrent.article) === true) {
                 article = errorCurrent.article, header = errorCurrent.header, explanation = errorCurrent.explanation;
                 articleHeight = $(header).outerHeight() + $(explanation).outerHeight();
                 if (typeof $('footer') !== 'undefined') {
@@ -135,7 +135,8 @@ define(["lib/jquery-1.6.3.min",
         // return something to define module
         return {
             check: check,
-            clear: clear
+            clear: clear,
+            domElement: domElement
         };
     }
 );

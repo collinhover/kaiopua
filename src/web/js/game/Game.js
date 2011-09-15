@@ -7,8 +7,7 @@ define(["lib/jquery-1.6.3.min",
         "game/sections/launcher/Launcher"],
 function () {
     var shared = require('utils/Shared'),
-        id = 'game';
-        domElement = $('#' + id);
+        domElement = $('#game');
     
     /*===================================================
     
