@@ -2,7 +2,7 @@
 Loader.js
 Loader module, handles loading game assets while entertaining user.
 */
-define(["utils/Shared"],
+define([],
 function () {
     var shared = require('utils/Shared');
     

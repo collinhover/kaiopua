@@ -2,7 +2,7 @@
 StartMenu.js
 Start Menu module, handles start menu of game.
 */
-define(["utils/Shared"],
+define([],
     function () {
         var shared = require('utils/Shared');
         

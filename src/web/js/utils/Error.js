@@ -3,11 +3,10 @@ Error.js
 Handles compatibility checks and user viewable errors.
 */
 
-define(["lib/jquery-1.6.3.min",
-        "utils/Shared"],
+define([],
 function () {
     var shared = require('utils/Shared'),
-        domElement = $('#error_container'),
+        domElement = shared.errorContainer,
         errorCurrent,
         errorID = 'error',
         errorHash = 'error=',
@@ -16,9 +15,13 @@ function () {
                 header: "Oops! That wasn't supposed to happen!",
                 message: "Something broke and we're very sorry about that. No worries though, if you were playing any progress you've made has been saved. All you need to do is reload the page!"
             },
-            webgl: {
+            webgl_browser: {
                 header: "Oops! We need WebGL!",
-                message: "We are sorry, but it appears that your browser does not support WebGL. This could be due to a number of different reasons. For more information visit the <a href='http://get.webgl.org/troubleshooting/' target='_blank'>WebGL troubleshooting</a> page."
+                message: "We are sorry, but it appears that your browser does not support WebGL. For more information visit <a href='http://get.webgl.org' target='_blank'>Get WebGL</a> to upgrade your browser."
+            },
+            webgl_other: {
+                header: "Oops! We need WebGL!",
+                message: "We are sorry, but it appears that your computer does not support WebGL. For more information visit the <a href='http://get.webgl.org/troubleshooting/' target='_blank'>WebGL troubleshooting</a> page."
             },
             fourohfour: {
                 header: "Oops! Not found!",
@@ -28,7 +31,23 @@ function () {
                 header: "We're afraid we can't let you do that.",
                 message: "Sorry, but the page you were trying to view is locked or hidden for a reason we can't tell you."
             }
-        };
+        },
+        webglNames = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];
+    
+    /*===================================================
+    
+    internal init
+    
+    =====================================================*/
+    
+    // check once
+    check();
+    
+    /*===================================================
+    
+    functions
+    
+    =====================================================*/
     
     // remove all error dom elements
     function clear () {
@@ -84,15 +103,33 @@ function () {
     
     // check for internal errors
     function check () {
-        var webgl;
+        var canvas, context, i, l;
         
         // clear current errors
         clear();
         
-        // webgl check
-        webgl = has_webgl();
-        if (webgl === false) {
-            window.location.hash = errorHash + 'webgl';
+        // webgl browser check
+        if (!window.WebGLRenderingContext) {
+            window.location.hash = errorHash + 'webgl_browser';
+        }
+        else {
+            canvas = document.createElement( 'canvas' );
+            
+            // try each browser's webgl type
+            for (i = 0, l = webglNames.length; i < l; i += 1) {
+                try {
+                    context = canvas.getContext(webglNames[i]);
+                }
+                catch ( e ) {}
+                if (typeof context !== 'undefined') {
+                    break;
+                }
+            }
+            
+            // if none found, there is another problem
+            if (typeof context === 'undefined') {
+                window.location.hash = errorHash + 'webgl_other';
+            }
         }
         
         // check url
@@ -118,19 +155,6 @@ function () {
             history.pushState( { "pState": shared.originLink }, '', shared.originLink );
         }
     }
-    
-    // has webgl
-    function has_webgl () {
-        try { 
-            return !! window.WebGLRenderingContext && !! document.createElement( 'canvas' ).getContext( 'experimental-webgl' );
-        } 
-        catch( e ) { 
-            return false;
-        }
-    }
-    
-    // check once
-    check();
     
     // return something to define module
     return {

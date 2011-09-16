@@ -14,11 +14,13 @@ define(["lib/jquery-1.6.3.min",
         "game/Game"], 
 function() {
     var shared = require('utils/Shared'),
-        dev = require('utils/Dev');
+        dev = require('utils/Dev'),
+        game = require('game/Game'),
+        lastGamma = 0, lastBeta = 0;
     
     /*===================================================
     
-    init
+    internal init
     
     =====================================================*/
     
@@ -41,6 +43,9 @@ function() {
     
     // resize once
     onWindowResize();
+    
+    // init game
+    game.init();
     
     /*===================================================
     
@@ -99,7 +104,7 @@ function() {
         gamma = overThreshold ? e.gamma : 0;
         beta = overThreshold ? e.beta : 0;
         
-        if ( shared.lastGamma !== gamma || shared.lastBeta !== beta) {
+        if ( lastGamma !== gamma || lastBeta !== beta) {
                 x = Math.round( 1.5 * gamma ) + shared.mouse.x;
                 y = ( - Math.round( 1.5 * beta ) ) + shared.mouse.y;
                 
@@ -124,8 +129,8 @@ function() {
                 e.mouse.x = x;
                 e.mouse.y = y;
                 
-                shared.lastGamma = gamma;
-                shared.lastBeta = beta;
+                lastGamma = gamma;
+                lastBeta = beta;
                 
                 shared.signals.mousemoved.dispatch( e );
                 

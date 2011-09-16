@@ -2,7 +2,7 @@
 Tutorial.js
 Tutorial module, handles teaching user basic game mechanics.
 */
-define(["utils/Shared"],
+define([],
     function () {
         var shared = require('utils/Shared');
         

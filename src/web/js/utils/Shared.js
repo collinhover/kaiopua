@@ -3,16 +3,27 @@ Shared.js
 Initializes an object that contains shared information across modules. (thanks > ro.me)
 */
 
-define(["lib/signals.min"],
+define([],
 function () {
     // return something to define module
     // shared is intended to be all public properties
     return {
         mouse : { x: 0, y: 0 },
-        screenWidth : window.innerWidth,
-        screenHeight : window.innerHeight,
-        loadedContent : false,
+        screenWidthMin : 1024,
+        screenHeightMin : 768,
+        screenWidth : $(window).width(),
+        screenHeight : $(window).height(),
         originLink : window.location.pathname.toString(),
+        
+        frameRateMax : 60,
+        frameRateMin : 20,
+        refreshInterval : 1000 / 60,
+        
+        loadedAssets : false,
+        
+        staticMenu: $('#static_menu'),
+        gameContainer: $('#game'),
+        errorContainer: $('#error_container'),
         
         signals : {
 
@@ -31,9 +42,6 @@ function () {
             loadItemAdded : new signals.Signal(),
             loadItemCompleted : new signals.Signal()
             
-        },
-        
-        lastGamma: 0,
-        lastBeta: 0
+        }
     };
 });

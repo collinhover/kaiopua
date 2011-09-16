@@ -3,25 +3,20 @@ Dev.js
 Initializes Logger, Stats, and DAT-GUI for development purposes
 */
 
-define(["lib/jquery-1.6.3.min", 
-        "lib/requestAnimFrame", 
-        "lib/requestInterval", 
-        "lib/Logger", 
+define(["lib/Logger", 
         "lib/Stats", 
-        "lib/DAT.GUI", 
-        "utils/Shared",
+        "lib/DAT.GUI",
         "utils/DevCommands"], 
 function() {
     var shared = require('utils/Shared'),
         devCommands = require('utils/DevCommands'),
         domElement, isOpen = true, stats, logger, 
-        gui, guiContainer, guiHeight, 
-        frameRate = 60, refreshInt = 1000 / frameRate,
+        gui, guiContainer, guiHeight,
         statsUpdateHandle;
     
     /*===================================================
     
-    init
+    internal init
     
     =====================================================*/
     
@@ -132,13 +127,35 @@ function() {
 
             stats.update();
 
-        }, refreshInt);
+        }, shared.refreshInterval);
     }
 
     function stats_stop() {
         if (typeof statsUpdateHandle !== 'undefined') {
             clearRequestInterval(statsUpdateHandle);
             statsUpdateHandle = undefined;
+        }
+    }
+    // self toggle on/off
+    function togglePanel(e) {
+        // open?
+        isOpen = !isOpen;
+        
+        // close gui if open
+        if (typeof e === 'undefined' || (typeof e === 'undefined' && gui.appearanceVars()[0] === true)) {
+            gui.toggle();
+        }
+
+        // turn logger and stats off
+        $(logger.domElement).toggle();
+        $(stats.domElement).toggle();
+
+        // start stats
+        if (isOpen) {
+            stats_start();
+        }
+        else {
+            stats_stop();
         }
     }
     
@@ -174,29 +191,6 @@ function() {
             top: spaceH
         });
         $(logDE).width(W - (spaceW * 3) - $(guiDE).width());
-    }
-
-    // self toggle on/off
-    function togglePanel(e) {
-        // open?
-        isOpen = !isOpen;
-        
-        // close gui if open
-        if (typeof e === 'undefined' || (typeof e === 'undefined' && gui.appearanceVars()[0] === true)) {
-            gui.toggle();
-        }
-
-        // turn logger and stats off
-        $(logger.domElement).toggle();
-        $(stats.domElement).toggle();
-
-        // start stats
-        if (isOpen) {
-            stats_start();
-        }
-        else {
-            stats_stop();
-        }
     }
     
     // return an object to define module
