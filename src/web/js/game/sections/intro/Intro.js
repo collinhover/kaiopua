@@ -1,6 +1,6 @@
 /*
-Tutorial.js
-Tutorial module, handles teaching user basic game mechanics.
+Intro.js
+Intro module, handles introduction to story and teaching user basic game mechanics.
 */
 define([],
     function () {
