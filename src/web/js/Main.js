@@ -3,18 +3,19 @@ Main.js
 Main module, handles browser events.
 */
 
-define(["lib/jquery-1.6.3.min", 
-        "lib/signals.min", 
-        "lib/requestAnimFrame", 
-        "lib/requestInterval", 
-        "lib/requestTimeout",
-        "utils/Shared", 
-        "utils/Dev",
-        "utils/Error",
-        "game/Game"], 
+define(["order!lib/requestAnimFrame", 
+        "order!lib/requestInterval", 
+        "order!lib/requestTimeout",
+        "order!lib/signals.min",
+        "order!lib/jquery-1.6.3.min",
+        "order!utils/Shared", 
+        "order!utils/Dev",
+        "order!utils/Error",
+        "order!game/Game"], 
 function() {
     var shared = require('utils/Shared'),
         dev = require('utils/Dev'),
+        error = require('utils/Error'),
         game = require('game/Game'),
         lastGamma = 0, lastBeta = 0;
     
@@ -39,13 +40,20 @@ function() {
 
     $(window).bind( 'resize', onWindowResize );
     
-    window.onerror = onWindowError;
+    window.onerror = onError;
+    shared.signals.error.add(onError);
     
     // resize once
     onWindowResize();
     
-    // init game
-    game.init();
+    // check for errors
+    if (error.check()) {
+        error.process();
+    }
+    // safe to start game
+    else {
+        game.init();
+    }
     
     /*===================================================
     
@@ -169,8 +177,7 @@ function() {
             return false;
     }
     
-    function onWindowError ( error, url, lineNumber ) {
-        // TODO save player progress
+    function onError ( error, url, lineNumber ) {
         
         dev.log_error(error, url, lineNumber);
         

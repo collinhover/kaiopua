@@ -3,11 +3,11 @@ Launcher.js
 Launcher module, handles loading assets, tutorial, and start menu.
 */
 define(["game/sections/launcher/Loader",
-        "game/sections/launcher/Tutorial",
         "game/sections/launcher/StartMenu"],
 function (loader, tutorial, startMenu) {
     var shared = require('utils/Shared'),
-        paused = true;
+        renderer = shared.renderer,
+        renderTarget = shared.renderTarget;
     
     /*===================================================
     

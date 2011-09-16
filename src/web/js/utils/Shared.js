@@ -21,7 +21,7 @@ function () {
         
         loadedAssets : false,
         
-        staticMenu: $('#static_menu'),
+        static_menu: $('#static_menu'),
         gameContainer: $('#game'),
         errorContainer: $('#error_container'),
         
@@ -40,8 +40,9 @@ function () {
             load : new signals.Signal(),
             loadBegin : new signals.Signal(),
             loadItemAdded : new signals.Signal(),
-            loadItemCompleted : new signals.Signal()
+            loadItemCompleted : new signals.Signal(),
             
+            error : new signals.Signal()
         }
     };
 });

@@ -11,8 +11,7 @@ function() {
     var shared = require('utils/Shared'),
         devCommands = require('utils/DevCommands'),
         domElement, isOpen = true, stats, logger, 
-        gui, guiContainer, guiHeight,
-        statsUpdateHandle;
+        gui, guiContainer, guiHeight, statsPaused = true;
     
     /*===================================================
     
@@ -119,23 +118,23 @@ function() {
     
     // stats functions
     function stats_start() {
-        // if stats already exists, reset
-        stats_stop();
-
-        // start stats updating
-        statsUpdateHandle = requestInterval(function() {
-
-            stats.update();
-
-        }, shared.refreshInterval);
+        if (statsPaused === true) {
+            statsPaused = false;
+            stats_update();
+        }
     }
 
     function stats_stop() {
-        if (typeof statsUpdateHandle !== 'undefined') {
-            clearRequestInterval(statsUpdateHandle);
-            statsUpdateHandle = undefined;
+        statsPaused = true;
+    }
+    
+    function stats_update() {
+        if (statsPaused === false) {
+            window.requestAnimFrame( stats_update );
+            stats.update();
         }
     }
+    
     // self toggle on/off
     function togglePanel(e) {
         // open?

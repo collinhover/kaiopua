@@ -10,7 +10,7 @@ function() {
     var shared = require('utils/Shared'),
         launcher = require('game/sections/launcher/Launcher'),
         domElement = shared.gameContainer,
-        renderer, renderTarget, sections, currentSection, animateHandle;
+        renderer, renderTarget, sections, currentSection, paused = true;
     
     /*===================================================
     
@@ -51,9 +51,9 @@ function() {
 
     function init() {
         
-        setSection(sections.launcher);
+        set_section(sections.launcher);
         
-        animate();
+        start_updating();
         
     }
     
@@ -63,7 +63,7 @@ function() {
     
     =====================================================*/
 
-    function setSection ( section ) {
+    function set_section ( section ) {
         // hide current section
         if (typeof currentSection !== 'undefined') {
             currentSection.hide();
@@ -76,27 +76,24 @@ function() {
         currentSection = section;
     }
     
-    function animate () {
-        // make sure not already going
-        inanimate();
-        
-        // start updating
-        animateHandle = requestInterval(function() {
+    function start_updating () {
+        if (paused === true) {
+            paused = false;
             update();
-        }, shared.refreshInterval);
-    }
-    
-    function inanimate () {
-        // stop updating
-        if (typeof animateHandle !== 'undefined') {
-            clearRequestInterval(animateHandle);
-            animateHandle = undefined;
         }
     }
     
+    function stop_updating () {
+        paused = true;
+    }
+    
     function update () {
-        if (typeof currentSection !== 'undefined') {
-            currentSection.update();
+        if (paused === false) {
+            window.requestAnimFrame( update );
+            
+            if (typeof currentSection !== 'undefined') {
+                currentSection.update();
+            }
         }
     }
     
@@ -113,8 +110,9 @@ function() {
     // return something to define module
     return {
         init: init,
-        animate: animate,
-        inanimate: inanimate,
-        domElement: domElement
+        start_updating: start_updating,
+        stop_updating: stop_updating,
+        domElement: domElement,
+        paused: function () { return paused; }
     };
 });
