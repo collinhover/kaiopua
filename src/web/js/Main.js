@@ -11,7 +11,8 @@ define(["order!lib/requestAnimFrame",
         "order!utils/Shared", 
         "order!utils/Dev",
         "order!utils/Error",
-        "order!game/Game"], 
+        "order!game/Game"
+        ], 
 function() {
     var shared = require('utils/Shared'),
         dev = require('utils/Dev'),

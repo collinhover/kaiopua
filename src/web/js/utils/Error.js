@@ -17,7 +17,8 @@ function () {
             },
             webgl_browser: {
                 header: "Oops! We need WebGL!",
-                explanation: "We are sorry, but it appears that your browser does not support WebGL. For more information visit <a href='http://get.webgl.org' target='_blank'>Get WebGL</a> to upgrade your browser."
+                explanation: "We are sorry, but it appears that your browser does not support WebGL. For more information visit <a href='http://get.webgl.org' target='_blank'>Get WebGL</a> or try upgrading to one of these friendly browsers:",
+                browser_extra: true
             },
             webgl_other: {
                 header: "Oops! We need WebGL!",
@@ -32,7 +33,8 @@ function () {
                 explanation: "Sorry, but the page you were trying to view is locked or hidden for a reason we can't tell you."
             }
         },
-        webglNames = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];
+        webglNames = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"],
+        browser_html = "<div class='browsers_each chrome'><a href='http://www.google.com/chrome/' target='_blank'>Chrome</a></div><div class='browsers_each firefox'><a href='http://www.mozilla.org/firefox/' target='_blank'>Firefox</a></div><div class='browsers_each safari'><a href='http://www.apple.com/safari/' target='_blank'>Safari</a></div>";
     
     /*===================================================
     
@@ -157,7 +159,7 @@ function () {
     
     // show error to user
     function show ( errorType ) {
-        var header, explanation, article, articleHeight, footerModifier = 0, animSpeed = 300;
+        var header, explanation, extra, article, articleHeight, footerModifier = 0, animSpeed = 500;
         
         // does id not match a specific error
         if (errorTypes.hasOwnProperty(errorType) === false) {
@@ -172,6 +174,13 @@ function () {
         explanation = document.createElement('p');
         $(explanation).addClass("error_explanation");
         $(explanation).html(errorTypes[errorType].explanation);
+        
+        // extra
+        if (errorTypes[errorType].browser_extra === true) {
+            extra = document.createElement('div');
+            $(extra).addClass("browsers");
+            $(extra).html(browser_html);
+        }
         
         // article
         article = document.createElement('article');
@@ -190,6 +199,13 @@ function () {
             footerModifier = shared.static_menu.outerHeight() * 0.5;   
         }
         
+        // append extra if needed
+        if(typeof extra !== 'undefined') {
+            $(article).append(extra);
+            articleHeight = articleHeight + $(extra).outerHeight();
+            $(extra).fadeOut(0).fadeIn(animSpeed);
+        }
+        
         // fade and slide smoothly to new values
         $(header).fadeOut(0).fadeIn(animSpeed);
         $(explanation).fadeOut(0).fadeIn(animSpeed);
@@ -202,7 +218,8 @@ function () {
         errorCurrent.domElements = {
             article: article, 
             header: header, 
-            explanation: explanation
+            explanation: explanation,
+            extra: extra
         };
     }
     
