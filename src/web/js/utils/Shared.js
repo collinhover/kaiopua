@@ -9,8 +9,6 @@ function () {
     // shared is intended to be all public properties
     return {
         mouse : { x: 0, y: 0 },
-        screenWidthMin : 1024,
-        screenHeightMin : 768,
         screenWidth : $(window).width(),
         screenHeight : $(window).height(),
         originLink : window.location.pathname.toString(),

@@ -10,7 +10,7 @@ function() {
     var shared = require('utils/Shared'),
         launcher = require('game/sections/launcher/Launcher'),
         domElement = shared.gameContainer,
-        renderer, renderTarget, sections, currentSection, paused = true;
+        renderer, renderTarget, sections, sectionNames, currentSection, paused = true;
     
     /*===================================================
     
@@ -20,13 +20,15 @@ function() {
     
     // init three 
     // renderer
-    renderer = new THREE.WebGLRenderer();
+    renderer = new THREE.WebGLRenderer( { antialias: false, clearColor: 0x000000, clearAlpha: 0 } );
     renderer.setSize( shared.screenWidth, shared.screenHeight );
+    renderer.sortObjects = false;
+    renderer.autoClear = false;
     
     // render target
     renderTarget = new THREE.WebGLRenderTarget( shared.screenWidth, shared.screenHeight );
-    renderTarget.minFilter = THREE.LinearFilter;
-    renderTarget.magFilter = THREE.NearestFilter;
+    //renderTarget.minFilter = THREE.LinearFilter;
+    //renderTarget.magFilter = THREE.NearestFilter;
     
     // add to game dom element
     domElement.append( renderer.domElement );
@@ -35,6 +37,7 @@ function() {
     sections = {
         launcher : launcher
     };
+    sectionNames = ['launcher'];
     
     // share
     shared.renderer = renderer;
@@ -50,7 +53,14 @@ function() {
     =====================================================*/
 
     function init() {
+        var i, l;
         
+        // init each section
+        for (i = 0, l = sectionNames.length; i < l; i += 1) {
+            sections[sectionNames[i]].init();
+        }
+        
+        // set initial section
         set_section(sections.launcher);
         
         start_updating();
