@@ -1,0 +1,15 @@
+body {
+	background:#666;
+	color:#fff;
+	padding:0;
+	margin:0;
+	overflow:hidden;
+	font-family:sans-serif;
+	text-align:center;
+}
+a:link {color: #fff;}
+a:visited {color: #fff;}
+a:active {color: #fff;}
+canvas { pointer-events:none; z-index:10; position:relative; }
+#info { text-align:left; font: 10px/1.2 Verdana, Arial, Helvetica, Sans-Serif; margin:0.5em 0em 0em 0.4em; z-index:11; position:absolute; display:none; color:#fff; background: #121212; opacity:0.8; border-radius:20px; padding: 32px }
+#infobutton { text-align:left; margin:0em 0 0em 0em; z-index:12; position:absolute; display:block; padding: 8px }
