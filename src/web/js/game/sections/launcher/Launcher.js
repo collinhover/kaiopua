@@ -15,28 +15,139 @@ function (loader, tutorial, startMenu) {
     
     =====================================================*/
     
-    fog = new THREE.Fog( 0xFFFFFF, - 100, 800 );
+    var DIST = 3000;
+    var FLOOR = 0;
+    var cameraRotVertMax = 25 * Math.PI / 180;
+    var cameraRotVertMin = -25 * Math.PI / 180;
+    var cameraRotHorzMax = 25 * Math.PI / 180;
+    var cameraRotHorzMin = -25 * Math.PI / 180;
     
-    camera = new THREE.Camera( 75, shared.screenWidth / shared.screenHeight, 1, 3000 );
-    camera.position.z = 600;
+    fog = new THREE.Fog( 0x529ad1, - 100, 10000 );
+    
+    camera = new THREE.Camera(60, shared.screenWidth / shared.screenHeight, 1, 10000);
+    /*
+    FirstPersonCamera( {
+                    fov: 60, 
+                    aspect: shared.screenWidth / shared.screenHeight, 
+                    near: 1, 
+                    far: 10000,
+					movementSpeed: 500, 
+                    lookSpeed: 0.1, 
+                    noFly: false, 
+                    lookVertical: false
+    });
+    */
+    
+    camera.position.x = -5800;
+    camera.position.y = 100;
+    camera.position.z = FLOOR;
+    camera.lookAt(new THREE.Vector3(0, 0, 0));
     
     scene = new THREE.Scene();
     scene.fog = fog;
     
-    var geometry = new THREE.SphereGeometry(200, 10, 10);
-    var material = new THREE.MeshLambertMaterial( { color: 0xfee972 } );
+    // lights
     
-    var mesh = new THREE.Mesh( geometry, material );
+    var ambient = new THREE.AmbientLight( 0xCCCCCC );
+    scene.addLight( ambient );
     
-    scene.addObject( mesh );
+    var light1 = new THREE.DirectionalLight( 0xFFFFFF, 1.0 );
+    light1.position = new THREE.Vector3(-1,1, -1).normalize();
     
-    var pointLight = new THREE.PointLight( 0xFFFFFF );
+    scene.addLight(light1);
     
-    pointLight.position.x = 200;
-    pointLight.position.y = 0;
-    pointLight.position.z = 400;
+    // water
+    var waterVertsW = 50;
+    var waterVertsH = 50;
+    var waterNumVerts = waterVertsW * waterVertsH;
+    var waveTime = 0;
+    var waveSpeed = 0.04;
+    var waveSpeedMod = 0.5;
+    var waveAmp = 200;
+    var waveCameraBobAmp = waveAmp * 2;
+    var waveFreq = 4;
+    var wvvMin = -Math.min(waveAmp * 0.5, 35);
+    var wvvMax = Math.min(waveAmp * 0.5, 35);
+    var wvvDelta = (wvvMax - wvvMin) * 0.01;
+    var wvvDirSwitchPause = 600;
     
-    scene.addLight(pointLight); 
+    // create water geometry
+    var waterGeom = new THREE.PlaneGeometry( 10000, 10000, waterVertsW - 1, waterVertsH - 1 );
+    waterGeom.dynamic = true;
+    
+    // per vert variation
+    var waterVertVar = [];
+    for ( var i = 0; i < waterNumVerts; i += 1 ) {
+		waterVertVar[ i ] = {
+            amp : Math.random() * (wvvMax - wvvMin) + wvvMin,
+            dir : 1,
+            dirSwitch : Math.round(Math.random() * (wvvDirSwitchPause * 0.5) + (wvvDirSwitchPause * 0.5)),
+            dirSwitchCount : Math.round(Math.random() * (wvvDirSwitchPause * 0.5) + (wvvDirSwitchPause * 0.5))
+		};
+    }
+    
+    var waterMaterial = new THREE.MeshLambertMaterial( { color: 0x529ad1 } );
+    
+    var waterMesh = new THREE.Mesh( waterGeom, waterMaterial );
+	waterMesh.rotation.x = -90 * Math.PI / 180;
+	waterMesh.doubleSided = true;
+    
+	scene.addObject(waterMesh);
+    
+    function waves() {
+        
+        var waterVerts = waterGeom.vertices, 
+            wVert, wvVariation, 
+            vvw = waterVertsW - 1, vvh = waterVertsH - 1, i, l;
+        
+        // update wave time
+        waveTime += waveSpeed * waveSpeedMod;
+        waveTime = waveTime % (Math.PI * 2);
+        
+        for ( i = 0; i < waterVertsW; i += 1 ) {
+			for ( l = 0; l < waterVertsH; l += 1 ) {
+                wVert = waterVerts[ i + l * waterVertsH ];
+                
+                // set water vert
+				wVert.position.z = waveAmp * ( Math.cos( i / waveFreq  + waveTime ) + Math.sin( l / waveFreq + waveTime ) );
+                
+                // set water vert variation
+                if( i !== 0 && i !== waterVertsW - 1 && l !== 0 && l !== waterVertsH - 1) {
+                    wvVariation = waterVertVar[ i + l * waterVertsH ];
+                    
+                    // update variation amplitude
+                    wvVariation.amp = Math.min(wvvMax, Math.max(wvvMin, wvVariation.amp + wvvDelta * wvVariation.dir ));
+                    
+                    // check for switch direction of variation
+                    if ( wvVariation.dirSwitch > wvVariation.dirSwitchCount ) {
+                        wvVariation.dir = -wvVariation.dir;
+                        wvVariation.dirSwitch = 0;
+                    }
+                    wvVariation.dirSwitch += 1;
+                    
+                    // add variation to vert z
+                    wVert.position.z += wvVariation.amp;
+                }
+			}
+		}
+        
+        // recompute normals for correct lighting
+        // very heavy on processing
+		waterGeom.computeFaceNormals();
+		waterGeom.computeVertexNormals();
+        
+        // tell three to update vertices
+		waterMesh.geometry.__dirtyVertices = true;
+	}
+    
+    function movement () {
+        
+        waves();
+        
+        // bob camera with waves
+		camera.position.y = FLOOR + (Math.sin(waveTime) * waveCameraBobAmp);
+        
+    }
     
     /*===================================================
     
@@ -59,6 +170,9 @@ function (loader, tutorial, startMenu) {
     
     function show () {
         
+        // set gradient background
+        shared.gameContainer.addClass('bg_launcher');
+        
         // add listener for resize signal
         shared.signals.windowresized.add(resize);
         
@@ -73,6 +187,9 @@ function (loader, tutorial, startMenu) {
     
     function remove () {
         
+        // set gradient background
+        shared.gameContainer.removeClass('bg_launcher');
+        
         // remove listener for resize signal
         shared.signals.windowresized.remove(resize);
         
@@ -80,14 +197,16 @@ function (loader, tutorial, startMenu) {
     
     function update () {
         
-        mesh.rotation.x += 0.01;
-        mesh.rotation.y += 0.02;
+        movement();
         
         renderer.render( scene, camera);//, renderTarget );
         
     }
     
     function resize ( W, H ) {
+        
+        camera.aspect = W / H;
+		camera.updateProjectionMatrix();
         
     }
     
@@ -96,6 +215,7 @@ function (loader, tutorial, startMenu) {
         init: init,
         show: show,
         hide: hide,
-        update: update
+        update: update,
+        resize: resize
     };
 });

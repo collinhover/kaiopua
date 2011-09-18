@@ -94,6 +94,7 @@ function() {
     togglePanel();
     
     // resize signal
+    resize(shared.screenWidth, shared.screenHeight);
     shared.signals.windowresized.add(resize);
 
     // add dev commands

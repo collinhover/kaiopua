@@ -280,15 +280,26 @@ footer {
     margin-top: -95px; 
     height: 95px; 
     clear:both;
+    color: #eeeeee;
 }
+footer a, footer a:visited {
+    color: #dddddd;
+}
+
+footer a:hover, footer a:active {
+    color: #ffffff;
+}
+
 footer header {
     float: left;
 }
+
 footer nav {
     overflow: auto; 
     width: 380px;
     margin: 0 auto;
 }
+
 footer nav ul {
     float: left; 
     margin-top: 18px;
@@ -299,13 +310,29 @@ footer nav li {
     margin-left: 10px; 
     border-left: 1px solid #A0A0A0;
 }
+
 footer nav .last_nav {
     padding: 0; 
     border: none;
 }
+
 footer .copyright {
     clear:both; 
     text-align: center;
+}
+
+/* launcher
+-------------------------*/
+.bg_launcher {
+    /* fallback color*/ 
+    background-color: #529ad1;
+    
+    /* gradients based on browser */
+    background-image: linear-gradient(bottom, #0F042E 0%, #1D508F 25%, #529AD1 44%, #529AD1 62%, #455AE0 100%);
+background-image: -o-linear-gradient(bottom, #0F042E 0%, #1D508F 25%, #529AD1 44%, #529AD1 62%, #455AE0 100%);
+background-image: -moz-linear-gradient(bottom, #0F042E 0%, #1D508F 25%, #529AD1 44%, #529AD1 62%, #455AE0 100%);
+background-image: -webkit-linear-gradient(bottom, #0F042E 0%, #1D508F 25%, #529AD1 44%, #529AD1 62%, #455AE0 100%);
+background-image: -ms-linear-gradient(bottom, #0F042E 0%, #1D508F 25%, #529AD1 44%, #529AD1 62%, #455AE0 100%);
 }
 
 /* image replacements 

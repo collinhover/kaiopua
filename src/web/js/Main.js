@@ -63,38 +63,38 @@ function() {
     =====================================================*/
     
     function onDocumentMouseDown( e ) {
-            shared.signals.mousedown.dispatch( e );
-            
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
+        shared.signals.mousedown.dispatch( e );
+        
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
     }
     
     function onDocumentMouseUp( e ) {
-            shared.signals.mouseup.dispatch( e );
-            
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
+        shared.signals.mouseup.dispatch( e );
+        
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
     }
     
     function onDocumentMouseMove( e ) {
-            shared.mouse.x = e.clientX;
-            shared.mouse.y = e.clientY;
-            
-            shared.signals.mousemoved.dispatch( e );
-            
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
+        shared.mouse.x = e.clientX;
+        shared.mouse.y = e.clientY;
+        
+        shared.signals.mousemoved.dispatch( e );
+        
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
     }
     
     function onDocumentMouseWheel( e ) {
-            shared.signals.mousewheel.dispatch( e );
-            
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
+        shared.signals.mousewheel.dispatch( e );
+        
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
     }
     
     function onWindowDeviceOrientation( e ) {
@@ -114,75 +114,75 @@ function() {
         beta = overThreshold ? e.beta : 0;
         
         if ( lastGamma !== gamma || lastBeta !== beta) {
-                x = Math.round( 1.5 * gamma ) + shared.mouse.x;
-                y = ( - Math.round( 1.5 * beta ) ) + shared.mouse.y;
-                
-                if( Math.abs( x ) > window.innerWidth ) {
-                        if( x < 0 ) {
-                                x = -window.innerWidth;
-                        } 
-                        else {
-                                x = window.innerWidth;
-                        }
-                }
-                
-                if( Math.abs( y ) > window.innerHeight ) {
-                        if( y < 0 ) {
-                                y = -window.innerHeight;
-                        } 
-                        else {
-                                y = window.innerHeight;
-                        }
-                }
-                
-                e.mouse.x = x;
-                e.mouse.y = y;
-                
-                lastGamma = gamma;
-                lastBeta = beta;
-                
-                shared.signals.mousemoved.dispatch( e );
-                
-                e.preventDefault();
-                e.stopPropagation();
-                return false;
+            x = Math.round( 1.5 * gamma ) + shared.mouse.x;
+            y = ( - Math.round( 1.5 * beta ) ) + shared.mouse.y;
+            
+            if( Math.abs( x ) > window.innerWidth ) {
+                    if( x < 0 ) {
+                            x = -window.innerWidth;
+                    } 
+                    else {
+                            x = window.innerWidth;
+                    }
+            }
+            
+            if( Math.abs( y ) > window.innerHeight ) {
+                    if( y < 0 ) {
+                            y = -window.innerHeight;
+                    } 
+                    else {
+                            y = window.innerHeight;
+                    }
+            }
+            
+            e.mouse.x = x;
+            e.mouse.y = y;
+            
+            lastGamma = gamma;
+            lastBeta = beta;
+            
+            shared.signals.mousemoved.dispatch( e );
+            
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
         }
     }
 
     function onDocumentKeyDown( e ) {
-            shared.signals.keydown.dispatch( e );
-            
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
+        shared.signals.keydown.dispatch( e );
+        
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
     }
 
     function onDocumentKeyUp( e ) {
-            shared.signals.keyup.dispatch( e );
-            
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
+        shared.signals.keyup.dispatch( e );
+        
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
     }
 
     function onWindowResize( e ) {
-            shared.screenWidth = $(window).width();
-            shared.screenHeight = $(window).height();
-            
-            shared.signals.windowresized.dispatch(shared.screenWidth, shared.screenHeight);
-            
-            if (typeof e !== 'undefined') {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-            return false;
+        
+        shared.screenWidth = $(window).width();
+        shared.screenHeight = $(window).height();
+        
+        shared.signals.windowresized.dispatch(shared.screenWidth, shared.screenHeight);
+        
+        if (typeof e !== 'undefined') {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        return false;
     }
     
     function onError ( error, url, lineNumber ) {
         
         dev.log_error(error, url, lineNumber);
         
-        return false;
     }
     
     // return an object to define module

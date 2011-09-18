@@ -5,7 +5,7 @@ Game module, handles sections of game.
 
 define(["order!lib/Three",
         "order!lib/ThreeExtras",
-        "game/sections/launcher/Launcher"],
+        "order!game/sections/launcher/Launcher"],
 function() {
     var shared = require('utils/Shared'),
         launcher = require('game/sections/launcher/Launcher'),
@@ -22,13 +22,9 @@ function() {
     // renderer
     renderer = new THREE.WebGLRenderer( { antialias: false, clearColor: 0x000000, clearAlpha: 0 } );
     renderer.setSize( shared.screenWidth, shared.screenHeight );
-    renderer.sortObjects = false;
-    renderer.autoClear = false;
     
     // render target
-    renderTarget = new THREE.WebGLRenderTarget( shared.screenWidth, shared.screenHeight );
-    //renderTarget.minFilter = THREE.LinearFilter;
-    //renderTarget.magFilter = THREE.NearestFilter;
+    renderTarget = new THREE.WebGLRenderTarget( shared.screenWidth, shared.screenHeight, { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter } );
     
     // add to game dom element
     domElement.append( renderer.domElement );
@@ -44,6 +40,7 @@ function() {
     shared.renderTarget = renderTarget;
     
     // resize listener
+    resize(shared.screenWidth, shared.screenHeight);
     shared.signals.windowresized.add(resize);
     
     /*===================================================
@@ -79,11 +76,18 @@ function() {
             currentSection.hide();
         }
         
-        // show new section
-        section.show();
-        
-        // store new as current
-        currentSection = section;
+        if (typeof section !== 'undefined') {
+            
+            section.resize(shared.screenWidth, shared.screenHeight);
+            
+            section.show();
+            
+            currentSection = section;
+            
+        }
+        else {
+            currentSection = undefined;
+        }
     }
     
     function start_updating () {
@@ -108,13 +112,12 @@ function() {
     }
     
     function resize( W, H ) {
-        // resize game container
-        domElement.width(W).height(H);
         
         // resize three
         renderer.setSize( W, H );
         renderTarget.width = W;
         renderTarget.height = H;
+        
     }
 
     // return something to define module
