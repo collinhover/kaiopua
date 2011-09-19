@@ -154,7 +154,7 @@ button {width: auto; overflow: visible;}
 body {font: 13px 'OpenSansRegular', Helmet, Freesans, sans-serif;}
 
 /* we like off-black for text */
-body, select, input, textarea {color: #333;}
+body, select, input, textarea {color: #333333;}
 
 /* Custom text-selection colors (remove any text shadows: twitter.com/miketaylr/status/12228805301) */
 ::-moz-selection{background: #fcd700; color: #fff; text-shadow: none;}
@@ -170,7 +170,10 @@ mark {background-color: #fcd700; color: #000; font-style: italic; font-weight: b
 -------------------------------------------------------------------------------*/
 
 /* body */
-html, body {height: 100%;}
+html, body {
+    height: 100%; 
+    background-color: #333333;
+}
 
 /* wrapper */
 #wrapper {min-height: 100%;}
@@ -204,13 +207,13 @@ a:hover, a:active {
 
 .error {
     width: 540px; 
-    height: 270px; 
+    height: 275px; 
     overflow: auto; 
     position: absolute; 
     left: 50%; 
     top: 50%;
-    margin: -182px 0 0 -270px;
-    background: #333333; 
+    margin: -197px 0 0 -270px;
+    background: #222222; 
     color: #ffffff;
     -moz-border-radius    : 15px;
     -webkit-border-radius : 15px;
@@ -277,8 +280,8 @@ footer {
     width: 380px; 
     margin: 0 auto; 
     position: relative; 
-    margin-top: -95px; 
-    height: 95px; 
+    margin-top: -120px; 
+    height: 120px; 
     clear:both;
     color: #eeeeee;
 }
@@ -319,6 +322,18 @@ footer nav .last_nav {
 footer .copyright {
     clear:both; 
     text-align: center;
+}
+
+/* transitioner
+-------------------------*/
+#transitioner {
+    min-height: 100%;
+	width: 100%;
+	height: auto;
+	position: fixed;
+	top: 0;
+	left: 0;
+    background-color: #333333;
 }
 
 /* launcher

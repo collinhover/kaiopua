@@ -5,12 +5,13 @@ Game module, handles sections of game.
 
 define(["order!lib/Three",
         "order!lib/ThreeExtras",
-        "order!game/sections/launcher/Launcher"],
+        "order!game/sections/LauncherSection"],
 function() {
     var shared = require('utils/Shared'),
-        launcher = require('game/sections/launcher/Launcher'),
+        launcher = require('game/sections/LauncherSection'),
         domElement = shared.gameContainer,
-        renderer, renderTarget, sections, sectionNames, currentSection, paused = true;
+        renderer, renderTarget, sections, sectionNames, 
+        currentSection, previousSection, paused = true;
     
     /*===================================================
     
@@ -61,7 +62,6 @@ function() {
         set_section(sections.launcher);
         
         start_updating();
-        
     }
     
     /*===================================================
@@ -73,20 +73,40 @@ function() {
     function set_section ( section ) {
         // hide current section
         if (typeof currentSection !== 'undefined') {
-            currentSection.hide();
+            
+            previousSection = currentSection;
+            
+            previousSection.hide();
+            
+            stop_updating();
+            
+            shared.transitioner.fadeTo(shared.transitionIn, 1).promise().done( function () {
+                previousSection.remove();
+            });
+            
         }
         
+        // no current section
+        currentSection = undefined;
+        
+        // start and show new section
         if (typeof section !== 'undefined') {
             
-            section.resize(shared.screenWidth, shared.screenHeight);
+            // wait for transitioner to finish fading in
+            shared.transitioner.promise().done(function () {
+                
+                section.resize(shared.screenWidth, shared.screenHeight);
             
-            section.show();
+                section.show();
+                
+                currentSection = section;
+                
+                start_updating();
+                
+                shared.transitioner.fadeTo(shared.transitionOut, 0);
+                
+            });
             
-            currentSection = section;
-            
-        }
-        else {
-            currentSection = undefined;
         }
     }
     

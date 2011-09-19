@@ -1,5 +1,5 @@
 /*
-Intro.js
+IntroSection.js
 Intro module, handles introduction to story and teaching user basic game mechanics.
 */
 define([],

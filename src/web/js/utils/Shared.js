@@ -22,6 +22,10 @@ function () {
         static_menu: $('#static_menu'),
         gameContainer: $('#game'),
         errorContainer: $('#error_container'),
+        transitioner: $('#transitioner'),
+        
+        transitionOut: 500,
+        transitionIn: 400,
         
         signals : {
 
