@@ -1,33 +1,41 @@
 /*
 Water.js
 Launcher section water handler.
+
+ray texture (c) oosmoxie @ http://oos.moxiecode.com/
 */
 
 define([],
 function () {
-    var waterGeometry, 
-        waterMaterial,
-        waterMesh,
-        waterFog,
-        color = 0x529ad1,
-        size = 10000,
-        vertsW = 50,
-        vertsH = 50,
-        vertsNum,
+    var wavesGeometry, 
+        wavesMaterial,
+        wavesMesh,
+        wavesColor = 0x529ad1,
+        wavesSize = 10000,
+        wavesVertsW = 50,
+        wavesVertsH = 50,
+        wavesVertsNum,
         time = 0,
-        speed = 0.04,
-        speedMod = 0.5,
-        amplitude = 200,
-        frequency = 4,
+        wavesSpeed = 0.04,
+        wavesSpeedMod = 0.5,
+        wavesAmplitude = 200,
+        wavesFrequency = 4,
         vertVariations = [],
         vvAbs = 35,
-        vvMin = -Math.min(amplitude * 0.5, vvAbs),
-        vvMax = Math.min(amplitude * 0.5, vvAbs),
+        vvMin = -Math.min(wavesAmplitude * 0.5, vvAbs),
+        vvMax = Math.min(wavesAmplitude * 0.5, vvAbs),
         vvDelta = (vvMax - vvMin) * 0.01,
         vvDirSwitchPause = 600,
-        cameraBobAmp = amplitude * 1.5,
-        cameraTiltAmp = 5 * (Math.PI / 180),
-        cameraTiltCycleMod = Math.PI * 1.5;
+        bobAmp = wavesAmplitude * 1.5,
+        bobTiltAmp = 5 * (Math.PI / 180),
+        bobTiltCycleMod = Math.PI * 1.5,
+        waterRays = [],
+        rayTexture = THREE.ImageUtils.loadTexture( "files/img/ray.png" ),
+        numRays = 20,
+        rayWidth = 700,
+        rayHeight = 2000,
+        lightAngle = (-Math.PI * 0.1), 
+        environment = new THREE.Object3D();
         
     /*===================================================
     
@@ -35,16 +43,54 @@ function () {
     
     =====================================================*/
     
-    function init () {
-        var i;
+    function init ( parameters ) {
+        var i, ray, rayGeometry, rayMaterial, rayVert;
+        
+        // handle parameters
+        
+        parameters = parameters || {};
+        
+        wavesColor = parameters.wavesColor || wavesColor;
+        
+        wavesSize = parameters.wavesSize || wavesSize;
+        
+        wavesVertsW = parameters.wavesVertsW || wavesVertsW;
+        
+        wavesVertsH = parameters.wavesVertsH || wavesVertsH;
+        
+        wavesSpeed = parameters.wavesSpeed || wavesSpeed;
+        
+        wavesSpeedMod = parameters.wavesSpeedMod || wavesSpeedMod;
+        
+        wavesAmplitude = parameters.wavesAmplitude || wavesAmplitude;
+        
+        vvAbs = parameters.vvAbs || vvAbs;
+        
+        vvMin = -Math.min(wavesAmplitude * 0.5, vvAbs);
+        
+        vvMax = Math.min(wavesAmplitude * 0.5, vvAbs);
+        
+        vvDelta = (vvMax - vvMin) * 0.01;
+        
+        bobAmp = wavesAmplitude * 1.5;
+        
+        wavesFrequency = parameters.wavesFrequency || wavesFrequency;
+        
+        numRays = parameters.numRays || numRays;
+        
+        rayWidth = parameters.rayWidth || rayWidth;
+        
+        rayHeight = parameters.rayHeight || rayHeight;
+        
+        lightAngle = parameters.lightAngle || lightAngle;
         
         // create water geometry
-        waterGeometry = new THREE.PlaneGeometry( size, size, vertsW - 1, vertsH - 1 );
-        waterGeometry.dynamic = true;
+        wavesGeometry = new THREE.PlaneGeometry( wavesSize, wavesSize, wavesVertsW - 1, wavesVertsH - 1 );
+        wavesGeometry.dynamic = true;
         
         // per vert variation
-        vertsNum = waterGeometry.vertices.length;
-        for ( i = 0; i < vertsNum; i += 1 ) {
+        wavesVertsNum = wavesGeometry.vertices.length;
+        for ( i = 0; i < wavesVertsNum; i += 1 ) {
             vertVariations[ i ] = {
                 amplitude : Math.random() * (vvMax - vvMin) + vvMin,
                 dir : 1,
@@ -54,13 +100,39 @@ function () {
         }
         
         // water material
-        waterMaterial = new THREE.MeshLambertMaterial( { color: color } );
+        wavesMaterial = new THREE.MeshLambertMaterial( { color: wavesColor } );
         
         // water mesh
-        waterMesh = new THREE.Mesh( waterGeometry, waterMaterial );
+        wavesMesh = new THREE.Mesh( wavesGeometry, wavesMaterial );
+        wavesMesh.doubleSided = true;
         
-        // fog
-        waterFog = new THREE.Fog( color, - 100, size );
+        environment.addChild( wavesMesh );
+        
+        // water rays
+        /*
+        rayGeometry = new THREE.PlaneGeometry ( rayWidth, rayHeight );
+        
+        rayMaterial = new THREE.MeshLambertMaterial( { color: 0x000000});//wavesColor, map: rayTexture, opacity: 0.5, depthTest: false } );
+        
+        for ( i = 0; i < numRays; i += 1 ) {
+            
+			ray = new THREE.Mesh( rayGeometry, rayMaterial );
+            //ray.doubleSided = true;
+            ray.up.set(
+            ray.rotation.set( Math.PI * 0.5 - lightAngle, -Math.PI * 0.5, 0);
+            //ray.rotation.set( Math.PI * 0.5 - lightAngle, -Math.PI * 0.5, 0);
+            
+            rayVert = wavesGeometry.vertices[ Math.floor((i / numRays) * wavesVertsNum) ];
+            
+			//ray.position.x = rayVert.position.y;
+            //ray.position.y = rayVert.position.x;
+            //ray.position.z = -(rayWidth + wavesAmplitude);
+            
+            require('utils/Dev').log(' z: ' + ray.position.x + ' x: ' + ray.position.y + ' y: ' + ray.position.z);
+            
+            environment.addChild( ray );
+        }
+        */
     }
     
     /*===================================================
@@ -71,27 +143,27 @@ function () {
     
     function waves() {
         
-        var waterVerts = waterGeometry.vertices, 
-            vert, variation, vvw = vertsW - 1, vvh = vertsH - 1,
+        var wavesVerts = wavesGeometry.vertices, 
+            vert, variation, vvw = wavesVertsW - 1, vvh = wavesVertsH - 1,
             i, l;
         
         // update wave time
-        //time = new Date().getTime() * speedMod;
-        time += speed * speedMod;
+        //time = new Date().getTime() * wavesSpeedMod;
+        time += wavesSpeed * wavesSpeedMod;
         time = time % (Math.PI * 2);
         
-        for ( i = 0; i < vertsW; i += 1 ) {
-            for ( l = 0; l < vertsH; l += 1 ) {
-                vert = waterVerts[ i + l * vertsH ];
+        for ( i = 0; i < wavesVertsW; i += 1 ) {
+            for ( l = 0; l < wavesVertsH; l += 1 ) {
+                vert = wavesVerts[ i + l * wavesVertsH ];
                 
                 // set water vert
-                vert.position.z = amplitude * ( Math.cos( i / frequency  + time ) + Math.sin( l / frequency + time ) );
+                vert.position.z = wavesAmplitude * ( Math.cos( i / wavesFrequency  + time ) + Math.sin( l / wavesFrequency + time ) );
                 
                 // set water vert variation
                 if( i !== 0 && i !== vvw && l !== 0 && l !== vvh) {
-                    variation = vertVariations[ i + l * vertsH ];
+                    variation = vertVariations[ i + l * wavesVertsH ];
                     
-                    // update variation amplitude
+                    // update variation wavesAmplitude
                     variation.amplitude = Math.min(vvMax, Math.max(vvMin, variation.amplitude + vvDelta * variation.dir ));
                     
                     // check for switch direction of variation
@@ -109,22 +181,24 @@ function () {
         
         // recompute normals for correct lighting
         // very heavy on processing
-		waterGeometry.computeFaceNormals();
-		waterGeometry.computeVertexNormals();
+		wavesGeometry.computeFaceNormals();
+		wavesGeometry.computeVertexNormals();
         
         // tell three to update vertices
-		waterGeometry.__dirtyVertices = true;
+		wavesGeometry.__dirtyVertices = true;
 	}
+    
+    // bobs object with waves
+    function bob ( object ) {
+        object.position.y = (Math.sin(time) * bobAmp);
+        object.rotation.x = Math.sin(time + bobTiltCycleMod) * bobTiltAmp;
+    }
     
     // return something to define module
     return {
         init: init,
         waves : waves,
-        get_mesh : function () { return waterMesh; },
-        get_fog : function () { return waterFog; },
-        get_time : function () { return time; },
-        cameraBobAmp : cameraBobAmp,
-        cameraTiltAmp : cameraTiltAmp,
-        cameraTiltCycleMod : cameraTiltCycleMod
+        get_environment : function () { return environment; },
+        bob : bob
     };
 });

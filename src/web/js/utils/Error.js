@@ -63,14 +63,15 @@ function () {
                 try {
                     context = canvas.getContext(webglNames[i]);
                 }
-                catch ( e ) {}
-                if (typeof context !== 'undefined') {
+                catch ( e ) {
+                }
+                if (context !== null && typeof context !== 'undefined') {
                     break;
                 }
             }
             
             // if none found, there is another problem
-            if (typeof context === 'undefined') {
+            if (context === null || typeof context === 'undefined') {
                 errorType = 'webgl_other';
             }
         }

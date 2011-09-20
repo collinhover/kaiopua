@@ -10,15 +10,12 @@ define(["order!lib/requestAnimFrame",
         "order!lib/jquery-1.6.3.min",
         "order!utils/Shared", 
         "order!utils/Dev",
-        "order!utils/Error",
-        "order!game/Game"
-        ], 
+        "order!utils/Error"], 
 function() {
     var shared = require('utils/Shared'),
         dev = require('utils/Dev'),
         error = require('utils/Error'),
-        game = require('game/Game'),
-        lastGamma = 0, lastBeta = 0;
+        game, lastGamma = 0, lastBeta = 0;
     
     /*===================================================
     
@@ -46,14 +43,18 @@ function() {
     
     // resize once
     onWindowResize();
-    
     // check for errors
     if (error.check()) {
         error.process();
     }
     // safe to start game
     else {
-        game.init();
+        // load game module and all parts
+        require(["game/Game"], function (gameModule) {
+            // start
+            game = gameModule;
+            game.init(); 
+        });
     }
     
     /*===================================================

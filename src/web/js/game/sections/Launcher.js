@@ -1,17 +1,16 @@
 /*
-LauncherSection.js
+Launcher.js
 Launcher module, handles loading assets, tutorial, and start menu.
 */
 define(["game/sections/launcher/Loader",
         "game/sections/launcher/StartMenu",
         "game/sections/launcher/Water",
         "game/sections/launcher/Sky"],
-function () {
+function (loader, tutorial, startMenu) {
     var shared = require('utils/Shared'),
         renderer, renderTarget,
-        camera, cameraRotY = -90 * Math.PI / 180, scene,
-        water = require("game/sections/launcher/Water"),
-        sky = require("game/sections/launcher/Sky");
+        camera, scene,
+        water = require("game/sections/launcher/Water"); 
     
     /*===================================================
     
@@ -23,18 +22,16 @@ function () {
     
     function init_internal () {
         
-        var i, ambient, light1, waterEnv, skyEnv;
+        var i, ambient, light1;
         
-        //camera = new THREE.Camera(60, shared.screenWidth / shared.screenHeight, 1, 10000);
-        
-        camera = new THREE.FirstPersonCamera( { fov: 60, aspect:shared.screenWidth / shared.screenHeight, near: 1, far: 20000, movementSpeed: 1000, lookSpeed: 0.1, noFly: false, lookVertical: true } );
+        camera = new THREE.Camera(60, shared.screenWidth / shared.screenHeight, 1, 10000);
         
         // starting position
         camera.position = new THREE.Vector3(-5800, 0, 0);
         
         // useTarget property set to false for control over rotation
-        //camera.useTarget = false;
-        //camera.rotation.y = cameraRotY;
+        camera.useTarget = false;
+        camera.rotation.y = -90 * Math.PI / 180;
         
         scene = new THREE.Scene();
     
@@ -48,32 +45,12 @@ function () {
         scene.addLight( ambient );
         scene.addLight( light1 );
         
-        // fog
-        scene.fog = new THREE.Fog( 0x529ad1, -100, 10000 );
-        
         // water
-        water.init( { wavesColor: scene.fog.color.getHex() } );
+        water.init();
         
-        waterEnv = water.get_environment();
+        scene.fog = water.fog;
         
-        waterEnv.rotation.x = cameraRotY;
-        
-        scene.addObject( waterEnv );
-        
-        // sky
-        
-        sky.init();
-        
-        // sky mesh
-        skyEnv = sky.get_environment();
-        
-        skyEnv.position.x = 0;
-        skyEnv.position.y = 2000;
-        
-        skyEnv.rotation.y = cameraRotY;
-        
-        // add clouds
-        scene.addObject( skyEnv );
+        scene.addObject( water.mesh );
     }
     
     /*===================================================
@@ -97,12 +74,11 @@ function () {
     
     function simulate () {
         
-        sky.wind_blow();
-        
-        water.waves();
+        //water.waves();
         
         // bob camera with waves
-		//water.bob( camera );
+		//camera.position.y = floor + (Math.sin(water.time) * water.waveCameraBobAmp);
+        //camera.rotation.x = Math.sin(water.time + water.waveCameraTiltCycleMod) * waveCameraTiltAmp;
         
     }
     
@@ -117,9 +93,6 @@ function () {
         // set gradient background
         shared.gameContainer.addClass('bg_launcher');
         
-        // disable renderer object sorting
-        shared.renderer.sortObjects = false;
-        
         // add listener for resize signal
         shared.signals.windowresized.add(resize);
         
@@ -133,9 +106,6 @@ function () {
     }
     
     function remove () {
-        
-        // enable renderer object sorting
-        shared.renderer.sortObjects = true;
         
         // clear gradient background
         shared.gameContainer.removeClass('bg_launcher');
