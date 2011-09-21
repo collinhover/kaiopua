@@ -49,9 +49,7 @@ function() {
     }
     // safe to start game
     else {
-        // load game module and all parts
         require(["game/Game"], function (gameModule) {
-            // start
             game = gameModule;
             game.init(); 
         });
