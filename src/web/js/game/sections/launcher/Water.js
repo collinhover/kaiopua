@@ -38,7 +38,7 @@ function () {
         lightAngle = (-Math.PI * 0.1),
         rayShowChance = 0.01,
         rayOpacityOn = 0.6,
-        rayOpacityDelta = 0.02,
+        rayOpacityDelta = 0.01,
         environment = new THREE.Object3D();
         
     /*===================================================
