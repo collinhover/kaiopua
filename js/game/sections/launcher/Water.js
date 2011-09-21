@@ -33,7 +33,7 @@ function () {
         numRays = 20,
         rayWidth = 700,
         rayHeight = 2000,
-        rayHeightVariation = rayHeight * 0.5;
+        rayHeightVariation = rayHeight * 0.5,
         lightAngle = (-Math.PI * 0.1),
         rayShowChance = 0.001,
         rayOpacityOn = 0.6,
