@@ -1,8 +1,6 @@
 /*
 Water.js
 Launcher section water handler.
-
-ray texture (c) oosmoxie @ http://oos.moxiecode.com/
 */
 
 define([],
@@ -31,14 +29,15 @@ function () {
         bobTiltCycleMod = Math.PI * 1.5,
         waterRaysInactive = [],
         waterRaysActive = [],
-        rayTexture = THREE.ImageUtils.loadTexture( "files/img/ray.png" ),
+        rayTexture = THREE.ImageUtils.loadTexture( "files/img/light_ray.png" ),
         numRays = 20,
         rayWidth = 700,
         rayHeight = 2000,
+        rayHeightVariation = rayHeight * 0.5;
         lightAngle = (-Math.PI * 0.1),
-        rayShowChance = 0.01,
+        rayShowChance = 0.001,
         rayOpacityOn = 0.6,
-        rayOpacityDelta = 0.01,
+        rayOpacityDelta = 0.02,
         environment = new THREE.Object3D();
         
     /*===================================================
@@ -86,6 +85,8 @@ function () {
         
         rayHeight = parameters.rayHeight || rayHeight;
         
+        rayHeightVariation = parameters.rayHeightVariation || rayHeightVariation;
+        
         lightAngle = parameters.lightAngle || lightAngle;
         
         rayShowChance = parameters.rayShowChance || rayShowChance;
@@ -120,7 +121,7 @@ function () {
         
         // water rays
         
-        rayGeometry = new THREE.PlaneGeometry ( rayWidth, rayHeight );
+        rayGeometry = new THREE.PlaneGeometry ( rayWidth, rayHeight + (Math.random() * (rayHeightVariation) - (rayHeightVariation * 0.5)) );
         
         for ( i = 0; i < numRays; i += 1 ) {
         
@@ -151,10 +152,11 @@ function () {
     =====================================================*/
     
     function show_ray (tri) {
-        var mat = tri.material;
+        var mat = tri.material,
+            halfDelta = rayOpacityDelta * 0.5;
         
         // increase material opacity towards target
-        mat.opacity += rayOpacityDelta * tri.targetOpacityDir;
+        mat.opacity += (halfDelta + Math.random() * halfDelta) * tri.targetOpacityDir;
         
         // if at or below 0, stop showing
         if (tri.targetOpacity === 0 && mat.opacity <= tri.targetOpacity) {
@@ -217,12 +219,13 @@ function () {
                 // check vert z, if low enough 
                 // and there are inactive water rays, show water ray
                 if (vert.position.z < -wavesAmplitude && waterRaysInactive.length > 0 && Math.random() <= rayShowChance) {
+                
                     // get next ray by removing last from inactive
                     waterRayInfo = waterRaysInactive.pop();
                     waterRay = waterRayInfo.ray;
                     
                     // set ray position to position of triggering water vertex
-                    waterRay.position.set(vert.position.x, vert.position.y, -(vert.position.z + rayHeight * 0.5 + wavesAmplitude * 1.5));
+                    waterRay.position.set(vert.position.x, vert.position.y, -(vert.position.z + rayHeight * 0.5 + wavesAmplitude));
                     
                     // record active index for later so we dont have to search
                     waterRayInfo.activeIndex = waterRaysActive.length;
