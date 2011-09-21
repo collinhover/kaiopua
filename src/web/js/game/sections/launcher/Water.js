@@ -37,8 +37,8 @@ function () {
         rayHeight = 2000,
         lightAngle = (-Math.PI * 0.1),
         rayShowChance = 0.01,
-        rayOpacityOn = 0.5,
-        rayOpacityDelta = 0.01,
+        rayOpacityOn = 0.6,
+        rayOpacityDelta = 0.02,
         environment = new THREE.Object3D();
         
     /*===================================================
@@ -88,6 +88,12 @@ function () {
         
         lightAngle = parameters.lightAngle || lightAngle;
         
+        rayShowChance = parameters.rayShowChance || rayShowChance;
+        
+        rayOpacityOn = parameters.rayOpacityOn || rayOpacityOn;
+        
+        rayOpacityDelta = parameters.rayOpacityDelta || rayOpacityDelta;
+        
         // create water geometry
         wavesGeometry = new THREE.PlaneGeometry( wavesSize, wavesSize, wavesVertsW - 1, wavesVertsH - 1 );
         wavesGeometry.dynamic = true;
@@ -118,7 +124,7 @@ function () {
         
         for ( i = 0; i < numRays; i += 1 ) {
         
-            rayMaterial = new THREE.MeshLambertMaterial( { color: wavesColor, map: rayTexture, opacity: 0});//, depthTest: false } );
+            rayMaterial = new THREE.MeshLambertMaterial( { color: wavesColor, map: rayTexture, opacity: 0, depthTest: false } );
             
 			ray = new THREE.Mesh( rayGeometry, rayMaterial );
             
@@ -216,7 +222,7 @@ function () {
                     waterRay = waterRayInfo.ray;
                     
                     // set ray position to position of triggering water vertex
-                    waterRay.position.set(vert.position.x, vert.position.y, -(vert.position.z + rayHeight * 0.5));
+                    waterRay.position.set(vert.position.x, vert.position.y, -(vert.position.z + rayHeight * 0.5 + wavesAmplitude * 1.5));
                     
                     // record active index for later so we dont have to search
                     waterRayInfo.activeIndex = waterRaysActive.length;

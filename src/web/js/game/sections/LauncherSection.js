@@ -25,16 +25,16 @@ function () {
         
         var i, ambient, light1, waterEnv, skyEnv;
         
-        //camera = new THREE.Camera(60, shared.screenWidth / shared.screenHeight, 1, 10000);
+        camera = new THREE.Camera(60, shared.screenWidth / shared.screenHeight, 1, 10000);
         
-        camera = new THREE.FirstPersonCamera( { fov: 60, aspect:shared.screenWidth / shared.screenHeight, near: 1, far: 20000, movementSpeed: 1000, lookSpeed: 0.1, noFly: false, lookVertical: true } );
+        //camera = new THREE.FirstPersonCamera( { fov: 60, aspect:shared.screenWidth / shared.screenHeight, near: 1, far: 20000, movementSpeed: 1000, lookSpeed: 0.1, noFly: false, lookVertical: true } );
         
         // starting position
         camera.position = new THREE.Vector3(-5800, 0, 0);
         
         // useTarget property set to false for control over rotation
-        //camera.useTarget = false;
-        //camera.rotation.y = cameraRotY;
+        camera.useTarget = false;
+        camera.rotation.y = cameraRotY;
         
         scene = new THREE.Scene();
     
@@ -102,7 +102,7 @@ function () {
         water.waves();
         
         // bob camera with waves
-		//water.bob( camera );
+		water.bob( camera );
         
     }
     
