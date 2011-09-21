@@ -1,8 +1,6 @@
 /*
 Water.js
 Launcher section water handler.
-
-ray texture (c) oosmoxie @ http://oos.moxiecode.com/
 */
 
 define([],
@@ -29,12 +27,17 @@ function () {
         bobAmp = wavesAmplitude * 1.5,
         bobTiltAmp = 5 * (Math.PI / 180),
         bobTiltCycleMod = Math.PI * 1.5,
-        waterRays = [],
-        rayTexture = THREE.ImageUtils.loadTexture( "files/img/ray.png" ),
+        waterRaysInactive = [],
+        waterRaysActive = [],
+        rayTexture = THREE.ImageUtils.loadTexture( "files/img/light_ray.png" ),
         numRays = 20,
         rayWidth = 700,
         rayHeight = 2000,
-        lightAngle = (-Math.PI * 0.1), 
+        rayHeightVariation = rayHeight * 0.5;
+        lightAngle = (-Math.PI * 0.1),
+        rayShowChance = 0.001,
+        rayOpacityOn = 0.6,
+        rayOpacityDelta = 0.02,
         environment = new THREE.Object3D();
         
     /*===================================================
@@ -44,7 +47,7 @@ function () {
     =====================================================*/
     
     function init ( parameters ) {
-        var i, ray, rayGeometry, rayMaterial, rayVert;
+        var i, ray, rayGeometry, rayMaterial;
         
         // handle parameters
         
@@ -82,7 +85,15 @@ function () {
         
         rayHeight = parameters.rayHeight || rayHeight;
         
+        rayHeightVariation = parameters.rayHeightVariation || rayHeightVariation;
+        
         lightAngle = parameters.lightAngle || lightAngle;
+        
+        rayShowChance = parameters.rayShowChance || rayShowChance;
+        
+        rayOpacityOn = parameters.rayOpacityOn || rayOpacityOn;
+        
+        rayOpacityDelta = parameters.rayOpacityDelta || rayOpacityDelta;
         
         // create water geometry
         wavesGeometry = new THREE.PlaneGeometry( wavesSize, wavesSize, wavesVertsW - 1, wavesVertsH - 1 );
@@ -109,30 +120,29 @@ function () {
         environment.addChild( wavesMesh );
         
         // water rays
-        /*
-        rayGeometry = new THREE.PlaneGeometry ( rayWidth, rayHeight );
         
-        rayMaterial = new THREE.MeshLambertMaterial( { color: 0x000000});//wavesColor, map: rayTexture, opacity: 0.5, depthTest: false } );
+        rayGeometry = new THREE.PlaneGeometry ( rayWidth, rayHeight + (Math.random() * (rayHeightVariation) - (rayHeightVariation * 0.5)) );
         
         for ( i = 0; i < numRays; i += 1 ) {
+        
+            rayMaterial = new THREE.MeshLambertMaterial( { color: wavesColor, map: rayTexture, opacity: 0, depthTest: false } );
             
 			ray = new THREE.Mesh( rayGeometry, rayMaterial );
-            //ray.doubleSided = true;
-            ray.up.set(
-            ray.rotation.set( Math.PI * 0.5 - lightAngle, -Math.PI * 0.5, 0);
-            //ray.rotation.set( Math.PI * 0.5 - lightAngle, -Math.PI * 0.5, 0);
             
-            rayVert = wavesGeometry.vertices[ Math.floor((i / numRays) * wavesVertsNum) ];
+            ray.rotation.set( Math.PI * 0.5 - lightAngle, -Math.PI * 0.5, 0); //
             
-			//ray.position.x = rayVert.position.y;
-            //ray.position.y = rayVert.position.x;
-            //ray.position.z = -(rayWidth + wavesAmplitude);
+            // add to inactive water rays list
+            waterRaysInactive[waterRaysInactive.length] = {
+                ray: ray,
+                material: rayMaterial,
+                targetOpacity: rayOpacityOn,
+                targetOpacityDir: 1
+            };
             
-            require('utils/Dev').log(' z: ' + ray.position.x + ' x: ' + ray.position.y + ' y: ' + ray.position.z);
-            
+            // add to environment
             environment.addChild( ray );
         }
-        */
+        
     }
     
     /*===================================================
@@ -141,11 +151,40 @@ function () {
     
     =====================================================*/
     
+    function show_ray (tri) {
+        var mat = tri.material,
+            halfDelta = rayOpacityDelta * 0.5;
+        
+        // increase material opacity towards target
+        mat.opacity += (halfDelta + Math.random() * halfDelta) * tri.targetOpacityDir;
+        
+        // if at or below 0, stop showing
+        if (tri.targetOpacity === 0 && mat.opacity <= tri.targetOpacity) {
+            tri.targetOpacityDir = 1;
+            tri.targetOpacity = rayOpacityOn;
+            
+            waterRaysActive.splice(tri.activeIndex, 1);
+            
+            waterRaysInactive[waterRaysInactive.length] = tri;
+        }
+        // else keep ray showing
+        else {
+            if (tri.targetOpacity === rayOpacityOn && mat.opacity >= tri.targetOpacity){
+                tri.targetOpacityDir = -1;
+                tri.targetOpacity = 0;
+            }
+            
+            // recursive call until done
+            window.requestAnimFrame(function () { show_ray(tri); });   
+        }
+        
+    }
+    
     function waves() {
         
         var wavesVerts = wavesGeometry.vertices, 
             vert, variation, vvw = wavesVertsW - 1, vvh = wavesVertsH - 1,
-            i, l;
+            waterRayInfo, waterRay, i, l;
         
         // update wave time
         //time = new Date().getTime() * wavesSpeedMod;
@@ -175,6 +214,27 @@ function () {
                     
                     // add variation to vert z
                     vert.position.z += variation.amplitude;
+                }
+                
+                // check vert z, if low enough 
+                // and there are inactive water rays, show water ray
+                if (vert.position.z < -wavesAmplitude && waterRaysInactive.length > 0 && Math.random() <= rayShowChance) {
+                
+                    // get next ray by removing last from inactive
+                    waterRayInfo = waterRaysInactive.pop();
+                    waterRay = waterRayInfo.ray;
+                    
+                    // set ray position to position of triggering water vertex
+                    waterRay.position.set(vert.position.x, vert.position.y, -(vert.position.z + rayHeight * 0.5 + wavesAmplitude));
+                    
+                    // record active index for later so we dont have to search
+                    waterRayInfo.activeIndex = waterRaysActive.length;
+                    
+                    // add to list of active rays
+                    waterRaysActive[waterRaysActive.length] = waterRayInfo;
+                    
+                    // show ray
+                    show_ray(waterRayInfo);
                 }
 			}
 		}
