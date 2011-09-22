@@ -2,14 +2,16 @@
 LauncherSection.js
 Launcher module, handles loading assets, tutorial, and start menu.
 */
-define(["game/sections/launcher/Loader",
+define(["order!lib/ShaderExtras",
+        "game/sections/launcher/Loader",
         "game/sections/launcher/StartMenu",
         "game/sections/launcher/Water",
         "game/sections/launcher/Sky"],
 function () {
     var shared = require('utils/Shared'),
         renderer, renderTarget,
-        camera, cameraRotY = -90 * Math.PI / 180, scene,
+        camera, cameraRotY = -90 * Math.PI / 180, 
+        scene,
         water = require("game/sections/launcher/Water"),
         sky = require("game/sections/launcher/Sky");
     
@@ -76,6 +78,12 @@ function () {
         scene.addObject( skyEnv );
     }
     
+    // post processing
+    var postprocessing = { 
+        enabled  : true,
+        depthMat : new THREE.MeshDepthMaterial()
+    };
+    
     /*===================================================
     
     external init
@@ -87,7 +95,51 @@ function () {
         renderer = shared.renderer;
         renderTarget = shared.renderTarget;
         
+        // post processing
+        
+        initPostprocessing();
+        
     }
+    
+    function initPostprocessing() {
+        
+        renderer.autoClear = false;
+        
+        scene.matrixAutoUpdate = false;
+
+		postprocessing.scene = new THREE.Scene();
+        
+		postprocessing.camera = new THREE.OrthoCamera( shared.screenWidth / - 2, shared.screenWidth / 2,  shared.screenHeight / 2, shared.screenHeight / - 2, -10000, 10000 );
+		postprocessing.camera.position.z = 100;
+
+		var pars = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBFormat };
+		postprocessing.rtTextureDepth = new THREE.WebGLRenderTarget( shared.screenWidth, shared.screenHeight, pars );
+		postprocessing.rtTextureColor = new THREE.WebGLRenderTarget( shared.screenWidth, shared.screenHeight, pars );
+
+		var bokeh_shader = THREE.ShaderExtras[ "bokeh" ];
+
+		postprocessing.bokeh_uniforms = THREE.UniformsUtils.clone( bokeh_shader.uniforms );
+
+		postprocessing.bokeh_uniforms[ "tColor" ].texture = postprocessing.rtTextureColor;
+		postprocessing.bokeh_uniforms[ "tDepth" ].texture = postprocessing.rtTextureDepth;
+		postprocessing.bokeh_uniforms[ "focus" ].value = 0.1;//0.15;
+        postprocessing.bokeh_uniforms["aperture"].value = 0.06;//0.04;//0.025;
+        postprocessing.bokeh_uniforms["maxblur"].value = 3.0;
+		postprocessing.bokeh_uniforms[ "aspect" ].value = shared.screenWidth / shared.screenHeight;
+        
+		postprocessing.materialBokeh = new THREE.MeshShaderMaterial( {
+
+			uniforms: postprocessing.bokeh_uniforms,
+			vertexShader: bokeh_shader.vertexShader,
+			fragmentShader: bokeh_shader.fragmentShader
+
+		} );
+
+		postprocessing.quad = new THREE.Mesh( new THREE.PlaneGeometry( shared.screenWidth, shared.screenHeight ), postprocessing.materialBokeh );
+		postprocessing.quad.position.z = - 500;
+		postprocessing.scene.addObject( postprocessing.quad );
+
+	}
     
     /*===================================================
     
@@ -143,10 +195,32 @@ function () {
     }
     
     function update () {
+        var i, l, objMap = [], matsMap = [], objsWMats = [], obj, objMats, depthMat;
         
         simulate();
         
-        renderer.render( scene, camera);//, renderTarget );
+        if (postprocessing.enabled) {
+            
+            renderer.clear();
+
+			// Render scene into texture
+
+			//scene.overrideMaterial = null;
+			renderer.render( scene, camera, postprocessing.rtTextureColor, true );
+
+			// Render depth into texture
+
+			scene.overrideMaterial = postprocessing.depthMaterial;
+			renderer.render( scene, camera, postprocessing.rtTextureDepth, true );
+
+			// Render bokeh composite
+
+			renderer.render( postprocessing.scene, postprocessing.camera );
+            
+        }
+        else {
+            renderer.render( scene, camera);//, renderTarget );
+        }
         
     }
     

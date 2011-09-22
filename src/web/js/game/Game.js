@@ -131,6 +131,23 @@ function() {
         }
     }
     
+    function find_objs_with_materials (objsList) {
+        var obj, objsWithMats = [], i;
+        
+        for (i = objsList.length - 1; i >= 0; i -= 1) {
+            obj = objsList[i];
+            
+            if (typeof obj.materials !== 'undefined' && obj.materials.length > 0) {
+                objsWithMats[objsWithMats.length] = obj;
+            }
+            else if (obj.children.length > 0)  {
+                objsWithMats = objsWithMats.concat(find_objs_with_materials(obj.children));
+            }
+        }
+        
+        return objsWithMats;
+    }
+    
     function resize( W, H ) {
         
         // resize three
