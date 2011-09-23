@@ -3,9 +3,7 @@ Main.js
 Main module, handles browser events.
 */
 
-define(["order!lib/requestAnimFrame", 
-        "order!lib/requestInterval", 
-        "order!lib/requestTimeout",
+define(["order!lib/RequestAnimationFrame",
         "order!lib/signals.min",
         "order!lib/jquery-1.6.3.min",
         "order!utils/Shared", 

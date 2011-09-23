@@ -175,7 +175,7 @@ function () {
             }
             
             // recursive call until done
-            window.requestAnimFrame(function () { show_ray(tri); });   
+            window.requestAnimationFrame(function () { show_ray(tri); });   
         }
         
     }

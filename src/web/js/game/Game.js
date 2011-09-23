@@ -23,9 +23,10 @@ function() {
     // renderer
     renderer = new THREE.WebGLRenderer( { antialias: false, clearColor: 0x000000, clearAlpha: 0 } );
     renderer.setSize( shared.screenWidth, shared.screenHeight );
+    renderer.autoClear = false;
     
     // render target
-    renderTarget = new THREE.WebGLRenderTarget( shared.screenWidth, shared.screenHeight, { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter } );
+    renderTarget = new THREE.WebGLRenderTarget( shared.screenWidth, shared.screenHeight, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter } );
     
     // add to game dom element
     domElement.append( renderer.domElement );
@@ -123,7 +124,7 @@ function() {
     
     function update () {
         if (paused === false) {
-            window.requestAnimFrame( update );
+            window.requestAnimationFrame( update );
             
             if (typeof currentSection !== 'undefined') {
                 currentSection.update();
