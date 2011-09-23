@@ -336,20 +336,6 @@ footer .copyright {
     background-color: #333333;
 }
 
-/* launcher
--------------------------*/
-.bg_launcher {
-    /* fallback color*/ 
-    background-color: #529ad1;
-    
-    /* gradients based on browser */
-    background-image: linear-gradient(bottom, #0F042E 0%, #1D508F 25%, #529AD1 44%, #529AD1 62%, #455AE0 100%);
-background-image: -o-linear-gradient(bottom, #0F042E 0%, #1D508F 25%, #529AD1 44%, #529AD1 62%, #455AE0 100%);
-background-image: -moz-linear-gradient(bottom, #0F042E 0%, #1D508F 25%, #529AD1 44%, #529AD1 62%, #455AE0 100%);
-background-image: -webkit-linear-gradient(bottom, #0F042E 0%, #1D508F 25%, #529AD1 44%, #529AD1 62%, #455AE0 100%);
-background-image: -ms-linear-gradient(bottom, #0F042E 0%, #1D508F 25%, #529AD1 44%, #529AD1 62%, #455AE0 100%);
-}
-
 /* image replacements 
 -------------------------*/
 .ir { display: block; border: 0; text-indent: -999em; overflow: hidden; background-color: transparent; background-repeat: no-repeat; text-align: left; direction: ltr; }

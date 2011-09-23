@@ -2,8 +2,8 @@
 LauncherSection.js
 Launcher module, handles loading assets, tutorial, and start menu.
 */
-define(["game/effects/EffectLinearGradient",
-        "game/effects/EffectVignette",
+define(["game/effects/LinearGradient",
+        "game/effects/Vignette",
         "game/sections/launcher/Loader",
         "game/sections/launcher/StartMenu",
         "game/sections/launcher/Water",
@@ -12,18 +12,20 @@ function () {
     var shared = require('utils/Shared'),
         renderer, 
         renderTarget,
+        renderSeq,
         camera, 
         cameraRotY = -90 * Math.PI / 180, 
         scene,
         backgroundParams = {
             colors: [0x0F042E, 0x1D508F, 0x529AD1, 0x529AD1, 0x455AE0],
-            stops: [0, 0.25, 0.44, 0.62, 1.0],
+            stops: [0, 0.25, 0.5, 0.75, 1.0],
             startBottom: true
         },
-        background = require('game/effects/EffectLinearGradient'),
+        background = require('game/effects/LinearGradient'),
         postprocessing = [
-            require('game/effects/EffectVignette')
+            require('game/effects/Vignette')
         ],
+        time,
         water = require("game/sections/launcher/Water"),
         sky = require("game/sections/launcher/Sky");
     
@@ -98,24 +100,10 @@ function () {
     =====================================================*/
     
     function init () {
-        var i, ppl = postprocessing.length, shader;
         
         renderer = shared.renderer;
         renderTarget = shared.renderTarget;
         
-        // background
-        
-        background.init( backgroundParams );
-        
-        // post processing
-        
-        for (i = 0; i < ppl; i += 1) {
-            
-            shader = postprocessing[i];
-            
-            shader.init();
-            
-        }
     }
     
     /*===================================================
@@ -124,16 +112,6 @@ function () {
     
     =====================================================*/
     
-    function simulate () {
-        
-        sky.wind_blow();
-        
-        water.waves();
-        
-        // bob camera with waves
-		water.bob( camera );
-        
-    }
     
     /*===================================================
     
@@ -142,9 +120,34 @@ function () {
     =====================================================*/
     
     function show () {
+        var i, ppl = postprocessing.length, shader, bgRenderSeq;
         
-        // set gradient background
-        shared.gameContainer.addClass('bg_launcher');
+        // background
+        
+        background.enable( backgroundParams );
+        
+        bgRenderSeq = background.get_render_sequence();
+        bgRenderSeq.renderTarget = renderTarget;
+        bgRenderSeq.forceClear = true;
+        
+        // render sequence
+        
+        renderSeq = [
+            bgRenderSeq, 
+            { scene: scene, camera: camera, renderTarget: renderTarget }
+        ];
+        
+        // post processing
+        
+        for (i = 0; i < ppl; i += 1) {
+            
+            shader = postprocessing[i];
+            
+            shader.enable( renderTarget );
+            
+            renderSeq[renderSeq.length] = shader.get_render_sequence();
+            
+        }  
         
         // disable renderer object sorting
         shared.renderer.sortObjects = false;
@@ -156,6 +159,25 @@ function () {
     
     function hide () {
         
+        var i, ppl = postprocessing.length, shader;
+        
+        // background
+        
+        background.disable();
+        
+        // post processing
+        
+        for (i = 0; i < ppl; i += 1) {
+            
+            shader = postprocessing[i];
+            
+            shader.disable();
+            
+        }
+        
+        // render sequence
+        renderSeq = [];
+        
         // remove listener for resize signal
         shared.signals.windowresized.remove(resize);
         
@@ -166,58 +188,18 @@ function () {
         // enable renderer object sorting
         shared.renderer.sortObjects = true;
         
-        // clear gradient background
-        shared.gameContainer.removeClass('bg_launcher');
-        
     }
     
     function update () {
-        var i, ppl = postprocessing.length, shader;
         
-        simulate();
+        time = new Date().getTime();
         
-        renderer.clear();
+        sky.wind_blow( time );
         
-        // post process
-        if (ppl > 0) {
-            
-            // apply background
-            
-            background.apply();
-            
-            // render base scene into render target
-            
-            renderer.render( scene, camera, renderTarget);
-            
-            // apply post processing for each shader in order
-            for (i = 0; i < ppl; i += 1) {
-                
-                shader = postprocessing[i];
-                
-                shader.apply();
-                
-            }
-            
-            /*
-			// Render scene into texture
-            
-			scene.overrideMaterial = null;
-			renderer.render( scene, camera, postprocessing.rtDiffuse, true );
-            
-			// Render depth into texture
-
-			scene.overrideMaterial = postprocessing.depthMaterial;
-			renderer.render( scene, camera, postprocessing.rtTextureDepth, true );
-            
-			// Render postprocessing composite
-
-			renderer.render( postprocessing.scene, postprocessing.camera );
-            */
-        }
-        // no post processing
-        else {
-            renderer.render( scene, camera );
-        }
+        water.waves( time );
+        
+        // bob camera with waves
+        water.bob( camera, time );
         
     }
     
@@ -235,6 +217,7 @@ function () {
         hide: hide,
         remove: remove,
         update: update,
+        get_render_sequence: function () { return renderSeq; },
         resize: resize
     };
 });

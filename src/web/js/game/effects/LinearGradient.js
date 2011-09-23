@@ -8,8 +8,8 @@ function () {
     var shared = require('utils/Shared'),
         camera,
         scene,
-        renderer, 
-        renderTarget,
+        renderer,
+        renderSeq,
         geometry,
         materials,
         quad,
@@ -22,37 +22,19 @@ function () {
     
     /*===================================================
     
-    external init
+    internal init
     
     =====================================================*/
     
-    function init ( parameters ) {
-        
-        renderer = shared.renderer;
-        
-        renderTarget = shared.renderTarget;
-        
-        camera = new THREE.OrthoCamera( shared.screenWidth / - 2, shared.screenWidth / 2,  shared.screenHeight / 2, shared.screenHeight / - 2, -10000, 10000 );
-        camera.position.z = 100;
-        
-        scene = new THREE.Scene();
-        
-        materials = [
-            new THREE.MeshLambertMaterial({
-		        color: 0xffffff,
-		        shading: THREE.FlatShading,
-		        vertexColors: THREE.VertexColors,
-                depthTest: false
-		    }), /*
-            new THREE.MeshBasicMaterial({
-		        color: 0x000000,
-		        shading: THREE.FlatShading,
-		        wireframe: true
-		    })*/
-        ];
-        
-        set_options( parameters );
-    }
+    camera = new THREE.OrthoCamera( shared.screenWidth / - 2, shared.screenWidth / 2,  shared.screenHeight / 2, shared.screenHeight / - 2, -10000, 10000 );
+    camera.position.z = 100;
+    
+    scene = new THREE.Scene();
+    
+    renderSeq = { 
+        scene:scene, 
+        camera:camera
+    };
     
     /*===================================================
     
@@ -93,6 +75,22 @@ function () {
         
         numColors = colors.length;
         numFaces = numColors - 1;
+        
+        // gradient material depth test disabled so that it stays in bg
+        
+        materials = [
+            new THREE.MeshLambertMaterial({
+                color: parameters.baseColor || 0xffffff,
+		        shading: THREE.FlatShading,
+		        vertexColors: THREE.VertexColors,
+                depthTest: false
+		    })/*,
+            new THREE.MeshBasicMaterial({
+		        color: color: parameters.wireColor || 0x000000,
+		        shading: THREE.FlatShading,
+		        wireframe: true
+		    })*/
+        ];
         
         // if gradient stops was not passed or passed incorrectly
         
@@ -151,25 +149,47 @@ function () {
 		scene.addObject( quad );
     }
 
-    function apply () {
+    function enable ( parameters ) {
         
-        // gradient material depth test disabled so that it stays in bg
+        renderer = shared.renderer;
         
-        renderer.render( scene, camera, renderTarget, true );
+        set_options ( parameters );
+        
+        // add listener for resize signal
+        shared.signals.windowresized.add(resize);
+        
+    }
+    
+    function disable () {
+        
+        // remove listener for resize signal
+        shared.signals.windowresized.remove(resize);
+        
+    }
+
+    function apply ( renderTarget, forceClear ) {
+        
+        renderer.render( scene, camera, renderTarget, forceClear );
+            
+    }
+    
+    function resize ( W, H ) {
+        
+        camera.left = W / - 2;
+        camera.right = W / 2;
+        camera.top = H / 2;
+        camera.bottom = H / - 2;
+        camera.updateProjectionMatrix();
         
     }
     
     // return something to define module
     return {
-        init: init,
         set_options: set_options,
-        get_gradient: function () { return quad; },
+        enable: enable,
+        disable: disable,
         apply: apply,
-        width: function () { return width; },
-        height: function () { return height; },
-        colors: function () { return colors; },
-        stops: function () { return stops; },
-        startBottom: function () { return startBottom; },
-        threeColors: function () { return threeColors; }
+        resize: resize,
+        get_render_sequence: function () { return renderSeq; }
     };
 });

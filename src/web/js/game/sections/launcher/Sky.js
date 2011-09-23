@@ -13,6 +13,7 @@ function () {
         numClouds = 40, 
         lightAngle = (-Math.PI * 0.25), 
         lightAngleVariation = (Math.PI * 0.25),
+        timePrev,
         windDirection = -1,
         windSpeedMax = 4,
         windSpeedMin = 1,
@@ -192,8 +193,18 @@ function () {
         return cloudMesh;
     }
     
-    function wind_blow ( direction, speedMax, speedMin ) {
-        var i, pct, boundXNeg, boundXPos;
+    function wind_blow ( time, direction, speedMax, speedMin ) {
+        var i, timeDiff, pct, boundXNeg, boundXPos;
+        
+        // handle time change
+        
+        timePrev = timePrev || time;
+        
+        timeDiff = 1 - (time - timePrev) / 60;
+        
+        timePrev = time;
+        
+        // set wind direction and speed
         
         windDirection = direction || windDirection;
         
@@ -204,12 +215,16 @@ function () {
         boundXPos = skyWidth * 0.5;
         boundXNeg = -boundXPos;
         
+        // push each cloud
+        
         for ( i = 0; i < numClouds; i += 1) {
             cloud = clouds[i];
             
             pct = ((numClouds - i) / numClouds);
             
-            cloud.position.x += windDirection * (windSpeedMax * pct + windSpeedMin * (1 - pct));
+            cloud.position.x += timeDiff * windDirection * (windSpeedMax * pct + windSpeedMin * (1 - pct));
+            
+            // cloud bounds
             
             if (cloud.position.x > boundXPos) {
                 cloud.position.x = boundXNeg;
