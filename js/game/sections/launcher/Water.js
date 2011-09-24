@@ -13,9 +13,8 @@ function () {
         wavesVertsW = 50,
         wavesVertsH = 50,
         wavesVertsNum,
-        time = 0,
-        wavesSpeed = 0.04,
-        wavesSpeedMod = 0.5,
+        waveTime = 0,
+        wavesSpeed = 0.001,
         wavesAmplitude = 200,
         wavesFrequency = 4,
         vertVariations = [],
@@ -24,7 +23,7 @@ function () {
         vvMax = Math.min(wavesAmplitude * 0.5, vvAbs),
         vvDelta = (vvMax - vvMin) * 0.01,
         vvDirSwitchPause = 600,
-        bobAmp = wavesAmplitude * 1.5,
+        bobAmp,
         bobTiltAmp = 5 * (Math.PI / 180),
         bobTiltCycleMod = Math.PI * 1.5,
         waterRaysInactive = [],
@@ -62,8 +61,6 @@ function () {
         wavesVertsH = parameters.wavesVertsH || wavesVertsH;
         
         wavesSpeed = parameters.wavesSpeed || wavesSpeed;
-        
-        wavesSpeedMod = parameters.wavesSpeedMod || wavesSpeedMod;
         
         wavesAmplitude = parameters.wavesAmplitude || wavesAmplitude;
         
@@ -175,28 +172,26 @@ function () {
             }
             
             // recursive call until done
-            window.requestAnimFrame(function () { show_ray(tri); });   
+            window.requestAnimationFrame(function () { show_ray(tri); });   
         }
         
     }
     
-    function waves() {
+    function waves( time ) {
         
         var wavesVerts = wavesGeometry.vertices, 
             vert, variation, vvw = wavesVertsW - 1, vvh = wavesVertsH - 1,
             waterRayInfo, waterRay, i, l;
         
         // update wave time
-        //time = new Date().getTime() * wavesSpeedMod;
-        time += wavesSpeed * wavesSpeedMod;
-        time = time % (Math.PI * 2);
+        waveTime = time * wavesSpeed;
         
         for ( i = 0; i < wavesVertsW; i += 1 ) {
             for ( l = 0; l < wavesVertsH; l += 1 ) {
                 vert = wavesVerts[ i + l * wavesVertsH ];
                 
                 // set water vert
-                vert.position.z = wavesAmplitude * ( Math.cos( i / wavesFrequency  + time ) + Math.sin( l / wavesFrequency + time ) );
+                vert.position.z = wavesAmplitude * ( Math.cos( i / wavesFrequency  + waveTime ) + Math.sin( l / wavesFrequency + waveTime ) );
                 
                 // set water vert variation
                 if( i !== 0 && i !== vvw && l !== 0 && l !== vvh) {
@@ -250,8 +245,8 @@ function () {
     
     // bobs object with waves
     function bob ( object ) {
-        object.position.y = (Math.sin(time) * bobAmp);
-        object.rotation.x = Math.sin(time + bobTiltCycleMod) * bobTiltAmp;
+        object.position.y = (Math.sin(waveTime) * bobAmp);
+        object.rotation.x = Math.sin(waveTime + bobTiltCycleMod) * bobTiltAmp;
     }
     
     // return something to define module

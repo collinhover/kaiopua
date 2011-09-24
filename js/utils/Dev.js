@@ -131,7 +131,7 @@ function() {
     
     function stats_update() {
         if (statsPaused === false) {
-            window.requestAnimFrame( stats_update );
+            window.requestAnimationFrame( stats_update );
             stats.update();
         }
     }
@@ -202,6 +202,7 @@ function() {
             logger.log('[ERROR] in file: ' + url);
             logger.log('[ERROR] line # ' + lineNumber);
         },
+        gui: gui,
         add_command: devCommands.add,
         resize: resize,
         isOpen: function () {return isOpen;},

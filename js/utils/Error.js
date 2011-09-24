@@ -22,7 +22,7 @@ function () {
             },
             webgl_other: {
                 header: "Oops! We need WebGL!",
-                explanation: "We are sorry, but it appears that your computer does not support WebGL. For more information visit the <a href='http://get.webgl.org/troubleshooting/' target='_blank'>WebGL troubleshooting</a> page."
+                explanation: "Although your browser seems to support WebGL, it appears as if your computer does not. For more information visit the <a href='http://get.webgl.org/troubleshooting/' target='_blank'>WebGL troubleshooting</a> page."
             },
             fourohfour: {
                 header: "Oops! Not found!",

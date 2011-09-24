@@ -3,8 +3,13 @@ Game.js
 Game module, handles sections of game.
 */
 
-define(["order!lib/Three",
-        "order!lib/ThreeExtras",
+define(["order!lib/three/Three",
+        "order!lib/three/ThreeExtras",
+        "order!lib/three/postprocessing/ShaderExtras",
+        "order!lib/three/postprocessing/EffectComposer",
+        "order!lib/three/postprocessing/RenderPass",
+        "order!lib/three/postprocessing/ShaderPass",
+        "order!lib/three/postprocessing/MaskPass",
         "order!game/sections/LauncherSection"],
 function() {
     var shared = require('utils/Shared'),
@@ -23,9 +28,10 @@ function() {
     // renderer
     renderer = new THREE.WebGLRenderer( { antialias: false, clearColor: 0x000000, clearAlpha: 0 } );
     renderer.setSize( shared.screenWidth, shared.screenHeight );
+    renderer.autoClear = false;
     
     // render target
-    renderTarget = new THREE.WebGLRenderTarget( shared.screenWidth, shared.screenHeight, { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter } );
+    renderTarget = new THREE.WebGLRenderTarget( shared.screenWidth, shared.screenHeight, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter } );
     
     // add to game dom element
     domElement.append( renderer.domElement );
@@ -122,13 +128,39 @@ function() {
     }
     
     function update () {
+        var i, l;
+        
         if (paused === false) {
-            window.requestAnimFrame( update );
+            
+            window.requestAnimationFrame( update );
+            
+            renderer.clear();
             
             if (typeof currentSection !== 'undefined') {
+                
+                // update section
+                
                 currentSection.update();
+                
             }
         }
+    }
+    
+    function find_objs_with_materials (objsList) {
+        var obj, objsWithMats = [], i;
+        
+        for (i = objsList.length - 1; i >= 0; i -= 1) {
+            obj = objsList[i];
+            
+            if (typeof obj.materials !== 'undefined' && obj.materials.length > 0) {
+                objsWithMats[objsWithMats.length] = obj;
+            }
+            else if (obj.children.length > 0)  {
+                objsWithMats = objsWithMats.concat(find_objs_with_materials(obj.children));
+            }
+        }
+        
+        return objsWithMats;
     }
     
     function resize( W, H ) {
