@@ -3,38 +3,8 @@ EffectLinearGradient.js
 Draws a linear gradient into background.
 */
 
-define(['utils/Shared'],
+define([],
 function () {
-    var shared = require('utils/Shared'),
-        camera,
-        scene,
-        renderer,
-        renderSeq,
-        geometry,
-        materials,
-        quad,
-        width,
-        height,
-        colors,
-        stops,
-        startBottom,
-        threeColors;
-    
-    /*===================================================
-    
-    internal init
-    
-    =====================================================*/
-    
-    camera = new THREE.OrthoCamera( shared.screenWidth / - 2, shared.screenWidth / 2,  shared.screenHeight / 2, shared.screenHeight / - 2, -10000, 10000 );
-    camera.position.z = 100;
-    
-    scene = new THREE.Scene();
-    
-    renderSeq = { 
-        scene:scene, 
-        camera:camera
-    };
     
     /*===================================================
     
@@ -42,9 +12,21 @@ function () {
     
     =====================================================*/
     
-    function set_options ( parameters ) {
+    function generate ( parameters ) {
         
-        var i, 
+        var camera,
+            scene,
+            renderer,
+            geometry,
+            materials,
+            quad,
+            width,
+            height,
+            colors,
+            stops,
+            startBottom,
+            threeColors,
+            i, 
             numColors,
             faceVertexIndices = ['a', 'b', 'c', 'd'],
             colorIndex,
@@ -56,18 +38,12 @@ function () {
             colorA,
             colorB;
         
-        // remove previous quad if exists
-        
-        if (typeof quad !== 'undefined') {
-            scene.removeObject( quad );
-        }
-        
         // handle parameters
         
         parameters = parameters || {};
         
-        width = parameters.width || shared.screenWidth;
-        height = parameters.height || shared.screenHeight;
+        width = 1;
+        height = 1;
         colors = parameters.colors || [0xFFFFFF, 0x000000];
         stops = parameters.stops || [];
         startBottom = parameters.startBottom || false;
@@ -75,6 +51,13 @@ function () {
         
         numColors = colors.length;
         numFaces = numColors - 1;
+        
+        // camera and scene
+        
+        camera = new THREE.OrthoCamera( width / - 2, width / 2,  height / 2, height / - 2, -10000, 10000 );
+        camera.position.z = 100;
+        
+        scene = new THREE.Scene();
         
         // gradient material depth test disabled so that it stays in bg
         
@@ -84,13 +67,16 @@ function () {
 		        shading: THREE.FlatShading,
 		        vertexColors: THREE.VertexColors,
                 depthTest: false
-		    })/*,
-            new THREE.MeshBasicMaterial({
-		        color: color: parameters.wireColor || 0x000000,
+		    })
+        ];
+        
+        if ( parameters.showWireframe === true ) {
+            materials[materials.length] = new THREE.MeshBasicMaterial({
+                color: parameters.wireColor || 0x000000,
 		        shading: THREE.FlatShading,
 		        wireframe: true
-		    })*/
-        ];
+		    });
+        }
         
         // if gradient stops was not passed or passed incorrectly
         
@@ -147,49 +133,26 @@ function () {
         quad.position.z = -100;
         
 		scene.addObject( quad );
-    }
-
-    function enable ( parameters ) {
         
-        renderer = shared.renderer;
-        
-        set_options ( parameters );
-        
-        // add listener for resize signal
-        shared.signals.windowresized.add(resize);
-        
-    }
-    
-    function disable () {
-        
-        // remove listener for resize signal
-        shared.signals.windowresized.remove(resize);
-        
-    }
-
-    function apply ( renderTarget, forceClear ) {
-        
-        renderer.render( scene, camera, renderTarget, forceClear );
-            
-    }
-    
-    function resize ( W, H ) {
-        
-        camera.left = W / - 2;
-        camera.right = W / 2;
-        camera.top = H / 2;
-        camera.bottom = H / - 2;
-        camera.updateProjectionMatrix();
-        
+        return { 
+            scene: scene,
+            camera: camera,
+            resize: function ( W, H ) {
+                
+                camera.left = W / - 2;
+                camera.right = W / 2;
+                camera.top = H / 2;
+                camera.bottom = H / - 2;
+                
+                camera.updateProjectionMatrix();
+                
+                quad.scale.set( W, H, 1 );
+            }
+        };
     }
     
     // return something to define module
     return {
-        set_options: set_options,
-        enable: enable,
-        disable: disable,
-        apply: apply,
-        resize: resize,
-        get_render_sequence: function () { return renderSeq; }
+        generate: generate
     };
 });

@@ -6,6 +6,10 @@ Game module, handles sections of game.
 define(["order!lib/three/Three",
         "order!lib/three/ThreeExtras",
         "order!lib/three/postprocessing/ShaderExtras",
+        "order!lib/three/postprocessing/EffectComposer",
+        "order!lib/three/postprocessing/RenderPass",
+        "order!lib/three/postprocessing/ShaderPass",
+        "order!lib/three/postprocessing/MaskPass",
         "order!game/sections/LauncherSection"],
 function() {
     var shared = require('utils/Shared'),
@@ -138,32 +142,7 @@ function() {
                 
                 currentSection.update();
                 
-                // do section render sequence
-                    
-                render_sequence( currentSection.get_render_sequence() );
-                
             }
-        }
-    }
-    
-    function render_sequence ( rs ) {
-        var i, l;
-        
-        // if array of sequences
-        if ( rs.hasOwnProperty(length) ) {
-            
-            for ( i = 0, l = rs.length; i < l; i += 1) {
-                
-                render_sequence(rs[i]);
-                
-            }
-            
-        }
-        // single sequence
-        else {
-        
-            renderer.render( rs.scene, rs.camera, rs.renderTarget, rs.forceClear);
-            
         }
     }
     

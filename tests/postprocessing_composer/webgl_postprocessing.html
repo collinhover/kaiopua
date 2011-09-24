@@ -39,10 +39,10 @@
 
 		<div id="container"></div>
 
-		<script type="text/javascript" src="../build/Three.js"></script>
+		<script type="text/javascript" src="js/Three.js"></script>
 
 
-		<script type="text/javascript" src="js/ShaderExtras.js"></script>
+		<script type="text/javascript" src="js/postprocessing/ShaderExtras.js"></script>
 
 		<script type="text/javascript" src="js/postprocessing/EffectComposer.js"></script>
 		<script type="text/javascript" src="js/postprocessing/RenderPass.js"></script>
@@ -215,8 +215,8 @@
 				//effectFilmBW.renderToScreen = true;
 				//effectDotScreen.renderToScreen = true;
 				//effectBleach.renderToScreen = true;
-				effectVignette.renderToScreen = true;
-				//effectScreen.renderToScreen = true;
+				//effectVignette.renderToScreen = true;
+				effectScreen.renderToScreen = true;
 
 				//
 
@@ -229,6 +229,8 @@
 
 				composerScene.addPass( renderBackground );
 				composerScene.addPass( renderModel );
+                composerScene.addPass( effectVignette );
+                composerScene.addPass( effectScreen );
 
 				//
 
@@ -245,9 +247,10 @@
 
 				composer1.addPass( renderScene );
 				//composer1.addPass( renderMask );
-				composer1.addPass( effectFilmBW );
+				//composer1.addPass( effectFilmBW );
 				//composer1.addPass( clearMask );
-				composer1.addPass( effectVignette );
+				//composer1.addPass( effectVignette );
+                composer1.addPass( effectScreen );
 
 				//
 
@@ -398,7 +401,7 @@
 
 				renderer.setViewport( 0, 0, halfWidth, halfHeight );
 				composer1.render( delta );
-
+/*
 				renderer.setViewport( halfWidth, 0, halfWidth, halfHeight );
 				composer2.render( delta );
 
@@ -407,7 +410,7 @@
 
 				renderer.setViewport( halfWidth, halfHeight, halfWidth, halfHeight );
 				composer4.render( delta );
-
+*/
 			}
 
 		</script>
