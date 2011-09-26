@@ -10,13 +10,22 @@ define(["order!lib/three/Three",
         "order!lib/three/postprocessing/RenderPass",
         "order!lib/three/postprocessing/ShaderPass",
         "order!lib/three/postprocessing/MaskPass",
+        "order!game/workers/Loader",
         "order!game/sections/LauncherSection"],
 function() {
     var shared = require('utils/Shared'),
+        domElement = shared.html.gameContainer,
+        transitioner = shared.html.transitioner,
         launcher = require('game/sections/LauncherSection'),
-        domElement = shared.gameContainer,
-        renderer, renderTarget, sections, sectionNames, 
-        currentSection, previousSection, paused = true;
+        renderer, 
+        renderTarget, 
+        sections, 
+        sectionNames, 
+        currentSection, 
+        previousSection, 
+        paused = true,
+        transitionOut = 1000, 
+        transitionIn = 400;
     
     /*===================================================
     
@@ -46,6 +55,10 @@ function() {
     shared.renderer = renderer;
     shared.renderTarget = renderTarget;
     
+    // game signals
+    shared.signals.paused = new signals.Signal();
+    shared.signals.resumed = new signals.Signal();
+    
     // resize listener
     resize(shared.screenWidth, shared.screenHeight);
     shared.signals.windowresized.add(resize);
@@ -67,7 +80,7 @@ function() {
         // set initial section
         set_section(sections.launcher);
         
-        start_updating();
+        animate();
     }
     
     /*===================================================
@@ -75,76 +88,6 @@ function() {
     functions
     
     =====================================================*/
-
-    function set_section ( section ) {
-        // hide current section
-        if (typeof currentSection !== 'undefined') {
-            
-            previousSection = currentSection;
-            
-            previousSection.hide();
-            
-            stop_updating();
-            
-            shared.transitioner.fadeTo(shared.transitionIn, 1).promise().done( function () {
-                previousSection.remove();
-            });
-            
-        }
-        
-        // no current section
-        currentSection = undefined;
-        
-        // start and show new section
-        if (typeof section !== 'undefined') {
-            
-            // wait for transitioner to finish fading in
-            shared.transitioner.promise().done(function () {
-                
-                section.resize(shared.screenWidth, shared.screenHeight);
-            
-                section.show();
-                
-                currentSection = section;
-                
-                start_updating();
-                
-                shared.transitioner.fadeTo(shared.transitionOut, 0);
-                
-            });
-            
-        }
-    }
-    
-    function start_updating () {
-        if (paused === true) {
-            paused = false;
-            update();
-        }
-    }
-    
-    function stop_updating () {
-        paused = true;
-    }
-    
-    function update () {
-        var i, l;
-        
-        if (paused === false) {
-            
-            window.requestAnimationFrame( update );
-            
-            renderer.clear();
-            
-            if (typeof currentSection !== 'undefined') {
-                
-                // update section
-                
-                currentSection.update();
-                
-            }
-        }
-    }
     
     function find_objs_with_materials (objsList) {
         var obj, objsWithMats = [], i;
@@ -162,6 +105,76 @@ function() {
         
         return objsWithMats;
     }
+
+    function set_section ( section ) {
+        // hide current section
+        if (typeof currentSection !== 'undefined') {
+            
+            previousSection = currentSection;
+            
+            previousSection.hide();
+            
+            transitioner.fadeTo(transitionIn, 1).promise().done( function () {
+                previousSection.remove();
+            });
+            
+        }
+        
+        // no current section
+        currentSection = undefined;
+        
+        // start and show new section
+        if (typeof section !== 'undefined') {
+            
+            // wait for transitioner to finish fading in
+            transitioner.promise().done(function () {
+                
+                section.resize(shared.screenWidth, shared.screenHeight);
+            
+                section.show();
+                
+                currentSection = section;
+                
+                transitioner.fadeTo(transitionOut, 0);
+                
+            });
+            
+        }
+    }
+    
+    function pause () {
+        if (paused === false) {
+            
+            paused = true;
+            
+            shared.signals.paused.dispatch();
+            
+        }
+    }
+    
+    function resume () {
+        if (paused === true) {
+            
+            paused = false;
+            
+            shared.signals.resumed.dispatch();
+            
+        }
+    }
+    
+    function animate () {
+        
+        requestAnimationFrame( animate );
+        
+        if (typeof currentSection !== 'undefined') {
+            
+            // update section
+            
+            currentSection.update();
+            
+        }
+        
+    }
     
     function resize( W, H ) {
         
@@ -175,9 +188,9 @@ function() {
     // return something to define module
     return {
         init: init,
-        start_updating: start_updating,
-        stop_updating: stop_updating,
-        domElement: domElement,
+        resume: resume,
+        pause: pause,
+        domElement: function () { return domElement; },
         paused: function () { return paused; }
     };
 });

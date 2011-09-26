@@ -2,16 +2,20 @@
 Dev.js
 Initializes Logger, Stats, and DAT-GUI for development purposes
 */
-
-define(["lib/Logger", 
-        "lib/Stats", 
-        "lib/DAT.GUI",
-        "utils/DevCommands"], 
-function() {
-    var shared = require('utils/Shared'),
-        devCommands = require('utils/DevCommands'),
+var KAIOPUA = (function (main) {
+    
+    var dev = main.dev = main.dev || {};
+    
+    var shared = main.shared,
+        devCommands,
         domElement, isOpen = true, stats, logger, 
-        gui, guiContainer, guiHeight, statsPaused = true;
+        gui, guiContainer, guiHeight, statsPaused = true,
+        dependencies = [
+            "js/lib/Logger.js", 
+            "js/lib/Stats.js", 
+            "js/lib/DAT.GUI.js",
+            "js/utils/DevCommands.js"
+        ];
     
     /*===================================================
     
@@ -19,97 +23,104 @@ function() {
     
     =====================================================*/
     
-    // stats
-    stats = new Stats();
-    stats.domElement.style.position = 'absolute';
+    $LAB.script( dependencies ).wait( init );
     
-    // logger
-    logger = new Logger();
-    $(logger.domElement).css({
-        position: 'absolute',
-        overflow: 'auto',
-        padding: '0',
-        opacity: '0.8',
-        backgroundColor: '#333',
-        color: '#fcd700',
-        'font-size': '13px'
-    });
-    // override log function to autoscroll to bottom of domElement
-    logger.oldLog = logger.log;
-    logger.log = function (msg, expand) {
-        logger.oldLog(msg, expand);
-        logger.domElement.scrollTop = logger.domElement.scrollHeight;
-    };
-
-    // gui
-    // DAT.GUI hacked to add property to disable drag
-    gui = new DAT.GUI({
-        height: 200,
-        dragAllowed: false,
-        closeString: 'Close Dev Console',
-        openString: 'Open Dev Console'
-    });
-    guiContainer = $('#guidat');
-    gui.domElement.style.margin = '0';
-
-    // gui elements
-    gui.add(devCommands, 'current').name('CMD?').onFinishChange(function(newCmd) {
-        logger.log('[DEV CMD] ' + newCmd);
-        devCommands.execute(newCmd);
-    });
-    gui.add(logger, 'clear').name('Clear Log');
-
-    // force the gui to calculate the correct height
-    // - sure there must be a better way :-/
-    gui.toggle();
-    gui.toggle();
-
-    // set logger height explicitly to gui height
-    // DAT.GUI hacked to add property totalHeight and targetHeight
-    logger.domElement.style.height = gui.totalHeight + 'px';
-
-    // container
-    domElement = document.createElement('div');
-    domElement.id = 'dev_utils';
-    domElement.style.position = 'absolute';
-    domElement.style.left = '0px';
-    domElement.style.top = '0px';
-
-    // add all dev utils to container
-    domElement.appendChild(logger.domElement);
-    domElement.appendChild(stats.domElement);
-    $(domElement).append(guiContainer);
-
-    // add dev utils to window
-    document.body.appendChild(domElement);
+    function init() {
+        
+        devCommands = dev.commands;
+        
+        // stats
+        stats = new Stats();
+        stats.domElement.style.position = 'absolute';
+        
+        // logger
+        logger = new Logger();
+        $(logger.domElement).css({
+            position: 'absolute',
+            overflow: 'auto',
+            padding: '0',
+            opacity: '0.8',
+            backgroundColor: '#333',
+            color: '#fcd700',
+            'font-size': '13px'
+        });
+        // override log function to autoscroll to bottom of domElement
+        logger.oldLog = logger.log;
+        logger.log = function (msg, expand) {
+            logger.oldLog(msg, expand);
+            logger.domElement.scrollTop = logger.domElement.scrollHeight;
+        };
     
-    // add listeners to gui toggle
-    gui.toggleButton.addEventListener('mouseup', function(e) {
-        togglePanel(e);
-        e.preventDefault();
-        return false;
-    }, false);
-
-    // turn dev off initially
-    togglePanel();
+        // gui
+        // DAT.GUI hacked to add property to disable drag
+        gui = new DAT.GUI({
+            height: 200,
+            dragAllowed: false,
+            closeString: 'Close Dev Console',
+            openString: 'Open Dev Console'
+        });
+        guiContainer = $('#guidat');
+        gui.domElement.style.margin = '0';
+        
+        // gui elements
+        gui.add(devCommands, 'current').name('CMD?').onFinishChange(function(newCmd) {
+            logger.log('[DEV CMD] ' + newCmd);
+            devCommands.execute(newCmd);
+        });
+        gui.add(logger, 'clear').name('Clear Log');
     
-    // resize signal
-    resize(shared.screenWidth, shared.screenHeight);
-    shared.signals.windowresized.add(resize);
-
-    // add dev commands
-    devCommands.add({
-        cmd_hist: function(modifier) {
-            if (modifier === 'clear') {
-                logger.log('Cleared dev cmd history!');
-                devCommands.clear_history();
+        // force the gui to calculate the correct height
+        // - sure there must be a better way :-/
+        gui.toggle();
+        gui.toggle();
+    
+        // set logger height explicitly to gui height
+        // DAT.GUI hacked to add property totalHeight and targetHeight
+        logger.domElement.style.height = gui.totalHeight + 'px';
+    
+        // container
+        domElement = document.createElement('div');
+        domElement.id = 'dev_utils';
+        domElement.style.position = 'absolute';
+        domElement.style.left = '0px';
+        domElement.style.top = '0px';
+    
+        // add all dev utils to container
+        domElement.appendChild(logger.domElement);
+        domElement.appendChild(stats.domElement);
+        $(domElement).append(guiContainer);
+    
+        // add dev utils to window
+        document.body.appendChild(domElement);
+        
+        // add listeners to gui toggle
+        gui.toggleButton.addEventListener('mouseup', function(e) {
+            togglePanel(e);
+            e.preventDefault();
+            return false;
+        }, false);
+    
+        // turn dev off initially
+        togglePanel();
+        
+        // resize signal
+        resize(shared.screenWidth, shared.screenHeight);
+        shared.signals.windowresized.add(resize);
+    
+        // add dev commands
+        devCommands.add({
+            cmd_hist: function(modifier) {
+                if (modifier === 'clear') {
+                    logger.log('Cleared dev cmd history!');
+                    devCommands.clear_history();
+                }
+                else {
+                    logger.log('Showing dev cmd history:');
+                    logger.log(devCommands.get_history(), true);
+                }
             }
-            else {
-                logger.log('Showing dev cmd history:');
-                logger.log(devCommands.get_history(), true);
-            }
-        }
-    });
+        });
+    }
     
     /*===================================================
     
@@ -131,7 +142,7 @@ function() {
     
     function stats_update() {
         if (statsPaused === false) {
-            window.requestAnimationFrame( stats_update );
+            requestAnimationFrame( stats_update );
             stats.update();
         }
     }
@@ -193,19 +204,24 @@ function() {
         $(logDE).width(W - (spaceW * 3) - $(guiDE).width());
     }
     
-    // return an object to define module
-    return {
-        toggle: togglePanel,
-        log: function (msg, expand) { logger.log(msg, expand); },
-        log_error: function (error, url, lineNumber) {
+    /*===================================================
+    
+    public properties
+    
+    =====================================================*/
+    
+    main.dev.toggle = togglePanel;
+    main.dev.log = function (msg, expand) { logger.log(msg, expand); };
+    main.dev.log_error = function (error, url, lineNumber) {
             logger.log('[ERROR] ' + error);
             logger.log('[ERROR] in file: ' + url);
             logger.log('[ERROR] line # ' + lineNumber);
-        },
-        gui: gui,
-        add_command: devCommands.add,
-        resize: resize,
-        isOpen: function () {return isOpen;},
-        domElement: domElement
-    };
-});
+        };
+    main.dev.gui = function () { return gui; };
+    main.dev.resize = resize;
+    main.dev.isOpen = function () {return isOpen;};
+    main.dev.domElement = function () { return domElement; };
+    
+    return main; 
+    
+}(KAIOPUA || {}));

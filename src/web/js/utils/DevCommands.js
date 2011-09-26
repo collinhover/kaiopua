@@ -2,8 +2,12 @@
 Dev Commands
 Call using require('utils/DevCommands').functionName()
 */
-define([], 
-function () {
+var KAIOPUA = (function (main) {
+    
+    main.dev = main.dev || {};
+    
+    main.dev.commands = main.dev.commands || {};
+    
     var commands = [], callbacks = {}, current = "", history = [];
     
     // add list of commands
@@ -78,12 +82,18 @@ function () {
         }
     }
     
-    // return something to define module
-    return {
-        current: current,
-        add: add,
-        execute: execute,
-        get_history: function () {return history.slice(0);},
-        clear_history: function () {history = [];}
-    };
-});
+    /*===================================================
+    
+    public properties
+    
+    =====================================================*/
+    
+    main.dev.commands.current = current;
+    main.dev.commands.add = add;
+    main.dev.commands.execute = execute;
+    main.dev.commands.get_history = function () {return history.slice(0);};
+    main.dev.commands.clear_history = function () {history = [];};
+    
+    return main; 
+    
+}(KAIOPUA || {}));

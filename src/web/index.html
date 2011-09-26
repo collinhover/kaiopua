@@ -56,7 +56,7 @@
 		 - Transparency is not recommended (iOS will put a black BG behind the icon) -->
     
 	<!-- CSS: screen, mobile & print are all in the same file -->
-	<link rel="stylesheet" href="files/css/style.css">
+	<link rel="stylesheet" href="css/style.css">
 	
 	<!-- all our JS is at the bottom of the page, except for Modernizr. -->
 	<script src="js/lib/modernizr-2.0.6.min.js"></script>
@@ -124,8 +124,8 @@
     	<ul>
 			<li><a href="https://github.com/collinhover/kaiopua" target="_blank">Source Code</a></li>
 			<li>Share</li>
-			<li class="last_nav"><a href="http://www.facebook.com/sharer.php?u=http%3A%2F%2Fcollinhover.com&t=Kaiopua%3A%20an%20interactive%20moon-sized%20Hawaiian%20space%20worm%20that%20will%20teach%20you%20to%20be%20a%20better%20web%2Fgame%20designer!" target="_blank"><img src="files/img/fb-trans.png" alt="Facebook" border="0"></a></li>
-		    <li class="last_nav"><a href="http://twitter.com/share?url=http%3A%2F%2Fcollinhover.com&text=Kaiopua%3A%20an%20interactive%20moon-sized%20Hawaiian%20space%20worm%20that%20will%20teach%20you%20to%20be%20a%20better%20web%2Fgame%20designer!" target="_blank"><img src="files/img/twitter-trans.png" alt="Twitter" border="0"></a></li>   
+			<li class="last_nav"><a href="http://www.facebook.com/sharer.php?u=http%3A%2F%2Fcollinhover.com&t=Kaiopua%3A%20an%20interactive%20moon-sized%20Hawaiian%20space%20worm%20that%20will%20teach%20you%20to%20be%20a%20better%20web%2Fgame%20designer!" target="_blank"><img src="img/fb-trans.png" alt="Facebook" border="0"></a></li>
+		    <li class="last_nav"><a href="http://twitter.com/share?url=http%3A%2F%2Fcollinhover.com&text=Kaiopua%3A%20an%20interactive%20moon-sized%20Hawaiian%20space%20worm%20that%20will%20teach%20you%20to%20be%20a%20better%20web%2Fgame%20designer!" target="_blank"><img src="img/twitter-trans.png" alt="Twitter" border="0"></a></li>   
 		</ul>
 	    
 	</nav>
@@ -135,7 +135,17 @@
 </footer>
 
 <!-- javascript -->
-<script data-main="js/Main" src="js/lib/require.js"></script>
+
+<script>
+    (function(g,b,d){var c=b.head||b.getElementsByTagName("head"),D="readyState",E="onreadystatechange",F="DOMContentLoaded",G="addEventListener",H=setTimeout;
+    function f(){
+       $LAB.script("js/Kaiopua.js")
+    }
+    H(function(){if("item"in c){if(!c[0]){H(arguments.callee,25);return}c=c[0]}var a=b.createElement("script"),e=false;a.onload=a[E]=function(){if((a[D]&&a[D]!=="complete"&&a[D]!=="loaded")||e){return false}a.onload=a[E]=null;e=true;f()};
+    
+    a.src="js/lib/LAB.min.js";
+        c.insertBefore(a,c.firstChild)},0);if(b[D]==null&&b[G]){b[D]="loading";b[G](F,d=function(){b.removeEventListener(F,d,false);b[D]="complete"},false)}})(this,document);
+</script>
 
 <!-- google analytics -->
 <script>
@@ -152,10 +162,11 @@
 
 </script>
 
-<!-- Prompt IE 6 users to install Chrome Frame. chromium.org/developers/how-tos/chrome-frame-getting-started -->
+<!-- Prompt IE 6 users to install Chrome Frame. Remove this if you want to support IE 6.
+       chromium.org/developers/how-tos/chrome-frame-getting-started -->
   <!--[if lt IE 7 ]>
-    <script src="//ajax.googleapis.com/ajax/libs/chrome-frame/1.0.3/CFInstall.min.js"></script>
-    <script>window.attachEvent('onload',function(){CFInstall.check({mode:'overlay'})})</script>
+    <script defer src="//ajax.googleapis.com/ajax/libs/chrome-frame/1.0.3/CFInstall.min.js"></script>
+    <script defer>window.attachEvent('onload',function(){CFInstall.check({mode:'overlay'})})</script>
   <![endif]-->
   
 </body>

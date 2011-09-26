@@ -1,17 +1,10 @@
 # TODO  
   
 #### Collin
-* Setup placeholder splash page for site while building
-  * Functions as loader
-  * Functions as start screen (disable start until game complete)
-  * HTML Page
-  * CSS file
-  * JS engine
-* Concept art for 'Clouds over the Ocean' level
-* Write out plans for Flower/2nd, Forest/3rd, and Volcanic/4th levels
-  * Descriptions
-  * Abilities
-  * Puzzles
+* Implement loader for game that
+  * works behind the scenes
+  * has visual indicator for both start menu and in game
+* Implement start menu
 * Complete INDEX.html meta tags & supporting info
   * google-site-verification
   * favicon
@@ -24,11 +17,10 @@
 * Speak to Hawaiian natives about concepts that derive from Hawaiian culture
 
 #### Joshua
-* Teach self Javascript
-* Setup basic 3D scene with WebGL/ThreeJS
+* Explore threejs physics
+* Model assets
 
 #### Ian
-* Model player character
 * Texture player character
 * Animate player character
   * Run cycle

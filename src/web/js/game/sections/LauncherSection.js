@@ -1,16 +1,14 @@
 /*
 LauncherSection.js
-Launcher module, handles loading assets, tutorial, and start menu.
+Launcher module, handles start menu and environment.
 */
-define(["game/effects/LinearGradient",
-        "game/effects/FocusVignette",
-        "game/sections/launcher/Loader",
+define(["effects/LinearGradient",
+        "effects/FocusVignette",
         "game/sections/launcher/StartMenu",
         "game/sections/launcher/Water",
         "game/sections/launcher/Sky"],
 function () {
     var shared = require('utils/Shared'),
-        linearGradientEffect = require('game/effects/LinearGradient'),
         renderer, 
         renderTarget,
         camera, 
@@ -23,7 +21,7 @@ function () {
             stops: [0, 0.4, 0.6, 0.8, 1.0],
             startBottom: true
         },
-        bg = linearGradientEffect.generate( bgParams ),
+        bg = require('effects/LinearGradient').generate( bgParams ),
         time,
         water = require("game/sections/launcher/Water"),
         sky = require("game/sections/launcher/Sky"),
@@ -52,17 +50,11 @@ function () {
     
     =====================================================*/
     
-    init_internal();
+    init_basics();
     
-    function init_internal () {
-        
-        init_basics();
-        
-        init_render_processing();
+    init_render_processing();
     
-        init_environment();
-        
-    }
+    init_environment();
     
     function init_basics () {
         
@@ -85,7 +77,7 @@ function () {
     function init_render_processing () {
         
         var shaderScreen = THREE.ShaderExtras[ "screen" ],
-            shaderFocusVignette = require('game/effects/FocusVignette');
+            shaderFocusVignette = require('effects/FocusVignette');
         
         renderPasses = {
             bg: new THREE.RenderPass( bg.scene, bg.camera ),
@@ -212,8 +204,6 @@ function () {
         mouse.ry = (1 - pctY) * mouse.rangeRotMaxY + (pctY) * mouse.rangeRotMinY;
         
     }
-
-    
     
     /*===================================================
     

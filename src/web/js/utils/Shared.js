@@ -17,15 +17,12 @@ function () {
         frameRateMin : 20,
         refreshInterval : 1000 / 60,
         
-        loadedAssets : false,
-        
-        static_menu: $('#static_menu'),
-        gameContainer: $('#game'),
-        errorContainer: $('#error_container'),
-        transitioner: $('#transitioner'),
-        
-        transitionOut: 500,
-        transitionIn: 400,
+        html: {
+            staticMenu: $('#static_menu'),
+            gameContainer: $('#game'),
+            errorContainer: $('#error_container'),
+            transitioner: $('#transitioner')
+        },
         
         signals : {
 
@@ -38,11 +35,6 @@ function () {
             keyup : new signals.Signal(),
 
             windowresized : new signals.Signal(),
-
-            load : new signals.Signal(),
-            loadBegin : new signals.Signal(),
-            loadItemAdded : new signals.Signal(),
-            loadItemCompleted : new signals.Signal(),
             
             error : new signals.Signal()
         }

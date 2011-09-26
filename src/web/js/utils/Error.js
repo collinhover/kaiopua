@@ -3,11 +3,9 @@ Error.js
 Handles compatibility checks and user viewable errors.
 */
 
-define([],
-function () {
-    var shared = require('utils/Shared'),
-        domElement = shared.errorContainer,
-        errorState = false,
+var KAIOPUA = (function (main) {
+    
+    var errorState = false,
         errorCurrent = {},
         errorHash = 'error=',
         errorTypes = {
@@ -90,7 +88,7 @@ function () {
     
     // remove error state
     function clear () {
-        domElement.empty();
+        main.shared.html.errorContainer.empty();
         errorCurrent = {};
         errorState = false;
     }
@@ -137,10 +135,10 @@ function () {
             
             // set url back to origin link with history states
             // always hide unnecessary information from users
-            history.pushState( { "pState": shared.originLink }, '', shared.originLink );
+            history.pushState( { "pState": main.shared.originLink }, '', main.shared.originLink );
             
             // trigger shared error signal
-            shared.signals.error.dispatch(errorCurrent.type, origin || 'Unknown Origin', 'N/A');
+            main.shared.signals.error.dispatch(errorCurrent.type, origin || 'Unknown Origin', 'N/A');
         }
     }
     
@@ -191,13 +189,13 @@ function () {
         // add to display
         $(article).append(header);
         $(article).append(explanation);
-        domElement.append(article);
+        main.shared.html.errorContainer.append(article);
         
         // set height and negative margin-top
         // no need to position, css top/left at 50%
         articleHeight = $(header).outerHeight() + $(explanation).outerHeight();
-        if (typeof shared.static_menu !== 'undefined') {
-            footerModifier = shared.static_menu.outerHeight() * 0.5;   
+        if (typeof main.shared.html.staticMenu !== 'undefined') {
+            footerModifier = main.shared.html.staticMenu.outerHeight() * 0.5;   
         }
         
         // append extra if needed
@@ -224,12 +222,19 @@ function () {
         };
     }
     
-    // return something to define module
-    return {
+    /*===================================================
+    
+    public properties
+    
+    =====================================================*/
+    
+    main.error = {
         check: check,
         generate: generate,
         process: process,
-        clear: clear,
-        domElement: domElement
+        clear: clear
     };
-});
+    
+    return main; 
+    
+}(KAIOPUA || {}));

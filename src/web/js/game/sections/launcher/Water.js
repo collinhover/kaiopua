@@ -28,7 +28,7 @@ function () {
         bobTiltCycleMod = Math.PI * 1.5,
         waterRaysInactive = [],
         waterRaysActive = [],
-        rayTexture = THREE.ImageUtils.loadTexture( "files/img/light_ray.png" ),
+        rayTexture = THREE.ImageUtils.loadTexture( "assets/textures/light_ray.png" ),
         numRays = 20,
         rayWidth = 700,
         rayHeight = 2000,

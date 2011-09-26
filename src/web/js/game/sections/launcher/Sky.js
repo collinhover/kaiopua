@@ -26,7 +26,7 @@ function () {
         cloudPlaneScaleStart = 6, 
         cloudPlaneScaleEnd = 4,
         cloudPlaneTextureLoading = false,
-        cloudPlaneTexturePath = 'files/img/cloud256.png',
+        cloudPlaneTexturePath = 'assets/textures/cloud256.png',
         cloudPlaneTexture,
         clouds = [],
         environment = new THREE.Object3D();
