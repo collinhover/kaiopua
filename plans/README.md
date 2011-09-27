@@ -22,11 +22,14 @@ The core goal of the project is to teach players how to solve communication and 
 ####Core Mechanic
 The game's core mechanic is the ability to change the size or scale of the player's environment. This includes everything in the game, from scaling the entire world to resizing individual parts of a plant. This is like a combination of a shrink ray and a giant growth potion, and works as follows:
 
-*   The player has a bottle of sunshine, which has a limited amount of energy and shoots beams of light.
-*   The player may use the bottle in two basic point and shoot methods:
-    * A. Shrink light (make things smaller)
-    * B. Grow light (make things bigger)
-*   Anything that light beams A & B touch will change scale.
+*   May be used on any visible surface in the game.
+*   Player only has a limited amount of scaling energy.
+    * Enough to allow player to resize several objects
+    * Not enough to let player warp or destroy entire world (i.e. break game)
+*   The player may use the ability in two basic point and shoot methods:
+    * A. Shrink light (make things smaller >> lighter weight, less affected by gravity)
+    * B. Grow light (make things bigger >> heavier weight, more affected by gravity)
+*   Anything that light types A & B touch will change scale.
 *   Anything scaled will keep the energy used and stay at that scale until the player takes the energy back.
 *   By default a player scales individual faces of the game's objects.
 *   If a player tries to scale the whole world, they will scale themselves, making the world seem to change scale.
@@ -36,6 +39,7 @@ The game's core mechanic is the ability to change the size or scale of the playe
     * Point and shoot again to deselect an object.
     * All objects selected get scaled at the same rate.
     * Uses energy based on amount of objects scaled.
+*   The ability takes the form of a bottle of sunshine that shoots beams of light.
 
 ####Setting
 The game takes place on a moon sized worm-like creature named Kaiopua, which begins as a newborn or seedling. Kaiopua is a giant white worm, split into a face with two eyes, a mouth, and a small farmer's shack (like a horn), and a stubby tail at the back. Between the face and tail are the individual levels of the game in the form of rings, containing all the puzzles and majority of the gameplay. The player may be gated or hindered from accessing some rings at any time during the game, and it may be that only 1 ring shows up at a time. The head serves three purposes: (a) it is the starting point of the game, (b) it may speak to the player to provide story or hints, and (c) it is the where a player may feed combinable objects that have been found while exploring.
