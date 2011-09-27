@@ -12,9 +12,29 @@ MFA Graduate Thesis in epistemic gaming based visual communication and learning
 Kaiopua
 
 ####Game Summary
-Science fiction builder puzzle game, in which the player assumes the role of a simple boy named Iki. Iki is stranded on a moon sized worm-like creature named Kaiopua, who is broken and needs help to restore power to his life systems. The game will be accessible and playable via website, and will not require any third party plug-ins or software beyond the web browser of player’s choice.
+Science fiction puzzle game, in which the player assumes the role of a simple boy named Iki. Iki is stranded on a moon sized worm-like creature named Kaiopua, who is broken and needs help to restore power to his life systems. The game will be accessible and playable via website, and will not require any third party plug-ins or software beyond the web browser of player’s choice.
 
 ![visual_style_001](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_visual_style_001.jpg "Game Visual Style")
+
+####Core Goal
+The core goal of the project is to teach players how to solve communication and design problems efficiently. Communication efficiency is one of those core values of professional web design, where a web designer uses the smallest number of resources in the most efficient way to add as much to a user's experience as possible. For the full core goal description, see [Main README](https://github.com/collinhover/kaiopua).
+
+####Core Mechanic
+The game's core mechanic is the ability to change the size or scale of the player's environment. This includes everything in the game, from scaling the entire world to resizing individual parts of a plant. This is like a combination of a shrink ray and a giant growth potion, and works as follows:
+* The player has a bottle of sunshine, which has a limited amount of energy and shoots streams of light.
+* The player may use the bottle in two basic point and shoot methods:
+  * A. Make things smaller
+  * B. Make things bigger
+* Anything that the light streams touches will be activated and scaled based on the type of stream.
+* Anything scaled will keep the energy used and stay at that scale until the player takes it back.
+* By default a player scales individual faces of the game's objects.
+* If a player points and shoots at the ground, they will scale themselves, making the world seem to change scale.
+* To aid the player in scaling larger objects or sets of objects, they will also be able to quickly select entire objects using an object selection stream:
+  * Point and shoot once to select an object.
+  * Point and shoot again to deselect an object.
+  * All objects get scaled at the same rate.
+  * Uses energy based on amount of objects scaled.
+
 
 ####Setting
 The game takes place on a moon sized worm-like creature named Kaiopua, which begins as a newborn or seedling. Kaiopua is a giant white worm, split into a face with two eyes, a mouth, and a blowhole, and a stubby tail at the back. Between the face and tail are the individual levels of the game in the form of rings, containing all the puzzles and majority of the gameplay. The player may be gated or hindered from accessing some rings at any time during the game. The head serves three purposes: (a) it is the starting point of the game, (b) it may speak to the player to provide story or hints, and (c) it is the where a player may feed combinable objects that have been found while exploring.
@@ -126,19 +146,18 @@ Once the game starts, the player gains the ability to examine any object they ar
 
 ##Game Mechanics
 ####Basics
-*   Game style: Puzzle / Builder
+*   Game style: Puzzle
 *   Perspective: Third-person
 *   Visuals:
     * Low-poly models with textures doing a lot of the heavy lifting.
     * Visuals will be playful and vibrant, and should attempt to stay away from the brown/dead feel of games attempting realism. 
-    * Visuals should draw from influences such as ROME (ro.me), Legend of Zelda: The Wind Waker, Legend of Zelda: Phantom Hourglass, Super Paper Mario, and Okami.
-    * Expected to include: multiple lights, normal mapping, cel-shading, depth of field (dof).
-    * And as performance allows and aesthetic direction suggests, may additionally include: ambient occlusion (ao, if not handled by textures), texture filters, vertex colors / shading, displacement mapping.
+    * Visuals should draw from influences such as ROME (ro.me), Legend of Zelda: The Wind Waker, Super Paper Mario, and Okami.
+    * As performance allows and aesthetic direction suggests, may additionally include: cel-shading, depth of field (dof), ambient occlusion (ao, if not handled by textures), vertex colors / shading, displacement mapping.
 *   Difficulty: Mid range, allow for reasonable failure and don’t punish player by adding time wasters such as long runs, grind based goals (i.e. repetitive and dull tasks), and overpriced progression.
 *   Pace: Do not artificially extend the time players spend in game. The game pace should be constant and exciting, but not pushy (i.e. no count-down timers) or irritating (i.e. player should not fail because of a random number generator).
 *   Resolution: Dynamic based on frames per second (fps) achieved by player computer. If player can meet or exceed 20 fps, the game will be rendered at the full size of the browser window. If player drops below this, game will be rendered at a reduced size and scaled up to match browser window, resulting in pixellated visuals.
 *   Frames per second: Default and maximum is 60, with minimum at 20. Below min, warn player and reduce quality.
-*   Configurable Options: Low or no priority for allowing player to changeoptions for resolution, difficulty, and keybindings.
+*   Configurable Options: Low or no priority for allowing player to change options for resolution, difficulty, and keybindings.
 
 ####Features
 *   Movement: (Max priority) Players will be able to move in space (using WASD / arrows keys). Preferred additions include jumping (space bar). All modes of movement may be augmented by abilities.
