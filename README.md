@@ -12,23 +12,17 @@ Kaiopua is a science fiction builder / puzzle game, in which the player assumes 
 [Project Plan](https://github.com/collinhover/kaiopua/blob/master/plans/README.md "Project Plan") - [Game Website](http://collinhover.github.com/kaiopua) (placeholder) - [Contributors](https://github.com/collinhover/kaiopua/contributors "Contributors") - [TODO List](https://github.com/collinhover/kaiopua/blob/master/TODO.md)
 
 ####Core Goal
-Create a game in which a player develops and adopts a piece of a professional web designer's problem solving framework. Notable modules of solving problems as a web designer may include:
+The core goal of the project is to teach players how to solve communication and design problems efficiently. When a web designer creates a website to solve a communication problem, they use a set of professional values to figure out what the boundaries of the project are and how to find the right solution within those constraints. Communication efficiency is one of those core values, where a web designer uses the smallest number of resources in the most efficient way to add as much to a user's experience as possible. This can manifest in multiple areas of web design: loading and delivery of content is the most literal, while the layout of the site (i.e. navigation and sections) is perhaps the most difficult. 
 
-* Small file sizes - solving problem efficiently with smallest number of resources
-* Browser Accessibility - making sure everyone gets the same experience
-* Ease of use (navigation) - good use of hierarchy so everyone has a frustration free experience
-* Cloud - use existing resources from a central location that users may already have
-* Dynamic experience - each experience is manipulated to fit the current situation
-* Semantic content - every part of a design is tagged with meaning
-* HTML, CSS, and JS - separation of structure, form, and interactivity
-* Meticulousness - making sure your design is error free
+Because everything on the web is stored somewhere remote, loading and delivery time is an unforgiving constraint of web design. A user arrives at a website with a preconceived idea of how long they expect to spend waiting for the site to load and how long they plan to browse. Breaking a user's loading patience, which is often very low, is the equivalent of not having a website at all.
+
+The layout of a website is heavily influenced by efficiency in a number of ways, but most notable is the ease of use. If a website is well organized and well planned, users will find it easy to use because it is friendly and not overwhelming. Efficiency used in this way is about hierarchy of information and is similar to what was said by Antoine de Saint Exupéry: "A designer knows he has achieved perfection not when there is nothing left to add, but when there is nothing left to take away."
 
 ## Contributors
 
 #### Code
 
 Collin Hover  
-Joshua Wilson
 
 #### Modelling / Texturing / Animation
 
@@ -36,6 +30,7 @@ Collin Hover
 Ian Wilson  
 Kevin Ly  
 Houston Hardaway
+Joshua Wilson
 
 #### Concept Illustration
 Collin Hover  
