@@ -21,19 +21,19 @@ The core goal of the project is to teach players how to solve communication and 
 
 ####Core Mechanic
 The game's core mechanic is the ability to change the size or scale of the player's environment. This includes everything in the game, from scaling the entire world to resizing individual parts of a plant. This is like a combination of a shrink ray and a giant growth potion, and works as follows:
-* The player has a bottle of sunshine, which has a limited amount of energy and shoots streams of light.
-* The player may use the bottle in two basic point and shoot methods:
-  * A. Make things smaller
-  * B. Make things bigger
-* Anything that the light streams touches will be activated and scaled based on the type of stream.
-* Anything scaled will keep the energy used and stay at that scale until the player takes it back.
-* By default a player scales individual faces of the game's objects.
-* If a player points and shoots at the ground, they will scale themselves, making the world seem to change scale.
-* To aid the player in scaling larger objects or sets of objects, they will also be able to quickly select entire objects using an object selection stream:
-  * Point and shoot once to select an object.
-  * Point and shoot again to deselect an object.
-  * All objects get scaled at the same rate.
-  * Uses energy based on amount of objects scaled.
+*   The player has a bottle of sunshine, which has a limited amount of energy and shoots streams of light.
+*   The player may use the bottle in two basic point and shoot methods:
+    *   A. Make things smaller
+    *   B. Make things bigger
+*   Anything that the light streams touches will be activated and scaled based on the type of stream.
+*   Anything scaled will keep the energy used and stay at that scale until the player takes it back.
+*   By default a player scales individual faces of the game's objects.
+*   If a player points and shoots at the ground, they will scale themselves, making the world seem to change scale.
+*   To aid the player in scaling larger objects or sets of objects, they will also be able to quickly select entire objects using an object selection stream:
+    *   Point and shoot once to select an object.
+    *   Point and shoot again to deselect an object.
+    *   All objects get scaled at the same rate.
+    *   Uses energy based on amount of objects scaled.
 
 
 ####Setting
