@@ -5,7 +5,8 @@ Main module, handles browser events.
 
 var KAIOPUA = (function (main) {
     
-    var loader, shared, error,
+    var shared = main.shared = main.shared || {},
+        loader, error,
         libList = [
             "js/lib/jquery-1.6.4.min.js",
             "js/lib/RequestAnimationFrame.js",
@@ -30,41 +31,39 @@ var KAIOPUA = (function (main) {
     function init_basics () {
         
         // shared
-        shared = main.shared = {
-            mouse : { x: 0, y: 0 },
-            screenWidth : $(window).width(),
-            screenHeight : $(window).height(),
-            originLink : window.location.pathname.toString(),
-            
-            frameRateMax : 60,
-            frameRateMin : 20,
-            refreshInterval : 1000 / 60,
-            
-            html: {
-                staticMenu: $('#static_menu'),
-                gameContainer: $('#game'),
-                errorContainer: $('#error_container'),
-                transitioner: $('#transitioner')
-            },
-            
-            signals : {
+        shared.mouse = { x: 0, y: 0 };
+        shared.screenWidth = $(window).width();
+        shared.screenHeight = $(window).height();
+        shared.originLink = window.location.pathname.toString();
         
-                mousedown : new signals.Signal(),
-                mouseup : new signals.Signal(),
-                mousemoved : new signals.Signal(),
-                mousewheel : new signals.Signal(),
+        shared.frameRateMax = 60;
+        shared.frameRateMin = 20;
+        shared.refreshInterval = 1000 / 60;
         
-                keydown : new signals.Signal(),
-                keyup : new signals.Signal(),
+        shared.html= {
+            staticMenu: $('#static_menu'),
+            gameContainer: $('#game'),
+            errorContainer: $('#error_container'),
+            transitioner: $('#transitioner')
+        };
         
-                windowresized : new signals.Signal(),
-                
-                loadItemCompleted : new signals.Signal(),
-                loadListCompleted : new signals.Signal(),
-                loadAllCompleted : new signals.Signal(),
-                
-                error : new signals.Signal()
-            }
+        shared.signals = {
+    
+            mousedown : new signals.Signal(),
+            mouseup : new signals.Signal(),
+            mousemoved : new signals.Signal(),
+            mousewheel : new signals.Signal(),
+    
+            keydown : new signals.Signal(),
+            keyup : new signals.Signal(),
+    
+            windowresized : new signals.Signal(),
+            
+            loadItemCompleted : new signals.Signal(),
+            loadListCompleted : new signals.Signal(),
+            loadAllCompleted : new signals.Signal(),
+            
+            error : new signals.Signal()
         };
         
         // add listeners for events

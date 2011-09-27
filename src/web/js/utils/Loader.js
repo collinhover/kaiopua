@@ -4,7 +4,8 @@ Loader module, handles loading assets.
 */
 var KAIOPUA = (function ( main ) {
     
-    var listNameBase = 'loadList',
+    var shared = main.shared = main.shared || {},
+        listNameBase = 'loadList',
         listNumber = 0,
         loading = false,
         listsToLoad = [],
@@ -137,9 +138,9 @@ var KAIOPUA = (function ( main ) {
         
         // shared signal
         
-        if (typeof main.shared !== 'undefined') {
+        if (typeof shared !== 'undefined') {
             
-            main.shared.signals.loadItemCompleted.dispatch();
+            shared.signals.loadItemCompleted.dispatch();
             
         }
         
@@ -176,9 +177,9 @@ var KAIOPUA = (function ( main ) {
         
         // shared signal
         
-        if (typeof main.shared !== 'undefined') {
+        if (typeof shared !== 'undefined') {
             
-            main.shared.signals.loadListCompleted.dispatch();
+            shared.signals.loadListCompleted.dispatch();
             
         }
         

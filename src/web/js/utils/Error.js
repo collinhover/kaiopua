@@ -5,7 +5,8 @@ Handles compatibility checks and user viewable errors.
 
 var KAIOPUA = (function (main) {
     
-    var errorState = false,
+    var shared = main.shared = main.shared || {},
+        errorState = false,
         errorCurrent = {},
         errorHash = 'error=',
         errorTypes = {
@@ -88,7 +89,7 @@ var KAIOPUA = (function (main) {
     
     // remove error state
     function clear () {
-        main.shared.html.errorContainer.empty();
+        shared.html.errorContainer.empty();
         errorCurrent = {};
         errorState = false;
     }
@@ -135,10 +136,10 @@ var KAIOPUA = (function (main) {
             
             // set url back to origin link with history states
             // always hide unnecessary information from users
-            history.pushState( { "pState": main.shared.originLink }, '', main.shared.originLink );
+            history.pushState( { "pState": shared.originLink }, '', shared.originLink );
             
             // trigger shared error signal
-            main.shared.signals.error.dispatch(errorCurrent.type, origin || 'Unknown Origin', 'N/A');
+            shared.signals.error.dispatch(errorCurrent.type, origin || 'Unknown Origin', 'N/A');
         }
     }
     
@@ -189,13 +190,13 @@ var KAIOPUA = (function (main) {
         // add to display
         $(article).append(header);
         $(article).append(explanation);
-        main.shared.html.errorContainer.append(article);
+        shared.html.errorContainer.append(article);
         
         // set height and negative margin-top
         // no need to position, css top/left at 50%
         articleHeight = $(header).outerHeight() + $(explanation).outerHeight();
-        if (typeof main.shared.html.staticMenu !== 'undefined') {
-            footerModifier = main.shared.html.staticMenu.outerHeight() * 0.5;   
+        if (typeof shared.html.staticMenu !== 'undefined') {
+            footerModifier = shared.html.staticMenu.outerHeight() * 0.5;   
         }
         
         // append extra if needed

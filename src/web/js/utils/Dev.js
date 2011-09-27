@@ -6,7 +6,7 @@ var KAIOPUA = (function (main) {
     
     var dev = main.dev = main.dev || {};
     
-    var shared = main.shared,
+    var shared = main.shared = main.shared || {},
         devCommands,
         domElement, isOpen = true, stats, logger, 
         gui, guiContainer, guiHeight, statsPaused = true,
