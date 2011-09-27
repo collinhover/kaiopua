@@ -3,7 +3,7 @@ Project Plan
 ##Collin Hover, Graduate Thesis: Kaiopua
 
 ####Plan Version
-4.0.08.30.2011
+5.0.09.27.2011
 
 ####Project
 MFA Graduate Thesis in epistemic gaming based visual communication and learning
