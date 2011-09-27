@@ -38,7 +38,7 @@ The game's core mechanic is the ability to change the size or scale of the playe
     * Uses energy based on amount of objects scaled.
 
 ####Setting
-The game takes place on a moon sized worm-like creature named Kaiopua, which begins as a newborn or seedling. Kaiopua is a giant white worm, split into a face with two eyes, a mouth, and a blowhole, and a stubby tail at the back. Between the face and tail are the individual levels of the game in the form of rings, containing all the puzzles and majority of the gameplay. The player may be gated or hindered from accessing some rings at any time during the game. The head serves three purposes: (a) it is the starting point of the game, (b) it may speak to the player to provide story or hints, and (c) it is the where a player may feed combinable objects that have been found while exploring.
+The game takes place on a moon sized worm-like creature named Kaiopua, which begins as a newborn or seedling. Kaiopua is a giant white worm, split into a face with two eyes, a mouth, and a small farmer's shack (like a horn), and a stubby tail at the back. Between the face and tail are the individual levels of the game in the form of rings, containing all the puzzles and majority of the gameplay. The player may be gated or hindered from accessing some rings at any time during the game, and it may be that only 1 ring shows up at a time. The head serves three purposes: (a) it is the starting point of the game, (b) it may speak to the player to provide story or hints, and (c) it is the where a player may feed combinable objects that have been found while exploring.
 
 Level plans: [Level 1](https://github.com/collinhover/kaiopua/blob/master/plans/levels/PLAN_LEVEL_001.md) - [Level 2](https://github.com/collinhover/kaiopua/blob/master/plans/levels/PLAN_LEVEL_002.md) - [Level 3](https://github.com/collinhover/
 opua/blob/master/plans/levels/PLAN_LEVEL_003.md) - [Level 4](https://github.com/collinhover/kaiopua/blob/master/plans/levels/PLAN_LEVEL_004.md)
@@ -46,33 +46,34 @@ opua/blob/master/plans/levels/PLAN_LEVEL_003.md) - [Level 4](https://github.com/
 ![world_001](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_world_001.jpg "Game World")
 
 ####Plot
-Iki, a simple boy with a rice farmer’s pack basket on his pack, finds himself in a small cave with no way out but up. After exploring, Iki realizes that the hole in the roof is too high up for him to jump to, so he must find another way to solve the puzzle. The only things in the room are a massive ooze plugging a hole in the floor, a large cinnamon bun, and a small flaming splinter stuck in the wall. Taking the cinnamon bun, the player gets their first ability object, ‘Feed Bun’, which gives them the ability to feed something a cinnamon bun. If fed to the flaming splinter, the ‘Feed Bun’ turns into a ‘Flaming Bun’, which can be thrown at things to set them on fire. Once the player sets the ooze on fire, the entire cave starts to shake and the player is shot out of the top of the cave by a massive geyser. Landing on the wrong side of his face, Iki is surprised to find himself standing on the giant sleeping face of a moon sized worm. Woken by the sudden explosion, the creature is also surprised to find Iki standing on its face, but that surprise quickly turns to sadness. As the creature begins to talk, Iki realizes that the creature’s language is very similar to whale sounds, and that he keeps hearing the word ‘Kaiopua’. Iki decides that he will call this creature Kaiopua, and that he will find out what is making Kaiopua so sad.
+Iki, a simple boy with a big head, wakes from dreams of clouds over the ocean and rolls out of his tiny cot into his hawaiian farmer's hut. After a great warrior's yawn, Iki grabs his pack basket, throws it on his back, picks up  a strange bottle with a miniature sun bobbing around in it, and heads out the door. As he walks down the steps from his hut, Iki uncorks the bottle and pours some of the escaping light onto a plant, which causes it to grow enormously! Hearing something strange, Iki looks around and spots an giant feral pig rooting around near the house. Thinking quickly, Iki points the bottle of sunshine at the pig and zaps it down into a knee high piglet, which he gives a friendly pat.
+
+Suddenly, a huge roar of "HIIIIIIIIIIII!" explodes from every direction, and Iki calls back a friendly greeting to the moon sized worm named Kaiopua on whose face he lives. Running down to talk to Kaiopua, Iki learns that something strange has been going on in the rings that is making Kaiopua feel sick, and so he sets off to find out about the disturbances.
 
 ![character_003](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_character_003.jpg "Characters")
 
 ####Gameplay
-The gameplay of Kaiopua consists of a third-person journey through a growing moon sized worm called Kaiopua. The player can explore by pressing and holding the WASD or arrow keys to move, while using the mouse to select and interact with objects. Players begin their journey in the blowhole of Kaiopua, a small cave structure that later serves as a fast travel system throughout the game. At this starting location, players will find a basic puzzle that serves as a tutorial on movement, turning, looking, interacting with objects, and solving problems.
+The gameplay of Kaiopua consists of a third-person journey through a moon sized worm called Kaiopua. The player can explore by pressing and holding the WASD or arrow keys to move, while using the mouse to select and interact with objects. Players begin their journey on the face of Kaiopua, and quickly transition into the first ring. Players will learn immediately about the core mechanic of the game, and find out about movement, turning, looking, interacting with objects, and solving problems shortly after.
 
-To complete the game, players must explore Kaiopua’s surface, collect objects, solve puzzles, fix Kaiopua’s power sources, and battle creatures. Player’s overall objective is to fix the worm, and to do so they must fix each of the rings between its head and tail. To fix each ring, the player will need to restore its power source by finding specific ‘ability’ objects located in that ring. Ability objects serve several purposes in the game: (a) they grant the player an ability to use in solving puzzles, and (b) they are used to restore a ring’s power source. As the power is restored in a ring, it will begin to rotate faster. As each of the rings gets fixed and begins to rotate faster, the world becomes happier, grows whale fins, grows a tail, and finally is able to use his fins and tail to fly through space.
+To complete the game, players must explore Kaiopua’s surface, solve puzzles, and battle creatures. Player’s overall objective is to find out about the disturbances and fix the worm's rings. To fix each ring, the player will need to restore its power sources by finding and activating them. As each of the rings gets fixed, Kaiopua becomes happier and happiers until finally he is able to fly through space.
 
-To solve puzzles, players will need to use ability objects to activate and change the environment in order to release or access further ability objects. Each ability object will exist in the game from the beginning, but only one will be accessible to the player initially on each ring. The player will begin each ring by solving an exploration puzzle, which will require no abilities, to find the first ability object. Then the player will solve puzzles by using and finding further ability objects. The power source itself is always unreachable by a player until they’ve found the final ability object on a ring. Once the player reaches the power source, they will only need to activate it to restore power and complete the ring.
+To solve puzzles, players will need to use the core mechanic of shrinking and growing objects to activate and change the environment in order to continue along their path. Each power source in a ring will always be unreachable by a player until they’ve found the right way to change the environment or themselves to get to it. Once the player reaches the power source, they will only need to activate it to restore power, and once all power sources on a ring are restored, the player completes the ring.
 
-While solving puzzles, players may unlock ‘collectible’ or ‘combine’ objects instead of ability or key objects. Combine objects serve no direct purpose in solving puzzles or restoring parts, but instead allow the player to feed combine objects to the world three at a time to receive a buff. These buffs enhance a player’s basic movement / abilities as well as visually modifying the character, and are intended to reward the player for exploration and travel.
+While solving puzzles, players may unlock ‘collectible’ or ‘combine’ objects. Combine objects serve no direct purpose in solving puzzles or restoring parts, but instead allow the player to feed combine objects to the world three at a time to receive a buff. These buffs enhance a player’s basic movement / abilities as well as visually modifying the character, and are intended to reward the player for exploration and travel.
 
-The player is given very little background before starting. At the beginning of the game no obvious goals or objectives are laid out, which means that players must simply begin to explore. As the player quickly discovers, there is no time within which the player must complete the game, and so the game unfolds at the player’s pace and is solved through a combination of observation, experimentation, creativity, and logical thinking.
+The player is given very little background before starting. At the beginning of the game only a single goal of exploring for the source of the disturbances is laid out. As the player quickly discovers, there is no time within which the player must complete the game, and so the game unfolds at the player’s pace and is solved through a combination of observation, experimentation, creativity, and logical thinking.
 
 ##Game Details
 ####Setting
 *   Giant space worm made of face, tail, and variable number of rings.
 *   Face and tail are pre-modeled/animated
 *   Rings are made of generated grid + pre-modeled/animated objects.
-*   Fast travel through worm’s blowhole
 *   Player solves puzzles and collects objects in a cycle
 
 ![world_002](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_world_002.jpg "World")
 
 ####Player
-*   Simple boy with a rice farmer’s pack basket on back (inventory)
+*   Simple boy with a farmer’s pack basket and a bottle of sunshine
 *   All white body, with two black eyes (near top of head) and black mouth
 *   Large head, long arms (almost to ground), short legs
 *   All units in game based on player character, which has bounds of 1 W x 2 H x 1 D
@@ -102,29 +103,13 @@ The player is given very little background before starting. At the beginning of 
 *   Fix the worm
 *   Fix each ring
 *   For each ring, restore power
-*   Use ability objects to get to power source and restore it
-*   Once a ring is restored, it grows a pair of fins (and/or begins to spin?)
-*   As worm gets fixed, major parts grow (like fins and tail propellor) and start to work
+*   As worm gets fixed, worm gets happier
 
 ![puzzle_001](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_puzzles_001.jpg "Power Source")
 
-####Object Types
-*   Ability objects solve puzzles
-*   Combine objects fed to worm and give buffs
-*   All object types are found through solving puzzles
-
 ####Puzzles
-*   1 puzzle per ability object per ring
-*   variable # of ability objects and combine objects
-*   All puzzles are simple individually: use the right ability object to solve
+*   All puzzles are simple individually: change the right parts of the environment or player
 *   Puzzles work in sequence, i.e. solve one to access the next
-
-####Ability Objects
-*   Ability objects each have a function and use in game
-*   To solve puzzles, use the right ability object at the right place
-*   Ex1: Use gravity pull to cause lava flow to redirect and allow passage
-*   Ex2: Use gravity push to place stones in lava pool to allow passage
-*   Ex3: Use vortex to pull player across large gaps to reach power source
 
 ####Combine Objects
 *   Certain objects are collectable
@@ -140,7 +125,7 @@ The player is given very little background before starting. At the beginning of 
 ####User Interface
 The gameplay will take place from a 3D perspective and exploration view. In the 3D perspective and exploration view, players will see the world in 3D from a third person / over the shoulder viewpoint with minimal or no GUI interaction. In this mode, players can explore the world physically, interact with the objects, feed the world, battle creatures, and most importantly solve puzzles.  
   
-Once the game starts, the player gains the ability to examine any object they are currently holding. This examination creates a radial context menu based on the object being examined, which shows simple icon flowchart for the current object and what sort of abilities it has. Key objects always show the ability to restore a part. Combine objects show only an icon for the area of the character’s body that they will visually modify. Ability objects show icons for each possible function they may be used for in puzzle solving.
+Additionally, player may have a 2D map view to see pathways and locations of power sources.
 
 ![ui_001](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_ui_001.jpg "UI")
 ![ui_002](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_ui_002.jpg "UI")
@@ -164,14 +149,15 @@ Once the game starts, the player gains the ability to examine any object they ar
 *   Movement: (Max priority) Players will be able to move in space (using WASD / arrows keys). Preferred additions include jumping (space bar). All modes of movement may be augmented by abilities.
 *   Abilities: (Max priority) Player will find objects that may be used as tools to perform certain abilities in game.
 *   Task / Quest Log: Not planned for implementation.
-*   Inventory: Objects collected by player will be organized by type in an easy to use interface.
+*   Inventory: Not planned for implementation.
 *   Equipment: Not planned for implementation.
 *   Character Customization: (Min priority) Player will find objects that may modify his/her character’s appearance in game.
 *   Leveling Up / Stats: Not planned for implementation.
 *   Achievements: (Min priority) If time permits, limited social media based achievements may be implemented.
 *   HUD  (High priority): Heads up display (HUD) will be minimal by default, with most information derived from visual based queues instead, but exceptions will be made:
     * Lifebar will be shown
-    * Ability Objects as list (scrollable / selectable)
+    * Energy bar will be shown
+    * Abilities as list (scrollable / selectable)
     * Options / Menu buttons (pause on use)
 *   Life and Death: (High priority) The player will be able to die in game but will never get a game over. Instead, upon dieing the player will be spit out of the world’s mouth.
 *   Saving: May be added if time permits.
