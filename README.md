@@ -29,7 +29,7 @@ Collin Hover
 Collin Hover  
 Ian Wilson  
 Kevin Ly  
-Houston Hardaway
+Houston Hardaway  
 Joshua Wilson
 
 #### Concept Illustration
