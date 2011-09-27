@@ -19,6 +19,12 @@ Science fiction puzzle game, in which the player assumes the role of a simple bo
 ####Core Goal
 The core goal of the project is to teach players how to solve communication and design problems efficiently. Communication efficiency is one of those core values of professional web design, where a web designer uses the smallest number of resources in the most efficient way to add as much to a user's experience as possible. For the full core goal description, see [Main README](https://github.com/collinhover/kaiopua).
 
+####Levels
+*   Cylinder / ring shape, gravity at center
+*   Player walks along outside
+*   Constructed by a grid of 1 x 1 unit squares
+*   Radius of rings 
+
 ####Core Mechanic
 The game's core mechanic is the ability to change the size or scale of the player's environment. This includes everything in the game, from scaling the entire world to resizing individual parts of a plant. This is like a combination of a shrink ray and a giant growth potion, and works as follows:  
 *   The player has a bottle of sunshine, which has a limited amount of energy and shoots streams of light.
