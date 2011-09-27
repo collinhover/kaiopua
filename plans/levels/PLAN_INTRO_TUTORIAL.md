@@ -37,12 +37,15 @@ Intro section of website will be composed of both the game's introduction and th
         * Door of shack closed
     * Moves outside character's shack
         * Character walks out and down steps
-        * Character makes a plant grow
-        * Character makes big pig shrink
+        * Character makes a plant grow (shows player growing ability)
+        * Character makes big pig shrink (shows player shrinking ability)
     * Kaiopua greets character
         * Character learns about disturbances
         * Character sets out for first ring
 
 ####Tutorial
 * Teaches player basics of game mechanics
-* 
+* Doubles as first level of game
+* Basic movement and jumping >> player must run from house to Kaiopua's mouth
+* Interacting with objects >> player must start speaking to Kaiopua
+* Basic ability of scaling >> player solves first puzzle
