@@ -16,9 +16,7 @@ The core goal of the project is to teach players how to solve communication and 
 
 Because everything on the web is stored somewhere remote, loading and delivery time is an unforgiving constraint of web design. A user arrives at a website with a preconceived idea of how long they expect to spend waiting for the site to load and how long they plan to browse. Breaking a user's loading patience, which is often very low, is the equivalent of not having a website at all.
 
-The layout of a website is heavily influenced by efficiency in a number of ways, but most notable is usability. If a website is well organized and well planned, users will find it easy to use because it is friendly and not overwhelming. Efficiency used in this way is about hierarchy of information and is similar to what was said by Antoine de Saint Exupéry: "A designer knows he has achieved perfection not when there is nothing left to add, but when there is nothing left to take away."
-
----  
+The layout of a website is heavily influenced by efficiency in a number of ways, but most notable is usability. If a website is well organized and well planned, users will find it easy to use because it is friendly and not overwhelming. Efficiency used in this way is about hierarchy of information and is similar to what was said by Antoine de Saint Exupéry: "A designer knows he has achieved perfection not when there is nothing left to add, but when there is nothing left to take away."  
 
 ##Contributors
 
@@ -58,8 +56,6 @@ SignalsJS, Modernizr, HTML5-Reset, RequestAnimFrame
 Seiji Ikeda  
 Tuan Ho  
 Robert Hower  
-  
----  
 
 ##Brief
 ####Target Audience
