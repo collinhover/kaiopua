@@ -1,1 +1,7 @@
-define([],function(){return{id:"hello world"}});
+define([],
+function () {
+    
+    return {
+        id: 'hello world'
+    };
+});

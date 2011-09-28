@@ -1,2 +1,66 @@
-THREE.MaskPass=function(b,c){this.scene=b;this.camera=c;this.clear=!0;this.needsSwap=!1};THREE.MaskPass.prototype={render:function(b,c,d){var a=b.context;a.colorMask(!1,!1,!1,!1);a.depthMask(!1);a.enable(a.STENCIL_TEST);a.stencilOp(a.REPLACE,a.REPLACE,a.REPLACE);a.stencilFunc(a.ALWAYS,1,4294967295);b.render(this.scene,this.camera,d,this.clear);b.render(this.scene,this.camera,c,this.clear);a.colorMask(!0,!0,!0,!0);a.depthMask(!0);a.stencilFunc(a.EQUAL,1,4294967295);a.stencilOp(a.KEEP,a.KEEP,a.KEEP)}};
-THREE.ClearMaskPass=function(){};THREE.ClearMaskPass.prototype={render:function(b){b=b.context;b.disable(b.STENCIL_TEST)}};
+/**
+ * @author alteredq / http://alteredqualia.com/
+ */
+
+THREE.MaskPass = function ( scene, camera ) {
+
+	this.scene = scene;
+	this.camera = camera;
+
+	this.clear = true;
+	this.needsSwap = false;
+
+};
+
+THREE.MaskPass.prototype = {
+
+	render: function ( renderer, writeBuffer, readBuffer, delta ) {
+
+		var context = renderer.context;
+
+		// don't update color or depth
+
+		context.colorMask( false, false, false, false );
+		context.depthMask( false );
+
+		// set up stencil
+
+		context.enable( context.STENCIL_TEST );
+		context.stencilOp( context.REPLACE, context.REPLACE, context.REPLACE );
+		context.stencilFunc( context.ALWAYS, 1, 0xffffffff );
+
+		// draw into the stencil buffer
+
+		renderer.render( this.scene, this.camera, readBuffer, this.clear );
+		renderer.render( this.scene, this.camera, writeBuffer, this.clear );
+
+		// re-enable update of color and depth
+
+		context.colorMask( true, true, true, true );
+		context.depthMask( true );
+
+		// only render where stencil is set to 1
+
+		context.stencilFunc( context.EQUAL, 1, 0xffffffff );  // draw if == 1
+		context.stencilOp( context.KEEP, context.KEEP, context.KEEP );
+
+	}
+
+};
+
+
+THREE.ClearMaskPass = function () {
+
+};
+
+THREE.ClearMaskPass.prototype = {
+
+	render: function ( renderer, writeBuffer, readBuffer, delta ) {
+
+		var context = renderer.context;
+
+		context.disable( context.STENCIL_TEST );
+
+	}
+
+};

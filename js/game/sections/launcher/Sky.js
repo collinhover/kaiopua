@@ -1,5 +1,256 @@
-var KAIOPUA=function(e){e.shared=e.shared||{};var d=e.game=e.game||{},d=d.sections=d.sections||{},d=d.launcher=d.launcher||{},d=d.sky=d.sky||{},n=2E4,t=2E3,u=1E4,i=40,x=-Math.PI*0.25,v=Math.PI*0.25,k,o=-1,p=4,q=1,y=1E3,z=500,A={min:400,max:600},B={min:0,max:1E3},C={w:1,h:0.5,d:0},D=100,E=6,F=4,w,G=[],H;d.init=function(a){var c,d,a=a||{};n=a.skyWidth||n;t=a.skyHeight||t;u=a.skyDepth||u;i=a.numClouds||i;x=a.lightAngle||x;v=a.lightAngleVariation||v;o=a.windDirection||o;p=a.windSpeedMax||p;q=a.windSpeedMin||
-q;y=a.cloudWidth||y;z=a.cloudDepth||z;A=a.cloudHeightStart||A;B=a.cloudHeightEnd||B;C=a.cloudScaleVariation||C;D=a.numPlanesPerCloud||D;E=a.cloudPlaneScaleStart||E;F=a.cloudPlaneScaleEnd||F;H=new THREE.Object3D;w=THREE.ImageUtils.loadTexture("assets/textures/cloud256.png",THREE.UVMapping);w.minFilter=w.magFilter=THREE.LinearFilter;for(a=0;a<i;a+=1){d=(i-a)/i;var b=c=void 0,e=void 0,j=void 0,r=void 0,l=void 0,m=void 0,f=void 0,g=void 0,k=void 0,J=void 0,h=b=void 0,I=void 0,K=void 0,s=h=void 0;c=c||
-{};r=c.numPlanes||D;k=c.planeScaleStart||E;J=c.planeScaleEnd||F;b=c.scaleVariation||C;l=c.width||y;f=c.heightStart||A;g=c.heightEnd||B;m=c.depth||z;l+=Math.random()*l*b.w-l*b.w*0.5;f.max+=Math.random()*f.max*b.h-f.max*b.h*0.5;f.min+=Math.random()*f.min*b.h-f.min*b.h*0.5;g.max+=Math.random()*g.max*b.h-g.max*b.h*0.5;g.min+=Math.random()*g.min*b.h-g.min*b.h*0.5;m+=Math.random()*m*b.d-m*b.d*0.5;e=new THREE.MeshBasicMaterial({color:16777215,depthTest:!1,map:w});b=new THREE.Geometry;j=new THREE.Mesh(new THREE.PlaneGeometry(256,
-256));for(s=0;s<r;s+=1)h=(r-s)/r,I=k*(1-h)+J*h,K=f.max+(g.max-f.max)*h,h=f.min+(g.min-f.min)*h,j.position.x=Math.random()*Math.random()*l*2-l,j.position.y=Math.random()*Math.random()*(K-h)+h,j.position.z=s*(m/r)-m*0.5,j.rotation.z=x+(Math.random()*v*2-v),j.scale.x=j.scale.y=Math.random()*Math.random()*I+I*0.3,THREE.GeometryUtils.merge(b,j);c=new THREE.Mesh(b,e);c.position.x=Math.random()*n-n*0.5;c.position.y=Math.random()*t-t*0.5;c.position.z=u*d-u*0.5;G[G.length]=c;H.addChild(c)}};d.wind_blow=function(a,
-c,d,b){var e;k=k||a;e=1-(a-k)/60;k=a;o=c||o;p=d||p;q=b||q;b=n*0.5;d=-b;for(a=0;a<i;a+=1)if(cloud=G[a],c=(i-a)/i,cloud.position.x+=e*o*(p*c+q*(1-c)),cloud.position.x>b)cloud.position.x=d;else if(cloud.position.x<d)cloud.position.x=b};d.get_environment=function(){return H};return e}(KAIOPUA||{});
+/*
+Sky.js
+Launcher section sky handler.
+
+cloud texture (c) ro.me
+*/
+
+var KAIOPUA = (function (main) {
+    
+    var shared = main.shared = main.shared || {},
+        game = main.game = main.game || {},
+        sections = game.sections = game.sections || {},
+        launcher = sections.launcher = sections.launcher || {},
+        sky = launcher.sky = launcher.sky || {},
+        skyWidth = 20000,
+        skyHeight = 2000, 
+        skyDepth = 10000,
+        numClouds = 40, 
+        lightAngle = (-Math.PI * 0.25), 
+        lightAngleVariation = (Math.PI * 0.25),
+        timePrev,
+        windDirection = -1,
+        windSpeedMax = 4,
+        windSpeedMin = 1,
+        cloudWidth = 1000,
+        cloudDepth = 500,
+        cloudHeightStart = {min: 400, max: 600}, 
+        cloudHeightEnd = {min: 0, max: 1000},
+        cloudScaleVariation = {w: 1, h: 0.5, d:0},
+        numPlanesPerCloud = 100,
+        cloudPlaneScaleStart = 6, 
+        cloudPlaneScaleEnd = 4,
+        cloudPlaneTextureLoading = false,
+        cloudPlaneTexturePath = 'assets/textures/cloud256.png',
+        cloudPlaneTexture,
+        clouds = [],
+        environment;
+    
+    /*===================================================
+    
+    internal init
+    
+    =====================================================*/
+    
+    /*===================================================
+    
+    external init
+    
+    =====================================================*/
+    
+    function init ( parameters ) {
+        var i, cloud, pct;
+        
+        // handle parameters
+        
+        parameters = parameters || {};
+        
+        skyWidth = parameters.skyWidth || skyWidth;
+        
+        skyHeight = parameters.skyHeight || skyHeight;
+        
+        skyDepth = parameters.skyDepth || skyDepth;
+        
+        numClouds = parameters.numClouds || numClouds;
+        
+        lightAngle = parameters.lightAngle || lightAngle;
+        
+        lightAngleVariation = parameters.lightAngleVariation || lightAngleVariation;
+        
+        windDirection = parameters.windDirection || windDirection;
+        
+        windSpeedMax = parameters.windSpeedMax || windSpeedMax;
+        
+        windSpeedMin = parameters.windSpeedMin || windSpeedMin;
+        
+        cloudWidth = parameters.cloudWidth || cloudWidth;
+        
+        cloudDepth = parameters.cloudDepth || cloudDepth;
+        
+        cloudHeightStart = parameters.cloudHeightStart || cloudHeightStart;
+        
+        cloudHeightEnd = parameters.cloudHeightEnd || cloudHeightEnd;
+        
+        cloudScaleVariation = parameters.cloudScaleVariation || cloudScaleVariation;
+        
+        numPlanesPerCloud = parameters.numPlanesPerCloud || numPlanesPerCloud;
+        
+        cloudPlaneScaleStart = parameters.cloudPlaneScaleStart || cloudPlaneScaleStart;
+        
+        cloudPlaneScaleEnd = parameters.cloudPlaneScaleEnd || cloudPlaneScaleEnd;
+        
+        // environment
+        
+        environment = new THREE.Object3D();
+        
+        // generate clouds
+        
+        cloudPlaneTexture = THREE.ImageUtils.loadTexture( cloudPlaneTexturePath, THREE.UVMapping);
+           
+        cloudPlaneTexture.minFilter = cloudPlaneTexture.magFilter = THREE.LinearFilter;
+        
+        for ( i = 0; i < numClouds; i += 1) {
+            
+            pct = ((numClouds - i) / numClouds);
+            
+            cloud = generate_cloud();
+            
+            cloud.position.x = Math.random() * (skyWidth) - skyWidth * 0.5;
+            cloud.position.y = Math.random() * (skyHeight) - skyHeight * 0.5;
+            cloud.position.z = (skyDepth * pct) - skyDepth * 0.5; 
+            
+            clouds[clouds.length] = cloud;
+            
+            // add to environment
+            environment.addChild(cloud);
+        }
+    }
+    
+    /*===================================================
+    
+    custom functions
+    
+    =====================================================*/
+    
+    function generate_cloud( parameters ) {
+        var cloudMesh, cloudGeometry, cloudMaterial,
+            cloudPlane, numPlanes, width, depth, heightStart, heightEnd,
+            planeScaleStart, planeScaleEnd, scaleVariation,
+            pct, currScale, currPlaneHeightMax, currPlaneHeightMin, i;
+        
+        // handle parameters
+        
+        parameters = parameters || {};
+        
+        numPlanes = parameters.numPlanes || numPlanesPerCloud;
+        
+        planeScaleStart = parameters.planeScaleStart || cloudPlaneScaleStart;
+        
+        planeScaleEnd = parameters.planeScaleEnd || cloudPlaneScaleEnd;
+        
+        scaleVariation = parameters.scaleVariation || cloudScaleVariation;
+        
+        width = parameters.width || cloudWidth;
+        
+        heightStart = parameters.heightStart || cloudHeightStart;
+        
+        heightEnd = parameters.heightEnd || cloudHeightEnd;
+        
+        depth = parameters.depth || cloudDepth;
+        
+        
+        // scale variation
+        width = width + (Math.random() * width * scaleVariation.w - width * scaleVariation.w * 0.5);
+        heightStart.max = heightStart.max + (Math.random() * heightStart.max * scaleVariation.h - heightStart.max * scaleVariation.h * 0.5);
+        heightStart.min = heightStart.min + (Math.random() * heightStart.min * scaleVariation.h - heightStart.min * scaleVariation.h * 0.5);
+        heightEnd.max = heightEnd.max + (Math.random() * heightEnd.max * scaleVariation.h - heightEnd.max * scaleVariation.h * 0.5);
+        heightEnd.min = heightEnd.min + (Math.random() * heightEnd.min * scaleVariation.h - heightEnd.min * scaleVariation.h * 0.5);
+        depth = depth + (Math.random() * depth * scaleVariation.d - depth * scaleVariation.d * 0.5);
+        
+        // material
+        
+        cloudMaterial = new THREE.MeshBasicMaterial( { color: 0xFFFFFF, depthTest: false, map: cloudPlaneTexture } );
+        
+        // geometry
+        
+        cloudGeometry = new THREE.Geometry();
+        
+        // planes
+        
+        cloudPlane = new THREE.Mesh( new THREE.PlaneGeometry( 256, 256 ) );
+        
+        // position each cloud plane and merge into cloud geometry
+        for ( i = 0; i < numPlanes; i += 1 ) {
+            
+            pct = ((numPlanes - i) / numPlanes);
+            
+            currScale = planeScaleStart * (1 - pct) + (planeScaleEnd * pct);
+            
+            currPlaneHeightMax = heightStart.max + (heightEnd.max - heightStart.max) * pct;
+            
+            currPlaneHeightMin = heightStart.min + (heightEnd.min - heightStart.min) * pct;
+            
+            cloudPlane.position.x = Math.random() * Math.random() * (width * 2) - width;
+            cloudPlane.position.y = Math.random() * Math.random() * (currPlaneHeightMax - currPlaneHeightMin) + currPlaneHeightMin;
+            cloudPlane.position.z = i * (depth / numPlanes) - depth * 0.5;
+            cloudPlane.rotation.z = lightAngle + (Math.random() * (lightAngleVariation * 2) - lightAngleVariation);
+            cloudPlane.scale.x = cloudPlane.scale.y = Math.random() * Math.random() * currScale + (currScale * 0.3);
+            
+            THREE.GeometryUtils.merge( cloudGeometry, cloudPlane );
+            
+        }
+        
+        // mesh
+        
+        cloudMesh = new THREE.Mesh( cloudGeometry, cloudMaterial );
+        
+        return cloudMesh;
+    }
+    
+    function wind_blow ( time, direction, speedMax, speedMin ) {
+        var i, timeDiff, pct, boundXNeg, boundXPos;
+        
+        // handle time change
+        
+        timePrev = timePrev || time;
+        
+        timeDiff = 1 - (time - timePrev) / 60;
+        
+        timePrev = time;
+        
+        // set wind direction and speed
+        
+        windDirection = direction || windDirection;
+        
+        windSpeedMax = speedMax || windSpeedMax;
+        
+        windSpeedMin = speedMin || windSpeedMin;
+        
+        boundXPos = skyWidth * 0.5;
+        boundXNeg = -boundXPos;
+        
+        // push each cloud
+        
+        for ( i = 0; i < numClouds; i += 1) {
+            cloud = clouds[i];
+            
+            pct = ((numClouds - i) / numClouds);
+            
+            cloud.position.x += timeDiff * windDirection * (windSpeedMax * pct + windSpeedMin * (1 - pct));
+            
+            // cloud bounds
+            
+            if (cloud.position.x > boundXPos) {
+                cloud.position.x = boundXNeg;
+            }
+            else if (cloud.position.x < boundXNeg) {
+                cloud.position.x = boundXPos;
+            }
+        }
+    }
+    
+    /*===================================================
+    
+    public properties
+    
+    =====================================================*/
+    
+    sky.init = init;
+    sky.wind_blow = wind_blow;
+    sky.get_environment = function () {
+        return environment;    
+    };
+        
+    return main; 
+    
+}(KAIOPUA || {}));

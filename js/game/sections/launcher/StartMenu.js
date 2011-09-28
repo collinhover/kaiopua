@@ -1,1 +1,22 @@
-var KAIOPUA=function(b){b.shared=b.shared||{};var a=b.game=b.game||{},a=a.sections=a.sections||{},a=a.launcher=a.launcher||{};a.startMenu=a.startMenu||{};return b}(KAIOPUA||{});
+/*
+StartMenu.js
+Start Menu module, handles start menu of game.
+*/
+
+var KAIOPUA = (function (main) {
+    
+    var shared = main.shared = main.shared || {},
+        game = main.game = main.game || {},
+        sections = game.sections = game.sections || {},
+        launcher = sections.launcher = sections.launcher || {},
+        startMenu = launcher.startMenu = launcher.startMenu || {};
+        
+    /*===================================================
+    
+    public properties
+    
+    =====================================================*/
+        
+    return main; 
+    
+}(KAIOPUA || {}));

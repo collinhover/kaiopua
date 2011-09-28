@@ -1,2 +1,51 @@
-THREE.DotScreenPass=function(b,c,a){var d=THREE.ShaderExtras.dotscreen;this.uniforms=THREE.UniformsUtils.clone(d.uniforms);b!==void 0&&this.uniforms.center.value.copy(b);if(c!==void 0)this.uniforms.angle.value=c;if(a!==void 0)this.uniforms.scale.value=a;this.material=new THREE.MeshShaderMaterial({uniforms:this.uniforms,vertexShader:d.vertexShader,fragmentShader:d.fragmentShader});this.renderToScreen=!1;this.needsSwap=!0};
-THREE.DotScreenPass.prototype={render:function(b,c,a){this.uniforms.tDiffuse.texture=a;this.uniforms.tSize.value.set(a.width,a.height);THREE.EffectComposer.quad.materials[0]=this.material;this.renderToScreen?b.render(THREE.EffectComposer.scene,THREE.EffectComposer.camera):b.render(THREE.EffectComposer.scene,THREE.EffectComposer.camera,c,!1)}};
+/**
+ * @author alteredq / http://alteredqualia.com/
+ */
+
+THREE.DotScreenPass = function( center, angle, scale ) {
+
+	var shader = THREE.ShaderExtras[ "dotscreen" ];
+
+	this.uniforms = THREE.UniformsUtils.clone( shader.uniforms );
+
+	if ( center !== undefined )
+		this.uniforms[ "center" ].value.copy( center );
+
+	if ( angle !== undefined )	this.uniforms[ "angle"].value = angle;
+	if ( scale !== undefined )	this.uniforms[ "scale"].value = scale;
+
+	this.material = new THREE.MeshShaderMaterial( {
+
+		uniforms: this.uniforms,
+		vertexShader: shader.vertexShader,
+		fragmentShader: shader.fragmentShader
+
+	} );
+
+	this.renderToScreen = false;
+	this.needsSwap = true;
+
+};
+
+THREE.DotScreenPass.prototype = {
+
+	render: function ( renderer, writeBuffer, readBuffer, delta ) {
+
+		this.uniforms[ "tDiffuse" ].texture = readBuffer;
+		this.uniforms[ "tSize" ].value.set( readBuffer.width, readBuffer.height );
+
+		THREE.EffectComposer.quad.materials[ 0 ] = this.material;
+
+		if ( this.renderToScreen ) {
+
+			renderer.render( THREE.EffectComposer.scene, THREE.EffectComposer.camera );
+
+		} else {
+
+			renderer.render( THREE.EffectComposer.scene, THREE.EffectComposer.camera, writeBuffer, false );
+
+		}
+
+	}
+
+};

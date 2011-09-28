@@ -1,5 +1,310 @@
-var KAIOPUA=function(d){var n,v,w,o,x,y,p,z,A,q,B,C,D,r,s,f;function E(){var b=a.mouse.x/a.screenWidth,c=a.mouse.y/a.screenHeight;n=b*v+(1-b)*w;o=c*x+(1-c)*y;p=b*z+(1-b)*A;q=(1-c)*B+c*C}function t(b,e){f.uniforms.screenWidth.value=a.screenWidth;f.uniforms.screenHeight.value=a.screenHeight;j.resize(b,e);c.aspect=b/e;c.updateProjectionMatrix();h.reset()}var a=d.shared=d.shared||{},i=d.game=d.game||{},F=d.effects=d.effects||{},i=i.sections=i.sections||{},e=i.launcher=i.launcher||{},k,c,G=-90*Math.PI/
-180,g,h,H={colors:[984110,1921167,5413585,5413585,4545248],stops:[0,0.4,0.6,0.8,1],startBottom:!0},j,u,l,m;n=0;o=0;p=0;q=0;v=500;w=-500;x=250;y=-250;z=1E3;A=-1E3;B=1E3;C=0;e.init=function(){c=new THREE.Camera(60,a.screenWidth/a.screenHeight,1,1E4);c.position.set(-5800,0,0);c.target.position.set(0,0,0);g=new THREE.Scene;var b=THREE.ShaderExtras.screen,d=F.FocusVignette;j=F.LinearGradient.generate(H);D=new THREE.RenderPass(j.scene,j.camera);r=new THREE.RenderPass(g,c);s=new THREE.ShaderPass(b);f=new THREE.ShaderPass(d);
-s.renderToScreen=!0;r.clear=!1;f.uniforms.screenWidth.value=a.screenWidth;f.uniforms.screenHeight.value=a.screenHeight;f.uniforms.vingenettingOffset.value=0.6;f.uniforms.vingenettingDarkening.value=0.5;f.uniforms.sampleDistance.value=0.2;f.uniforms.waveFactor.value=0.3;b=new THREE.AmbientLight(13421772);d=new THREE.DirectionalLight(16777215,1);d.position=(new THREE.Vector3(-1,1,-1)).normalize();g.addLight(b);g.addLight(d);g.fog=new THREE.Fog(5413585,-100,1E4);l=e.water;l.init({wavesColor:g.fog.color.getHex()});
-b=l.get_environment();b.rotation.x=G;g.addObject(b);m=e.sky;m.init();b=m.get_environment();b.position.x=0;b.position.y=2E3;b.rotation.y=G;g.addObject(b);k=a.renderer;h=new THREE.EffectComposer(k);h.addPass(D);h.addPass(r);h.addPass(f);h.addPass(s)};e.show=function(){a.renderer.sortObjects=!1;a.signals.mousemoved.add(E);a.signals.windowresized.add(t)};e.hide=function(){a.signals.mousemoved.remove(E);a.signals.windowresized.remove(t)};e.remove=function(){a.renderer.sortObjects=!0};e.update=function(){u=
-(new Date).getTime();c.position.z+=(n-c.position.z)*0.01;c.position.y+=(-o-c.position.y)*0.01;c.target.position.z+=(p-c.target.position.z)*0.05;c.target.position.y+=(q-c.target.position.y)*0.05;m.wind_blow(u);l.waves(u);k.setViewport(0,0,a.screenWidth,a.screenHeight);k.clear();h.render()};e.resize=t;return d}(KAIOPUA||{});
+/*
+LauncherSection.js
+Launcher module, handles start menu and environment.
+*/
+var KAIOPUA = (function (main) {
+    
+    var shared = main.shared = main.shared || {},
+        game = main.game = main.game || {},
+        effects = main.effects = main.effects || {},
+        sections = game.sections = game.sections || {},
+        launcher = sections.launcher = sections.launcher || {},
+        renderer, 
+        renderTarget,
+        camera, 
+        cameraRotY = -90 * Math.PI / 180, 
+        scene,
+        composerScene,
+        renderPasses,
+        bgParams = {
+            colors: [0x0F042E, 0x1D508F, 0x529AD1, 0x529AD1, 0x455AE0],
+            stops: [0, 0.4, 0.6, 0.8, 1.0],
+            startBottom: true
+        },
+        bg,
+        time,
+        water,
+        sky,
+        mouse = { 
+            x: 0, 
+            y: 0,
+            rx: 0,
+            ry: 0, 
+            rangeTransMaxX: 500, 
+            rangeTransMinX: -500,
+            rangeTransMaxY: 250, 
+            rangeTransMinY: -250,
+            speedTransX: 0.01, 
+            speedTransY: 0.01,
+            rangeRotMaxX: 1000,
+            rangeRotMinX: -1000,
+            rangeRotMaxY: 1000,
+            rangeRotMinY: 0,
+            speedRotX: 0.05,
+            speedRotY: 0.05
+        };
+    
+    /*===================================================
+    
+    internal init
+    
+    =====================================================*/
+    
+    /*===================================================
+    
+    external init
+    
+    =====================================================*/
+    
+    function init () {
+        
+        init_basics();
+    
+        init_render_processing();
+        
+        init_environment();
+        
+        init_rendering();
+    
+    }
+    
+    function init_basics () {
+        
+        camera = new THREE.Camera(60, shared.screenWidth / shared.screenHeight, 1, 10000);
+        
+        //camera = new THREE.FirstPersonCamera( { fov: 60, aspect:shared.screenWidth / shared.screenHeight, near: 1, far: 20000, movementSpeed: 1000, lookSpeed: 0.1, noFly: false, lookVertical: true } );
+        
+        // starting position
+        camera.position.set(-5800, 0, 0);
+        
+        // useTarget property set to false for control over rotation
+        camera.target.position.set(0, 0, 0);
+        //camera.useTarget = false;
+        //camera.rotation.y = cameraRotY;
+        
+        scene = new THREE.Scene();
+        
+    }
+    
+    function init_render_processing () {
+        
+        var shaderScreen = THREE.ShaderExtras[ "screen" ],
+            shaderFocusVignette = effects.FocusVignette;
+        
+        bg = effects.LinearGradient.generate( bgParams );
+        
+        renderPasses = {
+            bg: new THREE.RenderPass( bg.scene, bg.camera ),
+            env: new THREE.RenderPass( scene, camera ),
+            screen: new THREE.ShaderPass( shaderScreen ),
+            focusVignette: new THREE.ShaderPass ( shaderFocusVignette )
+        };
+        
+        renderPasses.screen.renderToScreen = true;
+        
+        renderPasses.env.clear = false;
+        
+        renderPasses.focusVignette.uniforms[ "screenWidth" ].value = shared.screenWidth;
+        renderPasses.focusVignette.uniforms[ "screenHeight" ].value = shared.screenHeight;
+        renderPasses.focusVignette.uniforms[ "vingenettingOffset" ].value = 0.6;
+        renderPasses.focusVignette.uniforms[ "vingenettingDarkening" ].value = 0.5;
+        renderPasses.focusVignette.uniforms[ "sampleDistance" ].value = 0.2;
+        renderPasses.focusVignette.uniforms[ "waveFactor" ].value = 0.3;
+        
+        /*
+        var effectController  = {
+            
+			vingenettingOffset: 0.6,
+			vingenettingDarkening: 0.5,
+			sampleDistance: 0.2,
+            waveFactor: 0.3
+
+		};
+
+		var matChanger = function( ) {
+            
+			renderPasses.focusVignette.uniforms[ "vingenettingOffset" ].value = effectController.vingenettingOffset;
+            renderPasses.focusVignette.uniforms[ "vingenettingDarkening" ].value = effectController.vingenettingDarkening;
+            renderPasses.focusVignette.uniforms[ "sampleDistance" ].value = effectController.sampleDistance;
+            renderPasses.focusVignette.uniforms[ "waveFactor" ].value = effectController.waveFactor;
+
+		};
+        
+		require('utils/Dev').gui.add( effectController, "vingenettingOffset", 0.0, 3.0, 0.1 ).onChange( matChanger );
+		require('utils/Dev').gui.add( effectController, "vingenettingDarkening", -1, 1, 0.01 ).onChange( matChanger );
+		require('utils/Dev').gui.add( effectController, "sampleDistance", 0.0, 2, 0.01 ).onChange( matChanger );
+        require('utils/Dev').gui.add( effectController, "waveFactor", 0.0, 2, 0.01 ).onChange( matChanger );
+        */
+    }
+    
+    function init_environment () {
+        
+        var i, ambient, light1, waterEnv, skyEnv;
+        
+        // lights
+        
+        ambient = new THREE.AmbientLight( 0xCCCCCC );
+        
+        light1 = new THREE.DirectionalLight( 0xFFFFFF, 1.0 );
+        light1.position = new THREE.Vector3(-1,1, -1).normalize();
+        
+        scene.addLight( ambient );
+        scene.addLight( light1 );
+        
+        // fog
+        scene.fog = new THREE.Fog( 0x529ad1, -100, 10000 );
+        
+        // water
+        
+        water = launcher.water;
+        
+        water.init( { wavesColor: scene.fog.color.getHex() } );
+        
+        waterEnv = water.get_environment();
+        
+        waterEnv.rotation.x = cameraRotY;
+        
+        scene.addObject( waterEnv );
+        
+        // sky
+        
+        sky = launcher.sky;
+        
+        sky.init();
+        
+        // sky mesh
+        skyEnv = sky.get_environment();
+        
+        skyEnv.position.x = 0;
+        skyEnv.position.y = 2000;
+        
+        skyEnv.rotation.y = cameraRotY;
+        
+        // add clouds
+        scene.addObject( skyEnv );
+        
+    }
+    
+    function init_rendering () {
+        
+        renderer = shared.renderer;
+        renderTarget = shared.renderTarget;
+        
+        composerScene = new THREE.EffectComposer( renderer );
+        
+        composerScene.addPass( renderPasses.bg );
+		composerScene.addPass( renderPasses.env );
+        composerScene.addPass( renderPasses.focusVignette );
+        composerScene.addPass( renderPasses.screen );
+        
+    }
+    
+    /*===================================================
+    
+    custom functions
+    
+    =====================================================*/
+    
+    function on_mouse_moved () {
+        
+        var pctX = ( shared.mouse.x / shared.screenWidth ),
+            pctY = ( shared.mouse.y / shared.screenHeight );
+        
+        mouse.x = pctX * mouse.rangeTransMaxX + (1 - pctX) * mouse.rangeTransMinX;
+        mouse.y = pctY * mouse.rangeTransMaxY + (1 - pctY) * mouse.rangeTransMinY;
+        
+        mouse.rx = (pctX) * mouse.rangeRotMaxX + (1 - pctX) * mouse.rangeRotMinX;
+        mouse.ry = (1 - pctY) * mouse.rangeRotMaxY + (pctY) * mouse.rangeRotMinY;
+        
+    }
+    
+    /*===================================================
+    
+    section functions
+    
+    =====================================================*/
+    
+    function show () {
+        
+        shared.renderer.sortObjects = false;
+        
+        shared.signals.mousemoved.add( on_mouse_moved );
+        
+        shared.signals.windowresized.add( resize );
+        
+    }
+    
+    function hide () {
+        
+        shared.signals.mousemoved.remove( on_mouse_moved );
+        
+        shared.signals.windowresized.remove( resize );
+        
+    }
+    
+    function remove () {
+        
+        // enable renderer object sorting
+        shared.renderer.sortObjects = true;
+        
+    }
+    
+    function update () {
+        
+        time = new Date().getTime();
+        
+        camera.position.z += (  mouse.x - camera.position.z ) * mouse.speedTransX;
+        camera.position.y += ( -mouse.y - camera.position.y ) * mouse.speedTransY;
+        
+        camera.target.position.z += ( mouse.rx - camera.target.position.z ) * mouse.speedRotX;
+        camera.target.position.y += ( mouse.ry - camera.target.position.y ) * mouse.speedRotY;
+        
+        
+        // update environment
+        
+        sky.wind_blow( time );
+        
+        water.waves( time );
+        
+        //water.bob( camera );
+        
+        // render
+        
+        renderer.setViewport( 0, 0, shared.screenWidth, shared.screenHeight );
+
+	    renderer.clear();
+        
+		composerScene.render();
+        
+    }
+    
+    function resize ( W, H ) {
+        
+        renderPasses.focusVignette.uniforms[ "screenWidth" ].value = shared.screenWidth;
+        renderPasses.focusVignette.uniforms[ "screenHeight" ].value = shared.screenHeight;
+        
+        bg.resize( W, H );
+        
+        camera.aspect = W / H;
+		camera.updateProjectionMatrix();
+        
+        composerScene.reset();
+        
+    }
+    
+    /*===================================================
+    
+    public properties
+    
+    =====================================================*/
+    
+    launcher.init = init;
+    launcher.show = show;
+    launcher.hide = hide;
+    launcher.remove = remove;
+    launcher.update = update;
+    launcher.resize = resize;
+        
+    return main; 
+    
+}(KAIOPUA || {}));
