@@ -44,11 +44,10 @@ The game's core mechanic is the ability to change the size or scale of the playe
 ####Setting
 The game takes place on a moon sized worm-like creature named Kaiopua. The name Kai’Opua comes from Hawaiian culture, known as the opua or pink cumulus cloud formations that hang low over ‘kai’, the ocean. These clouds are regarded as omens of good fortune and good weather. Kaiopua is a giant white worm, split into a face with two eyes, a mouth, and a small farmer's shack (like a horn), and a stubby tail at the back. Between the face and tail are the individual levels of the game in the form of rings, containing all the puzzles and majority of the gameplay. The player may be gated or hindered from accessing some rings at any time during the game, and it may be that only 1 ring shows up at a time. The head serves three purposes: (a) it is the starting point of the game, (b) it may speak to the player to provide story or hints, and (c) it is the where a player may feed combinable objects that have been found while exploring.
 
-Level plans:  
-*   May
-*   [Launcher & Loader](https://github.com/collinhover/kaiopua/blob/master/plans/levels/PLAN_LAUNCHER_LOADER.md)
-*   [Intro & Tutorial](https://github.com/collinhover/kaiopua/blob/master/plans/levels/PLAN_INTRO_TUTORIAL.md)
-*   [Level 1](https://github.com/collinhover/kaiopua/blob/master/plans/levels/PLAN_LEVEL_001.md)
+####Level Plans
+[Launcher & Loader](https://github.com/collinhover/kaiopua/blob/master/plans/levels/PLAN_LAUNCHER_LOADER.md)  
+[Intro & Tutorial](https://github.com/collinhover/kaiopua/blob/master/plans/levels/PLAN_INTRO_TUTORIAL.md)  
+[Level 1](https://github.com/collinhover/kaiopua/blob/master/plans/levels/PLAN_LEVEL_001.md)  
 
 ![world_001](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_world_001.jpg "Game World")
 
