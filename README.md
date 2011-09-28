@@ -27,9 +27,14 @@ Collin Hover
 ####Modelling / Texturing / Animation
 
 Collin Hover  
+Ian Wilson  
+Kevin Ly  
+Houston Hardaway  
+Joshua Wilson
 
 ####Concept Illustration
-Collin Hover   
+Collin Hover  
+Amanda Nicole East  
 
 ####Music
 
@@ -50,7 +55,7 @@ SignalsJS, Modernizr, HTML5-Reset, RequestAnimFrame
 
 Seiji Ikeda  
 Tuan Ho  
-Robert Hower  
+Robert Hower 
 
 ##Brief
 ####Target Audience
