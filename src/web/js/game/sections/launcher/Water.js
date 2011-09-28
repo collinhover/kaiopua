@@ -3,9 +3,14 @@ Water.js
 Launcher section water handler.
 */
 
-define([],
-function () {
-    var wavesGeometry, 
+var KAIOPUA = (function (main) {
+    
+    var shared = main.shared = main.shared || {},
+        game = main.game = main.game || {},
+        sections = game.sections = game.sections || {},
+        launcher = sections.launcher = sections.launcher || {},
+        water = launcher.water = launcher.water || {},
+        wavesGeometry, 
         wavesMaterial,
         wavesMesh,
         wavesColor = 0x529ad1,
@@ -28,7 +33,8 @@ function () {
         bobTiltCycleMod = Math.PI * 1.5,
         waterRaysInactive = [],
         waterRaysActive = [],
-        rayTexture = THREE.ImageUtils.loadTexture( "assets/textures/light_ray.png" ),
+        rayTexture,
+        rayTexturePath = "assets/textures/light_ray.png",
         numRays = 20,
         rayWidth = 700,
         rayHeight = 2000,
@@ -37,7 +43,7 @@ function () {
         rayShowChance = 0.001,
         rayOpacityOn = 0.6,
         rayOpacityDelta = 0.02,
-        environment = new THREE.Object3D();
+        environment;
         
     /*===================================================
     
@@ -92,6 +98,10 @@ function () {
         
         rayOpacityDelta = parameters.rayOpacityDelta || rayOpacityDelta;
         
+        // environment
+        
+        environment = new THREE.Object3D();
+        
         // create water geometry
         wavesGeometry = new THREE.PlaneGeometry( wavesSize, wavesSize, wavesVertsW - 1, wavesVertsH - 1 );
         wavesGeometry.dynamic = true;
@@ -119,6 +129,8 @@ function () {
         // water rays
         
         rayGeometry = new THREE.PlaneGeometry ( rayWidth, rayHeight + (Math.random() * (rayHeightVariation) - (rayHeightVariation * 0.5)) );
+        
+        rayTexture = THREE.ImageUtils.loadTexture( rayTexturePath );
         
         for ( i = 0; i < numRays; i += 1 ) {
         
@@ -249,11 +261,17 @@ function () {
         object.rotation.x = Math.sin(waveTime + bobTiltCycleMod) * bobTiltAmp;
     }
     
-    // return something to define module
-    return {
-        init: init,
-        waves : waves,
-        get_environment : function () { return environment; },
-        bob : bob
-    };
-});
+    /*===================================================
+    
+    public properties
+    
+    =====================================================*/
+    
+    water.init = init;
+    water.waves = waves;
+    water.get_environment = function () { return environment; };
+    water.bob = bob;
+    
+    return main; 
+    
+}(KAIOPUA || {}));

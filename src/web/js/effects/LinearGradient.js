@@ -3,8 +3,10 @@ EffectLinearGradient.js
 Draws a linear gradient into background.
 */
 
-define([],
-function () {
+var KAIOPUA = (function (main) {
+    
+    var effects = main.effects = main.effects || {},
+        LinearGradient = effects.LinearGradient = effects.LinearGradient || {};
     
     /*===================================================
     
@@ -151,8 +153,8 @@ function () {
         };
     }
     
-    // return something to define module
-    return {
-        generate: generate
-    };
-});
+    LinearGradient.generate = generate;
+    
+    return main; 
+    
+}(KAIOPUA || {}));

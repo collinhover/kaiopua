@@ -2,13 +2,13 @@
 LauncherSection.js
 Launcher module, handles start menu and environment.
 */
-define(["effects/LinearGradient",
-        "effects/FocusVignette",
-        "game/sections/launcher/StartMenu",
-        "game/sections/launcher/Water",
-        "game/sections/launcher/Sky"],
-function () {
-    var shared = require('utils/Shared'),
+var KAIOPUA = (function (main) {
+    
+    var shared = main.shared = main.shared || {},
+        game = main.game = main.game || {},
+        effects = main.effects = main.effects || {},
+        sections = game.sections = game.sections || {},
+        launcher = sections.launcher = sections.launcher || {},
         renderer, 
         renderTarget,
         camera, 
@@ -21,10 +21,10 @@ function () {
             stops: [0, 0.4, 0.6, 0.8, 1.0],
             startBottom: true
         },
-        bg = require('effects/LinearGradient').generate( bgParams ),
+        bg,
         time,
-        water = require("game/sections/launcher/Water"),
-        sky = require("game/sections/launcher/Sky"),
+        water,
+        sky,
         mouse = { 
             x: 0, 
             y: 0,
@@ -50,11 +50,23 @@ function () {
     
     =====================================================*/
     
-    init_basics();
+    /*===================================================
     
-    init_render_processing();
+    external init
     
-    init_environment();
+    =====================================================*/
+    
+    function init () {
+        
+        init_basics();
+    
+        init_render_processing();
+        
+        init_environment();
+        
+        init_rendering();
+    
+    }
     
     function init_basics () {
         
@@ -77,7 +89,9 @@ function () {
     function init_render_processing () {
         
         var shaderScreen = THREE.ShaderExtras[ "screen" ],
-            shaderFocusVignette = require('effects/FocusVignette');
+            shaderFocusVignette = effects.FocusVignette;
+        
+        bg = effects.LinearGradient.generate( bgParams );
         
         renderPasses = {
             bg: new THREE.RenderPass( bg.scene, bg.camera ),
@@ -88,7 +102,7 @@ function () {
         
         renderPasses.screen.renderToScreen = true;
         
-    	renderPasses.env.clear = false;
+        renderPasses.env.clear = false;
         
         renderPasses.focusVignette.uniforms[ "screenWidth" ].value = shared.screenWidth;
         renderPasses.focusVignette.uniforms[ "screenHeight" ].value = shared.screenHeight;
@@ -141,6 +155,9 @@ function () {
         scene.fog = new THREE.Fog( 0x529ad1, -100, 10000 );
         
         // water
+        
+        water = launcher.water;
+        
         water.init( { wavesColor: scene.fog.color.getHex() } );
         
         waterEnv = water.get_environment();
@@ -150,6 +167,8 @@ function () {
         scene.addObject( waterEnv );
         
         // sky
+        
+        sky = launcher.sky;
         
         sky.init();
         
@@ -166,13 +185,7 @@ function () {
         
     }
     
-    /*===================================================
-    
-    external init
-    
-    =====================================================*/
-    
-    function init () {
+    function init_rendering () {
         
         renderer = shared.renderer;
         renderTarget = shared.renderTarget;
@@ -279,13 +292,19 @@ function () {
         
     }
     
-    // return something to define module
-    return {
-        init: init,
-        show: show,
-        hide: hide,
-        remove: remove,
-        update: update,
-        resize: resize
-    };
-});
+    /*===================================================
+    
+    public properties
+    
+    =====================================================*/
+    
+    launcher.init = init;
+    launcher.show = show;
+    launcher.hide = hide;
+    launcher.remove = remove;
+    launcher.update = update;
+    launcher.resize = resize;
+        
+    return main; 
+    
+}(KAIOPUA || {}));

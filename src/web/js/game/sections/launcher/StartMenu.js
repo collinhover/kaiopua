@@ -2,11 +2,21 @@
 StartMenu.js
 Start Menu module, handles start menu of game.
 */
-define([],
-    function () {
-        var shared = require('utils/Shared');
+
+var KAIOPUA = (function (main) {
+    
+    var shared = main.shared = main.shared || {},
+        game = main.game = main.game || {},
+        sections = game.sections = game.sections || {},
+        launcher = sections.launcher = sections.launcher || {},
+        startMenu = launcher.startMenu = launcher.startMenu || {};
         
-        // return something to define module
-        return {};
-    }
-);
+    /*===================================================
+    
+    public properties
+    
+    =====================================================*/
+        
+    return main; 
+    
+}(KAIOPUA || {}));

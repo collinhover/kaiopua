@@ -4,7 +4,8 @@ Loader module, handles loading assets.
 */
 var KAIOPUA = (function ( main ) {
     
-    var shared = main.shared = main.shared || {},
+    var loader = main.loader = main.loader || {},
+        shared = main.shared = main.shared || {},
         listNameBase = 'loadList',
         listNumber = 0,
         loading = false,
@@ -210,10 +211,8 @@ var KAIOPUA = (function ( main ) {
     
     =====================================================*/
     
-    main.loader = {
-        load: load_list,
-        assets: assets
-    };
+    loader.load = load_list;
+    loader.assets = assets;
     
     return main; 
     

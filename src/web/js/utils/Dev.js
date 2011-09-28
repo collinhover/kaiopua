@@ -4,9 +4,8 @@ Initializes Logger, Stats, and DAT-GUI for development purposes
 */
 var KAIOPUA = (function (main) {
     
-    var dev = main.dev = main.dev || {};
-    
-    var shared = main.shared = main.shared || {},
+    var dev = main.dev = main.dev || {},
+        shared = main.shared = main.shared || {},
         devCommands,
         domElement, isOpen = true, stats, logger, 
         gui, guiContainer, guiHeight, statsPaused = true,
@@ -210,17 +209,17 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
     
-    main.dev.toggle = togglePanel;
-    main.dev.log = function (msg, expand) { logger.log(msg, expand); };
-    main.dev.log_error = function (error, url, lineNumber) {
+    dev.toggle = togglePanel;
+    dev.log = function (msg, expand) { logger.log(msg, expand); };
+    dev.log_error = function (error, url, lineNumber) {
             logger.log('[ERROR] ' + error);
             logger.log('[ERROR] in file: ' + url);
             logger.log('[ERROR] line # ' + lineNumber);
         };
-    main.dev.gui = function () { return gui; };
-    main.dev.resize = resize;
-    main.dev.isOpen = function () {return isOpen;};
-    main.dev.domElement = function () { return domElement; };
+    dev.gui = function () { return gui; };
+    dev.resize = resize;
+    dev.isOpen = function () {return isOpen;};
+    dev.domElement = function () { return domElement; };
     
     return main; 
     

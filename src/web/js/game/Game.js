@@ -3,29 +3,35 @@ Game.js
 Game module, handles sections of game.
 */
 
-define(["order!lib/three/Three",
-        "order!lib/three/ThreeExtras",
-        "order!lib/three/postprocessing/ShaderExtras",
-        "order!lib/three/postprocessing/EffectComposer",
-        "order!lib/three/postprocessing/RenderPass",
-        "order!lib/three/postprocessing/ShaderPass",
-        "order!lib/three/postprocessing/MaskPass",
-        "order!game/workers/Loader",
-        "order!game/sections/LauncherSection"],
-function() {
-    var shared = require('utils/Shared'),
-        domElement = shared.html.gameContainer,
-        transitioner = shared.html.transitioner,
-        launcher = require('game/sections/LauncherSection'),
+var KAIOPUA = (function (main) {
+    
+    var shared = main.shared = main.shared || {},
+        game = main.game = main.game || {},
+        sections = game.sections = game.sections || {},
+        domElement,
+        transitioner,
         renderer, 
-        renderTarget, 
-        sections, 
-        sectionNames, 
+        renderTarget,
         currentSection, 
         previousSection, 
         paused = true,
         transitionOut = 1000, 
-        transitionIn = 400;
+        transitionIn = 400,
+        dependencies = [
+            "js/lib/three/Three.js",
+            "js/lib/three/ThreeExtras.js",
+            "js/lib/three/postprocessing/ShaderExtras.js",
+            "js/lib/three/postprocessing/EffectComposer.js",
+            "js/lib/three/postprocessing/RenderPass.js",
+            "js/lib/three/postprocessing/ShaderPass.js",
+            "js/lib/three/postprocessing/MaskPass.js",
+            "js/game/sections/LauncherSection.js",
+            "js/effects/LinearGradient.js",
+            "js/effects/FocusVignette.js",
+            "js/game/sections/launcher/StartMenu.js",
+            "js/game/sections/launcher/Water.js",
+            "js/game/sections/launcher/Sky.js"
+        ];
     
     /*===================================================
     
@@ -33,44 +39,58 @@ function() {
     
     =====================================================*/
     
-    // init three 
-    // renderer
-    renderer = new THREE.WebGLRenderer( { antialias: false, clearColor: 0x000000, clearAlpha: 0 } );
-    renderer.setSize( shared.screenWidth, shared.screenHeight );
-    renderer.autoClear = false;
-    
-    // render target
-    renderTarget = new THREE.WebGLRenderTarget( shared.screenWidth, shared.screenHeight, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter } );
-    
-    // add to game dom element
-    domElement.append( renderer.domElement );
-    
-    // store sections
-    sections = {
-        launcher : launcher
-    };
-    sectionNames = ['launcher'];
-    
-    // share
-    shared.renderer = renderer;
-    shared.renderTarget = renderTarget;
-    
-    // game signals
-    shared.signals.paused = new signals.Signal();
-    shared.signals.resumed = new signals.Signal();
-    
-    // resize listener
-    resize(shared.screenWidth, shared.screenHeight);
-    shared.signals.windowresized.add(resize);
     
     /*===================================================
     
     external init
     
     =====================================================*/
-
+    
     function init() {
+        
+        // get dependencies
+        $LAB.script( dependencies ).wait( start );
+        
+    }
+    
+    function start () {
         var i, l;
+        
+        domElement = shared.html.gameContainer;
+        transitioner = shared.html.transitioner;
+        
+        // init three 
+        // renderer
+        renderer = new THREE.WebGLRenderer( { antialias: false, clearColor: 0x000000, clearAlpha: 0 } );
+        renderer.setSize( shared.screenWidth, shared.screenHeight );
+        renderer.autoClear = false;
+        
+        // render target
+        renderTarget = new THREE.WebGLRenderTarget( shared.screenWidth, shared.screenHeight, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter } );
+        
+        // add to game dom element
+        domElement.append( renderer.domElement );
+        
+        // get section names
+        sectionNames = [];
+        for ( i in sections ) {
+           if ( sections.hasOwnProperty( i ) ) {
+               sectionNames.push(i);
+           }
+        }
+        console.log(sectionNames.length);
+        // share
+        shared.renderer = renderer;
+        shared.renderTarget = renderTarget;
+        
+        // game signals
+        shared.signals = shared.signals || {};
+        shared.signals.paused = new signals.Signal();
+        shared.signals.resumed = new signals.Signal();
+        
+        // resize listener
+        resize(shared.screenWidth, shared.screenHeight);
+        shared.signals.windowresized.add(resize);
         
         // init each section
         for (i = 0, l = sectionNames.length; i < l; i += 1) {
@@ -185,12 +205,18 @@ function() {
         
     }
 
-    // return something to define module
-    return {
-        init: init,
-        resume: resume,
-        pause: pause,
-        domElement: function () { return domElement; },
-        paused: function () { return paused; }
-    };
-});
+    /*===================================================
+    
+    public properties
+    
+    =====================================================*/
+    
+    game.init = init;
+    game.resume = resume;
+    game.pause = pause;
+    game.domElement = function () { return domElement; };
+    game.paused = function () { return paused; };
+        
+    return main; 
+    
+}(KAIOPUA || {}));

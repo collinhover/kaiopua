@@ -6,7 +6,7 @@ Main module, handles browser events.
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
-        loader, error,
+        loader, error, game,
         libList = [
             "js/lib/jquery-1.6.4.min.js",
             "js/lib/RequestAnimationFrame.js",
@@ -15,7 +15,8 @@ var KAIOPUA = (function (main) {
         setupList = [
             "js/utils/Dev.js",
             "js/utils/Error.js",
-            "js/utils/Loader.js"
+            "js/utils/Loader.js",
+            "js/game/Game.js"
         ];
     
     /*===================================================
@@ -24,7 +25,7 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
     
-    // load loader script
+    // load scripts
     $LAB.script( libList ).wait( init_basics )
         .script( setupList ).wait( init_setup );
     
@@ -90,6 +91,10 @@ var KAIOPUA = (function (main) {
     
     function init_setup () {
         
+        error = main.error;
+        loader = main.loader;
+        game = main.game;
+        
         // check for errors
         error = main.error;
         
@@ -98,13 +103,7 @@ var KAIOPUA = (function (main) {
         }
         // safe to start game
         else {
-            console.log('no errors');
-            /*
-            require(["game/Game"], function (gameModule) {
-                game = gameModule;
-                game.init(); 
-            });
-            */
+            game.init();
         }
     }
     

@@ -5,10 +5,10 @@ Blurs render increasingly as moves away from center.
 Based on ro.me's original PaintEffect implementation
 */
 
-define([],
-function () {
-        
-    return {
+var KAIOPUA = (function (main) {
+    
+    var effects = main.effects = main.effects || {},
+        FocusVignette = effects.FocusVignette = {
 
         uniforms: {
             
@@ -106,4 +106,7 @@ function () {
             ].join("\n")
 
 	};
-});
+    
+    return main; 
+    
+}(KAIOPUA || {}));

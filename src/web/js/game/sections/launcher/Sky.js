@@ -5,9 +5,14 @@ Launcher section sky handler.
 cloud texture (c) ro.me
 */
 
-define([],
-function () {
-    var skyWidth = 20000,
+var KAIOPUA = (function (main) {
+    
+    var shared = main.shared = main.shared || {},
+        game = main.game = main.game || {},
+        sections = game.sections = game.sections || {},
+        launcher = sections.launcher = sections.launcher || {},
+        sky = launcher.sky = launcher.sky || {},
+        skyWidth = 20000,
         skyHeight = 2000, 
         skyDepth = 10000,
         numClouds = 40, 
@@ -29,15 +34,13 @@ function () {
         cloudPlaneTexturePath = 'assets/textures/cloud256.png',
         cloudPlaneTexture,
         clouds = [],
-        environment = new THREE.Object3D();
+        environment;
     
     /*===================================================
     
     internal init
     
     =====================================================*/
-    
-    load_cloud_texture();
     
     /*===================================================
     
@@ -86,7 +89,16 @@ function () {
         
         cloudPlaneScaleEnd = parameters.cloudPlaneScaleEnd || cloudPlaneScaleEnd;
         
+        // environment
+        
+        environment = new THREE.Object3D();
+        
         // generate clouds
+        
+        cloudPlaneTexture = THREE.ImageUtils.loadTexture( cloudPlaneTexturePath, THREE.UVMapping);
+           
+        cloudPlaneTexture.minFilter = cloudPlaneTexture.magFilter = THREE.LinearFilter;
+        
         for ( i = 0; i < numClouds; i += 1) {
             
             pct = ((numClouds - i) / numClouds);
@@ -109,14 +121,6 @@ function () {
     custom functions
     
     =====================================================*/
-    
-    function load_cloud_texture () {
-        if (typeof cloudPlaneTexture === 'undefined') {
-            cloudPlaneTexture = THREE.ImageUtils.loadTexture( cloudPlaneTexturePath, THREE.UVMapping);
-                
-            cloudPlaneTexture.minFilter = cloudPlaneTexture.magFilter = THREE.LinearFilter;
-        }
-    }
     
     function generate_cloud( parameters ) {
         var cloudMesh, cloudGeometry, cloudMaterial,
@@ -235,12 +239,18 @@ function () {
         }
     }
     
-    // return something to define module
-    return {
-        init: init,
-        wind_blow: wind_blow,
-        get_environment: function () {
-            return environment;    
-        }
+    /*===================================================
+    
+    public properties
+    
+    =====================================================*/
+    
+    sky.init = init;
+    sky.wind_blow = wind_blow;
+    sky.get_environment = function () {
+        return environment;    
     };
-});
+        
+    return main; 
+    
+}(KAIOPUA || {}));
