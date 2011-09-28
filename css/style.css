@@ -130,22 +130,22 @@ button {width: auto; overflow: visible;}
    
 @font-face {
     font-family: 'OpenSansRegular';
-    src: url('../webfonts/OpenSans-Regular-webfont.eot');
-    src: url('../webfonts/OpenSans-Regular-webfont.eot?#iefix') format('embedded-opentype'),
-         url('../webfonts/OpenSans-Regular-webfont.woff') format('woff'),
-         url('../webfonts/OpenSans-Regular-webfont.ttf') format('truetype'),
-         url('../webfonts/OpenSans-Regular-webfont.svg#OpenSansRegular') format('svg');
+    src: url('webfonts/OpenSans-Regular-webfont.eot');
+    src: url('webfonts/OpenSans-Regular-webfont.eot?#iefix') format('embedded-opentype'),
+         url('webfonts/OpenSans-Regular-webfont.woff') format('woff'),
+         url('webfonts/OpenSans-Regular-webfont.ttf') format('truetype'),
+         url('webfonts/OpenSans-Regular-webfont.svg#OpenSansRegular') format('svg');
     font-weight: normal;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'CoustardRegular';
-    src: url('../webfonts/coustard-webfont.eot');
-    src: url('../webfonts/coustard-webfont.eot?#iefix') format('embedded-opentype'),
-         url('../webfonts/coustard-webfont.woff') format('woff'),
-         url('../webfonts/coustard-webfont.ttf') format('truetype'),
-         url('../webfonts/coustard-webfont.svg#CoustardRegular') format('svg');
+    src: url('webfonts/coustard-webfont.eot');
+    src: url('webfonts/coustard-webfont.eot?#iefix') format('embedded-opentype'),
+         url('webfonts/coustard-webfont.woff') format('woff'),
+         url('webfonts/coustard-webfont.ttf') format('truetype'),
+         url('webfonts/coustard-webfont.svg#CoustardRegular') format('svg');
     font-weight: normal;
     font-style: normal;
 }
