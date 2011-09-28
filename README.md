@@ -27,14 +27,9 @@ Collin Hover
 ####Modelling / Texturing / Animation
 
 Collin Hover  
-Ian Wilson  
-Kevin Ly  
-Houston Hardaway  
-Joshua Wilson
 
 ####Concept Illustration
-Collin Hover  
-Amanda Nicole East  
+Collin Hover   
 
 ####Music
 
