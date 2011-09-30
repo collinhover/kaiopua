@@ -7,6 +7,7 @@ var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
         loader, error, game,
+        lastGamma, lastBeta,
         libList = [
             "js/lib/jquery-1.6.4.min.js",
             "js/lib/RequestAnimationFrame.js",
@@ -186,8 +187,8 @@ var KAIOPUA = (function (main) {
                     }
             }
             
-            e.mouse.x = x;
-            e.mouse.y = y;
+            shared.mouse.x = x;
+            shared.mouse.y = y;
             
             lastGamma = gamma;
             lastBeta = beta;
@@ -241,7 +242,7 @@ var KAIOPUA = (function (main) {
         }
         
         if (typeof main.dev !== 'undefined') {
-            dev.log_error(error, url, lineNumber);
+            main.dev.log_error(error, url, lineNumber);
         }
         
     }

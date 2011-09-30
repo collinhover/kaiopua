@@ -185,7 +185,7 @@ var KAIOPUA = (function (main) {
         
         // article
         article = document.createElement('article');
-        $(article).addClass("error unselectable");
+        $(article).addClass("error info_panel unselectable");
         $(article).attr('id', errorType);
         
         // add to display

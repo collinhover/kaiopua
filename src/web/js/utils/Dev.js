@@ -90,7 +90,7 @@ var KAIOPUA = (function (main) {
         $(domElement).append(guiContainer);
     
         // add dev utils to window
-        document.body.appendChild(domElement);
+        $(document.body).append(domElement);
         
         // add listeners to gui toggle
         gui.toggleButton.addEventListener('mouseup', function(e) {
@@ -210,12 +210,18 @@ var KAIOPUA = (function (main) {
     =====================================================*/
     
     dev.toggle = togglePanel;
-    dev.log = function (msg, expand) { logger.log(msg, expand); };
+    dev.log = function (msg, expand) { 
+        if (typeof logger !== 'undefined') {
+            logger.log(msg, expand); 
+        }
+    };
     dev.log_error = function (error, url, lineNumber) {
+        if (typeof logger !== 'undefined') {
             logger.log('[ERROR] ' + error);
             logger.log('[ERROR] in file: ' + url);
             logger.log('[ERROR] line # ' + lineNumber);
-        };
+        }
+    };
     dev.gui = function () { return gui; };
     dev.resize = resize;
     dev.isOpen = function () {return isOpen;};

@@ -114,6 +114,7 @@ var KAIOPUA = (function (main) {
             // add to environment
             environment.addChild(cloud);
         }
+        
     }
     
     /*===================================================

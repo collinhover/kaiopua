@@ -1,30 +1,176 @@
 /*
 Loader.js
 Loader module, handles loading assets.
+
+load base message (c) MIT
 */
 var KAIOPUA = (function ( main ) {
     
     var loader = main.loader = main.loader || {},
         shared = main.shared = main.shared || {},
         listNameBase = 'loadList',
+        loadingHeaderBase = 'Loading &hearts; from Hawaii',
+        loadingMessageBase = '"Kali iki" means wait a moment.',
+        loadingTips = [
+            ///////////////////////////////////////////// = bad sentence size
+            '"Aloha kāua" means may there be friendship or love between us.',
+            '"Mahalo nui loa" means thanks very much.',
+            '"Kali iki" means wait a moment.',
+            '"Koʻu hoaloha" means my friend.',
+            '"Kāne" means male or man.',
+            '"Wahine" means female or woman.',
+            '"Aliʻi kāne" means king or chieftan.',
+            '"Aliʻi wahine" means queen or chiefess.',
+            '"He mea hoʻopāʻani" means to play a game.',
+            '"Kai" means sea or ocean.',
+            '"ʻōpua" means puffy clouds.',
+            '"Kaiʻōpua" means clouds over the ocean.',
+            '"Iki" means small or little.',
+            '"Nui" means large or huge.'
+        ],
         listNumber = 0,
         loading = false,
         listsToLoad = [],
+        loadingMessages = {},
         locations = {},
         callbacks = {},
         loaded = {},
         assets = {},
-        listCurrent;
-    
-    
+        listCurrent,
+        barWidth = 260,
+        barHeight = 12,
+        barFillSpace = 2,
+        barColor = '#FFFFFF',
+        fillColor = '#FFFFFF',
+        bar,
+        fill,
+        header,
+        message,
+        padder,
+        domElement;
+        
     /*===================================================
     
-    custom functions
+    load bar functions
     
     =====================================================*/
     
-    function load_list ( locationsList, callback ) {
-        var listName;
+    init_visuals();
+    
+    function init_visuals () {
+        
+        // dom element
+        
+        domElement = document.createElement( 'section' );
+        $(domElement).addClass('info_panel'); 
+        $(domElement).css({
+            'position': 'absolute',
+            'left': '50%',
+            'top': '50%'
+        });
+        
+        // padder
+        
+        padder = document.createElement( 'div' );
+        $(padder).addClass('padder_20'); 
+        
+        // bar
+
+        bar = document.createElement( 'div' );
+        $(bar).addClass('load_bar'); 
+        $(bar).css({
+            'border-style' : 'solid',
+            'border-color' : barColor,
+            'border-width' : '1px',
+            'border-radius' : '5px'
+        }).width(barWidth).height(barHeight);
+        
+        // fill
+    
+        fill = document.createElement( 'div' );
+        $(fill).css({
+            'margin-left' : barFillSpace + 'px',
+            'margin-top' : barFillSpace + 'px',
+            'background' : fillColor,
+            'border-radius' : '5px'
+        }).width(0).height(barHeight - barFillSpace * 2);
+        $(bar).append( fill );
+        
+        // header
+        header = document.createElement( 'header' );
+        $(header).html(loadingHeaderBase);
+        $(header).width(barWidth);
+        
+        // message
+        message = document.createElement( 'p' );
+        $(message).html(loadingMessageBase);
+        $(message).width(barWidth);
+        
+        // display
+        $(padder).append( header );
+        $(padder).append( bar );
+        $(padder).append( message );
+        
+        $(domElement).append( padder );
+        
+    }
+    
+    function resize_visuals () {
+        
+        $(domElement).css({
+            'margin-top' : (-$(domElement).innerHeight() * 0.5) + 'px',
+            'margin-left' : (-$(domElement).innerWidth() * 0.5) + 'px'
+        });
+        
+    } 
+    
+    function show_visuals ( container ) {
+        
+        if (typeof container !== 'undefined' ) {
+            $( container ).append( domElement );
+        }
+        else {
+            $(document.body).append( domElement );
+        }
+        
+        resize_visuals();
+        
+    }
+    
+    function hide_visuals () {
+        
+        $(domElement).remove();
+        
+    }
+    
+    function update_visuals () {
+        var locationsList, 
+            loadedList,
+            total,
+            pct = 1;
+        
+        if ( typeof listCurrent !== 'undefined' ) {
+            
+            locationsList = locations[listCurrent];
+            loadedList = loaded[listCurrent];
+            total = locationsList.length + loadedList.length;
+            
+            if ( isNaN( total ) === false ) {
+                pct = loadedList.length / total;
+            }
+            
+            $(fill).width( (barWidth - barFillSpace * 2) *  pct );
+            
+        }
+    }
+    
+    /*===================================================
+    
+    loading functions
+    
+    =====================================================*/
+    
+    function load_list ( locationsList, callback, listName, loadingMessage ) {
         
         if ( typeof locationsList !== 'undefined' ) {
             
@@ -34,9 +180,13 @@ var KAIOPUA = (function ( main ) {
                 locationsList = [locationsList];
             }
             
-            listName = listNameBase + listNumber;
-            
-            listNumber += 1;
+            if ( typeof listName !== 'string' ||  locations.hasOwnProperty( listName )) {
+                
+                listName = listNameBase + listNumber;
+                
+                listNumber += 1;
+                
+            }
             
             // store locations
             
@@ -45,6 +195,15 @@ var KAIOPUA = (function ( main ) {
             // store callbacks
             
             callbacks[listName] = callback;
+            
+            // store load message
+            
+            if ( typeof loadingMessage !== 'string' ) {
+                
+                loadingMessage = loadingTips[Math.max(0, Math.min(loadingTips.length - 1, Math.round(Math.random() * loadingTips.length) - 1))];
+            }
+            
+            loadingMessages[listName] = loadingMessage;
             
             // init new loaded array
             
@@ -59,6 +218,8 @@ var KAIOPUA = (function ( main ) {
             load_next_list();
             
         }
+        
+        return listName;
     }
     
     function load_next_list () {
@@ -73,6 +234,12 @@ var KAIOPUA = (function ( main ) {
             // get next list 
             
             listCurrent = listsToLoad.shift();
+            
+            // set loading message
+            
+            $(message).html(loadingMessages[listCurrent]);
+            
+            // get locations
             
             locationsList = locations[listCurrent];
             
@@ -94,7 +261,6 @@ var KAIOPUA = (function ( main ) {
         var ext;
         
         if ( typeof location !== 'undefined' ) {
-            console.log('load ' + location);
             
             // load based on file extension
             // LAB handles all scripts
@@ -116,7 +282,7 @@ var KAIOPUA = (function ( main ) {
     
     function load_single_completed ( data, location ) {
         var locationsList, index;
-        console.log('completed load: ' + location);
+        
         // store data in assets
         
         assets[location] = data;
@@ -145,6 +311,10 @@ var KAIOPUA = (function ( main ) {
             
         }
         
+        // update visuals
+        
+        update_visuals();
+        
         // if current list is complete
         
         if ( locationsList.length === 0 ) {
@@ -157,24 +327,25 @@ var KAIOPUA = (function ( main ) {
     
     function current_list_completed () {
         var callback = callbacks[listCurrent];
-        console.log('list ' + listCurrent + ' completed');
+        
+        // do callback before clear
+        if ( typeof callback !== 'undefined' ) {
+            
+            callback.call();
+            
+        }
+        
         // clear
         
         delete locations[listCurrent];
         
         delete callbacks[listCurrent];
         
+        delete loadingMessages[listName];
+        
         delete loaded[listCurrent];
         
         listCurrent = undefined;
-        
-        // do callback
-        
-        if ( typeof callback !== 'undefined' ) {
-            
-            callback.call();
-            
-        }
         
         // shared signal
         
@@ -213,6 +384,9 @@ var KAIOPUA = (function ( main ) {
     
     loader.load = load_list;
     loader.assets = assets;
+    loader.show = show_visuals;
+    loader.hide = hide_visuals;
+    loader.domElement = function () { return domElement; };
     
     return main; 
     

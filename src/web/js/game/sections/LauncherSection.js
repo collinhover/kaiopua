@@ -259,7 +259,6 @@ var KAIOPUA = (function (main) {
         camera.target.position.z += ( mouse.rx - camera.target.position.z ) * mouse.speedRotX;
         camera.target.position.y += ( mouse.ry - camera.target.position.y ) * mouse.speedRotY;
         
-        
         // update environment
         
         sky.wind_blow( time );

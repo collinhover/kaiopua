@@ -49,7 +49,13 @@ var KAIOPUA = (function (main) {
     function init() {
         
         // get dependencies
-        $LAB.script( dependencies ).wait( start );
+        
+        main.loader.show();
+        
+        main.loader.load( dependencies , function () {
+            main.loader.hide();
+            start();
+        });
         
     }
     
@@ -78,7 +84,7 @@ var KAIOPUA = (function (main) {
                sectionNames.push(i);
            }
         }
-        console.log(sectionNames.length);
+        
         // share
         shared.renderer = renderer;
         shared.renderTarget = renderTarget;

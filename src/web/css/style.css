@@ -207,20 +207,11 @@ a:hover, a:active {
 
 .error {
     width: 540px; 
-    height: 275px; 
-    overflow: auto; 
+    height: 275px;
     position: absolute; 
     left: 50%; 
     top: 50%;
     margin: -197px 0 0 -270px;
-    background: #222222; 
-    color: #ffffff;
-    -moz-border-radius    : 15px;
-    -webkit-border-radius : 15px;
-    border-radius         : 15px;
-    -moz-box-shadow    : 0px 1px 5px #46474a;
-    -webkit-box-shadow : 0px 1px 5px #46474a;
-    box-shadow         : 0px 1px 5px #46474a;
 }
 .error a, .error a:visited {
     color: #fcd700;
@@ -273,6 +264,48 @@ a:hover, a:active {
     left:330px;
     padding-top:95px;
 }
+
+/* info panel 
+-------------------------*/
+
+.info_panel {
+    overflow: auto;
+    background: #222222;
+    -moz-border-radius    : 15px;
+    -webkit-border-radius : 15px;
+    border-radius         : 15px;
+    -moz-box-shadow    : 0px 1px 5px #46474a;
+    -webkit-box-shadow : 0px 1px 5px #46474a;
+    box-shadow         : 0px 1px 5px #46474a;
+}
+
+.info_panel header {
+    text-align: center;
+    font: 18px Georgia, serif;
+    color: #ffffff;
+}
+
+.info_panel p {
+    text-align: center;
+    color: #eeeeee;
+}
+
+.padder_10 {
+    padding: 10px;
+}
+
+.padder_20 {
+    padding: 20px;
+}
+
+/* load bar 
+-------------------------*/
+
+.load_bar {
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
 
 /* footer 
 -------------------------*/
