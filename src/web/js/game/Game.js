@@ -25,10 +25,10 @@ var KAIOPUA = (function (main) {
             "js/lib/three/postprocessing/RenderPass.js",
             "js/lib/three/postprocessing/ShaderPass.js",
             "js/lib/three/postprocessing/MaskPass.js",
-            "js/game/sections/LauncherSection.js",
             "js/effects/LinearGradient.js",
             "js/effects/FocusVignette.js",
-            "js/game/sections/launcher/StartMenu.js",
+            "js/game/workers/MenuMaker.js",
+            "js/game/sections/LauncherSection.js",
             "js/game/sections/launcher/Water.js",
             "js/game/sections/launcher/Sky.js"
         ];
@@ -63,7 +63,11 @@ var KAIOPUA = (function (main) {
         var i, l;
         
         domElement = shared.html.gameContainer;
-        transitioner = shared.html.transitioner;
+        
+        // transitioner
+        
+        transitioner = document.createElement( 'div' );
+        $(transitioner).addClass('transitioner');
         
         // init three 
         // renderer
@@ -114,25 +118,9 @@ var KAIOPUA = (function (main) {
     functions
     
     =====================================================*/
-    
-    function find_objs_with_materials (objsList) {
-        var obj, objsWithMats = [], i;
-        
-        for (i = objsList.length - 1; i >= 0; i -= 1) {
-            obj = objsList[i];
-            
-            if (typeof obj.materials !== 'undefined' && obj.materials.length > 0) {
-                objsWithMats[objsWithMats.length] = obj;
-            }
-            else if (obj.children.length > 0)  {
-                objsWithMats = objsWithMats.concat(find_objs_with_materials(obj.children));
-            }
-        }
-        
-        return objsWithMats;
-    }
 
     function set_section ( section ) {
+        
         // hide current section
         if (typeof currentSection !== 'undefined') {
             
@@ -140,8 +128,14 @@ var KAIOPUA = (function (main) {
             
             previousSection.hide();
             
-            transitioner.fadeTo(transitionIn, 1).promise().done( function () {
+            $(domElement).append(transitioner);
+            
+            $(transitioner).fadeTo(transitionIn, 1).promise().done( function () {
+                
+                $(transitioner).detach();
+                
                 previousSection.remove();
+                
             });
             
         }
@@ -153,15 +147,19 @@ var KAIOPUA = (function (main) {
         if (typeof section !== 'undefined') {
             
             // wait for transitioner to finish fading in
-            transitioner.promise().done(function () {
+            $(transitioner).promise().done(function () {
+                
+                $(domElement).append(transitioner);
                 
                 section.resize(shared.screenWidth, shared.screenHeight);
-            
+                
                 section.show();
                 
                 currentSection = section;
                 
-                transitioner.fadeTo(transitionOut, 0);
+                $(transitioner).fadeTo(transitionOut, 0).promise().done(function () {
+                    $(transitioner).detach();
+                });
                 
             });
             
@@ -220,7 +218,7 @@ var KAIOPUA = (function (main) {
     game.init = init;
     game.resume = resume;
     game.pause = pause;
-    game.domElement = function () { return domElement; };
+    game.get_dom_element = function () { return domElement; };
     game.paused = function () { return paused; };
         
     return main; 

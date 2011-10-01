@@ -8,7 +8,7 @@ var KAIOPUA = (function ( main ) {
     
     var loader = main.loader = main.loader || {},
         shared = main.shared = main.shared || {},
-        listNameBase = 'loadList',
+        listIDBase = 'loadList',
         loadingHeaderBase = 'Loading &hearts; from Hawaii',
         loadingMessageBase = '"Kali iki" means wait a moment.',
         loadingTips = [
@@ -46,7 +46,6 @@ var KAIOPUA = (function ( main ) {
         fill,
         header,
         message,
-        padder,
         domElement;
         
     /*===================================================
@@ -66,13 +65,9 @@ var KAIOPUA = (function ( main ) {
         $(domElement).css({
             'position': 'absolute',
             'left': '50%',
-            'top': '50%'
+            'top': '50%',
+            'padding' : '20px'
         });
-        
-        // padder
-        
-        padder = document.createElement( 'div' );
-        $(padder).addClass('padder_20'); 
         
         // bar
 
@@ -107,11 +102,9 @@ var KAIOPUA = (function ( main ) {
         $(message).width(barWidth);
         
         // display
-        $(padder).append( header );
-        $(padder).append( bar );
-        $(padder).append( message );
-        
-        $(domElement).append( padder );
+        $(domElement).append( header );
+        $(domElement).append( bar );
+        $(domElement).append( message );
         
     }
     
@@ -139,7 +132,7 @@ var KAIOPUA = (function ( main ) {
     
     function hide_visuals () {
         
-        $(domElement).remove();
+        $(domElement).detach();
         
     }
     
@@ -170,7 +163,7 @@ var KAIOPUA = (function ( main ) {
     
     =====================================================*/
     
-    function load_list ( locationsList, callback, listName, loadingMessage ) {
+    function load_list ( locationsList, callback, listID, loadingMessage ) {
         
         if ( typeof locationsList !== 'undefined' ) {
             
@@ -180,9 +173,9 @@ var KAIOPUA = (function ( main ) {
                 locationsList = [locationsList];
             }
             
-            if ( typeof listName !== 'string' ||  locations.hasOwnProperty( listName )) {
+            if ( typeof listID !== 'string' ||  locations.hasOwnProperty( listID )) {
                 
-                listName = listNameBase + listNumber;
+                listID = listIDBase + listNumber;
                 
                 listNumber += 1;
                 
@@ -190,11 +183,11 @@ var KAIOPUA = (function ( main ) {
             
             // store locations
             
-            locations[listName] = locationsList;
+            locations[listID] = locationsList;
             
             // store callbacks
             
-            callbacks[listName] = callback;
+            callbacks[listID] = callback;
             
             // store load message
             
@@ -203,15 +196,15 @@ var KAIOPUA = (function ( main ) {
                 loadingMessage = loadingTips[Math.max(0, Math.min(loadingTips.length - 1, Math.round(Math.random() * loadingTips.length) - 1))];
             }
             
-            loadingMessages[listName] = loadingMessage;
+            loadingMessages[listID] = loadingMessage;
             
             // init new loaded array
             
-            loaded[listName] = [];
+            loaded[listID] = [];
             
-            // add list name to lists to load
+            // add list ID to lists to load
             
-            listsToLoad.push(listName);
+            listsToLoad.push(listID);
             
             // start loading
             
@@ -219,7 +212,7 @@ var KAIOPUA = (function ( main ) {
             
         }
         
-        return listName;
+        return listID;
     }
     
     function load_next_list () {
@@ -254,6 +247,11 @@ var KAIOPUA = (function ( main ) {
                 load_single( location );
                 
             }
+        }
+        else {
+            
+            shared.signals.loadAllCompleted.dispatch();
+            
         }
     }
     
@@ -341,7 +339,7 @@ var KAIOPUA = (function ( main ) {
         
         delete callbacks[listCurrent];
         
-        delete loadingMessages[listName];
+        delete loadingMessages[listCurrent];
         
         delete loaded[listCurrent];
         

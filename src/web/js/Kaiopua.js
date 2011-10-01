@@ -45,8 +45,7 @@ var KAIOPUA = (function (main) {
         shared.html= {
             staticMenu: $('#static_menu'),
             gameContainer: $('#game'),
-            errorContainer: $('#error_container'),
-            transitioner: $('#transitioner')
+            errorContainer: $('#error_container')
         };
         
         shared.signals = {
@@ -85,9 +84,6 @@ var KAIOPUA = (function (main) {
         
         window.onerror = onError;
         shared.signals.error.add(onError);
-        
-        // resize once
-        onWindowResize();
     }
     
     function init_setup () {
@@ -106,6 +102,9 @@ var KAIOPUA = (function (main) {
         else {
             game.init();
         }
+        
+        // resize once
+        onWindowResize();
     }
     
     /*===================================================

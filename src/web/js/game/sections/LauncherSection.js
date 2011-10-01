@@ -9,6 +9,8 @@ var KAIOPUA = (function (main) {
         effects = main.effects = main.effects || {},
         sections = game.sections = game.sections || {},
         launcher = sections.launcher = sections.launcher || {},
+        menumaker,
+        domElement,
         renderer, 
         renderTarget,
         camera, 
@@ -22,9 +24,14 @@ var KAIOPUA = (function (main) {
             startBottom: true
         },
         bg,
-        time,
+        menuParams = {
+            id: 'start_menu',
+            width: 260
+        },
+        menu,
         water,
         sky,
+        time,
         mouse = { 
             x: 0, 
             y: 0,
@@ -59,16 +66,43 @@ var KAIOPUA = (function (main) {
     function init () {
         
         init_basics();
-    
-        init_render_processing();
         
         init_environment();
         
-        init_rendering();
+        init_render_processing();
+        
+    }
     
+    function menuclick () {
+        console.log('Start menu click');
     }
     
     function init_basics () {
+        
+        domElement = document.createElement( 'section' );
+        $(domElement).attr('id', 'launcher');
+        
+        menumaker = game.workers.menumaker;
+        
+        menu = menumaker.menu( menuParams );
+        
+        menu.add_item( menumaker.button( 'Start', menuclick, false, 'item_big'  ) );
+        menu.add_item( menumaker.button( 'Continue', menuclick, true ) );
+        menu.add_item( menumaker.button( 'Options', menuclick, true ) );
+        
+        menu.keep_centered();
+        
+        $(domElement).append(menu.domElement);
+        
+        menu.hide();
+        
+    }
+    
+    function init_environment () {
+        
+        var i, ambient, light1, waterEnv, skyEnv;
+        
+        // camera
         
         camera = new THREE.Camera(60, shared.screenWidth / shared.screenHeight, 1, 10000);
         
@@ -82,64 +116,9 @@ var KAIOPUA = (function (main) {
         //camera.useTarget = false;
         //camera.rotation.y = cameraRotY;
         
+        // scene
+        
         scene = new THREE.Scene();
-        
-    }
-    
-    function init_render_processing () {
-        
-        var shaderScreen = THREE.ShaderExtras[ "screen" ],
-            shaderFocusVignette = effects.FocusVignette;
-        
-        bg = effects.LinearGradient.generate( bgParams );
-        
-        renderPasses = {
-            bg: new THREE.RenderPass( bg.scene, bg.camera ),
-            env: new THREE.RenderPass( scene, camera ),
-            screen: new THREE.ShaderPass( shaderScreen ),
-            focusVignette: new THREE.ShaderPass ( shaderFocusVignette )
-        };
-        
-        renderPasses.screen.renderToScreen = true;
-        
-        renderPasses.env.clear = false;
-        
-        renderPasses.focusVignette.uniforms[ "screenWidth" ].value = shared.screenWidth;
-        renderPasses.focusVignette.uniforms[ "screenHeight" ].value = shared.screenHeight;
-        renderPasses.focusVignette.uniforms[ "vingenettingOffset" ].value = 0.6;
-        renderPasses.focusVignette.uniforms[ "vingenettingDarkening" ].value = 0.5;
-        renderPasses.focusVignette.uniforms[ "sampleDistance" ].value = 0.2;
-        renderPasses.focusVignette.uniforms[ "waveFactor" ].value = 0.3;
-        
-        /*
-        var effectController  = {
-            
-			vingenettingOffset: 0.6,
-			vingenettingDarkening: 0.5,
-			sampleDistance: 0.2,
-            waveFactor: 0.3
-
-		};
-
-		var matChanger = function( ) {
-            
-			renderPasses.focusVignette.uniforms[ "vingenettingOffset" ].value = effectController.vingenettingOffset;
-            renderPasses.focusVignette.uniforms[ "vingenettingDarkening" ].value = effectController.vingenettingDarkening;
-            renderPasses.focusVignette.uniforms[ "sampleDistance" ].value = effectController.sampleDistance;
-            renderPasses.focusVignette.uniforms[ "waveFactor" ].value = effectController.waveFactor;
-
-		};
-        
-		require('utils/Dev').gui.add( effectController, "vingenettingOffset", 0.0, 3.0, 0.1 ).onChange( matChanger );
-		require('utils/Dev').gui.add( effectController, "vingenettingDarkening", -1, 1, 0.01 ).onChange( matChanger );
-		require('utils/Dev').gui.add( effectController, "sampleDistance", 0.0, 2, 0.01 ).onChange( matChanger );
-        require('utils/Dev').gui.add( effectController, "waveFactor", 0.0, 2, 0.01 ).onChange( matChanger );
-        */
-    }
-    
-    function init_environment () {
-        
-        var i, ambient, light1, waterEnv, skyEnv;
         
         // lights
         
@@ -185,7 +164,55 @@ var KAIOPUA = (function (main) {
         
     }
     
-    function init_rendering () {
+    function init_render_processing () {
+        
+        var shaderScreen = THREE.ShaderExtras[ "screen" ],
+            shaderFocusVignette = effects.FocusVignette;
+        
+        bg = effects.LinearGradient.generate( bgParams );
+        
+        renderPasses = {
+            bg: new THREE.RenderPass( bg.scene, bg.camera ),
+            env: new THREE.RenderPass( scene, camera ),
+            screen: new THREE.ShaderPass( shaderScreen ),
+            focusVignette: new THREE.ShaderPass ( shaderFocusVignette )
+        };
+        
+        renderPasses.screen.renderToScreen = true;
+        
+        renderPasses.env.clear = false;
+        
+        renderPasses.focusVignette.uniforms[ "screenWidth" ].value = shared.screenWidth;
+        renderPasses.focusVignette.uniforms[ "screenHeight" ].value = shared.screenHeight;
+        renderPasses.focusVignette.uniforms[ "vingenettingOffset" ].value = 0.6;
+        renderPasses.focusVignette.uniforms[ "vingenettingDarkening" ].value = 0.5;
+        renderPasses.focusVignette.uniforms[ "sampleDistance" ].value = 0.2;
+        renderPasses.focusVignette.uniforms[ "waveFactor" ].value = 0.3;
+        
+        /*
+        var effectController  = {
+            
+    		vingenettingOffset: 0.6,
+			vingenettingDarkening: 0.5,
+			sampleDistance: 0.2,
+            waveFactor: 0.3
+
+		};
+
+		var matChanger = function( ) {
+            
+			renderPasses.focusVignette.uniforms[ "vingenettingOffset" ].value = effectController.vingenettingOffset;
+            renderPasses.focusVignette.uniforms[ "vingenettingDarkening" ].value = effectController.vingenettingDarkening;
+            renderPasses.focusVignette.uniforms[ "sampleDistance" ].value = effectController.sampleDistance;
+            renderPasses.focusVignette.uniforms[ "waveFactor" ].value = effectController.waveFactor;
+
+		};
+        
+		require('utils/Dev').gui.add( effectController, "vingenettingOffset", 0.0, 3.0, 0.1 ).onChange( matChanger );
+		require('utils/Dev').gui.add( effectController, "vingenettingDarkening", -1, 1, 0.01 ).onChange( matChanger );
+		require('utils/Dev').gui.add( effectController, "sampleDistance", 0.0, 2, 0.01 ).onChange( matChanger );
+        require('utils/Dev').gui.add( effectController, "waveFactor", 0.0, 2, 0.01 ).onChange( matChanger );
+        */
         
         renderer = shared.renderer;
         renderTarget = shared.renderTarget;
@@ -193,10 +220,9 @@ var KAIOPUA = (function (main) {
         composerScene = new THREE.EffectComposer( renderer );
         
         composerScene.addPass( renderPasses.bg );
-		composerScene.addPass( renderPasses.env );
+        composerScene.addPass( renderPasses.env );
         composerScene.addPass( renderPasses.focusVignette );
         composerScene.addPass( renderPasses.screen );
-        
     }
     
     /*===================================================
@@ -232,6 +258,10 @@ var KAIOPUA = (function (main) {
         
         shared.signals.windowresized.add( resize );
         
+        $(game.get_dom_element()).append( domElement );
+        
+        menu.show();
+        
     }
     
     function hide () {
@@ -246,6 +276,8 @@ var KAIOPUA = (function (main) {
         
         // enable renderer object sorting
         shared.renderer.sortObjects = true;
+        
+        $(domElement).detach();
         
     }
     
@@ -303,6 +335,7 @@ var KAIOPUA = (function (main) {
     launcher.remove = remove;
     launcher.update = update;
     launcher.resize = resize;
+    launcher.domElement = function () { return domElement; };
         
     return main; 
     

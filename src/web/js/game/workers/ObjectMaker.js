@@ -1,5 +1,5 @@
 /*
-Maker.js
+ObjectMaker.js
 Object generator module, handles generation of misc things.
 */
 
@@ -7,13 +7,36 @@ var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
         game = main.game = main.game || {},
-        maker = game.maker = game.maker || {};
+        workers = game.workers = game.workers || {},
+        objectmaker = workers.objectmaker = workers.objectmaker || {};
         
     /*===================================================
     
     custom functions
     
     =====================================================*/
+    
+    // finds all objects with own materials
+    // will iterate through all children recursively
+    
+    function find_objs_with_materials (objsList) {
+        var obj, objsWithMats = [], i;
+        
+        for (i = objsList.length - 1; i >= 0; i -= 1) {
+            obj = objsList[i];
+            
+            if (typeof obj.materials !== 'undefined' && obj.materials.length > 0) {
+                objsWithMats[objsWithMats.length] = obj;
+            }
+            else if (obj.children.length > 0)  {
+                objsWithMats = objsWithMats.concat(find_objs_with_materials(obj.children));
+            }
+        }
+        
+        return objsWithMats;
+    }
+    
+    // generates a skybox from array of images
     
     function generate_skybox ( images, width, height, depth ) {
         
@@ -43,7 +66,8 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
     
-    maker.generate_skybox = generate_skybox;
+    objectmaker.find_objs_with_materials = find_objs_with_materials;
+    objectmaker.generate_skybox = generate_skybox;
         
     return main; 
     
