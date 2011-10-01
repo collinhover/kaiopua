@@ -10,8 +10,8 @@ var KAIOPUA = (function (main) {
         workers = game.workers = game.workers || {},
         menumaker = workers.menumaker = workers.menumaker || {},
         menuIDBase = 'game_menu',
-        menuShowTime = 500,
-        menuHideTime = 250;
+        menuShowTime = 1000,
+        menuHideTime = 500;
     
     /*===================================================
     
@@ -19,7 +19,7 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
     
-    function menu ( parameters ) {
+    function make_menu ( parameters ) {
         var menu = {}, id, domElement;
         
         // handle parameters
@@ -49,7 +49,9 @@ var KAIOPUA = (function (main) {
         
         menu.id = id;
         menu.domElement = domElement;
+        menu.enabled = true;
         menu.items = [];
+        menu.itemsByID = {};
         menu.add_items = function ( items ) {
             var i, l;
             
@@ -62,7 +64,11 @@ var KAIOPUA = (function (main) {
             
             if ( menu.items.indexOf(item) === -1 ) {
                 
+                item.menu = menu;
+                
                 menu.items.push( item );
+                
+                menu.itemsByID[item.id] = item;
                 
                 $(menu.domElement).append( item.domElement );
                 
@@ -83,13 +89,39 @@ var KAIOPUA = (function (main) {
             
             if ( index !== -1 ) {
                 
+                item.menu = undefined;
+                
                 menu.items.splice( index, 1 );
+                
+                delete menu.itemsByID[item.id];
                 
                 $(item.domElement).detach();
                 
             }
             
             return item;
+        };
+        menu.enable = function () {
+            var item, i, l;
+            
+            menu.enabled = true;
+            
+            for ( i = 0, l = menu.items.length; i < l; i += 1) {
+                item = menu.items[i];
+                if ( item.enabled === true ) {
+                    item.enable_visual();
+                }
+            }
+        };
+        menu.disable = function () {
+            var item, i, l;
+            
+            menu.enabled = false;
+            
+            for ( i = 0, l = menu.items.length; i < l; i += 1) {
+                item = menu.items[i];
+                item.disable_visual();
+            }
         };
         menu.reposition = function ( x, y ) {
             var tempadded = false;
@@ -120,38 +152,69 @@ var KAIOPUA = (function (main) {
         menu.centerme = function ( W, H ) {
             menu.reposition( W * 0.5, H * 0.5 );
         };
-        menu.show = function () {
-            $(menu.domElement).fadeTo(menuShowTime, 1);
+        menu.show = function ( container, time ) {
+            if ( typeof container !== 'undefined' ) {
+                $(container).append(menu.domElement);
+            }
+            
+            if ( time === 0 || menuShowTime === 0 ) {
+                $(menu.domElement).show();
+            } 
+            else {
+                $(menu.domElement).fadeIn(time || menuShowTime);
+            }
         };
-        menu.hide = function () {
-            $(menu.domElement).fadeTo(menuHideTime, 0);
+        menu.hide = function ( time, callback ) {
+            if ( time === 0 || menuHideTime === 0 ) {
+                $(menu.domElement).hide();
+            } 
+            else {
+                $(menu.domElement).fadeOut(time || menuHideTime);
+            }
+            
+            $(menu.domElement).promise().done(function () {
+                if ( typeof callback !== 'undefined' ) {
+                    callback.call();
+                }
+                $(menu.domElement).detach();
+            });
         };
         
         return menu;
     }
     
-    function button ( id, callback, disabled, extraClasses ) {
+    function make_button ( id, callback, disabled, extraClasses ) {
         var button = {}, domElement;
         
         domElement = document.createElement( 'div' );
         $(domElement).html( id );
-        $(domElement).addClass( 'item ' + extraClasses || '' );
+        $(domElement).addClass( 'item' );
+        if ( typeof extraClasses === 'string' ) {
+            $(domElement).addClass( extraClasses );
+        }
         
         button.id = id;
         button.domElement = domElement;
         button.callback = callback;
+        button.menu = undefined;
         button.enable = function () {
             button.enabled = true;
+            button.enable_visual();
+        };
+        button.enable_visual = function () {
             $(domElement).removeClass( 'item_disabled' );
             $(domElement).addClass( 'item_enabled' );
         };
         button.disable = function () {
             button.enabled = false;
+            button.disable_visual();
+        };
+        button.disable_visual = function () {
             $(domElement).removeClass( 'item_enabled' );
             $(domElement).addClass( 'item_disabled' );
         };
         button.trigger = function () {
-            if ( button.enabled ) {
+            if ( button.enabled && ( typeof button.menu === 'undefined' || (typeof button.menu !== 'undefined' && button.menu.enabled === true ) ) ) {
                 button.callback.call();
             }
         };
@@ -178,8 +241,8 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
     
-    menumaker.menu = menu;
-    menumaker.button = button;
+    menumaker.make_menu = make_menu;
+    menumaker.make_button = make_button;
     
     return main; 
     

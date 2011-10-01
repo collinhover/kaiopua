@@ -1,6 +1,6 @@
 /*
 LauncherSection.js
-Launcher module, handles start menu and environment.
+Launcher module, handles start environment.
 */
 var KAIOPUA = (function (main) {
     
@@ -9,8 +9,6 @@ var KAIOPUA = (function (main) {
         effects = main.effects = main.effects || {},
         sections = game.sections = game.sections || {},
         launcher = sections.launcher = sections.launcher || {},
-        menumaker,
-        domElement,
         renderer, 
         renderTarget,
         camera, 
@@ -24,11 +22,6 @@ var KAIOPUA = (function (main) {
             startBottom: true
         },
         bg,
-        menuParams = {
-            id: 'start_menu',
-            width: 260
-        },
-        menu,
         water,
         sky,
         time,
@@ -65,36 +58,9 @@ var KAIOPUA = (function (main) {
     
     function init () {
         
-        init_basics();
-        
         init_environment();
         
         init_render_processing();
-        
-    }
-    
-    function menuclick () {
-        console.log('Start menu click');
-    }
-    
-    function init_basics () {
-        
-        domElement = document.createElement( 'section' );
-        $(domElement).attr('id', 'launcher');
-        
-        menumaker = game.workers.menumaker;
-        
-        menu = menumaker.menu( menuParams );
-        
-        menu.add_item( menumaker.button( 'Start', menuclick, false, 'item_big'  ) );
-        menu.add_item( menumaker.button( 'Continue', menuclick, true ) );
-        menu.add_item( menumaker.button( 'Options', menuclick, true ) );
-        
-        menu.keep_centered();
-        
-        $(domElement).append(menu.domElement);
-        
-        menu.hide();
         
     }
     
@@ -258,10 +224,6 @@ var KAIOPUA = (function (main) {
         
         shared.signals.windowresized.add( resize );
         
-        $(game.get_dom_element()).append( domElement );
-        
-        menu.show();
-        
     }
     
     function hide () {
@@ -276,8 +238,6 @@ var KAIOPUA = (function (main) {
         
         // enable renderer object sorting
         shared.renderer.sortObjects = true;
-        
-        $(domElement).detach();
         
     }
     
@@ -335,7 +295,7 @@ var KAIOPUA = (function (main) {
     launcher.remove = remove;
     launcher.update = update;
     launcher.resize = resize;
-    launcher.domElement = function () { return domElement; };
+    launcher.domElement = function () {};
         
     return main; 
     

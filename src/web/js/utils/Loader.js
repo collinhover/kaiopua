@@ -155,6 +155,9 @@ var KAIOPUA = (function ( main ) {
             $(fill).width( (barWidth - barFillSpace * 2) *  pct );
             
         }
+        else {
+            $(fill).width(0);
+        }
     }
     
     /*===================================================
@@ -352,6 +355,10 @@ var KAIOPUA = (function ( main ) {
             shared.signals.loadListCompleted.dispatch();
             
         }
+        
+        // update visuals to reset fill
+        
+        update_visuals();
         
         // no longer loading
         

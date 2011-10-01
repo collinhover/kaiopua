@@ -11,6 +11,8 @@ var KAIOPUA = (function (main) {
         libList = [
             "js/lib/jquery-1.6.4.min.js",
             "js/lib/RequestAnimationFrame.js",
+            "js/lib/requestInterval.js",
+            "js/lib/requestTimeout.js",
             "js/lib/signals.min.js"
         ],
         setupList = [

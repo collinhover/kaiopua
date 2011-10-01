@@ -6,10 +6,15 @@ Game module, handles sections of game.
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
+        loader = main.loader = main.loader || {},
         game = main.game = main.game || {},
         sections = game.sections = game.sections || {},
+        workers = game.workers = game.workers || {},
+        transitioner = workers.transitioner = workers.transitioner || {},
+        menus = game.menus = game.menus || {},
         domElement,
         transitioner,
+        menumaker,
         renderer, 
         renderTarget,
         currentSection, 
@@ -17,6 +22,7 @@ var KAIOPUA = (function (main) {
         paused = true,
         transitionOut = 1000, 
         transitionIn = 400,
+        loadAssetsDelay = 500,
         dependencies = [
             "js/lib/three/Three.js",
             "js/lib/three/ThreeExtras.js",
@@ -31,6 +37,9 @@ var KAIOPUA = (function (main) {
             "js/game/sections/LauncherSection.js",
             "js/game/sections/launcher/Water.js",
             "js/game/sections/launcher/Sky.js"
+        ],
+        gameAssets = [
+            "assets/models/kaiopua_head.js"
         ];
     
     /*===================================================
@@ -50,24 +59,29 @@ var KAIOPUA = (function (main) {
         
         // get dependencies
         
-        main.loader.show();
+        loader.show();
         
-        main.loader.load( dependencies , function () {
-            main.loader.hide();
-            start();
+        loader.load( dependencies , function () {
+            loader.hide();
+            init_basics();
         });
         
     }
     
-    function start () {
+    function init_basics () {
         var i, l;
         
         domElement = shared.html.gameContainer;
         
         // transitioner
         
-        transitioner = document.createElement( 'div' );
-        $(transitioner).addClass('transitioner');
+        
+        transitioner.domElement = document.createElement( 'div' );
+        $(transitioner.domElement).addClass('transitioner');
+        
+        // workers
+        
+        menumaker = game.workers.menumaker;
         
         // init three 
         // renderer
@@ -110,7 +124,71 @@ var KAIOPUA = (function (main) {
         // set initial section
         set_section(sections.launcher);
         
+        // start drawing
+        
         animate();
+        
+        
+        // pause for short delay
+        // start loading all game assets
+        window.requestTimeout( function () {
+            
+            loader.show();
+            
+            loader.load( gameAssets , function () {
+                loader.hide();
+                init_startmenu();
+            });
+            
+        }, loadAssetsDelay);
+        
+    }
+    
+    /*===================================================
+    
+    start
+    
+    =====================================================*/
+    
+    function init_startmenu() {
+        var ms;
+        
+        // init start menu
+        
+        ms = menus.start = menumaker.make_menu( {
+            id: 'start_menu',
+            width: 260
+        } );
+        
+        ms.add_item( menumaker.make_button( 'Start', function () {
+            start();
+        }, false, 'item_big'  ) );
+        ms.add_item( menumaker.make_button( 'Continue', function () {}, true ) );
+        ms.add_item( menumaker.make_button( 'Options', function () {}, true ) );
+        
+        //ms.itemsByID.Continue.enable();
+        
+        ms.keep_centered();
+        
+        // hide instantly then show start menu
+        
+        ms.hide( 0 );
+        
+        ms.show( domElement );
+        
+    }
+    
+    function start() {
+        var ms = menus.start;
+        
+        // disable start menu
+        ms.disable();
+        
+        // hide start menu
+        ms.hide();
+        
+        // set next section
+        
     }
     
     /*===================================================
@@ -128,11 +206,11 @@ var KAIOPUA = (function (main) {
             
             previousSection.hide();
             
-            $(domElement).append(transitioner);
+            $(domElement).append(transitioner.domElement);
             
-            $(transitioner).fadeTo(transitionIn, 1).promise().done( function () {
+            $(transitioner.domElement).fadeTo(transitionIn, 1).promise().done( function () {
                 
-                $(transitioner).detach();
+                $(transitioner.domElement).detach();
                 
                 previousSection.remove();
                 
@@ -147,9 +225,9 @@ var KAIOPUA = (function (main) {
         if (typeof section !== 'undefined') {
             
             // wait for transitioner to finish fading in
-            $(transitioner).promise().done(function () {
+            $(transitioner.domElement).promise().done(function () {
                 
-                $(domElement).append(transitioner);
+                $(domElement).append(transitioner.domElement);
                 
                 section.resize(shared.screenWidth, shared.screenHeight);
                 
@@ -157,8 +235,8 @@ var KAIOPUA = (function (main) {
                 
                 currentSection = section;
                 
-                $(transitioner).fadeTo(transitionOut, 0).promise().done(function () {
-                    $(transitioner).detach();
+                $(transitioner.domElement).fadeTo(transitionOut, 0).promise().done(function () {
+                    $(transitioner.domElement).detach();
                 });
                 
             });
