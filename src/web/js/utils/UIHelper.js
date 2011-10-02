@@ -54,6 +54,8 @@ var KAIOPUA = (function (main) {
         
         el.staticPosition = staticPosition;
         
+        el.keepCentered = parameters.keepCentered || false;
+        
         // id
         
         el.id = id;
@@ -93,8 +95,8 @@ var KAIOPUA = (function (main) {
                 $(el.domElement).css({
                     'left' : x + 'px',
                     'top' : y + 'px',
-                    'margin-top' : (-$(el.domElement).height() * 0.5) + 'px',
-                    'margin-left' : (-$(el.domElement).width() * 0.5) + 'px'
+                    'margin-top' : (-$(el.domElement).outerHeight() * 0.5) + 'px',
+                    'margin-left' : (-$(el.domElement).outerWidth() * 0.5) + 'px'
                 });
                 
                 if ( tempadded ) {
@@ -106,6 +108,8 @@ var KAIOPUA = (function (main) {
         
         el.ui_keep_centered = function () {
             
+            el.keepCentered = true;
+            
             if ( el.staticPosition === true ) {
                 el.staticPosition = false;
                 $(el.domElement).css({'position' : 'absolute'});
@@ -116,7 +120,11 @@ var KAIOPUA = (function (main) {
         };
         
         el.ui_not_centered = function () {
+            
+            el.keepCentered = false;
+            
             shared.signals.windowresized.remove( el.ui_centerme );
+            
         };
         
         el.ui_centerme = function ( W, H ) {
@@ -126,6 +134,10 @@ var KAIOPUA = (function (main) {
         el.ui_show = function ( container, time, callback ) {
             if ( typeof container !== 'undefined' ) {
                 $( container ).append( el.domElement );
+            }
+            
+            if ( el.keepCentered === true ) {
+                el.ui_centerme( shared.screenWidth, shared.screenHeight );
             }
             
             if ( time === 0 || uiElementShowTime === 0 ) {

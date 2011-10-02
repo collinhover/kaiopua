@@ -62,10 +62,10 @@ var KAIOPUA = (function (main) {
         
         // get dependencies
         
-        loader.ui_show( domElement, 0 );
+        //loader.ui_show( domElement, 0 );
         
         loader.load( dependencies , function () {
-            loader.ui_hide( true );
+            //loader.ui_hide( true );
             init_basics();
         });
         
@@ -112,10 +112,6 @@ var KAIOPUA = (function (main) {
         shared.signals.paused = new signals.Signal();
         shared.signals.resumed = new signals.Signal();
         
-        // resize listener
-        resize(shared.screenWidth, shared.screenHeight);
-        shared.signals.windowresized.add(resize);
-        
         // init each section
         for (i = 0, l = sectionNames.length; i < l; i += 1) {
             sections[sectionNames[i]].init();
@@ -127,7 +123,6 @@ var KAIOPUA = (function (main) {
         // start drawing
         
         animate();
-        
         
         // pause for short delay
         // start loading all game assets
@@ -141,6 +136,10 @@ var KAIOPUA = (function (main) {
             });
             
         }, loadAssetsDelay);
+        
+        // resize listener
+        resize(shared.screenWidth, shared.screenHeight);
+        shared.signals.windowresized.add(resize);
         
     }
     
