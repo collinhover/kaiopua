@@ -6,8 +6,9 @@ load base message (c) MIT
 */
 var KAIOPUA = (function ( main ) {
     
-    var loader = main.loader = main.loader || {},
-        shared = main.shared = main.shared || {},
+    var shared = main.shared = main.shared || {},
+        utils = main.utils = main.utils || {},
+        loader = utils.loader = utils.loader || {},
         listIDBase = 'loadList',
         loadingHeaderBase = 'Loading &hearts; from Hawaii',
         loadingMessageBase = '"Kali iki" means wait a moment.',
@@ -47,96 +48,95 @@ var KAIOPUA = (function ( main ) {
         header,
         message,
         domElement;
-        
+    
+    /*===================================================
+    
+    external init
+    
+    =====================================================*/
+    
     /*===================================================
     
     load bar functions
     
     =====================================================*/
     
-    init_visuals();
-    
-    function init_visuals () {
+    function init_ui () {
         
-        // dom element
+        var uihelper = utils.uihelper;
         
-        domElement = document.createElement( 'section' );
-        $(domElement).addClass('info_panel'); 
-        $(domElement).css({
-            'position': 'absolute',
-            'left': '50%',
-            'top': '50%',
-            'padding' : '20px'
-        });
+        loader = uihelper.ui_element_ify({
+            elementType: 'section',
+            classes: 'info_panel',
+            cssmap: {
+                'padding' : '20px'
+            }
+        }, loader);
+        
+        domElement = loader.domElement;
         
         // bar
 
-        bar = document.createElement( 'div' );
-        $(bar).addClass('load_bar'); 
-        $(bar).css({
-            'border-style' : 'solid',
-            'border-color' : barColor,
-            'border-width' : '1px',
-            'border-radius' : '5px'
-        }).width(barWidth).height(barHeight);
+        bar = uihelper.ui_element_ify({
+            classes: 'load_bar',
+            cssmap: {
+                'border-style' : 'solid',
+                'border-color' : barColor,
+                'border-width' : '1px',
+                'border-radius' : '5px'
+            },
+            staticPosition: true,
+            width: barWidth,
+            height: barHeight
+        });
         
         // fill
     
-        fill = document.createElement( 'div' );
-        $(fill).css({
-            'margin-left' : barFillSpace + 'px',
-            'margin-top' : barFillSpace + 'px',
-            'background' : fillColor,
-            'border-radius' : '5px'
-        }).width(0).height(barHeight - barFillSpace * 2);
-        $(bar).append( fill );
-        
-        // header
-        header = document.createElement( 'header' );
-        $(header).html(loadingHeaderBase);
-        $(header).width(barWidth);
-        
-        // message
-        message = document.createElement( 'p' );
-        $(message).html(loadingMessageBase);
-        $(message).width(barWidth);
-        
-        // display
-        $(domElement).append( header );
-        $(domElement).append( bar );
-        $(domElement).append( message );
-        
-    }
-    
-    function resize_visuals () {
-        
-        $(domElement).css({
-            'margin-top' : (-$(domElement).innerHeight() * 0.5) + 'px',
-            'margin-left' : (-$(domElement).innerWidth() * 0.5) + 'px'
+        fill = uihelper.ui_element_ify({
+            cssmap: {
+                'margin-left' : barFillSpace + 'px',
+                'margin-top' : barFillSpace + 'px',
+                'background' : fillColor,
+                'border-radius' : '5px'
+            },
+            staticPosition: true,
+            width: 0,
+            height: barHeight - barFillSpace * 2
         });
         
-    } 
-    
-    function show_visuals ( container ) {
         
-        if (typeof container !== 'undefined' ) {
-            $( container ).append( domElement );
-        }
-        else {
-            $(document.body).append( domElement );
-        }
         
-        resize_visuals();
+        // header
+        header = uihelper.ui_element_ify({
+            elementType: 'header',
+            staticPosition: true,
+            width: barWidth,
+            text: loadingHeaderBase
+        });
+        
+        // message
+        message = uihelper.ui_element_ify({
+            elementType: 'p',
+            staticPosition: true,
+            width: barWidth,
+            text: loadingMessageBase
+        });
+        
+        // display
+        
+        $(bar.domElement).append( fill.domElement );
+        
+        $(domElement).append( header.domElement );
+        $(domElement).append( bar.domElement );
+        $(domElement).append( message.domElement );
+        
+        // center
+        
+        loader.ui_keep_centered();
         
     }
     
-    function hide_visuals () {
-        
-        $(domElement).detach();
-        
-    }
-    
-    function update_visuals () {
+    function update_ui () {
         var locationsList, 
             loadedList,
             total,
@@ -152,11 +152,11 @@ var KAIOPUA = (function ( main ) {
                 pct = loadedList.length / total;
             }
             
-            $(fill).width( (barWidth - barFillSpace * 2) *  pct );
+            $(fill.domElement).width( (barWidth - barFillSpace * 2) *  pct );
             
         }
         else {
-            $(fill).width(0);
+            $(fill.domElement).width(0);
         }
     }
     
@@ -312,9 +312,9 @@ var KAIOPUA = (function ( main ) {
             
         }
         
-        // update visuals
+        // update ui
         
-        update_visuals();
+        update_ui();
         
         // if current list is complete
         
@@ -356,9 +356,9 @@ var KAIOPUA = (function ( main ) {
             
         }
         
-        // update visuals to reset fill
+        // update ui to reset fill
         
-        update_visuals();
+        update_ui();
         
         // no longer loading
         
@@ -387,11 +387,9 @@ var KAIOPUA = (function ( main ) {
     
     =====================================================*/
     
+    loader.init_ui = init_ui;
     loader.load = load_list;
     loader.assets = assets;
-    loader.show = show_visuals;
-    loader.hide = hide_visuals;
-    loader.domElement = function () { return domElement; };
     
     return main; 
     

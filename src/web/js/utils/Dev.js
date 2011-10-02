@@ -4,8 +4,9 @@ Initializes Logger, Stats, and DAT-GUI for development purposes
 */
 var KAIOPUA = (function (main) {
     
-    var dev = main.dev = main.dev || {},
-        shared = main.shared = main.shared || {},
+    var shared = main.shared = main.shared || {},
+        utils = main.utils = main.utils || {},
+        dev = utils.dev = utils.dev || {},
         devCommands,
         domElement, isOpen = true, stats, logger, 
         gui, guiContainer, guiHeight, statsPaused = true,

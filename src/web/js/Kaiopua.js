@@ -6,6 +6,7 @@ Main module, handles browser events.
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
+        utils = main.utils = main.utils || {},
         loader, error, game,
         lastGamma, lastBeta,
         libList = [
@@ -19,6 +20,7 @@ var KAIOPUA = (function (main) {
             "js/utils/Dev.js",
             "js/utils/Error.js",
             "js/utils/Loader.js",
+            "js/utils/UIHelper.js",
             "js/game/Game.js"
         ];
     
@@ -90,12 +92,18 @@ var KAIOPUA = (function (main) {
     
     function init_setup () {
         
-        error = main.error;
-        loader = main.loader;
+        // utils
+        
+        error = utils.error;
+        loader = utils.loader;
+        
+        loader.init_ui();
+        
+        // game
+        
         game = main.game;
         
         // check for errors
-        error = main.error;
         
         if (error.check()) {
             error.process();

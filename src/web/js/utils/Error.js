@@ -5,8 +5,9 @@ Handles compatibility checks and user viewable errors.
 
 var KAIOPUA = (function (main) {
     
-    var error = main.error = main.error || {},
-        shared = main.shared = main.shared || {},
+    var shared = main.shared = main.shared || {},
+        utils = main.utils = main.utils || {},
+        error = utils.error = utils.error || {},
         errorState = false,
         errorCurrent = {},
         errorHash = 'error=',

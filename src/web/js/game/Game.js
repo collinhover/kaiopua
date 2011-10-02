@@ -6,14 +6,15 @@ Game module, handles sections of game.
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
-        loader = main.loader = main.loader || {},
+        utils = main.utils = main.utils || {},
+        loader = utils.loader = utils.loader || {},
+        uihelper = utils.uihelper = utils.uihelper || {},
         game = main.game = main.game || {},
         sections = game.sections = game.sections || {},
         workers = game.workers = game.workers || {},
-        transitioner = workers.transitioner = workers.transitioner || {},
         menus = game.menus = game.menus || {},
-        domElement,
         transitioner,
+        domElement,
         menumaker,
         renderer, 
         renderTarget,
@@ -57,12 +58,14 @@ var KAIOPUA = (function (main) {
     
     function init() {
         
+        domElement = shared.html.gameContainer;
+        
         // get dependencies
         
-        loader.show();
+        loader.ui_show( domElement, 0 );
         
         loader.load( dependencies , function () {
-            loader.hide();
+            loader.ui_hide( true );
             init_basics();
         });
         
@@ -71,13 +74,10 @@ var KAIOPUA = (function (main) {
     function init_basics () {
         var i, l;
         
-        domElement = shared.html.gameContainer;
-        
         // transitioner
-        
-        
-        transitioner.domElement = document.createElement( 'div' );
-        $(transitioner.domElement).addClass('transitioner');
+        transitioner = uihelper.ui_element_ify({
+            classes: 'transitioner'
+        });
         
         // workers
         
@@ -133,10 +133,10 @@ var KAIOPUA = (function (main) {
         // start loading all game assets
         window.requestTimeout( function () {
             
-            loader.show();
+            loader.ui_show( domElement );
             
             loader.load( gameAssets , function () {
-                loader.hide();
+                loader.ui_hide( true );
                 init_startmenu();
             });
             
@@ -160,21 +160,36 @@ var KAIOPUA = (function (main) {
             width: 260
         } );
         
-        ms.add_item( menumaker.make_button( 'Start', function () {
-            start();
-        }, false, 'item_big'  ) );
-        ms.add_item( menumaker.make_button( 'Continue', function () {}, true ) );
-        ms.add_item( menumaker.make_button( 'Options', function () {}, true ) );
+        ms.add_item( menumaker.make_button( {
+            id: 'Start', 
+            callback: function () {
+                start();
+            },
+            staticPosition: true,
+            classes: 'item_big'
+        } ) );
+        ms.add_item( menumaker.make_button( {
+            id: 'Continue', 
+            callback: function () {},
+            staticPosition: true,
+            disabled: true
+        } ) );
+        ms.add_item( menumaker.make_button( {
+            id: 'Options', 
+            callback: function () {},
+            staticPosition: true,
+            disabled: true
+        } ) );
         
         //ms.itemsByID.Continue.enable();
         
-        ms.keep_centered();
+        ms.ui_keep_centered();
         
         // hide instantly then show start menu
         
-        ms.hide( 0 );
+        ms.ui_hide( false, 0 );
         
-        ms.show( domElement );
+        ms.ui_show( domElement );
         
     }
     
@@ -185,7 +200,7 @@ var KAIOPUA = (function (main) {
         ms.disable();
         
         // hide start menu
-        ms.hide();
+        ms.ui_hide();
         
         // set next section
         
