@@ -7,8 +7,7 @@ var KAIOPUA = (function (main) {
     var shared = main.shared = main.shared || {},
         game = main.game = main.game || {},
         sections = game.sections = game.sections || {},
-        intro = sections.intro = sections.intro || {},
-        assets,
+        section = sections.section = sections.section || {},
         renderer, 
         renderTarget,
         camera,
@@ -25,8 +24,6 @@ var KAIOPUA = (function (main) {
     
     function init () {
         
-        assets = main.utils.loader.assets;
-        
         init_environment();
         
         init_render_processing();
@@ -37,9 +34,7 @@ var KAIOPUA = (function (main) {
         
         // camera
         
-        //camera = new THREE.Camera(60, shared.screenWidth / shared.screenHeight, 1, 10000);
-        
-        camera = new THREE.FirstPersonCamera( { fov: 60, aspect:shared.screenWidth / shared.screenHeight, near: 1, far: 20000, movementSpeed: 1000, lookSpeed: 0.1, noFly: false, lookVertical: true } );
+        camera = new THREE.Camera(60, shared.screenWidth / shared.screenHeight, 1, 10000);
         
         // scene
         
@@ -51,25 +46,10 @@ var KAIOPUA = (function (main) {
         
         scene.addLight( ambient );
         
-        var light1 = new THREE.DirectionalLight( 0xFFFFFF, 1.0 );
-        light1.position = new THREE.Vector3(-1, -1, 1).normalize();
-        
-        scene.addLight( light1 );
-        
         // fog
         
         scene.fog = new THREE.Fog( 0xffffff, -100, 10000 );
         
-        // kaiopua
-        
-        var geometry = assets["assets/models/kaiopua_head.js"];
-        var material = new THREE.MeshLambertMaterial( { color: 0xffaa55 } );
-        var mesh = new THREE.Mesh( geometry, material );
-        var scale = 100;
-    	
-		mesh.scale.set( scale, scale, scale );
-        console.log('mesh in');
-        scene.addChild( mesh );
     }
     
     function init_render_processing () {
@@ -129,14 +109,14 @@ var KAIOPUA = (function (main) {
 
         renderer.clear();
         
-		composerScene.render();
+    	composerScene.render();
         
     }
     
     function resize ( W, H ) {
         
         camera.aspect = W / H;
-        camera.updateProjectionMatrix();
+    	camera.updateProjectionMatrix();
         
         composerScene.reset();
         
@@ -148,13 +128,13 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
     
-    intro.init = init;
-    intro.show = show;
-    intro.hide = hide;
-    intro.remove = remove;
-    intro.update = update;
-    intro.resize = resize;
-    intro.domElement = function () {};
+    section.init = init;
+    section.show = show;
+    section.hide = hide;
+    section.remove = remove;
+    section.update = update;
+    section.resize = resize;
+    section.domElement = function () {};
     
     return main; 
     

@@ -250,8 +250,8 @@ var KAIOPUA = (function (main) {
             main.game.pause();
         }
         
-        if (typeof main.dev !== 'undefined') {
-            main.dev.log_error(error, url, lineNumber);
+        if (typeof main.utils.dev !== 'undefined') {
+            main.utils.dev.log_error(error, url, lineNumber);
         }
         
     }

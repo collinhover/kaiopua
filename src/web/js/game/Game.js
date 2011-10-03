@@ -18,6 +18,7 @@ var KAIOPUA = (function (main) {
         menumaker,
         renderer, 
         renderTarget,
+        sectionNames = [],
         currentSection, 
         previousSection, 
         paused = true,
@@ -34,13 +35,18 @@ var KAIOPUA = (function (main) {
             "js/lib/three/postprocessing/MaskPass.js",
             "js/effects/LinearGradient.js",
             "js/effects/FocusVignette.js",
-            "js/game/workers/MenuMaker.js",
+            "js/game/workers/MenuMaker.js"
+        ],
+        launcherAssets = [
             "js/game/sections/LauncherSection.js",
             "js/game/sections/launcher/Water.js",
-            "js/game/sections/launcher/Sky.js"
+            "js/game/sections/launcher/Sky.js",
+            "assets/textures/cloud256.png",
+            "assets/textures/light_ray.png"
         ],
         gameAssets = [
-            "assets/models/kaiopua_head.js"
+            "js/game/sections/IntroSection.js",
+            { path: "assets/models/kaiopua_head.js", type: 'model' }
         ];
     
     /*===================================================
@@ -62,10 +68,7 @@ var KAIOPUA = (function (main) {
         
         // get dependencies
         
-        //loader.ui_show( domElement, 0 );
-        
         loader.load( dependencies , function () {
-            //loader.ui_hide( true );
             init_basics();
         });
         
@@ -75,7 +78,7 @@ var KAIOPUA = (function (main) {
         var i, l;
         
         // transitioner
-        transitioner = uihelper.ui_element_ify({
+        transitioner = uihelper.make_ui_element({
             classes: 'transitioner'
         });
         
@@ -95,14 +98,6 @@ var KAIOPUA = (function (main) {
         // add to game dom element
         domElement.append( renderer.domElement );
         
-        // get section names
-        sectionNames = [];
-        for ( i in sections ) {
-           if ( sections.hasOwnProperty( i ) ) {
-               sectionNames.push(i);
-           }
-        }
-        
         // share
         shared.renderer = renderer;
         shared.renderTarget = renderTarget;
@@ -112,45 +107,56 @@ var KAIOPUA = (function (main) {
         shared.signals.paused = new signals.Signal();
         shared.signals.resumed = new signals.Signal();
         
-        // init each section
-        for (i = 0, l = sectionNames.length; i < l; i += 1) {
-            sections[sectionNames[i]].init();
-        }
-        
-        // set initial section
-        set_section(sections.launcher);
+        // resize listener
+        resize(shared.screenWidth, shared.screenHeight);
+        shared.signals.windowresized.add(resize);
         
         // start drawing
         
         animate();
         
+        // get launcher
+        
+        loader.load( launcherAssets , function () {
+            init_launcher();
+        });
+        
+    }
+    
+    function init_launcher () {
+        
+        // update sections
+        
+        update_section_list();
+        
+        // set launcher section
+        
+        set_section( sections.launcher );
+        
         // pause for short delay
         // start loading all game assets
+        
         window.requestTimeout( function () {
+            
+            loader.ui_hide( false, 0);
             
             loader.ui_show( domElement );
             
             loader.load( gameAssets , function () {
-                loader.ui_hide( true );
-                init_startmenu();
+                loader.ui_hide( true, undefined, function () {
+                    init_game();
+                });
             });
             
         }, loadAssetsDelay);
-        
-        // resize listener
-        resize(shared.screenWidth, shared.screenHeight);
-        shared.signals.windowresized.add(resize);
-        
     }
     
-    /*===================================================
-    
-    start
-    
-    =====================================================*/
-    
-    function init_startmenu() {
+    function init_game() {
         var ms;
+
+        // update sections
+        
+        update_section_list();
         
         // init start menu
         
@@ -162,7 +168,7 @@ var KAIOPUA = (function (main) {
         ms.add_item( menumaker.make_button( {
             id: 'Start', 
             callback: function () {
-                start();
+                start_game();
             },
             staticPosition: true,
             classes: 'item_big'
@@ -192,7 +198,13 @@ var KAIOPUA = (function (main) {
         
     }
     
-    function start() {
+    /*===================================================
+    
+    start
+    
+    =====================================================*/
+    
+    function start_game() {
         var ms = menus.start;
         
         // disable start menu
@@ -201,8 +213,8 @@ var KAIOPUA = (function (main) {
         // hide start menu
         ms.ui_hide();
         
-        // set next section
-        
+        // set intro section
+        set_section( sections.intro );
     }
     
     /*===================================================
@@ -210,6 +222,37 @@ var KAIOPUA = (function (main) {
     functions
     
     =====================================================*/
+    
+    function update_section_list () {
+        var i, l,
+            name,
+            prevNames = sectionNames.slice(0);
+        
+        // reset names
+        
+        sectionNames = [];
+        
+        // get all names
+        
+        for ( name in sections ) {
+           if ( sections.hasOwnProperty( name ) ) {
+               sectionNames.push( name );
+           }
+        }
+        
+        // init each new section
+        
+        for (i = 0, l = sectionNames.length; i < l; i += 1) {
+            
+            name = sectionNames[i];
+            console.log(name);
+            console.log(sections[name]);
+            if ( prevNames.indexOf(name) === -1 ) {
+                sections[name].init();
+            }
+        }
+        
+    }
 
     function set_section ( section ) {
         

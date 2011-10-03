@@ -35,7 +35,7 @@ var KAIOPUA = (function (main) {
         
         // ui element ify
         
-        menu = uihelper.ui_element_ify( parameters );
+        menu = uihelper.make_ui_element( parameters );
         
         // public properties
         
@@ -134,7 +134,7 @@ var KAIOPUA = (function (main) {
         
         parameters.disabled = parameters.disabled || false;
         
-        button = uihelper.ui_element_ify( parameters );
+        button = uihelper.make_ui_element( parameters );
         
         button.callback = parameters.callback;
         button.menu = undefined;

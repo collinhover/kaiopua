@@ -130,7 +130,8 @@ var KAIOPUA = (function (main) {
         
         rayGeometry = new THREE.PlaneGeometry ( rayWidth, rayHeight + (Math.random() * (rayHeightVariation) - (rayHeightVariation * 0.5)) );
         
-        rayTexture = THREE.ImageUtils.loadTexture( rayTexturePath );
+        rayTexture = new THREE.Texture( main.utils.loader.assets[rayTexturePath] ); 
+        rayTexture.needsUpdate = true;
         
         for ( i = 0; i < numRays; i += 1 ) {
         

@@ -18,15 +18,16 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
     
-    function ui_element_ify ( parameters, el ) {
-        var el = el || {}, 
-            elementType,
+    function make_ui_element ( parameters, el ) {
+        var elementType,
             id,
             classes,
             autoPosition,
             text,
             cssmap,
             domElement;
+            
+        el = el || {};
         
         // handle parameters
         
@@ -186,7 +187,7 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
     
-    uihelper.ui_element_ify = ui_element_ify;
+    uihelper.make_ui_element = make_ui_element;
     
     return main; 
     

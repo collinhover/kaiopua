@@ -31,7 +31,7 @@ var KAIOPUA = (function (main) {
         cloudPlaneScaleStart = 6, 
         cloudPlaneScaleEnd = 4,
         cloudPlaneTextureLoading = false,
-        cloudPlaneTexturePath = 'assets/textures/cloud256.png',
+        cloudPlaneTexturePath = "assets/textures/cloud256.png",
         cloudPlaneTexture,
         clouds = [],
         environment;
@@ -95,9 +95,13 @@ var KAIOPUA = (function (main) {
         
         // generate clouds
         
-        cloudPlaneTexture = THREE.ImageUtils.loadTexture( cloudPlaneTexturePath, THREE.UVMapping);
-           
-        cloudPlaneTexture.minFilter = cloudPlaneTexture.magFilter = THREE.LinearFilter;
+        // cloud texture
+        
+        cloudPlaneTexture = new THREE.Texture( main.utils.loader.assets[cloudPlaneTexturePath] );
+        
+        cloudPlaneTexture.needsUpdate = true;
+        
+        // cloud meshes
         
         for ( i = 0; i < numClouds; i += 1) {
             

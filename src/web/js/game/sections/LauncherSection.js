@@ -11,20 +11,20 @@ var KAIOPUA = (function (main) {
         launcher = sections.launcher = sections.launcher || {},
         renderer, 
         renderTarget,
-        camera, 
-        cameraRotY = -90 * Math.PI / 180, 
+        camera,
         scene,
         composerScene,
         renderPasses,
+        bg,
+        water,
+        sky,
+        time,
+        cameraRotY = -90 * Math.PI / 180, 
         bgParams = {
             colors: [0x0F042E, 0x1D508F, 0x529AD1, 0x529AD1, 0x455AE0],
             stops: [0, 0.4, 0.6, 0.8, 1.0],
             startBottom: true
         },
-        bg,
-        water,
-        sky,
-        time,
         mouse = { 
             x: 0, 
             y: 0,
@@ -43,12 +43,6 @@ var KAIOPUA = (function (main) {
             speedRotX: 0.05,
             speedRotY: 0.05
         };
-    
-    /*===================================================
-    
-    internal init
-    
-    =====================================================*/
     
     /*===================================================
     
@@ -71,8 +65,6 @@ var KAIOPUA = (function (main) {
         // camera
         
         camera = new THREE.Camera(60, shared.screenWidth / shared.screenHeight, 1, 10000);
-        
-        //camera = new THREE.FirstPersonCamera( { fov: 60, aspect:shared.screenWidth / shared.screenHeight, near: 1, far: 20000, movementSpeed: 1000, lookSpeed: 0.1, noFly: false, lookVertical: true } );
         
         // starting position
         camera.position.set(-5800, 0, 0);

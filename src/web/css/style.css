@@ -366,16 +366,17 @@ a:hover, a:active {
 /* footer 
 -------------------------*/
 footer {
-    width: 380px; 
+    width: 400px; 
     margin: 0 auto; 
     position: relative; 
     margin-top: -120px; 
     height: 120px; 
     clear:both;
     color: #eeeeee;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.85);
 }
 footer a, footer a:visited {
-    color: #dddddd;
+    color: #eeeeee;
 }
 
 footer a:hover, footer a:active {
@@ -388,8 +389,9 @@ footer header {
 
 footer nav {
     overflow: auto; 
-    width: 380px;
+    width: 400px;
     margin: 0 auto;
+    font-size: 15px;
 }
 
 footer nav ul {
