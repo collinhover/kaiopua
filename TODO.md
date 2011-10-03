@@ -1,10 +1,6 @@
 # TODO  
   
 #### Collin
-* Implement loader for game that
-  * works behind the scenes
-  * has visual indicator for both start menu and in game
-* Implement start menu
 * Complete INDEX.html meta tags & supporting info
   * google-site-verification
   * favicon
@@ -15,10 +11,23 @@
   * Twitter share url to domain name
 * Get domain name and hosting
 * Speak to Hawaiian natives about concepts that derive from Hawaiian culture
+* Vertex coloring of models
+* Physics - basic + planetoid
+* 3rd Person character camera
+* Scaling mechanics:
+  * Select objects
+  * Scale up
+  * Scale down
+  * Scale using mouse drag
+* Ambient occlusion
 
 #### Joshua
-* Explore threejs physics
-* Model assets
+* Model shack/hut with japanese style roof, patio, and banana leaf door
+* Model bed/cot, very simple/plain
+* Model palm tree and banana tree
+* Model hill with spiral path from top to bottom
+* Model taro plant
+* Model pineapple plant
 
 #### Ian
 * Texture player character
@@ -28,16 +37,39 @@
   * Activate / shoot generic object
 
 #### Kevin
-* Model worm face
-* Texture worm face
+* Model world face morphs
+  * Neutral
+  * Smile
+  * Frown
+  * Mouth open
+* Model world whale tail
+* Model environment objects
+  * Boulders / rocks
+* Model Power source object
+* Rig power source object
+* Power source morph targets
+  * mouth open
+  * mouth closed
+  * sink into ground
+* Rig world whale tail
+* Tail morph targets - up, down, left, & right
 
 #### Houston
-* Model worm tail
-* Texture worm tail
+* Model mini-sun
+* Model bottle
+* Model tiki lamp
+* Model asian style lamp
 
 #### Amanda
-* Illustrate scenes with character Opua doing something from first level
-* Color each scene in several different ways to analyze color schemes
+* Illustrate potential animals and enemies
+  * Feral pig
+  * Big worm creatures
+* Illustrate potential environment objects
+  * Taro plant
+  * Pineapple plant
+  * Grass
+  * Trees
+* Color schemes
 
 #### Sound Artist
 * Speak to others about getting a sound artist to join
