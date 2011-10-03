@@ -21,6 +21,10 @@
   * Scale using mouse drag
 * Ambient occlusion
 
+#### Kapil
+* Learn Javascript
+* Research shaders and cell-shading
+
 #### Joshua
 * Model shack/hut with japanese style roof, patio, and banana leaf door
 * Model bed/cot, very simple/plain
