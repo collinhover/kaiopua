@@ -44,6 +44,17 @@ var KAIOPUA = (function (main) {
         rayOpacityOn = 0.6,
         rayOpacityDelta = 0.02,
         environment;
+    
+    /*===================================================
+    
+    public properties
+    
+    =====================================================*/
+    
+    water.init = init;
+    water.waves = waves;
+    water.get_environment = function () { return environment; };
+    water.bob = bob;
         
     /*===================================================
     
@@ -261,17 +272,6 @@ var KAIOPUA = (function (main) {
         object.position.y = (Math.sin(waveTime) * bobAmp);
         object.rotation.x = Math.sin(waveTime + bobTiltCycleMod) * bobTiltAmp;
     }
-    
-    /*===================================================
-    
-    public properties
-    
-    =====================================================*/
-    
-    water.init = init;
-    water.waves = waves;
-    water.get_environment = function () { return environment; };
-    water.bob = bob;
     
     return main; 
     

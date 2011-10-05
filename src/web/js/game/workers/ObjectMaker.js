@@ -9,7 +9,16 @@ var KAIOPUA = (function (main) {
         game = main.game = main.game || {},
         workers = game.workers = game.workers || {},
         objectmaker = workers.objectmaker = workers.objectmaker || {};
-        
+    
+    /*===================================================
+    
+    public properties
+    
+    =====================================================*/
+    
+    objectmaker.find_objs_with_materials = find_objs_with_materials;
+    objectmaker.generate_skybox = generate_skybox;
+    
     /*===================================================
     
     custom functions
@@ -59,15 +68,6 @@ var KAIOPUA = (function (main) {
         return mesh;
         
     }
-    
-    /*===================================================
-    
-    public properties
-    
-    =====================================================*/
-    
-    objectmaker.find_objs_with_materials = find_objs_with_materials;
-    objectmaker.generate_skybox = generate_skybox;
         
     return main; 
     

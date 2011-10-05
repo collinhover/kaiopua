@@ -16,6 +16,15 @@ var KAIOPUA = (function (main) {
     
     /*===================================================
     
+    public properties
+    
+    =====================================================*/
+    
+    menumaker.make_menu = make_menu;
+    menumaker.make_button = make_button;
+    
+    /*===================================================
+    
     custom functions
     
     =====================================================*/
@@ -175,15 +184,6 @@ var KAIOPUA = (function (main) {
         
         return button;
     }
-    
-    /*===================================================
-    
-    public properties
-    
-    =====================================================*/
-    
-    menumaker.make_menu = make_menu;
-    menumaker.make_button = make_button;
     
     return main; 
     

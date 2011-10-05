@@ -38,9 +38,15 @@ var KAIOPUA = (function (main) {
     
     /*===================================================
     
-    internal init
+    public properties
     
     =====================================================*/
+    
+    sky.init = init;
+    sky.wind_blow = wind_blow;
+    sky.get_environment = function () {
+        return environment;    
+    };
     
     /*===================================================
     
@@ -243,18 +249,6 @@ var KAIOPUA = (function (main) {
             }
         }
     }
-    
-    /*===================================================
-    
-    public properties
-    
-    =====================================================*/
-    
-    sky.init = init;
-    sky.wind_blow = wind_blow;
-    sky.get_environment = function () {
-        return environment;    
-    };
         
     return main; 
     

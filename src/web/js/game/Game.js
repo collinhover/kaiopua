@@ -51,10 +51,16 @@ var KAIOPUA = (function (main) {
     
     /*===================================================
     
-    internal init
+    public properties
     
     =====================================================*/
     
+    game.init = init;
+    game.resume = resume;
+    game.pause = pause;
+    game.update_section_list = update_section_list;
+    game.get_dom_element = function () { return domElement; };
+    game.paused = function () { return paused; };
     
     /*===================================================
     
@@ -125,10 +131,6 @@ var KAIOPUA = (function (main) {
     
     function init_launcher () {
         
-        // update sections
-        
-        update_section_list();
-        
         // set launcher section
         
         set_section( sections.launcher );
@@ -153,10 +155,6 @@ var KAIOPUA = (function (main) {
     
     function init_game() {
         var ms;
-
-        // update sections
-        
-        update_section_list();
         
         // init start menu
         
@@ -211,7 +209,7 @@ var KAIOPUA = (function (main) {
         ms.disable();
         
         // hide start menu
-        ms.ui_hide();
+        ms.ui_hide( true );
         
         // set intro section
         set_section( sections.intro );
@@ -238,18 +236,6 @@ var KAIOPUA = (function (main) {
            if ( sections.hasOwnProperty( name ) ) {
                sectionNames.push( name );
            }
-        }
-        
-        // init each new section
-        
-        for (i = 0, l = sectionNames.length; i < l; i += 1) {
-            
-            name = sectionNames[i];
-            console.log(name);
-            console.log(sections[name]);
-            if ( prevNames.indexOf(name) === -1 ) {
-                sections[name].init();
-            }
         }
         
     }
@@ -285,6 +271,8 @@ var KAIOPUA = (function (main) {
             $(transitioner.domElement).promise().done(function () {
                 
                 $(domElement).append(transitioner.domElement);
+                
+                section.init();
                 
                 section.resize(shared.screenWidth, shared.screenHeight);
                 
@@ -343,18 +331,6 @@ var KAIOPUA = (function (main) {
         renderTarget.height = H;
         
     }
-
-    /*===================================================
-    
-    public properties
-    
-    =====================================================*/
-    
-    game.init = init;
-    game.resume = resume;
-    game.pause = pause;
-    game.get_dom_element = function () { return domElement; };
-    game.paused = function () { return paused; };
         
     return main; 
     

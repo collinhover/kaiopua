@@ -10,6 +10,14 @@ var KAIOPUA = (function (main) {
     
     /*===================================================
     
+    public properties
+    
+    =====================================================*/
+    
+    LinearGradient.generate = generate;
+    
+    /*===================================================
+    
     custom functions
     
     =====================================================*/
@@ -152,8 +160,6 @@ var KAIOPUA = (function (main) {
             }
         };
     }
-    
-    LinearGradient.generate = generate;
     
     return main; 
     

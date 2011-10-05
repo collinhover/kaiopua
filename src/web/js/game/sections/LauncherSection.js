@@ -9,6 +9,8 @@ var KAIOPUA = (function (main) {
         effects = main.effects = main.effects || {},
         sections = game.sections = game.sections || {},
         launcher = sections.launcher = sections.launcher || {},
+        readyInternal = false,
+        readyAll = false,
         renderer, 
         renderTarget,
         camera,
@@ -46,21 +48,67 @@ var KAIOPUA = (function (main) {
     
     /*===================================================
     
+    public properties
+    
+    =====================================================*/
+    
+    launcher.init = init;
+    launcher.show = show;
+    launcher.hide = hide;
+    launcher.remove = remove;
+    launcher.update = update;
+    launcher.resize = resize;
+    launcher.ready = ready;
+    launcher.domElement = function () {};
+    
+    /*===================================================
+    
+    internal init
+    
+    =====================================================*/
+    
+    game.update_section_list();
+    
+    /*===================================================
+    
     external init
     
     =====================================================*/
     
+    function ready () { 
+        return readyInternal && readyAll; 
+    }
+    
     function init () {
         
-        init_environment();
+        if ( !ready() ) {
+            
+            init_internal();
+            
+            init_environment();
+            
+            readyAll = true;
+            
+        }
+    }
+    
+    function init_internal () {
         
-        init_render_processing();
+        if ( readyInternal !== true ) {
+            
+            init_basics();
+            
+            init_render_processing();
+            
+            readyInternal = true;
+            
+        }
         
     }
     
-    function init_environment () {
+    function init_basics () {
         
-        var i, ambient, light1, waterEnv, skyEnv;
+        var ambient, directional;
         
         // camera
         
@@ -82,43 +130,14 @@ var KAIOPUA = (function (main) {
         
         ambient = new THREE.AmbientLight( 0xCCCCCC );
         
-        light1 = new THREE.DirectionalLight( 0xFFFFFF, 1.0 );
-        light1.position = new THREE.Vector3(-1,1, -1).normalize();
+        directional = new THREE.DirectionalLight( 0xFFFFFF, 1.0 );
+        directional.position = new THREE.Vector3(-1,1, -1).normalize();
         
         scene.addLight( ambient );
-        scene.addLight( light1 );
+        scene.addLight( directional );
         
         // fog
         scene.fog = new THREE.Fog( 0x529ad1, -100, 10000 );
-        
-        // water
-        
-        water = launcher.water;
-        
-        water.init( { wavesColor: scene.fog.color.getHex() } );
-        
-        waterEnv = water.get_environment();
-        
-        waterEnv.rotation.x = cameraRotY;
-        
-        scene.addObject( waterEnv );
-        
-        // sky
-        
-        sky = launcher.sky;
-        
-        sky.init();
-        
-        // sky mesh
-        skyEnv = sky.get_environment();
-        
-        skyEnv.position.x = 0;
-        skyEnv.position.y = 2000;
-        
-        skyEnv.rotation.y = cameraRotY;
-        
-        // add clouds
-        scene.addObject( skyEnv );
         
     }
     
@@ -150,7 +169,7 @@ var KAIOPUA = (function (main) {
         /*
         var effectController  = {
             
-    		vingenettingOffset: 0.6,
+        	vingenettingOffset: 0.6,
 			vingenettingDarkening: 0.5,
 			sampleDistance: 0.2,
             waveFactor: 0.3
@@ -181,6 +200,41 @@ var KAIOPUA = (function (main) {
         composerScene.addPass( renderPasses.env );
         composerScene.addPass( renderPasses.focusVignette );
         composerScene.addPass( renderPasses.screen );
+    }
+    
+    function init_environment () {
+        
+        var waterEnv, skyEnv;
+        
+        // water
+        
+        water = launcher.water;
+        
+        water.init( { wavesColor: scene.fog.color.getHex() } );
+        
+        waterEnv = water.get_environment();
+        
+        waterEnv.rotation.x = cameraRotY;
+        
+        scene.addObject( waterEnv );
+        
+        // sky
+        
+        sky = launcher.sky;
+        
+        sky.init();
+        
+        // sky mesh
+        skyEnv = sky.get_environment();
+        
+        skyEnv.position.x = 0;
+        skyEnv.position.y = 2000;
+        
+        skyEnv.rotation.y = cameraRotY;
+        
+        // add clouds
+        scene.addObject( skyEnv );
+        
     }
     
     /*===================================================
@@ -274,20 +328,6 @@ var KAIOPUA = (function (main) {
         composerScene.reset();
         
     }
-    
-    /*===================================================
-    
-    public properties
-    
-    =====================================================*/
-    
-    launcher.init = init;
-    launcher.show = show;
-    launcher.hide = hide;
-    launcher.remove = remove;
-    launcher.update = update;
-    launcher.resize = resize;
-    launcher.domElement = function () {};
         
     return main; 
     
