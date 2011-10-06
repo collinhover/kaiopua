@@ -11,13 +11,17 @@ var KAIOPUA = (function (main) {
         readyInternal = false,
         readyAll = false,
         assets,
+        objectmaker,
         renderer, 
         renderTarget,
-        camera,
-        scene,
-        ambient,
         composerScene,
-        renderPasses;
+        renderPasses,
+        camera,
+        cameraControls,
+        scene,
+        ambientLight,
+        pointLight,
+        lightVis;
     
     /*===================================================
     
@@ -58,6 +62,8 @@ var KAIOPUA = (function (main) {
             
             assets = main.utils.loader.assets;
             
+            objectmaker = main.game.workers.objectmaker;
+            
             init_internal();
             
             init_environment();
@@ -85,20 +91,15 @@ var KAIOPUA = (function (main) {
         
         // camera
         
-        //camera = new THREE.Camera(60, shared.screenWidth / shared.screenHeight, 1, 10000);
-        
-        camera = new THREE.FirstPersonCamera( { 
-            fov: 60, 
-            aspect: shared.screenWidth / shared.screenHeight, 
-            near: 1, 
-            far: 20000,
-            movementSpeed: 1000, 
-            lookSpeed: 0.1, 
-            noFly: false, 
-            lookVertical: true
-        } );
+        camera = new THREE.PerspectiveCamera(60, shared.screenWidth / shared.screenHeight, 1, 10000);
         
         camera.position.set(0, 0, 800);
+        camera.lookAt( new THREE.Vector3(0, 0, 0) );
+        
+        cameraControls = new THREE.FlyControls( camera );
+        cameraControls.rollSpeed = 0.5;
+        cameraControls.movementSpeed = 400;
+        cameraControls.update();
         
         // scene
         
@@ -106,14 +107,14 @@ var KAIOPUA = (function (main) {
         
         // lights
         
-        ambient = new THREE.AmbientLight( 0x444444 );
+        ambientLight = new THREE.AmbientLight( 0x444444 );
         
-        scene.addLight( ambient );
+        scene.add( ambientLight );
         
-        var light1 = new THREE.SpotLight( 0xffffff );
-        light1.position = new THREE.Vector3(-1, 0, 1).normalize();
+        pointLight = new THREE.SpotLight( 0xffffff );
+        pointLight.position = new THREE.Vector3(-1, 0, 1).normalize();
         
-        scene.addLight( light1 );
+        scene.add( pointLight );
         
         // fog
         
@@ -150,30 +151,24 @@ var KAIOPUA = (function (main) {
     
     function init_environment () {
         
+        // light visual
+        
+        lightVis = new THREE.Mesh( new THREE.SphereGeometry( 4, 8, 8 ), new THREE.MeshBasicMaterial( { color: 0xffffff } ) );
+        
+        lightVis.useQuaternion = true;
+        
+        scene.add( lightVis );
+        
         // kaiopua
         
         var geometry = assets["assets/models/kaiopua_head.js"];
         
-        geometry.materials[0][0].shading = THREE.FlatShading;
-
-    	var material = new THREE.MeshFaceMaterial();
+        var model = objectmaker.make_model({
+            geometry: geometry,
+            scale: 100
+        });
         
-        /*
-        morphColorsToFaceColors( geometry );
-        
-        var material = new THREE.MeshLambertMaterial( { 
-            color: 0xffffff,
-            morphTargets: true,
-            vertexColors: THREE.FaceColors 
-        } );
-        */
-        var mesh = new THREE.Mesh( geometry, material );
-        
-        var scale = 100;
-        
-		mesh.scale.set( scale, scale, scale );
-        
-        scene.addChild( mesh );
+        scene.add( model.mesh );
     }
     
     function morphColorsToFaceColors( geometry ) {
@@ -215,6 +210,29 @@ var KAIOPUA = (function (main) {
     }
     
     function update () {
+        
+        // update camera controls
+        cameraControls.update();
+        
+        // position point light to always be 
+        // above and infront of camera
+        // camera.matrixWorld
+        // quaternion
+        // Vector3.setPositionFromMatrix( m );
+        // Vector3.setRotationFromMatrix( m );
+        var camP = camera.position.clone();
+        var newP = new THREE.Vector3( 0, 200, -500);
+        
+        camera.quaternion.multiplyVector3( newP );
+        
+        newP.addSelf( camera.position );
+        //camera.matrixWorld.multiplyVector3( cubeP );
+        
+        lightVis.position = newP;
+        pointLight.position = newP;//.clone().normalize();
+        
+        //lightVis.quaternion.setFromRotationMatrix( camera.matrixWorld );
+        lightVis.quaternion.copy( camera.quaternion );
         
         // render
         

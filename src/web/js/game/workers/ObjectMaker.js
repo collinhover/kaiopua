@@ -16,6 +16,7 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
     
+    objectmaker.make_model = make_model;
     objectmaker.find_objs_with_materials = find_objs_with_materials;
     objectmaker.generate_skybox = generate_skybox;
     
@@ -25,10 +26,65 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
     
+    // adds functionality to basic mesh/model objects
+    // default is vertex coloring
+    
+    function make_model ( parameters ) {
+        var i, l,
+            model = {},
+            geometry,
+            materials,
+            materialsForShading,
+            material,
+            mesh,
+            scale;
+        
+        // handle parameters
+        
+        parameters = parameters || {};
+            
+        // geometry
+        
+        geometry = parameters.geometry || new THREE.Geometry();
+        
+        // material
+        
+        materials = parameters.materials || new THREE.MeshFaceMaterial();
+        
+        materials = materials && materials.length ? materials : [ materials ];
+        
+        // shading
+        
+        materialsForShading = geometry.materials && geometry.materials.length > 0 ? geometry.materials : materials;
+        
+        for ( i = 0, l = materialsForShading.length; i < l; i += 1) {
+            material = materialsForShading[i][0];
+            if (typeof material.shading !== 'undefined' ) {
+                material.shading = parameters.shading || THREE.SmoothShading; // (1 = flat, 2 = smooth )
+            }
+        }
+        
+        // mesh
+        
+        mesh = new THREE.Mesh( geometry, material );
+        
+        // scale
+        
+        scale = parameters.scale || 1;
+        
+        mesh.scale.set( scale, scale, scale );
+        
+        // public properties
+        
+        model.mesh = mesh;
+        
+        return model;
+    }
+    
     // finds all objects with own materials
     // will iterate through all children recursively
     
-    function find_objs_with_materials (objsList) {
+    function find_objs_with_materials ( objsList ) {
         var obj, objsWithMats = [], i;
         
         for (i = objsList.length - 1; i >= 0; i -= 1) {

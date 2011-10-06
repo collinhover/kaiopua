@@ -35,7 +35,8 @@ var KAIOPUA = (function (main) {
             "js/lib/three/postprocessing/MaskPass.js",
             "js/effects/LinearGradient.js",
             "js/effects/FocusVignette.js",
-            "js/game/workers/MenuMaker.js"
+            "js/game/workers/MenuMaker.js",
+            "js/game/workers/ObjectMaker.js"
         ],
         launcherAssets = [
             "js/game/sections/LauncherSection.js",
@@ -122,7 +123,6 @@ var KAIOPUA = (function (main) {
         animate();
         
         // get launcher
-        
         loader.load( launcherAssets , function () {
             init_launcher();
         });
@@ -130,7 +130,6 @@ var KAIOPUA = (function (main) {
     }
     
     function init_launcher () {
-        
         // set launcher section
         
         set_section( sections.launcher );

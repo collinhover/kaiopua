@@ -135,7 +135,7 @@ var KAIOPUA = (function (main) {
         wavesMesh = new THREE.Mesh( wavesGeometry, wavesMaterial );
         wavesMesh.doubleSided = true;
         
-        environment.addChild( wavesMesh );
+        environment.add( wavesMesh );
         
         // water rays
         
@@ -161,7 +161,7 @@ var KAIOPUA = (function (main) {
             };
             
             // add to environment
-            environment.addChild( ray );
+            environment.add( ray );
         }
         
     }

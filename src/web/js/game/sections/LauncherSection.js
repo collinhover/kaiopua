@@ -112,15 +112,13 @@ var KAIOPUA = (function (main) {
         
         // camera
         
-        camera = new THREE.Camera(60, shared.screenWidth / shared.screenHeight, 1, 10000);
+        camera = new THREE.PerspectiveCamera(60, shared.screenWidth / shared.screenHeight, 1, 10000);
         
         // starting position
         camera.position.set(-5800, 0, 0);
         
         // useTarget property set to false for control over rotation
-        camera.target.position.set(0, 0, 0);
-        //camera.useTarget = false;
-        //camera.rotation.y = cameraRotY;
+        camera.lookAt(new THREE.Vector3(0, 0, 0));
         
         // scene
         
@@ -131,10 +129,10 @@ var KAIOPUA = (function (main) {
         ambient = new THREE.AmbientLight( 0xCCCCCC );
         
         directional = new THREE.DirectionalLight( 0xFFFFFF, 1.0 );
-        directional.position = new THREE.Vector3(-1,1, -1).normalize();
+        directional.position = new THREE.Vector3(-1, 1, -1).normalize();
         
-        scene.addLight( ambient );
-        scene.addLight( directional );
+        scene.add( ambient );
+        scene.add( directional );
         
         // fog
         scene.fog = new THREE.Fog( 0x529ad1, -100, 10000 );
@@ -216,7 +214,7 @@ var KAIOPUA = (function (main) {
         
         waterEnv.rotation.x = cameraRotY;
         
-        scene.addObject( waterEnv );
+        scene.add( waterEnv );
         
         // sky
         
@@ -233,7 +231,7 @@ var KAIOPUA = (function (main) {
         skyEnv.rotation.y = cameraRotY;
         
         // add clouds
-        scene.addObject( skyEnv );
+        scene.add( skyEnv );
         
     }
     
@@ -289,13 +287,18 @@ var KAIOPUA = (function (main) {
     
     function update () {
         
+        var camLookTarget = new THREE.Vector3();
+        
         time = new Date().getTime();
         
         camera.position.z += (  mouse.x - camera.position.z ) * mouse.speedTransX;
         camera.position.y += ( -mouse.y - camera.position.y ) * mouse.speedTransY;
         
-        camera.target.position.z += ( mouse.rx - camera.target.position.z ) * mouse.speedRotX;
-        camera.target.position.y += ( mouse.ry - camera.target.position.y ) * mouse.speedRotY;
+        // needs persistant tracking to add to
+        camLookTarget.z += ( mouse.rx - camLookTarget.z ) * mouse.speedRotX;
+        camLookTarget.y += ( mouse.ry - camLookTarget.y ) * mouse.speedRotY;
+        
+        camera.lookAt(camLookTarget);
         
         // update environment
         

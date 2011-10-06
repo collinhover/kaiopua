@@ -122,7 +122,7 @@ var KAIOPUA = (function (main) {
             clouds[clouds.length] = cloud;
             
             // add to environment
-            environment.addChild(cloud);
+            environment.add(cloud);
         }
         
     }

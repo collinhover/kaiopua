@@ -4,9 +4,10 @@
 
 THREE.MaskPass = function ( scene, camera ) {
 
-	this.scene = scene;
+    this.scene = scene;
 	this.camera = camera;
 
+	this.enabled = true;
 	this.clear = true;
 	this.needsSwap = false;
 
@@ -50,6 +51,8 @@ THREE.MaskPass.prototype = {
 
 
 THREE.ClearMaskPass = function () {
+
+	this.enabled = true;
 
 };
 
