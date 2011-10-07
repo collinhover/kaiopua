@@ -22,12 +22,12 @@ var KAIOPUA = (function (main) {
     
     /*===================================================
     
-    custom functions
+    model
     
     =====================================================*/
     
     // adds functionality to basic mesh/model objects
-    // default is vertex coloring
+    // default is vertex colored model
     
     function make_model ( parameters ) {
         var i, l,
@@ -37,7 +37,8 @@ var KAIOPUA = (function (main) {
             materialsForShading,
             material,
             mesh,
-            scale;
+            scale,
+            morphs;
         
         // handle parameters
         
@@ -60,7 +61,8 @@ var KAIOPUA = (function (main) {
         for ( i = 0, l = materialsForShading.length; i < l; i += 1) {
             material = materialsForShading[i][0];
             if (typeof material.shading !== 'undefined' ) {
-                material.shading = parameters.shading || THREE.SmoothShading; // (1 = flat, 2 = smooth )
+                // (1 = flat, 2 = smooth )
+                material.shading = parameters.shading || THREE.SmoothShading; 
             }
         }
         
@@ -74,12 +76,165 @@ var KAIOPUA = (function (main) {
         
         mesh.scale.set( scale, scale, scale );
         
+        // morphs
+        
+        morphs = make_morphs_handler( geometry );
+        
+        /*
+        main.utils.dev.log( morphs.animations.names.length );
+        main.utils.dev.log( morphs.animations.names[0] );
+        
+        main.utils.dev.log( morphs.animations.maps.horn_small[0].index );
+        main.utils.dev.log( morphs.animations.maps.horn_small[0].number );
+        main.utils.dev.log( morphs.animations.maps.horn_big[0].index );
+        main.utils.dev.log( morphs.animations.maps.horn_big[0].number );
+        */
+        
         // public properties
         
         model.mesh = mesh;
+        model.morphs = morphs;
         
         return model;
     }
+    
+    /*===================================================
+    
+    morphs
+    
+    =====================================================*/
+    
+    // creates handler for a model's morphs (animations and colors)
+    // records indices of morphs (targets or colors) in geometry object
+    // groups morphs into each single animation cycle by name
+    // naming scheme is 'name' + 'number'
+    
+    function make_morphs_handler ( geometry ) {
+        var i, l,
+            morphTargets = geometry.morphTargets || [],
+            morphColors = geometry.morphColors || [],
+            morphs = {},
+            animations,
+            colors;
+        
+        // morph targets ( animations )
+        
+        morphs.animations = animations = parse_morph_list( morphTargets );
+        
+        // morph colors
+        
+        morphs.colors = colors = parse_morph_list( morphColors );
+        
+        return morphs;
+    }
+    
+    function parse_morph_list ( morphs ) {
+        var i, l,
+            data = {},
+            names = [],
+            maps = {},
+            morph,
+            name,
+            nameParsed,
+            map;
+        
+        for ( i = 0, l = morphs.length; i < l; i += 1 ) {
+            
+            morph = morphs[i];
+            
+            name = morph.name;
+            
+            // extract base name and number
+            
+            nameParsed = parse_morph_name( name );
+            
+            // if morph map does not exist
+            // create new map
+            
+            if ( typeof maps[ nameParsed.name ] === 'undefined' ) {
+                
+                // map array
+                
+                map = [];
+                
+                // add map to names and maps lists
+                
+                names[ i ] = nameParsed.name;
+                
+                maps[ nameParsed.name ] = map;
+                
+            }
+            
+            // get correct map
+            
+            map = maps[ nameParsed.name ];
+            
+            // add morph to current map
+            
+            map.push( { index: i, number: nameParsed.number } );
+            
+        }
+        
+        // sort maps
+        
+        for ( i = 0, l = names.length; i < l; i += 1 ) {
+            
+            map = maps[ names[i] ];
+            
+            // sort map by number
+                
+            map.sort( sort_morph_map );
+        }
+        
+        // public properties
+        
+        data.names = names;
+        data.maps = maps;
+        
+        return data;
+    }
+    
+    function sort_morph_map ( a, b ) {
+        
+        return a.number - b.number;
+        
+    }
+    
+    function parse_morph_name( name ) {
+        var nameParsed = { 
+                name: name,
+                number: 0
+            },
+            splitIndex,
+            numberTest;
+        
+        // get split of base name and number by last _
+        
+        splitIndex = name.lastIndexOf('_');
+        
+        if ( splitIndex !== -1) {
+            
+            numberTest = parseFloat(name.substr( splitIndex + 1 ));
+            
+            // test if is number
+            
+            if ( !isNaN(numberTest) && isFinite(numberTest) ) {
+                
+                nameParsed.name = name.substr( 0, splitIndex );
+                
+                nameParsed.number = numberTest;
+                
+            }
+        }
+        
+        return nameParsed;
+    }
+    
+    /*===================================================
+    
+    misc
+    
+    =====================================================*/
     
     // finds all objects with own materials
     // will iterate through all children recursively

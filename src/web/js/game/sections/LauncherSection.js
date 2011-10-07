@@ -21,7 +21,8 @@ var KAIOPUA = (function (main) {
         water,
         sky,
         time,
-        cameraRotY = -90 * Math.PI / 180, 
+        cameraRotY = -90 * Math.PI / 180,
+        camLookTarget,
         bgParams = {
             colors: [0x0F042E, 0x1D508F, 0x529AD1, 0x529AD1, 0x455AE0],
             stops: [0, 0.4, 0.6, 0.8, 1.0],
@@ -117,8 +118,11 @@ var KAIOPUA = (function (main) {
         // starting position
         camera.position.set(-5800, 0, 0);
         
-        // useTarget property set to false for control over rotation
-        camera.lookAt(new THREE.Vector3(0, 0, 0));
+        // camera look target
+        
+        camLookTarget = new THREE.Vector3(0, 0, 0);
+        
+        camera.lookAt( camLookTarget );
         
         // scene
         
@@ -287,8 +291,6 @@ var KAIOPUA = (function (main) {
     
     function update () {
         
-        var camLookTarget = new THREE.Vector3();
-        
         time = new Date().getTime();
         
         camera.position.z += (  mouse.x - camera.position.z ) * mouse.speedTransX;
@@ -298,7 +300,7 @@ var KAIOPUA = (function (main) {
         camLookTarget.z += ( mouse.rx - camLookTarget.z ) * mouse.speedRotX;
         camLookTarget.y += ( mouse.ry - camLookTarget.y ) * mouse.speedRotY;
         
-        camera.lookAt(camLookTarget);
+        camera.lookAt( camLookTarget );
         
         // update environment
         
