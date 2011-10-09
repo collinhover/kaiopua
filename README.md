@@ -53,10 +53,10 @@ SignalsJS, Modernizr, HTML5-Reset, RequestAnimFrame
 
 ####Thesis Committee
 
-Seiji Ikeda (Major Professor) - Assistant Professor  
-Tuan Ho - Assistant Professor   
-Robert Hower - Professor & Chair   
-Vassilis Athitsos - Assistant Professor  
+Seiji Ikeda (Major Professor) - Assistant Professor, Art + Art History  
+Tuan Ho - Assistant Professor, Art + Art History   
+Robert Hower - Professor & Chair, Art + Art History   
+Vassilis Athitsos - Assistant Professor, Computer Science and Engineering  
 
 ##Brief
 ####Target Audience
