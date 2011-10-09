@@ -169,7 +169,10 @@ var KAIOPUA = (function (main) {
             shading: THREE.FlatShading
         });
         
-        model.morphs.play('animation', 2000, true);
+        model.morphs.play('animation', { 
+            duration:2000,
+            loop: true
+        });
         
         scene.add( model.mesh );
     }

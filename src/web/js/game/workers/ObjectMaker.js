@@ -165,11 +165,7 @@ var KAIOPUA = (function (main) {
         
         // functions
         
-        morphs.shift = function ( nameStart, nameEnd, duration, callback ) {
-            
-        };
-        
-        morphs.play = function ( name, duration, loop, callback ) {
+        morphs.play = function ( name, parameters ) {
             
             var shapesList = shapes.list,
                 updates = shapes.updates,
@@ -177,17 +173,20 @@ var KAIOPUA = (function (main) {
                 uList = updates.list,
                 updaterIndex,
                 updater,
-                info;
+                info,
+                morphsMap;
             
             // get if updater for animation exists
             
             updaterIndex = uNames.indexOf( name );
             
+            // set morphs map
+                
+            morphsMap = shapesList[ name ].map;
+            
             // new updater
             
-            if ( updaterIndex === -1 && typeof shapesList[ name ] !== 'undefined' ) {
-                
-                main.utils.dev.log(' making updater for ' + name );
+            if ( updaterIndex === -1 && typeof morphsMap !== 'undefined' && morphsMap.length !== 0 ) {
                 
                 updater = make_morph_updater( name );
                 
@@ -199,33 +198,9 @@ var KAIOPUA = (function (main) {
                 
                 uList[ name ] = updater;
                 
-                // handle arguments
-                
-                info.nameTarget = info.nameCurrent = name;
-            
-                info.duration = duration || durationBase;
-                
-                info.loop = loop || false;
-                
-                info.callback = callback;
-                
-                // store info
-                
-                info.mesh = mesh;
-                
-                info.morphsMap = shapesList[ name ].map;
-                
-                info.framesPlayed = 0;
-                
-                // set update function
-                
-                updater.update = function () {
-                    morph_play( updater );
-                };
-                
                 // start updating
                 
-                updater.start();
+                updater.start( mesh, morphsMap, parameters );
             
             }
             
@@ -385,24 +360,240 @@ var KAIOPUA = (function (main) {
     =====================================================*/
     
     function make_morph_updater ( name ) {
-        var updater = {};
+        var updater = {},
+            info;
         
         // init updater
         
-        updater.info = {
+        info = updater.info = {
             name: name,
             updating: false
         };
         
-        updater.start = function () {
+        updater.start = function ( mesh, morphsMap, parameters ) {
             
-            updater.info.updating = true;
+            if ( info.updating !== true ) {
                 
-            shared.signals.update.add( updater.update );
+                parameters = parameters || {};
+                
+                info.mesh = mesh;
+                
+                info.morphsMap = morphsMap;
+                
+                info.duration = parameters.duration || durationBase;
+                
+                info.loop = parameters.loop || false;
+                
+                info.callback = parameters.callback;
+                
+                info.direction = parameters.direction || 1;
+                
+                info.interpolationDirection = 1;
+                
+                // special case for single morph
+                
+                if ( morphsMap.length === 1 ) {
+                    
+                    // if morph is not already in zero state
+                    
+                    if ( info.direction === -1 && mesh.morphTargetInfluences[ morphsMap[0] ] > 0 ) {
+                        info.interpolationDirection = -1;
+                    }
+                    
+                    // direction cannot be in reverse
+                    
+                    info.direction = 1;
+                    
+                }
+                
+                if ( parameters.reset !== false ) {
+                    updater.reset();
+                }
+            
+                info.updating = true;
+                    
+                shared.signals.update.add( updater.update );
+            
+            }
             
         };
         
-        updater.update = function () {};
+        updater.reset = function ( isLooping ) {
+            
+            info.timeStart = new Date().getTime();
+            
+            info.numFramesUpdated = 0;
+            
+            if ( isLooping !== true ) {
+                
+                info.time = info.timeLast = info.timeStart;
+                
+                info.frameTimeDelta = 0;
+                
+                if ( info.direction === -1 ) {
+                    info.frame = info.morphsMap.length - 1;
+                }
+                else {
+                    info.frame = 0;
+                }
+                
+                info.frameLast = -1;
+                
+            }
+            
+        };
+        
+        updater.reverseDirection = function () {
+            
+            info.direction = -info.direction;
+            
+        };
+        
+        updater.reverseInterpolationDirection = function () {
+            
+            info.interpolationDirection = -info.interpolationDirection;
+            
+        };
+        
+        updater.update = function () {
+            
+            var mesh = info.mesh,
+                loop,
+                callback,
+                morphsMap = info.morphsMap,
+                numFrames = morphsMap.length,
+                time = info.time,
+                timeStart = info.timeStart,
+                timeLast = info.timeLast,
+                timeDelta = (time - timeLast),
+                timeFromStart = time - timeStart,
+                frameTimeDelta = info.frameTimeDelta,
+                direction = info.direction,
+                duration = info.duration,
+                durationFrame = duration / numFrames,
+                frame = info.frame,
+                frameLast = info.frameLast,
+                morphIndex = morphsMap[ frame ].index,
+                morphIndexLast,
+                cyclePct = timeFromStart / duration,
+                interpolationDirection = info.interpolationDirection,
+                interpolationDelta = (timeDelta / durationFrame) * interpolationDirection;
+            
+            // update frameTimeDelta
+            
+            info.frameTimeDelta = frameTimeDelta += timeDelta;
+            
+            // if frame should swap
+            
+            if ( frameTimeDelta >= durationFrame ) {
+                
+                // reset frame time delta
+                // account for large time delta
+                info.frameTimeDelta = Math.max( 0, frameTimeDelta - durationFrame );
+                
+                // record new frames for next cycle
+                
+                info.frameLast = info.frame;
+                
+                info.frame = frame + 1 * direction;
+                
+                info.numFramesUpdated += 1;
+                
+                // reset frame to start?
+                
+                if ( direction === -1 && info.frame < 0  ) {
+                    
+                    info.frame = numFrames - 1;
+                    
+                }
+                else if ( direction === 1 && info.frame > numFrames - 1 ) {
+                    
+                    info.frame = 0;
+                    
+                }
+
+                // push influences to max / min
+                    
+                if ( frameLast > -1 ) {
+                    
+                    morphIndexLast = morphsMap[ frameLast ].index;
+                    
+                    mesh.morphTargetInfluences[ morphIndexLast ] = 0;
+                    
+                }
+                
+                mesh.morphTargetInfluences[ morphIndex ] = 1;
+                
+                // special case for looping single morphs
+                    
+                if ( morphsMap.length === 1 ) {
+                    
+                    if ( interpolationDirection === -1 ) {
+                        
+                        mesh.morphTargetInfluences[ morphIndex ] = 0;
+                        
+                    }
+                    
+                    info.frameLast = -1;
+                    
+                    updater.reverseInterpolationDirection();
+                    
+                }
+                
+            }
+            // change influences by interpolation delta
+            else {
+                
+                // current frame
+                
+                mesh.morphTargetInfluences[ morphIndex ] = Math.max( 0, Math.min ( 1, mesh.morphTargetInfluences[ morphIndex ] + interpolationDelta ) );
+                
+                // last frame
+                
+                if ( frameLast > -1 ) {
+                    
+                    morphIndexLast = morphsMap[ frameLast ].index;
+                    
+                    mesh.morphTargetInfluences[ morphIndexLast ] = Math.min( 1, Math.max( 0, mesh.morphTargetInfluences[ morphIndexLast ] - interpolationDelta ) );
+                    
+                }
+                
+            }
+            
+            // update time
+            
+            info.timeLast = info.time;
+            info.time = new Date().getTime();
+            
+            // reset, looping and callback
+            
+            if ( info.numFramesUpdated >= numFrames ) {
+                
+                loop = info.loop;
+                
+                if ( loop !== true ) {
+                    
+                    updater.stop();
+                    
+                }
+                // do looping cycle reset
+                else {
+                    
+                    updater.reset( loop );
+                    
+                }
+                
+                callback = info.callback;
+                
+                if ( typeof callback !== 'undefined' ) {
+                    
+                    callback.call();
+                    
+                }
+                
+            }
+            
+        };
         
         updater.stop = function () {
             
@@ -413,70 +604,6 @@ var KAIOPUA = (function (main) {
         };
         
         return updater;
-    }
-    
-    function morph_play ( updater ) {
-        
-        var info = updater.info,
-            mesh = info.mesh,
-            loop,
-            callback,
-            morphsMap = info.morphsMap,
-            duration = info.duration,
-            numFrames = morphsMap.length - 1,
-            interpolation = duration / numFrames,
-            time = new Date().getTime() % duration,
-            frameCurrent = info.frameCurrent || 0,
-            frameLast = info.frameLast || 0,
-            frame = Math.floor( time / interpolation ) + 1;
-        
-        if ( frame != frameCurrent ) {
-            
-			mesh.morphTargetInfluences[ frameLast ] = 0;
-			mesh.morphTargetInfluences[ frameCurrent ] = 1;
-			mesh.morphTargetInfluences[ frame ] = 0;
-            
-			frameLast = info.frameLast = frameCurrent;
-			frameCurrent = info.frameCurrent = frame;
-            
-            info.framesPlayed += 1;
-            
-		}
-        
-		mesh.morphTargetInfluences[ frame ] = ( time % interpolation ) / interpolation;
-		mesh.morphTargetInfluences[ frameLast ] = 1 - mesh.morphTargetInfluences[ frame ];
-        
-        main.utils.dev.log('frame: ' + frame);
-        main.utils.dev.log('frames played: ' + info.framesPlayed);
-        main.utils.dev.log('numFrames: ' + numFrames);
-        if ( info.framesPlayed > numFrames ) {
-            
-            info.framesPlayed = 0;
-            
-            loop = info.loop;
-            
-            if ( loop !== true ) {
-                
-                updater.stop();
-                
-            }
-            
-            callback = info.callback;
-            
-            if ( typeof callback !== 'undefined' ) {
-                
-                callback.call();
-                
-            }
-            
-        }
-        
-    }
-    
-    function morph_shift ( updater ) {
-        
-        
-        
     }
     
     // shapes
