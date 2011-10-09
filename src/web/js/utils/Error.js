@@ -39,6 +39,17 @@ var KAIOPUA = (function (main) {
     
     /*===================================================
     
+    public properties
+    
+    =====================================================*/
+    
+    error.check = check;
+    error.generate = generate;
+    error.process = process;
+    error.clear = clear;
+    
+    /*===================================================
+    
     internal init
     
     =====================================================*/
@@ -224,17 +235,6 @@ var KAIOPUA = (function (main) {
             extra: extra
         };
     }
-    
-    /*===================================================
-    
-    public properties
-    
-    =====================================================*/
-    
-    error.check = check;
-    error.generate = generate;
-    error.process = process;
-    error.clear = clear;
     
     return main; 
     

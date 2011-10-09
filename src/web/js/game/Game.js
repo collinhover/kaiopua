@@ -47,7 +47,11 @@ var KAIOPUA = (function (main) {
         ],
         gameAssets = [
             "js/game/sections/IntroSection.js",
-            { path: "assets/models/kaiopua_head.js", type: 'model' }
+            { path: "assets/models/kaiopua_head_blend.js", type: 'model' },
+            { path: "assets/models/kaiopua_head_obj.js", type: 'model' },
+            { path: "assets/models/test_sphere.js", type: 'model' },
+            { path: "assets/models/character.js", type: 'model' },
+            { path: "assets/models/rome_tree_anim.js", type: 'model' }
         ];
     
     /*===================================================
@@ -113,6 +117,7 @@ var KAIOPUA = (function (main) {
         shared.signals = shared.signals || {};
         shared.signals.paused = new signals.Signal();
         shared.signals.resumed = new signals.Signal();
+        shared.signals.update = new signals.Signal();
         
         // resize listener
         resize(shared.screenWidth, shared.screenHeight);
@@ -312,13 +317,7 @@ var KAIOPUA = (function (main) {
         
         requestAnimationFrame( animate );
         
-        if (typeof currentSection !== 'undefined') {
-            
-            // update section
-            
-            currentSection.update();
-            
-        }
+        shared.signals.update.dispatch();
         
     }
     

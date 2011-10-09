@@ -171,7 +171,7 @@ var KAIOPUA = (function (main) {
         /*
         var effectController  = {
             
-        	vingenettingOffset: 0.6,
+            vingenettingOffset: 0.6,
 			vingenettingDarkening: 0.5,
 			sampleDistance: 0.2,
             waveFactor: 0.3
@@ -272,6 +272,8 @@ var KAIOPUA = (function (main) {
         
         shared.signals.windowresized.add( resize );
         
+        shared.signals.update.add( update );
+        
     }
     
     function hide () {
@@ -279,6 +281,8 @@ var KAIOPUA = (function (main) {
         shared.signals.mousemoved.remove( on_mouse_moved );
         
         shared.signals.windowresized.remove( resize );
+        
+        shared.signals.update.remove( update );
         
     }
     

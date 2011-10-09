@@ -19,6 +19,30 @@ var KAIOPUA = (function (main) {
     
     /*===================================================
     
+    public properties
+    
+    =====================================================*/
+    
+    dev.toggle = togglePanel;
+    dev.log = function (msg, expand) { 
+        if (typeof logger !== 'undefined') {
+            logger.log(msg, expand); 
+        }
+    };
+    dev.log_error = function (error, url, lineNumber) {
+        if (typeof logger !== 'undefined') {
+            logger.log('[ERROR] ' + error);
+            logger.log('[ERROR] in file: ' + url);
+            logger.log('[ERROR] line # ' + lineNumber);
+        }
+    };
+    dev.gui = function () { return gui; };
+    dev.resize = resize;
+    dev.isOpen = function () {return isOpen;};
+    dev.domElement = function () { return domElement; };
+    
+    /*===================================================
+    
     internal init
     
     =====================================================*/
@@ -203,30 +227,6 @@ var KAIOPUA = (function (main) {
         });
         $(logDE).width(W - (spaceW * 3) - $(guiDE).width());
     }
-    
-    /*===================================================
-    
-    public properties
-    
-    =====================================================*/
-    
-    dev.toggle = togglePanel;
-    dev.log = function (msg, expand) { 
-        if (typeof logger !== 'undefined') {
-            logger.log(msg, expand); 
-        }
-    };
-    dev.log_error = function (error, url, lineNumber) {
-        if (typeof logger !== 'undefined') {
-            logger.log('[ERROR] ' + error);
-            logger.log('[ERROR] in file: ' + url);
-            logger.log('[ERROR] line # ' + lineNumber);
-        }
-    };
-    dev.gui = function () { return gui; };
-    dev.resize = resize;
-    dev.isOpen = function () {return isOpen;};
-    dev.domElement = function () { return domElement; };
     
     return main; 
     

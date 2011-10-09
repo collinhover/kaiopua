@@ -8,7 +8,8 @@ var KAIOPUA = (function (main) {
     var shared = main.shared = main.shared || {},
         game = main.game = main.game || {},
         workers = game.workers = game.workers || {},
-        objectmaker = workers.objectmaker = workers.objectmaker || {};
+        objectmaker = workers.objectmaker = workers.objectmaker || {},
+        durationBase = 1000;
     
     /*===================================================
     
@@ -34,7 +35,7 @@ var KAIOPUA = (function (main) {
             model = {},
             geometry,
             materials,
-            materialsForShading,
+            materialsAll,
             material,
             mesh,
             scale,
@@ -50,25 +51,67 @@ var KAIOPUA = (function (main) {
         
         // material
         
-        materials = parameters.materials || new THREE.MeshFaceMaterial();
+        materials = parameters.materials || [];
         
         materials = materials && materials.length ? materials : [ materials ];
         
-        // shading
+        // if using vertex colors
         
-        materialsForShading = geometry.materials && geometry.materials.length > 0 ? geometry.materials : materials;
+        if ( parameters.vertexColors === true || parameters.vertexColors === THREE.VertexColors ) {
+            
+            parameters.vertexColors = THREE.VertexColors;
+            
+            // set materials to face material
+            
+            materials = [new THREE.MeshFaceMaterial()];
+            
+        }
         
-        for ( i = 0, l = materialsForShading.length; i < l; i += 1) {
-            material = materialsForShading[i][0];
-            if (typeof material.shading !== 'undefined' ) {
-                // (1 = flat, 2 = smooth )
-                material.shading = parameters.shading || THREE.SmoothShading; 
+        // if has geometry materials
+        
+        if ( geometry.materials && geometry.materials.length > 0 ) {
+            
+            // add to all
+            
+            for ( i = 0, l = geometry.materials.length; i < l; i += 1) {
+                materials.push( geometry.materials[i][0] );
             }
+        }
+        
+        // if no materials yet, add default
+        if ( materials.length === 0 ) {
+            
+            materials.push( new THREE.MeshLambertMaterial() );
+            
+        }
+
+        // material properties
+        
+        for ( i = 0, l = materials.length; i < l; i += 1) {
+            material = materials[i];
+            
+            // morph targets
+            
+            material.morphTargets = geometry.morphTargets.length > 0 ? true : false;
+            
+            // vertex colors
+            
+            material.vertexColors = parameters.vertexColors || THREE.FaceColors;
+            
+            // shading
+            // (1 = flat, 2 = smooth )
+            material.shading = parameters.shading || THREE.SmoothShading;
+            
         }
         
         // mesh
         
-        mesh = new THREE.Mesh( geometry, material );
+        mesh = new THREE.Mesh( geometry, materials );
+        
+        // shadows
+        
+        mesh.castShadow = parameters.castShadow || false;
+        mesh.receiveShadow = parameters.receiveShadow || false;
         
         // scale
         
@@ -78,17 +121,7 @@ var KAIOPUA = (function (main) {
         
         // morphs
         
-        morphs = make_morphs_handler( geometry );
-        
-        /*
-        main.utils.dev.log( morphs.animations.names.length );
-        main.utils.dev.log( morphs.animations.names[0] );
-        
-        main.utils.dev.log( morphs.animations.maps.horn_small[0].index );
-        main.utils.dev.log( morphs.animations.maps.horn_small[0].number );
-        main.utils.dev.log( morphs.animations.maps.horn_big[0].index );
-        main.utils.dev.log( morphs.animations.maps.horn_big[0].number );
-        */
+        morphs = make_morphs_handler( mesh );
         
         // public properties
         
@@ -109,21 +142,99 @@ var KAIOPUA = (function (main) {
     // groups morphs into each single animation cycle by name
     // naming scheme is 'name' + 'number'
     
-    function make_morphs_handler ( geometry ) {
+    function make_morphs_handler ( mesh ) {
         var i, l,
+            geometry = mesh.geometry,
             morphTargets = geometry.morphTargets || [],
             morphColors = geometry.morphColors || [],
             morphs = {},
-            animations,
+            shapes,
             colors;
         
-        // morph targets ( animations )
+        // morph types
         
-        morphs.animations = animations = parse_morph_list( morphTargets );
+        morphs.shapes = shapes = parse_morph_list( morphTargets );
         
-        // morph colors
+        morphs.colors = colors = {};// not supported yet // parse_morph_list( morphColors );
         
-        morphs.colors = colors = parse_morph_list( morphColors );
+        // functions
+        
+        morphs.shift = function ( nameStart, nameEnd, duration, callback ) {
+            
+        };
+        
+        morphs.play = function ( name, duration, loop, callback ) {
+            
+            var shapesList = shapes.list,
+                updates = shapes.updates,
+                uNames = updates.names,
+                uList = updates.list,
+                updaterIndex,
+                updater,
+                info;
+            
+            // get if updater for animation exists
+            
+            updaterIndex = uNames.indexOf( name );
+            
+            // new updater
+            
+            if ( updaterIndex === -1 && typeof shapesList[ name ] !== 'undefined' ) {
+            
+                updater = make_morph_updater( name );
+                
+                info = updater.info;
+                
+                // add to lists
+                
+                uNames.push( name );
+                
+                uList[ name ] = updater;
+                
+                // handle arguments
+                
+                info.nameTarget = info.nameCurrent = name;
+            
+                info.duration = duration || durationBase;
+                
+                info.loop = loop || false;
+                
+                info.callback = callback;
+                
+                // store info
+                
+                info.mesh = mesh;
+                
+                info.morphList = shapesList[ name ];
+                
+                // set update function
+                
+                updater.update = function () {
+                    morph_play( updater );
+                };
+                
+                // start updating
+                
+                updater.start();
+            
+            }
+            
+        };
+        
+        morphs.stop = function () {
+            
+            var i, l,
+                updates = shapes.updates,
+                uNames = updates.names,
+                uList = updates.list;
+            
+            for ( i = 0, l = uNames.length; i < l; i += 1 ) {
+                
+                uList[ uNames[i] ].stop();
+                
+            }
+            
+        };
         
         return morphs;
     }
@@ -131,11 +242,13 @@ var KAIOPUA = (function (main) {
     function parse_morph_list ( morphs ) {
         var i, l,
             data = {},
+            list = {},
             names = [],
-            maps = {},
+            updates = [],
             morph,
             name,
             nameParsed,
+            morphData,
             map;
         
         for ( i = 0, l = morphs.length; i < l; i += 1 ) {
@@ -149,27 +262,29 @@ var KAIOPUA = (function (main) {
             nameParsed = parse_morph_name( name );
             
             // if morph map does not exist
-            // create new map
+            // create new data
             
-            if ( typeof maps[ nameParsed.name ] === 'undefined' ) {
+            if ( typeof list[ nameParsed.name ] === 'undefined' ) {
                 
-                // map array
+                names.push( nameParsed.name );
                 
-                map = [];
-                
-                // add map to names and maps lists
-                
-                names[ i ] = nameParsed.name;
-                
-                maps[ nameParsed.name ] = map;
+                list[ nameParsed.name ] = {
+                    
+                    map: []
+                    
+                };
                 
             }
             
-            // get correct map
+            // get correct data
             
-            map = maps[ nameParsed.name ];
+            morphData = list[ nameParsed.name ];
             
-            // add morph to current map
+            // get map
+            
+            map = morphData.map;
+            
+            // add morph to data map
             
             map.push( { index: i, number: nameParsed.number } );
             
@@ -179,17 +294,24 @@ var KAIOPUA = (function (main) {
         
         for ( i = 0, l = names.length; i < l; i += 1 ) {
             
-            map = maps[ names[i] ];
+            morphData = list[ names[i] ];
+            
+            map = morphData.map;
             
             // sort map by number
                 
             map.sort( sort_morph_map );
         }
         
-        // public properties
+        // init updates
         
+        updates.names = [];
+        updates.list = {};
+        
+        // public properties
+        data.list = list;
         data.names = names;
-        data.maps = maps;
+        data.updates = updates;
         
         return data;
     }
@@ -229,6 +351,227 @@ var KAIOPUA = (function (main) {
         
         return nameParsed;
     }
+    
+    function morph_colors_to_face_colors( geometry ) {
+
+        if ( geometry.morphColors && geometry.morphColors.length ) {
+            
+			var colorMap = geometry.morphColors[ 0 ];
+
+			for ( var i = 0; i < colorMap.colors.length; i ++ ) {
+
+				geometry.faces[ i ].color = colorMap.colors[ i ];
+
+			}
+
+		}
+
+	}
+    
+    /*===================================================
+    
+    morph updates
+    
+    =====================================================*/
+    
+    function make_morph_updater ( name ) {
+        var updater = {};
+        
+        // init updater
+        
+        updater.info = {
+            name: name,
+            updating: false
+        };
+        
+        updater.start = function () {
+            
+            updater.info.updating = true;
+                
+            shared.signals.update.add( updater.update );
+            
+        };
+        
+        updater.update = function () {};
+        
+        updater.stop = function () {
+            
+            updater.info.updating = false;
+                
+            shared.signals.update.remove( updater.update );
+            
+        };
+        
+        return updater;
+    }
+    
+    function morph_play ( updater ) {
+        
+        var info = updater.info;
+        
+        
+        
+    }
+    
+    function morph_shift ( updater ) {
+        
+        
+        
+    }
+    
+    // shapes
+    /*
+    shapes.updater.update = function () {
+        
+        var i, l,
+            list = shapes.list,
+            updater = shapes.updater,
+            info = updater.info,
+            nameCurrent,
+            nameTarget,
+            dataCurrent,
+            dataTarget,
+            morphsMap,
+            morphIndex,
+            morphIndexCurrent,
+            morphIndexLast,
+            numFrames,
+            duration,
+            durationFrame,
+            interpolation,
+            interpolationFrame,
+            time,
+            timeStart,
+            timeLast,
+            timeDelta,
+            frame,
+            loop,
+            callback;
+        
+        if ( info.updating === true ) {
+            
+            // set parameters
+            
+            nameCurrent = info.nameCurrent;
+            nameTarget = info.nameTarget;
+            dataCurrent = list[ nameCurrent ];
+            dataTarget = list[ nameTarget ];
+            
+            timeStart = info.timeStart;
+            time = new Date().getTime();
+            timeLast = info.time;
+            timeDelta = time - timeStart;
+            info.time = time;
+            
+            morphMap = [];
+            
+            // shifting between two shapes
+            if ( nameCurrent !== nameTarget ) {
+                
+                morphsMap = [ dataCurrent.map[ 0 ], dataTarget.map[ 0 ] ];
+                
+            }
+            // playing shape animation
+            else {
+                
+                morphsMap = dataCurrent.map;
+                
+            }
+            
+            numFrames = morphsMap.length;
+            
+            duration = info.duration;
+            
+            durationFrame = duration / (numFrames - 1);
+            
+            interpolation = timeDelta / duration;
+            
+            interpolationFrame = (timeDelta % durationFrame) / durationFrame;
+            
+            frame = (Math.floor( (numFrames - 1) * interpolation ) + 1) % numFrames;
+            
+            if ( frame !== info.frameCurrent) {
+                
+                //info.frameCurrent = frame - 1;
+                
+                morphIndexLast = morphsMap[ info.frameLast ].index;
+                morphIndexCurrent = morphsMap[ info.frameCurrent ].index;
+                
+                mesh.morphTargetInfluences[ morphIndexLast ] = 0;
+                mesh.morphTargetInfluences[ morphIndexCurrent ] = 1;
+                
+                main.utils.dev.log(' --------------- ');
+                main.utils.dev.log('frame ' + frame);
+                main.utils.dev.log(' influences atm ');
+                
+                // make sure all other influences are reset
+                // probably not the best way to do it
+                for ( i = 0, l = morphsMap.length; i < l; i += 1) {
+                    
+                    if ( morphsMap[ i ].index !== morphIndexCurrent ) {
+                        //mesh.morphTargetInfluences[morphsMap[ i ].index] = 0;
+                    }
+                    
+                    main.utils.dev.log(' > ' + i + ' = ' + mesh.morphTargetInfluences[morphsMap[ i ].index]);
+                    
+                }
+                
+                info.frameLast = info.frameCurrent;
+                info.frameCurrent = frame;
+                
+            }
+            
+            if ( timeDelta < duration ) {
+            
+                morphIndex = morphsMap[ frame ].index;
+                
+                morphIndexLast = morphsMap[ info.frameLast ].index;
+                
+                mesh.morphTargetInfluences[ morphIndex ] = interpolationFrame;
+                mesh.morphTargetInfluences[ morphIndexLast ] = 1 - mesh.morphTargetInfluences[ morphIndex ];
+                
+            }
+            // else complete timeDelta >= duration
+            else {
+                
+                main.utils.dev.log(' final influences ');
+                
+                // make sure all other influences are reset
+                // probably not the best way to do it
+                for ( i = 0, l = morphsMap.length; i < l; i += 1) {
+                    
+                    main.utils.dev.log(' > ' + i + ' = ' + mesh.morphTargetInfluences[morphsMap[ i ].index]);
+                    
+                }
+                
+                // loop or stop
+                
+                loop = info.loop;
+                
+                if ( loop === true ) {
+                    
+                    morphs.play( nameTarget, duration, loop, callback );
+                    
+                }
+                else {
+                    
+                    updater.stop();
+                    
+                }
+                
+                // callback
+                
+                callback = info.callback;
+                
+                if ( typeof callback !== 'undefined' ) {
+                    callback.call();
+                }
+                
+            }
+        }
+        
+    };
+    */
     
     /*===================================================
     

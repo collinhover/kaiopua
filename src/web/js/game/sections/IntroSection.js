@@ -161,31 +161,16 @@ var KAIOPUA = (function (main) {
         
         // kaiopua
         
-        var geometry = assets["assets/models/kaiopua_head.js"];
+        var geometry = assets["assets/models/rome_tree_anim.js"];
         
         var model = objectmaker.make_model({
-            geometry: geometry,
-            scale: 100
+            geometry: geometry
         });
+        
+        model.morphs.play('animation', 1000, true);
         
         scene.add( model.mesh );
     }
-    
-    function morphColorsToFaceColors( geometry ) {
-
-		if ( geometry.morphColors && geometry.morphColors.length ) {
-            
-			var colorMap = geometry.morphColors[ 0 ];
-
-			for ( var i = 0; i < colorMap.colors.length; i ++ ) {
-
-				geometry.faces[ i ].color = colorMap.colors[ i ];
-
-			}
-
-		}
-
-	}
     
     /*===================================================
     
@@ -197,11 +182,15 @@ var KAIOPUA = (function (main) {
         
         shared.signals.windowresized.add( resize );
         
+        shared.signals.update.add( update );
+        
     }
     
     function hide () {
         
         shared.signals.windowresized.remove( resize );
+        
+        shared.signals.update.remove( update );
         
     }
     

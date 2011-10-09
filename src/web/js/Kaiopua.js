@@ -69,6 +69,7 @@ var KAIOPUA = (function (main) {
             loadAllCompleted : new signals.Signal(),
             
             error : new signals.Signal()
+            
         };
         
         // add listeners for events
