@@ -47,15 +47,16 @@ Javascript, WebGL
 
 ####Libraries & Concepts
 
-jQuery, ThreeJS, RequireJS + CommonJS    
+ThreeJS, jQuery  
 SignalsJS, Modernizr, HTML5-Reset, RequestAnimFrame  
 (+ development: DAT-GUI, StatsJS, LoggerJS)  
 
-####Concept and Design Assistance
+####Thesis Committee
 
-Seiji Ikeda  
-Tuan Ho  
-Robert Hower 
+Seiji Ikeda (Major Professor) - Assistant Professor  
+Tuan Ho - Assistant Professor   
+Robert Hower - Professor & Chair   
+Vassilis Athitsos - Assistant Professor  
 
 ##Brief
 ####Target Audience
