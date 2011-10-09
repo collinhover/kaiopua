@@ -180,7 +180,9 @@ var KAIOPUA = (function (main) {
             // new updater
             
             if ( updaterIndex === -1 && typeof shapesList[ name ] !== 'undefined' ) {
-            
+                
+                main.utils.dev.log(' making updater for ' + name );
+                
                 updater = make_morph_updater( name );
                 
                 info = updater.info;
@@ -205,7 +207,9 @@ var KAIOPUA = (function (main) {
                 
                 info.mesh = mesh;
                 
-                info.morphList = shapesList[ name ];
+                info.morphsMap = shapesList[ name ].map;
+                
+                info.framesPlayed = 0;
                 
                 // set update function
                 
@@ -407,9 +411,59 @@ var KAIOPUA = (function (main) {
     
     function morph_play ( updater ) {
         
-        var info = updater.info;
+        var info = updater.info,
+            mesh = info.mesh,
+            loop,
+            callback,
+            morphsMap = info.morphsMap,
+            duration = info.duration,
+            numFrames = morphsMap.length - 1,
+            interpolation = duration / numFrames,
+            time = new Date().getTime() % duration,
+            frameCurrent = info.frameCurrent || 0,
+            frameLast = info.frameLast || 0,
+            frame = Math.floor( time / interpolation ) + 1;
         
+        if ( frame != frameCurrent ) {
+            
+			mesh.morphTargetInfluences[ frameLast ] = 0;
+			mesh.morphTargetInfluences[ frameCurrent ] = 1;
+			mesh.morphTargetInfluences[ frame ] = 0;
+            
+			frameLast = info.frameLast = frameCurrent;
+			frameCurrent = info.frameCurrent = frame;
+            
+            info.framesPlayed += 1;
+            
+		}
         
+		mesh.morphTargetInfluences[ frame ] = ( time % interpolation ) / interpolation;
+		mesh.morphTargetInfluences[ frameLast ] = 1 - mesh.morphTargetInfluences[ frame ];
+        
+        main.utils.dev.log('frame: ' + frame);
+        main.utils.dev.log('frames played: ' + info.framesPlayed);
+        main.utils.dev.log('numFrames: ' + numFrames);
+        if ( info.framesPlayed > numFrames ) {
+            
+            info.framesPlayed = 0;
+            
+            loop = info.loop;
+            
+            if ( loop !== true ) {
+                
+                updater.stop();
+                
+            }
+            
+            callback = info.callback;
+            
+            if ( typeof callback !== 'undefined' ) {
+                
+                callback.call();
+                
+            }
+            
+        }
         
     }
     

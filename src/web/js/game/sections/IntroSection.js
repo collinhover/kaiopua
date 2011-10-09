@@ -164,10 +164,11 @@ var KAIOPUA = (function (main) {
         var geometry = assets["assets/models/rome_tree_anim.js"];
         
         var model = objectmaker.make_model({
-            geometry: geometry
+            geometry: geometry,
+            vertexColors: THREE.VertexColors
         });
         
-        model.morphs.play('animation', 1000, true);
+        model.morphs.play('animation', 2000, true);
         
         scene.add( model.mesh );
     }
