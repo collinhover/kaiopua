@@ -165,7 +165,8 @@ var KAIOPUA = (function (main) {
         
         var model = objectmaker.make_model({
             geometry: geometry,
-            vertexColors: THREE.VertexColors
+            vertexColors: THREE.VertexColors,
+            shading: THREE.FlatShading
         });
         
         model.morphs.play('animation', 2000, true);

@@ -35,8 +35,9 @@ var KAIOPUA = (function (main) {
             model = {},
             geometry,
             materials,
-            materialsAll,
+            materialsToModify,
             material,
+            geometryHasMaterials = false,
             mesh,
             scale,
             morphs;
@@ -49,46 +50,51 @@ var KAIOPUA = (function (main) {
         
         geometry = parameters.geometry || new THREE.Geometry();
         
-        // material
+        // materials
         
         materials = parameters.materials || [];
         
         materials = materials && materials.length ? materials : [ materials ];
         
-        // if using vertex colors
-        
-        if ( parameters.vertexColors === true || parameters.vertexColors === THREE.VertexColors ) {
-            
-            parameters.vertexColors = THREE.VertexColors;
-            
-            // set materials to face material
-            
-            materials = [new THREE.MeshFaceMaterial()];
-            
-        }
+        materialsToModify = materials.slice(0);
         
         // if has geometry materials
         
         if ( geometry.materials && geometry.materials.length > 0 ) {
             
+            geometryHasMaterials = true;
+            
             // add to all
             
             for ( i = 0, l = geometry.materials.length; i < l; i += 1) {
-                materials.push( geometry.materials[i][0] );
+                materialsToModify.push( geometry.materials[i][0] );
             }
+            
         }
         
-        // if no materials yet, add default
-        if ( materials.length === 0 ) {
+        // if using vertex colors or geometry materials
+        if ( geometryHasMaterials === true || parameters.vertexColors === true || parameters.vertexColors === THREE.VertexColors ) {
             
-            materials.push( new THREE.MeshLambertMaterial() );
+            parameters.vertexColors = THREE.VertexColors;
+            
+            materials.push( new THREE.MeshFaceMaterial() );
+            
+        }
+        // if no materials yet, add default
+        else if ( materials.length === 0 ) {
+            
+            material = new THREE.MeshLambertMaterial();
+            
+            materials.push( material );
+            
+            materialsToModify.push( material );
             
         }
 
         // material properties
         
-        for ( i = 0, l = materials.length; i < l; i += 1) {
-            material = materials[i];
+        for ( i = 0, l = materialsToModify.length; i < l; i += 1) {
+            material = materialsToModify[i];
             
             // morph targets
             
