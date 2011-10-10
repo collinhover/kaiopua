@@ -194,6 +194,11 @@ var KAIOPUA = (function (main) {
         
         scene.add( modelChar.mesh );
         
+        modelChar.morphs.play('animation', { 
+            duration:1000,
+            loop: true
+        });
+        
         // head uvmapped blender
         
         var geometryHeadA = assets["assets/models/kaiopua_head_uvmapped_blend.js"];
@@ -204,33 +209,32 @@ var KAIOPUA = (function (main) {
             shading: THREE.FlatShading
         });
         
+        modelHeadA.mesh.position.set(200, 0, 0);
+        
+        scene.add( modelHeadA.mesh );
+        
         modelHeadA.morphs.play('animation', { 
             duration:1000,
             loop: true
         });
         
-        modelHeadA.mesh.position.set(200, 0, 0);
-        
-        scene.add( modelHeadA.mesh );
-        
         // head uvmapped obj
         
-        var geometryHeadB = assets["assets/models/kaiopua_head_uvmapped_obj.js"];
+        var geometrySphere = assets["assets/models/test_sphere.js"];
         
-        var modelHeadB = objectmaker.make_model({
-            geometry: geometryHeadB,
-            vertexColors: THREE.VertexColors,
+        var modelSphere = objectmaker.make_model({
+            geometry: geometrySphere,
             shading: THREE.FlatShading
         });
         
-        modelHeadB.morphs.play('horn_test', { 
+        modelSphere.morphs.play('animation', { 
             duration:1000,
             loop: true
         });
         
-        modelHeadB.mesh.position.set(900, 0, 0);
+        modelSphere.mesh.position.set(1300, 0, 0);
         
-        scene.add( modelHeadB.mesh );
+        scene.add( modelSphere.mesh );
     }
     
     /*===================================================
