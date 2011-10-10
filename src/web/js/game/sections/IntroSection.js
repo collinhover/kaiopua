@@ -201,7 +201,7 @@ var KAIOPUA = (function (main) {
         
         // head uvmapped blender
         
-        var geometryHeadA = assets["assets/models/kaiopua_head_uvmapped_blend.js"];
+        var geometryHeadA = assets["assets/models/kaiopua_head_uvmapped.js"];
         
         var modelHeadA = objectmaker.make_model({
             geometry: geometryHeadA,
@@ -232,7 +232,7 @@ var KAIOPUA = (function (main) {
             loop: true
         });
         
-        modelSphere.mesh.position.set(1300, 0, 0);
+        modelSphere.mesh.position.set(600, 0, 0);
         
         scene.add( modelSphere.mesh );
     }
