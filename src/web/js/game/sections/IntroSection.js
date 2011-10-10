@@ -209,7 +209,7 @@ var KAIOPUA = (function (main) {
             shading: THREE.FlatShading
         });
         
-        modelHeadA.mesh.position.set(200, 0, 0);
+        modelHeadA.mesh.position.set(250, 0, 0);
         
         scene.add( modelHeadA.mesh );
         
@@ -232,7 +232,7 @@ var KAIOPUA = (function (main) {
             loop: true
         });
         
-        modelSphere.mesh.position.set(600, 0, 0);
+        modelSphere.mesh.position.set(700, 0, 0);
         
         scene.add( modelSphere.mesh );
     }
