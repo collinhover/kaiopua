@@ -54,7 +54,7 @@ var KAIOPUA = (function (main) {
     
     function ready () { 
         return readyInternal && readyAll; 
-    };
+    }
     
     function init () {
         
@@ -93,7 +93,7 @@ var KAIOPUA = (function (main) {
         
         camera = new THREE.PerspectiveCamera(60, shared.screenWidth / shared.screenHeight, 1, 10000);
         
-        camera.position.set(0, 0, 800);
+        camera.position.set(0, 0, 1200);
         camera.lookAt( new THREE.Vector3(0, 0, 0) );
         
         cameraControls = new THREE.FlyControls( camera );
@@ -159,22 +159,78 @@ var KAIOPUA = (function (main) {
         
         scene.add( lightVis );
         
-        // kaiopua
+        // testing
         
-        var geometry = assets["assets/models/rome_tree_anim.js"];
+        // tree from rome
         
-        var model = objectmaker.make_model({
-            geometry: geometry,
+        var geometryTree = assets["assets/models/rome_tree_anim.js"];
+        
+        var modelTree = objectmaker.make_model({
+            geometry: geometryTree,
             vertexColors: THREE.VertexColors,
             shading: THREE.FlatShading
         });
         
-        model.morphs.play('animation', { 
+        modelTree.morphs.play('animation', { 
             duration:2000,
             loop: true
         });
         
-        scene.add( model.mesh );
+        modelTree.mesh.position.set(-700, -400, 0);
+        
+        scene.add( modelTree.mesh );
+        
+        // character
+        
+        var geometryChar = assets["assets/models/character.js"];
+        
+        var modelChar = objectmaker.make_model({
+            geometry: geometryChar,
+            vertexColors: THREE.VertexColors,
+            shading: THREE.FlatShading
+        });
+        
+        modelChar.mesh.position.set(-350, 0, 0);
+        
+        scene.add( modelChar.mesh );
+        
+        // head uvmapped blender
+        
+        var geometryHeadA = assets["assets/models/kaiopua_head_uvmapped_blend.js"];
+        
+        var modelHeadA = objectmaker.make_model({
+            geometry: geometryHeadA,
+            vertexColors: THREE.VertexColors,
+            shading: THREE.FlatShading
+        });
+        
+        modelHeadA.morphs.play('animation', { 
+            duration:1000,
+            loop: true
+        });
+        
+        modelHeadA.mesh.position.set(200, 0, 0);
+        
+        scene.add( modelHeadA.mesh );
+        
+        // head uvmapped obj
+        
+        var geometryHeadB = assets["assets/models/kaiopua_head_uvmapped_obj.js"];
+        
+        var modelHeadB = objectmaker.make_model({
+            geometry: geometryHeadB,
+            vertexColors: THREE.VertexColors,
+            shading: THREE.FlatShading
+        });
+        
+        modelHeadB.morphs.play('horn_test', { 
+            duration:1000,
+            loop: true
+        });
+        
+        modelHeadB.mesh.position.set(900, 0, 0);
+        
+        scene.add( modelHeadB.mesh );
     }
     
     /*===================================================

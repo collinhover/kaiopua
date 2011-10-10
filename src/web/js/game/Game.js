@@ -47,8 +47,8 @@ var KAIOPUA = (function (main) {
         ],
         gameAssets = [
             "js/game/sections/IntroSection.js",
-            { path: "assets/models/kaiopua_head_blend.js", type: 'model' },
-            { path: "assets/models/kaiopua_head_obj.js", type: 'model' },
+            { path: "assets/models/kaiopua_head_uvmapped_obj.js", type: 'model' },
+            { path: "assets/models/kaiopua_head_uvmapped_blend.js", type: 'model' },
             { path: "assets/models/test_sphere.js", type: 'model' },
             { path: "assets/models/character.js", type: 'model' },
             { path: "assets/models/rome_tree_anim.js", type: 'model' }
