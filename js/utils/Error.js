@@ -5,8 +5,9 @@ Handles compatibility checks and user viewable errors.
 
 var KAIOPUA = (function (main) {
     
-    var error = main.error = main.error || {},
-        shared = main.shared = main.shared || {},
+    var shared = main.shared = main.shared || {},
+        utils = main.utils = main.utils || {},
+        error = utils.error = utils.error || {},
         errorState = false,
         errorCurrent = {},
         errorHash = 'error=',
@@ -35,6 +36,17 @@ var KAIOPUA = (function (main) {
         },
         webglNames = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"],
         browser_html = "<div class='browsers_each chrome'><a href='http://www.google.com/chrome/' target='_blank'>Chrome</a></div><div class='browsers_each firefox'><a href='http://www.mozilla.org/firefox/' target='_blank'>Firefox</a></div><div class='browsers_each safari'><a href='http://www.apple.com/safari/' target='_blank'>Safari</a></div>";
+    
+    /*===================================================
+    
+    public properties
+    
+    =====================================================*/
+    
+    error.check = check;
+    error.generate = generate;
+    error.process = process;
+    error.clear = clear;
     
     /*===================================================
     
@@ -185,7 +197,7 @@ var KAIOPUA = (function (main) {
         
         // article
         article = document.createElement('article');
-        $(article).addClass("error unselectable");
+        $(article).addClass("error info_panel unselectable");
         $(article).attr('id', errorType);
         
         // add to display
@@ -223,17 +235,6 @@ var KAIOPUA = (function (main) {
             extra: extra
         };
     }
-    
-    /*===================================================
-    
-    public properties
-    
-    =====================================================*/
-    
-    error.check = check;
-    error.generate = generate;
-    error.process = process;
-    error.clear = clear;
     
     return main; 
     

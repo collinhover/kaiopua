@@ -4,11 +4,10 @@ Call using require('utils/DevCommands').functionName()
 */
 var KAIOPUA = (function (main) {
     
-    main.dev = main.dev || {};
-    
-    main.dev.commands = main.dev.commands || {};
-    
-    var commands = [], callbacks = {}, current = "", history = [];
+    var utils = main.utils = main.utils || {},
+        dev = utils.dev = utils.dev || {},
+        devCommands = dev.commands = dev.commands || {},
+        commands = [], callbacks = {}, current = "", history = [];
     
     // add list of commands
     // cmds can be an object with any number of name + callback pairs
@@ -88,11 +87,11 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
     
-    main.dev.commands.current = current;
-    main.dev.commands.add = add;
-    main.dev.commands.execute = execute;
-    main.dev.commands.get_history = function () {return history.slice(0);};
-    main.dev.commands.clear_history = function () {history = [];};
+    devCommands.current = current;
+    devCommands.add = add;
+    devCommands.execute = execute;
+    devCommands.get_history = function () {return history.slice(0);};
+    devCommands.clear_history = function () {history = [];};
     
     return main; 
     

@@ -19,10 +19,10 @@ window.requestTimeout = function(fn, delay) {
 		var current = new Date().getTime(),
 			delta = current - start;
 			
-		delta >= delay ? fn.call() : handle.value = requestAnimFrame(loop);
+		delta >= delay ? fn.call() : handle.value = requestAnimationFrame(loop);
 	};
 	
-	handle.value = requestAnimFrame(loop);
+	handle.value = requestAnimationFrame(loop);
 	return handle;
 };
 

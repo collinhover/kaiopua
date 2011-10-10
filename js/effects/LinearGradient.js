@@ -10,6 +10,14 @@ var KAIOPUA = (function (main) {
     
     /*===================================================
     
+    public properties
+    
+    =====================================================*/
+    
+    LinearGradient.generate = generate;
+    
+    /*===================================================
+    
     custom functions
     
     =====================================================*/
@@ -56,7 +64,7 @@ var KAIOPUA = (function (main) {
         
         // camera and scene
         
-        camera = new THREE.OrthoCamera( width / - 2, width / 2,  height / 2, height / - 2, -10000, 10000 );
+        camera = new THREE.OrthographicCamera( width / - 2, width / 2,  height / 2, height / - 2, -10000, 10000 );
         camera.position.z = 100;
         
         scene = new THREE.Scene();
@@ -134,7 +142,7 @@ var KAIOPUA = (function (main) {
         quad = new THREE.Mesh( geometry, materials );
         quad.position.z = -100;
         
-		scene.addObject( quad );
+		scene.add( quad );
         
         return { 
             scene: scene,
@@ -152,8 +160,6 @@ var KAIOPUA = (function (main) {
             }
         };
     }
-    
-    LinearGradient.generate = generate;
     
     return main; 
     

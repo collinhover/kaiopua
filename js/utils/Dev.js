@@ -4,8 +4,9 @@ Initializes Logger, Stats, and DAT-GUI for development purposes
 */
 var KAIOPUA = (function (main) {
     
-    var dev = main.dev = main.dev || {},
-        shared = main.shared = main.shared || {},
+    var shared = main.shared = main.shared || {},
+        utils = main.utils = main.utils || {},
+        dev = utils.dev = utils.dev || {},
         devCommands,
         domElement, isOpen = true, stats, logger, 
         gui, guiContainer, guiHeight, statsPaused = true,
@@ -15,6 +16,30 @@ var KAIOPUA = (function (main) {
             "js/lib/DAT.GUI.js",
             "js/utils/DevCommands.js"
         ];
+    
+    /*===================================================
+    
+    public properties
+    
+    =====================================================*/
+    
+    dev.toggle = togglePanel;
+    dev.log = function (msg, expand) { 
+        if (typeof logger !== 'undefined') {
+            logger.log(msg, expand); 
+        }
+    };
+    dev.log_error = function (error, url, lineNumber) {
+        if (typeof logger !== 'undefined') {
+            logger.log('[ERROR] ' + error);
+            logger.log('[ERROR] in file: ' + url);
+            logger.log('[ERROR] line # ' + lineNumber);
+        }
+    };
+    dev.gui = function () { return gui; };
+    dev.resize = resize;
+    dev.isOpen = function () {return isOpen;};
+    dev.domElement = function () { return domElement; };
     
     /*===================================================
     
@@ -90,7 +115,7 @@ var KAIOPUA = (function (main) {
         $(domElement).append(guiContainer);
     
         // add dev utils to window
-        document.body.appendChild(domElement);
+        $(document.body).append(domElement);
         
         // add listeners to gui toggle
         gui.toggleButton.addEventListener('mouseup', function(e) {
@@ -202,24 +227,6 @@ var KAIOPUA = (function (main) {
         });
         $(logDE).width(W - (spaceW * 3) - $(guiDE).width());
     }
-    
-    /*===================================================
-    
-    public properties
-    
-    =====================================================*/
-    
-    dev.toggle = togglePanel;
-    dev.log = function (msg, expand) { logger.log(msg, expand); };
-    dev.log_error = function (error, url, lineNumber) {
-            logger.log('[ERROR] ' + error);
-            logger.log('[ERROR] in file: ' + url);
-            logger.log('[ERROR] line # ' + lineNumber);
-        };
-    dev.gui = function () { return gui; };
-    dev.resize = resize;
-    dev.isOpen = function () {return isOpen;};
-    dev.domElement = function () { return domElement; };
     
     return main; 
     

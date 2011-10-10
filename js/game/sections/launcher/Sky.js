@@ -31,16 +31,22 @@ var KAIOPUA = (function (main) {
         cloudPlaneScaleStart = 6, 
         cloudPlaneScaleEnd = 4,
         cloudPlaneTextureLoading = false,
-        cloudPlaneTexturePath = 'assets/textures/cloud256.png',
+        cloudPlaneTexturePath = "assets/textures/cloud256.png",
         cloudPlaneTexture,
         clouds = [],
         environment;
     
     /*===================================================
     
-    internal init
+    public properties
     
     =====================================================*/
+    
+    sky.init = init;
+    sky.wind_blow = wind_blow;
+    sky.get_environment = function () {
+        return environment;    
+    };
     
     /*===================================================
     
@@ -95,9 +101,13 @@ var KAIOPUA = (function (main) {
         
         // generate clouds
         
-        cloudPlaneTexture = THREE.ImageUtils.loadTexture( cloudPlaneTexturePath, THREE.UVMapping);
-           
-        cloudPlaneTexture.minFilter = cloudPlaneTexture.magFilter = THREE.LinearFilter;
+        // cloud texture
+        
+        cloudPlaneTexture = new THREE.Texture( main.utils.loader.assets[cloudPlaneTexturePath] );
+        
+        cloudPlaneTexture.needsUpdate = true;
+        
+        // cloud meshes
         
         for ( i = 0; i < numClouds; i += 1) {
             
@@ -112,8 +122,9 @@ var KAIOPUA = (function (main) {
             clouds[clouds.length] = cloud;
             
             // add to environment
-            environment.addChild(cloud);
+            environment.add(cloud);
         }
+        
     }
     
     /*===================================================
@@ -238,18 +249,6 @@ var KAIOPUA = (function (main) {
             }
         }
     }
-    
-    /*===================================================
-    
-    public properties
-    
-    =====================================================*/
-    
-    sky.init = init;
-    sky.wind_blow = wind_blow;
-    sky.get_environment = function () {
-        return environment;    
-    };
         
     return main; 
     

@@ -1,6 +1,6 @@
 /*
 LauncherSection.js
-Launcher module, handles start menu and environment.
+Launcher module, handles start environment.
 */
 var KAIOPUA = (function (main) {
     
@@ -9,22 +9,25 @@ var KAIOPUA = (function (main) {
         effects = main.effects = main.effects || {},
         sections = game.sections = game.sections || {},
         launcher = sections.launcher = sections.launcher || {},
+        readyInternal = false,
+        readyAll = false,
         renderer, 
         renderTarget,
-        camera, 
-        cameraRotY = -90 * Math.PI / 180, 
+        camera,
         scene,
         composerScene,
         renderPasses,
+        bg,
+        water,
+        sky,
+        time,
+        cameraRotY = -90 * Math.PI / 180,
+        camLookTarget,
         bgParams = {
             colors: [0x0F042E, 0x1D508F, 0x529AD1, 0x529AD1, 0x455AE0],
             stops: [0, 0.4, 0.6, 0.8, 1.0],
             startBottom: true
         },
-        bg,
-        time,
-        water,
-        sky,
         mouse = { 
             x: 0, 
             y: 0,
@@ -46,9 +49,26 @@ var KAIOPUA = (function (main) {
     
     /*===================================================
     
+    public properties
+    
+    =====================================================*/
+    
+    launcher.init = init;
+    launcher.show = show;
+    launcher.hide = hide;
+    launcher.remove = remove;
+    launcher.update = update;
+    launcher.resize = resize;
+    launcher.ready = ready;
+    launcher.domElement = function () {};
+    
+    /*===================================================
+    
     internal init
     
     =====================================================*/
+    
+    game.update_section_list();
     
     /*===================================================
     
@@ -56,33 +76,70 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
     
+    function ready () { 
+        return readyInternal && readyAll; 
+    }
+    
     function init () {
         
-        init_basics();
+        if ( !ready() ) {
+            
+            init_internal();
+            
+            init_environment();
+            
+            readyAll = true;
+            
+        }
+    }
     
-        init_render_processing();
+    function init_internal () {
         
-        init_environment();
+        if ( readyInternal !== true ) {
+            
+            init_basics();
+            
+            init_render_processing();
+            
+            readyInternal = true;
+            
+        }
         
-        init_rendering();
-    
     }
     
     function init_basics () {
         
-        camera = new THREE.Camera(60, shared.screenWidth / shared.screenHeight, 1, 10000);
+        var ambient, directional;
         
-        //camera = new THREE.FirstPersonCamera( { fov: 60, aspect:shared.screenWidth / shared.screenHeight, near: 1, far: 20000, movementSpeed: 1000, lookSpeed: 0.1, noFly: false, lookVertical: true } );
+        // camera
+        
+        camera = new THREE.PerspectiveCamera(60, shared.screenWidth / shared.screenHeight, 1, 10000);
         
         // starting position
         camera.position.set(-5800, 0, 0);
         
-        // useTarget property set to false for control over rotation
-        camera.target.position.set(0, 0, 0);
-        //camera.useTarget = false;
-        //camera.rotation.y = cameraRotY;
+        // camera look target
+        
+        camLookTarget = new THREE.Vector3(0, 0, 0);
+        
+        camera.lookAt( camLookTarget );
+        
+        // scene
         
         scene = new THREE.Scene();
+        
+        // lights
+        
+        ambient = new THREE.AmbientLight( 0xCCCCCC );
+        
+        directional = new THREE.DirectionalLight( 0xFFFFFF, 1.0 );
+        directional.position = new THREE.Vector3(-1, 1, -1).normalize();
+        
+        scene.add( ambient );
+        scene.add( directional );
+        
+        // fog
+        scene.fog = new THREE.Fog( 0x529ad1, -100, 10000 );
         
     }
     
@@ -114,7 +171,7 @@ var KAIOPUA = (function (main) {
         /*
         var effectController  = {
             
-			vingenettingOffset: 0.6,
+            vingenettingOffset: 0.6,
 			vingenettingDarkening: 0.5,
 			sampleDistance: 0.2,
             waveFactor: 0.3
@@ -135,24 +192,21 @@ var KAIOPUA = (function (main) {
 		require('utils/Dev').gui.add( effectController, "sampleDistance", 0.0, 2, 0.01 ).onChange( matChanger );
         require('utils/Dev').gui.add( effectController, "waveFactor", 0.0, 2, 0.01 ).onChange( matChanger );
         */
+        
+        renderer = shared.renderer;
+        renderTarget = shared.renderTarget;
+        
+        composerScene = new THREE.EffectComposer( renderer );
+        
+        composerScene.addPass( renderPasses.bg );
+        composerScene.addPass( renderPasses.env );
+        composerScene.addPass( renderPasses.focusVignette );
+        composerScene.addPass( renderPasses.screen );
     }
     
     function init_environment () {
         
-        var i, ambient, light1, waterEnv, skyEnv;
-        
-        // lights
-        
-        ambient = new THREE.AmbientLight( 0xCCCCCC );
-        
-        light1 = new THREE.DirectionalLight( 0xFFFFFF, 1.0 );
-        light1.position = new THREE.Vector3(-1,1, -1).normalize();
-        
-        scene.addLight( ambient );
-        scene.addLight( light1 );
-        
-        // fog
-        scene.fog = new THREE.Fog( 0x529ad1, -100, 10000 );
+        var waterEnv, skyEnv;
         
         // water
         
@@ -164,7 +218,7 @@ var KAIOPUA = (function (main) {
         
         waterEnv.rotation.x = cameraRotY;
         
-        scene.addObject( waterEnv );
+        scene.add( waterEnv );
         
         // sky
         
@@ -181,21 +235,7 @@ var KAIOPUA = (function (main) {
         skyEnv.rotation.y = cameraRotY;
         
         // add clouds
-        scene.addObject( skyEnv );
-        
-    }
-    
-    function init_rendering () {
-        
-        renderer = shared.renderer;
-        renderTarget = shared.renderTarget;
-        
-        composerScene = new THREE.EffectComposer( renderer );
-        
-        composerScene.addPass( renderPasses.bg );
-		composerScene.addPass( renderPasses.env );
-        composerScene.addPass( renderPasses.focusVignette );
-        composerScene.addPass( renderPasses.screen );
+        scene.add( skyEnv );
         
     }
     
@@ -232,6 +272,8 @@ var KAIOPUA = (function (main) {
         
         shared.signals.windowresized.add( resize );
         
+        shared.signals.update.add( update );
+        
     }
     
     function hide () {
@@ -239,6 +281,8 @@ var KAIOPUA = (function (main) {
         shared.signals.mousemoved.remove( on_mouse_moved );
         
         shared.signals.windowresized.remove( resize );
+        
+        shared.signals.update.remove( update );
         
     }
     
@@ -256,9 +300,11 @@ var KAIOPUA = (function (main) {
         camera.position.z += (  mouse.x - camera.position.z ) * mouse.speedTransX;
         camera.position.y += ( -mouse.y - camera.position.y ) * mouse.speedTransY;
         
-        camera.target.position.z += ( mouse.rx - camera.target.position.z ) * mouse.speedRotX;
-        camera.target.position.y += ( mouse.ry - camera.target.position.y ) * mouse.speedRotY;
+        // needs persistant tracking to add to
+        camLookTarget.z += ( mouse.rx - camLookTarget.z ) * mouse.speedRotX;
+        camLookTarget.y += ( mouse.ry - camLookTarget.y ) * mouse.speedRotY;
         
+        camera.lookAt( camLookTarget );
         
         // update environment
         
@@ -291,19 +337,6 @@ var KAIOPUA = (function (main) {
         composerScene.reset();
         
     }
-    
-    /*===================================================
-    
-    public properties
-    
-    =====================================================*/
-    
-    launcher.init = init;
-    launcher.show = show;
-    launcher.hide = hide;
-    launcher.remove = remove;
-    launcher.update = update;
-    launcher.resize = resize;
         
     return main; 
     

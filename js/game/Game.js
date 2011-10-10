@@ -6,17 +6,25 @@ Game module, handles sections of game.
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
+        utils = main.utils = main.utils || {},
+        loader = utils.loader = utils.loader || {},
+        uihelper = utils.uihelper = utils.uihelper || {},
         game = main.game = main.game || {},
         sections = game.sections = game.sections || {},
-        domElement,
+        workers = game.workers = game.workers || {},
+        menus = game.menus = game.menus || {},
         transitioner,
+        domElement,
+        menumaker,
         renderer, 
         renderTarget,
+        sectionNames = [],
         currentSection, 
         previousSection, 
         paused = true,
         transitionOut = 1000, 
         transitionIn = 400,
+        loadAssetsDelay = 500,
         dependencies = [
             "js/lib/three/Three.js",
             "js/lib/three/ThreeExtras.js",
@@ -25,20 +33,39 @@ var KAIOPUA = (function (main) {
             "js/lib/three/postprocessing/RenderPass.js",
             "js/lib/three/postprocessing/ShaderPass.js",
             "js/lib/three/postprocessing/MaskPass.js",
-            "js/game/sections/LauncherSection.js",
             "js/effects/LinearGradient.js",
             "js/effects/FocusVignette.js",
-            "js/game/sections/launcher/StartMenu.js",
+            "js/game/workers/MenuMaker.js",
+            "js/game/workers/ObjectMaker.js"
+        ],
+        launcherAssets = [
+            "js/game/sections/LauncherSection.js",
             "js/game/sections/launcher/Water.js",
-            "js/game/sections/launcher/Sky.js"
+            "js/game/sections/launcher/Sky.js",
+            "assets/textures/cloud256.png",
+            "assets/textures/light_ray.png"
+        ],
+        gameAssets = [
+            "js/game/sections/IntroSection.js",
+            { path: "assets/models/kaiopua_head_uvmapped_obj.js", type: 'model' },
+            { path: "assets/models/kaiopua_head_uvmapped_blend.js", type: 'model' },
+            { path: "assets/models/test_sphere.js", type: 'model' },
+            { path: "assets/models/character.js", type: 'model' },
+            { path: "assets/models/rome_tree_anim.js", type: 'model' }
         ];
     
     /*===================================================
     
-    internal init
+    public properties
     
     =====================================================*/
     
+    game.init = init;
+    game.resume = resume;
+    game.pause = pause;
+    game.update_section_list = update_section_list;
+    game.get_dom_element = function () { return domElement; };
+    game.paused = function () { return paused; };
     
     /*===================================================
     
@@ -48,16 +75,27 @@ var KAIOPUA = (function (main) {
     
     function init() {
         
+        domElement = shared.html.gameContainer;
+        
         // get dependencies
-        $LAB.script( dependencies ).wait( start );
+        
+        loader.load( dependencies , function () {
+            init_basics();
+        });
         
     }
     
-    function start () {
+    function init_basics () {
         var i, l;
         
-        domElement = shared.html.gameContainer;
-        transitioner = shared.html.transitioner;
+        // transitioner
+        transitioner = uihelper.make_ui_element({
+            classes: 'transitioner'
+        });
+        
+        // workers
+        
+        menumaker = game.workers.menumaker;
         
         // init three 
         // renderer
@@ -71,14 +109,6 @@ var KAIOPUA = (function (main) {
         // add to game dom element
         domElement.append( renderer.domElement );
         
-        // get section names
-        sectionNames = [];
-        for ( i in sections ) {
-           if ( sections.hasOwnProperty( i ) ) {
-               sectionNames.push(i);
-           }
-        }
-        console.log(sectionNames.length);
         // share
         shared.renderer = renderer;
         shared.renderTarget = renderTarget;
@@ -87,20 +117,106 @@ var KAIOPUA = (function (main) {
         shared.signals = shared.signals || {};
         shared.signals.paused = new signals.Signal();
         shared.signals.resumed = new signals.Signal();
+        shared.signals.update = new signals.Signal();
         
         // resize listener
         resize(shared.screenWidth, shared.screenHeight);
         shared.signals.windowresized.add(resize);
         
-        // init each section
-        for (i = 0, l = sectionNames.length; i < l; i += 1) {
-            sections[sectionNames[i]].init();
-        }
-        
-        // set initial section
-        set_section(sections.launcher);
+        // start drawing
         
         animate();
+        
+        // get launcher
+        loader.load( launcherAssets , function () {
+            init_launcher();
+        });
+        
+    }
+    
+    function init_launcher () {
+        // set launcher section
+        
+        set_section( sections.launcher );
+        
+        // pause for short delay
+        // start loading all game assets
+        
+        window.requestTimeout( function () {
+            
+            loader.ui_hide( false, 0);
+            
+            loader.ui_show( domElement );
+            
+            loader.load( gameAssets , function () {
+                loader.ui_hide( true, undefined, function () {
+                    init_game();
+                });
+            });
+            
+        }, loadAssetsDelay);
+    }
+    
+    function init_game() {
+        var ms;
+        
+        // init start menu
+        
+        ms = menus.start = menumaker.make_menu( {
+            id: 'start_menu',
+            width: 260
+        } );
+        
+        ms.add_item( menumaker.make_button( {
+            id: 'Start', 
+            callback: function () {
+                start_game();
+            },
+            staticPosition: true,
+            classes: 'item_big'
+        } ) );
+        ms.add_item( menumaker.make_button( {
+            id: 'Continue', 
+            callback: function () {},
+            staticPosition: true,
+            disabled: true
+        } ) );
+        ms.add_item( menumaker.make_button( {
+            id: 'Options', 
+            callback: function () {},
+            staticPosition: true,
+            disabled: true
+        } ) );
+        
+        //ms.itemsByID.Continue.enable();
+        
+        ms.ui_keep_centered();
+        
+        // hide instantly then show start menu
+        
+        ms.ui_hide( false, 0 );
+        
+        ms.ui_show( domElement );
+        
+    }
+    
+    /*===================================================
+    
+    start
+    
+    =====================================================*/
+    
+    function start_game() {
+        var ms = menus.start;
+        
+        // disable start menu
+        ms.disable();
+        
+        // hide start menu
+        ms.ui_hide( true );
+        
+        // set intro section
+        set_section( sections.intro );
     }
     
     /*===================================================
@@ -109,24 +225,27 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
     
-    function find_objs_with_materials (objsList) {
-        var obj, objsWithMats = [], i;
+    function update_section_list () {
+        var i, l,
+            name,
+            prevNames = sectionNames.slice(0);
         
-        for (i = objsList.length - 1; i >= 0; i -= 1) {
-            obj = objsList[i];
-            
-            if (typeof obj.materials !== 'undefined' && obj.materials.length > 0) {
-                objsWithMats[objsWithMats.length] = obj;
-            }
-            else if (obj.children.length > 0)  {
-                objsWithMats = objsWithMats.concat(find_objs_with_materials(obj.children));
-            }
+        // reset names
+        
+        sectionNames = [];
+        
+        // get all names
+        
+        for ( name in sections ) {
+           if ( sections.hasOwnProperty( name ) ) {
+               sectionNames.push( name );
+           }
         }
         
-        return objsWithMats;
     }
 
     function set_section ( section ) {
+        
         // hide current section
         if (typeof currentSection !== 'undefined') {
             
@@ -134,8 +253,14 @@ var KAIOPUA = (function (main) {
             
             previousSection.hide();
             
-            transitioner.fadeTo(transitionIn, 1).promise().done( function () {
+            $(domElement).append(transitioner.domElement);
+            
+            $(transitioner.domElement).fadeTo(transitionIn, 1).promise().done( function () {
+                
+                $(transitioner.domElement).detach();
+                
                 previousSection.remove();
+                
             });
             
         }
@@ -147,15 +272,21 @@ var KAIOPUA = (function (main) {
         if (typeof section !== 'undefined') {
             
             // wait for transitioner to finish fading in
-            transitioner.promise().done(function () {
+            $(transitioner.domElement).promise().done(function () {
+                
+                $(domElement).append(transitioner.domElement);
+                
+                section.init();
                 
                 section.resize(shared.screenWidth, shared.screenHeight);
-            
+                
                 section.show();
                 
                 currentSection = section;
                 
-                transitioner.fadeTo(transitionOut, 0);
+                $(transitioner.domElement).fadeTo(transitionOut, 0).promise().done(function () {
+                    $(transitioner.domElement).detach();
+                });
                 
             });
             
@@ -186,13 +317,7 @@ var KAIOPUA = (function (main) {
         
         requestAnimationFrame( animate );
         
-        if (typeof currentSection !== 'undefined') {
-            
-            // update section
-            
-            currentSection.update();
-            
-        }
+        shared.signals.update.dispatch();
         
     }
     
@@ -204,18 +329,6 @@ var KAIOPUA = (function (main) {
         renderTarget.height = H;
         
     }
-
-    /*===================================================
-    
-    public properties
-    
-    =====================================================*/
-    
-    game.init = init;
-    game.resume = resume;
-    game.pause = pause;
-    game.domElement = function () { return domElement; };
-    game.paused = function () { return paused; };
         
     return main; 
     

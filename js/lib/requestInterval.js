@@ -23,10 +23,10 @@ window.requestInterval = function(fn, delay) {
 			start = new Date().getTime();
 		}
 
-		handle.value = requestAnimFrame(loop);
+		handle.value = requestAnimationFrame(loop);
 	};
 	
-	handle.value = requestAnimFrame(loop);
+	handle.value = requestAnimationFrame(loop);
 	return handle;
 }
 

@@ -44,6 +44,17 @@ var KAIOPUA = (function (main) {
         rayOpacityOn = 0.6,
         rayOpacityDelta = 0.02,
         environment;
+    
+    /*===================================================
+    
+    public properties
+    
+    =====================================================*/
+    
+    water.init = init;
+    water.waves = waves;
+    water.get_environment = function () { return environment; };
+    water.bob = bob;
         
     /*===================================================
     
@@ -124,13 +135,14 @@ var KAIOPUA = (function (main) {
         wavesMesh = new THREE.Mesh( wavesGeometry, wavesMaterial );
         wavesMesh.doubleSided = true;
         
-        environment.addChild( wavesMesh );
+        environment.add( wavesMesh );
         
         // water rays
         
         rayGeometry = new THREE.PlaneGeometry ( rayWidth, rayHeight + (Math.random() * (rayHeightVariation) - (rayHeightVariation * 0.5)) );
         
-        rayTexture = THREE.ImageUtils.loadTexture( rayTexturePath );
+        rayTexture = new THREE.Texture( main.utils.loader.assets[rayTexturePath] ); 
+        rayTexture.needsUpdate = true;
         
         for ( i = 0; i < numRays; i += 1 ) {
         
@@ -149,7 +161,7 @@ var KAIOPUA = (function (main) {
             };
             
             // add to environment
-            environment.addChild( ray );
+            environment.add( ray );
         }
         
     }
@@ -260,17 +272,6 @@ var KAIOPUA = (function (main) {
         object.position.y = (Math.sin(waveTime) * bobAmp);
         object.rotation.x = Math.sin(waveTime + bobTiltCycleMod) * bobTiltAmp;
     }
-    
-    /*===================================================
-    
-    public properties
-    
-    =====================================================*/
-    
-    water.init = init;
-    water.waves = waves;
-    water.get_environment = function () { return environment; };
-    water.bob = bob;
     
     return main; 
     

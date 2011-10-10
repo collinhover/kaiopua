@@ -1,30 +1,179 @@
 /*
 Loader.js
 Loader module, handles loading assets.
+
+load base message (c) MIT
 */
 var KAIOPUA = (function ( main ) {
     
-    var loader = main.loader = main.loader || {},
-        shared = main.shared = main.shared || {},
-        listNameBase = 'loadList',
+    var shared = main.shared = main.shared || {},
+        utils = main.utils = main.utils || {},
+        loader = utils.loader = utils.loader || {},
+        threeLoaderJSON,
+        threeLoaderBIN,
+        threeLoaderErrorMessage = 'Attempted to load model before THREE',
+        listIDBase = 'loadList',
+        loadingHeaderBase = 'Loading &hearts; from Hawaii',
+        loadingMessageBase = '"Kali iki" means wait a moment.',
+        loadingTips = [
+            ///////////////////////////////////////////// = bad sentence size
+            '"Aloha kāua" means may there be friendship or love between us.',
+            '"Mahalo nui loa" means thanks very much.',
+            '"Kali iki" means wait a moment.',
+            '"Koʻu hoaloha" means my friend.',
+            '"Kāne" means male or man.',
+            '"Wahine" means female or woman.',
+            '"Aliʻi kāne" means king or chieftan.',
+            '"Aliʻi wahine" means queen or chiefess.',
+            '"He mea hoʻopāʻani" means to play a game.',
+            '"Kai" means sea or ocean.',
+            '"ʻōpua" means puffy clouds.',
+            '"Kaiʻōpua" means clouds over the ocean.',
+            '"Iki" means small or little.',
+            '"Nui" means large or huge.'
+        ],
         listNumber = 0,
         loading = false,
         listsToLoad = [],
+        loadingMessages = {},
         locations = {},
         callbacks = {},
         loaded = {},
         assets = {},
-        listCurrent;
-    
+        listCurrent,
+        barWidth = 260,
+        barHeight = 12,
+        barFillSpace = 2,
+        barColor = '#FFFFFF',
+        fillColor = '#FFFFFF',
+        bar,
+        fill,
+        header,
+        message,
+        domElement;
     
     /*===================================================
     
-    custom functions
+    external init
     
     =====================================================*/
     
-    function load_list ( locationsList, callback ) {
-        var listName;
+    /*===================================================
+    
+    load bar functions
+    
+    =====================================================*/
+    
+    function init_ui () {
+        
+        var uihelper = utils.uihelper;
+        
+        loader = uihelper.make_ui_element({
+            elementType: 'section',
+            classes: 'info_panel',
+            cssmap: {
+                'padding' : '20px'
+            }
+        }, loader);
+        
+        domElement = loader.domElement;
+        
+        // bar
+
+        bar = uihelper.make_ui_element({
+            classes: 'load_bar',
+            cssmap: {
+                'border-style' : 'solid',
+                'border-color' : barColor,
+                'border-width' : '1px',
+                'border-radius' : '5px'
+            },
+            staticPosition: true,
+            width: barWidth,
+            height: barHeight
+        });
+        
+        // fill
+    
+        fill = uihelper.make_ui_element({
+            cssmap: {
+                'margin-left' : barFillSpace + 'px',
+                'margin-top' : barFillSpace + 'px',
+                'background' : fillColor,
+                'border-radius' : '5px'
+            },
+            staticPosition: true,
+            width: 0,
+            height: barHeight - barFillSpace * 2
+        });
+        
+        
+        
+        // header
+        header = uihelper.make_ui_element({
+            elementType: 'header',
+            staticPosition: true,
+            width: barWidth,
+            text: loadingHeaderBase
+        });
+        
+        // message
+        message = uihelper.make_ui_element({
+            elementType: 'p',
+            staticPosition: true,
+            width: barWidth,
+            text: loadingMessageBase
+        });
+        
+        // display
+        
+        $(bar.domElement).append( fill.domElement );
+        
+        $(domElement).append( header.domElement );
+        $(domElement).append( bar.domElement );
+        $(domElement).append( message.domElement );
+        
+        // center
+        
+        loader.ui_keep_centered();
+        
+    }
+    
+    function update_ui_progress () {
+        var locationsList, 
+            loadedList,
+            total,
+            pct = 1;
+        
+        if ( typeof listCurrent !== 'undefined' ) {
+            
+            locationsList = locations[listCurrent];
+            loadedList = loaded[listCurrent];
+            total = locationsList.length + loadedList.length;
+            
+            if ( isNaN( total ) === false ) {
+                pct = loadedList.length / total;
+            }
+            
+            $(fill.domElement).width( (barWidth - barFillSpace * 2) *  pct );
+            
+        }
+        else {
+            clear_ui_progress();
+        }
+    }
+    
+    function clear_ui_progress () {
+        $(fill.domElement).width(0);
+    }
+    
+    /*===================================================
+    
+    loading functions
+    
+    =====================================================*/
+    
+    function load_list ( locationsList, callback, listID, loadingMessage ) {
         
         if ( typeof locationsList !== 'undefined' ) {
             
@@ -34,31 +183,46 @@ var KAIOPUA = (function ( main ) {
                 locationsList = [locationsList];
             }
             
-            listName = listNameBase + listNumber;
-            
-            listNumber += 1;
+            if ( typeof listID !== 'string' ||  locations.hasOwnProperty( listID )) {
+                
+                listID = listIDBase + listNumber;
+                
+                listNumber += 1;
+                
+            }
             
             // store locations
             
-            locations[listName] = locationsList;
+            locations[listID] = locationsList;
             
             // store callbacks
             
-            callbacks[listName] = callback;
+            callbacks[listID] = callback;
+            
+            // store load message
+            
+            if ( typeof loadingMessage !== 'string' ) {
+                
+                loadingMessage = loadingTips[Math.max(0, Math.min(loadingTips.length - 1, Math.round(Math.random() * loadingTips.length) - 1))];
+            }
+            
+            loadingMessages[listID] = loadingMessage;
             
             // init new loaded array
             
-            loaded[listName] = [];
+            loaded[listID] = [];
             
-            // add list name to lists to load
+            // add list ID to lists to load
             
-            listsToLoad.push(listName);
+            listsToLoad.push(listID);
             
             // start loading
             
             load_next_list();
             
         }
+        
+        return listID;
     }
     
     function load_next_list () {
@@ -70,9 +234,19 @@ var KAIOPUA = (function ( main ) {
             
             loading = true;
             
+            // update ui to reset fill
+            
+            update_ui_progress();
+            
             // get next list 
             
             listCurrent = listsToLoad.shift();
+            
+            // set loading message
+            
+            $(message).html(loadingMessages[listCurrent]);
+            
+            // get locations
             
             locationsList = locations[listCurrent];
             
@@ -88,38 +262,112 @@ var KAIOPUA = (function ( main ) {
                 
             }
         }
+        else {
+            
+            shared.signals.loadAllCompleted.dispatch();
+            
+        }
     }
     
     function load_single ( location ) {
-        var ext;
+        var loader,
+            path, 
+            ext, 
+            loadType = 'script', 
+            data = 'script',
+            defaultCallback = function ( ) {
+                load_single_completed( data, location );
+            },
+            modelCallback = function ( geometry ) {
+                load_single_completed( geometry, location );
+            };
         
         if ( typeof location !== 'undefined' ) {
-            console.log('load ' + location);
             
-            // load based on file extension
-            // LAB handles all scripts
-            // THREE handles images
+            // load based on type of location and file extension
             
-            ext = get_file_ext( location );
+            // LAB handles scripts (js)
+            // THREE handles models (ascii/bin js) and images (jpg/png/gif/bmp)
             
-            if ( ext === 'js' ) {
-                $LAB.script( location ).wait( function (  ) {
-                    load_single_completed( 'script', location );
-                });
-            }
-            else {
+            // get type
+            
+            loadType = location.type || 'script';
+            
+            // get location path
+            
+            path = location.path || location;
+            
+            // get extension
+            
+            ext = get_file_ext( path );
+            
+            // type and/or extension check
+            
+            if ( ext === 'jpg' || ext === 'jpeg' || ext === 'png' || ext === 'gif' || ext === 'bmp' ) {
                 
+                data = new Image();
+                data.onload = defaultCallback;
+                data.crossOrigin = '';
+                data.src = path;
+                
+            }
+            else if ( loadType === 'model' || loadType === 'model_ascii' ) {
+                
+                if ( typeof THREE === 'undefined' ) {
+                    main.utils.error.generate( threeLoaderErrorMessage, 'Loader' );
+                }
+                else {
+                    
+                    // init loader if needed
+                    
+                    if ( typeof threeLoaderJSON === 'undefined' ) {
+                        threeLoaderJSON = new THREE.JSONLoader( true );
+                    }
+                    
+                    threeLoaderJSON.load( {
+                        model: path,
+                        callback: modelCallback
+                    } );
+                }
+            }
+            else if ( loadType === 'model_bin' ) {
+                
+                if ( typeof THREE === 'undefined' ) {
+                    main.utils.error.generate( threeLoaderErrorMessage, 'Loader' );
+                }
+                else {
+                    
+                    // init loader if needed
+                    
+                    if ( typeof threeLoaderBIN === 'undefined' ) {
+                        threeLoaderBIN = new THREE.BinaryLoader( true );
+                    }
+                    
+                    threeLoaderBIN.load( {
+                        model: path,
+                        callback: modelCallback
+                    } );
+                    
+                }
+            }
+            // default to script loading
+            else {
+                $LAB.script( path ).wait( defaultCallback );
             }
         }
         
     }
     
     function load_single_completed ( data, location ) {
-        var locationsList, index;
-        console.log('completed load: ' + location);
+        var locationsList, index, path;
+        
+        // get location path
+            
+        path = location.path || location;
+        
         // store data in assets
         
-        assets[location] = data;
+        assets[path] = data;
         
         // get current locations list
         
@@ -145,6 +393,10 @@ var KAIOPUA = (function ( main ) {
             
         }
         
+        // update ui
+        
+        update_ui_progress();
+        
         // if current list is complete
         
         if ( locationsList.length === 0 ) {
@@ -157,24 +409,25 @@ var KAIOPUA = (function ( main ) {
     
     function current_list_completed () {
         var callback = callbacks[listCurrent];
-        console.log('list ' + listCurrent + ' completed');
+        
+        // do callback before clear
+        if ( typeof callback !== 'undefined' ) {
+            
+            callback.call();
+            
+        }
+        
         // clear
         
         delete locations[listCurrent];
         
         delete callbacks[listCurrent];
         
+        delete loadingMessages[listCurrent];
+        
         delete loaded[listCurrent];
         
         listCurrent = undefined;
-        
-        // do callback
-        
-        if ( typeof callback !== 'undefined' ) {
-            
-            callback.call();
-            
-        }
         
         // shared signal
         
@@ -199,7 +452,7 @@ var KAIOPUA = (function ( main ) {
         dotIndex = location.lastIndexOf('.');
         
         if ( dotIndex !== -1 ) {
-            ext = location.substr( dotIndex + 1 );
+            ext = location.substr( dotIndex + 1 ).toLowerCase();
         }
         
         return ext;
@@ -211,6 +464,8 @@ var KAIOPUA = (function ( main ) {
     
     =====================================================*/
     
+    loader.init_ui = init_ui;
+    loader.clear_ui_progress = clear_ui_progress;
     loader.load = load_list;
     loader.assets = assets;
     

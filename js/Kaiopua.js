@@ -6,16 +6,21 @@ Main module, handles browser events.
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
+        utils = main.utils = main.utils || {},
         loader, error, game,
+        lastGamma, lastBeta,
         libList = [
             "js/lib/jquery-1.6.4.min.js",
             "js/lib/RequestAnimationFrame.js",
+            "js/lib/requestInterval.js",
+            "js/lib/requestTimeout.js",
             "js/lib/signals.min.js"
         ],
         setupList = [
             "js/utils/Dev.js",
             "js/utils/Error.js",
             "js/utils/Loader.js",
+            "js/utils/UIHelper.js",
             "js/game/Game.js"
         ];
     
@@ -44,8 +49,7 @@ var KAIOPUA = (function (main) {
         shared.html= {
             staticMenu: $('#static_menu'),
             gameContainer: $('#game'),
-            errorContainer: $('#error_container'),
-            transitioner: $('#transitioner')
+            errorContainer: $('#error_container')
         };
         
         shared.signals = {
@@ -65,6 +69,7 @@ var KAIOPUA = (function (main) {
             loadAllCompleted : new signals.Signal(),
             
             error : new signals.Signal()
+            
         };
         
         // add listeners for events
@@ -84,19 +89,22 @@ var KAIOPUA = (function (main) {
         
         window.onerror = onError;
         shared.signals.error.add(onError);
-        
-        // resize once
-        onWindowResize();
     }
     
     function init_setup () {
         
-        error = main.error;
-        loader = main.loader;
+        // utils
+        
+        error = utils.error;
+        loader = utils.loader;
+        
+        loader.init_ui();
+        
+        // game
+        
         game = main.game;
         
         // check for errors
-        error = main.error;
         
         if (error.check()) {
             error.process();
@@ -105,6 +113,9 @@ var KAIOPUA = (function (main) {
         else {
             game.init();
         }
+        
+        // resize once
+        onWindowResize();
     }
     
     /*===================================================
@@ -186,8 +197,8 @@ var KAIOPUA = (function (main) {
                     }
             }
             
-            e.mouse.x = x;
-            e.mouse.y = y;
+            shared.mouse.x = x;
+            shared.mouse.y = y;
             
             lastGamma = gamma;
             lastBeta = beta;
@@ -240,8 +251,8 @@ var KAIOPUA = (function (main) {
             main.game.pause();
         }
         
-        if (typeof main.dev !== 'undefined') {
-            dev.log_error(error, url, lineNumber);
+        if (typeof main.utils.dev !== 'undefined') {
+            main.utils.dev.log_error(error, url, lineNumber);
         }
         
     }
