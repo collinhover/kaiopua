@@ -182,59 +182,42 @@ var KAIOPUA = (function (main) {
         
         // character
         
-        var geometryChar = assets["assets/models/character.js"];
+        var geometryTest2 = assets["assets/models/character_mt2.js"];
         
-        var modelChar = objectmaker.make_model({
-            geometry: geometryChar,
-            vertexColors: THREE.VertexColors,
+        var modelTest2 = objectmaker.make_model({
+            geometry: geometryTest2,
+            //vertexColors: THREE.VertexColors,
             shading: THREE.FlatShading
         });
         
-        modelChar.mesh.position.set(-350, 0, 0);
+        modelTest2.mesh.position.set(-350, 0, 0);
         
-        scene.add( modelChar.mesh );
+        scene.add( modelTest2.mesh );
         
-        modelChar.morphs.play('animation', { 
+        modelTest2.morphs.play('animation', { 
             duration:1000,
             loop: true
         });
         
         // head uvmapped blender
         
-        var geometryHeadA = assets["assets/models/kaiopua_head_uvmapped.js"];
+        var geometryTest3 = assets["assets/models/character_mt9.js"];
         
-        var modelHeadA = objectmaker.make_model({
-            geometry: geometryHeadA,
-            vertexColors: THREE.VertexColors,
+        var modelTest3 = objectmaker.make_model({
+            geometry: geometryTest3,
+            //vertexColors: THREE.VertexColors,
             shading: THREE.FlatShading
         });
         
-        modelHeadA.mesh.position.set(250, 0, 0);
+        modelTest3.mesh.position.set(250, 0, 0);
         
-        scene.add( modelHeadA.mesh );
+        scene.add( modelTest3.mesh );
         
-        modelHeadA.morphs.play('animation', { 
+        modelTest3.morphs.play('animation', { 
             duration:1000,
             loop: true
         });
-        
-        // head uvmapped obj
-        
-        var geometrySphere = assets["assets/models/test_sphere.js"];
-        
-        var modelSphere = objectmaker.make_model({
-            geometry: geometrySphere,
-            shading: THREE.FlatShading
-        });
-        
-        modelSphere.morphs.play('animation', { 
-            duration:1000,
-            loop: true
-        });
-        
-        modelSphere.mesh.position.set(700, 0, 0);
-        
-        scene.add( modelSphere.mesh );
+		
     }
     
     /*===================================================
