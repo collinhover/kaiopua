@@ -37,7 +37,7 @@ var KAIOPUA = (function (main) {
             materials,
             materialsToModify,
             material,
-            geometryHasMaterials = false,
+            hasVertexColors = false,
             mesh,
             scale,
             morphs;
@@ -53,8 +53,10 @@ var KAIOPUA = (function (main) {
         // materials
         
         materials = parameters.materials || [];
-        
-        materials = materials && materials.length ? materials : [ materials ];
+		
+		if ( materials.hasOwnProperty('length') === false ) {
+			materials = [ materials ];
+		}
         
         materialsToModify = materials.slice(0);
         
@@ -67,30 +69,34 @@ var KAIOPUA = (function (main) {
             // add to all
             
             for ( i = 0, l = geometry.materials.length; i < l; i += 1) {
-                materialsToModify.push( geometry.materials[i][0] );
+				
+				material = geometry.materials[i][0];
+				
+				if ( material.vertexColors === true || material.vertexColors === THREE.VertexColors ) {
+					hasVertexColors = true;
+				}
+				
+                materialsToModify.push( material );
             }
             
         }
-        
-        // if using vertex colors or geometry materials
-        if ( geometryHasMaterials === true || parameters.vertexColors === true || parameters.vertexColors === THREE.VertexColors ) {
-            
-            parameters.vertexColors = THREE.VertexColors;
-            
-            materials.push( new THREE.MeshFaceMaterial() );
-            
-        }
-        // if no materials yet, add default
-        else if ( materials.length === 0 ) {
-            
-            material = new THREE.MeshLambertMaterial();
+		
+		// if no materials yet, add default
+        if ( materials.length === 0 ) {
+			
+			if ( hasVertexColors === true ) {
+				material = new THREE.MeshFaceMaterial();
+			}
+			else {
+				material = new THREE.MeshLambertMaterial();
+			}
             
             materials.push( material );
             
             materialsToModify.push( material );
             
         }
-
+		
         // material properties
         
         for ( i = 0, l = materialsToModify.length; i < l; i += 1) {
@@ -100,16 +106,12 @@ var KAIOPUA = (function (main) {
             
             material.morphTargets = geometry.morphTargets.length > 0 ? true : false;
             
-            // vertex colors
-            
-            material.vertexColors = parameters.vertexColors || THREE.FaceColors;
-            
             // shading
             // (1 = flat, 2 = smooth )
             material.shading = parameters.shading || THREE.SmoothShading;
             
         }
-        
+		
         // mesh
         
         mesh = new THREE.Mesh( geometry, materials );
@@ -130,7 +132,6 @@ var KAIOPUA = (function (main) {
         morphs = make_morphs_handler( mesh );
         
         // public properties
-        
         model.mesh = mesh;
         model.morphs = morphs;
         
@@ -179,15 +180,13 @@ var KAIOPUA = (function (main) {
             // get if updater for animation exists
             
             updaterIndex = uNames.indexOf( name );
-            
-            // set morphs map
-            main.utils.dev.log(name);
-            morphsMap = shapesList[ name ].map;
-            
+			
             // new updater
             
-            if ( updaterIndex === -1 && typeof morphsMap !== 'undefined' && morphsMap.length !== 0 ) {
-                
+            if ( updaterIndex === -1 && typeof shapesList[ name ] !== 'undefined' && shapesList[ name ].map.length !== 0 ) {
+			
+				morphsMap = shapesList[ name ].map;
+				
                 updater = make_morph_updater( name );
                 
                 info = updater.info;

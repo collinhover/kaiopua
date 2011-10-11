@@ -167,7 +167,6 @@ var KAIOPUA = (function (main) {
         
         var modelTree = objectmaker.make_model({
             geometry: geometryTree,
-            vertexColors: THREE.VertexColors,
             shading: THREE.FlatShading
         });
         
@@ -179,14 +178,13 @@ var KAIOPUA = (function (main) {
         modelTree.mesh.position.set(-700, -400, 0);
         
         scene.add( modelTree.mesh );
-        
+		
         // character
         
         var geometryTest2 = assets["assets/models/character_mt2.js"];
         
         var modelTest2 = objectmaker.make_model({
             geometry: geometryTest2,
-            //vertexColors: THREE.VertexColors,
             shading: THREE.FlatShading
         });
         
@@ -198,14 +196,13 @@ var KAIOPUA = (function (main) {
             duration:1000,
             loop: true
         });
-        
+		
         // head uvmapped blender
         
         var geometryTest3 = assets["assets/models/character_mt9.js"];
-        
+	
         var modelTest3 = objectmaker.make_model({
             geometry: geometryTest3,
-            //vertexColors: THREE.VertexColors,
             shading: THREE.FlatShading
         });
         
@@ -217,7 +214,6 @@ var KAIOPUA = (function (main) {
             duration:1000,
             loop: true
         });
-		
     }
     
     /*===================================================
