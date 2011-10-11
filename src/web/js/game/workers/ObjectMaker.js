@@ -181,7 +181,7 @@ var KAIOPUA = (function (main) {
             updaterIndex = uNames.indexOf( name );
             
             // set morphs map
-                
+            main.utils.dev.log(name);
             morphsMap = shapesList[ name ].map;
             
             // new updater
