@@ -56,8 +56,6 @@ Iki, a simple boy with a big head, wakes from dreams of clouds over the ocean an
 
 Suddenly, a huge roar of "HIIIIIIIIIIII!" explodes from every direction, and Iki calls back a friendly greeting to the moon sized worm named Kaiopua on whose face he lives. Running down to talk to Kaiopua, Iki learns that something strange has been going on in the rings that is making Kaiopua feel sick, and so he sets off to find out about the disturbances.
 
-![character_003](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_character_003.jpg "Characters")
-
 ####Gameplay
 The gameplay of Kaiopua consists of a third-person journey through a moon sized worm called Kaiopua. The player can explore by pressing and holding the WASD or arrow keys to move, while using the mouse to select and interact with objects. Players begin their journey on the face of Kaiopua, and quickly transition into the first ring. Players will learn immediately about the core mechanic of the game, and find out about movement, turning, looking, interacting with objects, and solving problems shortly after.
 
@@ -94,7 +92,7 @@ The player is given very little background before starting. At the beginning of 
 ![character_003](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_character_animation_001.jpg "Character Animation")
 ![character_004](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_character_animation_002.jpg "Character Animation")
 ![character_005](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_character_faces_001.jpg "Character Faces")
-![character_006](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_lantern_001.jpg "Character Lantern")
+![character_006](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_character_lantern_001.jpg "Character Lantern")
 
 ####Levels
 *   Cylinder / ring shape, gravity at center
@@ -192,6 +190,7 @@ Additionally, player may have a 2D map view to see pathways and locations of pow
 
 The following are examples of the visual style of the game.
 
+![character_003](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_character_003.jpg "Characters")
 ![visual_style_003](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_visual_style_003.jpg "Visual Style")
 ![visual_style_004](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_visual_style_004.jpg "Visual Style")
 ![visual_style_005](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_visual_style_005.jpg "Visual Style")
