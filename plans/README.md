@@ -1,4 +1,4 @@
-Project Plan
+﻿Project Plan
 ============
 ##Collin Hover, Graduate Thesis: Kaiopua
 
@@ -77,6 +77,10 @@ The player is given very little background before starting. At the beginning of 
 *   Player solves puzzles and collects objects in a cycle
 
 ![world_002](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_world_002.jpg "World")
+![house_001](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_house_001.jpg "Character House")
+![house_002](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_house_002.jpg "Character House")
+![walls_rocks_001](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_walls_rocks_001.jpg "Walls and Rocks")
+![plants_001](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_plants_001.jpg "Plants")
 
 ####Player
 *   Simple boy with a farmer’s pack basket and a bottle of sunshine
@@ -87,6 +91,10 @@ The player is given very little background before starting. At the beginning of 
 
 ![character_001](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_character_001.jpg "Character Front")
 ![character_002](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_character_002.jpg "Character Side")
+![character_003](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_character_animation_001.jpg "Character Animation")
+![character_004](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_character_animation_002.jpg "Character Animation")
+![character_005](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_character_faces_001.jpg "Character Faces")
+![character_006](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_lantern_001.jpg "Character Lantern")
 
 ####Levels
 *   Cylinder / ring shape, gravity at center
@@ -104,6 +112,8 @@ The player is given very little background before starting. At the beginning of 
 
 ![world_003](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_world_003.jpg "Levels")
 ![environment_001](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_environment_001.jpg "Environment")
+![creatures_001](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_creatures_001.jpg "Creatures")
+![creatures_002](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_creatures_002.jpg "Creatures")
 
 ####Overall Objective
 *   Fix the worm
