@@ -1,4 +1,4 @@
-Kaiopua
+﻿Kaiopua
 ========
 
 ####Web-native science fiction puzzle game
@@ -20,20 +20,21 @@ The layout of a website is heavily influenced by efficiency in a number of ways,
 
 ##Contributors
 
+####Concepts and Design
+
+Collin Hover  
+
 ####Code
 
 Collin Hover  
 
-####Modelling / Texturing / Animation
+####Modelling / Animation
 
 Collin Hover  
 Ian Wilson  
 Kevin Ly  
 Houston Hardaway  
 Joshua Wilson
-
-####Concept Illustration
-Collin Hover  
 Amanda Nicole East  
 
 ####Music
