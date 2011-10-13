@@ -10,8 +10,6 @@
   * Facebook share url to domain name
   * Twitter share url to domain name
 * Get domain name and hosting
-* Speak to Hawaiian natives about concepts that derive from Hawaiian culture
-* Vertex coloring of models
 * Physics - basic + planetoid
 * 3rd Person character camera
 * Scaling mechanics:
@@ -26,27 +24,34 @@
 * Research shaders and cell-shading
 
 #### Joshua
-* Model shack/hut with japanese style roof, patio, and banana leaf door
-* Model bed/cot, very simple/plain
-* Model palm tree and banana tree
+* Model shack/hut with japanese style roof and banana leaf door
+* Model bed/cot, very simple/plain flat mat with ti leaves
+* Model palm tree
 * Model hill with spiral path from top to bottom
+* Model fence for hill path
 * Model taro plant
-* Model pineapple plant
 
 #### Ian
-* Texture player character
-* Animate player character
-  * Run cycle
-  * Pick up object
-  * Activate / shoot generic object
-
-#### Kevin
-* Model world face morphs
-  * Neutral
+* Animate / morph player character in sections (arm left, arm right, body, and legs) with the following:
+  * Idle
+  * Walk
+  * Run
+  * Jump
+  * Grab / use
+  * Hold Lantern up
+  * Hurt / pain
+* Animate / morph player character head as follows:
+  * Look left
+  * Look right
+  * Look up
+  * Look down
   * Smile
   * Frown
   * Mouth open
-* Model world whale tail
+
+#### Kevin
+* Model world face morphs
+  * Mouth open
 * Model environment objects
   * Boulders / rocks
 * Model Power source object
@@ -57,22 +62,20 @@
   * sink into ground
 * Rig world whale tail
 * Tail morph targets - up, down, left, & right
+* Model pig
 
 #### Houston
 * Model mini-sun
-* Model bottle
-* Model tiki lamp
-* Model asian style lamp
+* Model lantern
+* Model chicken
+* Rig chicken
+* Animate chicken
+  * Walk
+  * Peck ground
 
 #### Amanda
-* Illustrate potential animals and enemies
-  * Feral pig
-  * Big worm creatures
-* Illustrate potential environment objects
-  * Taro plant
-  * Pineapple plant
-  * Grass
-  * Trees
+* Learn to model using Blender
+  * Try with any of plant objects
 * Color schemes
 
 #### Sound Artist
