@@ -22,7 +22,7 @@ The layout of a website is heavily influenced by efficiency in a number of ways,
 
 ####Author
 
-[Collin Hover](https://collinhover.com "Collin Hover")
+[Collin Hover](http://collinhover.com "Collin Hover")
 
 ####Thesis Committee
 
