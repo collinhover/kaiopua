@@ -18,19 +18,21 @@ Because everything on the web is stored somewhere remote, loading and delivery t
 
 The layout of a website is heavily influenced by efficiency in a number of ways, but most notable is usability. If a website is well organized and well planned, users will find it easy to use because it is friendly and not overwhelming. Efficiency used in this way is about hierarchy of information and is similar to what was said by Antoine de Saint Exupéry: "A designer knows he has achieved perfection not when there is nothing left to add, but when there is nothing left to take away."  
 
+##Author
+
+Collin Hover
+
 ##Contributors
 
-####Concepts and Design
+####Thesis Committee
 
-Collin Hover  
-
-####Code
-
-Collin Hover  
+Seiji Ikeda (Major Professor) - Assistant Professor, Art + Art History  
+Tuan Ho - Assistant Professor, Art + Art History   
+Robert Hower - Professor & Chair, Art + Art History   
+Vassilis Athitsos - Assistant Professor, Computer Science and Engineering  
 
 ####Modelling / Animation
 
-Collin Hover  
 Ian Wilson  
 Kevin Ly  
 Houston Hardaway  
@@ -41,7 +43,7 @@ Amanda Nicole East
 
 (none yet - TBA)
 
-####Technology
+##Technology
 
 HTML5 < canvas >, < video >, < audio >  
 Javascript, WebGL  
@@ -51,13 +53,6 @@ Javascript, WebGL
 ThreeJS, jQuery  
 SignalsJS, Modernizr, HTML5-Reset, RequestAnimFrame  
 (+ development: DAT-GUI, StatsJS, LoggerJS)  
-
-####Thesis Committee
-
-Seiji Ikeda (Major Professor) - Assistant Professor, Art + Art History  
-Tuan Ho - Assistant Professor, Art + Art History   
-Robert Hower - Professor & Chair, Art + Art History   
-Vassilis Athitsos - Assistant Professor, Computer Science and Engineering  
 
 ##Brief
 ####Target Audience
@@ -89,5 +84,5 @@ The project seeks to utilize the teachings of epistemic gaming in the form of a 
 
 ---
   
-*Copyright (C) 2011 Collin Hover & Kaiopua Authors.*  
+*Copyright (C) 2011 Collin Hover*  
 *For full license and information, see [LICENSE](https://github.com/collinhover/kaiopua/blob/master/LICENSE) and [COPYING](https://github.com/collinhover/kaiopua/blob/master/COPYING).*  
