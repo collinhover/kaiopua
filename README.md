@@ -18,11 +18,11 @@ Because everything on the web is stored somewhere remote, loading and delivery t
 
 The layout of a website is heavily influenced by efficiency in a number of ways, but most notable is usability. If a website is well organized and well planned, users will find it easy to use because it is friendly and not overwhelming. Efficiency used in this way is about hierarchy of information and is similar to what was said by Antoine de Saint Exupéry: "A designer knows he has achieved perfection not when there is nothing left to add, but when there is nothing left to take away."  
 
-##Author
-
-Collin Hover
-
 ##Contributors
+
+####Author
+
+[Collin Hover](https://collinhover.com "Collin Hover")
 
 ####Thesis Committee
 
