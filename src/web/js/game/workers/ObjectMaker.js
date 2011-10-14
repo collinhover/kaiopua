@@ -37,7 +37,6 @@ var KAIOPUA = (function (main) {
             materials,
             materialsToModify,
             material,
-            hasVertexColors = false,
             mesh,
             scale,
             morphs;
@@ -49,7 +48,9 @@ var KAIOPUA = (function (main) {
         // geometry
         
         geometry = parameters.geometry || new THREE.Geometry();
-        
+		
+		//geometry.computeVertexNormals();
+		
         // materials
         
         materials = parameters.materials || [];
@@ -64,17 +65,11 @@ var KAIOPUA = (function (main) {
         
         if ( geometry.materials && geometry.materials.length > 0 ) {
             
-            geometryHasMaterials = true;
-            
             // add to all
             
             for ( i = 0, l = geometry.materials.length; i < l; i += 1) {
 				
 				material = geometry.materials[i][0];
-				
-				if ( material.vertexColors === true || material.vertexColors === THREE.VertexColors ) {
-					hasVertexColors = true;
-				}
 				
                 materialsToModify.push( material );
             }
@@ -83,17 +78,10 @@ var KAIOPUA = (function (main) {
 		
 		// if no materials yet, add default
         if ( materials.length === 0 ) {
-			
-			if ( hasVertexColors === true ) {
-				material = new THREE.MeshFaceMaterial();
-			}
-			else {
-				material = new THREE.MeshLambertMaterial();
-			}
             
-            materials.push( material );
+            materials = [ new THREE.MeshFaceMaterial() ];
             
-            materialsToModify.push( material );
+            materialsToModify = materialsToModify.concat( material );
             
         }
 		
@@ -103,13 +91,12 @@ var KAIOPUA = (function (main) {
             material = materialsToModify[i];
             
             // morph targets
-            
-            material.morphTargets = geometry.morphTargets.length > 0 ? true : false;
-            
+			material.morphTargets = geometry.morphTargets.length > 0 ? true : false;
+			
             // shading
             // (1 = flat, 2 = smooth )
-            material.shading = parameters.shading || THREE.SmoothShading;
-            
+			material.shading = parameters.shading || THREE.SmoothShading;
+			
         }
 		
         // mesh
@@ -235,7 +222,11 @@ var KAIOPUA = (function (main) {
             morphData,
             map;
         
-        for ( i = 0, l = morphs.length; i < l; i += 1 ) {
+		// parses all morphs except for last
+		// assumes last is identical to base geometry
+		// as required to make model + morphtargets work
+		
+        for ( i = 0, l = morphs.length - 1; i < l; i += 1 ) {
             
             morph = morphs[i];
             
@@ -604,160 +595,6 @@ var KAIOPUA = (function (main) {
         
         return updater;
     }
-    
-    // shapes
-    /*
-    shapes.updater.update = function () {
-        
-        var i, l,
-            list = shapes.list,
-            updater = shapes.updater,
-            info = updater.info,
-            nameCurrent,
-            nameTarget,
-            dataCurrent,
-            dataTarget,
-            morphsMap,
-            morphIndex,
-            morphIndexCurrent,
-            morphIndexLast,
-            numFrames,
-            duration,
-            durationFrame,
-            interpolation,
-            interpolationFrame,
-            time,
-            timeStart,
-            timeLast,
-            timeDelta,
-            frame,
-            loop,
-            callback;
-        
-        if ( info.updating === true ) {
-            
-            // set parameters
-            
-            nameCurrent = info.nameCurrent;
-            nameTarget = info.nameTarget;
-            dataCurrent = list[ nameCurrent ];
-            dataTarget = list[ nameTarget ];
-            
-            timeStart = info.timeStart;
-            time = new Date().getTime();
-            timeLast = info.time;
-            timeDelta = time - timeStart;
-            info.time = time;
-            
-            morphMap = [];
-            
-            // shifting between two shapes
-            if ( nameCurrent !== nameTarget ) {
-                
-                morphsMap = [ dataCurrent.map[ 0 ], dataTarget.map[ 0 ] ];
-                
-            }
-            // playing shape animation
-            else {
-                
-                morphsMap = dataCurrent.map;
-                
-            }
-            
-            numFrames = morphsMap.length;
-            
-            duration = info.duration;
-            
-            durationFrame = duration / (numFrames - 1);
-            
-            interpolation = timeDelta / duration;
-            
-            interpolationFrame = (timeDelta % durationFrame) / durationFrame;
-            
-            frame = (Math.floor( (numFrames - 1) * interpolation ) + 1) % numFrames;
-            
-            if ( frame !== info.frameCurrent) {
-                
-                //info.frameCurrent = frame - 1;
-                
-                morphIndexLast = morphsMap[ info.frameLast ].index;
-                morphIndexCurrent = morphsMap[ info.frameCurrent ].index;
-                
-                mesh.morphTargetInfluences[ morphIndexLast ] = 0;
-                mesh.morphTargetInfluences[ morphIndexCurrent ] = 1;
-                
-                main.utils.dev.log(' --------------- ');
-                main.utils.dev.log('frame ' + frame);
-                main.utils.dev.log(' influences atm ');
-                
-                // make sure all other influences are reset
-                // probably not the best way to do it
-                for ( i = 0, l = morphsMap.length; i < l; i += 1) {
-                    
-                    if ( morphsMap[ i ].index !== morphIndexCurrent ) {
-                        //mesh.morphTargetInfluences[morphsMap[ i ].index] = 0;
-                    }
-                    
-                    main.utils.dev.log(' > ' + i + ' = ' + mesh.morphTargetInfluences[morphsMap[ i ].index]);
-                    
-                }
-                
-                info.frameLast = info.frameCurrent;
-                info.frameCurrent = frame;
-                
-            }
-            
-            if ( timeDelta < duration ) {
-            
-                morphIndex = morphsMap[ frame ].index;
-                
-                morphIndexLast = morphsMap[ info.frameLast ].index;
-                
-                mesh.morphTargetInfluences[ morphIndex ] = interpolationFrame;
-                mesh.morphTargetInfluences[ morphIndexLast ] = 1 - mesh.morphTargetInfluences[ morphIndex ];
-                
-            }
-            // else complete timeDelta >= duration
-            else {
-                
-                main.utils.dev.log(' final influences ');
-                
-                // make sure all other influences are reset
-                // probably not the best way to do it
-                for ( i = 0, l = morphsMap.length; i < l; i += 1) {
-                    
-                    main.utils.dev.log(' > ' + i + ' = ' + mesh.morphTargetInfluences[morphsMap[ i ].index]);
-                    
-                }
-                
-                // loop or stop
-                
-                loop = info.loop;
-                
-                if ( loop === true ) {
-                    
-                    morphs.play( nameTarget, duration, loop, callback );
-                    
-                }
-                else {
-                    
-                    updater.stop();
-                    
-                }
-                
-                // callback
-                
-                callback = info.callback;
-                
-                if ( typeof callback !== 'undefined' ) {
-                    callback.call();
-                }
-                
-            }
-        }
-        
-    };
-    */
     
     /*===================================================
     

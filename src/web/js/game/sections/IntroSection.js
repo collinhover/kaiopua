@@ -12,16 +12,16 @@ var KAIOPUA = (function (main) {
         readyAll = false,
         assets,
         objectmaker,
+		world,
+		player,
+		camera,
+        scene,
         renderer, 
         renderTarget,
         composerScene,
         renderPasses,
-        camera,
-        cameraControls,
-        scene,
-        ambientLight,
-        pointLight,
-        lightVis;
+		light,
+		lightSource;
     
     /*===================================================
     
@@ -45,35 +45,8 @@ var KAIOPUA = (function (main) {
     =====================================================*/
     
     game.update_section_list();
-    
-    /*===================================================
-    
-    external init
-    
-    =====================================================*/
-    
-    function ready () { 
-        return readyInternal && readyAll; 
-    }
-    
-    function init () {
-        
-        if ( !ready() ) {
-            
-            assets = main.utils.loader.assets;
-            
-            objectmaker = main.game.workers.objectmaker;
-            
-            init_internal();
-            
-            init_environment();
-            
-            readyAll = true;
-            
-        }
-    }
-    
-    function init_internal () {
+	
+	function init_internal () {
         
         if ( readyInternal !== true ) {
             
@@ -88,37 +61,19 @@ var KAIOPUA = (function (main) {
     }
     
     function init_basics () {
+		
+		// core
+		
+		world = game.core.world;
+		player = game.core.player;
         
         // camera
         
-        camera = new THREE.PerspectiveCamera(60, shared.screenWidth / shared.screenHeight, 1, 10000);
-        
-        camera.position.set(0, 0, 1200);
-        camera.lookAt( new THREE.Vector3(0, 0, 0) );
-        
-        cameraControls = new THREE.FlyControls( camera );
-        cameraControls.rollSpeed = 0.5;
-        cameraControls.movementSpeed = 400;
-        cameraControls.update();
+        camera = player.get_camera();
         
         // scene
         
-        scene = new THREE.Scene();
-        
-        // lights
-        
-        ambientLight = new THREE.AmbientLight( 0x444444 );
-        
-        scene.add( ambientLight );
-        
-        pointLight = new THREE.SpotLight( 0xffffff );
-        pointLight.position = new THREE.Vector3(-1, 0, 1).normalize();
-        
-        scene.add( pointLight );
-        
-        // fog
-        
-        scene.fog = new THREE.Fog( 0xffffff, -100, 10000 );
+        scene = world.get_scene();
         
     }
     
@@ -149,71 +104,46 @@ var KAIOPUA = (function (main) {
         
     }
     
+    /*===================================================
+    
+    external init
+    
+    =====================================================*/
+    
+    function ready () { 
+        return readyInternal && readyAll; 
+    }
+    
+    function init () {
+        
+        if ( !ready() ) {
+			
+            init_internal();
+            
+            init_environment();
+            
+            readyAll = true;
+            
+        }
+    }
+    
     function init_environment () {
+		
+		// light
+		
+		light = new THREE.SpotLight( 0xffffff );
+        light.position = new THREE.Vector3(-1, 0, 1).normalize();
+        
+        scene.add( light );
         
         // light visual
         
-        lightVis = new THREE.Mesh( new THREE.SphereGeometry( 4, 8, 8 ), new THREE.MeshBasicMaterial( { color: 0xffffff } ) );
+        lightSource = new THREE.Mesh( new THREE.SphereGeometry( 4, 8, 8 ), new THREE.MeshBasicMaterial( { color: 0xffffff } ) );
         
-        lightVis.useQuaternion = true;
+        lightSource.useQuaternion = true;
         
-        scene.add( lightVis );
-        
-        // testing
-        
-        // tree from rome
-        
-        var geometryTree = assets["assets/models/rome_tree_anim.js"];
-        
-        var modelTree = objectmaker.make_model({
-            geometry: geometryTree,
-            shading: THREE.FlatShading
-        });
-        
-        modelTree.morphs.play('animation', { 
-            duration:2000,
-            loop: true
-        });
-        
-        modelTree.mesh.position.set(-700, -400, 0);
-        
-        scene.add( modelTree.mesh );
+        scene.add( lightSource );
 		
-        // character
-        
-        var geometryTest2 = assets["assets/models/character_mt2.js"];
-        
-        var modelTest2 = objectmaker.make_model({
-            geometry: geometryTest2,
-            shading: THREE.FlatShading
-        });
-        
-        modelTest2.mesh.position.set(-350, 0, 0);
-        
-        scene.add( modelTest2.mesh );
-        
-        modelTest2.morphs.play('animation', { 
-            duration:1000,
-            loop: true
-        });
-		
-        // head uvmapped blender
-        
-        var geometryTest3 = assets["assets/models/character_mt9.js"];
-	
-        var modelTest3 = objectmaker.make_model({
-            geometry: geometryTest3,
-            shading: THREE.FlatShading
-        });
-        
-        modelTest3.mesh.position.set(250, 0, 0);
-        
-        scene.add( modelTest3.mesh );
-        
-        modelTest3.morphs.play('animation', { 
-            duration:1000,
-            loop: true
-        });
     }
     
     /*===================================================
@@ -243,29 +173,21 @@ var KAIOPUA = (function (main) {
     }
     
     function update () {
-        
-        // update camera controls
-        cameraControls.update();
-        
-        // position point light to always be 
+		
+		// position point light to always be 
         // above and infront of camera
-        // camera.matrixWorld
-        // quaternion
-        // Vector3.setPositionFromMatrix( m );
-        // Vector3.setRotationFromMatrix( m );
+		
         var camP = camera.position.clone();
         var newP = new THREE.Vector3( 0, 200, -500);
         
         camera.quaternion.multiplyVector3( newP );
         
         newP.addSelf( camera.position );
-        //camera.matrixWorld.multiplyVector3( cubeP );
         
-        lightVis.position = newP;
-        pointLight.position = newP;//.clone().normalize();
-        
-        //lightVis.quaternion.setFromRotationMatrix( camera.matrixWorld );
-        lightVis.quaternion.copy( camera.quaternion );
+		light.position = newP;
+        lightSource.position = newP;
+		
+        lightSource.quaternion.copy( camera.quaternion );
         
         // render
         

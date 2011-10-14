@@ -40,31 +40,8 @@ var KAIOPUA = (function (main) {
     =====================================================*/
     
     game.update_section_list();
-    
-    /*===================================================
-    
-    external init
-    
-    =====================================================*/
-    
-    function ready () { 
-        return readyInternal && readyAll; 
-    };
-    
-    function init () {
-        
-        if ( !ready() ) {
-            
-            assets = main.utils.loader.assets;
-            
-            init_internal();
-            
-            readyAll = true;
-            
-        }
-    }
-    
-    function init_internal () {
+	
+	function init_internal () {
         
         if ( readyInternal !== true ) {
             
@@ -132,6 +109,29 @@ var KAIOPUA = (function (main) {
         composerScene.addPass( renderPasses.env );
         composerScene.addPass( renderPasses.screen );
         
+    }
+    
+    /*===================================================
+    
+    external init
+    
+    =====================================================*/
+    
+    function ready () { 
+        return readyInternal && readyAll; 
+    };
+    
+    function init () {
+        
+        if ( !ready() ) {
+            
+            assets = main.utils.loader.assets;
+            
+            init_internal();
+            
+            readyAll = true;
+            
+        }
     }
     
     /*===================================================

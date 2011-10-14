@@ -10,6 +10,7 @@ var KAIOPUA = (function (main) {
         loader = utils.loader = utils.loader || {},
         uihelper = utils.uihelper = utils.uihelper || {},
         game = main.game = main.game || {},
+		core = game.core = game.core || {},
         sections = game.sections = game.sections || {},
         workers = game.workers = game.workers || {},
         menus = game.menus = game.menus || {},
@@ -18,6 +19,8 @@ var KAIOPUA = (function (main) {
         menumaker,
         renderer, 
         renderTarget,
+		world,
+		player,
         sectionNames = [],
         currentSection, 
         previousSection, 
@@ -34,9 +37,7 @@ var KAIOPUA = (function (main) {
             "js/lib/three/postprocessing/ShaderPass.js",
             "js/lib/three/postprocessing/MaskPass.js",
             "js/effects/LinearGradient.js",
-            "js/effects/FocusVignette.js",
-            "js/game/workers/MenuMaker.js",
-            "js/game/workers/ObjectMaker.js"
+            "js/effects/FocusVignette.js"
         ],
         launcherAssets = [
             "js/game/sections/LauncherSection.js",
@@ -46,11 +47,16 @@ var KAIOPUA = (function (main) {
             "assets/textures/light_ray.png"
         ],
         gameAssets = [
+			"js/lib/jiglib.all.min.js",
+			"js/game/workers/MenuMaker.js",
+			"js/game/workers/ObjectMaker.js",
+			"js/game/core/World.js",
+			"js/game/core/Player.js",
+			"js/game/core/Character.js",
             "js/game/sections/IntroSection.js",
-            { path: "assets/models/character_mt2.js", type: 'model' },
-			{ path: "assets/models/character_mt9.js", type: 'model' },
-            { path: "assets/models/test_sphere.js", type: 'model' },
-            { path: "assets/models/rome_tree_anim.js", type: 'model' }
+            { path: "assets/models/World_Head.js", type: 'model' },
+			{ path: "assets/models/World_Tail.js", type: 'model' },
+			{ path: "assets/models/Hero.js", type: 'model' }
         ];
     
     /*===================================================
@@ -83,6 +89,12 @@ var KAIOPUA = (function (main) {
         });
         
     }
+	
+	/*===================================================
+    
+    init basics
+    
+    =====================================================*/
     
     function init_basics () {
         var i, l;
@@ -91,10 +103,6 @@ var KAIOPUA = (function (main) {
         transitioner = uihelper.make_ui_element({
             classes: 'transitioner'
         });
-        
-        // workers
-        
-        menumaker = game.workers.menumaker;
         
         // init three 
         // renderer
@@ -132,6 +140,12 @@ var KAIOPUA = (function (main) {
         });
         
     }
+	
+	/*===================================================
+    
+    init launcher
+    
+    =====================================================*/
     
     function init_launcher () {
         // set launcher section
@@ -155,9 +169,47 @@ var KAIOPUA = (function (main) {
             
         }, loadAssetsDelay);
     }
+	
+	/*===================================================
     
-    function init_game() {
-        var ms;
+    init game
+    
+    =====================================================*/
+    
+    function init_game () {
+        
+		// core
+		
+		init_core();
+		
+		// start menu
+		
+		init_start_menu();
+		
+    }
+	
+	function init_core () {
+		
+		// world
+		
+		world = core.world;
+		
+		world.init();
+		
+		// player
+		
+		player = core.player;
+		
+		player.init();
+		
+	}
+	
+	function init_start_menu () {
+		var ms;
+		
+		// workers
+        
+        menumaker = game.workers.menumaker;
         
         // init start menu
         
@@ -187,8 +239,6 @@ var KAIOPUA = (function (main) {
             disabled: true
         } ) );
         
-        //ms.itemsByID.Continue.enable();
-        
         ms.ui_keep_centered();
         
         // hide instantly then show start menu
@@ -197,7 +247,7 @@ var KAIOPUA = (function (main) {
         
         ms.ui_show( domElement );
         
-    }
+	}
     
     /*===================================================
     

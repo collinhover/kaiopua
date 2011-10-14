@@ -1,0 +1,65 @@
+<html><head><meta http-equiv="content-type" content="text/html; charset=UTF-8"> <style>
+	.KEYW {color: #933;}
+	.COMM {color: #bbb; font-style: italic;}
+	.NUMB {color: #393;}
+	.STRN {color: #393;}
+	.REGX {color: #339;}
+	.line {border-right: 1px dotted #666; color: #666; font-style: normal;}
+	</style></head><body><pre><span class='line'>  1</span> <span class="COMM">/*
+<span class='line'>  2</span>    Copyright (c) 2007 Danny Chapman
+<span class='line'>  3</span>    http://www.rowlhouse.co.uk
+<span class='line'>  4</span> 
+<span class='line'>  5</span>    This software is provided 'as-is', without any express or implied
+<span class='line'>  6</span>    warranty. In no event will the authors be held liable for any damages
+<span class='line'>  7</span>    arising from the use of this software.
+<span class='line'>  8</span>    Permission is granted to anyone to use this software for any purpose,
+<span class='line'>  9</span>    including commercial applications, and to alter it and redistribute it
+<span class='line'> 10</span>    freely, subject to the following restrictions:
+<span class='line'> 11</span>    1. The origin of this software must not be misrepresented; you must not
+<span class='line'> 12</span>    claim that you wrote the original software. If you use this software
+<span class='line'> 13</span>    in a product, an acknowledgment in the product documentation would be
+<span class='line'> 14</span>    appreciated but is not required.
+<span class='line'> 15</span>    2. Altered source versions must be plainly marked as such, and must not be
+<span class='line'> 16</span>    misrepresented as being the original software.
+<span class='line'> 17</span>    3. This notice may not be removed or altered from any source
+<span class='line'> 18</span>    distribution.
+<span class='line'> 19</span>  */</span><span class="WHIT">
+<span class='line'> 20</span> 
+<span class='line'> 21</span> </span><span class="PUNC">(</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">jigLib</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 22</span> </span><span class="WHIT">	</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">Vector3DUtil</span><span class="PUNC">=</span><span class="NAME">jigLib.Vector3DUtil</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 23</span> </span><span class="WHIT">	</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">JNumber3D</span><span class="PUNC">=</span><span class="NAME">jigLib.JNumber3D</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 24</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'> 25</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'> 26</span> 	 * @author Muzer(muzerly@gmail.com)
+<span class='line'> 27</span> 	 * 
+<span class='line'> 28</span> 	 * @name JRay
+<span class='line'> 29</span> 	 * @class JRay
+<span class='line'> 30</span> 	 * @extends RigidBody
+<span class='line'> 31</span> 	 * @requires Vector3DUtil
+<span class='line'> 32</span> 	 * @requires JNumber3D
+<span class='line'> 33</span> 	 * @property {array} origin the origin of the ray expressed as a 3D vector
+<span class='line'> 34</span> 	 * @property {array} dir the direction of the ray expressed as a 3D vector
+<span class='line'> 35</span> 	 * @constructor
+<span class='line'> 36</span> 	 * @param {array} _origin the origin of the ray expressed as a 3D vector
+<span class='line'> 37</span> 	 * @param {array} _dir the direction of the ray expressed as a 3D vector
+<span class='line'> 38</span> 	 **/</span><span class="WHIT">
+<span class='line'> 39</span> </span><span class="WHIT">	</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">JRay</span><span class="PUNC">=</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">_origin</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">_dir</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 40</span> </span><span class="WHIT">		</span><span class="NAME">this.origin</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">_origin</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 41</span> </span><span class="WHIT">		</span><span class="NAME">this.dir</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">_dir</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 42</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 43</span> </span><span class="WHIT">	</span><span class="NAME">JRay.prototype.origin</span><span class="PUNC">=</span><span class="KEYW">null</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 44</span> </span><span class="WHIT">	</span><span class="NAME">JRay.prototype.dir</span><span class="PUNC">=</span><span class="KEYW">null</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 45</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'> 46</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'> 47</span> 	 * @function getOrigin gets the origin
+<span class='line'> 48</span> 	 * @param {number} t
+<span class='line'> 49</span> 	 * @type array
+<span class='line'> 50</span> 	 **/</span><span class="WHIT">
+<span class='line'> 51</span> </span><span class="WHIT">	</span><span class="NAME">JRay.prototype.getOrigin</span><span class="PUNC">=</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">t</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 52</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">Vector3DUtil.add</span><span class="PUNC">(</span><span class="NAME">this.origin</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">JNumber3D.getScaleVector</span><span class="PUNC">(</span><span class="NAME">this.dir</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">t</span><span class="PUNC">)</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 53</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 54</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'> 55</span> </span><span class="WHIT">	</span><span class="NAME">jigLib.JRay</span><span class="PUNC">=</span><span class="NAME">JRay</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 56</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'> 57</span> </span><span class="PUNC">}</span><span class="PUNC">)</span><span class="PUNC">(</span><span class="NAME">jigLib</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 58</span> </span></pre></body></html>

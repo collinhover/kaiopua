@@ -1,0 +1,58 @@
+<html><head><meta http-equiv="content-type" content="text/html; charset=UTF-8"> <style>
+	.KEYW {color: #933;}
+	.COMM {color: #bbb; font-style: italic;}
+	.NUMB {color: #393;}
+	.STRN {color: #393;}
+	.REGX {color: #339;}
+	.line {border-right: 1px dotted #666; color: #666; font-style: normal;}
+	</style></head><body><pre><span class='line'>  1</span> <span class="PUNC">(</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">jigLib</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>  2</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>  3</span> 		 * Represents a mesh from a 3D engine inside JigLib.
+<span class='line'>  4</span> 		 * Its implementation shold allow to get and set a Matrix3D on
+<span class='line'>  5</span> 		 * the original object.
+<span class='line'>  6</span> 		 *
+<span class='line'>  7</span> 		 * In the implementation, JMatrix3D should be translated into
+<span class='line'>  8</span> 		 * the type proper for a given engine.
+<span class='line'>  9</span> 		 *
+<span class='line'> 10</span> 		 * @author bartekd
+<span class='line'> 11</span> 		 */</span><span class="WHIT">
+<span class='line'> 12</span> </span><span class="WHIT">	</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">Matrix3D</span><span class="PUNC">=</span><span class="NAME">jigLib.Matrix3D</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 13</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'> 14</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'> 15</span> 	 * @author bartekd
+<span class='line'> 16</span> 	 * 
+<span class='line'> 17</span> 	 * @name ISkin3D
+<span class='line'> 18</span> 	 * @class ISkin3D an interface representing a mesh from a 3D engine inside JigLib. 
+<span class='line'> 19</span> 	 * Implementations should allow getting and setting a Matrix3D on the original object. 
+<span class='line'> 20</span> 	 * Matrix3D should be translated into a type compatible with the engine.
+<span class='line'> 21</span> 	 * 
+<span class='line'> 22</span> 	 * @requires Matrix3D
+<span class='line'> 23</span> 	 * @property {Matrix3D} matrix
+<span class='line'> 24</span> 	 * @constructor
+<span class='line'> 25</span> 	 **/</span><span class="WHIT">
+<span class='line'> 26</span> </span><span class="WHIT">	</span><span class="KEYW">function</span><span class="WHIT"> </span><span class="NAME">ISkin3D</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 27</span> </span><span class="WHIT">		</span><span class="NAME">this.matrix</span><span class="PUNC">=</span><span class="KEYW">new</span><span class="WHIT"> </span><span class="NAME">Matrix3D</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 28</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 29</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'> 30</span> </span><span class="WHIT">	</span><span class="NAME">ISkin3D.prototype.matrix</span><span class="PUNC">=</span><span class="KEYW">null</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 31</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'> 32</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'> 33</span> 	 * @function get_transform gets the transform matrix
+<span class='line'> 34</span> 	 * @type Matrix3D
+<span class='line'> 35</span> 	 **/</span><span class="WHIT">
+<span class='line'> 36</span> </span><span class="WHIT">	</span><span class="NAME">ISkin3D.prototype.get_transform</span><span class="PUNC">=</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 37</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">this.matrix</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 38</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 39</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'> 40</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'> 41</span> 	 * @function set_transform sets the transform matrix
+<span class='line'> 42</span> 	 * @param {Matrix3D} value
+<span class='line'> 43</span> 	 * @type void
+<span class='line'> 44</span> 	 **/</span><span class="WHIT">
+<span class='line'> 45</span> </span><span class="WHIT">	</span><span class="NAME">ISkin3D.prototype.set_transform</span><span class="PUNC">=</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">value</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 46</span> </span><span class="WHIT">		</span><span class="NAME">this.matrix</span><span class="PUNC">=</span><span class="NAME">value</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 47</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 48</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'> 49</span> </span><span class="WHIT">	</span><span class="NAME">jigLib.ISkin3D</span><span class="PUNC">=</span><span class="NAME">ISkin3D</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 50</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'> 51</span> </span><span class="PUNC">}</span><span class="PUNC">)</span><span class="PUNC">(</span><span class="NAME">jigLib</span><span class="PUNC">)</span><span class="PUNC">;</span></pre></body></html>

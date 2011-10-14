@@ -1,0 +1,10 @@
+Following the principles of JigLibJS this is a new Javascript port of JiglibFlash (which is a port of c++ JigLib). The code is generated automatically from the AS3 code so all functionality should work exactly like the AS3 version.
+
+JigLibJS2: http://www.brokstuk.com/jiglibjs2/
+
+Other links:
+
+JiglibFlash: http://www.jiglibflash.com/
+Original c++ JigLib: http://www.rowlhouse.co.uk/jiglib/
+Original JigLibJS port: https://github.com/supereggbert/JigLibJS
+glmatrix: http://code.google.com/p/glmatrix/

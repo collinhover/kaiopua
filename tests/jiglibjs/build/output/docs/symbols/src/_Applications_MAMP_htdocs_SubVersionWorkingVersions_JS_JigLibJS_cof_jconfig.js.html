@@ -1,0 +1,48 @@
+<html><head><meta http-equiv="content-type" content="text/html; charset=UTF-8"> <style>
+	.KEYW {color: #933;}
+	.COMM {color: #bbb; font-style: italic;}
+	.NUMB {color: #393;}
+	.STRN {color: #393;}
+	.REGX {color: #339;}
+	.line {border-right: 1px dotted #666; color: #666; font-style: normal;}
+	</style></head><body><pre><span class='line'>  1</span> <span class="PUNC">(</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">jigLib</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>  2</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>  3</span> 	 * @namespace JConfig a collection of configuration values
+<span class='line'>  4</span> 	 * @property {string} solverType the solver to use - can be one of FAST NORMAL or ACCUMULATED
+<span class='line'>  5</span> 	 * @property {string} boxCollisionsType can be one of EDGEBASE or SORTBASE
+<span class='line'>  6</span> 	 * @property {string} rotationType the unit of rotation - can be one of DEGREES or RADIANS
+<span class='line'>  7</span> 	 * @property {boolean} aabbDetection whether to execute aabb detection
+<span class='line'>  8</span> 	 * @property {boolean} doShockStep whether to perform the shock step (helps with stacking)
+<span class='line'>  9</span> 	 * @property {number} allowedPenetration the amount of penetration to be permitted
+<span class='line'> 10</span> 	 * @property {number} collToll collision detection tolerance
+<span class='line'> 11</span> 	 * @property {number} velThreshold the line velocity threshold for freezing
+<span class='line'> 12</span> 	 * @property {number} angVelThreshold the angle velocity threshold for freezing
+<span class='line'> 13</span> 	 * @property {number} posThreshold the threshold for detecting position changes during deactivation
+<span class='line'> 14</span> 	 * @property {number} orientThreshold the threshold for detecting orientation changes during deactivation
+<span class='line'> 15</span> 	 * @property {number} deactivationTime how long it takes to go from active to frozen when stationary
+<span class='line'> 16</span> 	 * @property {number} numPenetrationRelaxationTimesteps the number of timesteps over which to resolve penetration
+<span class='line'> 17</span> 	 * @property {number} numCollisionIterations the number of collision iterations
+<span class='line'> 18</span> 	 * @property {number} numContactIterations the number of contact iterations
+<span class='line'> 19</span> 	 * @property {number} numConstraintIterations number of constraint iterations
+<span class='line'> 20</span> 	 **/</span><span class="WHIT">
+<span class='line'> 21</span> </span><span class="WHIT">	</span><span class="NAME">jigLib.JConfig</span><span class="PUNC">=</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 22</span> </span><span class="WHIT">		</span><span class="NAME">solverType</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="STRN">"ACCUMULATED"</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 23</span> </span><span class="WHIT">		</span><span class="NAME">boxCollisionsType</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="STRN">"EDGEBASE"</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 24</span> </span><span class="WHIT">		</span><span class="NAME">rotationType</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="STRN">"DEGREES"</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 25</span> </span><span class="WHIT">		</span><span class="NAME">aabbDetection</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">true</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 26</span> </span><span class="WHIT">		</span><span class="NAME">doShockStep</span><span class="PUNC">:</span><span class="WHIT">  </span><span class="KEYW">false</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 27</span> </span><span class="WHIT">		</span><span class="NAME">allowedPenetration</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NUMB">0.01</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 28</span> </span><span class="WHIT">		</span><span class="NAME">collToll</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NUMB">0.05</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 29</span> </span><span class="WHIT">		</span><span class="NAME">velThreshold</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NUMB">0.7</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 30</span> </span><span class="WHIT">		</span><span class="NAME">angVelThreshold</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NUMB">5</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 31</span> </span><span class="WHIT">		</span><span class="NAME">posThreshold</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NUMB">0.7</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 32</span> </span><span class="WHIT">		</span><span class="NAME">orientThreshold</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NUMB">0.7</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="WHIT">
+<span class='line'> 33</span> </span><span class="WHIT">		</span><span class="NAME">deactivationTime</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NUMB">0.2</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="WHIT">
+<span class='line'> 34</span> </span><span class="WHIT">		</span><span class="NAME">numPenetrationRelaxationTimesteps</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NUMB">50</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 35</span> </span><span class="WHIT">		</span><span class="NAME">numCollisionIterations</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NUMB">4</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 36</span> </span><span class="WHIT">		</span><span class="NAME">numContactIterations</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NUMB">8</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 37</span> </span><span class="WHIT">		</span><span class="NAME">numConstraintIterations</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NUMB">15</span><span class="WHIT">
+<span class='line'> 38</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 39</span> </span><span class="WHIT">	 </span><span class="WHIT">
+<span class='line'> 40</span> </span><span class="PUNC">}</span><span class="PUNC">)</span><span class="PUNC">(</span><span class="NAME">jigLib</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 41</span> </span></pre></body></html>

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="YUICompression" basedir="../">
+	<target name="default" description="Minifiy and output to the official_demos directory">
+
+		<!-- YUICompress -->
+		
+		<delete dir="${basedir}/official_demos/jiglib" />
+		<mkdir dir="${basedir}/official_demos/jiglib" />
+		
+		<taskdef name="yuicompress"
+			classname="com.yahoo.platform.yui.compressor.YUICompressTask">
+			<classpath>
+				<pathelement path="${basedir}/build/tasks/YUICompress/yuicompressor-2.4.2.jar" />
+				<pathelement path="${basedir}/build/tasks/YUICompress/YUIAnt.jar" />
+			</classpath>
+		</taskdef>
+		<yuicompress linebreak="16000" warn="false" munge="yes"
+			preserveallsemicolons="true" outputfolder="${basedir}/official_demos/jiglib/">
+			<fileset dir="${basedir}">
+				<exclude name="build/**" />
+				<exclude name="test/**" />
+				<exclude name="official_demos/**" />
+				<include name="**/*.js" />
+			</fileset>
+		</yuicompress>
+		
+		<!-- Concatenated versions -->
+			
+		<delete file="${basedir}/official_demos/jiglib/jiglib.all.min.js" />
+			
+		<concat destfile="${basedir}/official_demos/jiglib/jiglib.all.min.js">
+			<filelist dir="${basedir}/official_demos/jiglib" files="jiglib.js" />
+			<fileset dir="${basedir}/official_demos/jiglib/cof" includes="*.js" />
+			<filelist dir="${basedir}/official_demos/jiglib/events" files="JEvent.js" />
+			<fileset dir="${basedir}/official_demos/jiglib/events" includes="*.js" excludes="JEvent.js" />
+			<filelist dir="${basedir}/official_demos/jiglib/maths" files="glmatrix.js,vector3dutil.js,matrix3d.js,jnumber3d.js,jmatrix3d.js,jmaths3d.js" />
+			<filelist dir="${basedir}/official_demos/jiglib/data" files="CollOutData.js" />
+			<fileset dir="${basedir}/official_demos/jiglib/data" includes="*.js" excludes="CollOutData.js" />
+			<fileset dir="${basedir}/official_demos/jiglib/plugins" includes="*.js" />
+			<filelist dir="${basedir}/official_demos/jiglib/geometry" files="jaabox.js" />
+			<fileset dir="${basedir}/official_demos/jiglib/physics" includes="*.js" excludes="hingejoint.js,physicssystem.js" />
+			<filelist dir="${basedir}/official_demos/jiglib/physics/effect" files="jeffect.js" />
+			<fileset dir="${basedir}/official_demos/jiglib/physics/effect" includes="*.js" excludes="jeffect.js" />
+			<fileset dir="${basedir}/official_demos/jiglib/geometry" includes="*.js" excludes="jaabox.js" />
+			<filelist dir="${basedir}/official_demos/jiglib/collision" files="collpointinfo.js,collisioninfo.js,colldetectinfo.js,colldetectfunctor.js" />
+			<fileset dir="${basedir}/official_demos/jiglib/collision" includes="colldetect*.js" />
+			<filelist dir="${basedir}/official_demos/jiglib/collision" files="collisionsystem.js,collisionsystemabstract.js,collisionsystembrute.js,collisionsystemgrid.js" />
+			<fileset dir="${basedir}/official_demos/jiglib/physics/constraint" includes="*.js" />
+			<filelist dir="${basedir}/official_demos/jiglib/physics" files="hingejoint.js" />
+			<filelist dir="${basedir}/official_demos/jiglib/physics" files="physicssystem.js" />
+			<fileset dir="${basedir}/official_demos/jiglib/vehicles" includes="*.js" />
+		</concat>
+		
+		<delete file="${basedir}/official_demos/jiglib/jiglib.all.full.js" />
+		
+		<concat destfile="${basedir}/official_demos/jiglib/jiglib.all.full.js">
+			<filelist dir="${basedir}" files="jiglib.js" />
+			<fileset dir="${basedir}/cof" includes="*.js" />
+			<filelist dir="${basedir}/events" files="JEvent.js" />
+			<fileset dir="${basedir}/events" includes="*.js" excludes="JEvent.js" />
+			<filelist dir="${basedir}/maths" files="glmatrix.js,vector3dutil.js,matrix3d.js,jnumber3d.js,jmatrix3d.js,jmaths3d.js" />
+			<filelist dir="${basedir}/data" files="CollOutData.js" />
+			<fileset dir="${basedir}/data" includes="*.js" excludes="CollOutData.js" />
+			<fileset dir="${basedir}/plugins" includes="*.js" />
+			<filelist dir="${basedir}/geometry" files="jaabox.js" />
+			<fileset dir="${basedir}/physics" includes="*.js" excludes="hingejoint.js,physicssystem.js" />
+			<filelist dir="${basedir}/physics/effect" files="jeffect.js" />
+			<fileset dir="${basedir}/physics/effect" includes="*.js" excludes="jeffect.js" />
+			<fileset dir="${basedir}/geometry" includes="*.js" excludes="jaabox.js" />
+			<filelist dir="${basedir}/collision" files="collpointinfo.js,collisioninfo.js,colldetectinfo.js,colldetectfunctor.js" />
+			<fileset dir="${basedir}/collision" includes="colldetect*.js" />
+			<filelist dir="${basedir}/collision" files="collisionsystem.js,collisionsystemabstract.js,collisionsystembrute.js,collisionsystemgrid.js" />
+			<fileset dir="${basedir}/physics/constraint" includes="*.js" />
+			<filelist dir="${basedir}/physics" files="hingejoint.js" />
+			<filelist dir="${basedir}/physics" files="physicssystem.js" />
+			<fileset dir="${basedir}/vehicles" includes="*.js" />
+		</concat>
+	</target>
+</project>
