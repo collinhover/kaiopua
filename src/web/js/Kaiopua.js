@@ -30,6 +30,9 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
     
+	// force cache-busting
+	$LAB.setGlobalDefaults({ CacheBust: true });
+	
     // load scripts
     $LAB.script( libList ).wait( init_basics )
         .script( setupList ).wait( init_setup );

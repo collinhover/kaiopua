@@ -19,6 +19,7 @@ var KAIOPUA = (function (main) {
         menumaker,
         renderer, 
         renderTarget,
+		physics,
 		world,
 		player,
         sectionNames = [],
@@ -47,9 +48,9 @@ var KAIOPUA = (function (main) {
             "assets/textures/light_ray.png"
         ],
         gameAssets = [
-			"js/lib/jiglib.all.min.js",
 			"js/game/workers/MenuMaker.js",
 			"js/game/workers/ObjectMaker.js",
+			"js/game/core/Physics.js",
 			"js/game/core/World.js",
 			"js/game/core/Player.js",
 			"js/game/core/Character.js",
@@ -190,6 +191,12 @@ var KAIOPUA = (function (main) {
 	
 	function init_core () {
 		
+		// physics
+		
+		physics = core.physics;
+		
+		//physics.init();
+		
 		// world
 		
 		world = core.world;
@@ -266,6 +273,9 @@ var KAIOPUA = (function (main) {
         
         // set intro section
         set_section( sections.intro );
+		
+		// resume game
+		resume();
     }
     
     /*===================================================

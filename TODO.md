@@ -1,6 +1,7 @@
 # TODO  
   
 #### Collin
+* Remove cache-busting from loading for distribution version
 * Complete INDEX.html meta tags & supporting info
   * google-site-verification
   * favicon

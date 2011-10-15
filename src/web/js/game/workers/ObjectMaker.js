@@ -102,6 +102,10 @@ var KAIOPUA = (function (main) {
         // mesh
         
         mesh = new THREE.Mesh( geometry, materials );
+		
+		// force use quaternion
+		
+		mesh.useQuaternion = true;
         
         // shadows
         
