@@ -95,7 +95,7 @@ var KAIOPUA = (function (main) {
 		threeObj.add( head.mesh );
 		threeObj.add( tail.mesh );
 		
-		scene.add( threeObj );
+		//scene.add( threeObj );
 		
 	}
 	

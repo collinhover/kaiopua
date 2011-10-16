@@ -30,7 +30,6 @@ var KAIOPUA = (function (main) {
 	physics.start = start;
 	physics.stop = stop;
 	physics.update = update;
-	physics.set_gravity = set_gravity;
 	
 	/*===================================================
     
@@ -48,10 +47,12 @@ var KAIOPUA = (function (main) {
 		
 		// system
 		
-		system = jiglib.PhysicsSystem.getInstance();
-		system.setCollisionSystem(true); // grid seems better than brute
-		system.setSolverType("ACCUMULATED"); // accumulated seems better than fast or normal
-		set_gravity( 0, -9.8, 0 );
+		system = jigLib.PhysicsSystem.getInstance();
+		//system.setCollisionSystem(true); // collisions missing and makes rigid bodies slide?
+		//system.setSolverType("FAST");
+		//system.setSolverType("NORMAL");
+		system.setSolverType("ACCUMULATED");
+		system.setGravity( [ 0, -100, 0, 0 ] );
 		
 		// conversion objects
 		
@@ -101,13 +102,15 @@ var KAIOPUA = (function (main) {
 		
 		movable = parameters.movable || true;
 		
+		mass = parameters.mass || 1;
+		
 		restitution = parameters.restitution || 0.25;
 		
 		friction = parameters.friction || 0.25;
 		
-		position = init_jig_vec( parameters.position );
+		position = init_jig_vec( parameters.position, true );
 		
-		rotation = init_jig_vec( parameters.rotation, true );
+		rotation = init_jig_vec( parameters.rotation, false, true );
 		
 		velocity = init_jig_vec( parameters.velocity );
 		
@@ -127,8 +130,6 @@ var KAIOPUA = (function (main) {
 		height = (bbox.y[1] - bbox.y[0]) * scale;
 		depth = (bbox.z[1] - bbox.z[0]) * scale;
 		
-		mass = parameters.mass || width * height * depth;
-		
 		// create physics object
 		
 		if ( bodyType === 'trimesh' ) {
@@ -136,27 +137,27 @@ var KAIOPUA = (function (main) {
 		}
 		else if ( bodyType === 'capsule' ) {
 			
-			rigidBody = new jiglib.JCapsule( null, Math.max( width, depth ), height );
+			rigidBody = new jigLib.JCapsule( null, Math.max( width, depth ), height );
 			
-			rotation.x += 90;
+			rotation[0] += 90;
 			
 		}
 		else if ( bodyType === 'sphere' ) {
 			
 			radius = Math.max( width, Math.max( height, depth ) ) * 0.5;
 			
-			rigidBody = new jiglib.JSphere( null, radius );
+			rigidBody = new jigLib.JSphere( null, radius );
 			
 		}
 		else if ( bodyType === 'plane' ) {
 			
-			rigidBody = new jiglib.JPlane( null, parameters.up || new jiglib.Vector3D( 0, 0, 1, 0 ) );
+			rigidBody = new jigLib.JPlane( null, parameters.up );
 			
 		}
 		// default box
 		else {
 			
-			rigidBody = new jiglib.JBox( null, width, height, depth );
+			rigidBody = new jigLib.JBox( null, width, height, depth );
 			
 		}
 		
@@ -190,9 +191,9 @@ var KAIOPUA = (function (main) {
 		
 		rigidBody.moveTo( position );
 		
-		rigidBody.set_rotationX( rotation.x );
-		rigidBody.set_rotationY( rotation.y );
-		rigidBody.set_rotationZ( rotation.z );
+		rigidBody.setRotation( rotation );
+		
+		rigidBody.setVelocity( velocity );
 		
 		// add to links
 		
@@ -232,32 +233,52 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	function init_jig_vec ( vsource, isRotation, normalize ) {
-		var vjig;
+	function init_jig_vec ( vsource, isArray4, isRotation, normalize ) {
+		var vjig, i, l;
 		
 		if ( typeof vsource !== 'undefined' ) {
 			
-			if ( isRotation === true ) {
+			// vthree is object
+			if ( vsource.hasOwnProperty('length') === false ) {
 				
-				vjig = three_rot_to_jig_rot( vsource );
-				
+				if ( isRotation === true ) {
+					
+					vjig = three_rot_to_jig_rot( vsource );
+					
+				}
+				else {
+					
+					vjig = three_vec_to_jig_vec3( vsource );
+					
+				}
 			}
+			// vsource is array
 			else {
-				
-				vjig = three_vec_to_jig_vec3( vsource );
-				
+				vjig = vsource.slice( 0 );
 			}
 			
 		}
 		else {
-			vjig = new jiglib.Vector3D( 0, 0, 0 );
+			vjig = [ 0, 0, 0 ];
+		}
+		
+		// enforce correct length
+		if ( isArray4 === true ) {
+			l = 4;
+		}
+		else {
+			l = 3;
+		}
+		
+		for ( i = vjig.length; i < l; i += 1 ) {
+			vjig.push( 0 );
 		}
 		
 		// normalize
 		
 		if ( normalize === true ) {
 			
-			vjig.normalize();
+			jigLib.Vector3DUtil.normalize( vjig );
 			
 		}
 		
@@ -266,7 +287,13 @@ var KAIOPUA = (function (main) {
 	
 	function three_vec_to_jig_vec3 ( vthree ) {
 		
-		return new jiglib.Vector3D( vthree.x, vthree.y, vthree.z, 0 );
+		return [ vthree.x, vthree.y, vthree.z ];
+		
+	}
+	
+	function three_vec_to_jig_vec4 ( vthree ) {
+		
+		return [ vthree.x, vthree.y, vthree.z, 0 ];
 		
 	}
 	
@@ -303,17 +330,6 @@ var KAIOPUA = (function (main) {
 		vtemp.setRotationFromMatrix( mtemp );
 		
 		return three_rot_to_jig_rot( vtemp );
-	}
-	
-	/*===================================================
-    
-    physics functions
-    
-    =====================================================*/
-	
-	function set_gravity ( x, y, z ) {
-		gravity = new jiglib.Vector3D( x, y, z, 0 );
-		system.setGravity( gravity );
 	}
 	
 	/*===================================================
@@ -358,6 +374,10 @@ var KAIOPUA = (function (main) {
 		timeDelta = time - timeLast;
 		
 		timeStep = timeDelta / 1000;
+
+		if( timeStep > 0.05 ) {
+			timeStep = 0.05;
+		}
 		
 		// integrate system
 		
@@ -377,11 +397,11 @@ var KAIOPUA = (function (main) {
 			
 			pbPos = pbState.position;
 			
-			pbOri = pbState.orientation.get_rawData();
+			pbOri = pbState.get_orientation().glmatrix;
 			
 			mtemp.set( pbOri[0], pbOri[1], pbOri[2], pbOri[3], pbOri[4], pbOri[5], pbOri[6], pbOri[7], pbOri[8], pbOri[9], pbOri[10], pbOri[11], pbOri[12], pbOri[13], pbOri[14], pbOri[15] );
 			
-			mesh.position.copy( pbPos );
+			mesh.position.set( pbPos[0], pbPos[1], pbPos[2] );
 			
 			if ( mesh.useQuaternion === true ) {
 				

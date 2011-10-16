@@ -39,6 +39,8 @@ var KAIOPUA = (function (main) {
             material,
             mesh,
             scale,
+			rotation,
+			position,
             morphs;
         
         // handle parameters
@@ -81,7 +83,7 @@ var KAIOPUA = (function (main) {
             
             materials = [ new THREE.MeshFaceMaterial() ];
             
-            materialsToModify = materialsToModify.concat( material );
+            materialsToModify = materialsToModify.push( material );
             
         }
 		
@@ -91,7 +93,7 @@ var KAIOPUA = (function (main) {
             material = materialsToModify[i];
             
             // morph targets
-			material.morphTargets = geometry.morphTargets.length > 0 ? true : false;
+			material.morphTargets = geometry.morphTargets && geometry.morphTargets.length > 0 ? true : false;
 			
             // shading
             // (1 = flat, 2 = smooth )
@@ -117,6 +119,43 @@ var KAIOPUA = (function (main) {
         scale = parameters.scale || 1;
         
         mesh.scale.set( scale, scale, scale );
+		
+		// rotation
+		
+		if ( parameters.hasOwnProperty('rotation') ) {
+			
+			rotation = parameters.rotation;
+			
+			// if quaternion
+			if ( rotation.hasOwnProperty('w') ) {
+				
+				mesh.quaternion.copy( rotation );
+				
+			}
+			// vector
+			else if ( rotation.hasOwnProperty('x') && rotation.hasOwnProperty('y') && rotation.hasOwnProperty('z') ) {
+				
+				mesh.quaternion.setFromEuler( rotation );
+				
+			}
+			// else matrix
+			else {
+				
+				mesh.quaternion.setFromRotationMatrix( rotation );
+				
+			}
+			
+		}
+		
+		// position
+		
+		if ( parameters.hasOwnProperty('position') ) {
+			
+			position = parameters.position;
+			
+			mesh.position.copy( position );
+			
+		}
         
         // morphs
         

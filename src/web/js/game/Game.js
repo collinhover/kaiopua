@@ -48,6 +48,154 @@ var KAIOPUA = (function (main) {
             "assets/textures/light_ray.png"
         ],
         gameAssets = [
+			/* JigLib Physics Library (1)
+			 * TODO: Minify and Concat */
+			/*
+			"js/lib/jiglibjs/jiglib.js",
+			"js/lib/jiglibjs/cof/jconfig.js",
+			"js/lib/jiglibjs/maths/glmatrix.js",
+			"js/lib/jiglibjs/maths/vector3dutil.js",
+			"js/lib/jiglibjs/maths/matrix3d.js",
+			"js/lib/jiglibjs/maths/jnumber3d.js",
+			"js/lib/jiglibjs/maths/jmatrix3d.js",
+			"js/lib/jiglibjs/maths/jmaths3d.js",
+			"js/lib/jiglibjs/data/contactdata.js",
+			"js/lib/jiglibjs/data/edgedata.js",
+			"js/lib/jiglibjs/data/planedata.js",
+			"js/lib/jiglibjs/data/spandata.js",
+			"js/lib/jiglibjs/data/trianglevertexindices.js",
+			"js/lib/jiglibjs/data/octreecell.js",
+			"js/lib/jiglibjs/data/colloutdata.js",
+			"js/lib/jiglibjs/data/colloutbodydata.js",
+			"js/lib/jiglibjs/events/JEventDispatcher.js",
+			"js/lib/jiglibjs/events/JEvent.js",
+			"js/lib/jiglibjs/events/JCollisionEvent.js",
+			"js/lib/jiglibjs/plugins/iskin3d.js",
+			"js/lib/jiglibjs/geometry/jaabox.js",
+			"js/lib/jiglibjs/physics/bodypair.js",
+			"js/lib/jiglibjs/physics/cachedimpluse.js",
+			"js/lib/jiglibjs/physics/materialproperties.js",
+			"js/lib/jiglibjs/physics/physicscontroller.js",
+			"js/lib/jiglibjs/physics/physicsstate.js",
+			"js/lib/jiglibjs/physics/rigid_body.js",
+			"js/lib/jiglibjs/physics/hingejoint.js",
+			"js/lib/jiglibjs/physics/effect/jeffect.js",
+			"js/lib/jiglibjs/physics/effect/gravityField.js",
+			"js/lib/jiglibjs/physics/effect/explosion.js",
+			"js/lib/jiglibjs/physics/effect/wind.js",
+			"js/lib/jiglibjs/geometry/jbox.js",
+			"js/lib/jiglibjs/geometry/jcapsule.js",
+			"js/lib/jiglibjs/geometry/jplane.js",
+			"js/lib/jiglibjs/geometry/jray.js",
+			"js/lib/jiglibjs/geometry/jsegment.js",
+			"js/lib/jiglibjs/geometry/jsphere.js",
+			"js/lib/jiglibjs/geometry/jterrain.js",
+			"js/lib/jiglibjs/geometry/jindexedtriangle.js",
+			"js/lib/jiglibjs/geometry/jtriangle.js",
+			"js/lib/jiglibjs/geometry/joctree.js",
+			"js/lib/jiglibjs/geometry/jtrianglemesh.js",
+			"js/lib/jiglibjs/collision/collpointinfo.js",
+			"js/lib/jiglibjs/collision/collisioninfo.js",
+			"js/lib/jiglibjs/collision/colldetectinfo.js",
+			"js/lib/jiglibjs/collision/colldetectfunctor.js",
+			"js/lib/jiglibjs/collision/colldetectboxbox.js",
+			"js/lib/jiglibjs/collision/colldetectboxplane.js",
+			"js/lib/jiglibjs/collision/colldetectboxterrain.js",
+			"js/lib/jiglibjs/collision/colldetectcapsulebox.js",
+			"js/lib/jiglibjs/collision/colldetectcapsulecapsule.js",
+			"js/lib/jiglibjs/collision/colldetectcapsuleplane.js",
+			"js/lib/jiglibjs/collision/colldetectcapsuleterrain.js",
+			"js/lib/jiglibjs/collision/colldetectspherebox.js",
+			"js/lib/jiglibjs/collision/colldetectspherecapsule.js",
+			"js/lib/jiglibjs/collision/colldetectsphereplane.js",
+			"js/lib/jiglibjs/collision/colldetectspheresphere.js",
+			"js/lib/jiglibjs/collision/colldetectsphereterrain.js",
+			"js/lib/jiglibjs/collision/colldetectboxmesh.js",
+			"js/lib/jiglibjs/collision/colldetectspheremesh.js",
+			"js/lib/jiglibjs/collision/collisionsystemabstract.js",
+			"js/lib/jiglibjs/collision/collisionsystembrute.js",
+			"js/lib/jiglibjs/collision/collisionsystemgridentry.js",
+			"js/lib/jiglibjs/collision/collisionsystemgrid.js",
+			"js/lib/jiglibjs/physics/constraint/jconstraint.js",
+			"js/lib/jiglibjs/physics/constraint/jconstraintmaxdistance.js",
+			"js/lib/jiglibjs/physics/constraint/jconstraintpoint.js",
+			"js/lib/jiglibjs/physics/physicssystem.js",
+			"js/lib/jiglibjs/vehicles/jchassis.js",
+			"js/lib/jiglibjs/vehicles/jwheel.js",
+			"js/lib/jiglibjs/vehicles/jcar.js",
+			*/
+			/* end JigLib 1 library */
+			
+			/* JigLib Physics Library (2)
+			 * TODO: Minify and Concat */
+			"js/lib/jiglibjs2/jiglib.js",
+			"js/lib/jiglibjs2/geom/glMatrix.js",
+			"js/lib/jiglibjs2/geom/Vector3D.js",
+			"js/lib/jiglibjs2/geom/Matrix3D.js",
+			"js/lib/jiglibjs2/math/JMatrix3D.js",
+			"js/lib/jiglibjs2/math/JMath3D.js",
+			"js/lib/jiglibjs2/math/JNumber3D.js",
+			"js/lib/jiglibjs2/cof/JConfig.js",
+			"js/lib/jiglibjs2/data/CollOutData.js",
+			"js/lib/jiglibjs2/data/ContactData.js",
+			"js/lib/jiglibjs2/data/PlaneData.js",
+			"js/lib/jiglibjs2/data/EdgeData.js",
+			"js/lib/jiglibjs2/data/TerrainData.js",
+			"js/lib/jiglibjs2/data/OctreeCell.js",
+			"js/lib/jiglibjs2/data/CollOutBodyData.js",
+			"js/lib/jiglibjs2/data/TriangleVertexIndices.js",
+			"js/lib/jiglibjs2/data/SpanData.js",
+			"js/lib/jiglibjs2/physics/constraint/JConstraint.js",
+			"js/lib/jiglibjs2/physics/constraint/JConstraintMaxDistance.js",
+			"js/lib/jiglibjs2/physics/constraint/JConstraintWorldPoint.js",
+			"js/lib/jiglibjs2/physics/constraint/JConstraintPoint.js",
+			"js/lib/jiglibjs2/physics/MaterialProperties.js",
+			"js/lib/jiglibjs2/collision/CollPointInfo.js",
+			"js/lib/jiglibjs2/collision/CollisionInfo.js",
+			"js/lib/jiglibjs2/collision/CollDetectInfo.js",
+			"js/lib/jiglibjs2/collision/CollDetectFunctor.js",
+			"js/lib/jiglibjs2/collision/CollDetectBoxTerrain.js",
+			"js/lib/jiglibjs2/collision/CollDetectSphereMesh.js",
+			"js/lib/jiglibjs2/collision/CollDetectCapsuleBox.js",
+			"js/lib/jiglibjs2/collision/CollDetectSphereCapsule.js",
+			"js/lib/jiglibjs2/collision/CollDetectCapsuleTerrain.js",
+			"js/lib/jiglibjs2/collision/CollDetectSphereBox.js",
+			"js/lib/jiglibjs2/collision/CollDetectSphereTerrain.js",
+			"js/lib/jiglibjs2/collision/CollDetectBoxBox.js",
+			"js/lib/jiglibjs2/collision/CollDetectBoxMesh.js",
+			"js/lib/jiglibjs2/collision/CollDetectBoxPlane.js",
+			"js/lib/jiglibjs2/collision/CollDetectCapsuleCapsule.js",
+			"js/lib/jiglibjs2/collision/CollDetectSphereSphere.js",
+			"js/lib/jiglibjs2/collision/CollDetectSpherePlane.js",
+			"js/lib/jiglibjs2/collision/CollDetectCapsulePlane.js",
+			"js/lib/jiglibjs2/collision/CollisionSystemAbstract.js",
+			"js/lib/jiglibjs2/collision/CollisionSystemGridEntry.js",
+			"js/lib/jiglibjs2/collision/CollisionSystemGrid.js",
+			"js/lib/jiglibjs2/collision/CollisionSystemBrute.js",
+			"js/lib/jiglibjs2/geometry/JIndexedTriangle.js",
+			"js/lib/jiglibjs2/geometry/JOctree.js",
+			"js/lib/jiglibjs2/geometry/JRay.js",
+			"js/lib/jiglibjs2/geometry/JAABox.js",
+			"js/lib/jiglibjs2/geometry/JTriangle.js",
+			"js/lib/jiglibjs2/geometry/JSegment.js",
+			"js/lib/jiglibjs2/events/JCollisionEvent.js",
+			"js/lib/jiglibjs2/physics/PhysicsController.js",
+			"js/lib/jiglibjs2/physics/CachedImpulse.js",
+			"js/lib/jiglibjs2/physics/HingeJoint.js",
+			"js/lib/jiglibjs2/physics/BodyPair.js",
+			"js/lib/jiglibjs2/physics/PhysicsState.js",
+			"js/lib/jiglibjs2/physics/PhysicsSystem.js",
+			"js/lib/jiglibjs2/physics/RigidBody.js",
+			"js/lib/jiglibjs2/geometry/JSphere.js",
+			"js/lib/jiglibjs2/geometry/JTriangleMesh.js",
+			"js/lib/jiglibjs2/geometry/JPlane.js",
+			"js/lib/jiglibjs2/geometry/JTerrain.js",
+			"js/lib/jiglibjs2/geometry/JBox.js",
+			"js/lib/jiglibjs2/geometry/JCapsule.js",
+			"js/lib/jiglibjs2/vehicles/JChassis.js",
+			"js/lib/jiglibjs2/vehicles/JWheel.js",
+			"js/lib/jiglibjs2/vehicles/JCar.js",
+			/* end JigLib 2 library */
 			"js/game/workers/MenuMaker.js",
 			"js/game/workers/ObjectMaker.js",
 			"js/game/core/Physics.js",
@@ -195,7 +343,7 @@ var KAIOPUA = (function (main) {
 		
 		physics = core.physics;
 		
-		//physics.init();
+		physics.init();
 		
 		// world
 		
@@ -276,6 +424,80 @@ var KAIOPUA = (function (main) {
 		
 		// resume game
 		resume();
+		
+		// test
+		
+		var mat = new THREE.MeshNormalMaterial();
+		
+		var g1 = new THREE.PlaneGeometry( 500, 500, 1, 1 );
+		
+		var m1 = workers.objectmaker.make_model({
+            geometry: g1,
+			materials: mat,
+			rotation: new THREE.Vector3( -90, 0, 0 )
+        });
+		m1.mesh.doubleSided = true;
+		m1.mesh.position.set( 0, -100, 0 );
+		
+		// add to scene
+		
+		world.get_scene().add( m1.mesh );
+		
+		// add to physics
+		physics.add( m1.mesh, {
+			bodyType: 'plane',
+			position: m1.mesh.position,
+			rotation: m1.mesh.quaternion
+		});
+		
+		var yinit = 100;
+		
+		for( i = 0; i < 100; i++ ) {
+			
+			// random between cube or sphere
+			if ( Math.random() > 0.5 ) {
+			
+				var g2 = new THREE.CubeGeometry( 50, 50, 50 );
+			
+				var m2 = workers.objectmaker.make_model({
+					geometry: g2,
+					materials: mat
+				});
+				
+				world.get_scene().add( m2.mesh );
+				
+				m2.mesh.position.set( 0, yinit, 0 );
+			
+				physics.add( m2.mesh, {
+					bodyType: 'box',
+					position: m2.mesh.position
+				});
+				
+			}
+			else {
+				
+				var geom3 = new THREE.SphereGeometry( 25 );
+				
+				var mat3 = new THREE.MeshLambertMaterial();
+				
+				var m3 = workers.objectmaker.make_model({
+					geometry: geom3,
+					materials: mat
+				});
+				
+				world.get_scene().add( m3.mesh );
+				
+				m3.mesh.position.set( 0, yinit, 0 );
+				
+				physics.add( m3.mesh, {
+					bodyType: 'sphere',
+					position: m3.mesh.position
+				});
+				
+			}
+			
+			yinit += 100;
+		}
     }
     
     /*===================================================
