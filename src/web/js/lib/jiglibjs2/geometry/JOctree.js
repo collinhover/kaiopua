@@ -21,6 +21,7 @@
 
 	var JOctree = function()
 	{
+		
 		this._cells = null; // OctreeCell
 		this._vertices = null; // Vector3D
 		this._triangles = null; // JIndexedTriangle
@@ -289,7 +290,13 @@
 		return result;
 		
 	}
-
+	
+	/* Possible fix?
+	JOctree.prototype.doesTriangleIntersectCell = function(triangle, cell)
+	{
+		return triangle.get_boundingBox().overlapTest(cell.AABox);
+	}
+	*/
 	JOctree.prototype.doesTriangleIntersectCell = function(triangle, cell)
 	{
 

@@ -44,12 +44,12 @@ var KAIOPUA = (function (main) {
         
         camera = new THREE.PerspectiveCamera(60, shared.screenWidth / shared.screenHeight, 1, 10000);
         
-        camera.position.set(0, 0, 1200);
+        camera.position.set(0, 0, 4000);
         camera.lookAt( new THREE.Vector3(0, 0, 0) );
         
         cameraControls = new THREE.FlyControls( camera );
         cameraControls.rollSpeed = 0.5;
-        cameraControls.movementSpeed = 400;
+        cameraControls.movementSpeed = 800;
         cameraControls.update();
 		
 	}

@@ -73,8 +73,8 @@ var KAIOPUA = (function (main) {
 	
 	function add ( mesh, parameters ) {
 		
-		var geometry = mesh.geometry,
-			bboxScale,
+		var i, l,
+			geometry,
 			bbox,
 			bodyType,
 			rigidBody,
@@ -89,13 +89,22 @@ var KAIOPUA = (function (main) {
 			position,
 			rotation,
 			velocity,
-			name;
+			name,
+			vertsThree,
+			vertsJig,
+			vertex,
+			vertPos,
+			facesThree,
+			facesJig,
+			face;
+		
+		geometry = parameters.geometry || mesh.geometry;
 		
 		// handle parameters
 		
 		parameters = parameters || {};
 		
-		scale = parameters.scale || 1;
+		name = parameters.name || linksBaseName + linksCount;
 		
 		bodyType = parameters.bodyType || 'box';
 		
@@ -111,8 +120,6 @@ var KAIOPUA = (function (main) {
 		
 		velocity = init_jig_vec( parameters.velocity );
 		
-		name = parameters.name || linksBaseName + linksCount;
-		
 		// model bounding box
 		
 		if ( !geometry.boundingBox || geometry.boundingBox.hasOwnProperty('length') === false ) {
@@ -123,15 +130,49 @@ var KAIOPUA = (function (main) {
 		
 		bbox = geometry.boundingBox;
 		
-		width = (bbox.x[1] - bbox.x[0]) * scale;
-		height = (bbox.y[1] - bbox.y[0]) * scale;
-		depth = (bbox.z[1] - bbox.z[0]) * scale;
+		width = (bbox.x[1] - bbox.x[0]);
+		height = (bbox.y[1] - bbox.y[0]);
+		depth = (bbox.z[1] - bbox.z[0]);
 		
 		mass = parameters.mass || width * height * depth;
 		
 		// create physics object
 		
 		if ( bodyType === 'trimesh' ) {
+			
+			// handle vertices
+			
+			vertsThree = geometry.vertices;
+			
+			vertsJig = [];
+			
+			for( i = 0, l = vertsThree.length; i < l; i += 1 ){
+				
+				vertex = vertsThree[ i ];
+				
+				vertPos = vertex.position;
+				
+				vertsJig.push( new jiglib.Vector3D( vertPos.x, vertPos.y, vertPos.z ) );
+				
+			}
+			
+			// handle faces
+			
+			facesThree = geometry.faces;
+			
+			facesJig = [];
+			
+			for( i = 0, l = facesThree.length; i < l; i += 1 ){
+				
+				face = facesThree[ i ];
+				
+				facesJig.push( { i0: face.a, i1: face.b, i2: face.c } );
+
+			}
+			
+			rigidBody = new jiglib.JTriangleMesh( null, parameters.trianglesPerCell, parameters.minCellSize );
+			
+			rigidBody.createMesh( vertsJig, facesJig );
 			
 		}
 		else if ( bodyType === 'capsule' ) {
@@ -203,22 +244,22 @@ var KAIOPUA = (function (main) {
 		linksMap[ name ] = { mesh: mesh, rigidBody: rigidBody };
 		
 		return name;
-		
 	}
 	
 	function remove ( name ) {
 		
-		var linkIndex, linkInfo;
+		var index, info;
 		
-		linkIndex = linksNames.indexOf( name );
+		index = linksNames.indexOf( name );
 		
-		if ( linkIndex !== -1 ) {
+		// if is already a link
+		if ( index !== -1 ) {
 			
-			linksNames.splice( linkIndex, 1 );
+			linksNames.splice( index, 1 );
 			
-			linkInfo = linksMap[ name ];
+			info = linksMap[ name ];
 			
-			system.removeBody( linkInfo.rigidBody );
+			system.removeBody( info.rigidBody );
 		
 			delete linksMap[ name ];
 			
@@ -244,13 +285,13 @@ var KAIOPUA = (function (main) {
 			}
 			else {
 				
-				vjig = three_vec_to_jig_vec3( vsource );
+				vjig = three_vec_to_jig_vec( vsource );
 				
 			}
 			
 		}
 		else {
-			vjig = new jiglib.Vector3D( 0, 0, 0 );
+			vjig = new jiglib.Vector3D( 0, 0, 0, 0 );
 		}
 		
 		// normalize
@@ -264,7 +305,7 @@ var KAIOPUA = (function (main) {
 		return vjig;
 	}
 	
-	function three_vec_to_jig_vec3 ( vthree ) {
+	function three_vec_to_jig_vec ( vthree ) {
 		
 		return new jiglib.Vector3D( vthree.x, vthree.y, vthree.z, 0 );
 		
@@ -284,7 +325,7 @@ var KAIOPUA = (function (main) {
 			
 			vtemp.multiplyScalar( 180 / Math.PI );
 			
-			return three_vec_to_jig_vec3( vtemp );
+			return three_vec_to_jig_vec( vtemp );
 			
 		}
 		
@@ -358,6 +399,10 @@ var KAIOPUA = (function (main) {
 		timeDelta = time - timeLast;
 		
 		timeStep = timeDelta / 1000;
+		
+		if ( timeStep > 0.05 ) {
+			timeStep = 0.05;
+		}
 		
 		// integrate system
 		

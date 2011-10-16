@@ -34,6 +34,9 @@ var KAIOPUA = (function (main) {
         var i, l,
             model = {},
             geometry,
+			vertices,
+			vertex,
+			vertPos,
             materials,
             materialsToModify,
             material,
@@ -113,12 +116,6 @@ var KAIOPUA = (function (main) {
         
         mesh.castShadow = parameters.castShadow || false;
         mesh.receiveShadow = parameters.receiveShadow || false;
-        
-        // scale
-        
-        scale = parameters.scale || 1;
-        
-        mesh.scale.set( scale, scale, scale );
 		
 		// rotation
 		

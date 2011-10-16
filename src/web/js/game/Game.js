@@ -48,84 +48,6 @@ var KAIOPUA = (function (main) {
             "assets/textures/light_ray.png"
         ],
         gameAssets = [
-			/* JigLib Physics Library (1)
-			 * TODO: Minify and Concat */
-			/*
-			"js/lib/jiglibjs/jiglib.js",
-			"js/lib/jiglibjs/cof/jconfig.js",
-			"js/lib/jiglibjs/maths/glmatrix.js",
-			"js/lib/jiglibjs/maths/vector3dutil.js",
-			"js/lib/jiglibjs/maths/matrix3d.js",
-			"js/lib/jiglibjs/maths/jnumber3d.js",
-			"js/lib/jiglibjs/maths/jmatrix3d.js",
-			"js/lib/jiglibjs/maths/jmaths3d.js",
-			"js/lib/jiglibjs/data/contactdata.js",
-			"js/lib/jiglibjs/data/edgedata.js",
-			"js/lib/jiglibjs/data/planedata.js",
-			"js/lib/jiglibjs/data/spandata.js",
-			"js/lib/jiglibjs/data/trianglevertexindices.js",
-			"js/lib/jiglibjs/data/octreecell.js",
-			"js/lib/jiglibjs/data/colloutdata.js",
-			"js/lib/jiglibjs/data/colloutbodydata.js",
-			"js/lib/jiglibjs/events/JEventDispatcher.js",
-			"js/lib/jiglibjs/events/JEvent.js",
-			"js/lib/jiglibjs/events/JCollisionEvent.js",
-			"js/lib/jiglibjs/plugins/iskin3d.js",
-			"js/lib/jiglibjs/geometry/jaabox.js",
-			"js/lib/jiglibjs/physics/bodypair.js",
-			"js/lib/jiglibjs/physics/cachedimpluse.js",
-			"js/lib/jiglibjs/physics/materialproperties.js",
-			"js/lib/jiglibjs/physics/physicscontroller.js",
-			"js/lib/jiglibjs/physics/physicsstate.js",
-			"js/lib/jiglibjs/physics/rigid_body.js",
-			"js/lib/jiglibjs/physics/hingejoint.js",
-			"js/lib/jiglibjs/physics/effect/jeffect.js",
-			"js/lib/jiglibjs/physics/effect/gravityField.js",
-			"js/lib/jiglibjs/physics/effect/explosion.js",
-			"js/lib/jiglibjs/physics/effect/wind.js",
-			"js/lib/jiglibjs/geometry/jbox.js",
-			"js/lib/jiglibjs/geometry/jcapsule.js",
-			"js/lib/jiglibjs/geometry/jplane.js",
-			"js/lib/jiglibjs/geometry/jray.js",
-			"js/lib/jiglibjs/geometry/jsegment.js",
-			"js/lib/jiglibjs/geometry/jsphere.js",
-			"js/lib/jiglibjs/geometry/jterrain.js",
-			"js/lib/jiglibjs/geometry/jindexedtriangle.js",
-			"js/lib/jiglibjs/geometry/jtriangle.js",
-			"js/lib/jiglibjs/geometry/joctree.js",
-			"js/lib/jiglibjs/geometry/jtrianglemesh.js",
-			"js/lib/jiglibjs/collision/collpointinfo.js",
-			"js/lib/jiglibjs/collision/collisioninfo.js",
-			"js/lib/jiglibjs/collision/colldetectinfo.js",
-			"js/lib/jiglibjs/collision/colldetectfunctor.js",
-			"js/lib/jiglibjs/collision/colldetectboxbox.js",
-			"js/lib/jiglibjs/collision/colldetectboxplane.js",
-			"js/lib/jiglibjs/collision/colldetectboxterrain.js",
-			"js/lib/jiglibjs/collision/colldetectcapsulebox.js",
-			"js/lib/jiglibjs/collision/colldetectcapsulecapsule.js",
-			"js/lib/jiglibjs/collision/colldetectcapsuleplane.js",
-			"js/lib/jiglibjs/collision/colldetectcapsuleterrain.js",
-			"js/lib/jiglibjs/collision/colldetectspherebox.js",
-			"js/lib/jiglibjs/collision/colldetectspherecapsule.js",
-			"js/lib/jiglibjs/collision/colldetectsphereplane.js",
-			"js/lib/jiglibjs/collision/colldetectspheresphere.js",
-			"js/lib/jiglibjs/collision/colldetectsphereterrain.js",
-			"js/lib/jiglibjs/collision/colldetectboxmesh.js",
-			"js/lib/jiglibjs/collision/colldetectspheremesh.js",
-			"js/lib/jiglibjs/collision/collisionsystemabstract.js",
-			"js/lib/jiglibjs/collision/collisionsystembrute.js",
-			"js/lib/jiglibjs/collision/collisionsystemgridentry.js",
-			"js/lib/jiglibjs/collision/collisionsystemgrid.js",
-			"js/lib/jiglibjs/physics/constraint/jconstraint.js",
-			"js/lib/jiglibjs/physics/constraint/jconstraintmaxdistance.js",
-			"js/lib/jiglibjs/physics/constraint/jconstraintpoint.js",
-			"js/lib/jiglibjs/physics/physicssystem.js",
-			"js/lib/jiglibjs/vehicles/jchassis.js",
-			"js/lib/jiglibjs/vehicles/jwheel.js",
-			"js/lib/jiglibjs/vehicles/jcar.js",
-			*/
-			/* end JigLib 1 library */
-			
 			/* JigLib Physics Library (2)
 			 * TODO: Minify and Concat */
 			"js/lib/jiglibjs2/jiglib.js",
@@ -141,6 +63,7 @@ var KAIOPUA = (function (main) {
 			"js/lib/jiglibjs2/data/PlaneData.js",
 			"js/lib/jiglibjs2/data/EdgeData.js",
 			"js/lib/jiglibjs2/data/TerrainData.js",
+			"js/lib/jiglibjs2/geometry/JAABox.js",
 			"js/lib/jiglibjs2/data/OctreeCell.js",
 			"js/lib/jiglibjs2/data/CollOutBodyData.js",
 			"js/lib/jiglibjs2/data/TriangleVertexIndices.js",
@@ -150,6 +73,8 @@ var KAIOPUA = (function (main) {
 			"js/lib/jiglibjs2/physics/constraint/JConstraintWorldPoint.js",
 			"js/lib/jiglibjs2/physics/constraint/JConstraintPoint.js",
 			"js/lib/jiglibjs2/physics/MaterialProperties.js",
+			"js/lib/jiglibjs2/geometry/JTriangle.js",
+			"js/lib/jiglibjs2/geometry/JSegment.js",
 			"js/lib/jiglibjs2/collision/CollPointInfo.js",
 			"js/lib/jiglibjs2/collision/CollisionInfo.js",
 			"js/lib/jiglibjs2/collision/CollDetectInfo.js",
@@ -175,9 +100,6 @@ var KAIOPUA = (function (main) {
 			"js/lib/jiglibjs2/geometry/JIndexedTriangle.js",
 			"js/lib/jiglibjs2/geometry/JOctree.js",
 			"js/lib/jiglibjs2/geometry/JRay.js",
-			"js/lib/jiglibjs2/geometry/JAABox.js",
-			"js/lib/jiglibjs2/geometry/JTriangle.js",
-			"js/lib/jiglibjs2/geometry/JSegment.js",
 			"js/lib/jiglibjs2/events/JCollisionEvent.js",
 			"js/lib/jiglibjs2/physics/PhysicsController.js",
 			"js/lib/jiglibjs2/physics/CachedImpulse.js",
@@ -205,6 +127,8 @@ var KAIOPUA = (function (main) {
             "js/game/sections/IntroSection.js",
             { path: "assets/models/World_Head.js", type: 'model' },
 			{ path: "assets/models/World_Tail.js", type: 'model' },
+			{ path: "assets/models/World_Head_low.js", type: 'model' },
+			{ path: "assets/models/World_Tail_low.js", type: 'model' },
 			{ path: "assets/models/Hero.js", type: 'model' }
         ];
     
@@ -326,38 +250,12 @@ var KAIOPUA = (function (main) {
     =====================================================*/
     
     function init_game () {
-        
-		// core
-		
-		init_core();
 		
 		// start menu
 		
 		init_start_menu();
 		
     }
-	
-	function init_core () {
-		
-		// physics
-		
-		physics = core.physics;
-		
-		physics.init();
-		
-		// world
-		
-		world = core.world;
-		
-		world.init();
-		
-		// player
-		
-		player = core.player;
-		
-		player.init();
-		
-	}
 	
 	function init_start_menu () {
 		var ms;
@@ -412,6 +310,10 @@ var KAIOPUA = (function (main) {
     
     function start_game() {
         var ms = menus.start;
+		
+		// core
+		
+		init_core();
         
         // disable start menu
         ms.disable();
@@ -425,11 +327,39 @@ var KAIOPUA = (function (main) {
 		// resume game
 		resume();
 		
+    }
+	
+	function init_core () {
+		
+		// physics
+		
+		physics = core.physics;
+		
+		physics.init();
+		
+		// world
+		
+		world = core.world;
+		
+		world.init();
+		
+		// player
+		
+		player = core.player;
+		
+		player.init();
+		
+		
+		start_physics_test();
+		
+	}
+	
+	function start_physics_test () {
 		// test
 		
 		var mat = new THREE.MeshNormalMaterial();
 		
-		var g1 = new THREE.PlaneGeometry( 500, 500, 1, 1 );
+		var g1 = new THREE.PlaneGeometry( 3000, 3000, 1, 1 );
 		
 		var m1 = workers.objectmaker.make_model({
             geometry: g1,
@@ -437,7 +367,7 @@ var KAIOPUA = (function (main) {
 			rotation: new THREE.Vector3( -90, 0, 0 )
         });
 		m1.mesh.doubleSided = true;
-		m1.mesh.position.set( 0, -100, 0 );
+		m1.mesh.position.set( 0, -1640, 0 );
 		
 		// add to scene
 		
@@ -450,9 +380,11 @@ var KAIOPUA = (function (main) {
 			rotation: m1.mesh.quaternion
 		});
 		
-		var yinit = 100;
+		var yinit = 1900;
+		var xinit = 200;
+		var zinit = 200;
 		
-		for( i = 0; i < 100; i++ ) {
+		for( i = 0; i < 50; i++ ) {
 			
 			// random between cube or sphere
 			if ( Math.random() > 0.5 ) {
@@ -466,7 +398,7 @@ var KAIOPUA = (function (main) {
 				
 				world.get_scene().add( m2.mesh );
 				
-				m2.mesh.position.set( 0, yinit, 0 );
+				m2.mesh.position.set( xinit, yinit, zinit );
 			
 				physics.add( m2.mesh, {
 					bodyType: 'box',
@@ -487,7 +419,7 @@ var KAIOPUA = (function (main) {
 				
 				world.get_scene().add( m3.mesh );
 				
-				m3.mesh.position.set( 0, yinit, 0 );
+				m3.mesh.position.set( xinit, yinit, zinit );
 				
 				physics.add( m3.mesh, {
 					bodyType: 'sphere',
@@ -496,9 +428,25 @@ var KAIOPUA = (function (main) {
 				
 			}
 			
-			yinit += 100;
+			xinit -= 100;
+			
+			if ( xinit <= -200 ) {
+				
+				xinit = 200;
+				
+				zinit -= 100;
+				
+				if ( zinit <= -200 ) {
+					
+					zinit = 200;
+					
+					yinit += 100;
+					
+				}
+			}
 		}
-    }
+		
+	}
     
     /*===================================================
     

@@ -111,7 +111,7 @@
 
 	JAABox.prototype.addPoint = function(pos)
 	{
-
+		
 		var tiny=JMath3D.NUM_TINY;
 		if (pos.x < this.minPos.x) this.minPos.x = pos.x - tiny;
 		if (pos.x > this.maxPos.x) this.maxPos.x = pos.x + tiny;

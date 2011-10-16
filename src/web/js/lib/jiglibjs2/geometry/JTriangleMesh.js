@@ -1,28 +1,30 @@
 
 (function(jiglib) {
 
-	var JIndexedTriangle = jiglib.JIndexedTriangle;
-	var JOctree = jiglib.JOctree;
-	var JCapsule = jiglib.JCapsule;
-	var JBox = jiglib.JBox;
-	var JRay = jiglib.JRay;
-	var JAABox = jiglib.JAABox;
-	var JTerrain = jiglib.JTerrain;
-	var JPlane = jiglib.JPlane;
-	var JTriangle = jiglib.JTriangle;
-	var JSphere = jiglib.JSphere;
-	var JSegment = jiglib.JSegment;
-	var RigidBody = jiglib.RigidBody;
-	var Matrix3D = jiglib.Matrix3D;
-	var Vector3D = jiglib.Vector3D;
-	var CollOutData = jiglib.CollOutData;
-	var TriangleVertexIndices = jiglib.TriangleVertexIndices;
-	var JMatrix3D = jiglib.JMatrix3D;
-	var JMath3D = jiglib.JMath3D;
-	var JNumber3D = jiglib.JNumber3D;
-	var PhysicsState = jiglib.PhysicsState;
-
-	var JTriangleMesh = function(skin, initPosition, initOrientation, maxTrianglesPerCell, minCellSize)
+	var JIndexedTriangle = jiglib.JIndexedTriangle,
+		JOctree = jiglib.JOctree,
+		JCapsule = jiglib.JCapsule,
+		JBox = jiglib.JBox,
+		JRay = jiglib.JRay,
+		JAABox = jiglib.JAABox,
+		JTerrain = jiglib.JTerrain,
+		JPlane = jiglib.JPlane,
+		JTriangle = jiglib.JTriangle,
+		JSphere = jiglib.JSphere,
+		JSegment = jiglib.JSegment,
+		RigidBody = jiglib.RigidBody,
+		Matrix3D = jiglib.Matrix3D,
+		Vector3D = jiglib.Vector3D,
+		CollOutData = jiglib.CollOutData,
+		TriangleVertexIndices = jiglib.TriangleVertexIndices,
+		JMatrix3D = jiglib.JMatrix3D,
+		JMath3D = jiglib.JMath3D,
+		JNumber3D = jiglib.JNumber3D,
+		PhysicsState = jiglib.PhysicsState;
+	
+	// removed init position and init orientation from arguments, not useful
+	// also added fallback/defaults for tris per cell and min cell size
+	var JTriangleMesh = function(skin, maxTrianglesPerCell, minCellSize)
 	{
 		this._octree = null; // JOctree
 		this._maxTrianglesPerCell = null; // int
@@ -31,16 +33,13 @@
 
 		jiglib.RigidBody.apply(this, [ skin ]);
 		
-		this.get_currentState().position=initPosition.clone();
-		this.get_currentState().orientation=initOrientation.clone();
-		this._maxTrianglesPerCell = maxTrianglesPerCell;
-		this._minCellSize = minCellSize;
+		this._maxTrianglesPerCell = maxTrianglesPerCell || 20;
+		this._minCellSize = minCellSize || 1;
 		
 		this.set_movable(false);
 		
 		if(skin){
-			this._skinVertices=skin.vertices;
-			this.createMesh(this._skinVertices,skin.indices);
+			this.createMesh(skin.vertices,skin.indices);
 			
 			this._boundingBox=this._octree.boundingBox().clone();
 			skin.transform = JMatrix3D.getAppendMatrix3D(this.get_currentState().orientation, JMatrix3D.getTranslationMatrix(this.get_currentState().position.x, this.get_currentState().position.y, this.get_currentState().position.z));
@@ -54,7 +53,6 @@
 
 	JTriangleMesh.prototype.createMesh = function(vertices, triangleVertexIndices)
 	{
-
 		
 		var len=vertices.length;
 		var vts=[];
@@ -72,6 +70,7 @@
 		this._octree.addTriangles(vts, vts.length, triangleVertexIndices, triangleVertexIndices.length);
 		this._octree.buildOctree(this._maxTrianglesPerCell, this._minCellSize);
 		
+		this._skinVertices = vts;
 		
 	}
 
@@ -121,7 +120,6 @@
 
 		jiglib.RigidBody.prototype.updateState.apply(this, [  ]);
 		
-		var len=this._skinVertices.length;
 		var vts=[];
 		
 		var transform = JMatrix3D.getTranslationMatrix(this.get_currentState().position.x, this.get_currentState().position.y, this.get_currentState().position.z);

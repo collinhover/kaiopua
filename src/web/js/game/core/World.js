@@ -10,13 +10,15 @@ var KAIOPUA = (function (main) {
 		world = core.world = core.world || {},
 		assets,
 		objectmaker,
+		physics,
 		scene,
 		ambientLight,
-		threeObj,
 		body,
 		head,
+		head_collision_model,
 		tail,
-		scale = 110;
+		tail_collision_model,
+		gravityMagnitude = 100;
 	
 	/*===================================================
     
@@ -26,7 +28,6 @@ var KAIOPUA = (function (main) {
 	
 	world.init = init;
 	world.get_scene = function () { return scene; };
-	world.get_three_obj = function () { return threeObj; };
 	world.get_head = function () { return head; };
 	world.get_tail = function () { return tail; };
 	
@@ -46,11 +47,17 @@ var KAIOPUA = (function (main) {
 		
 		objectmaker = game.workers.objectmaker;
 		
+		// core
+		
+		physics = core.physics;
+		
 		// initialization
 		
 		init_basics();
 		
 		init_environment();
+		
+		init_physics();
 		
 	}
 	
@@ -78,24 +85,50 @@ var KAIOPUA = (function (main) {
         
         head = objectmaker.make_model({
             geometry: assets["assets/models/World_Head.js"],
-			scale: scale,
 			shading: THREE.FlatShading
         });
 		
 		tail = objectmaker.make_model({
             geometry: assets["assets/models/World_Tail.js"],
-			scale: scale,
 			shading: THREE.FlatShading
         });
 		
-		// add to threeObj
+		scene.add( head.mesh );
+		scene.add( tail.mesh );
 		
-		threeObj = new THREE.Object3D();
+	}
+	
+	function init_physics () {
 		
-		threeObj.add( head.mesh );
-		threeObj.add( tail.mesh );
+		// change gravity
 		
-		//scene.add( threeObj );
+		physics.set_gravity( 0, -gravityMagnitude, 0 );
+		
+		// init low poly models for physics collisions
+		
+		head_collision_model = objectmaker.make_model({
+            geometry: assets["assets/models/World_Head_low.js"]
+        });
+		
+		tail_collision_model = objectmaker.make_model({
+            geometry: assets["assets/models/World_Tail_low.js"]
+        });
+		
+		// add parts
+		
+		physics.add( head.mesh, {
+			bodyType: 'trimesh',
+			geometry: head_collision_model.mesh.geometry,
+			position: head.mesh.position,
+			rotation: head.mesh.quaternion
+		});
+		
+		physics.add( tail.mesh, {
+			bodyType: 'trimesh',
+			geometry: tail_collision_model.mesh.geometry,
+			position: tail.mesh.position,
+			rotation: tail.mesh.quaternion
+		});
 		
 	}
 	
