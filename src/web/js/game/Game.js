@@ -145,14 +145,32 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
     
+	// functions
+	
     game.init = init;
     game.resume = resume;
     game.pause = pause;
     game.update_section_list = update_section_list;
-	game.get_scene = function () { return scene; };
-	game.get_camera = function () { return camera; };
-    game.get_dom_element = function () { return domElement; };
-    game.paused = function () { return paused; };
+	
+	// getters and setters
+	
+	Object.defineProperty(game, 'domElement', { 
+		get : function () { return domElement; }
+	});
+	
+	Object.defineProperty(game, 'paused', { 
+		get : function () { return paused; }
+	});
+	
+	Object.defineProperty(game, 'scene', { 
+		get : function () { return scene; },  
+		set : set_scene
+	});
+	
+	Object.defineProperty(game, 'camera', { 
+		get : function () { return camera; },  
+		set : set_camera
+	});
     
     /*===================================================
     
@@ -230,12 +248,12 @@ var KAIOPUA = (function (main) {
     function init_basics () {
         
 		var shaderScreen = THREE.ShaderExtras[ "screen" ],
-            shaderFocusVignette = effects.FocusVignette,
-			bg = effects.LinearGradient.generate( {
+            shaderFocusVignette = effects.FocusVignette;
+			/*bg = effects.LinearGradient.generate( {
 				colors: [0x0F042E, 0x1D508F, 0x529AD1, 0x529AD1, 0x455AE0],
 				stops: [0, 0.4, 0.6, 0.8, 1.0],
 				startBottom: true
-			} );
+			} )*/
 		
         // transitioner
         transitioner = uihelper.make_ui_element({
@@ -277,7 +295,6 @@ var KAIOPUA = (function (main) {
 		// passes
         
         renderPasses = {
-            bg: new THREE.RenderPass( bg.scene, bg.camera ),
             env: new THREE.RenderPass( scene, camera ),
             screen: new THREE.ShaderPass( shaderScreen ),
             focusVignette: new THREE.ShaderPass ( shaderFocusVignette )
@@ -286,8 +303,6 @@ var KAIOPUA = (function (main) {
 		// settings
 		
         renderPasses.screen.renderToScreen = true;
-        
-        renderPasses.env.clear = false;
 		
         renderPasses.focusVignette.uniforms[ "screenWidth" ].value = shared.screenWidth;
         renderPasses.focusVignette.uniforms[ "screenHeight" ].value = shared.screenHeight;
@@ -298,12 +313,7 @@ var KAIOPUA = (function (main) {
         
         // composer
         
-        renderComposer = new THREE.EffectComposer( renderer );
-        
-        renderComposer.addPass( renderPasses.bg );
-        renderComposer.addPass( renderPasses.env );
-        renderComposer.addPass( renderPasses.focusVignette );
-        renderComposer.addPass( renderPasses.screen );
+        set_render_processing();
 		
 		// add renderer to game dom element
 		
@@ -543,11 +553,113 @@ var KAIOPUA = (function (main) {
 	
 	/*===================================================
     
+    render functions
+    
+    =====================================================*/
+	
+	function set_render_processing ( parameters ) {
+		
+		var i, l,
+			requiredPasses = ['env', 'screen'],
+			passesNames,
+			passName,
+			envPass;
+		
+		// handle parameters
+		
+		parameters = parameters || {};
+		
+		passesNames = parameters.passesNames;
+		
+		// init composer
+		
+		renderComposer = new THREE.EffectComposer( renderer );
+		
+		// check that environment camera and scene match current
+		
+		envPass = renderPasses.env;
+		
+		if ( envPass.scene !== scene ) {
+			console.log(' update env scene ');
+			envPass.scene = scene;
+		}
+		
+		if ( envPass.camera !== camera ) {
+			console.log(' update env camera ');
+			envPass.camera = camera;
+		}
+		
+		// if should use default passes
+		
+		if ( typeof passesNames === 'undefined' || passesNames.hasOwnProperty('length') === false ) {
+			
+			passesNames = [];
+			
+		}
+		
+		// if names includes env, remove
+		
+		if ( passesNames.indexOf( 'env' ) !== -1 ) {
+			
+			passesNames.splice( passesNames.indexOf( 'env' ), 1 );
+			
+		}
+		
+		// if names includes screen, remove
+		
+		if ( passesNames.indexOf( 'screen' ) !== -1 ) {
+			
+			passesNames.splice( passesNames.indexOf( 'screen' ), 1 );
+			
+		}
+		
+		// add required passes to beginning
+		
+		passesNames = requiredPasses.concat(passesNames);
+        
+		// add each pass in passes names
+		
+		for ( i = 0, l = passesNames.length; i < l; i += 1 ) {
+			
+			passName = passesNames[ i ];
+			
+			if ( typeof renderPasses[ passName ] !== 'undefined' ) {
+				
+				renderComposer.addPass( renderPasses[ passName ] );
+				
+			}
+			
+		}
+		
+	}
+	
+	/*===================================================
+    
     scene functions
     
     =====================================================*/
 	
+	function set_scene ( sceneNew ) {
+		
+		scene = sceneNew;
+		
+		renderPasses.env.scene = scene;
+		
+	}
 	
+	/*===================================================
+    
+    camera functions
+    
+    =====================================================*/
+	
+	function set_camera ( cameraNew ) {
+		
+		camera = cameraNew;
+		
+		renderPasses.env.camera = camera;
+		
+	}
 	
     /*===================================================
     
@@ -623,6 +735,7 @@ var KAIOPUA = (function (main) {
             });
             
         }
+		
     }
     
     function pause () {

@@ -65,7 +65,7 @@ var KAIOPUA = (function (main) {
 		
 		// scene
 		
-		scene = game.get_scene();
+		scene = game.scene;
         
         // fog
         

@@ -137,7 +137,7 @@ var KAIOPUA = (function (main) {
 		
 		// camera
         
-        camera = game.get_camera();
+        camera = game.camera;
         
         // starting position
         camera.position.set(-5800, 0, 0);
@@ -150,7 +150,7 @@ var KAIOPUA = (function (main) {
 		
 		// scene
 		
-		scene = game.get_scene();
+		scene = game.scene;
 		
 		// fog
         scene.fog = new THREE.Fog( fogColor, -100, 10000 );

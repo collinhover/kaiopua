@@ -118,7 +118,7 @@ var KAIOPUA = (function (main) {
 		
 		// camera
         
-        camera = game.get_camera();
+        camera = game.camera;
 		
 		camera.position.set(0, 0, 4000);
 		
@@ -126,7 +126,7 @@ var KAIOPUA = (function (main) {
 		
 		// scene
 		
-		scene = game.get_scene();
+		scene = game.scene;
 		
 		// add items
 		

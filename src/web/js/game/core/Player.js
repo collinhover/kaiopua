@@ -42,7 +42,7 @@ var KAIOPUA = (function (main) {
 		
 		// camera
         
-        camera = game.get_camera();
+        camera = game.camera;
         
         cameraControls = new THREE.FlyControls( camera );
         cameraControls.rollSpeed = 0.5;
