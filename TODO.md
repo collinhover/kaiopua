@@ -11,8 +11,9 @@
   * Facebook share url to domain name
   * Twitter share url to domain name
 * Get domain name and hosting
-* Physics - basic + planetoid
+* Physics - planetoid
 * 3rd Person character camera
+* Character controls
 * Scaling mechanics:
   * Select objects
   * Scale up
@@ -25,10 +26,10 @@
 * Research shaders and cell-shading
 
 #### Joshua
-* Model shack/hut with japanese style roof and banana leaf door
-* Model bed/cot, very simple/plain flat mat with ti leaves
-* Model palm tree
-* Model hill with spiral path from top to bottom
+* Make hut and local items take up an exaggerated amount of space on hill
+* Model bed, flat with geometry showing leaves (no spirals)
+* Curve palm tree
+* Fix hill
 * Model fence for hill path
 * Model taro plant
 
@@ -51,10 +52,6 @@
   * Mouth open
 
 #### Kevin
-* Model world face morphs
-  * Mouth open
-* Model environment objects
-  * Boulders / rocks
 * Model Power source object
 * Rig power source object
 * Power source morph targets
@@ -66,8 +63,8 @@
 * Model pig
 
 #### Houston
-* Model mini-sun
-* Model lantern
+* Fix mini-sun, smooth out curve of face
+* Fix lantern, walls and bottom has five sides
 * Model chicken
 * Rig chicken
 * Animate chicken
@@ -75,9 +72,15 @@
   * Peck ground
 
 #### Amanda
-* Learn to model using Blender
-  * Try with any of plant objects
 * Color schemes
+  * Create simple scene based on provided sketches
+  * Use hill, world skin, house, and plants
+  * Vibrant + contrasting colors
+  * Color for world
+  * Color for character
+  * Color for plants
+  * Color for hill + house
+  * Color for lantern
 
 #### Sound Artist
 * Speak to others about getting a sound artist to join
