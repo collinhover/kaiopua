@@ -14,11 +14,18 @@ var KAIOPUA = (function (main) {
         sections = game.sections = game.sections || {},
         workers = game.workers = game.workers || {},
         menus = game.menus = game.menus || {},
+		effects = main.effects = main.effects || {},
         transitioner,
         domElement,
         menumaker,
         renderer, 
         renderTarget,
+		renderComposer,
+        renderPasses,
+		scene,
+		fog,
+		camera,
+		launcher,
 		physics,
 		world,
 		player,
@@ -29,7 +36,7 @@ var KAIOPUA = (function (main) {
         transitionOut = 1000, 
         transitionIn = 400,
         loadAssetsDelay = 500,
-        dependencies = [
+        assetsBasic = [
             "js/lib/three/Three.js",
             "js/lib/three/ThreeExtras.js",
             "js/lib/three/postprocessing/ShaderExtras.js",
@@ -40,14 +47,14 @@ var KAIOPUA = (function (main) {
             "js/effects/LinearGradient.js",
             "js/effects/FocusVignette.js"
         ],
-        launcherAssets = [
-            "js/game/sections/LauncherSection.js",
-            "js/game/sections/launcher/Water.js",
-            "js/game/sections/launcher/Sky.js",
+        assetsLauncher = [
+            "js/game/launcher/Launcher.js",
+            "js/game/launcher/Water.js",
+            "js/game/launcher/Sky.js",
             "assets/textures/cloud256.png",
             "assets/textures/light_ray.png"
         ],
-        gameAssets = [
+        assetsGame = [
 			/* JigLib Physics Library (2)
 			 * TODO: Minify and Concat */
 			"js/lib/jiglibjs2/jiglib.js",
@@ -142,43 +149,106 @@ var KAIOPUA = (function (main) {
     game.resume = resume;
     game.pause = pause;
     game.update_section_list = update_section_list;
+	game.get_scene = function () { return scene; };
+	game.get_camera = function () { return camera; };
     game.get_dom_element = function () { return domElement; };
     game.paused = function () { return paused; };
     
     /*===================================================
     
-    external init
+    external init and loading
     
     =====================================================*/
     
     function init() {
         
-        domElement = shared.html.gameContainer;
-        
-        // get dependencies
-        
-        loader.load( dependencies , function () {
-            init_basics();
-        });
+        // start loading
+		
+		load_basics();
         
     }
 	
+	function load_basics () {
+		
+		loader.load( assetsBasic , function () {
+			
+            init_basics();
+			
+			load_launcher();
+			
+        });
+		
+	}
+	
+	function load_launcher () {
+		
+		loader.load( assetsLauncher , function () {
+			
+			init_launcher();
+			
+			load_game();
+			
+		});
+	}
+	
+	function load_game () {
+		
+		// pause for short delay
+		
+		window.requestTimeout( function () {
+			
+			// show loader ui
+			
+			loader.ui_hide( false, 0);
+			
+			loader.ui_show( domElement );
+			
+			// start loading all game assets
+			
+			loader.load( assetsGame , function () {
+				
+				loader.ui_hide( true, undefined, function () {
+					
+					// get game ready to be started
+					
+					init_game();
+					
+				});
+				
+			});
+			
+		}, loadAssetsDelay);
+		
+	}
+	
 	/*===================================================
     
-    init basics
+    init with basic assets
     
     =====================================================*/
     
     function init_basics () {
-        var i, l;
         
+		var shaderScreen = THREE.ShaderExtras[ "screen" ],
+            shaderFocusVignette = effects.FocusVignette,
+			bg = effects.LinearGradient.generate( {
+				colors: [0x0F042E, 0x1D508F, 0x529AD1, 0x529AD1, 0x455AE0],
+				stops: [0, 0.4, 0.6, 0.8, 1.0],
+				startBottom: true
+			} );
+		
         // transitioner
         transitioner = uihelper.make_ui_element({
             classes: 'transitioner'
         });
         
-        // init three 
-        // renderer
+        // game signals
+        shared.signals = shared.signals || {};
+        shared.signals.paused = new signals.Signal();
+        shared.signals.resumed = new signals.Signal();
+        shared.signals.update = new signals.Signal();
+		
+		// renderer
         renderer = new THREE.WebGLRenderer( { antialias: false, clearColor: 0x000000, clearAlpha: 0 } );
         renderer.setSize( shared.screenWidth, shared.screenHeight );
         renderer.autoClear = false;
@@ -186,32 +256,70 @@ var KAIOPUA = (function (main) {
         // render target
         renderTarget = new THREE.WebGLRenderTarget( shared.screenWidth, shared.screenHeight, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter } );
         
-        // add to game dom element
-        domElement.append( renderer.domElement );
-        
-        // share
+        // share renderer
         shared.renderer = renderer;
         shared.renderTarget = renderTarget;
+		
+		// scene
+		
+		scene = new THREE.Scene();
         
-        // game signals
-        shared.signals = shared.signals || {};
-        shared.signals.paused = new signals.Signal();
-        shared.signals.resumed = new signals.Signal();
-        shared.signals.update = new signals.Signal();
+        // fog
+		
+		fog = new THREE.Fog( 0xffffff, -100, 10000 );
         
-        // resize listener
-        resize(shared.screenWidth, shared.screenHeight);
+        scene.fog = fog;
+		
+		// camera
+		
+		camera = new THREE.PerspectiveCamera(60, shared.screenWidth / shared.screenHeight, 1, 10000);
+		
+		// passes
+        
+        renderPasses = {
+            bg: new THREE.RenderPass( bg.scene, bg.camera ),
+            env: new THREE.RenderPass( scene, camera ),
+            screen: new THREE.ShaderPass( shaderScreen ),
+            focusVignette: new THREE.ShaderPass ( shaderFocusVignette )
+        };
+        
+		// settings
+		
+        renderPasses.screen.renderToScreen = true;
+        
+        renderPasses.env.clear = false;
+		
+        renderPasses.focusVignette.uniforms[ "screenWidth" ].value = shared.screenWidth;
+        renderPasses.focusVignette.uniforms[ "screenHeight" ].value = shared.screenHeight;
+        renderPasses.focusVignette.uniforms[ "vingenettingOffset" ].value = 0.6;
+        renderPasses.focusVignette.uniforms[ "vingenettingDarkening" ].value = 0.5;
+        renderPasses.focusVignette.uniforms[ "sampleDistance" ].value = 0.2;
+        renderPasses.focusVignette.uniforms[ "waveFactor" ].value = 0.3;
+        
+        // composer
+        
+        renderComposer = new THREE.EffectComposer( renderer );
+        
+        renderComposer.addPass( renderPasses.bg );
+        renderComposer.addPass( renderPasses.env );
+        renderComposer.addPass( renderPasses.focusVignette );
+        renderComposer.addPass( renderPasses.screen );
+		
+		// add renderer to game dom element
+		
+		domElement = shared.html.gameContainer;
+		
+        domElement.append( renderer.domElement );
+		
+		// resize
+		
         shared.signals.windowresized.add(resize);
+		resize(shared.screenWidth, shared.screenHeight);
         
-        // start drawing
+		// start drawing
         
         animate();
-        
-        // get launcher
-        loader.load( launcherAssets , function () {
-            init_launcher();
-        });
-        
+		
     }
 	
 	/*===================================================
@@ -219,29 +327,14 @@ var KAIOPUA = (function (main) {
     init launcher
     
     =====================================================*/
-    
-    function init_launcher () {
-        // set launcher section
-        
-        set_section( sections.launcher );
-        
-        // pause for short delay
-        // start loading all game assets
-        
-        window.requestTimeout( function () {
-            
-            loader.ui_hide( false, 0);
-            
-            loader.ui_show( domElement );
-            
-            loader.load( gameAssets , function () {
-                loader.ui_hide( true, undefined, function () {
-                    init_game();
-                });
-            });
-            
-        }, loadAssetsDelay);
-    }
+	
+	function init_launcher () {
+		
+		launcher = game.launcher;
+		
+		set_section( launcher );
+		
+	}
 	
 	/*===================================================
     
@@ -371,7 +464,7 @@ var KAIOPUA = (function (main) {
 		
 		// add to scene
 		
-		world.get_scene().add( m1.mesh );
+		scene.add( m1.mesh );
 		
 		// add to physics
 		physics.add( m1.mesh, {
@@ -396,7 +489,7 @@ var KAIOPUA = (function (main) {
 					materials: mat
 				});
 				
-				world.get_scene().add( m2.mesh );
+				scene.add( m2.mesh );
 				
 				m2.mesh.position.set( xinit, yinit, zinit );
 			
@@ -417,7 +510,7 @@ var KAIOPUA = (function (main) {
 					materials: mat
 				});
 				
-				world.get_scene().add( m3.mesh );
+				scene.add( m3.mesh );
 				
 				m3.mesh.position.set( xinit, yinit, zinit );
 				
@@ -447,7 +540,15 @@ var KAIOPUA = (function (main) {
 		}
 		
 	}
+	
+	/*===================================================
     
+    scene functions
+    
+    =====================================================*/
+	
+	
+	
     /*===================================================
     
     functions
@@ -507,7 +608,9 @@ var KAIOPUA = (function (main) {
                 
                 section.init();
                 
-                section.resize(shared.screenWidth, shared.screenHeight);
+				if ( typeof section.resize !== 'undefined' ) {
+					section.resize(shared.screenWidth, shared.screenHeight);
+				}
                 
                 section.show();
                 
@@ -545,17 +648,42 @@ var KAIOPUA = (function (main) {
     function animate () {
         
         requestAnimationFrame( animate );
+		
+		// update all
         
         shared.signals.update.dispatch();
+		
+		// render
         
+        renderer.setViewport( 0, 0, shared.screenWidth, shared.screenHeight );
+
+        renderer.clear();
+        
+		renderComposer.render();
+		
     }
     
     function resize( W, H ) {
+		
+		// render passes
+		
+		renderPasses.focusVignette.uniforms[ "screenWidth" ].value = W;
+        renderPasses.focusVignette.uniforms[ "screenHeight" ].value = H;
         
-        // resize three
+        // renderer
+		
         renderer.setSize( W, H );
         renderTarget.width = W;
         renderTarget.height = H;
+		
+		// camera
+		
+		camera.aspect = W / H;
+        camera.updateProjectionMatrix();
+        
+		// composer
+		
+        renderComposer.reset();
         
     }
         

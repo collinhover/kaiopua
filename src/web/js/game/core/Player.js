@@ -42,10 +42,7 @@ var KAIOPUA = (function (main) {
 		
 		// camera
         
-        camera = new THREE.PerspectiveCamera(60, shared.screenWidth / shared.screenHeight, 1, 10000);
-        
-        camera.position.set(0, 0, 4000);
-        camera.lookAt( new THREE.Vector3(0, 0, 0) );
+        camera = game.get_camera();
         
         cameraControls = new THREE.FlyControls( camera );
         cameraControls.rollSpeed = 0.5;

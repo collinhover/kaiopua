@@ -27,7 +27,7 @@ var KAIOPUA = (function (main) {
     =====================================================*/
 	
 	world.init = init;
-	world.get_scene = function () { return scene; };
+	world.get_scene = function () { return game.get_scene(); };
 	world.get_head = function () { return head; };
 	world.get_tail = function () { return tail; };
 	
@@ -65,13 +65,7 @@ var KAIOPUA = (function (main) {
 		
 		// scene
 		
-		scene = new THREE.Scene();
-		
-		// lights
-        
-        ambientLight = new THREE.AmbientLight( 0x444444 );
-        
-        scene.add( ambientLight );
+		scene = game.get_scene();
         
         // fog
         

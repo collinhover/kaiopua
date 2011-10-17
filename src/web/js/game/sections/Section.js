@@ -1,22 +1,22 @@
 /*
-IntroSection.js
-Intro module, handles introduction to story and teaching user basic game mechanics.
+Section.js
+Section module, generic template.
 */
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
         game = main.game = main.game || {},
         sections = game.sections = game.sections || {},
-        section = sections.section = sections.section || {},
+        sectionName = sections.sectionName = sections.sectionName || {},
         readyInternal = false,
         readyAll = false,
-        renderer, 
-        renderTarget,
-        camera,
+        assets,
+        objectmaker,
+		world,
+		player,
+		camera,
         scene,
-        ambient,
-        composerScene,
-        renderPasses;
+		addOnShow = [];
     
     /*===================================================
     
@@ -24,14 +24,14 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
     
-    section.init = init;
-    section.show = show;
-    section.hide = hide;
-    section.remove = remove;
-    section.update = update;
-    section.resize = resize;
-    section.ready = ready;
-    section.domElement = function () {};
+    sectionName.init = init;
+    sectionName.show = show;
+    sectionName.hide = hide;
+    sectionName.remove = remove;
+    sectionName.update = update;
+    sectionName.resize = resize;
+    sectionName.ready = ready;
+    sectionName.domElement = function () {};
     
     /*===================================================
     
@@ -47,8 +47,6 @@ var KAIOPUA = (function (main) {
             
             init_basics();
             
-            init_render_processing();
-            
             readyInternal = true;
             
         }
@@ -56,58 +54,11 @@ var KAIOPUA = (function (main) {
     }
     
     function init_basics () {
-        
-        // camera
-        
-        //camera = new THREE.Camera(60, shared.screenWidth / shared.screenHeight, 1, 10000);
-        
-        camera = new THREE.FirstPersonCamera( { fov: 60, aspect:shared.screenWidth / shared.screenHeight, near: 1, far: 20000, movementSpeed: 1000, lookSpeed: 0.1, noFly: false, lookVertical: true } );
-        
-        // scene
-        
-        scene = new THREE.Scene();
-        
-        // lights
-        
-        ambient = new THREE.AmbientLight( 0xCCCCCC );
-        
-        scene.addLight( ambient );
-        
-        var light1 = new THREE.DirectionalLight( 0xFFFFFF, 1.0 );
-        light1.position = new THREE.Vector3(-1, -1, 1).normalize();
-        
-        scene.addLight( light1 );
-        
-        // fog
-        
-        scene.fog = new THREE.Fog( 0xffffff, -100, 10000 );
-        
-    }
-    
-    function init_render_processing () {
-        
-        var shaderScreen = THREE.ShaderExtras[ "screen" ];
-        
-        // render passes
-        
-        renderPasses = {
-            env: new THREE.RenderPass( scene, camera ),
-            screen: new THREE.ShaderPass( shaderScreen )
-        };
-        
-        renderPasses.screen.renderToScreen = true;
-        
-        // renderer
-        
-        renderer = shared.renderer;
-        renderTarget = shared.renderTarget;
-        
-        // composer
-        
-        composerScene = new THREE.EffectComposer( renderer );
-        
-        composerScene.addPass( renderPasses.env );
-        composerScene.addPass( renderPasses.screen );
+		
+		// core
+		
+		world = game.core.world;
+		player = game.core.player;
         
     }
     
@@ -119,14 +70,12 @@ var KAIOPUA = (function (main) {
     
     function ready () { 
         return readyInternal && readyAll; 
-    };
+    }
     
     function init () {
         
         if ( !ready() ) {
-            
-            assets = main.utils.loader.assets;
-            
+			
             init_internal();
             
             readyAll = true;
@@ -141,8 +90,30 @@ var KAIOPUA = (function (main) {
     =====================================================*/
     
     function show () {
+		
+		var i, l;
+		
+		// camera
+        
+        camera = game.get_camera();
+		
+		// scene
+		
+		scene = game.get_scene();
+		
+		// add items
+		
+		for ( i = 0, l = addOnShow.length; i < l; i += 1 ) {
+			
+			scene.add( addOnShow[ i ] );
+			
+        }
+		
+		// signals
         
         shared.signals.windowresized.add( resize );
+        
+        shared.signals.update.add( update );
         
     }
     
@@ -150,30 +121,29 @@ var KAIOPUA = (function (main) {
         
         shared.signals.windowresized.remove( resize );
         
+        shared.signals.update.remove( update );
+        
     }
     
     function remove () {
         
+		var i, l;
+		
+		// remove added items
+		
+		for ( i = 0, l = addOnShow.length; i < l; i += 1 ) {
+		
+			scene.remove( addOnShow[ i ] );
+			
+        }
+		
     }
     
     function update () {
         
-        // render
-        
-        renderer.setViewport( 0, 0, shared.screenWidth, shared.screenHeight );
-
-        renderer.clear();
-        
-    	composerScene.render();
-        
     }
     
     function resize ( W, H ) {
-        
-        camera.aspect = W / H;
-    	camera.updateProjectionMatrix();
-        
-        composerScene.reset();
         
     }
     

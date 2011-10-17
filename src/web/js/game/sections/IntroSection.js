@@ -16,10 +16,7 @@ var KAIOPUA = (function (main) {
 		player,
 		camera,
         scene,
-        renderer, 
-        renderTarget,
-        composerScene,
-        renderPasses,
+		addOnShow = [],
 		light,
 		lightSource;
     
@@ -52,8 +49,6 @@ var KAIOPUA = (function (main) {
             
             init_basics();
             
-            init_render_processing();
-            
             readyInternal = true;
             
         }
@@ -66,41 +61,6 @@ var KAIOPUA = (function (main) {
 		
 		world = game.core.world;
 		player = game.core.player;
-        
-        // camera
-        
-        camera = player.get_camera();
-        
-        // scene
-        
-        scene = world.get_scene();
-        
-    }
-    
-    function init_render_processing () {
-        
-        var shaderScreen = THREE.ShaderExtras[ "screen" ];
-        
-        // render passes
-        
-        renderPasses = {
-            env: new THREE.RenderPass( scene, camera ),
-            screen: new THREE.ShaderPass( shaderScreen )
-        };
-        
-        renderPasses.screen.renderToScreen = true;
-        
-        // renderer
-        
-        renderer = shared.renderer;
-        renderTarget = shared.renderTarget;
-        
-        // composer
-        
-        composerScene = new THREE.EffectComposer( renderer );
-        
-        composerScene.addPass( renderPasses.env );
-        composerScene.addPass( renderPasses.screen );
         
     }
     
@@ -134,15 +94,15 @@ var KAIOPUA = (function (main) {
 		light = new THREE.SpotLight( 0xffffff );
         light.position = new THREE.Vector3(-1, 0, 1).normalize();
         
-        scene.add( light );
-        
         // light visual
         
         lightSource = new THREE.Mesh( new THREE.SphereGeometry( 4, 8, 8 ), new THREE.MeshBasicMaterial( { color: 0xffffff } ) );
         
         lightSource.useQuaternion = true;
-        
-        scene.add( lightSource );
+		
+		// add on show items
+		
+		addOnShow.push( light, lightSource );
 		
     }
     
@@ -153,6 +113,30 @@ var KAIOPUA = (function (main) {
     =====================================================*/
     
     function show () {
+		
+		var i, l;
+		
+		// camera
+        
+        camera = game.get_camera();
+		
+		camera.position.set(0, 0, 4000);
+		
+		camera.lookAt( new THREE.Vector3(0, 0, 0) );
+		
+		// scene
+		
+		scene = game.get_scene();
+		
+		// add items
+		
+		for ( i = 0, l = addOnShow.length; i < l; i += 1 ) {
+			
+			scene.add( addOnShow[ i ] );
+			
+        }
+		
+		// signals
         
         shared.signals.windowresized.add( resize );
         
@@ -170,6 +154,16 @@ var KAIOPUA = (function (main) {
     
     function remove () {
         
+		var i, l;
+		
+		// remove added items
+		
+		for ( i = 0, l = addOnShow.length; i < l; i += 1 ) {
+		
+			scene.remove( addOnShow[ i ] );
+			
+        }
+		
     }
     
     function update () {
@@ -189,22 +183,9 @@ var KAIOPUA = (function (main) {
 		
         lightSource.quaternion.copy( camera.quaternion );
         
-        // render
-        
-        renderer.setViewport( 0, 0, shared.screenWidth, shared.screenHeight );
-
-        renderer.clear();
-        
-		composerScene.render();
-        
     }
     
     function resize ( W, H ) {
-        
-        camera.aspect = W / H;
-        camera.updateProjectionMatrix();
-        
-        composerScene.reset();
         
     }
     
