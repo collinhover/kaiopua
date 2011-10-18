@@ -100,6 +100,7 @@
 		this.isActive = true;
 		this._movable = true;
 		this._origMovable = true;
+		this._rotatable = true;
 
 		this.collisions = [];
 		this._constraints = [];
@@ -309,7 +310,7 @@
 
 	RigidBody.prototype.setAngleVelocity = function(angVel)
 	{
-
+		
 		this._currState.rotVelocity = angVel.clone();
 		
 	}
@@ -323,7 +324,7 @@
 
 	RigidBody.prototype.setAngleVelocityAux = function(angVel)
 	{
-
+		
 		this._currRotVelocityAux = angVel.clone();
 		
 	}
@@ -407,11 +408,15 @@
 			return;
 		}
 		this._currState.linVelocity = this._currState.linVelocity.add(JNumber3D.getScaleVector(impulse, this._invMass));
-
-		var rotImpulse = pos.subtract(this._currState.position).crossProduct(impulse);
-		rotImpulse = this._worldInvInertia.transformVector(rotImpulse);
-		this._currState.rotVelocity = this._currState.rotVelocity.add(rotImpulse);
-
+		
+		if ( this._rotatable ) {
+		
+			var rotImpulse = pos.subtract(this._currState.position).crossProduct(impulse);
+			rotImpulse = this._worldInvInertia.transformVector(rotImpulse);
+			this._currState.rotVelocity = this._currState.rotVelocity.add(rotImpulse);
+		
+		}
+		
 		if (active) this.setActive();
 		
 	}
@@ -425,11 +430,15 @@
 			return;
 		}
 		this._currLinVelocityAux = this._currLinVelocityAux.add(JNumber3D.getScaleVector(impulse, this._invMass));
-
-		var rotImpulse = pos.subtract(this._currState.position).crossProduct(impulse);
-		rotImpulse = this._worldInvInertia.transformVector(rotImpulse);
-		this._currRotVelocityAux = this._currRotVelocityAux.add(rotImpulse);
-
+		
+		if ( this._rotatable ) {
+		
+			var rotImpulse = pos.subtract(this._currState.position).crossProduct(impulse);
+			rotImpulse = this._worldInvInertia.transformVector(rotImpulse);
+			this._currRotVelocityAux = this._currRotVelocityAux.add(rotImpulse);
+		
+		}
+		
 		if (active) this.setActive();
 		
 	}
@@ -443,11 +452,15 @@
 			return;
 		}
 		this._currState.linVelocity = this._currState.linVelocity.add(JNumber3D.getScaleVector(impulse, this._invMass));
-
-		var rotImpulse = delta.crossProduct(impulse);
-		rotImpulse = this._worldInvInertia.transformVector(rotImpulse);
-		this._currState.rotVelocity = this._currState.rotVelocity.add(rotImpulse);
-
+		
+		if ( this._rotatable ) {
+		
+			var rotImpulse = delta.crossProduct(impulse);
+			rotImpulse = this._worldInvInertia.transformVector(rotImpulse);
+			this._currState.rotVelocity = this._currState.rotVelocity.add(rotImpulse);
+		
+		}
+		
 		if (active) this.setActive();
 		
 	}
@@ -461,11 +474,15 @@
 			return;
 		}
 		this._currLinVelocityAux = this._currLinVelocityAux.add(JNumber3D.getScaleVector(impulse, this._invMass));
-
-		var rotImpulse = delta.crossProduct(impulse);
-		rotImpulse = this._worldInvInertia.transformVector(rotImpulse);
-		this._currRotVelocityAux = this._currRotVelocityAux.add(rotImpulse);
-
+		
+		if ( this._rotatable ) {
+			
+			var rotImpulse = delta.crossProduct(impulse);
+			rotImpulse = this._worldInvInertia.transformVector(rotImpulse);
+			this._currRotVelocityAux = this._currRotVelocityAux.add(rotImpulse);
+		
+		}
+		
 		if (active) this.setActive();
 		
 	}
@@ -477,7 +494,10 @@
 			return;
 
 		this._currState.linVelocity = this._currState.linVelocity.add(JNumber3D.getScaleVector(this._force, this._invMass * dt));
-
+		
+		if (!this._rotatable)
+			return;
+		
 		var rac = JNumber3D.getScaleVector(this._torque, dt);
 		rac = this._worldInvInertia.transformVector(rac);
 		this._currState.rotVelocity = this._currState.rotVelocity.add(rac);
@@ -496,21 +516,25 @@
 		   angMomBefore = this._worldInertia.transformVector(angMomBefore);
 
 		   this._currState.position = this._currState.position.add(JNumber3D.getScaleVector(this._currState.linVelocity, dt));
-
-		   var dir = this._currState.rotVelocity.clone();
-		   var ang = dir.get_length();
-		   if (ang > 0)
-		   {
-		   dir.normalize();
-		   ang *= dt;
-		   var rot = JMatrix3D.rotationMatrix(dir.x, dir.y, dir.z, ang);
-		   this._currState.orientation = JMatrix3D.getMatrix3D(JMatrix3D.multiply(rot, JMatrix3D.getJMatrix3D(this._currState.orientation)));
-		   this.updateInertia();
-		   }
-
-		   angMomBefore = this._worldInvInertia.transformVector(angMomBefore);
-		   this._currState.rotVelocity = angMomBefore.clone();
+			
+			if ( this._rotatable ) {
+			
+			   var dir = this._currState.rotVelocity.clone();
+			   var ang = dir.get_length();
+			   if (ang > 0)
+			   {
+			   dir.normalize();
+			   ang *= dt;
+			   var rot = JMatrix3D.rotationMatrix(dir.x, dir.y, dir.z, ang);
+			   this._currState.orientation = JMatrix3D.getMatrix3D(JMatrix3D.multiply(rot, JMatrix3D.getJMatrix3D(this._currState.orientation)));
+			   this.updateInertia();
+			   }
+			
+			   angMomBefore = this._worldInvInertia.transformVector(angMomBefore);
+			   this._currState.rotVelocity = angMomBefore.clone();
 		   
+			}
+			
 	}
 
 	RigidBody.prototype.updatePositionWithAux = function(dt)
@@ -533,24 +557,27 @@
 		}
 
 		this._currState.position = this._currState.position.add(JNumber3D.getScaleVector(this._currState.linVelocity.add(this._currLinVelocityAux), dt));
+		
+		if ( this._rotatable ) {
+			
+			var dir = this._currState.rotVelocity.add(this._currRotVelocityAux);
+			var ang = dir.get_length() * 180 / Math.PI;
+			if (ang > 0)
+			{
+				dir.normalize();
+				ang *= dt;
 
-		var dir = this._currState.rotVelocity.add(this._currRotVelocityAux);
-		var ang = dir.get_length() * 180 / Math.PI;
-		if (ang > 0)
-		{
-			dir.normalize();
-			ang *= dt;
 
+				var rot = JMatrix3D.getRotationMatrix(dir.x, dir.y, dir.z, ang);
+				this._currState.orientation = JMatrix3D.getAppendMatrix3D(this._currState.orientation, rot);
 
-			var rot = JMatrix3D.getRotationMatrix(dir.x, dir.y, dir.z, ang);
-			this._currState.orientation = JMatrix3D.getAppendMatrix3D(this._currState.orientation, rot);
+				this.updateInertia();
+			}
 
-			this.updateInertia();
 		}
-
+		
 		this._currLinVelocityAux.setTo(0,0,0);
 		this._currRotVelocityAux.setTo(0,0,0);
-
 		
 	}
 
@@ -655,6 +682,18 @@
 		this._worldInvInertia = JMatrix3D.getAppendMatrix3D(this._invOrientation, JMatrix3D.getAppendMatrix3D(this._currState.orientation, this._bodyInvInertia));
 		
 	}
+	
+	RigidBody.prototype.get_rotatable = function () {
+		
+		return this._rotatable;
+		
+	}
+	
+	RigidBody.prototype.set_rotatable = function ( rot ) {
+		
+		this._rotatable = rot;
+		
+	}
 
 	RigidBody.prototype.get_movable = function()
 	{
@@ -742,7 +781,7 @@
 
 	RigidBody.prototype.dampForDeactivation = function()
 	{
-
+		
 		this._currState.linVelocity.x *= this._linVelDamping.x;
 		this._currState.linVelocity.y *= this._linVelDamping.y;
 		this._currState.linVelocity.z *= this._linVelDamping.z;
