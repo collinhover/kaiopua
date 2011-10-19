@@ -438,36 +438,58 @@ var KAIOPUA = (function (main) {
     
     /*===================================================
     
-    start
+    start / stop game
     
     =====================================================*/
     
-    function start_game() {
+    function start_game () {
         var ms = menus.start;
 		
-		// core
+		// hide static menu
 		
-		init_core();
-        
+		$(shared.html.staticMenu).fadeOut( transitionIn );
+		
         // disable start menu
+		
         ms.disable();
         
         // hide start menu
+		
         ms.ui_hide( true );
         
         // set intro section
+		
         set_section( sections.intro );
 		
 		// resume game
-		resume();
 		
-		start_character_test();
+		resume();
 		
     }
 	
-	function start_character_test () {
+	function stop_game () {
 		
-		var c = character.make_character();
+		// pause game
+		
+		pause();
+		
+		// show static menu
+		
+		$(shared.html.staticMenu).fadeIn( transitionOut );
+        
+        // show start menu
+		
+        ms.ui_show( domElement, undefined, function () {
+			
+			// enable start menu
+			
+			ms.enable();
+			
+		});
+		
+		// set launcher section
+		
+        set_section( sections.launcher );
 		
 	}
 	

@@ -146,7 +146,7 @@ var KAIOPUA = (function (main) {
 		
 		player.enable();
 		
-		player.cameraMode = 'freelook';
+		//player.cameraMode = 'freelook';
 		
 		// signals
         

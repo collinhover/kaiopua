@@ -122,7 +122,7 @@ var KAIOPUA = (function (main) {
 			keyup: function () { console.log('key up: up'); }
 		};
 		kbMap[ '87' /*w*/ ] = kbMap[ 'w' ] = {
-			keydown: function () { console.log('key down: w'); },
+			keydown: function () { characterMove(); },
 			keyup: function () { console.log('key up: w'); }
 		};
 		
@@ -239,9 +239,16 @@ var KAIOPUA = (function (main) {
 	
 	function set_camera_mode ( modeType ) {
 		
+		var currRot = new THREE.Quaternion();
+		
 		// update camera
 		
 		camera = game.camera;
+		
+		currRot.setFromRotationMatrix( camera.matrix );
+		
+		camera.useQuaternion = true;
+		camera.quaternion = currRot;
 		
 		// set mode
 		
@@ -249,10 +256,14 @@ var KAIOPUA = (function (main) {
 		
 		if ( modeType === cameraModes.freelook ) {
 			
+			remove_control();
+			
 			free_look();
 			
 		}
 		else {
+			
+			allow_control();
 			
 		}
 		
@@ -274,6 +285,7 @@ var KAIOPUA = (function (main) {
 			cameraControls.rotationVector.set( 0, 0, 0 );
 			
 		}
+		
 	}
 	
 	/*===================================================
@@ -374,6 +386,24 @@ var KAIOPUA = (function (main) {
 	
 	/*===================================================
     
+    character movement
+    
+    =====================================================*/
+	
+	function characterMove ( direction ) {
+		
+		var pc = playerCharacter,
+			rb = pc.rigidBody,
+			rbState = rb.get_currentState(),
+			rbPos = rbState.position;
+			console.log('character move');
+			//rb.addWorldForce( new jiglib.Vector3D( 0, 200, 0 ), rbPos );
+			rb.setLineVelocity( new jiglib.Vector3D( 0, 200, 0 ) );
+		
+	}
+	
+	/*===================================================
+    
     custom functions
     
     =====================================================*/
@@ -414,6 +444,13 @@ var KAIOPUA = (function (main) {
 	
 	function update () {
 		
+		var pcMesh,
+			pcQuat,
+			camOffsetPos,
+			camOffsetRot,
+			camOffsetRotHalf,
+			camPosNew;
+		
 		// update camera based on mode
 		
 		if ( cameraMode === cameraModes.freelook ) {
@@ -424,7 +461,24 @@ var KAIOPUA = (function (main) {
 		}
 		else {
 			
+			pcMesh = playerCharacter.mesh;
+			pcQuat = pcMesh.quaternion;
 			
+			camPosNew = pcMesh.position.clone();
+			camOffsetPos = new THREE.Vector3( 0, 0, 200 );
+			camOffsetRot = new THREE.Quaternion( -0.1, 0.1, 0, 1 );
+			camOffsetRotHalf = new THREE.Quaternion( camOffsetRot.x * 0.5, camOffsetRot.y * 0.5, camOffsetRot.z * 0.5, 1);
+			
+			pcQuat.multiplyVector3( camOffsetPos );
+			camOffsetRot.multiplyVector3( camOffsetPos );
+			
+			camPosNew.addSelf( camOffsetPos );
+			
+			camera.position = camPosNew;
+			
+			camera.quaternion.copy( pcQuat );
+			
+			camera.quaternion.multiplySelf( camOffsetRotHalf );
 			
 		}
 	

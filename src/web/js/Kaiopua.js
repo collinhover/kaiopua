@@ -81,6 +81,7 @@ var KAIOPUA = (function (main) {
         $(document).bind( 'mouseup', onDocumentMouseUp );
         $(document).bind( 'mousemove', onDocumentMouseMove );
         $(document).bind( 'mousewheel', onDocumentMouseWheel );
+		$(shared.html.gameContainer).bind( 'contextmenu', onGameContextMenu );
         
         $(document).bind( 'keydown', onDocumentKeyDown );
         $(document).bind( 'keyup', onDocumentKeyUp );
@@ -160,6 +161,14 @@ var KAIOPUA = (function (main) {
         e.preventDefault();
         e.stopPropagation();
         return false;
+    }
+	
+	function onGameContextMenu( e ) {
+        
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+		
     }
     
     function onWindowDeviceOrientation( e ) {

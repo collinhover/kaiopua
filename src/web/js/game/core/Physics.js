@@ -186,19 +186,19 @@ var KAIOPUA = (function (main) {
 			
 			if ( needWidth === true ) {
 				
-				width = (bbox.x[1] - bbox.x[0]);
+				width = (bbox.z[1] - bbox.z[0]);
 				
 			}
 			
 			if ( needHeight === true ) {
 				
-				height = (bbox.y[1] - bbox.y[0]);
+				height = (bbox.x[1] - bbox.x[0]);
 			
 			}
 			
 			if ( needDepth === true ) {
 				
-				depth = (bbox.z[1] - bbox.z[0]);
+				depth = (bbox.y[1] - bbox.y[0]);
 				
 			}
 			
