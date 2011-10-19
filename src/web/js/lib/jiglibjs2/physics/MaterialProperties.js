@@ -14,8 +14,8 @@
 		this.restitution = null; // Number
 		this.friction = null; // Number
 
-		this.restitution = _restitution;
-		this.friction = _friction;
+		this.restitution = _restitution || 0.25;
+		this.friction = _friction || 0.9;
 		
 	}
 

@@ -23,12 +23,14 @@ var KAIOPUA = (function (main) {
 		renderComposer,
         renderPasses,
 		scene,
+		sceneDefault,
 		fog,
+		cameraDefault,
 		camera,
-		launcher,
 		physics,
 		world,
 		player,
+		character,
         sectionNames = [],
         currentSection, 
         previousSection, 
@@ -48,9 +50,9 @@ var KAIOPUA = (function (main) {
             "js/effects/FocusVignette.js"
         ],
         assetsLauncher = [
-            "js/game/launcher/Launcher.js",
-            "js/game/launcher/Water.js",
-            "js/game/launcher/Sky.js",
+            "js/game/sections/LauncherSection.js",
+            "js/game/sections/launcher/Water.js",
+            "js/game/sections/launcher/Sky.js",
             "assets/textures/cloud256.png",
             "assets/textures/light_ray.png"
         ],
@@ -131,6 +133,7 @@ var KAIOPUA = (function (main) {
 			"js/game/core/World.js",
 			"js/game/core/Player.js",
 			"js/game/core/Character.js",
+			"js/game/characters/Hero.js",
             "js/game/sections/IntroSection.js",
             { path: "assets/models/World_Head.js", type: 'model' },
 			{ path: "assets/models/World_Tail.js", type: 'model' },
@@ -280,7 +283,7 @@ var KAIOPUA = (function (main) {
 		
 		// scene
 		
-		scene = new THREE.Scene();
+		scene = sceneDefault = new THREE.Scene();
         
         // fog
 		
@@ -290,7 +293,7 @@ var KAIOPUA = (function (main) {
 		
 		// camera
 		
-		camera = new THREE.PerspectiveCamera(60, shared.screenWidth / shared.screenHeight, 1, 10000);
+		camera = cameraDefault = new THREE.PerspectiveCamera(60, shared.screenWidth / shared.screenHeight, 1, 10000);
 		
 		// passes
         
@@ -340,9 +343,7 @@ var KAIOPUA = (function (main) {
 	
 	function init_launcher () {
 		
-		launcher = game.launcher;
-		
-		set_section( launcher );
+		set_section( sections.launcher );
 		
 	}
 	
@@ -354,11 +355,41 @@ var KAIOPUA = (function (main) {
     
     function init_game () {
 		
+		// core
+		
+		init_core();
+		
 		// start menu
 		
 		init_start_menu();
 		
     }
+	
+	function init_core () {
+		
+		// physics
+		
+		physics = core.physics;
+		
+		physics.init();
+		
+		// world
+		
+		world = core.world;
+		
+		world.init();
+		
+		// player
+		
+		player = core.player;
+		
+		player.init();
+		
+		// character
+		
+		character = core.character;
+		
+	}
 	
 	function init_start_menu () {
 		var ms;
@@ -430,124 +461,13 @@ var KAIOPUA = (function (main) {
 		// resume game
 		resume();
 		
+		start_character_test();
+		
     }
 	
-	function init_core () {
+	function start_character_test () {
 		
-		// physics
-		
-		physics = core.physics;
-		
-		physics.init();
-		
-		// world
-		
-		world = core.world;
-		
-		world.init();
-		
-		// player
-		
-		player = core.player;
-		
-		player.init();
-		
-		
-		start_physics_test();
-		
-	}
-	
-	function start_physics_test () {
-		// test
-		
-		var mat = new THREE.MeshNormalMaterial();
-		
-		var g1 = new THREE.PlaneGeometry( 3000, 3000, 1, 1 );
-		
-		var m1 = workers.objectmaker.make_model({
-            geometry: g1,
-			materials: mat,
-			rotation: new THREE.Vector3( -90, 0, 0 )
-        });
-		m1.mesh.doubleSided = true;
-		m1.mesh.position.set( 0, -1640, 0 );
-		
-		// add to scene
-		
-		scene.add( m1.mesh );
-		
-		// add to physics
-		physics.add( m1.mesh, {
-			bodyType: 'plane',
-			position: m1.mesh.position,
-			rotation: m1.mesh.quaternion
-		});
-		
-		var yinit = 1900;
-		var xinit = 200;
-		var zinit = 200;
-		
-		for( i = 0; i < 50; i++ ) {
-			
-			// random between cube or sphere
-			if ( Math.random() > 0.5 ) {
-			
-				var g2 = new THREE.CubeGeometry( 50, 50, 50 );
-			
-				var m2 = workers.objectmaker.make_model({
-					geometry: g2,
-					materials: mat
-				});
-				
-				scene.add( m2.mesh );
-				
-				m2.mesh.position.set( xinit, yinit, zinit );
-			
-				physics.add( m2.mesh, {
-					bodyType: 'box',
-					position: m2.mesh.position
-				});
-				
-			}
-			else {
-				
-				var geom3 = new THREE.SphereGeometry( 25 );
-				
-				var mat3 = new THREE.MeshLambertMaterial();
-				
-				var m3 = workers.objectmaker.make_model({
-					geometry: geom3,
-					materials: mat
-				});
-				
-				scene.add( m3.mesh );
-				
-				m3.mesh.position.set( xinit, yinit, zinit );
-				
-				physics.add( m3.mesh, {
-					bodyType: 'sphere',
-					position: m3.mesh.position
-				});
-				
-			}
-			
-			xinit -= 100;
-			
-			if ( xinit <= -200 ) {
-				
-				xinit = 200;
-				
-				zinit -= 100;
-				
-				if ( zinit <= -200 ) {
-					
-					zinit = 200;
-					
-					yinit += 100;
-					
-				}
-			}
-		}
+		var c = character.make_character();
 		
 	}
 	
@@ -641,7 +561,7 @@ var KAIOPUA = (function (main) {
 	
 	function set_scene ( sceneNew ) {
 		
-		scene = sceneNew;
+		scene = sceneNew || sceneDefault;
 		
 		renderPasses.env.scene = scene;
 		
@@ -655,7 +575,7 @@ var KAIOPUA = (function (main) {
 	
 	function set_camera ( cameraNew ) {
 		
-		camera = cameraNew;
+		camera = cameraNew || cameraDefault;
 		
 		renderPasses.env.camera = camera;
 		
@@ -687,7 +607,7 @@ var KAIOPUA = (function (main) {
     }
 
     function set_section ( section ) {
-        
+		
         // hide current section
         if (typeof currentSection !== 'undefined') {
             
@@ -706,26 +626,31 @@ var KAIOPUA = (function (main) {
             });
             
         }
-        
+		
         // no current section
+		
         currentSection = undefined;
+		
+		// default scene and camera
+		
+		set_scene();
+		
+		set_camera();
         
         // start and show new section
         if (typeof section !== 'undefined') {
-            
+			
             // wait for transitioner to finish fading in
             $(transitioner.domElement).promise().done(function () {
-                
+				
                 $(domElement).append(transitioner.domElement);
-                
+				
                 section.init();
-                
-				if ( typeof section.resize !== 'undefined' ) {
-					section.resize(shared.screenWidth, shared.screenHeight);
-				}
-                
+				
+				section.resize(shared.screenWidth, shared.screenHeight);
+				
                 section.show();
-                
+				
                 currentSection = section;
                 
                 $(transitioner.domElement).fadeTo(transitionOut, 0).promise().done(function () {

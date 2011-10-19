@@ -19,7 +19,7 @@ var KAIOPUA = (function (main) {
     
     objectmaker.make_model = make_model;
     objectmaker.find_objs_with_materials = find_objs_with_materials;
-    objectmaker.generate_skybox = generate_skybox;
+    objectmaker.make_skybox = make_skybox;
     
     /*===================================================
     
@@ -113,9 +113,18 @@ var KAIOPUA = (function (main) {
 		mesh.useQuaternion = true;
         
         // shadows
-        
-        mesh.castShadow = parameters.castShadow || false;
-        mesh.receiveShadow = parameters.receiveShadow || false;
+		
+		if ( parameters.hasOwnProperty('castShadow') === true ) {
+			
+			mesh.castShadow = parameters.castShadow;
+			
+		}
+		
+		if ( parameters.hasOwnProperty('receiveShadow') === true ) {
+			
+			mesh.receiveShadow = parameters.receiveShadow;
+			
+		}
 		
 		// rotation
 		
@@ -412,7 +421,16 @@ var KAIOPUA = (function (main) {
                 
                 info.duration = parameters.duration || durationBase;
                 
-                info.loop = parameters.loop || false;
+				if ( parameters.hasOwnProperty('loop') === true ) {
+					
+					info.loop = parameters.loop;
+					
+				}
+				else {
+					
+					info.loop = false;
+					
+				}
                 
                 info.callback = parameters.callback;
                 
@@ -664,7 +682,7 @@ var KAIOPUA = (function (main) {
     
     // generates a skybox from array of images
     
-    function generate_skybox ( images, width, height, depth ) {
+    function make_skybox ( images, width, height, depth ) {
         
         var textureCube = new THREE.Texture( images );
         

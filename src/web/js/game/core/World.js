@@ -8,16 +8,15 @@ var KAIOPUA = (function (main) {
         game = main.game = main.game || {},
 		core = game.core = game.core || {},
 		world = core.world = core.world || {},
+		ready = false,
 		assets,
 		objectmaker,
 		physics,
 		scene,
-		ambientLight,
 		body,
 		head,
-		head_collision_model,
 		tail,
-		tail_collision_model,
+		parts,
 		gravityMagnitude = 100;
 	
 	/*===================================================
@@ -27,9 +26,22 @@ var KAIOPUA = (function (main) {
     =====================================================*/
 	
 	world.init = init;
-	world.get_scene = function () { return game.get_scene(); };
-	world.get_head = function () { return head; };
-	world.get_tail = function () { return tail; };
+	world.show = show;
+	world.hide = hide;
+	
+	// getters and setters
+	
+	Object.defineProperty(world, 'parts', { 
+		get : function () { return [head, tail]; }
+	});
+	
+	Object.defineProperty(world, 'head', { 
+		get : function () { return head; }
+	});
+	
+	Object.defineProperty(world, 'tail', { 
+		get : function () { return tail; }
+	});
 	
 	/*===================================================
     
@@ -39,38 +51,30 @@ var KAIOPUA = (function (main) {
 	
 	function init () {
 		
-		// assets
+		if ( ready !== true ) {
 		
-		assets = main.utils.loader.assets;
-		
-		// workers
-		
-		objectmaker = game.workers.objectmaker;
-		
-		// core
-		
-		physics = core.physics;
-		
-		// initialization
-		
-		init_basics();
-		
-		init_environment();
-		
-		init_physics();
-		
-	}
-	
-	function init_basics () {
-		
-		// scene
-		
-		scene = game.scene;
-        
-        // fog
-        
-        scene.fog = new THREE.Fog( 0xffffff, -100, 10000 );
-		
+			// assets
+			
+			assets = main.utils.loader.assets;
+			
+			// workers
+			
+			objectmaker = game.workers.objectmaker;
+			
+			// core
+			
+			physics = core.physics;
+			
+			// initialization
+			
+			init_environment();
+			
+			init_physics();
+			
+			ready = true;
+			
+		}
+			
 	}
 	
 	function init_environment () {
@@ -87,42 +91,108 @@ var KAIOPUA = (function (main) {
 			shading: THREE.FlatShading
         });
 		
-		scene.add( head.mesh );
-		scene.add( tail.mesh );
+		// store
+		
+		parts = [head, tail];
+		
+		// test
+		
+		var groundMat = new THREE.MeshNormalMaterial();
+		
+		var groundGeometry = new THREE.PlaneGeometry( 3000, 3000, 1, 1 );
+		
+		var ground = objectmaker.make_model({
+            geometry: groundGeometry,
+			materials: groundMat,
+			rotation: new THREE.Vector3( -90, 0, 0 )
+        });
+		
+		ground.mesh.position.set( 0, -1640, 0 );
+		
+		// add to physics
+		ground.rigidBody = physics.translate( ground.mesh, {
+			bodyType: 'plane'
+		});
+		
+		parts.push( ground );
 		
 	}
 	
 	function init_physics () {
 		
-		// change gravity
+		// translate model to physics
 		
-		physics.set_gravity( 0, -gravityMagnitude, 0 );
+		head.rigidBody = physics.translate( head.mesh, {
+			bodyType: 'trimesh',
+			geometry: head.mesh.geometry
+		});
 		
-		// init low poly models for physics collisions
+		tail.rigidBody = physics.translate( tail.mesh, {
+			bodyType: 'trimesh',
+			geometry: tail.mesh.geometry
+		});
 		
-		head_collision_model = objectmaker.make_model({
-            geometry: assets["assets/models/World_Head_low.js"]
-        });
+	}
+	
+	/*===================================================
+    
+    custom functions
+    
+    =====================================================*/
+	
+	function show () {
 		
-		tail_collision_model = objectmaker.make_model({
-            geometry: assets["assets/models/World_Tail_low.js"]
-        });
+		var i, l,
+			part;
+		
+		scene = game.scene;
+		
+        // fog
+        
+        scene.fog = new THREE.Fog( 0xffffff, -100, 10000 );
+		
+		// set world gravity
+		
+		physics.gravity = new jiglib.Vector3D( 0, -gravityMagnitude, 0 );
 		
 		// add parts
 		
-		physics.add( head.mesh, {
-			bodyType: 'trimesh',
-			geometry: head_collision_model.mesh.geometry,
-			position: head.mesh.position,
-			rotation: head.mesh.quaternion
-		});
+		for ( i = 0, l = parts.length; i < l; i += 1 ) {
+			
+			part = parts[ i ];
+			
+			scene.add( part.mesh );
+			
+			if ( typeof part.rigidBody !== 'undefined' ) {
+				
+				physics.add( part.mesh, { rigidBody: part.rigidBody } );
+				
+			}
+			
+		}
 		
-		physics.add( tail.mesh, {
-			bodyType: 'trimesh',
-			geometry: tail_collision_model.mesh.geometry,
-			position: tail.mesh.position,
-			rotation: tail.mesh.quaternion
-		});
+	}
+	
+	function hide () {
+		
+		var i, l,
+			part;
+		
+		// remove parts
+		
+		for ( i = 0, l = parts.length; i < l; i += 1 ) {
+			
+			part = parts[ i ];
+			
+			scene.remove( part.mesh );
+			
+			if ( typeof part.rigidBody !== 'undefined' ) {
+				
+				physics.remove( part.mesh );
+				
+			}
+			
+		}
 		
 	}
 	

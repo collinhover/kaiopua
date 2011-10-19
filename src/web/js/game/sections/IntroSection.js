@@ -128,6 +128,10 @@ var KAIOPUA = (function (main) {
 		
 		scene = game.scene;
 		
+		// add world
+		
+		world.show();
+		
 		// add items
 		
 		for ( i = 0, l = addOnShow.length; i < l; i += 1 ) {
@@ -135,6 +139,14 @@ var KAIOPUA = (function (main) {
 			scene.add( addOnShow[ i ] );
 			
         }
+		
+		// start player
+		
+		player.show();
+		
+		player.enable();
+		
+		player.cameraMode = 'freelook';
 		
 		// signals
         
@@ -155,6 +167,16 @@ var KAIOPUA = (function (main) {
     function remove () {
         
 		var i, l;
+		
+		// stop player
+		
+		player.hide();
+		
+		player.disable();
+		
+		// hide world
+		
+		world.hide();
 		
 		// remove added items
 		

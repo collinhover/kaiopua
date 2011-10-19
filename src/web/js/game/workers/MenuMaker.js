@@ -141,7 +141,11 @@ var KAIOPUA = (function (main) {
         
         parameters.text = parameters.id;
         
-        parameters.disabled = parameters.disabled || false;
+		if ( parameters.hasOwnProperty('disabled') !== true ) {
+			
+			parameters.disabled = false;
+			
+		}
         
         button = uihelper.make_ui_element( parameters );
         
@@ -171,7 +175,7 @@ var KAIOPUA = (function (main) {
         
         // enable / disable
         
-        if ( parameters.disabled ) {
+        if ( parameters.disabled === true ) {
             button.disable();
         }
         else {

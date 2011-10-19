@@ -1,14 +1,15 @@
 /*
-Launcher.js
-Launcher module, handles start environment.
+LauncherSection.js
+Launcher section module, handles start environment.
 */
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
         game = main.game = main.game || {},
         effects = main.effects = main.effects || {},
-        launcher = game.launcher = game.launcher || {},
-        readyAll = false,
+		sections = game.sections = game.sections || {},
+        launcher = sections.launcher = sections.launcher || {},
+        ready = false,
         camera,
         scene,
 		addOnShow = [],
@@ -50,6 +51,7 @@ var KAIOPUA = (function (main) {
     launcher.hide = hide;
     launcher.remove = remove;
     launcher.update = update;
+	launcher.resize = resize;
     
     /*===================================================
     
@@ -67,44 +69,55 @@ var KAIOPUA = (function (main) {
     
     function init () {
 		
-        var waterEnv, skyEnv;
+		if ( ready !== true ) {
+			
+			init_environment();
+			
+			ready = true;
+			
+		}
+    }
+	
+	function init_environment () {
+		
+		var waterEnv, skyEnv;
 		
 		// lights
 		
 		ambientLight = new THREE.AmbientLight( 0xCCCCCC );
-        
-        directional = new THREE.DirectionalLight( 0xFFFFFF, 1.0 );
-        directional.position = new THREE.Vector3(-1, 1, -1).normalize();
 		
-        // water
-        
-        water = launcher.water;
+		directional = new THREE.DirectionalLight( 0xFFFFFF, 1.0 );
+		directional.position = new THREE.Vector3(-1, 1, -1).normalize();
 		
-        water.init( { wavesColor: fogColor } );
-        
-        waterEnv = water.get_environment();
-        
-        waterEnv.rotation.x = cameraRotY;
-        
-        // sky
-        
-        sky = launcher.sky;
-        
-        sky.init();
-        
-        // sky mesh
-        skyEnv = sky.get_environment();
-        
-        skyEnv.position.x = 0;
-        skyEnv.position.y = 2000;
-        
-        skyEnv.rotation.y = cameraRotY;
+		// water
+		
+		water = launcher.water;
+		
+		water.init( { wavesColor: fogColor } );
+		
+		waterEnv = water.get_environment();
+		
+		waterEnv.rotation.x = cameraRotY;
+		
+		// sky
+		
+		sky = launcher.sky;
+		
+		sky.init();
+		
+		// sky mesh
+		skyEnv = sky.get_environment();
+		
+		skyEnv.position.x = 0;
+		skyEnv.position.y = 2000;
+		
+		skyEnv.rotation.y = cameraRotY;
 		
 		// set items to add on show
 		
 		addOnShow.push( ambientLight, directional, waterEnv, skyEnv );
 		
-    }
+	}
     
     /*===================================================
     
@@ -220,6 +233,10 @@ var KAIOPUA = (function (main) {
         //water.bob( camera );
         
     }
+	
+	function resize () {
+		
+	}
         
     return main; 
     

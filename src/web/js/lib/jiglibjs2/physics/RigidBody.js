@@ -50,6 +50,7 @@
 		this._maxRotVelocities = null; // Vector3D
 		this._movable = null; // Boolean
 		this._origMovable = null; // Boolean
+		this._rotatableBySystem = null; // Boolean
 		this._inactiveTime = null; // Number
 		this._bodiesToBeActivatedOnMovement = null; // RigidBody
 		this._storedPositionForActivation = null; // Vector3D
@@ -100,7 +101,7 @@
 		this.isActive = true;
 		this._movable = true;
 		this._origMovable = true;
-		this._rotatable = true;
+		this._rotatableBySystem = true;
 
 		this.collisions = [];
 		this._constraints = [];
@@ -409,7 +410,7 @@
 		}
 		this._currState.linVelocity = this._currState.linVelocity.add(JNumber3D.getScaleVector(impulse, this._invMass));
 		
-		if ( this._rotatable ) {
+		if ( this._rotatableBySystem === true ) {
 		
 			var rotImpulse = pos.subtract(this._currState.position).crossProduct(impulse);
 			rotImpulse = this._worldInvInertia.transformVector(rotImpulse);
@@ -431,7 +432,7 @@
 		}
 		this._currLinVelocityAux = this._currLinVelocityAux.add(JNumber3D.getScaleVector(impulse, this._invMass));
 		
-		if ( this._rotatable ) {
+		if ( this._rotatableBySystem === true ) {
 		
 			var rotImpulse = pos.subtract(this._currState.position).crossProduct(impulse);
 			rotImpulse = this._worldInvInertia.transformVector(rotImpulse);
@@ -453,7 +454,7 @@
 		}
 		this._currState.linVelocity = this._currState.linVelocity.add(JNumber3D.getScaleVector(impulse, this._invMass));
 		
-		if ( this._rotatable ) {
+		if ( this._rotatableBySystem === true ) {
 		
 			var rotImpulse = delta.crossProduct(impulse);
 			rotImpulse = this._worldInvInertia.transformVector(rotImpulse);
@@ -475,7 +476,7 @@
 		}
 		this._currLinVelocityAux = this._currLinVelocityAux.add(JNumber3D.getScaleVector(impulse, this._invMass));
 		
-		if ( this._rotatable ) {
+		if ( this._rotatableBySystem === true ) {
 			
 			var rotImpulse = delta.crossProduct(impulse);
 			rotImpulse = this._worldInvInertia.transformVector(rotImpulse);
@@ -495,7 +496,7 @@
 
 		this._currState.linVelocity = this._currState.linVelocity.add(JNumber3D.getScaleVector(this._force, this._invMass * dt));
 		
-		if (!this._rotatable)
+		if ( this._rotatableBySystem !== true )
 			return;
 		
 		var rac = JNumber3D.getScaleVector(this._torque, dt);
@@ -517,7 +518,7 @@
 
 		   this._currState.position = this._currState.position.add(JNumber3D.getScaleVector(this._currState.linVelocity, dt));
 			
-			if ( this._rotatable ) {
+			if ( this._rotatableBySystem === true ) {
 			
 			   var dir = this._currState.rotVelocity.clone();
 			   var ang = dir.get_length();
@@ -558,7 +559,7 @@
 
 		this._currState.position = this._currState.position.add(JNumber3D.getScaleVector(this._currState.linVelocity.add(this._currLinVelocityAux), dt));
 		
-		if ( this._rotatable ) {
+		if ( this._rotatableBySystem === true ) {
 			
 			var dir = this._currState.rotVelocity.add(this._currRotVelocityAux);
 			var ang = dir.get_length() * 180 / Math.PI;
@@ -683,15 +684,15 @@
 		
 	}
 	
-	RigidBody.prototype.get_rotatable = function () {
+	RigidBody.prototype.get_rotatableBySystem = function () {
 		
-		return this._rotatable;
+		return this._rotatableBySystem;
 		
 	}
 	
-	RigidBody.prototype.set_rotatable = function ( rot ) {
+	RigidBody.prototype.set_rotatableBySystem = function ( rot ) {
 		
-		this._rotatable = rot;
+		this._rotatableBySystem = rot;
 		
 	}
 

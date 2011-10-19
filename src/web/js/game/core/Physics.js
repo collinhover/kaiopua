@@ -8,6 +8,7 @@ var KAIOPUA = (function (main) {
         game = main.game = main.game || {},
 		core = game.core = game.core || {},
 		physics = core.physics = core.physics || {},
+		ready = false,
 		system,
 		linksBaseName = 'vis_to_phys_link_',
 		linksCount = 0,
@@ -25,12 +26,20 @@ var KAIOPUA = (function (main) {
     =====================================================*/
 	
 	physics.init = init;
+	physics.translate = translate;
 	physics.add = add;
 	physics.remove = remove;
+	physics.remove_by_name = remove_by_name;
 	physics.start = start;
 	physics.stop = stop;
 	physics.update = update;
-	physics.set_gravity = set_gravity;
+	
+	// getters and setters
+	
+	Object.defineProperty(physics, 'gravity', { 
+		get : function () { return system.get_gravity(); },
+		set : set_gravity
+	});
 	
 	/*===================================================
     
@@ -40,7 +49,13 @@ var KAIOPUA = (function (main) {
 	
 	function init () {
 		
-		init_system();
+		if ( ready !== true ) {
+		
+			init_system();
+			
+			ready = true;
+		
+		}
 		
 	}
 	
@@ -67,21 +82,27 @@ var KAIOPUA = (function (main) {
 	
 	/*===================================================
     
-    add / remove
+    translate / add / remove
     
     =====================================================*/
 	
-	function add ( mesh, parameters ) {
+	// translates a mesh + parameters into a new rigid body
+	
+	function translate ( mesh, parameters ) {
 		
 		var i, l,
 			geometry,
 			bbox,
 			bodyType,
 			rigidBody,
-			movable,
+			movable = true,
+			rotatable = true,
 			width,
 			height,
 			depth,
+			needWidth,
+			needHeight,
+			needDepth,
 			radius,
 			mass,
 			restitution,
@@ -89,7 +110,6 @@ var KAIOPUA = (function (main) {
 			position,
 			rotation,
 			velocity,
-			name,
 			vertsThree,
 			vertsJig,
 			vertex,
@@ -104,35 +124,85 @@ var KAIOPUA = (function (main) {
 		
 		parameters = parameters || {};
 		
-		name = parameters.name || linksBaseName + linksCount;
-		
 		bodyType = parameters.bodyType || 'box';
 		
-		movable = parameters.movable || true;
-		
-		restitution = parameters.restitution || 0.25;
-		
-		friction = parameters.friction || 0.25;
-		
-		position = init_jig_vec( parameters.position );
-		
-		rotation = init_jig_vec( parameters.rotation, true );
-		
-		velocity = init_jig_vec( parameters.velocity );
-		
-		// model bounding box
-		
-		if ( !geometry.boundingBox || geometry.boundingBox.hasOwnProperty('length') === false ) {
+		if ( parameters.hasOwnProperty('movable') === true ) {
 			
-			geometry.computeBoundingBox();
+			movable = parameters.movable;
 			
 		}
 		
-		bbox = geometry.boundingBox;
+		if ( parameters.hasOwnProperty('rotatable') === true ) {
+			
+			rotatable = parameters.rotatable;
+			
+		}
 		
-		width = (bbox.x[1] - bbox.x[0]);
-		height = (bbox.y[1] - bbox.y[0]);
-		depth = (bbox.z[1] - bbox.z[0]);
+		restitution = parameters.restitution || 0.25;
+		
+		friction = parameters.friction || 0.9;
+		
+		position = init_jig_vec( parameters.position || mesh.position );
+		
+		rotation = init_jig_vec( parameters.rotation || ( mesh.useQuaternion === true ? mesh.quaternion : mesh.rotation ), true );
+		
+		velocity = init_jig_vec( parameters.velocity );
+		
+		width = parameters.width;
+		
+		height = parameters.height;
+		
+		depth = parameters.depth;
+		
+		if ( isNaN( width ) || isFinite( width ) === false ) {
+			
+			needWidth = true;
+			
+		}
+		
+		if ( isNaN( height ) || isFinite( height ) === false ) {
+			
+			needHeight = true;
+			
+		}
+		
+		if ( isNaN( depth ) || isFinite( depth ) === false ) {
+			
+			needDepth = true;
+			
+		}
+		
+		if ( needWidth === true || needHeight === true || needDepth === true ) {
+			
+			// model bounding box
+		
+			if ( !geometry.boundingBox || geometry.boundingBox.hasOwnProperty('length') === false ) {
+				
+				geometry.computeBoundingBox();
+				
+			}
+			
+			bbox = geometry.boundingBox;
+			
+			if ( needWidth === true ) {
+				
+				width = (bbox.x[1] - bbox.x[0]);
+				
+			}
+			
+			if ( needHeight === true ) {
+				
+				height = (bbox.y[1] - bbox.y[0]);
+			
+			}
+			
+			if ( needDepth === true ) {
+				
+				depth = (bbox.z[1] - bbox.z[0]);
+				
+			}
+			
+		}
 		
 		mass = parameters.mass || width * height * depth;
 		
@@ -205,6 +275,8 @@ var KAIOPUA = (function (main) {
 		
 		rigidBody.set_movable( movable );
 		
+		rigidBody.set_rotatableBySystem( rotatable );
+		
 		rigidBody.set_mass( mass );
 		
 		rigidBody.set_restitution( restitution );
@@ -223,10 +295,6 @@ var KAIOPUA = (function (main) {
 			
 		}
 		
-		// add to system
-		
-		system.addBody( rigidBody );
-		
 		// initial state
 		
 		rigidBody.moveTo( position );
@@ -234,6 +302,29 @@ var KAIOPUA = (function (main) {
 		rigidBody.set_rotationX( rotation.x );
 		rigidBody.set_rotationY( rotation.y );
 		rigidBody.set_rotationZ( rotation.z );
+		
+		return rigidBody;
+	}
+	
+	// adds mesh's rigid body to physics world
+	// creates new rigid body if one is not passed
+	
+	function add ( mesh, parameters ) {
+		
+		var rigidBody,
+			name;
+		
+		// parameters
+		
+		parameters = parameters || {};
+		
+		name = parameters.name || linksBaseName + linksCount;
+		
+		rigidBody = parameters.rigidBody || translate( mesh, parameters );
+		
+		// add to system
+		
+		system.addBody( rigidBody );
 		
 		// add to links
 		
@@ -243,24 +334,53 @@ var KAIOPUA = (function (main) {
 		
 		linksMap[ name ] = { mesh: mesh, rigidBody: rigidBody };
 		
-		return name;
+		return rigidBody;
+		
 	}
 	
-	function remove ( name ) {
+	// removes mesh's rigid body from physics world
+	
+	function remove ( meshOrBody ) {
 		
-		var index, info;
-		
-		index = linksNames.indexOf( name );
-		
-		// if is already a link
-		if ( index !== -1 ) {
+		var i, l,
+			name,
+			index, 
+			info;
 			
-			linksNames.splice( index, 1 );
+		for ( i = 0, l = linksNames.length; i < l; i += 1 ) {
+			
+			name = linksNames[ i ];
 			
 			info = linksMap[ name ];
 			
-			system.removeBody( info.rigidBody );
+			if ( info.mesh === meshOrBody || info.rigidBody === meshOrBody ) {
+				
+				linksNames.splice( i, 1 );
+				
+				system.removeBody( info.rigidBody );
+			
+				delete linksMap[ name ];
+				
+				break;
+				
+			}
+			
+		}
 		
+	}
+	
+	function remove_by_name ( name ) {
+		
+		var index;
+		
+		index = linksNames.indexOf( name );
+		
+		if ( index !== -1 ) {
+			
+			linksNames.splice( i, 1 );
+				
+			system.removeBody( linksMap[ name ].rigidBody );
+			
 			delete linksMap[ name ];
 			
 		}
@@ -352,9 +472,8 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	function set_gravity ( x, y, z ) {
-		gravity = new jiglib.Vector3D( x, y, z, 0 );
-		system.setGravity( gravity );
+	function set_gravity ( vec ) {
+		system.setGravity( vec );
 	}
 	
 	/*===================================================

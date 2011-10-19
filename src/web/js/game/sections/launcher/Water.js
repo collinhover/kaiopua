@@ -7,7 +7,8 @@ var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
         game = main.game = main.game || {},
-        launcher = game.launcher = game.launcher || {},
+		sections = game.sections = game.sections || {},
+        launcher = sections.launcher = sections.launcher || {},
         water = launcher.water = launcher.water || {},
         wavesGeometry, 
         wavesMaterial,
