@@ -31,6 +31,10 @@ var KAIOPUA = (function (main) {
 	
 	// getters and setters
 	
+	Object.defineProperty(world, 'gravityMagnitude', { 
+		get : function () { return gravityMagnitude; }
+	});
+	
 	Object.defineProperty(world, 'parts', { 
 		get : function () { return [head, tail]; }
 	});
@@ -153,7 +157,7 @@ var KAIOPUA = (function (main) {
 		
 		// set world gravity
 		
-		physics.gravity = new jiglib.Vector3D( 0, -gravityMagnitude, 0 );
+		physics.gravity = new jiglib.Vector3D( 0, 0, 0 );
 		
 		// add parts
 		

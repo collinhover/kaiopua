@@ -342,7 +342,7 @@
 
 	RigidBody.prototype.addWorldTorque = function(t, active)
 	{
-		if (active == null) active = true;
+		if (typeof active === 'undefined') active = true;
 
 		if (!this._movable)
 		{
@@ -356,7 +356,7 @@
 
 	RigidBody.prototype.addBodyTorque = function(t, active)
 	{
-		if (active == null) active = true;
+		if (typeof active === 'undefined') active = true;
 
 		if (!this._movable)
 			return;
@@ -367,7 +367,7 @@
 
 	RigidBody.prototype.addWorldForce = function(f, p, active)
 	{
-		if (active == null) active = true;
+		if (typeof active === 'undefined') active = true;
 
 		if (!this._movable)
 			return;
@@ -381,7 +381,7 @@
 
 	RigidBody.prototype.addBodyForce = function(f, p, active)
 	{
-		if (active == null) active = true;
+		if (typeof active === 'undefined') active = true;
 
 		if (!this._movable)
 			return;
@@ -402,7 +402,7 @@
 
 	RigidBody.prototype.applyWorldImpulse = function(impulse, pos, active)
 	{
-		if (active == null) active = true;
+		if (typeof active === 'undefined') active = true;
 
 		if (!this._movable)
 		{
@@ -424,7 +424,7 @@
 
 	RigidBody.prototype.applyWorldImpulseAux = function(impulse, pos, active)
 	{
-		if (active == null) active = true;
+		if (typeof active === 'undefined') active = true;
 
 		if (!this._movable)
 		{
@@ -446,7 +446,7 @@
 
 	RigidBody.prototype.applyBodyWorldImpulse = function(impulse, delta, active)
 	{
-		if (active == null) active = true;
+		if (typeof active === 'undefined') active = true;
 
 		if (!this._movable)
 		{
@@ -468,7 +468,7 @@
 
 	RigidBody.prototype.applyBodyWorldImpulseAux = function(impulse, delta, active)
 	{
-		if (active == null) active = true;
+		if (typeof active === 'undefined') active = true;
 
 		if (!this._movable)
 		{
@@ -912,9 +912,6 @@
 		if (this._collideBodies.indexOf(body) < 0) {
 			
 			this._collideBodies.push(body);
-			
-			
-			
 			
 		}
 		

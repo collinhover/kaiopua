@@ -12,6 +12,7 @@ var KAIOPUA = (function (main) {
 		assets,
 		objectmaker,
 		physics,
+		world,
 		scene,
 		camera,
 		cameraModes = {
@@ -19,7 +20,8 @@ var KAIOPUA = (function (main) {
 			freelook: 'freelook'
 		},
 		cameraMode = cameraModes.follow,
-		cameraControls,
+		cameraFollowSettings,
+		cameraFreelookControls,
 		keybindings = {},
 		keybindingsDefault = {},
 		playerCharacter;
@@ -66,6 +68,8 @@ var KAIOPUA = (function (main) {
 			
 			physics = core.physics;
 			
+			world = core.world;
+			
 			// initialization
 			
 			init_camera();
@@ -76,7 +80,9 @@ var KAIOPUA = (function (main) {
 			
 			init_character();
 			
-			init_signals();
+			// signals
+			
+			shared.signals.paused.add( pause );
 			
 			ready = true;
 			
@@ -85,6 +91,25 @@ var KAIOPUA = (function (main) {
 	}
 	
 	function init_camera () {
+		
+		// init camera follow settings
+		
+		cameraFollowSettings = {
+			offset: {
+				pos: new THREE.Vector3( 0, 0, 200 ),
+				rot: new THREE.Quaternion( -0.1, 0.1, 0, 1 )
+			},
+			clamps: {
+				minRotX: -0.4,
+				maxRotX: 0.1,
+				minRotY: -1,
+				maxRotY: 1,
+				minPosZ: -100,
+				maxPosZ: 300
+			}
+		}
+		
+		// set default camera mode
 		
 		set_camera_mode();
 		
@@ -103,7 +128,9 @@ var KAIOPUA = (function (main) {
 		// mouse buttons
 		
 		kbMap[ 'clickleft' ] = {
-			mousedown: function () { console.log('key down: clickleft'); },
+			mousedown: function () { 
+				console.log('key down: clickleft');
+			},
 			mouseup: function () { console.log('key up: clickleft'); }
 		};
 		kbMap[ 'clickmiddle' ] = {
@@ -224,13 +251,6 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function init_signals () {
-		
-		shared.signals.resumed.add( enable );
-		shared.signals.paused.add( disable );
-		
-	}
-	
 	/*===================================================
     
     camera
@@ -239,16 +259,16 @@ var KAIOPUA = (function (main) {
 	
 	function set_camera_mode ( modeType ) {
 		
-		var currRot = new THREE.Quaternion();
+		var cameraRot = new THREE.Quaternion();
 		
 		// update camera
 		
 		camera = game.camera;
 		
-		currRot.setFromRotationMatrix( camera.matrix );
+		cameraRot.setFromRotationMatrix( camera.matrix );
 		
 		camera.useQuaternion = true;
-		camera.quaternion = currRot;
+		camera.quaternion = cameraRot;
 		
 		// set mode
 		
@@ -258,7 +278,20 @@ var KAIOPUA = (function (main) {
 			
 			remove_control();
 			
-			free_look();
+			if ( typeof cameraFreelookControls === 'undefined' ) {
+				
+				cameraFreelookControls = new THREE.FlyControls( camera );
+				cameraFreelookControls.rollSpeed = 0.5;
+				cameraFreelookControls.movementSpeed = 800;
+				
+			}
+			else {
+				
+				cameraFreelookControls.object = camera;
+				cameraFreelookControls.moveVector.set( 0, 0, 0 );
+				cameraFreelookControls.rotationVector.set( 0, 0, 0 );
+				
+			}
 			
 		}
 		else {
@@ -269,22 +302,61 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function free_look () {
+	function update_camera () {
 		
-		if ( typeof cameraControls === 'undefined' ) {
+		// update camera based on mode
+		
+		if ( cameraMode === cameraModes.freelook ) {
 			
-			cameraControls = new THREE.FlyControls( camera );
-			cameraControls.rollSpeed = 0.5;
-			cameraControls.movementSpeed = 800;
+			camera_free_look();
 			
 		}
 		else {
 			
-			cameraControls.object = camera;
-			cameraControls.moveVector.set( 0, 0, 0 );
-			cameraControls.rotationVector.set( 0, 0, 0 );
+			camera_follow_character();
 			
 		}
+		
+	}
+	
+	function camera_free_look () {
+		
+		// update camera controls
+		cameraFreelookControls.update();
+		
+	}
+	
+	function camera_follow_character () {
+		
+		var offset = cameraFollowSettings.offset,
+			srcOffsetPos = offset.pos,
+			srcOffsetRot = offset.rot,
+			clamps = cameraFollowSettings.clamps,
+			pcMesh,
+			pcQuat,
+			camOffsetPos,
+			camOffsetRot,
+			camOffsetRotHalf,
+			camPosNew;
+		
+		pcMesh = playerCharacter.mesh;
+		pcQuat = pcMesh.quaternion;
+		
+		camPosNew = pcMesh.position.clone();
+		camOffsetPos = new THREE.Vector3( srcOffsetPos.x, srcOffsetPos.y, srcOffsetPos.z );
+		camOffsetRot = new THREE.Quaternion( srcOffsetRot.x, srcOffsetRot.y, srcOffsetRot.z, srcOffsetRot.w );
+		camOffsetRotHalf = new THREE.Quaternion( camOffsetRot.x * 0.5, camOffsetRot.y * 0.5, camOffsetRot.z * 0.5, camOffsetRot.w);
+		
+		pcQuat.multiplyVector3( camOffsetPos );
+		camOffsetRot.multiplyVector3( camOffsetPos );
+		
+		camPosNew.addSelf( camOffsetPos );
+		
+		camera.position = camPosNew;
+		
+		camera.quaternion.copy( pcQuat );
+		
+		camera.quaternion.multiplySelf( camOffsetRotHalf );
 		
 	}
 	
@@ -386,9 +458,36 @@ var KAIOPUA = (function (main) {
 	
 	/*===================================================
     
-    character movement
+    character
     
     =====================================================*/
+	
+	function update_character () {
+		
+		var pc = playerCharacter,
+			rb = pc.rigidBody,
+			rbState = rb.get_currentState(),
+			rbMass = rb.get_mass(),
+			rbPos = rbState.position,
+			rbRot = rbState.orientation,
+			gravitySource = {
+				pos: new jiglib.Vector3D()
+			},
+			rbToGravityV,
+			gravityNew = new jiglib.Vector3D();
+		
+		// get normalized vector between character and gravity source
+		
+		rbToGravityV = gravitySource.pos.subtract( rbPos )
+		//rbToGravityV.normalize();
+		rbToGravityV.scaleBy( world.gravityMagnitude );
+		//rbToGravityV.negate();
+		
+		// apply world impulse
+		
+		rb.applyWorldImpulse( rbToGravityV, gravitySource.pos, true );
+		
+	}
 	
 	function characterMove ( direction ) {
 		
@@ -397,8 +496,8 @@ var KAIOPUA = (function (main) {
 			rbState = rb.get_currentState(),
 			rbPos = rbState.position;
 			console.log('character move');
-			//rb.addWorldForce( new jiglib.Vector3D( 0, 200, 0 ), rbPos );
-			rb.setLineVelocity( new jiglib.Vector3D( 0, 200, 0 ) );
+			
+			rb.setLineVelocity( new jiglib.Vector3D( 200, 0, 0 ) );
 		
 	}
 	
@@ -407,6 +506,22 @@ var KAIOPUA = (function (main) {
     custom functions
     
     =====================================================*/
+	
+	function pause () {
+		
+		disable();
+		
+		shared.signals.resumed.add( resume );
+		
+	}
+	
+	function resume () {
+		
+		shared.signals.resumed.remove( resume );
+		
+		enable();
+		
+	}
 	
 	function enable () {
 		
@@ -444,44 +559,14 @@ var KAIOPUA = (function (main) {
 	
 	function update () {
 		
-		var pcMesh,
-			pcQuat,
-			camOffsetPos,
-			camOffsetRot,
-			camOffsetRotHalf,
-			camPosNew;
+		// camera
 		
-		// update camera based on mode
+		update_camera();
 		
-		if ( cameraMode === cameraModes.freelook ) {
-			
-			// update camera controls
-			cameraControls.update();
-			
-		}
-		else {
-			
-			pcMesh = playerCharacter.mesh;
-			pcQuat = pcMesh.quaternion;
-			
-			camPosNew = pcMesh.position.clone();
-			camOffsetPos = new THREE.Vector3( 0, 0, 200 );
-			camOffsetRot = new THREE.Quaternion( -0.1, 0.1, 0, 1 );
-			camOffsetRotHalf = new THREE.Quaternion( camOffsetRot.x * 0.5, camOffsetRot.y * 0.5, camOffsetRot.z * 0.5, 1);
-			
-			pcQuat.multiplyVector3( camOffsetPos );
-			camOffsetRot.multiplyVector3( camOffsetPos );
-			
-			camPosNew.addSelf( camOffsetPos );
-			
-			camera.position = camPosNew;
-			
-			camera.quaternion.copy( pcQuat );
-			
-			camera.quaternion.multiplySelf( camOffsetRotHalf );
-			
-		}
-	
+		// character
+		
+		update_character();
+		
 	}
 	
 	return main;

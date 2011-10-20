@@ -41,6 +41,10 @@ var KAIOPUA = (function (main) {
 		set : set_gravity
 	});
 	
+	Object.defineProperty(physics, 'system', { 
+		get : function () { return system; }
+	});
+	
 	/*===================================================
     
     external init
