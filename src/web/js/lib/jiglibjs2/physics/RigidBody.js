@@ -408,6 +408,7 @@
 		{
 			return;
 		}
+		
 		this._currState.linVelocity = this._currState.linVelocity.add(JNumber3D.getScaleVector(impulse, this._invMass));
 		
 		if ( this._rotatableBySystem === true ) {

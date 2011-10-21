@@ -148,6 +148,8 @@ var KAIOPUA = (function (main) {
 		
 		//player.cameraMode = 'freelook';
 		
+		//setTimeout( game.pause, 1000 );
+		
 		// signals
         
         shared.signals.windowresized.add( resize );
@@ -195,7 +197,7 @@ var KAIOPUA = (function (main) {
 		
         var camP = camera.position.clone();
         var newP = new THREE.Vector3( 0, 200, -500);
-        
+		
         camera.quaternion.multiplyVector3( newP );
         
         newP.addSelf( camera.position );

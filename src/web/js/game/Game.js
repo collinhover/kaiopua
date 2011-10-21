@@ -34,7 +34,7 @@ var KAIOPUA = (function (main) {
         sectionNames = [],
         currentSection, 
         previousSection, 
-        paused = true,
+        paused = false,
         transitionOut = 1000, 
         transitionIn = 400,
         loadAssetsDelay = 500,
@@ -461,10 +461,6 @@ var KAIOPUA = (function (main) {
 		
         set_section( sections.intro );
 		
-		// resume game
-		
-		resume();
-		
     }
 	
 	function stop_game () {
@@ -709,9 +705,19 @@ var KAIOPUA = (function (main) {
         
         requestAnimationFrame( animate );
 		
-		// update all
-        
-        shared.signals.update.dispatch();
+		// update
+		
+		if ( paused !== true ) {
+			
+			shared.signals.update.dispatch();
+			
+			// update physics
+			
+			if ( typeof physics !== 'undefined' ) {
+				physics.update();
+			}
+			
+		}
 		
 		// render
         

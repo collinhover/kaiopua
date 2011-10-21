@@ -77,11 +77,6 @@ var KAIOPUA = (function (main) {
 		convertMatrix4 = new THREE.Matrix4();
 		convertVector3 = new THREE.Vector3();
 		
-		// signals
-		
-		shared.signals.paused.add( stop );
-		shared.signals.resumed.add( start );
-		
 	}
 	
 	/*===================================================

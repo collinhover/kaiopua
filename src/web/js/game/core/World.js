@@ -17,7 +17,7 @@ var KAIOPUA = (function (main) {
 		head,
 		tail,
 		parts,
-		gravityMagnitude = 100;
+		gravityMagnitude = 9.8;
 	
 	/*===================================================
     

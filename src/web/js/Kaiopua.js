@@ -77,8 +77,8 @@ var KAIOPUA = (function (main) {
         
         // add listeners for events
         // each listener dispatches shared signal
-        $(document).bind( 'mousedown', onDocumentMouseDown );
-        $(document).bind( 'mouseup', onDocumentMouseUp );
+        $(document).bind( 'mousedown touchstart', onDocumentMouseDown );
+        $(document).bind( 'mouseup touchend', onDocumentMouseUp );
         $(document).bind( 'mousemove', onDocumentMouseMove );
         $(document).bind( 'mousewheel', onDocumentMouseWheel );
 		$(shared.html.gameContainer).bind( 'contextmenu', onGameContextMenu );
@@ -129,7 +129,32 @@ var KAIOPUA = (function (main) {
     =====================================================*/
     
     function onDocumentMouseDown( e ) {
-        shared.signals.mousedown.dispatch( e );
+		
+		var eOriginal = e.originalEvent, i, l, fingers, touch;
+		
+		// is touch event
+		
+		if (typeof eOriginal !== "undefined" && typeof eOriginal.touches !== "undefined" && typeof eOriginal.changedTouches !== "undefined"){
+			
+			// for each finger involved in the event
+			
+			fingers = eOriginal.changedTouches;
+			
+			for( i = 0, l = fingers.length; i < l; i += 1 ) {
+				
+				touch = fingers[i];
+				
+				// send as individual mouse event
+				
+				onDocumentMouseDown( touch );
+				
+			}
+		}
+		else {
+		
+			shared.signals.mousedown.dispatch( e );
+			
+		}
         
         e.preventDefault();
         e.stopPropagation();
@@ -137,18 +162,68 @@ var KAIOPUA = (function (main) {
     }
     
     function onDocumentMouseUp( e ) {
-        shared.signals.mouseup.dispatch( e );
+		
+		var eOriginal = e.originalEvent, i, l, fingers, touch;
+		
+		// is touch event
+		
+		if (typeof eOriginal !== "undefined" && typeof eOriginal.touches !== "undefined" && typeof eOriginal.changedTouches !== "undefined"){
+			
+			// for each finger involved in the event
+			
+			fingers = eOriginal.changedTouches;
+			
+			for( i = 0, l = fingers.length; i < l; i += 1 ) {
+				
+				touch = fingers[i];
+				
+				// send as individual mouse event
+				
+				onDocumentMouseUp( touch );
+				
+			}
+		}
+		else {
+			
+			shared.signals.mouseup.dispatch( e );
         
+		}
+		
         e.preventDefault();
         e.stopPropagation();
         return false;
     }
     
     function onDocumentMouseMove( e ) {
-        shared.mouse.x = e.clientX;
-        shared.mouse.y = e.clientY;
-        
-        shared.signals.mousemoved.dispatch( e );
+		
+		var eOriginal = e.originalEvent, i, l, fingers, touch;
+		
+		// is touch event
+		
+		if (typeof eOriginal !== "undefined" && typeof eOriginal.touches !== "undefined" && typeof eOriginal.changedTouches !== "undefined"){
+			
+			// for each finger involved in the event
+			
+			fingers = eOriginal.changedTouches;
+			
+			for( i = 0, l = fingers.length; i < l; i += 1 ) {
+				
+				touch = fingers[i];
+				
+				// send as individual mouse event
+				
+				onDocumentMouseMove( touch );
+				
+			}
+		}
+		else {
+			
+			shared.mouse.x = e.clientX;
+			shared.mouse.y = e.clientY;
+			
+			shared.signals.mousemoved.dispatch( e );
+			
+		}
         
         e.preventDefault();
         e.stopPropagation();

@@ -24,7 +24,11 @@ var KAIOPUA = (function (main) {
 		cameraFreelookControls,
 		keybindings = {},
 		keybindingsDefault = {},
-		playerCharacter;
+		playerCharacter,
+		line1,
+		line2,
+		line3,
+		line4;
 	
 	/*===================================================
     
@@ -215,8 +219,8 @@ var KAIOPUA = (function (main) {
 			keyup: function () { console.log('key up: r'); }
 		};
 		
-		kbMap[ '70' /*r*/ ] = kbMap[ 'f' ] = {
-			keyup: function () { console.log('key up: f'); }
+		kbMap[ '70' /*f*/ ] = kbMap[ 'f' ] = {
+			keyup: camera_toggle_free_look
 		};
 		
 		// set default as current
@@ -233,21 +237,68 @@ var KAIOPUA = (function (main) {
 	
 	function init_character () {
 		
+		playerCharacter = {};
+		
+		// model
+		
 		var mat = new THREE.MeshNormalMaterial();
 		
 		var playerCharacterGeometry = new THREE.CubeGeometry( 50, 100, 50 );
-	
-		playerCharacter = objectmaker.make_model({
+		
+		// three
+		
+		playerCharacter.model = objectmaker.make_model({
 			geometry: playerCharacterGeometry,
 			materials: mat
 		});
 		
-		playerCharacter.mesh.position.set( 0, 1900, 0 );
-	
-		playerCharacter.rigidBody = physics.translate( playerCharacter.mesh, {
+		playerCharacter.model.mesh.position.set( 0, 0, 1800 );
+		
+		// rigidbody
+		
+		playerCharacter.model.rigidBody = physics.translate( playerCharacter.model.mesh, {
 			bodyType: 'box',
 			rotatable: false
 		});
+		
+		// initial orientation
+		
+		playerCharacter.orientation = new THREE.Quaternion().copy( playerCharacter.model.mesh.quaternion );
+		
+		
+		// lines for testing
+		
+		var geom = new THREE.Geometry();
+		geom.vertices.push( new THREE.Vertex( new THREE.Vector3(-100, 0, 0) ) );
+		geom.vertices.push( new THREE.Vertex( new THREE.Vector3( 100, 0, 0) ) );
+		
+		var lineMat1 = new THREE.LineBasicMaterial( { color: 0xff0000, opacity: 1, linewidth: 3 } );
+		
+		line1 = new THREE.Line(geom, lineMat1);
+		
+		var geom2 = new THREE.Geometry();
+		geom2.vertices.push( new THREE.Vertex( new THREE.Vector3(-100, 0, 0) ) );
+		geom2.vertices.push( new THREE.Vertex( new THREE.Vector3( 100, 0, 0) ) );
+		
+		var lineMat2 = new THREE.LineBasicMaterial( { color: 0x00ff00, opacity: 1, linewidth: 3 } );
+		
+		line2 = new THREE.Line(geom2, lineMat2);
+		
+		var geom3 = new THREE.Geometry();
+		geom3.vertices.push( new THREE.Vertex( new THREE.Vector3(-100, 0, 0) ) );
+		geom3.vertices.push( new THREE.Vertex( new THREE.Vector3( 100, 0, 0) ) );
+		
+		var lineMat3 = new THREE.LineBasicMaterial( { color: 0x00ffff, opacity: 1, linewidth: 3 } );
+		
+		line3 = new THREE.Line(geom3, lineMat3);
+		
+		var geom4 = new THREE.Geometry();
+		geom4.vertices.push( new THREE.Vertex( new THREE.Vector3(-100, 0, 0) ) );
+		geom4.vertices.push( new THREE.Vertex( new THREE.Vector3( 100, 0, 0) ) );
+		
+		var lineMat4 = new THREE.LineBasicMaterial( { color: 0xff00ff, opacity: 1, linewidth: 3 } );
+		
+		line4 = new THREE.Line(geom4, lineMat4);
 		
 	}
 	
@@ -319,6 +370,21 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
+	function camera_toggle_free_look () {
+		
+		if ( cameraMode === cameraModes.freelook ) {
+			
+			set_camera_mode();
+			
+		}
+		else {
+			
+			set_camera_mode( 'freelook' );
+			
+		}
+		
+	}
+	
 	function camera_free_look () {
 		
 		// update camera controls
@@ -339,7 +405,7 @@ var KAIOPUA = (function (main) {
 			camOffsetRotHalf,
 			camPosNew;
 		
-		pcMesh = playerCharacter.mesh;
+		pcMesh = playerCharacter.model.mesh;
 		pcQuat = pcMesh.quaternion;
 		
 		camPosNew = pcMesh.position.clone();
@@ -465,40 +531,130 @@ var KAIOPUA = (function (main) {
 	function update_character () {
 		
 		var pc = playerCharacter,
-			rb = pc.rigidBody,
+			pcModel = pc.model,
+			pcRot = pc.orientation,
+			pcRotExpected,
+			pcRotMat,
+			rb = pcModel.rigidBody,
 			rbState = rb.get_currentState(),
 			rbMass = rb.get_mass(),
-			rbPos = rbState.position,
-			rbRot = rbState.orientation,
+			rbRotNew,
 			gravitySource = {
 				pos: new jiglib.Vector3D()
 			},
-			rbToGravityV,
-			gravityNew = new jiglib.Vector3D();
+			gravityDir,
+			gravityPull,
+			forceGravity = world.gravityMagnitude * rb.get_mass(),
+			upDirBase = new jiglib.Vector3D( 0, 1, 0 ),
+			upDirNew,
+			upDirDiffAxis,
+			upDirDiffAngle;
 		
 		// get normalized vector between character and gravity source
 		
-		rbToGravityV = gravitySource.pos.subtract( rbPos )
-		//rbToGravityV.normalize();
-		rbToGravityV.scaleBy( world.gravityMagnitude );
-		//rbToGravityV.negate();
+		gravityDir = gravitySource.pos.subtract( rbState.position )
+		gravityDir.normalize();
+		
+		// get pull of gravity
+		
+		gravityPull = gravityDir.clone();
+		gravityPull.scaleBy( forceGravity );
 		
 		// apply world impulse
+		rb.applyWorldImpulse( gravityPull, gravitySource.pos, true );
 		
-		rb.applyWorldImpulse( rbToGravityV, gravitySource.pos, true );
+		// set expected rotation
 		
+		upDirNew = gravityDir.clone().negate();
+		upDirNew.normalize();
+		
+		upDirDiffAngle = Math.acos( upDirBase.dotProduct( upDirNew ) ) * -1;
+		
+		upDirDiffAxis = upDirBase.crossProduct( upDirNew );
+		upDirDiffAxis.normalize();
+		
+		pcRotExpected = new THREE.Quaternion();
+		pcRotExpected.setFromAxisAngle( upDirDiffAxis, upDirDiffAngle );
+		
+		pcRotMat = new THREE.Matrix4().setRotationFromQuaternion( pcRotExpected );
+		
+		rbRotNew = new jiglib.Matrix3D( pcRotMat.flatten() );
+		
+		rbState.orientation = rbRotNew;
+		
+		// line testing
+		
+		var normalX = new jiglib.Vector3D( 0, 0, 1 ).crossProduct( gravityDir );
+		var normalZ = normalX.crossProduct( gravityDir );
+		
+		normalX.normalize();
+		normalZ.normalize();
+		
+		/*
+		var angleX = Math.acos( right.dotProduct( normalX ) ) * -1;
+		var angleZ = Math.acos( forward.dotProduct( normalZ ) ) * -1;
+		
+		var axisX = right.crossProduct( normalX );
+		var axisZ = forward.crossProduct( normalZ );
+		
+		axisX.normalize();
+		axisZ.normalize();
+		
+		var qx = new THREE.Quaternion();
+		qx.setFromAxisAngle( axisX, angleX );
+		var qy = new THREE.Quaternion();
+		qy.setFromAxisAngle( axisY, angleY );
+		var qz = new THREE.Quaternion();
+		qz.setFromAxisAngle( axisZ, angleZ );
+		*/
+		
+		var lineStart = new THREE.Vector3( normalZ.x, normalZ.y, normalZ.z );
+		lineStart.addSelf( rbState.position );
+		var normalClone = normalZ.clone().scaleBy( 100 );
+		var lineEnd = lineStart.clone();
+		lineEnd.addSelf( normalClone );
+		
+		line1.geometry.vertices[0].position = lineStart;
+		line1.geometry.vertices[1].position = lineEnd;
+		line1.geometry.__dirtyVertices = true;
+		line1.geometry.__dirtyElements = true;
+		
+		
+		var ls2 = new THREE.Vector3( normalX.x, normalX.y, normalX.z );
+		ls2.addSelf( rbState.position );
+		var nc2 = normalX.clone().scaleBy( 100 );
+		var le2 = ls2.clone();
+		le2.addSelf( nc2 );
+		
+		line2.geometry.vertices[0].position = ls2;
+		line2.geometry.vertices[1].position = le2;
+		line2.geometry.__dirtyVertices = true;
+		line2.geometry.__dirtyElements = true;
+		
+		
+		var ls3 = new THREE.Vector3( upDirNew.x, upDirNew.y, upDirNew.z );
+		ls3.addSelf( rbState.position );
+		var nc3 = upDirNew.clone().scaleBy( 100 );
+		var le3 = ls3.clone();
+		le3.addSelf( nc3 );
+		
+		line3.geometry.vertices[0].position = ls3;
+		line3.geometry.vertices[1].position = le3;
+		line3.geometry.__dirtyVertices = true;
+		line3.geometry.__dirtyElements = true;
 	}
 	
 	function characterMove ( direction ) {
 		
 		var pc = playerCharacter,
-			rb = pc.rigidBody,
+			pcModel = pc.model,
+			rb = pcModel.rigidBody,
 			rbState = rb.get_currentState(),
 			rbPos = rbState.position;
 			console.log('character move');
 			
 			rb.setLineVelocity( new jiglib.Vector3D( 200, 0, 0 ) );
-		
+			
 	}
 	
 	/*===================================================
@@ -543,29 +699,34 @@ var KAIOPUA = (function (main) {
 		
 		scene = game.scene;
 		
-		scene.add( playerCharacter.mesh );
+		scene.add( line1 );
+		scene.add( line2 );
+		scene.add( line3 );
+		scene.add( line4 );
 		
-		physics.add( playerCharacter.mesh, { rigidBody: playerCharacter.rigidBody } );
+		scene.add( playerCharacter.model.mesh );
+		
+		physics.add( playerCharacter.model.mesh, { rigidBody: playerCharacter.model.rigidBody } );
 		
 	}
 	
 	function hide () {
 		
-		scene.remove( playerCharacter.mesh );
+		scene.remove( playerCharacter.model.mesh );
 		
-		physics.remove( playerCharacter.mesh, { rigidBody: playerCharacter.rigidBody } );
+		physics.remove( playerCharacter.model.mesh, { rigidBody: playerCharacter.model.rigidBody } );
 		
 	}
 	
 	function update () {
 		
-		// camera
-		
-		update_camera();
-		
 		// character
 		
 		update_character();
+		
+		// camera
+		
+		update_camera();
 		
 	}
 	
