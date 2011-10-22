@@ -196,7 +196,7 @@ var KAIOPUA = (function (main) {
         // above and infront of camera
 		
         var camP = camera.position.clone();
-        var newP = new THREE.Vector3( 0, 200, -500);
+        var newP = new THREE.Vector3( 0, 200, -100);
 		
         camera.quaternion.multiplyVector3( newP );
         

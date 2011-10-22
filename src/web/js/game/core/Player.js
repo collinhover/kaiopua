@@ -100,8 +100,11 @@ var KAIOPUA = (function (main) {
 		
 		cameraFollowSettings = {
 			offset: {
-				pos: new THREE.Vector3( 0, 0, 200 ),
-				rot: new THREE.Quaternion( -0.1, 0.1, 0, 1 )
+				pos: new THREE.Vector3( 0, 0, 250 ),
+				posRotated: new THREE.Vector3(),
+				rot: new THREE.Vector3( -0.2, 0, 0 ),
+				rotQuaternion: new THREE.Quaternion(),
+				rotHalfQuaternion: new THREE.Quaternion()
 			},
 			clamps: {
 				minRotX: -0.4,
@@ -148,40 +151,24 @@ var KAIOPUA = (function (main) {
 		
 		// wasd / uldr
 		
-		kbMap[ '38' /*up*/ ] = {
-			keydown: function () { console.log('key down: up'); },
-			keyup: function () { console.log('key up: up'); }
-		};
-		kbMap[ '87' /*w*/ ] = kbMap[ 'w' ] = {
-			keydown: function () { characterMove(); },
-			keyup: function () { console.log('key up: w'); }
+		kbMap[ '38' /*up*/ ] = kbMap[ '87' /*w*/ ] = kbMap[ 'w' ] = {
+			keydown: function () { characterMove( 'forward' ); },
+			keyup: function () { characterMove( 'forward', true ); }
 		};
 		
-		kbMap[ '40' /*down*/ ] = {
-			keydown: function () { console.log('key down: down'); },
-			keyup: function () { console.log('key up: down'); }
-		};
-		kbMap[ '83' /*s*/ ] = kbMap[ 's' ] = {
-			keydown: function () { console.log('key down: s'); },
-			keyup: function () { console.log('key up: s'); }
+		kbMap[ '40' /*down*/ ] = kbMap[ '83' /*s*/ ] = kbMap[ 's' ] = {
+			keydown: function () { characterMove( 'back' ); },
+			keyup: function () { characterMove( 'back', true ); }
 		};
 		
-		kbMap[ '37' /*left*/ ] = {
-			keydown: function () { console.log('key down: left'); },
-			keyup: function () { console.log('key up: left'); }
-		};
-		kbMap[ '65' /*a*/ ] = kbMap[ 'a' ] = {
-			keydown: function () { console.log('key down: a'); },
-			keyup: function () { console.log('key up: a'); }
+		kbMap[ '37' /*left*/ ] = kbMap[ '65' /*a*/ ] = kbMap[ 'a' ] = {
+			keydown: function () { characterMove( 'turnLeft' ); },
+			keyup: function () { characterMove( 'turnLeft', true ); }
 		};
 		
-		kbMap[ '39' /*right*/ ] = {
-			keydown: function () { console.log('key down: right'); },
-			keyup: function () { console.log('key up: right'); }
-		};
-		kbMap[ '68' /*d*/ ] = kbMap[ 'd' ] = {
-			keydown: function () { console.log('key down: d'); },
-			keyup: function () { console.log('key up: d'); }
+		kbMap[ '39' /*right*/ ] = kbMap[ '68' /*d*/ ] = kbMap[ 'd' ] = {
+			keydown: function () { characterMove( 'turnRight' ); },
+			keyup: function () { characterMove( 'turnRight', true ); }
 		};
 		
 		// numbers
@@ -252,7 +239,7 @@ var KAIOPUA = (function (main) {
 			materials: mat
 		});
 		
-		playerCharacter.model.mesh.position.set( 0, 0, 1800 );
+		playerCharacter.model.mesh.position.set( 0, 1800, 0 );
 		
 		// rigidbody
 		
@@ -261,10 +248,30 @@ var KAIOPUA = (function (main) {
 			rotatable: false
 		});
 		
-		// initial orientation
+		// movement
 		
-		playerCharacter.orientation = new THREE.Quaternion().copy( playerCharacter.model.mesh.quaternion );
-		
+		playerCharacter.movement = {
+			move: {
+				speed: 200,
+				vector: new THREE.Vector3()
+			},
+			rotate: {
+				speed: 0.01,
+				vector: new THREE.Vector3(),
+				update: new THREE.Quaternion(),
+				record: new THREE.Quaternion()
+			},
+			state: {
+				up: 0, 
+				down: 0, 
+				left: 0, 
+				right: 0, 
+				forward: 0, 
+				back: 0, 
+				turnLeft: 0, 
+				turnRight: 0
+			}
+		}
 		
 		// lines for testing
 		
@@ -398,29 +405,24 @@ var KAIOPUA = (function (main) {
 			srcOffsetPos = offset.pos,
 			srcOffsetRot = offset.rot,
 			clamps = cameraFollowSettings.clamps,
-			pcMesh,
-			pcQuat,
-			camOffsetPos,
-			camOffsetRot,
-			camOffsetRotHalf,
-			camPosNew;
-		
-		pcMesh = playerCharacter.model.mesh;
-		pcQuat = pcMesh.quaternion;
+			pcMesh = playerCharacter.model.mesh,
+			pcQuaternion = pcMesh.quaternion,
+			camOffsetPos = offset.posRotated,
+			camOffsetRot = offset.rotQuaternion,
+			camOffsetRotHalf = offset.rotHalfQuaternion;
 		
 		camPosNew = pcMesh.position.clone();
-		camOffsetPos = new THREE.Vector3( srcOffsetPos.x, srcOffsetPos.y, srcOffsetPos.z );
-		camOffsetRot = new THREE.Quaternion( srcOffsetRot.x, srcOffsetRot.y, srcOffsetRot.z, srcOffsetRot.w );
-		camOffsetRotHalf = new THREE.Quaternion( camOffsetRot.x * 0.5, camOffsetRot.y * 0.5, camOffsetRot.z * 0.5, camOffsetRot.w);
+		camOffsetPos.set( srcOffsetPos.x, srcOffsetPos.y, srcOffsetPos.z );
+		camOffsetRot.set( srcOffsetRot.x, srcOffsetRot.y, srcOffsetRot.z, 1 ).normalize();
+		camOffsetRotHalf.set( camOffsetRot.x * 0.5, camOffsetRot.y * 0.5, camOffsetRot.z * 0.5, camOffsetRot.w).normalize();
 		
-		pcQuat.multiplyVector3( camOffsetPos );
 		camOffsetRot.multiplyVector3( camOffsetPos );
+		pcQuaternion.multiplyVector3( camOffsetPos );
 		
-		camPosNew.addSelf( camOffsetPos );
+		camera.position.copy( pcMesh.position ).addSelf( camOffsetPos );
+		//camera.position.addSelf( camPosNew.subSelf( camera.position ).multiplyScalar( 0.1 ) );
 		
-		camera.position = camPosNew;
-		
-		camera.quaternion.copy( pcQuat );
+		camera.quaternion.copy( pcQuaternion );
 		
 		camera.quaternion.multiplySelf( camOffsetRotHalf );
 		
@@ -531,24 +533,35 @@ var KAIOPUA = (function (main) {
 	function update_character () {
 		
 		var pc = playerCharacter,
-			pcModel = pc.model,
-			pcRot = pc.orientation,
-			pcRotExpected,
+			model = pc.model,
+			movement = pc.movement,
+			move = movement.move,
+			rotate = movement.rotate,
+			state = movement.state,
+			moveVec = move.vector,
+			moveSpeed = move.speed,
+			rotateVec = rotate.vector,
+			rotateRecord = rotate.record,
+			rotateUpdate = rotate.update,
+			rotateSpeed = rotate.speed,
+			pcRotQ,
 			pcRotMat,
-			rb = pcModel.rigidBody,
+			rb = model.rigidBody,
 			rbState = rb.get_currentState(),
 			rbMass = rb.get_mass(),
 			rbRotNew,
+			linVelForce,
 			gravitySource = {
 				pos: new jiglib.Vector3D()
 			},
+			gravityForce = world.gravityMagnitude * rbMass,
 			gravityDir,
 			gravityPull,
-			forceGravity = world.gravityMagnitude * rb.get_mass(),
 			upDirBase = new jiglib.Vector3D( 0, 1, 0 ),
 			upDirNew,
 			upDirDiffAxis,
-			upDirDiffAngle;
+			upDirDiffAngle,
+			upDirQ;
 		
 		// get normalized vector between character and gravity source
 		
@@ -558,10 +571,7 @@ var KAIOPUA = (function (main) {
 		// get pull of gravity
 		
 		gravityPull = gravityDir.clone();
-		gravityPull.scaleBy( forceGravity );
-		
-		// apply world impulse
-		rb.applyWorldImpulse( gravityPull, gravitySource.pos, true );
+		gravityPull.scaleBy( gravityForce );
 		
 		// set expected rotation
 		
@@ -573,14 +583,54 @@ var KAIOPUA = (function (main) {
 		upDirDiffAxis = upDirBase.crossProduct( upDirNew );
 		upDirDiffAxis.normalize();
 		
-		pcRotExpected = new THREE.Quaternion();
-		pcRotExpected.setFromAxisAngle( upDirDiffAxis, upDirDiffAngle );
+		upDirQ = new THREE.Quaternion();
+		upDirQ.setFromAxisAngle( upDirDiffAxis, upDirDiffAngle );
 		
-		pcRotMat = new THREE.Matrix4().setRotationFromQuaternion( pcRotExpected );
+		// commit rotation update
+		
+		rotateUpdate.set( rotateVec.x * rotateSpeed, rotateVec.y * rotateSpeed, rotateVec.z * rotateSpeed, 1 ).normalize();
+		
+		rotateRecord.multiplySelf( rotateUpdate );
+		
+		// set final rotation
+		pcRotQ = new THREE.Quaternion();
+		pcRotQ.multiply( rotateRecord, upDirQ );
+		
+		// commit final rotation
+		
+		pcRotMat = new THREE.Matrix4().setRotationFromQuaternion( pcRotQ );
 		
 		rbRotNew = new jiglib.Matrix3D( pcRotMat.flatten() );
 		
 		rbState.orientation = rbRotNew;
+		
+		// commit movement update
+		
+		var moveForce = new THREE.Vector3( moveVec.x, moveVec.y, moveVec.z );
+		
+		moveForce.multiplyScalar( 15 );//moveSpeed );// * rbMass );
+		
+		// diff angle
+		
+		var nonNegUpDirDiffAngle = Math.acos( upDirBase.dotProduct( upDirNew ) );
+		
+		var tempQ1 = new THREE.Quaternion();
+		tempQ1.setFromAxisAngle( upDirDiffAxis, nonNegUpDirDiffAngle );
+		
+		var tempQ2 = new THREE.Quaternion();
+		tempQ2.multiply( rotateRecord, tempQ1 );
+		
+		tempQ2.multiplyVector3( moveForce );
+		
+		console.log( 'moveForce: ' + moveForce.x + ', ' + moveForce.y + ', ' + moveForce.z );
+		
+		// apply world impulse
+		//rb.setLineVelocity( forcesAll );
+		//rbState.linVelocity = rbState.linVelocity.add( moveForce );
+		
+		// apply forces
+		
+		rb.applyWorldImpulse( gravityPull, gravitySource.pos, true );
 		
 		// line testing
 		
@@ -642,18 +692,62 @@ var KAIOPUA = (function (main) {
 		line3.geometry.vertices[1].position = le3;
 		line3.geometry.__dirtyVertices = true;
 		line3.geometry.__dirtyElements = true;
+		
 	}
 	
-	function characterMove ( direction ) {
+	function characterMove ( type, stop ) {
 		
 		var pc = playerCharacter,
-			pcModel = pc.model,
-			rb = pcModel.rigidBody,
-			rbState = rb.get_currentState(),
-			rbPos = rbState.position;
-			console.log('character move');
+			movement = pc.movement,
+			move = movement.move,
+			rotate = movement.rotate,
+			state = movement.state,
+			moveV = move.vector,
+			rotateV = rotate.vector;
+		
+		if ( type === 'turnLeft' ) {
 			
-			rb.setLineVelocity( new jiglib.Vector3D( 200, 0, 0 ) );
+			state.turnLeft = stop === true ? 0 : 1;
+			
+		}
+		else if ( type === 'turnRight' ) {
+			
+			state.turnRight = stop === true ? 0 : 1;
+			
+		}
+		else if ( type === 'forward' ) {
+			
+			state.forward = stop === true ? 0 : 1;
+			
+		}
+		else if ( type === 'back' ) {
+			
+			state.back = stop === true ? 0 : 1;
+			
+		}
+		else if ( type === 'left' ) {
+			
+			state.left = stop === true ? 0 : 1;
+			
+		}
+		else if ( type === 'right' ) {
+			
+			state.right = stop === true ? 0 : 1;
+			
+		}
+		else if ( type === 'up' ) {
+			
+			state.up = stop === true ? 0 : 1;
+			
+		}
+		
+		// update vectors
+		
+		moveV.x = ( state.right - state.left );
+		moveV.y = ( state.up - state.down );
+		moveV.z = ( state.back - state.forward );
+		
+		rotateV.y = ( state.turnRight - state.turnLeft );
 			
 	}
 	
