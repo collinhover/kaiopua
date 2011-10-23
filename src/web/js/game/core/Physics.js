@@ -147,11 +147,14 @@ var KAIOPUA = (function (main) {
 		
 		velocity = init_jig_vec( parameters.velocity );
 		
-		width = parameters.width;
+		// physics width is depth, height is width, depth is height
+		// this might not be the right way to do it
 		
-		height = parameters.height;
+		width = parameters.depth;
 		
-		depth = parameters.depth;
+		height = parameters.width;
+		
+		depth = parameters.height;
 		
 		if ( isNaN( width ) || isFinite( width ) === false ) {
 			

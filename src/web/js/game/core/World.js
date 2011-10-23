@@ -83,15 +83,19 @@ var KAIOPUA = (function (main) {
 	
 	function init_environment () {
 		
+		var normalMat = new THREE.MeshNormalMaterial();
+		
 		// body parts
         
         head = objectmaker.make_model({
             geometry: assets["assets/models/World_Head.js"],
+			materials: normalMat,
 			shading: THREE.FlatShading
         });
 		
 		tail = objectmaker.make_model({
             geometry: assets["assets/models/World_Tail.js"],
+			materials: normalMat,
 			shading: THREE.FlatShading
         });
 		
@@ -101,17 +105,15 @@ var KAIOPUA = (function (main) {
 		
 		// test
 		
-		var groundMat = new THREE.MeshNormalMaterial();
-		
 		var groundGeometry = new THREE.PlaneGeometry( 3000, 3000, 1, 1 );
 		
 		var ground = objectmaker.make_model({
             geometry: groundGeometry,
-			materials: groundMat,
+			materials: normalMat,
 			rotation: new THREE.Vector3( -90, 0, 0 )
         });
 		
-		ground.mesh.position.set( 0, -1640, 0 );
+		ground.mesh.position.set( 0, -2000, 0 );
 		
 		// add to physics
 		ground.rigidBody = physics.translate( ground.mesh, {
@@ -119,6 +121,72 @@ var KAIOPUA = (function (main) {
 		});
 		
 		parts.push( ground );
+		
+		//
+		//
+		//
+		// boxes test grid
+		//
+		//
+		//
+		
+		var make_box = function ( x, y, z ) {
+			var geom = new THREE.CubeGeometry( 50, 50, 50, 1, 1 );
+			
+			// box
+			
+			var box = objectmaker.make_model({
+				geometry: geom,
+				materials: normalMat
+			});
+			
+			box.mesh.position.set( x, y, z );
+			
+			box.rigidBody = physics.translate( box.mesh, {
+				bodyType: 'box'
+			});
+			
+			return box;
+		}
+		
+		var numRings = 6;
+		var radius = 2000;
+		
+		var deltaRotA = Math.PI / (numRings + 1);
+		var rotA = 0;
+		
+		var numBoxPerRing = 8;
+		var deltaRotB = (Math.PI * 2) / (numBoxPerRing);
+		var rotB = 0;
+		
+		for ( var i = 0, l = numRings; i < l; i += 1 ) {
+			
+			rotB = 0;
+			
+			rotA += deltaRotA;
+			
+			if ( rotA > Math.PI ) {
+				
+				rotA = 0;
+				
+			}
+			
+			var ny = radius * Math.cos( rotA );
+			
+			for ( var bi = 0, bl = numBoxPerRing; bi < bl; bi += 1 ) {
+				
+				var nx = radius * Math.sin( rotA ) * Math.cos( rotB );
+				var nz = radius * Math.sin( rotA ) * Math.sin( rotB );
+				
+				var box = make_box( nx, ny, nz );
+				
+				parts.push( box );
+				
+				rotB += deltaRotB;
+			
+			}
+			
+		}
 		
 	}
 	

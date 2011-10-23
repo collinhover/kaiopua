@@ -100,9 +100,9 @@ var KAIOPUA = (function (main) {
 		
 		cameraFollowSettings = {
 			offset: {
-				pos: new THREE.Vector3( 0, 0, 250 ),
+				pos: new THREE.Vector3( 0, -600, 1000 ),//0, 0, 250 ),
 				posRotated: new THREE.Vector3(),
-				rot: new THREE.Vector3( -0.2, 0, 0 ),
+				rot: new THREE.Vector3( -1, 0, 0 ),//-0.2, 0, 0 ),
 				rotQuaternion: new THREE.Quaternion(),
 				rotHalfQuaternion: new THREE.Quaternion()
 			},
@@ -171,6 +171,18 @@ var KAIOPUA = (function (main) {
 			keyup: function () { characterMove( 'turnRight', true ); }
 		};
 		
+		// qe
+		
+		kbMap[ '81' /*q*/ ] = kbMap[ 'q' ] = {
+			keydown: function () { characterMove( 'left' ); },
+			keyup: function () { characterMove( 'left', true ); }
+		};
+		
+		kbMap[ '69' /*e*/ ] = kbMap[ 'e' ] = {
+			keydown: function () { characterMove( 'right' ); },
+			keyup: function () { characterMove( 'right', true ); }
+		};
+		
 		// numbers
 		
 		kbMap[ '49' /*1*/ ] = kbMap[ '1' ] = {
@@ -193,14 +205,6 @@ var KAIOPUA = (function (main) {
 		};
 		
 		// misc
-		
-		kbMap[ '81' /*q*/ ] = kbMap[ 'q' ] = {
-			keyup: function () { console.log('key up: q'); }
-		};
-		
-		kbMap[ '69' /*e*/ ] = kbMap[ 'e' ] = {
-			keyup: function () { console.log('key up: e'); }
-		};
 		
 		kbMap[ '82' /*r*/ ] = kbMap[ 'r' ] = {
 			keyup: function () { console.log('key up: r'); }
@@ -230,12 +234,10 @@ var KAIOPUA = (function (main) {
 		
 		var mat = new THREE.MeshNormalMaterial();
 		
-		var playerCharacterGeometry = new THREE.CubeGeometry( 50, 100, 50 );
-		
 		// three
 		
 		playerCharacter.model = objectmaker.make_model({
-			geometry: playerCharacterGeometry,
+			geometry: assets["assets/models/Hero.js"],
 			materials: mat
 		});
 		
@@ -245,6 +247,9 @@ var KAIOPUA = (function (main) {
 		
 		playerCharacter.model.rigidBody = physics.translate( playerCharacter.model.mesh, {
 			bodyType: 'box',
+			width: 40,
+			height: 100,
+			depth: 40,
 			rotatable: false
 		});
 		
@@ -279,7 +284,7 @@ var KAIOPUA = (function (main) {
 		geom.vertices.push( new THREE.Vertex( new THREE.Vector3(-100, 0, 0) ) );
 		geom.vertices.push( new THREE.Vertex( new THREE.Vector3( 100, 0, 0) ) );
 		
-		var lineMat1 = new THREE.LineBasicMaterial( { color: 0xff0000, opacity: 1, linewidth: 3 } );
+		var lineMat1 = new THREE.LineBasicMaterial( { color: 0xff0000, opacity: 1, linewidth: 8 } );
 		
 		line1 = new THREE.Line(geom, lineMat1);
 		
@@ -287,7 +292,7 @@ var KAIOPUA = (function (main) {
 		geom2.vertices.push( new THREE.Vertex( new THREE.Vector3(-100, 0, 0) ) );
 		geom2.vertices.push( new THREE.Vertex( new THREE.Vector3( 100, 0, 0) ) );
 		
-		var lineMat2 = new THREE.LineBasicMaterial( { color: 0x00ff00, opacity: 1, linewidth: 3 } );
+		var lineMat2 = new THREE.LineBasicMaterial( { color: 0x00ff00, opacity: 1, linewidth: 8 } );
 		
 		line2 = new THREE.Line(geom2, lineMat2);
 		
@@ -295,7 +300,7 @@ var KAIOPUA = (function (main) {
 		geom3.vertices.push( new THREE.Vertex( new THREE.Vector3(-100, 0, 0) ) );
 		geom3.vertices.push( new THREE.Vertex( new THREE.Vector3( 100, 0, 0) ) );
 		
-		var lineMat3 = new THREE.LineBasicMaterial( { color: 0x00ffff, opacity: 1, linewidth: 3 } );
+		var lineMat3 = new THREE.LineBasicMaterial( { color: 0x0000ff, opacity: 1, linewidth: 8 } );
 		
 		line3 = new THREE.Line(geom3, lineMat3);
 		
@@ -303,7 +308,7 @@ var KAIOPUA = (function (main) {
 		geom4.vertices.push( new THREE.Vertex( new THREE.Vector3(-100, 0, 0) ) );
 		geom4.vertices.push( new THREE.Vertex( new THREE.Vector3( 100, 0, 0) ) );
 		
-		var lineMat4 = new THREE.LineBasicMaterial( { color: 0xff00ff, opacity: 1, linewidth: 3 } );
+		var lineMat4 = new THREE.LineBasicMaterial( { color: 0xff00ff, opacity: 1, linewidth: 8 } );
 		
 		line4 = new THREE.Line(geom4, lineMat4);
 		
@@ -423,7 +428,6 @@ var KAIOPUA = (function (main) {
 		//camera.position.addSelf( camPosNew.subSelf( camera.position ).multiplyScalar( 0.1 ) );
 		
 		camera.quaternion.copy( pcQuaternion );
-		
 		camera.quaternion.multiplySelf( camOffsetRotHalf );
 		
 	}
@@ -554,11 +558,18 @@ var KAIOPUA = (function (main) {
 			gravitySource = {
 				pos: new jiglib.Vector3D()
 			},
-			gravityForce = world.gravityMagnitude * rbMass,
+			gravityForce = 100,//world.gravityMagnitude * rbMass,
 			gravityDir,
 			gravityPull,
-			upDirBase = new jiglib.Vector3D( 0, 1, 0 ),
-			upDirNew,
+			up = new jiglib.Vector3D( 0, 1, 0 ),
+			down = new jiglib.Vector3D( 0, -1, 0 ),
+			forward = new jiglib.Vector3D( 0, 0, -1 ),
+			back = new jiglib.Vector3D( 0, 0, 1 ),
+			right = new jiglib.Vector3D( 1, 0, 0 ),
+			left = new jiglib.Vector3D( -1, 0, 0 ),
+			upNew,
+			forwardNew,
+			rightNew,
 			upDirDiffAxis,
 			upDirDiffAngle,
 			upDirQ;
@@ -573,14 +584,173 @@ var KAIOPUA = (function (main) {
 		gravityPull = gravityDir.clone();
 		gravityPull.scaleBy( gravityForce );
 		
+		// get new right / up / forward axes based on gravity
+		
+		upNew = gravityDir.clone().negate();
+		upNew.normalize();
+		
+		// find new forward vector by crossing
+		// the new up direction with the cardinal axis 
+		// that corresponds to the new up vector's component closest to zero
+		
+		var upMagX = Math.abs(upNew.x);
+		var upMagY = Math.abs(upNew.y);
+		var upMagZ = Math.abs(upNew.z);
+		var upMagMin = Math.min( upMagX, upMagY, upMagZ );
+		//console.log( upNew.x + ', ' + upNew.y + ', ' + upNew.z );
+		
+		if ( upMagX === 0 && upMagZ === 0 ) {
+			
+			if ( upNew.y === -1 ) {
+				forwardNew = back;
+				rightNew = left;
+			}
+			else {
+				forwardNew = forward;
+				rightNew = right;
+			}
+			
+		}
+		else if ( upMagX === 0 && upMagY === 0 ) {
+			
+			if ( upNew.z === -1 ) {
+				forwardNew = down;
+				rightNew = right;
+			}
+			else {
+				forwardNew = up;
+				rightNew = right;
+			}
+			
+		}
+		else if ( upMagY === 0 && upMagZ === 0 ) {
+			
+			if ( upNew.x === -1 ) {
+				forwardNew = forward;
+				rightNew = up;
+			}
+			else {
+				forwardNew = forward;
+				rightNew = down;
+			}
+			
+		}
+		else if ( upMagX === upMagMin ) {
+			console.log( 'XXX');
+			rightNew = new jiglib.Vector3D( upNew.y, -upNew.x, 0);
+			rightNew.normalize();
+			
+			forwardNew = rightNew.crossProduct( gravityDir );
+			forwardNew.normalize();
+			
+		}
+		else if ( upMagY === upMagMin ) {
+			console.log( 'y   y');
+			rightNew = new jiglib.Vector3D( upNew.y, -upNew.x, 0);
+			rightNew.normalize();
+			
+			forwardNew = rightNew.crossProduct( gravityDir );
+			forwardNew.normalize();
+			
+		}
+		else {
+			console.log( 'zzzzzz');
+			
+			rightNew = new jiglib.Vector3D( upNew.y, -upNew.x, 0);
+			rightNew.normalize();
+			
+			forwardNew = rightNew.crossProduct( gravityDir );
+			forwardNew.normalize();
+			
+		}
+		
+		/*
+		if ( upMagX === upMagMin ) {
+			console.log('XXX');
+			forwardNew = right.crossProduct( upNew );
+			forwardNew.normalize();
+			
+			rightNew = gravityDir.crossProduct( forwardNew );
+			rightNew.normalize();
+			
+		}
+		else if ( upMagY === upMagMin ) {
+			
+			
+			if ( upNew.x < 0 ) {
+				
+				if ( upNew.z < 0 ) {
+					console.log('Y -x -z');
+					
+					forwardNew = upNew.crossProduct( up );
+					forwardNew.normalize();
+					
+					rightNew = gravityDir.crossProduct( forwardNew );
+					rightNew.normalize();
+					
+				}
+				else {
+					console.log('Y -x +z');
+					
+					forwardNew = upNew.crossProduct( up );
+					forwardNew.normalize();
+					
+					rightNew = gravityDir.crossProduct( forwardNew );
+					rightNew.normalize();
+					
+				}
+				
+			}
+			else {
+				
+				if ( upNew.z < 0 ) {
+					
+					console.log('Y +x -z');
+					
+					forwardNew = up.crossProduct( upNew );
+					forwardNew.normalize();
+					
+					rightNew = gravityDir.crossProduct( forwardNew );
+					rightNew.normalize();
+					
+				}
+				else {
+					console.log('Y +x +z');
+					
+					forwardNew = up.crossProduct( upNew );
+					forwardNew.normalize();
+					
+					rightNew = gravityDir.crossProduct( forwardNew );
+					rightNew.normalize();
+					
+				}
+			}
+			
+		}
+		else {
+			console.log('zzzzzzzzz');
+			
+			rightNew = upNew.crossProduct( forward );
+			rightNew.normalize();
+			
+			forwardNew = rightNew.crossProduct( gravityDir );
+			forwardNew.normalize();
+			
+		}
+		*/
+		
+		/*
+		forwardNew = up.crossProduct( upNew );
+		forwardNew.normalize();
+		
+		rightNew = gravityDir.crossProduct( forwardNew );
+		rightNew.normalize();
+		*/
 		// set expected rotation
 		
-		upDirNew = gravityDir.clone().negate();
-		upDirNew.normalize();
+		upDirDiffAngle = Math.acos( up.dotProduct( upNew ) );// * -1 );
 		
-		upDirDiffAngle = Math.acos( upDirBase.dotProduct( upDirNew ) ) * -1;
-		
-		upDirDiffAxis = upDirBase.crossProduct( upDirNew );
+		upDirDiffAxis = up.crossProduct( gravityDir );
 		upDirDiffAxis.normalize();
 		
 		upDirQ = new THREE.Quaternion();
@@ -608,59 +778,31 @@ var KAIOPUA = (function (main) {
 		
 		var moveForce = new THREE.Vector3( moveVec.x, moveVec.y, moveVec.z );
 		
-		moveForce.multiplyScalar( 15 );//moveSpeed );// * rbMass );
+		moveForce.x = moveVec.z * forwardNew.x + moveVec.x * rightNew.x + moveVec.y * upNew.x;
+		moveForce.y = moveVec.z * forwardNew.y + moveVec.x * rightNew.y + moveVec.y * upNew.y;
+		moveForce.z = moveVec.z * forwardNew.z + moveVec.x * rightNew.z + moveVec.y * upNew.z;
+	
+		moveForce.multiplyScalar( 400 );//moveSpeed );// * rbMass );
 		
-		// diff angle
+		//moveForce = rbState.orientation.transformVector( new jiglib.Vector3D( moveForce.x, moveForce.y, moveForce.z ) );
 		
-		var nonNegUpDirDiffAngle = Math.acos( upDirBase.dotProduct( upDirNew ) );
+		//console.log( 'moveForce: ' + forwardNew.x + ', ' + forwardNew.y + ', ' + forwardNew.z );
 		
-		var tempQ1 = new THREE.Quaternion();
-		tempQ1.setFromAxisAngle( upDirDiffAxis, nonNegUpDirDiffAngle );
-		
-		var tempQ2 = new THREE.Quaternion();
-		tempQ2.multiply( rotateRecord, tempQ1 );
-		
-		tempQ2.multiplyVector3( moveForce );
-		
-		console.log( 'moveForce: ' + moveForce.x + ', ' + moveForce.y + ', ' + moveForce.z );
+		var forcesAll = gravityPull.add( moveForce );
 		
 		// apply world impulse
-		//rb.setLineVelocity( forcesAll );
+		rb.setLineVelocity( forcesAll );
 		//rbState.linVelocity = rbState.linVelocity.add( moveForce );
 		
 		// apply forces
 		
-		rb.applyWorldImpulse( gravityPull, gravitySource.pos, true );
+		//rb.applyWorldImpulse( gravityPull, gravitySource.pos, true );
 		
 		// line testing
 		
-		var normalX = new jiglib.Vector3D( 0, 0, 1 ).crossProduct( gravityDir );
-		var normalZ = normalX.crossProduct( gravityDir );
-		
-		normalX.normalize();
-		normalZ.normalize();
-		
-		/*
-		var angleX = Math.acos( right.dotProduct( normalX ) ) * -1;
-		var angleZ = Math.acos( forward.dotProduct( normalZ ) ) * -1;
-		
-		var axisX = right.crossProduct( normalX );
-		var axisZ = forward.crossProduct( normalZ );
-		
-		axisX.normalize();
-		axisZ.normalize();
-		
-		var qx = new THREE.Quaternion();
-		qx.setFromAxisAngle( axisX, angleX );
-		var qy = new THREE.Quaternion();
-		qy.setFromAxisAngle( axisY, angleY );
-		var qz = new THREE.Quaternion();
-		qz.setFromAxisAngle( axisZ, angleZ );
-		*/
-		
-		var lineStart = new THREE.Vector3( normalZ.x, normalZ.y, normalZ.z );
+		var lineStart = new THREE.Vector3( forwardNew.x, forwardNew.y, forwardNew.z );
 		lineStart.addSelf( rbState.position );
-		var normalClone = normalZ.clone().scaleBy( 100 );
+		var normalClone = forwardNew.clone().scaleBy( 100 );
 		var lineEnd = lineStart.clone();
 		lineEnd.addSelf( normalClone );
 		
@@ -670,9 +812,9 @@ var KAIOPUA = (function (main) {
 		line1.geometry.__dirtyElements = true;
 		
 		
-		var ls2 = new THREE.Vector3( normalX.x, normalX.y, normalX.z );
+		var ls2 = new THREE.Vector3( rightNew.x, rightNew.y, rightNew.z );
 		ls2.addSelf( rbState.position );
-		var nc2 = normalX.clone().scaleBy( 100 );
+		var nc2 = rightNew.clone().scaleBy( 100 );
 		var le2 = ls2.clone();
 		le2.addSelf( nc2 );
 		
@@ -682,9 +824,9 @@ var KAIOPUA = (function (main) {
 		line2.geometry.__dirtyElements = true;
 		
 		
-		var ls3 = new THREE.Vector3( upDirNew.x, upDirNew.y, upDirNew.z );
+		var ls3 = new THREE.Vector3( upNew.x, upNew.y, upNew.z );
 		ls3.addSelf( rbState.position );
-		var nc3 = upDirNew.clone().scaleBy( 100 );
+		var nc3 = upNew.clone().scaleBy( 100 );
 		var le3 = ls3.clone();
 		le3.addSelf( nc3 );
 		
@@ -745,7 +887,7 @@ var KAIOPUA = (function (main) {
 		
 		moveV.x = ( state.right - state.left );
 		moveV.y = ( state.up - state.down );
-		moveV.z = ( state.back - state.forward );
+		moveV.z = ( state.forward - state.back );
 		
 		rotateV.y = ( state.turnRight - state.turnLeft );
 			
