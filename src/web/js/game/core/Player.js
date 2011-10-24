@@ -558,13 +558,13 @@ var KAIOPUA = (function (main) {
 			gravitySource = {
 				pos: new jiglib.Vector3D()
 			},
-			gravityForce = 100,//world.gravityMagnitude * rbMass,
-			gravityDir,
+			gravityForce = 200,//world.gravityMagnitude * rbMass,
+			gravityUp,
 			gravityPull,
 			up = new jiglib.Vector3D( 0, 1, 0 ),
 			down = new jiglib.Vector3D( 0, -1, 0 ),
-			forward = new jiglib.Vector3D( 0, 0, -1 ),
-			back = new jiglib.Vector3D( 0, 0, 1 ),
+			forward = new jiglib.Vector3D( 0, 0, 1 ),
+			back = new jiglib.Vector3D( 0, 0, -1 ),
 			right = new jiglib.Vector3D( 1, 0, 0 ),
 			left = new jiglib.Vector3D( -1, 0, 0 ),
 			upNew,
@@ -576,185 +576,13 @@ var KAIOPUA = (function (main) {
 		
 		// get normalized vector between character and gravity source
 		
-		gravityDir = gravitySource.pos.subtract( rbState.position )
-		gravityDir.normalize();
+		gravityUp = rbState.position.subtract( gravitySource.pos );
+		gravityUp.normalize();
 		
 		// get pull of gravity
 		
-		gravityPull = gravityDir.clone();
+		gravityPull = gravityUp.clone().negate();
 		gravityPull.scaleBy( gravityForce );
-		
-		// get new right / up / forward axes based on gravity
-		
-		upNew = gravityDir.clone().negate();
-		upNew.normalize();
-		
-		// find new forward vector by crossing
-		// the new up direction with the cardinal axis 
-		// that corresponds to the new up vector's component closest to zero
-		
-		var upMagX = Math.abs(upNew.x);
-		var upMagY = Math.abs(upNew.y);
-		var upMagZ = Math.abs(upNew.z);
-		var upMagMin = Math.min( upMagX, upMagY, upMagZ );
-		//console.log( upNew.x + ', ' + upNew.y + ', ' + upNew.z );
-		
-		if ( upMagX === 0 && upMagZ === 0 ) {
-			
-			if ( upNew.y === -1 ) {
-				forwardNew = back;
-				rightNew = left;
-			}
-			else {
-				forwardNew = forward;
-				rightNew = right;
-			}
-			
-		}
-		else if ( upMagX === 0 && upMagY === 0 ) {
-			
-			if ( upNew.z === -1 ) {
-				forwardNew = down;
-				rightNew = right;
-			}
-			else {
-				forwardNew = up;
-				rightNew = right;
-			}
-			
-		}
-		else if ( upMagY === 0 && upMagZ === 0 ) {
-			
-			if ( upNew.x === -1 ) {
-				forwardNew = forward;
-				rightNew = up;
-			}
-			else {
-				forwardNew = forward;
-				rightNew = down;
-			}
-			
-		}
-		else if ( upMagX === upMagMin ) {
-			console.log( 'XXX');
-			rightNew = new jiglib.Vector3D( upNew.y, -upNew.x, 0);
-			rightNew.normalize();
-			
-			forwardNew = rightNew.crossProduct( gravityDir );
-			forwardNew.normalize();
-			
-		}
-		else if ( upMagY === upMagMin ) {
-			console.log( 'y   y');
-			rightNew = new jiglib.Vector3D( upNew.y, -upNew.x, 0);
-			rightNew.normalize();
-			
-			forwardNew = rightNew.crossProduct( gravityDir );
-			forwardNew.normalize();
-			
-		}
-		else {
-			console.log( 'zzzzzz');
-			
-			rightNew = new jiglib.Vector3D( upNew.y, -upNew.x, 0);
-			rightNew.normalize();
-			
-			forwardNew = rightNew.crossProduct( gravityDir );
-			forwardNew.normalize();
-			
-		}
-		
-		/*
-		if ( upMagX === upMagMin ) {
-			console.log('XXX');
-			forwardNew = right.crossProduct( upNew );
-			forwardNew.normalize();
-			
-			rightNew = gravityDir.crossProduct( forwardNew );
-			rightNew.normalize();
-			
-		}
-		else if ( upMagY === upMagMin ) {
-			
-			
-			if ( upNew.x < 0 ) {
-				
-				if ( upNew.z < 0 ) {
-					console.log('Y -x -z');
-					
-					forwardNew = upNew.crossProduct( up );
-					forwardNew.normalize();
-					
-					rightNew = gravityDir.crossProduct( forwardNew );
-					rightNew.normalize();
-					
-				}
-				else {
-					console.log('Y -x +z');
-					
-					forwardNew = upNew.crossProduct( up );
-					forwardNew.normalize();
-					
-					rightNew = gravityDir.crossProduct( forwardNew );
-					rightNew.normalize();
-					
-				}
-				
-			}
-			else {
-				
-				if ( upNew.z < 0 ) {
-					
-					console.log('Y +x -z');
-					
-					forwardNew = up.crossProduct( upNew );
-					forwardNew.normalize();
-					
-					rightNew = gravityDir.crossProduct( forwardNew );
-					rightNew.normalize();
-					
-				}
-				else {
-					console.log('Y +x +z');
-					
-					forwardNew = up.crossProduct( upNew );
-					forwardNew.normalize();
-					
-					rightNew = gravityDir.crossProduct( forwardNew );
-					rightNew.normalize();
-					
-				}
-			}
-			
-		}
-		else {
-			console.log('zzzzzzzzz');
-			
-			rightNew = upNew.crossProduct( forward );
-			rightNew.normalize();
-			
-			forwardNew = rightNew.crossProduct( gravityDir );
-			forwardNew.normalize();
-			
-		}
-		*/
-		
-		/*
-		forwardNew = up.crossProduct( upNew );
-		forwardNew.normalize();
-		
-		rightNew = gravityDir.crossProduct( forwardNew );
-		rightNew.normalize();
-		*/
-		// set expected rotation
-		
-		upDirDiffAngle = Math.acos( up.dotProduct( upNew ) );// * -1 );
-		
-		upDirDiffAxis = up.crossProduct( gravityDir );
-		upDirDiffAxis.normalize();
-		
-		upDirQ = new THREE.Quaternion();
-		upDirQ.setFromAxisAngle( upDirDiffAxis, upDirDiffAngle );
 		
 		// commit rotation update
 		
@@ -762,18 +590,100 @@ var KAIOPUA = (function (main) {
 		
 		rotateRecord.multiplySelf( rotateUpdate );
 		
+		// get new right / up / forward axes based on gravity
+		
+		function align_to_vector ( x, y, z ) {
+			var fac = 1;
+			
+			//order=yaw-pitch-roll
+			
+			var yaw,
+				pitch,
+				roll,
+				x1,
+				y1,
+				z1,
+				x2,
+				y2,
+				z2,
+				x3,
+				y3,
+				z3;
+			
+			yaw = -Math.atan2(x, z);
+			
+			x1 = z * Math.sin(yaw) + x * Math.cos(yaw);
+			y1 = y;
+			z1 = z * Math.cos(yaw) - x * Math.sin(yaw);
+			
+			pitch = -Math.atan2(y1, z1);
+			x2 = x1;
+			y2 = y1 * Math.cos(pitch) - z1 * Math.sin(pitch);
+			z2 = y1 * Math.sin(pitch) + z1 * Math.cos(pitch);
+			
+			roll = -Math.atan2(x2, y2);
+			x3 = x2 * Math.cos(roll) - y2 * Math.sin(roll);
+			y3 = x2 * Math.sin(roll) + y2 * Math.cos(roll);
+			z3 = z2;
+
+			//FIX
+			if ( y < 0 ) {
+				roll += Math.PI;
+			}
+			
+			roll = roll % (Math.PI * 2);
+			
+			return new jiglib.Vector3D( pitch, yaw, roll );
+			
+			//rotate_entity( entity, pitch, yaw, roll );
+		}
+		
+		var upRotVec = align_to_vector( gravityUp.x, gravityUp.y, gravityUp.z );
+		//upRotVec.scaleBy( 180 / Math.PI );
+		//upRotVec.normalize();
+		//console.log( upRotVec.x + ', ' + upRotVec.y + ', ' + upRotVec.z );
+		
+		//var tempM = new THREE.Matrix4();
+		//tempM.lookAt( new THREE.Vector3( 0, 0, -4000 ), model.mesh.position, gravityUp );
+		
+		upDirDiffAngle = Math.acos( up.dotProduct( gravityUp ) );
+		
+		upDirDiffAxis = up.crossProduct( gravityUp );
+		upDirDiffAxis.normalize();
+		
+		upDirQ = new THREE.Quaternion();
+		//upDirQ.setFromEuler( upRotVec );
+		upDirQ.setFromAxisAngle( upDirDiffAxis, upDirDiffAngle );
+		
 		// set final rotation
+		
 		pcRotQ = new THREE.Quaternion();
-		pcRotQ.multiply( rotateRecord, upDirQ );
+		pcRotQ.multiply( upDirQ, rotateRecord );
+		
+		//var fQ = THREE.Quaternion.slerp( pcRotQ, pcCurrQ, new THREE.Quaternion(), 0.1 );
+		//console.log('fQ: ' + fQ.x + ', ' + fQ.y + ', ' + fQ.z + ', ' + fQ.w);
+		
+		upNew = up.clone();
+		
+		forwardNew = upNew.crossProduct( right );
+		forwardNew.normalize();
+		
+		rightNew = forwardNew.crossProduct( upNew );
+		rightNew.normalize();
+		pcRotQ.multiplyVector3( upNew );
+		pcRotQ.multiplyVector3( forwardNew );
+		pcRotQ.multiplyVector3( rightNew );
 		
 		// commit final rotation
 		
-		pcRotMat = new THREE.Matrix4().setRotationFromQuaternion( pcRotQ );
+		var rbQ = new THREE.Quaternion().copy( pcRotQ ).inverse();
+		
+		pcRotMat = new THREE.Matrix4().setRotationFromQuaternion( rbQ );
 		
 		rbRotNew = new jiglib.Matrix3D( pcRotMat.flatten() );
 		
 		rbState.orientation = rbRotNew;
-		
+		//console.log( 'rbState.position a: ' + rbState.position.x + ', ' + rbState.position.y + ', ' + rbState.position.z );
 		// commit movement update
 		
 		var moveForce = new THREE.Vector3( moveVec.x, moveVec.y, moveVec.z );
@@ -782,11 +692,9 @@ var KAIOPUA = (function (main) {
 		moveForce.y = moveVec.z * forwardNew.y + moveVec.x * rightNew.y + moveVec.y * upNew.y;
 		moveForce.z = moveVec.z * forwardNew.z + moveVec.x * rightNew.z + moveVec.y * upNew.z;
 	
-		moveForce.multiplyScalar( 400 );//moveSpeed );// * rbMass );
+		moveForce.multiplyScalar( 600 );//moveSpeed );// * rbMass );
 		
 		//moveForce = rbState.orientation.transformVector( new jiglib.Vector3D( moveForce.x, moveForce.y, moveForce.z ) );
-		
-		//console.log( 'moveForce: ' + forwardNew.x + ', ' + forwardNew.y + ', ' + forwardNew.z );
 		
 		var forcesAll = gravityPull.add( moveForce );
 		
@@ -810,7 +718,6 @@ var KAIOPUA = (function (main) {
 		line1.geometry.vertices[1].position = lineEnd;
 		line1.geometry.__dirtyVertices = true;
 		line1.geometry.__dirtyElements = true;
-		
 		
 		var ls2 = new THREE.Vector3( rightNew.x, rightNew.y, rightNew.z );
 		ls2.addSelf( rbState.position );
@@ -889,7 +796,7 @@ var KAIOPUA = (function (main) {
 		moveV.y = ( state.up - state.down );
 		moveV.z = ( state.forward - state.back );
 		
-		rotateV.y = ( state.turnRight - state.turnLeft );
+		rotateV.y = ( state.turnLeft - state.turnRight );
 			
 	}
 	
