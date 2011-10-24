@@ -1,0 +1,493 @@
+/*
+    HTML5 Reset :: style.css
+	----------------------------------------------------------
+	We have learned much from/been inspired by/taken code where offered from:
+	
+	Eric Meyer					:: http://ericmeyer.com
+	HTML5 Doctor				:: http://html5doctor.com
+	and the HTML5 Boilerplate	:: http://html5boilerplate.com
+	
+-------------------------------------------------------------------------------*/
+
+/* Let's default this puppy out
+-------------------------------------------------------------------------------*/
+
+html, body, body div, span, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, abbr, address, cite, code, del, dfn, em, img, ins, kbd, q, samp, small, strong, sub, sup, var, b, i, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, figure, footer, header, hgroup, menu, nav, section, time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	outline: 0;
+	font-size: 100%;
+	vertical-align: baseline;
+	background: transparent;
+}									
+
+article, aside, figure, footer, header, hgroup, nav, section {display: block;}
+
+/* Responsive images and other embedded objects
+   Note: keeping IMG here will cause problems if you're using foreground images as sprites.
+   If this default setting for images is causing issues, you might want to replace it with a .responsive class instead. */
+img,
+object,
+embed {max-width: 100%;}
+
+/* disable scrollbars because we don't need them! */
+html {overflow: hidden;}
+
+/* we use a lot of ULs that aren't bulleted. 
+	don't forget to restore the bullets within content. */
+ul {list-style: none;}
+
+blockquote, q {quotes: none;}
+
+blockquote:before, 
+blockquote:after, 
+q:before, 
+q:after {content: ''; content: none;}
+
+a {margin: 0; padding: 0; font-size: 100%; vertical-align: baseline; background: transparent;}
+
+del {text-decoration: line-through;}
+
+abbr[title], dfn[title] {border-bottom: 1px dotted #000; cursor: help;}
+
+/* tables still need cellspacing="0" in the markup */
+table {border-collapse: collapse; border-spacing: 0;}
+th {font-weight: bold; vertical-align: bottom;}
+td {font-weight: normal; vertical-align: top;}
+
+hr {display: block; height: 1px; border: 0; border-top: 1px solid #ccc; margin: 1em 0; padding: 0;}
+
+input, select {vertical-align: middle;}
+
+pre {
+	white-space: pre; /* CSS2 */
+	white-space: pre-wrap; /* CSS 2.1 */
+	white-space: pre-line; /* CSS 3 (and 2.1 as well, actually) */
+	word-wrap: break-word; /* IE */
+}
+
+input[type="radio"] {vertical-align: text-bottom;}
+input[type="checkbox"] {vertical-align: bottom; *vertical-align: baseline;}
+.ie6 input {vertical-align: text-bottom;}
+
+select, input, textarea {font: 99% sans-serif;}
+
+table {font-size: inherit; font: 100%;}
+ 
+/* Accessible focus treatment
+	people.opera.com/patrickl/experiments/keyboard/test */
+a:hover, a:active {outline: none;}
+
+small {font-size: 85%;}
+
+strong, th {font-weight: bold;}
+
+td, td img {vertical-align: top;} 
+
+/* Make sure sup and sub don't screw with your line-heights
+	gist.github.com/413930 */
+sub, sup {font-size: 75%; line-height: 0; position: relative;}
+sup {top: -0.5em;}
+sub {bottom: -0.25em;}
+
+/* standardize any monospaced elements */
+pre, code, kbd, samp {font-family: monospace, sans-serif;}
+
+/* hand cursor on clickable elements */
+.clickable,
+label, 
+input[type=button], 
+input[type=submit], 
+button {cursor: pointer;}
+
+/* Webkit browsers add a 2px margin outside the chrome of form elements */
+button, input, select, textarea {margin: 0;}
+
+/* make buttons play nice in IE */
+button {width: auto; overflow: visible;}
+ 
+/* scale images in IE7 more attractively */
+.ie7 img {-ms-interpolation-mode: bicubic;}
+
+/* prevent BG image flicker upon hover */
+.ie6 html {filter: expression(document.execCommand("BackgroundImageCache", false, true));}
+
+/* let's clear some floats */
+.clearfix:before, .clearfix:after { content: "\0020"; display: block; height: 0; overflow: hidden; }  
+.clearfix:after { clear: both; }  
+.clearfix { zoom: 1; }  
+
+
+
+/* Ok, this is where the fun starts.
+-------------------------------------------------------------------------------*/
+
+/* Fonts used: 
+   Sans-serif > OpenSansRegular (Local), Helmet, Freesans, sans-serif
+   Serif > Georgia, serif
+   Display > CoustardRegular (Local), Georgia, serif  */
+   
+@font-face {
+    font-family: 'OpenSansRegular';
+    src: url('webfonts/OpenSans-Regular-webfont.eot');
+    src: url('webfonts/OpenSans-Regular-webfont.eot?#iefix') format('embedded-opentype'),
+         url('webfonts/OpenSans-Regular-webfont.woff') format('woff'),
+         url('webfonts/OpenSans-Regular-webfont.ttf') format('truetype'),
+         url('webfonts/OpenSans-Regular-webfont.svg#OpenSansRegular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'CoustardRegular';
+    src: url('webfonts/coustard-webfont.eot');
+    src: url('webfonts/coustard-webfont.eot?#iefix') format('embedded-opentype'),
+         url('webfonts/coustard-webfont.woff') format('woff'),
+         url('webfonts/coustard-webfont.ttf') format('truetype'),
+         url('webfonts/coustard-webfont.svg#CoustardRegular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* new Linux- and Windows-friendly sans-serif font stack: http://mky.be/fontstack */
+body {font: 13px 'OpenSansRegular', Helmet, Freesans, sans-serif;}
+
+/* we like off-black for text */
+body, select, input, textarea {color: #333333;}
+
+/* Custom text-selection colors (remove any text shadows: twitter.com/miketaylr/status/12228805301) */
+::-moz-selection{background: #fcd700; color: #fff; text-shadow: none;}
+::selection {background: #fcd700; color: #fff; text-shadow: none;} 
+
+/*    j.mp/webkit-tap-highlight-color */
+a:link {-webkit-tap-highlight-color: #fcd700;}
+
+ins {background-color: #fcd700; color: #000; text-decoration: none;}
+mark {background-color: #fcd700; color: #000; font-style: italic; font-weight: bold;}
+
+/* General styles!
+-------------------------------------------------------------------------------*/
+
+/* body */
+html, body {
+    height: 100%; 
+    background-color: #333333;
+}
+
+/* wrapper */
+#wrapper {min-height: 100%;}
+
+/* headers 
+-------------------------*/
+h1 {font: 36px 'CoustardRegular', Georgia, serif;}
+h2 {font: 18px Georgia, serif;}
+h3 {font: 18px Georgia, serif;}
+h4 {font: italic 18px Georgia, serif;}
+
+/* body copy 
+-------------------------*/
+p {
+    line-height: 1.5em;
+}
+
+/* link styles 
+-------------------------*/
+a, a:visited {
+    color: #535353; 
+    text-decoration: none;
+}
+a:hover, a:active {
+    color: black;
+    text-decoration: underline;
+}
+
+/* menus
+-------------------------*/
+
+.menu {
+    
+}
+
+.item {
+    font: 18px 'OpenSansRegular', Helmet, Freesans, sans-serif;
+    cursor: default;
+    color: #eeeeee;
+    padding: 5px 5px 5px 5px;
+    text-align: center;
+    margin: 10px 10px 10px 10px;
+    background: #333333;
+    -moz-border-radius    : 5px;
+    -webkit-border-radius : 5px;
+    border-radius         : 5px;
+    -moz-box-shadow    : 0px 1px 5px rgba(0, 0, 0, 0.25);
+    -webkit-box-shadow : 0px 1px 5px rgba(0, 0, 0, 0.25);
+    box-shadow         : 0px 1px 5px rgba(0, 0, 0, 0.25);
+}
+
+.item_big {
+    font: 20px 'CoustardRegular', Georgia, serif;
+}
+
+.item_inline {
+    display: inline-block;
+    width: 105px;
+    margin: 10px 0px 0px 10px;
+}
+
+.item_enabled {
+    cursor: pointer;
+}
+
+.item_enabled:hover {
+    color: #ffffff;
+    background: #444444;
+}
+
+.item_disabled {
+    color: #555555;
+    background: #333333;
+}
+
+/*
+    background: #ffffff;
+    border: 1px solid #eeeeee;
+    border: 1px solid rgba(68, 68, 68, 0.75);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+    border-radius: 5px 5px 5px 5px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+    display: block-inline;
+    padding: 5px 10px 6px;
+    position: relative;
+    text-decoration: none;
+    text-shadow: 0 -1px 1px rgba(0, 0, 0, 0.25);
+    
+    
+    
+*/
+
+/* info panel 
+-------------------------*/
+
+.info_panel {
+    overflow: auto;
+    background: #222222;
+    -moz-border-radius    : 15px;
+    -webkit-border-radius : 15px;
+    border-radius         : 15px;
+    -moz-box-shadow    : 0px 1px 5px rgba(0, 0, 0, 0.25);
+    -webkit-box-shadow : 0px 1px 5px rgba(0, 0, 0, 0.25);
+    box-shadow         : 0px 1px 5px rgba(0, 0, 0, 0.25);
+}
+
+.info_panel header {
+    text-align: center;
+    font: 18px Georgia, serif;
+    color: #ffffff;
+}
+
+.info_panel p {
+    text-align: center;
+    color: #eeeeee;
+}
+
+/* load bar 
+-------------------------*/
+
+.load_bar {
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+/* errors 
+-------------------------*/
+
+.error {
+    width: 540px; 
+    height: 275px;
+    position: absolute; 
+    left: 50%; 
+    top: 50%;
+    margin: -197px 0 0 -270px;
+}
+.error a, .error a:visited {
+    color: #fcd700;
+}
+.error a:hover, .error a:active {
+    color: #fee972;
+}
+.error header {
+    padding: 20px 20px 5px 20px;
+    font: 18px Georgia, serif;
+}
+.error_explanation {
+    padding: 10px 20px 20px 20px;
+}
+
+.browsers {
+    position: relative;
+    overflow: hidden;
+    height: 156px;
+    margin: 0 20px 0 20px;
+}
+
+.browsers_each {
+    width:165px;
+    height:95px;
+    text-decoration:none;
+    text-align:center;
+    background-position: 50% 0;
+    background-repeat:no-repeat;
+    position:absolute;
+}
+
+.chrome {
+    background-image:url(../img/browsers_chrome.png);
+    top:18px;
+    left:0px;
+    padding-top:95px;
+}
+
+.firefox {
+    background-image:url(../img/browsers_firefox.png);
+    top:16px;
+    left:165px;
+    padding-top:95px;
+}
+
+.safari {
+    background-image:url(../img/browsers_safari.png);
+    top:14px;
+    left:330px;
+    padding-top:95px;
+}
+
+
+/* footer 
+-------------------------*/
+footer {
+    width: 400px; 
+    margin: 0 auto; 
+    position: relative; 
+    margin-top: -120px; 
+    height: 120px; 
+    clear:both;
+    color: #eeeeee;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.85);
+}
+footer a, footer a:visited {
+    color: #eeeeee;
+}
+
+footer a:hover, footer a:active {
+    color: #ffffff;
+}
+
+footer header {
+    float: left;
+}
+
+footer nav {
+    overflow: auto; 
+    width: 400px;
+    margin: 0 auto;
+    font-size: 15px;
+}
+
+footer nav ul {
+    float: left; 
+    margin-top: 18px;
+}
+footer nav li {
+    float: left; 
+    padding-left: 10px; 
+    margin-left: 10px; 
+    border-left: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+footer nav .last_nav {
+    padding: 0; 
+    border: none;
+}
+
+footer .copyright {
+    clear:both; 
+    text-align: center;
+}
+
+/* transitioner
+-------------------------*/
+.transitioner {
+    min-height: 100%;
+	width: 100%;
+	height: auto;
+	position: fixed;
+	top: 0;
+	left: 0;
+    background-color: #333333;
+}
+
+/* image replacements 
+-------------------------*/
+.ir { display: block; border: 0; text-indent: -999em; overflow: hidden; background-color: transparent; background-repeat: no-repeat; text-align: left; direction: ltr; }
+.ir br { display: none; }
+
+/* unselectable 
+-------------------------*/
+.unselectable {
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -o-user-select: none;
+    user-select: none;   
+}
+
+/* hidden elements 
+-------------------------*/
+
+/* Hide from both screenreaders and browsers: h5bp.com/u */
+.hidden { display: none !important; visibility: hidden; }
+
+/* Hide only visually, but have it available for screenreaders: h5bp.com/v */
+.visuallyhidden { border: 0; clip: rect(0 0 0 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; width: 1px; }
+
+/* Extends the .visuallyhidden class to allow the element to be focusable when navigated to via the keyboard: h5bp.com/p */
+.visuallyhidden.focusable:active, .visuallyhidden.focusable:focus { clip: auto; height: auto; margin: 0; overflow: visible; position: static; width: auto; }
+
+/* Hide visually and from screenreaders, but maintain layout */
+.invisible { visibility: hidden; }
+
+/* Print styles!
+-------------------------------------------------------------------------------*/
+@media print {
+  * { background: transparent !important; color: black !important; text-shadow: none !important; filter:none !important; -ms-filter: none !important; } /* Black prints faster: h5bp.com/s */
+  a, a:visited { text-decoration: underline; }
+  a[href]:after { content: " (" attr(href) ")"; }
+  abbr[title]:after { content: " (" attr(title) ")"; }
+  .ir a:after, a[href^="javascript:"]:after, a[href^="#"]:after { content: ""; }  /* Don't show links for images, or javascript/internal links */
+  pre, blockquote { border: 1px solid #999; page-break-inside: avoid; }
+  thead { display: table-header-group; } /* h5bp.com/t */
+  tr, img { page-break-inside: avoid; }
+  img { max-width: 100% !important; }
+  @page { margin: 0.5cm; }
+  p, h2, h3 { orphans: 3; widows: 3; }
+  h2, h3 { page-break-after: avoid; }
+}
+
+
+/* Media queries!
+-------------------------------------------------------------------------------*/
+
+/* Consider this: www.cloudfour.com/css-media-query-for-mobile-is-fools-gold/ */
+@media screen and (max-device-width: 480px) {
+	
+		
+}
+
+@media all and (orientation: portrait) {
+	
+}
+
+@media all and (orientation: landscape) {
+	
+}
