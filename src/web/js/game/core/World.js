@@ -239,6 +239,9 @@ var KAIOPUA = (function (main) {
 				
 				physics.add( part.mesh, { rigidBody: part.rigidBody } );
 				
+				var mc = THREE.CollisionUtils.MeshColliderWBox( part.mesh );
+				THREE.Collisions.colliders.push( mc );
+				
 			}
 			
 		}

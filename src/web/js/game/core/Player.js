@@ -246,7 +246,7 @@ var KAIOPUA = (function (main) {
 		// rigidbody
 		
 		playerCharacter.model.rigidBody = physics.translate( playerCharacter.model.mesh, {
-			bodyType: 'box',
+			bodyType: 'sphere', // 'box',
 			width: 40,
 			height: 100,
 			depth: 40,
@@ -264,7 +264,8 @@ var KAIOPUA = (function (main) {
 				speed: 0.01,
 				vector: new THREE.Vector3(),
 				update: new THREE.Quaternion(),
-				record: new THREE.Quaternion()
+				record: new THREE.Quaternion(),
+				up: new THREE.Vector3( 0, 1, 0 )
 			},
 			state: {
 				up: 0, 
@@ -546,6 +547,7 @@ var KAIOPUA = (function (main) {
 			moveSpeed = move.speed,
 			rotateVec = rotate.vector,
 			rotateRecord = rotate.record,
+			rotateUp = rotate.up,
 			rotateUpdate = rotate.update,
 			rotateSpeed = rotate.speed,
 			pcRotQ,
@@ -553,137 +555,128 @@ var KAIOPUA = (function (main) {
 			rb = model.rigidBody,
 			rbState = rb.get_currentState(),
 			rbMass = rb.get_mass(),
+			rbPosition = new THREE.Vector3().copy( rbState.position ),
 			rbRotNew,
 			linVelForce,
 			gravitySource = {
-				pos: new jiglib.Vector3D()
+				pos: new THREE.Vector3()
 			},
 			gravityForce = 200,//world.gravityMagnitude * rbMass,
 			gravityUp,
 			gravityPull,
-			up = new jiglib.Vector3D( 0, 1, 0 ),
-			down = new jiglib.Vector3D( 0, -1, 0 ),
-			forward = new jiglib.Vector3D( 0, 0, 1 ),
-			back = new jiglib.Vector3D( 0, 0, -1 ),
-			right = new jiglib.Vector3D( 1, 0, 0 ),
-			left = new jiglib.Vector3D( -1, 0, 0 ),
+			up = new THREE.Vector3( 0, 1, 0 ),
+			down = new THREE.Vector3( 0, -1, 0 ),
+			forward = new THREE.Vector3( 0, 0, 1 ),
+			back = new THREE.Vector3( 0, 0, -1 ),
+			right = new THREE.Vector3( 1, 0, 0 ),
+			left = new THREE.Vector3( -1, 0, 0 ),
 			upNew,
 			forwardNew,
 			rightNew,
-			upDirDiffAxis,
-			upDirDiffAngle,
-			upDirQ;
+			upToUpNewAxis,
+			upToUpNewAngle,
+			upToUpNewQ;
 		
 		// get normalized vector between character and gravity source
-		
-		gravityUp = rbState.position.subtract( gravitySource.pos );
-		gravityUp.normalize();
+		gravityUp = new THREE.Vector3().sub( rbPosition, gravitySource.pos );
+		var gupLen = gravityUp.length();
+		if ( gupLen > 0 ) {
+			gravityUp.divideScalar( gupLen );
+		}
+		//gravityUp.normalize();
 		
 		// get pull of gravity
 		
 		gravityPull = gravityUp.clone().negate();
-		gravityPull.scaleBy( gravityForce );
+		gravityPull.multiplyScalar( gravityForce );
 		
 		// commit rotation update
 		
 		rotateUpdate.set( rotateVec.x * rotateSpeed, rotateVec.y * rotateSpeed, rotateVec.z * rotateSpeed, 1 ).normalize();
 		
-		rotateRecord.multiplySelf( rotateUpdate );
+		//rotateRecord.multiplySelf( rotateUpdate );
 		
 		// get new right / up / forward axes based on gravity
 		
-		function align_to_vector ( x, y, z ) {
-			var fac = 1;
-			
-			//order=yaw-pitch-roll
-			
-			var yaw,
-				pitch,
-				roll,
-				x1,
-				y1,
-				z1,
-				x2,
-				y2,
-				z2,
-				x3,
-				y3,
-				z3;
-			
-			yaw = -Math.atan2(x, z);
-			
-			x1 = z * Math.sin(yaw) + x * Math.cos(yaw);
-			y1 = y;
-			z1 = z * Math.cos(yaw) - x * Math.sin(yaw);
-			
-			pitch = -Math.atan2(y1, z1);
-			x2 = x1;
-			y2 = y1 * Math.cos(pitch) - z1 * Math.sin(pitch);
-			z2 = y1 * Math.sin(pitch) + z1 * Math.cos(pitch);
-			
-			roll = -Math.atan2(x2, y2);
-			x3 = x2 * Math.cos(roll) - y2 * Math.sin(roll);
-			y3 = x2 * Math.sin(roll) + y2 * Math.cos(roll);
-			z3 = z2;
+		/*
+		
+		var rayStart = new THREE.Vector3().copy( rbState.position );
+		var rayDirection = new THREE.Vector3().copy( gravityUp.clone().negate() );
+		
+		var ray = new THREE.Ray( rayStart, rayDirection );
 
-			//FIX
-			if ( y < 0 ) {
-				roll += Math.PI;
-			}
+		var c = THREE.Collisions.rayCastNearest( ray );
+
+		if( c ) {
+
+			console.log("Found @ normal " + c.normal.x.toFixed(2) + " , " + c.normal.y.toFixed(2) + " , " + c.normal.z.toFixed(2) );
 			
-			roll = roll % (Math.PI * 2);
+			var ls4 = ray.origin.clone().addSelf( ray.direction.clone().multiplyScalar(c.distance) );
+			var le4 = ls4.clone().addSelf(c.normal.multiplyScalar(100));
 			
-			return new jiglib.Vector3D( pitch, yaw, roll );
-			
-			//rotate_entity( entity, pitch, yaw, roll );
+			line4.geometry.vertices[0].position = ls4;
+			line4.geometry.vertices[1].position = le4;
+			line4.geometry.__dirtyVertices = true;
+			line4.geometry.__dirtyElements = true;
+
+		} else {
+
+			console.log("No intersection");
+
 		}
+		*/
 		
-		var upRotVec = align_to_vector( gravityUp.x, gravityUp.y, gravityUp.z );
-		//upRotVec.scaleBy( 180 / Math.PI );
-		//upRotVec.normalize();
-		//console.log( upRotVec.x + ', ' + upRotVec.y + ', ' + upRotVec.z );
+		upToUpNewAngle = Math.acos( Math.max( 0, Math.min( 1, rotateUp.dot( gravityUp ) ) ) );
+		upToUpNewAxis = new THREE.Vector3().cross( rotateUp, gravityUp );
+		var utunLen = upToUpNewAxis.length();
+		if ( utunLen > 0 ) {
+			upToUpNewAxis.divideScalar( utunLen );
+		}
+		//upToUpNewAxis.normalize();
 		
-		//var tempM = new THREE.Matrix4();
-		//tempM.lookAt( new THREE.Vector3( 0, 0, -4000 ), model.mesh.position, gravityUp );
+		upToUpNewQ = new THREE.Quaternion();
+		upToUpNewQ.setFromAxisAngle( upToUpNewAxis, upToUpNewAngle );
+		upToUpNewQ.inverse();
 		
-		upDirDiffAngle = Math.acos( up.dotProduct( gravityUp ) );
+		// store gravity up as rotate up
 		
-		upDirDiffAxis = up.crossProduct( gravityUp );
-		upDirDiffAxis.normalize();
+		rotateUp.copy( gravityUp );
 		
-		upDirQ = new THREE.Quaternion();
-		//upDirQ.setFromEuler( upRotVec );
-		upDirQ.setFromAxisAngle( upDirDiffAxis, upDirDiffAngle );
+		// add to rotation
 		
-		// set final rotation
+		rotateRecord.multiplySelf( upToUpNewQ );
 		
-		pcRotQ = new THREE.Quaternion();
-		pcRotQ.multiply( upDirQ, rotateRecord );
+		var rrNew = new THREE.Quaternion();
+		rrNew.multiplySelf( rotateUpdate.inverse() );
+		rrNew.multiplySelf( rotateRecord );
 		
-		//var fQ = THREE.Quaternion.slerp( pcRotQ, pcCurrQ, new THREE.Quaternion(), 0.1 );
-		//console.log('fQ: ' + fQ.x + ', ' + fQ.y + ', ' + fQ.z + ', ' + fQ.w);
+		//var rrSlerp = THREE.Quaternion.slerp( rotateRecord, rrNew, new THREE.Quaternion(), 0.25 );
+		//rotateRecord.copy( rrSlerp );
+		
+		rotateRecord.copy( rrNew );
 		
 		upNew = up.clone();
 		
-		forwardNew = upNew.crossProduct( right );
-		forwardNew.normalize();
+		forwardNew = forward.clone().negate();
 		
-		rightNew = forwardNew.crossProduct( upNew );
-		rightNew.normalize();
-		pcRotQ.multiplyVector3( upNew );
-		pcRotQ.multiplyVector3( forwardNew );
-		pcRotQ.multiplyVector3( rightNew );
+		rightNew = right.clone();
+		
+		var rrInv = new THREE.Quaternion().copy( rotateRecord ).inverse();
+		
+		rrInv.multiplyVector3( upNew );
+		rrInv.multiplyVector3( forwardNew );
+		rrInv.multiplyVector3( rightNew );
 		
 		// commit final rotation
 		
-		var rbQ = new THREE.Quaternion().copy( pcRotQ ).inverse();
+		//var rbQ = new THREE.Quaternion().copy( rotateRecord ).inverse();
 		
-		pcRotMat = new THREE.Matrix4().setRotationFromQuaternion( rbQ );
+		pcRotMat = new THREE.Matrix4().setRotationFromQuaternion( rotateRecord );
 		
 		rbRotNew = new jiglib.Matrix3D( pcRotMat.flatten() );
 		
 		rbState.orientation = rbRotNew;
-		//console.log( 'rbState.position a: ' + rbState.position.x + ', ' + rbState.position.y + ', ' + rbState.position.z );
+		
 		// commit movement update
 		
 		var moveForce = new THREE.Vector3( moveVec.x, moveVec.y, moveVec.z );
@@ -694,9 +687,8 @@ var KAIOPUA = (function (main) {
 	
 		moveForce.multiplyScalar( 600 );//moveSpeed );// * rbMass );
 		
-		//moveForce = rbState.orientation.transformVector( new jiglib.Vector3D( moveForce.x, moveForce.y, moveForce.z ) );
-		
-		var forcesAll = gravityPull.add( moveForce );
+		var forcesAll = new jiglib.Vector3D( gravityPull.x, gravityPull.y, gravityPull.z );
+		forcesAll = forcesAll.add( moveForce );
 		
 		// apply world impulse
 		rb.setLineVelocity( forcesAll );
@@ -708,22 +700,15 @@ var KAIOPUA = (function (main) {
 		
 		// line testing
 		
-		var lineStart = new THREE.Vector3( forwardNew.x, forwardNew.y, forwardNew.z );
-		lineStart.addSelf( rbState.position );
-		var normalClone = forwardNew.clone().scaleBy( 100 );
-		var lineEnd = lineStart.clone();
-		lineEnd.addSelf( normalClone );
-		
+		var lineStart = new THREE.Vector3().copy( forwardNew ).addSelf( rbPosition );
+		var lineEnd = new THREE.Vector3().copy( forwardNew ).multiplyScalar( 100 ).addSelf( rbPosition );
 		line1.geometry.vertices[0].position = lineStart;
 		line1.geometry.vertices[1].position = lineEnd;
 		line1.geometry.__dirtyVertices = true;
 		line1.geometry.__dirtyElements = true;
 		
-		var ls2 = new THREE.Vector3( rightNew.x, rightNew.y, rightNew.z );
-		ls2.addSelf( rbState.position );
-		var nc2 = rightNew.clone().scaleBy( 100 );
-		var le2 = ls2.clone();
-		le2.addSelf( nc2 );
+		var ls2 = new THREE.Vector3().copy( rightNew ).addSelf( rbPosition );
+		var le2 = new THREE.Vector3().copy( rightNew ).multiplyScalar( 100 ).addSelf( rbPosition );
 		
 		line2.geometry.vertices[0].position = ls2;
 		line2.geometry.vertices[1].position = le2;
@@ -731,11 +716,8 @@ var KAIOPUA = (function (main) {
 		line2.geometry.__dirtyElements = true;
 		
 		
-		var ls3 = new THREE.Vector3( upNew.x, upNew.y, upNew.z );
-		ls3.addSelf( rbState.position );
-		var nc3 = upNew.clone().scaleBy( 100 );
-		var le3 = ls3.clone();
-		le3.addSelf( nc3 );
+		var ls3 = new THREE.Vector3().copy( upNew ).addSelf( rbPosition );
+		var le3 = new THREE.Vector3().copy( upNew ).multiplyScalar( 100 ).addSelf( rbPosition );
 		
 		line3.geometry.vertices[0].position = ls3;
 		line3.geometry.vertices[1].position = le3;
