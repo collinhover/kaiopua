@@ -36,7 +36,7 @@ A game that gives the player the ability to change the size of any object
 ####I want to tell you why this matters
 
 ~
-Students are proficient in using digital tools to create websites, but do not understand what makes the tools work, yet they believe their proficiency is what matters
+Students are proficient in using digital tools to create websites, but do not understand the concepts behind the tools
 
 ~
 This is like knowing the answer to a math problem, but not knowing how or why that answer is the correct one
