@@ -709,13 +709,15 @@ var KAIOPUA = (function (main) {
 		
 		if ( paused !== true ) {
 			
-			shared.signals.update.dispatch();
-			
 			// update physics
 			
 			if ( typeof physics !== 'undefined' ) {
 				physics.update();
 			}
+			
+			// update all others
+			
+			shared.signals.update.dispatch();
 			
 		}
 		

@@ -223,10 +223,6 @@ var KAIOPUA = (function (main) {
         
         scene.fog = new THREE.Fog( 0xffffff, -100, 10000 );
 		
-		// set world gravity
-		
-		physics.gravity = new jiglib.Vector3D( 0, 0, 0 );
-		
 		// add parts
 		
 		for ( i = 0, l = parts.length; i < l; i += 1 ) {
@@ -238,9 +234,6 @@ var KAIOPUA = (function (main) {
 			if ( typeof part.rigidBody !== 'undefined' ) {
 				
 				physics.add( part.mesh, { rigidBody: part.rigidBody } );
-				
-				var mc = THREE.CollisionUtils.MeshColliderWBox( part.mesh );
-				THREE.Collisions.colliders.push( mc );
 				
 			}
 			
