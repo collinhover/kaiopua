@@ -26,12 +26,10 @@
 * Research shaders and cell-shading
 
 #### Joshua
-* Make hut and local items take up an exaggerated amount of space on hill
-* Model bed, flat with geometry showing leaves (no spirals)
-* Curve palm tree
-* Fix hill
-* Model fence for hill path
-* Model taro plant
+* Model leihua flower bush
+* Model ti leaf plant
+* Model grass
+* Model clouds
 
 #### Ian
 * Animate / morph player character in sections (arm left, arm right, body, and legs) with the following:
@@ -52,35 +50,27 @@
   * Mouth open
 
 #### Kevin
-* Model Power source object
-* Rig power source object
 * Power source morph targets
   * mouth open
   * mouth closed
   * sink into ground
-* Rig world whale tail
-* Tail morph targets - up, down, left, & right
 * Model pig
+* Rig pig
+* Pig animations:
+  * Bounce run
+  * Idle / flop on belly
 
 #### Houston
-* Fix mini-sun, smooth out curve of face
-* Fix lantern, walls and bottom has five sides
 * Model chicken
 * Rig chicken
 * Animate chicken
-  * Walk
-  * Peck ground
+  * Walk / Run
+  * Idle / Peck ground
 
 #### Amanda
-* Color schemes
-  * Create simple scene based on provided sketches
-  * Use hill, world skin, house, and plants
-  * Vibrant + contrasting colors
-  * Color for world
-  * Color for character
-  * Color for plants
-  * Color for hill + house
-  * Color for lantern
+* Skybox - half stars and half blue skies
+* World skin
+* Character skin
 
 #### Sound Artist
 * Speak to others about getting a sound artist to join
