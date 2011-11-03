@@ -246,11 +246,11 @@ var KAIOPUA = (function (main) {
 		// rigidbody
 		
 		playerCharacter.model.rigidBody = physics.translate( playerCharacter.model.mesh, {
-			bodyType: 'sphere', // 'box',
+			bodyType: 'box',
 			width: 40,
 			height: 100,
 			depth: 40,
-			rotatable: false
+			movable: true
 		});
 		
 		// movement
@@ -839,7 +839,7 @@ var KAIOPUA = (function (main) {
 		
 		scene.remove( playerCharacter.model.mesh );
 		
-		physics.remove( playerCharacter.model.mesh, { rigidBody: playerCharacter.model.rigidBody } );
+		physics.remove( playerCharacter.model.rigidBody );
 		
 	}
 	
@@ -847,7 +847,7 @@ var KAIOPUA = (function (main) {
 		
 		// character
 		
-		update_character();
+		//update_character();
 		
 		// camera
 		
