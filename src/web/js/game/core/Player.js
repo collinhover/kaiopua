@@ -241,7 +241,7 @@ var KAIOPUA = (function (main) {
 			materials: mat
 		});
 		
-		playerCharacter.model.mesh.position.set( 0, 1800, 0 );
+		playerCharacter.model.mesh.position.set( 0, 3000, 0 );
 		
 		// rigidbody
 		
@@ -597,34 +597,6 @@ var KAIOPUA = (function (main) {
 		//rotateRecord.multiplySelf( rotateUpdate );
 		
 		// get new right / up / forward axes based on gravity
-		
-		/*
-		
-		var rayStart = new THREE.Vector3().copy( rbState.position );
-		var rayDirection = new THREE.Vector3().copy( gravityUp.clone().negate() );
-		
-		var ray = new THREE.Ray( rayStart, rayDirection );
-
-		var c = THREE.Collisions.rayCastNearest( ray );
-
-		if( c ) {
-
-			console.log("Found @ normal " + c.normal.x.toFixed(2) + " , " + c.normal.y.toFixed(2) + " , " + c.normal.z.toFixed(2) );
-			
-			var ls4 = ray.origin.clone().addSelf( ray.direction.clone().multiplyScalar(c.distance) );
-			var le4 = ls4.clone().addSelf(c.normal.multiplyScalar(100));
-			
-			line4.geometry.vertices[0].position = ls4;
-			line4.geometry.vertices[1].position = le4;
-			line4.geometry.__dirtyVertices = true;
-			line4.geometry.__dirtyElements = true;
-
-		} else {
-
-			console.log("No intersection");
-
-		}
-		*/
 		
 		upToUpNewAngle = Math.acos( Math.max( 0, Math.min( 1, rotateUp.dot( gravityUp ) ) ) );
 		upToUpNewAxis = new THREE.Vector3().cross( rotateUp, gravityUp );
