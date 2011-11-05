@@ -17,8 +17,13 @@ var KAIOPUA = (function (main) {
 		links = [],
 		time,
 		timeLast,
-		cvMat4,
-		cvVec3;
+		utilMat4,
+		utilVec31,
+		utilVec32,
+		utilQ1,
+		utilQ2,
+		utilQ3,
+		line4;
 	
 	/*===================================================
     
@@ -78,8 +83,24 @@ var KAIOPUA = (function (main) {
 		
 		// utility / conversion objects
 		
-		cvMat4 = new THREE.Matrix4();
-		cvVec3 = new THREE.Vector3();
+		utilMat4 = new THREE.Matrix4();
+		utilVec31 = new THREE.Vector3();
+		utilVec32 = new THREE.Vector3();
+		utilQ1 = new THREE.Quaternion();
+		utilQ2 = new THREE.Quaternion();
+		utilQ3 = new THREE.Quaternion();
+		
+		// line testing
+		
+		var geom4 = new THREE.Geometry();
+		geom4.vertices.push( new THREE.Vertex( new THREE.Vector3(-100, 0, 0) ) );
+		geom4.vertices.push( new THREE.Vertex( new THREE.Vector3( 100, 0, 0) ) );
+		
+		var lineMat4 = new THREE.LineBasicMaterial( { color: 0xff00ff, opacity: 1, linewidth: 8 } );
+		
+		line4 = new THREE.Line(geom4, lineMat4);
+		
+		game.scene.add( line4 );
 		
 	}
 	
@@ -202,7 +223,7 @@ var KAIOPUA = (function (main) {
 		}
 		else if ( bodyType === 'plane' ) {
 			
-			collider = new THREE.PlaneCollider( position, parameters.up || new jiglib.Vector3D( 0, 0, 1, 0 ) );
+			collider = new THREE.PlaneCollider( position, parameters.up || new THREE.Vector3( 0, 0, 1 ) );
 			
 		}
 		// default box
@@ -236,7 +257,7 @@ var KAIOPUA = (function (main) {
 			axes: {
 				up: new THREE.Vector3( 0, 1, 0 ),
 				forward: new THREE.Vector3( 0, 0, 1 ),
-				right: new THREE.Vector3( 1, 0, 0 )
+				right: new THREE.Vector3( -1, 0, 0 )
 			}
 		};
 		
@@ -261,8 +282,7 @@ var KAIOPUA = (function (main) {
 		rigidBody.name = parameters.name || rigidBody.name || linksBaseName + linksCount;
 		
 		// add to system
-		
-		system.colliders.push( rigidBody.collider );
+		if ( typeof rigidBody.collider.min === 'undefined' ) system.colliders.push( rigidBody.collider );
 		
 		// add to links
 		
@@ -469,21 +489,20 @@ var KAIOPUA = (function (main) {
 	function integrate ( timeStep ) {
 		
 		var i, l,
-			j, k,
+			uv31 = utilVec31, uv32 = utilVec32,
+			uq1 = utilQ1, uq2 = utilQ2, uq3 = utilQ3,
 			rigidBody,
 			mesh,
 			collider,
 			position,
 			rotation,
+			rotationHelper,
 			axes,
 			axisUp,
 			axisUpNew,
 			axisUpToUpNewDist,
 			axisForward,
 			axisRight,
-			colMin,
-			colMax,
-			colDimensions,
 			velocityGravity,
 			velocityMovement,
 			gravSrc,
@@ -491,16 +510,11 @@ var KAIOPUA = (function (main) {
 			gravUp,
 			gravDown,
 			gravUpLength,
-			gravPull,
 			upToUpNewAngle,
 			upToUpNewAxis,
 			upToUpNewLength,
 			upToUpNewQ,
-			rayPosition,
-			rayGravity,
-			collisionGravity,
-			rayVelocity,
-			collisionVelocity;
+			collisionGravity;
 		
 		// update links
 		
@@ -520,7 +534,7 @@ var KAIOPUA = (function (main) {
 				
 				position = mesh.position;
 				
-				rotation = ( mesh.useQuaternion === true ? mesh.quaternion : mesh.rotation );
+				rotation = ( mesh.useQuaternion === true ? mesh.quaternion : mesh.matrix );
 				
 				velocityGravity = rigidBody.velocityGravity;
 				
@@ -528,7 +542,7 @@ var KAIOPUA = (function (main) {
 				
 				axes = rigidBody.axes;
 				
-				axisUp = axisUpNew = axes.up;
+				axisUp = axes.up;
 				
 				axisForward = axes.forward;
 				
@@ -540,7 +554,7 @@ var KAIOPUA = (function (main) {
 				
 				// get normalized up vector between character and gravity source
 				
-				gravUp = new THREE.Vector3().sub( position, gravSrc );
+				gravUp = uv31.sub( position, gravSrc );
 				gravUpLength = gravUp.length();
 				if ( gravUpLength > 0 ) {
 					gravUp.divideScalar( gravUpLength );
@@ -556,19 +570,21 @@ var KAIOPUA = (function (main) {
 				
 				// ray cast in the direction of gravity
 				
-				collisionGravity = raycast_in_direction( rigidBody, gravDown );
+				collisionGravity = raycast_in_direction( rigidBody, gravDown, true );
 				
 				if( collisionGravity ) {
 					
 					// get normal of colliding face as new up axis
 					
-					axisUpNew = collisionGravity.normal;
+					axisUpNew = gravUp;//collisionGravity.normal;
 					
 				} else {
 					
 					// TODO
 					// assume object has fallen through world
 					// reset to ground plane
+					
+					axisUpNew = gravUp;
 					
 				}
 				
@@ -580,12 +596,12 @@ var KAIOPUA = (function (main) {
 				
 				// if up axes are not same
 				
-				if ( axisUpToUpNewDist !== 1 ) {
+				if ( true ) { //axisUpToUpNewDist !== 1 ) {
 					
 					// axis / angle
 					
 					upToUpNewAngle = Math.acos( axisUpToUpNewDist );
-					upToUpNewAxis = new THREE.Vector3().cross( axisUp, axisUpNew );
+					upToUpNewAxis = uv32.cross( axisUp, axisUpNew );
 					upToUpNewLength = upToUpNewAxis.length();
 					if ( upToUpNewLength > 0 ) {
 						upToUpNewAxis.divideScalar( upToUpNewLength );
@@ -593,26 +609,41 @@ var KAIOPUA = (function (main) {
 					
 					// rotation change
 					
-					upToUpNewQ = new THREE.Quaternion();
-					upToUpNewQ.setFromAxisAngle( upToUpNewAxis, upToUpNewAngle );
-					upToUpNewQ.inverse();
+					upToUpNewQ = uq3.setFromAxisAngle( upToUpNewAxis, upToUpNewAngle );
 					
 					// add to rotation
 					
 					if ( mesh.useQuaternion === true ) {
 						
-						rotation.multiplySelf( upToUpNewQ );
+						// quaternion rotations
 						
+						uq1.multiply( upToUpNewQ, rotation );
+						
+						rotation.copy( uq1 );
+						
+						//THREE.Quaternion.slerp( rotation, uq1, rotation, 0.5 );
+					
 					}
 					else {
 						
-						upToUpNewQ.multiplyVector3( rotation );
+						// matrix rotations
+						
+						uq1.setFromRotationMatrix( rotation );
+						
+						uq2.multiply( upToUpNewQ, uq1 );
+						
+						rotation.setRotationFromQuaternion( uq2 );
 						
 					}
 					
 					// store new axes
 					
 					axisUp.copy( axisUpNew );
+					
+					// necessary?
+					//
+					//
+					//
 					
 					upToUpNewQ.multiplyVector3( axisForward );
 					
@@ -622,7 +653,7 @@ var KAIOPUA = (function (main) {
 				
 				// handle gravity velocity
 				
-				handle_velocity( rigidBody, velocityGravity, collisionGravity );
+				//handle_velocity( rigidBody, velocityGravity, collisionGravity );
 				
 				// handle movement velocity
 				
@@ -638,8 +669,6 @@ var KAIOPUA = (function (main) {
 		
 		var mesh = rigidBody.mesh,
 			position = mesh.position,
-			rotation = mesh.rotation,
-			rotationHelper,
 			velocityForce = velocity.force,
 			velocityForceRotated,
 			velocityForceRotatedLength,
@@ -647,55 +676,57 @@ var KAIOPUA = (function (main) {
 			collision,
 			collisionDist;
 		
+		if ( rigidBody.movable !== true || velocityForce.isZero() === true ) {
+			
+			return;
+			
+		}
+		
 		// rotate velocity to mesh's rotation
 		
 		velocityForceRotated = rotate_vector3_to_mesh_rotation( mesh, velocityForce );
 		
-		// if new velocity is not 0
+		// get rotated length
 		
-		if ( velocityForceRotated.isZero() !== true ) {
-			
-			// get rotated length
-			
-			velocityForceRotatedLength = velocityForceRotated.length();
-			
-			// get collision
-			
-			collision = collision || raycast_in_direction( rigidBody, velocityForceRotated );
-			
-			// modify velocity based on collision distances to avoid passing through or into objects
-			
+		velocityForceRotatedLength = velocityForceRotated.length();
+		
+		// get collision
+		
+		collision = collision || raycast_in_direction( rigidBody, velocityForceRotated );
+		
+		// modify velocity based on collision distances to avoid passing through or into objects
+		
+		if ( collision ) {
+		
 			collisionDist = collision.distance;
 			
 			if ( velocityForceRotatedLength > collisionDist ) {
 				
-				velocityForceRotated.multiplyScalar( (collisionDist - 1) / velocityForceRotatedLength );
+				velocityForceRotated.multiplyScalar( (Math.max( 1, collisionDist ) - 1) / velocityForceRotatedLength );
 				
 			}
 			
-			// add velocity to position
-			
-			position.addSelf( velocityForceRotated );
-			
-			// damp velocity
-			
-			velocityForce.multiplySelf( velocityDamping );
-			
 		}
+		
+		// add velocity to position
+		
+		position.addSelf( velocityForceRotated );
+		
+		// damp velocity
+		
+		velocityForce.multiplySelf( velocityDamping );
 		
 		// return collision from ray
 		
 		return collision;
 	}
 	
-	function raycast_in_direction ( rigidBody, direction ) {
+	function raycast_in_direction ( rigidBody, direction, showLine ) {
 		
 		var mesh = rigidBody.mesh,
 			position = mesh.position,
-			rotation = mesh.rotation,
 			colliderDimensions,
-			halfDimension,
-			centerOffset,
+			halfDimensionWithCenterOffset,
 			rayPosition,
 			rayDirection,
 			rayDirectionLength,
@@ -710,52 +741,81 @@ var KAIOPUA = (function (main) {
 			return;
 			
 		}
-		// raycast
-		else {
 			
-			// get collider width/height/depth
-			// could use geometry bounding box, but what if collider is different size?
+		// get collider width/height/depth
+		// could use geometry bounding box, but what if collider is different size?
+		
+		colliderDimensions = dimensions_from_collider_scaled( rigidBody );
+		//colliderDimensions = dimensions_from_bounding_box_scaled( mesh );
+		
+		// copy direction and normalize
+		
+		rayDirection = direction.clone();
+		rayDirectionLength = rayDirection.length();
+		if ( rayDirectionLength > 0 ) {
+			rayDirection.divideScalar( rayDirectionLength );
+		}
+		
+		// copy half of dimensions in direction and add 1 to avoid ray casting to self
+		
+		halfDimensionWithCenterOffset = colliderDimensions.clone().multiplyScalar( 0.5 ).addScalar( 1 );
+		
+		halfDimensionWithCenterOffset.addSelf( center_offset_from_bounding_box( mesh ) );
+		
+		halfDimensionWithCenterOffset.multiplySelf( rayDirection );
+		
+		var halfDimLength = halfDimensionWithCenterOffset.length();
+		
+		//console.log( 'halfDimLength: ' + halfDimLength);
+		
+		colliderDimensions = rotate_vector3_to_mesh_rotation( mesh, colliderDimensions );
+		//console.log('colliderDimensions: ' + colliderDimensions.x + ', ' + colliderDimensions.y + ', ' + colliderDimensions.z );
+		
+		// rotate dimensions to mesh's rotation
+		
+		//halfDimensionWithCenterOffset = rotate_vector3_to_mesh_rotation( mesh, halfDimensionWithCenterOffset );
+		
+		//
+		
+		// find true bottom of mesh
+		// add center offset of mesh to position
+		// subtract rotated half height
+		
+		rayPosition = position.clone();//.addSelf( halfDimensionWithCenterOffset );
+		
+		// ray cast
+		
+		ray = new THREE.Ray( rayPosition, rayDirection );
+
+		collision = THREE.Collisions.rayCastNearest( ray );
+		//collision = ray.intersectScene( game.scene );
+		
+		if ( showLine === true ) {
+			//console.log(collision);
+			//console.log('ray casting from position ' + rayPosition.x.toFixed(2) + ', '  + rayPosition.y.toFixed(2) + ', '  + rayPosition.z.toFixed(2) );
 			
-			colliderDimensions = dimensions_from_collider_scaled( rigidBody );
-			//colliderDimensions = dimensions_from_bounding_box_scaled( mesh );
-			
-			// copy direction and normalize
-			
-			rayDirection = direction.clone();
-			rayDirectionLength = rayDirection.length();
-			if ( rayDirectionLength > 0 ) {
-				rayDirection.divideScalar( rayDirectionLength );
+			if ( collision ) {
+				//console.log(' collision dist ' + collision.distance + ' and normal: ' + collision.normal.x.toFixed(2) + ', '  + collision.normal.y.toFixed(2) + ', '  + collision.normal.z.toFixed(2) );
+				
+				var ls4 = rayDirection.clone().addSelf( rayPosition );
+				var le4 = rayDirection.clone().multiplyScalar( collision.distance ).addSelf( rayPosition );
+				
+			}
+			else {
+				
+				var ls4 = rayDirection.clone().addSelf( rayPosition );
+				var le4 = rayDirection.clone().multiplyScalar( 100 ).addSelf( rayPosition );
+				
 			}
 			
-			// copy half of dimensions in direction and add 1 to avoid ray casting to self
-			
-			halfDimension = colliderDimensions.clone().multiplyScalar( 0.5 ).addScalar( 1 ).multiplySelf( rayDirection );//new THREE.Vector3( 0, colliderDimensions.y * 0.5 + 1, 0 );
-			
-			// rotate dimensions to mesh's rotation
-			
-			halfDimension = rotate_vector3_to_mesh_rotation( mesh, halfDimension );
-			
-			// find true bottom of mesh
-			// add center offset of mesh to position
-			// subtract rotated half height
-			
-			centerOffset = center_offset_from_bounding_box( mesh );
-			
-			rayPosition = position.clone().addSelf( centerOffset ).addSelf( halfDimension );
-			
-			// ray cast
-			
-			ray = new THREE.Ray( rayPosition, rayDirection );
-
-			collision = THREE.Collisions.rayCastNearest( ray );
-			
-			// clamp distance to give a 1 unit gap
-					
-			collision.distance = Math.max( 1, collision.distance );
-			
-			return collision;
-			
+			line4.geometry.vertices[0].position = ls4;
+			line4.geometry.vertices[1].position = le4;
+			line4.geometry.__dirtyVertices = true;
+			line4.geometry.__dirtyElements = true;
+		
 		}
+		
+		return collision;
 		
 	}
 	

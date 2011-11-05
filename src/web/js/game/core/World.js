@@ -85,42 +85,30 @@ var KAIOPUA = (function (main) {
 		
 		var normalMat = new THREE.MeshNormalMaterial();
 		
+		var normalMatWire = new THREE.MeshBasicMaterial({
+			color: 0x000000,
+			wireframe: true
+		});
+		
+		var normalMaterials = [normalMat, normalMatWire];
+		
 		// body parts
         
         head = objectmaker.make_model({
             geometry: assets["assets/models/World_Head.js"],
-			materials: normalMat,
+			materials: normalMaterials,
 			shading: THREE.FlatShading
         });
 		
 		tail = objectmaker.make_model({
             geometry: assets["assets/models/World_Tail.js"],
-			materials: normalMat,
+			materials: normalMaterials,
 			shading: THREE.FlatShading
         });
 		
 		// store
 		
 		parts = [head, tail];
-		
-		// test
-		
-		var groundGeometry = new THREE.PlaneGeometry( 3000, 3000, 1, 1 );
-		
-		var ground = objectmaker.make_model({
-            geometry: groundGeometry,
-			materials: normalMat,
-			rotation: new THREE.Vector3( -90, 0, 0 )
-        });
-		
-		ground.mesh.position.set( 0, -2000, 0 );
-		
-		// add to physics
-		ground.rigidBody = physics.translate( ground.mesh, {
-			bodyType: 'plane'
-		});
-		
-		parts.push( ground );
 		
 		//
 		//
@@ -137,7 +125,7 @@ var KAIOPUA = (function (main) {
 			
 			var box = objectmaker.make_model({
 				geometry: geom,
-				materials: normalMat
+				materials: normalMaterials
 			});
 			
 			box.mesh.position.set( x, y, z );

@@ -58,7 +58,7 @@ var KAIOPUA = (function (main) {
         ],
         assetsGame = [
 			/* JigLib Physics Library (2)
-			 * TODO: Minify and Concat */
+			 * TODO: Minify and Concat
 			"js/lib/jiglibjs2/jiglib.js",
 			"js/lib/jiglibjs2/geom/glMatrix.js",
 			"js/lib/jiglibjs2/geom/Vector3D.js",
@@ -126,7 +126,7 @@ var KAIOPUA = (function (main) {
 			"js/lib/jiglibjs2/vehicles/JChassis.js",
 			"js/lib/jiglibjs2/vehicles/JWheel.js",
 			"js/lib/jiglibjs2/vehicles/JCar.js",
-			/* end JigLib 2 library */
+			end JigLib 2 library */
 			"js/game/workers/MenuMaker.js",
 			"js/game/workers/ObjectMaker.js",
 			"js/game/core/Physics.js",
@@ -137,8 +137,6 @@ var KAIOPUA = (function (main) {
             "js/game/sections/IntroSection.js",
             { path: "assets/models/World_Head.js", type: 'model' },
 			{ path: "assets/models/World_Tail.js", type: 'model' },
-			{ path: "assets/models/World_Head_low.js", type: 'model' },
-			{ path: "assets/models/World_Tail_low.js", type: 'model' },
 			{ path: "assets/models/Hero.js", type: 'model' }
         ];
     
