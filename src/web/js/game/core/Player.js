@@ -28,6 +28,7 @@ var KAIOPUA = (function (main) {
 		utilVec31,
 		utilQ1,
 		utilQ2,
+		utilQ3,
 		line1,
 		line2,
 		line3;
@@ -75,6 +76,7 @@ var KAIOPUA = (function (main) {
 			utilVec31 = new THREE.Vector3();
 			utilQ1 = new THREE.Quaternion();
 			utilQ2 = new THREE.Quaternion();
+			utilQ3 = new THREE.Quaternion();
 			
 			// core
 			
@@ -108,6 +110,7 @@ var KAIOPUA = (function (main) {
 		
 		cameraFollowSettings = {
 			baseRotation: new THREE.Quaternion().setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), Math.PI ),
+			quaternionLast: new THREE.Quaternion(),
 			offset: {
 				pos: new THREE.Vector3( 0, 0, 1000 ),
 				rot: new THREE.Vector3( 60, 0, 0 )
@@ -247,7 +250,7 @@ var KAIOPUA = (function (main) {
 			materials: mat
 		});
 		
-		playerCharacter.model.mesh.position.set( 0, 3000, 0 );
+		playerCharacter.model.mesh.position.set( 1, 3000, 1 );
 		
 		// rigidbody
 		
@@ -263,7 +266,7 @@ var KAIOPUA = (function (main) {
 		
 		playerCharacter.movement = {
 			move: {
-				speed: 0.5,
+				speed: 0.25,
 				vector: new THREE.Vector3()
 			},
 			rotate: {
@@ -410,6 +413,7 @@ var KAIOPUA = (function (main) {
 			clamps = cameraFollowSettings.clamps,
 			pcMesh = playerCharacter.model.mesh,
 			pcQ = pcMesh.quaternion,
+			pcQLast = cameraFollowSettings.quaternionLast,
 			camQ = camera.quaternion,
 			camOffsetPos = utilVec31,
 			camOffsetRot = utilQ1,
@@ -438,6 +442,8 @@ var KAIOPUA = (function (main) {
 		camera.position.copy( pcMesh.position ).addSelf( camOffsetPos );
 		
 		// set new camera rotation
+		
+		//pcQLast = THREE.Quaternion.slerp( pcQLast, pcQ, new THREE.Quaternion(), 0.1 );
 		
 		camQ.copy( pcQ ).multiplySelf( camOffsetRot ).multiplySelf( baseRotation );
 		
@@ -667,7 +673,7 @@ var KAIOPUA = (function (main) {
 		
 		// update vectors
 		
-		moveV.x = ( state.right - state.left );
+		moveV.x = ( state.left - state.right );
 		moveV.y = ( state.up - state.down );
 		moveV.z = ( state.forward - state.back );
 		
