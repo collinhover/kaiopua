@@ -215,6 +215,15 @@ var KAIOPUA = (function (main) {
 		
 		// misc
 		
+		kbMap[ '27' /*escape*/ ] = {
+			keyup: function () { console.log('key up: escape'); }
+		};
+		
+		kbMap[ '32' /*space*/ ] = {
+			keydown: function () { characterMove( 'up' ); },
+			keyup: function () { characterMove( 'up', true ); }
+		};
+		
 		kbMap[ '82' /*r*/ ] = kbMap[ 'r' ] = {
 			keyup: function () { console.log('key up: r'); }
 		};
@@ -274,6 +283,13 @@ var KAIOPUA = (function (main) {
 				vector: new THREE.Vector3(),
 				update: new THREE.Quaternion(),
 			},
+			jump: {
+				speedStart: 4,
+				speedEnd: 0,
+				jumping: false,
+				updatesActive: 0,
+				updatesActiveMax: 30
+			}
 			state: {
 				up: 0, 
 				down: 0, 
@@ -562,6 +578,11 @@ var KAIOPUA = (function (main) {
 			moveVec = move.vector,
 			moveSpeed = move.speed,
 			moveActual = moveVec.clone().multiplyScalar( moveSpeed ),
+			jump = movement.jump,
+			jumpSpeedA,
+			jumpSpeedZ,
+			jumpTimeLast,
+			jumpTimeMax,
 			rotate = movement.rotate,
 			rotateVec = rotate.vector,
 			rotateUpdate = rotate.update,
@@ -569,6 +590,28 @@ var KAIOPUA = (function (main) {
 			rigidBody = model.rigidBody,
 			velocityMovement = rigidBody.velocityMovement,
 			velocityMovementForce = velocityMovement.force;
+		
+		// handle jumping
+		
+		if ( jump.jumping === true ) {
+		
+			/*
+			jump: {
+				speedStart: 4,
+				speedEnd: 0,
+				jumping: false,
+				updatesActive: 0,
+				updatesActiveMax: 30
+			}
+			*/
+
+			jump = movement.jump;
+			jumpSpeedA = jump.speedStart;
+			jumpSpeedZ = jump.speedEnd;
+			jumpTimeLast = jump.timeLast;
+			jumpTimeMax = jump.timeMax;
+		
+		}
 		
 		// add move vec to rigidBody movement
 		

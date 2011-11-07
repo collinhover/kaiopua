@@ -252,20 +252,6 @@ var KAIOPUA = (function (main) {
 		
 		collider.mesh = mesh;
 		
-		// init velocities
-		
-		velocityMovement = {
-			force: new THREE.Vector3(),
-			damping: new THREE.Vector3( 0.98, 0.98, 0.98 ),
-			offset: new THREE.Vector3()
-		};
-		
-		velocityGravity = {
-			force: new THREE.Vector3(),
-			damping: new THREE.Vector3( 0.98, 0.98, 0.98 ),
-			offset: new THREE.Vector3()
-		};
-		
 		// create rigid body
 		
 		rigidBody = {
@@ -273,8 +259,8 @@ var KAIOPUA = (function (main) {
 			collider: collider,
 			movable: movable,
 			mass: mass,
-			velocityMovement: velocityMovement,
-			velocityGravity: velocityGravity,
+			velocityMovement: generate_velocity_tracker(),
+			velocityGravity: generate_velocity_tracker(),
 			axes: {
 				up: new THREE.Vector3( 0, 1, 0 ),
 				forward: new THREE.Vector3( 0, 0, 1 ),
@@ -361,6 +347,23 @@ var KAIOPUA = (function (main) {
 	
 	function set_gravity_magnitude ( magnitude ) {
 		gravityMagnitude = new THREE.Vector3( magnitude.x, magnitude.y, magnitude.z );
+	}
+	
+	function generate_velocity_tracker ( parameters ) {
+		var velocity = {};
+		
+		// handle parameters
+		
+		parameters = parameters || {};
+		
+		parameters.damping = parameters.damping || 0.98;
+		
+		velocity.force = new THREE.Vector3();
+		velocity.damping = new THREE.Vector3().addScalar( parameters.damping );
+		velocity.offset = new THREE.Vector3();
+		velocity.moving = false;
+		
+		return velocity;
 	}
 	
 	function dimensions_from_bounding_box_scaled ( mesh ) {
@@ -765,7 +768,14 @@ var KAIOPUA = (function (main) {
 		
 		if ( rigidBody.movable !== true || velocityForce.isZero() === true ) {
 			
+			velocity.moving = false;
+			
 			return;
+			
+		} 
+		else {
+			
+			velocity.moving = true;
 			
 		}
 		
@@ -824,6 +834,8 @@ var KAIOPUA = (function (main) {
 				// set the base velocity to 0
 				
 				velocityForce.set( 0, 0, 0 );
+				
+				velocity.moving = false;
 				
 			}
 			
