@@ -25,10 +25,13 @@ var KAIOPUA = (function (main) {
 		keybindings = {},
 		keybindingsDefault = {},
 		playerCharacter,
+		utilVec31,
+		utilQ1,
+		utilQ2,
+		utilQ3,
 		line1,
 		line2,
-		line3,
-		line4;
+		line3;
 	
 	/*===================================================
     
@@ -68,6 +71,13 @@ var KAIOPUA = (function (main) {
 			
 			objectmaker = game.workers.objectmaker;
 			
+			// utility objects
+			
+			utilVec31 = new THREE.Vector3();
+			utilQ1 = new THREE.Quaternion();
+			utilQ2 = new THREE.Quaternion();
+			utilQ3 = new THREE.Quaternion();
+			
 			// core
 			
 			physics = core.physics;
@@ -99,12 +109,11 @@ var KAIOPUA = (function (main) {
 		// init camera follow settings
 		
 		cameraFollowSettings = {
+			baseRotation: new THREE.Quaternion().setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), Math.PI ),
+			quaternionLast: new THREE.Quaternion(),
 			offset: {
-				pos: new THREE.Vector3( 0, -600, 1000 ),//0, 0, 250 ),
-				posRotated: new THREE.Vector3(),
-				rot: new THREE.Vector3( -1, 0, 0 ),//-0.2, 0, 0 ),
-				rotQuaternion: new THREE.Quaternion(),
-				rotHalfQuaternion: new THREE.Quaternion()
+				pos: new THREE.Vector3( 0, 0, 1000 ),
+				rot: new THREE.Vector3( 60, 0, 0 )
 			},
 			clamps: {
 				minRotX: -0.4,
@@ -241,31 +250,29 @@ var KAIOPUA = (function (main) {
 			materials: mat
 		});
 		
-		playerCharacter.model.mesh.position.set( 0, 1800, 0 );
+		playerCharacter.model.mesh.position.set( 1, 3000, 1 );
 		
 		// rigidbody
 		
 		playerCharacter.model.rigidBody = physics.translate( playerCharacter.model.mesh, {
-			bodyType: 'sphere', // 'box',
+			bodyType: 'box',
 			width: 40,
 			height: 100,
 			depth: 40,
-			rotatable: false
+			movable: true
 		});
 		
 		// movement
 		
 		playerCharacter.movement = {
 			move: {
-				speed: 200,
+				speed: 0.25,
 				vector: new THREE.Vector3()
 			},
 			rotate: {
 				speed: 0.01,
 				vector: new THREE.Vector3(),
 				update: new THREE.Quaternion(),
-				record: new THREE.Quaternion(),
-				up: new THREE.Vector3( 0, 1, 0 )
 			},
 			state: {
 				up: 0, 
@@ -304,14 +311,6 @@ var KAIOPUA = (function (main) {
 		var lineMat3 = new THREE.LineBasicMaterial( { color: 0x0000ff, opacity: 1, linewidth: 8 } );
 		
 		line3 = new THREE.Line(geom3, lineMat3);
-		
-		var geom4 = new THREE.Geometry();
-		geom4.vertices.push( new THREE.Vertex( new THREE.Vector3(-100, 0, 0) ) );
-		geom4.vertices.push( new THREE.Vertex( new THREE.Vector3( 100, 0, 0) ) );
-		
-		var lineMat4 = new THREE.LineBasicMaterial( { color: 0xff00ff, opacity: 1, linewidth: 8 } );
-		
-		line4 = new THREE.Line(geom4, lineMat4);
 		
 	}
 	
@@ -407,29 +406,46 @@ var KAIOPUA = (function (main) {
 	
 	function camera_follow_character () {
 		
-		var offset = cameraFollowSettings.offset,
+		var baseRotation = cameraFollowSettings.baseRotation,
+			offset = cameraFollowSettings.offset,
 			srcOffsetPos = offset.pos,
 			srcOffsetRot = offset.rot,
 			clamps = cameraFollowSettings.clamps,
 			pcMesh = playerCharacter.model.mesh,
-			pcQuaternion = pcMesh.quaternion,
-			camOffsetPos = offset.posRotated,
-			camOffsetRot = offset.rotQuaternion,
-			camOffsetRotHalf = offset.rotHalfQuaternion;
+			pcQ = pcMesh.quaternion,
+			pcQLast = cameraFollowSettings.quaternionLast,
+			camQ = camera.quaternion,
+			camOffsetPos = utilVec31,
+			camOffsetRot = utilQ1,
+			camOffsetRotHalf = utilQ2;
+		
+		// set offset base position
 		
 		camPosNew = pcMesh.position.clone();
 		camOffsetPos.set( srcOffsetPos.x, srcOffsetPos.y, srcOffsetPos.z );
-		camOffsetRot.set( srcOffsetRot.x, srcOffsetRot.y, srcOffsetRot.z, 1 ).normalize();
+		
+		// set offset rotation
+		
+		camOffsetRot.setFromEuler( srcOffsetRot ).normalize();
 		camOffsetRotHalf.set( camOffsetRot.x * 0.5, camOffsetRot.y * 0.5, camOffsetRot.z * 0.5, camOffsetRot.w).normalize();
 		
+		// create new camera offset position
+		
+		baseRotation.multiplyVector3( camOffsetPos );
+		
 		camOffsetRot.multiplyVector3( camOffsetPos );
-		pcQuaternion.multiplyVector3( camOffsetPos );
+		
+		pcQ.multiplyVector3( camOffsetPos );
+		
+		// set new camera position
 		
 		camera.position.copy( pcMesh.position ).addSelf( camOffsetPos );
-		//camera.position.addSelf( camPosNew.subSelf( camera.position ).multiplyScalar( 0.1 ) );
 		
-		camera.quaternion.copy( pcQuaternion );
-		camera.quaternion.multiplySelf( camOffsetRotHalf );
+		// set new camera rotation
+		
+		//pcQLast = THREE.Quaternion.slerp( pcQLast, pcQ, new THREE.Quaternion(), 0.1 );
+		
+		camQ.copy( pcQ ).multiplySelf( camOffsetRot ).multiplySelf( baseRotation );
 		
 	}
 	
@@ -539,185 +555,68 @@ var KAIOPUA = (function (main) {
 		
 		var pc = playerCharacter,
 			model = pc.model,
+			mesh = model.mesh,
+			meshQ = mesh.quaternion,
 			movement = pc.movement,
 			move = movement.move,
-			rotate = movement.rotate,
-			state = movement.state,
 			moveVec = move.vector,
 			moveSpeed = move.speed,
+			moveActual = moveVec.clone().multiplyScalar( moveSpeed ),
+			rotate = movement.rotate,
 			rotateVec = rotate.vector,
-			rotateRecord = rotate.record,
-			rotateUp = rotate.up,
 			rotateUpdate = rotate.update,
 			rotateSpeed = rotate.speed,
-			pcRotQ,
-			pcRotMat,
-			rb = model.rigidBody,
-			rbState = rb.get_currentState(),
-			rbMass = rb.get_mass(),
-			rbPosition = new THREE.Vector3().copy( rbState.position ),
-			rbRotNew,
-			linVelForce,
-			gravitySource = {
-				pos: new THREE.Vector3()
-			},
-			gravityForce = 200,//world.gravityMagnitude * rbMass,
-			gravityUp,
-			gravityPull,
-			up = new THREE.Vector3( 0, 1, 0 ),
-			down = new THREE.Vector3( 0, -1, 0 ),
-			forward = new THREE.Vector3( 0, 0, 1 ),
-			back = new THREE.Vector3( 0, 0, -1 ),
-			right = new THREE.Vector3( 1, 0, 0 ),
-			left = new THREE.Vector3( -1, 0, 0 ),
-			upNew,
-			forwardNew,
-			rightNew,
-			upToUpNewAxis,
-			upToUpNewAngle,
-			upToUpNewQ;
+			rigidBody = model.rigidBody,
+			velocityMovement = rigidBody.velocityMovement,
+			velocityMovementForce = velocityMovement.force;
 		
-		// get normalized vector between character and gravity source
-		gravityUp = new THREE.Vector3().sub( rbPosition, gravitySource.pos );
-		var gupLen = gravityUp.length();
-		if ( gupLen > 0 ) {
-			gravityUp.divideScalar( gupLen );
-		}
-		//gravityUp.normalize();
+		// add move vec to rigidBody movement
 		
-		// get pull of gravity
+		velocityMovementForce.addSelf( moveActual );
 		
-		gravityPull = gravityUp.clone().negate();
-		gravityPull.multiplyScalar( gravityForce );
-		
-		// commit rotation update
+		// rotate self
 		
 		rotateUpdate.set( rotateVec.x * rotateSpeed, rotateVec.y * rotateSpeed, rotateVec.z * rotateSpeed, 1 ).normalize();
 		
-		//rotateRecord.multiplySelf( rotateUpdate );
+		utilQ1.multiply( meshQ, rotateUpdate );
 		
-		// get new right / up / forward axes based on gravity
-		
-		/*
-		
-		var rayStart = new THREE.Vector3().copy( rbState.position );
-		var rayDirection = new THREE.Vector3().copy( gravityUp.clone().negate() );
-		
-		var ray = new THREE.Ray( rayStart, rayDirection );
-
-		var c = THREE.Collisions.rayCastNearest( ray );
-
-		if( c ) {
-
-			console.log("Found @ normal " + c.normal.x.toFixed(2) + " , " + c.normal.y.toFixed(2) + " , " + c.normal.z.toFixed(2) );
-			
-			var ls4 = ray.origin.clone().addSelf( ray.direction.clone().multiplyScalar(c.distance) );
-			var le4 = ls4.clone().addSelf(c.normal.multiplyScalar(100));
-			
-			line4.geometry.vertices[0].position = ls4;
-			line4.geometry.vertices[1].position = le4;
-			line4.geometry.__dirtyVertices = true;
-			line4.geometry.__dirtyElements = true;
-
-		} else {
-
-			console.log("No intersection");
-
-		}
-		*/
-		
-		upToUpNewAngle = Math.acos( Math.max( 0, Math.min( 1, rotateUp.dot( gravityUp ) ) ) );
-		upToUpNewAxis = new THREE.Vector3().cross( rotateUp, gravityUp );
-		var utunLen = upToUpNewAxis.length();
-		if ( utunLen > 0 ) {
-			upToUpNewAxis.divideScalar( utunLen );
-		}
-		//upToUpNewAxis.normalize();
-		
-		upToUpNewQ = new THREE.Quaternion();
-		upToUpNewQ.setFromAxisAngle( upToUpNewAxis, upToUpNewAngle );
-		upToUpNewQ.inverse();
-		
-		// store gravity up as rotate up
-		
-		rotateUp.copy( gravityUp );
-		
-		// add to rotation
-		
-		rotateRecord.multiplySelf( upToUpNewQ );
-		
-		var rrNew = new THREE.Quaternion();
-		rrNew.multiplySelf( rotateUpdate.inverse() );
-		rrNew.multiplySelf( rotateRecord );
-		
-		//var rrSlerp = THREE.Quaternion.slerp( rotateRecord, rrNew, new THREE.Quaternion(), 0.25 );
-		//rotateRecord.copy( rrSlerp );
-		
-		rotateRecord.copy( rrNew );
-		
-		upNew = up.clone();
-		
-		forwardNew = forward.clone().negate();
-		
-		rightNew = right.clone();
-		
-		var rrInv = new THREE.Quaternion().copy( rotateRecord ).inverse();
-		
-		rrInv.multiplyVector3( upNew );
-		rrInv.multiplyVector3( forwardNew );
-		rrInv.multiplyVector3( rightNew );
-		
-		// commit final rotation
-		
-		//var rbQ = new THREE.Quaternion().copy( rotateRecord ).inverse();
-		
-		pcRotMat = new THREE.Matrix4().setRotationFromQuaternion( rotateRecord );
-		
-		rbRotNew = new jiglib.Matrix3D( pcRotMat.flatten() );
-		
-		rbState.orientation = rbRotNew;
-		
-		// commit movement update
-		
-		var moveForce = new THREE.Vector3( moveVec.x, moveVec.y, moveVec.z );
-		
-		moveForce.x = moveVec.z * forwardNew.x + moveVec.x * rightNew.x + moveVec.y * upNew.x;
-		moveForce.y = moveVec.z * forwardNew.y + moveVec.x * rightNew.y + moveVec.y * upNew.y;
-		moveForce.z = moveVec.z * forwardNew.z + moveVec.x * rightNew.z + moveVec.y * upNew.z;
-	
-		moveForce.multiplyScalar( 600 );//moveSpeed );// * rbMass );
-		
-		var forcesAll = new jiglib.Vector3D( gravityPull.x, gravityPull.y, gravityPull.z );
-		forcesAll = forcesAll.add( moveForce );
-		
-		// apply world impulse
-		rb.setLineVelocity( forcesAll );
-		//rbState.linVelocity = rbState.linVelocity.add( moveForce );
-		
-		// apply forces
-		
-		//rb.applyWorldImpulse( gravityPull, gravitySource.pos, true );
+		meshQ.copy( utilQ1 );
 		
 		// line testing
 		
-		var lineStart = new THREE.Vector3().copy( forwardNew ).addSelf( rbPosition );
-		var lineEnd = new THREE.Vector3().copy( forwardNew ).multiplyScalar( 100 ).addSelf( rbPosition );
+		var position = model.mesh.position;
+		var axes = rigidBody.axes;
+		var up = axes.up;
+		var forward = new THREE.Vector3( 0, 0, 1 );//axes.forward;
+		var right = new THREE.Vector3( -1, 0, 0 );//axes.right;
+		
+		meshQ.multiplyVector3( forward );
+		meshQ.multiplyVector3( right );
+		
+		// forward
+		
+		var lineStart = forward.clone().addSelf( position );
+		var lineEnd = forward.clone().multiplyScalar( 100 ).addSelf( position );
+		
 		line1.geometry.vertices[0].position = lineStart;
 		line1.geometry.vertices[1].position = lineEnd;
 		line1.geometry.__dirtyVertices = true;
 		line1.geometry.__dirtyElements = true;
 		
-		var ls2 = new THREE.Vector3().copy( rightNew ).addSelf( rbPosition );
-		var le2 = new THREE.Vector3().copy( rightNew ).multiplyScalar( 100 ).addSelf( rbPosition );
+		// right
+		
+		var ls2 = right.clone().addSelf( position );
+		var le2 = right.clone().multiplyScalar( 100 ).addSelf( position );
 		
 		line2.geometry.vertices[0].position = ls2;
 		line2.geometry.vertices[1].position = le2;
 		line2.geometry.__dirtyVertices = true;
 		line2.geometry.__dirtyElements = true;
 		
+		// up
 		
-		var ls3 = new THREE.Vector3().copy( upNew ).addSelf( rbPosition );
-		var le3 = new THREE.Vector3().copy( upNew ).multiplyScalar( 100 ).addSelf( rbPosition );
+		var ls3 = up.clone().addSelf( position );
+		var le3 = up.clone().multiplyScalar( 100 ).addSelf( position );
 		
 		line3.geometry.vertices[0].position = ls3;
 		line3.geometry.vertices[1].position = le3;
@@ -774,7 +673,7 @@ var KAIOPUA = (function (main) {
 		
 		// update vectors
 		
-		moveV.x = ( state.right - state.left );
+		moveV.x = ( state.left - state.right );
 		moveV.y = ( state.up - state.down );
 		moveV.z = ( state.forward - state.back );
 		
@@ -827,7 +726,6 @@ var KAIOPUA = (function (main) {
 		scene.add( line1 );
 		scene.add( line2 );
 		scene.add( line3 );
-		scene.add( line4 );
 		
 		scene.add( playerCharacter.model.mesh );
 		
@@ -839,7 +737,7 @@ var KAIOPUA = (function (main) {
 		
 		scene.remove( playerCharacter.model.mesh );
 		
-		physics.remove( playerCharacter.model.mesh, { rigidBody: playerCharacter.model.rigidBody } );
+		physics.remove( playerCharacter.model.rigidBody );
 		
 	}
 	

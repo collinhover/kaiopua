@@ -58,7 +58,7 @@ var KAIOPUA = (function (main) {
         ],
         assetsGame = [
 			/* JigLib Physics Library (2)
-			 * TODO: Minify and Concat */
+			 * TODO: Minify and Concat
 			"js/lib/jiglibjs2/jiglib.js",
 			"js/lib/jiglibjs2/geom/glMatrix.js",
 			"js/lib/jiglibjs2/geom/Vector3D.js",
@@ -126,7 +126,7 @@ var KAIOPUA = (function (main) {
 			"js/lib/jiglibjs2/vehicles/JChassis.js",
 			"js/lib/jiglibjs2/vehicles/JWheel.js",
 			"js/lib/jiglibjs2/vehicles/JCar.js",
-			/* end JigLib 2 library */
+			end JigLib 2 library */
 			"js/game/workers/MenuMaker.js",
 			"js/game/workers/ObjectMaker.js",
 			"js/game/core/Physics.js",
@@ -137,8 +137,6 @@ var KAIOPUA = (function (main) {
             "js/game/sections/IntroSection.js",
             { path: "assets/models/World_Head.js", type: 'model' },
 			{ path: "assets/models/World_Tail.js", type: 'model' },
-			{ path: "assets/models/World_Head_low.js", type: 'model' },
-			{ path: "assets/models/World_Tail_low.js", type: 'model' },
 			{ path: "assets/models/Hero.js", type: 'model' }
         ];
     
@@ -258,6 +256,10 @@ var KAIOPUA = (function (main) {
 				startBottom: true
 			} )*/
 		
+		// modify THREE classes
+		
+		add_three_modifications();
+		
         // transitioner
         transitioner = uihelper.make_ui_element({
             classes: 'transitioner'
@@ -334,6 +336,43 @@ var KAIOPUA = (function (main) {
         animate();
 		
     }
+	
+	function add_three_modifications () {
+		
+		// quaternion normalized lerp
+		
+		THREE.Quaternion.nlerp = function ( qa, qb, qr, t ) {
+			
+			var tFrom = 1 - t;
+			
+			qr.x = qa.x * tFrom + qb.x * t;
+			qr.y = qa.y * tFrom + qb.y * t;
+			qr.z = qa.z * tFrom + qb.z * t;
+			qr.w = qa.w * tFrom + qb.w * t;
+			
+			qr.normalize();
+			
+			return qr;
+			
+		}
+		
+		// vector3 normalized lerp
+		
+		THREE.Vector3.nlerp = function ( va, vb, vr, t ) {
+			
+			var tFrom = 1 - t;
+			
+			vr.x = va.x * tFrom + vb.x * t;
+			vr.y = va.y * tFrom + vb.y * t;
+			vr.z = va.z * tFrom + vb.z * t;
+			
+			vr.normalize();
+			
+			return vr;
+			
+		}
+		
+	}
 	
 	/*===================================================
     
@@ -709,13 +748,15 @@ var KAIOPUA = (function (main) {
 		
 		if ( paused !== true ) {
 			
-			shared.signals.update.dispatch();
-			
 			// update physics
 			
 			if ( typeof physics !== 'undefined' ) {
 				physics.update();
 			}
+			
+			// update all others
+			
+			shared.signals.update.dispatch();
 			
 		}
 		
