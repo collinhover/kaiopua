@@ -47,6 +47,8 @@ var KAIOPUA = (function (main) {
         
         shared.frameRateMax = 60;
         shared.frameRateMin = 20;
+        shared.time = new Date().getTime();
+        shared.timeLast = shared.time;
         shared.refreshInterval = 1000 / 60;
         
         shared.html= {

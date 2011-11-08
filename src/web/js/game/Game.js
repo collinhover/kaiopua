@@ -33,7 +33,7 @@ var KAIOPUA = (function (main) {
 		character,
         sectionNames = [],
         currentSection, 
-        previousSection, 
+        previousSection,
         paused = false,
         transitionOut = 1000, 
         transitionIn = 400,
@@ -741,8 +741,18 @@ var KAIOPUA = (function (main) {
     }
     
     function animate () {
+    
+    	var timeDelta;
         
         requestAnimationFrame( animate );
+		
+		// handle time
+		
+		shared.timeLast = shared.time;
+		
+		shared.time = new Date().getTime();
+		
+		timeDelta = shared.time - shared.timeLast;
 		
 		// update
 		
@@ -751,12 +761,12 @@ var KAIOPUA = (function (main) {
 			// update physics
 			
 			if ( typeof physics !== 'undefined' ) {
-				physics.update();
+				physics.update( timeDelta );
 			}
 			
 			// update all others
 			
-			shared.signals.update.dispatch();
+			shared.signals.update.dispatch( timeDelta );
 			
 		}
 		

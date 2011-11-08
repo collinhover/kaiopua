@@ -183,13 +183,11 @@ var KAIOPUA = (function (main) {
 		// qe
 		
 		kbMap[ '81' /*q*/ ] = kbMap[ 'q' ] = {
-			keydown: function () { characterMove( 'left' ); },
-			keyup: function () { characterMove( 'left', true ); }
+			keyup: function () { console.log('key up: q'); }
 		};
 		
 		kbMap[ '69' /*e*/ ] = kbMap[ 'e' ] = {
-			keydown: function () { characterMove( 'right' ); },
-			keyup: function () { characterMove( 'right', true ); }
+			keyup: function () { console.log('key up: e'); }
 		};
 		
 		// numbers
@@ -261,35 +259,26 @@ var KAIOPUA = (function (main) {
 		
 		playerCharacter.model.mesh.position.set( 1, 3000, 1 );
 		
-		// rigidbody
-		
-		playerCharacter.model.rigidBody = physics.translate( playerCharacter.model.mesh, {
-			bodyType: 'box',
-			width: 40,
-			height: 100,
-			depth: 40,
-			movable: true
-		});
-		
 		// movement
 		
 		playerCharacter.movement = {
 			move: {
-				speed: 0.25,
+				speed: 2,
 				vector: new THREE.Vector3()
 			},
 			rotate: {
 				speed: 0.01,
 				vector: new THREE.Vector3(),
-				update: new THREE.Quaternion(),
+				update: new THREE.Quaternion()
 			},
 			jump: {
-				speedStart: 4,
+				speedStart: 6,
 				speedEnd: 0,
-				jumping: false,
-				updatesActive: 0,
-				updatesActiveMax: 30
-			}
+				timeTotal: 0,
+				timeMax: 250,
+				ready: false,
+				stopped: false
+			},
 			state: {
 				up: 0, 
 				down: 0, 
@@ -298,9 +287,22 @@ var KAIOPUA = (function (main) {
 				forward: 0, 
 				back: 0, 
 				turnLeft: 0, 
-				turnRight: 0
+				turnRight: 0,
+				grounded: false
 			}
-		}
+		};
+		
+		// rigidbody
+		
+		playerCharacter.model.rigidBody = physics.translate( playerCharacter.model.mesh, {
+			bodyType: 'box',
+			width: 40,
+			height: 100,
+			depth: 40,
+			movable: true,
+			movementDamping: 0.85,
+			gravityDamping: 0.95
+		});
 		
 		// lines for testing
 		
@@ -308,7 +310,7 @@ var KAIOPUA = (function (main) {
 		geom.vertices.push( new THREE.Vertex( new THREE.Vector3(-100, 0, 0) ) );
 		geom.vertices.push( new THREE.Vertex( new THREE.Vector3( 100, 0, 0) ) );
 		
-		var lineMat1 = new THREE.LineBasicMaterial( { color: 0xff0000, opacity: 1, linewidth: 8 } );
+		var lineMat1 = new THREE.LineBasicMaterial( { color: 0xff0000, opacity: 1, linewidth: 1 } );
 		
 		line1 = new THREE.Line(geom, lineMat1);
 		
@@ -316,7 +318,7 @@ var KAIOPUA = (function (main) {
 		geom2.vertices.push( new THREE.Vertex( new THREE.Vector3(-100, 0, 0) ) );
 		geom2.vertices.push( new THREE.Vertex( new THREE.Vector3( 100, 0, 0) ) );
 		
-		var lineMat2 = new THREE.LineBasicMaterial( { color: 0x00ff00, opacity: 1, linewidth: 8 } );
+		var lineMat2 = new THREE.LineBasicMaterial( { color: 0x00ff00, opacity: 1, linewidth: 1 } );
 		
 		line2 = new THREE.Line(geom2, lineMat2);
 		
@@ -324,7 +326,7 @@ var KAIOPUA = (function (main) {
 		geom3.vertices.push( new THREE.Vertex( new THREE.Vector3(-100, 0, 0) ) );
 		geom3.vertices.push( new THREE.Vertex( new THREE.Vector3( 100, 0, 0) ) );
 		
-		var lineMat3 = new THREE.LineBasicMaterial( { color: 0x0000ff, opacity: 1, linewidth: 8 } );
+		var lineMat3 = new THREE.LineBasicMaterial( { color: 0x0000ff, opacity: 1, linewidth: 1 } );
 		
 		line3 = new THREE.Line(geom3, lineMat3);
 		
@@ -567,7 +569,7 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	function update_character () {
+	function update_character ( timeDelta ) {
 		
 		var pc = playerCharacter,
 			model = pc.model,
@@ -578,39 +580,64 @@ var KAIOPUA = (function (main) {
 			moveVec = move.vector,
 			moveSpeed = move.speed,
 			moveActual = moveVec.clone().multiplyScalar( moveSpeed ),
+			state = movement.state,
 			jump = movement.jump,
-			jumpSpeedA,
-			jumpSpeedZ,
-			jumpTimeLast,
-			jumpTimeMax,
+			jumpSpeedStart,
+			jumpSpeedEnd,
+			jumpTimeTotal = jump.timeTotal,
+			jumpTimeMax = jump.timeMax,
+			jumpTimeRatio,
 			rotate = movement.rotate,
 			rotateVec = rotate.vector,
 			rotateUpdate = rotate.update,
 			rotateSpeed = rotate.speed,
 			rigidBody = model.rigidBody,
 			velocityMovement = rigidBody.velocityMovement,
-			velocityMovementForce = velocityMovement.force;
+			velocityMovementForce = velocityMovement.force,
+			velocityGravity = rigidBody.velocityGravity;
+		
+		// handle time
+		
+		timeDelta = timeDelta || shared.refreshInterval;
 		
 		// handle jumping
 		
-		if ( jump.jumping === true ) {
+		state.grounded = !velocityGravity.moving;
 		
-			/*
-			jump: {
-				speedStart: 4,
-				speedEnd: 0,
-				jumping: false,
-				updatesActive: 0,
-				updatesActiveMax: 30
+		if ( state.up !== 0 && jump.stopped === false ) {
+			
+			if ( state.grounded === true && jump.ready === true ) {
+				
+				jump.timeTotal = 0;
+				
+				jump.ready = false;
+				
 			}
-			*/
-
-			jump = movement.jump;
-			jumpSpeedA = jump.speedStart;
-			jumpSpeedZ = jump.speedEnd;
-			jumpTimeLast = jump.timeLast;
-			jumpTimeMax = jump.timeMax;
+			else if ( jump.ready === false && jump.timeTotal < jumpTimeMax ) {
+				
+				// properties
+				
+				jumpTimeRatio = jumpTimeTotal / jumpTimeMax;
+				jumpSpeedStart = jump.speedStart;
+				jumpSpeedEnd = jump.speedEnd;
+				
+				// add speed to gravity velocity
+				
+				velocityGravity.force.y += jumpSpeedStart * ( 1 - jumpTimeRatio) + jumpSpeedEnd * jumpTimeRatio;
+				
+				// update time total
+				
+				jump.timeTotal += timeDelta;
+				
+			}
 		
+		}
+		else if ( state.grounded === true && state.up === 0 ) {
+			
+			jump.stopped = false;
+			
+			jump.ready = true;
+			
 		}
 		
 		// add move vec to rigidBody movement
@@ -678,6 +705,10 @@ var KAIOPUA = (function (main) {
 			moveV = move.vector,
 			rotateV = rotate.vector;
 		
+		if ( typeof stop === 'undefined' ) {
+			stop = false;
+		}
+		
 		if ( type === 'turnLeft' ) {
 			
 			state.turnLeft = stop === true ? 0 : 1;
@@ -710,14 +741,25 @@ var KAIOPUA = (function (main) {
 		}
 		else if ( type === 'up' ) {
 			
-			state.up = stop === true ? 0 : 1;
+			if ( stop === true ) {
+				
+				movement.jump.stopped = true;
+				
+				state.up = 0;
+				
+			}
+			else {
+				
+				state.up = 1;
+				
+			}
+				
 			
 		}
 		
 		// update vectors
 		
 		moveV.x = ( state.left - state.right );
-		moveV.y = ( state.up - state.down );
 		moveV.z = ( state.forward - state.back );
 		
 		rotateV.y = ( state.turnLeft - state.turnRight );
@@ -784,11 +826,11 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function update () {
+	function update ( timeDelta ) {
 		
 		// character
 		
-		update_character();
+		update_character( timeDelta );
 		
 		// camera
 		

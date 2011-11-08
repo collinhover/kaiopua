@@ -15,18 +15,16 @@ var KAIOPUA = (function (main) {
 		linksBaseName = 'vis_to_phys_link_',
 		linksCount = 0,
 		links = [],
-		time,
-		timeLast,
-		utilMat4,
-		utilVec31,
-		utilVec32,
-		utilVec33,
-		utilVec34,
-		utilQ1,
-		utilQ2,
-		utilQ3,
-		utilQ4,
-		utilQ5,
+		utilVec31Integrate,
+		utilVec32Integrate,
+		utilVec31IntegrateOffset,
+		utilVec31Raycast,
+		utilVec31Velocity,
+		utilVec32Velocity,
+		utilQ1Integrate,
+		utilQ2Integrate,
+		utilQ3Integrate,
+		utilQ4Offset,
 		line4;
 	
 	/*===================================================
@@ -87,16 +85,16 @@ var KAIOPUA = (function (main) {
 		
 		// utility / conversion objects
 		
-		utilMat4 = new THREE.Matrix4();
-		utilVec31 = new THREE.Vector3();
-		utilVec32 = new THREE.Vector3();
-		utilVec33 = new THREE.Vector3();
-		utilVec34 = new THREE.Vector3();
-		utilQ1 = new THREE.Quaternion();
-		utilQ2 = new THREE.Quaternion();
-		utilQ3 = new THREE.Quaternion();
-		utilQ4 = new THREE.Quaternion();
-		utilQ5 = new THREE.Quaternion();
+		utilVec31Integrate = new THREE.Vector3();
+		utilVec32Integrate = new THREE.Vector3();
+		utilVec31IntegrateOffset = new THREE.Vector3();
+		utilVec31Raycast = new THREE.Vector3();
+		utilVec31Velocity = new THREE.Vector3();
+		utilVec32Velocity = new THREE.Vector3();
+		utilQ1Integrate = new THREE.Quaternion();
+		utilQ2Integrate = new THREE.Quaternion();
+		utilQ3Integrate = new THREE.Quaternion();
+		utilQ4Offset = new THREE.Quaternion();
 		
 		// line testing
 		
@@ -104,7 +102,7 @@ var KAIOPUA = (function (main) {
 		geom4.vertices.push( new THREE.Vertex( new THREE.Vector3(-100, 0, 0) ) );
 		geom4.vertices.push( new THREE.Vertex( new THREE.Vector3( 100, 0, 0) ) );
 		
-		var lineMat4 = new THREE.LineBasicMaterial( { color: 0xff00ff, opacity: 1, linewidth: 8 } );
+		var lineMat4 = new THREE.LineBasicMaterial( { color: 0xff00ff, opacity: 1, linewidth: 1 } );
 		
 		line4 = new THREE.Line(geom4, lineMat4);
 		
@@ -259,8 +257,14 @@ var KAIOPUA = (function (main) {
 			collider: collider,
 			movable: movable,
 			mass: mass,
-			velocityMovement: generate_velocity_tracker(),
-			velocityGravity: generate_velocity_tracker(),
+			velocityMovement: generate_velocity_tracker( { 
+				damping: parameters.movementDamping,
+				offset: parameters.movementOffset
+			} ),
+			velocityGravity: generate_velocity_tracker( { 
+				damping: parameters.gravityDamping,
+				offset: parameters.gravityOffset
+			} ),
 			axes: {
 				up: new THREE.Vector3( 0, 1, 0 ),
 				forward: new THREE.Vector3( 0, 0, 1 ),
@@ -360,7 +364,7 @@ var KAIOPUA = (function (main) {
 		
 		velocity.force = new THREE.Vector3();
 		velocity.damping = new THREE.Vector3().addScalar( parameters.damping );
-		velocity.offset = new THREE.Vector3();
+		velocity.offset = parameters.offset && parameters.offset instanceof THREE.Vector3 ? parameters.offset : new THREE.Vector3();
 		velocity.moving = false;
 		
 		return velocity;
@@ -452,8 +456,8 @@ var KAIOPUA = (function (main) {
 		var offset = new THREE.Vector3( length, length, length ),
 			maxDim,
 			localDirection,
-			uV33 = utilVec33,
-			uQ4 = utilQ4;
+			uV33 = utilVec31IntegrateOffset,
+			uQ4 = utilQ4Offset;
 		
 		// set in direction
 		
@@ -472,8 +476,8 @@ var KAIOPUA = (function (main) {
 		var offset,
 			maxDim,
 			localDirection,
-			uV33 = utilVec33,
-			uQ4 = utilQ4;
+			uV33 = utilVec31IntegrateOffset,
+			uQ4 = utilQ4Offset;
 		
 		// set all dimensions to max dimension
 		
@@ -550,36 +554,40 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function update () {
+	function update ( timeDelta ) {
 		
-		var timeDelta,
+		var i, l = 1,
+			refreshInterval = shared.refreshInterval,
+			currentInterval = timeDelta,
 			timeStep;
 		
 		// handle time
 		
-		timeLast = time;
-		
-		time = new Date().getTime();
-		
-		timeDelta = time - timeLast;
-		
-		timeStep = timeDelta / 1000;
-		
-		if ( timeStep > 0.05 ) {
-			timeStep = 0.05;
+		if ( currentInterval > refreshInterval ) {
+			
+			l = Math.ceil( currentInterval / refreshInterval );
+			
 		}
 		
 		// integrate
 		
-		integrate( timeStep );
+		for ( i = 0; i < l; i += 1 ) {
+			
+			currentInterval = refreshInterval;
+			
+			timeStep = currentInterval / 1000;
+		
+			integrate( timeStep );
+			
+		}
 		
 	}
 	
 	function integrate ( timeStep ) {
 		
 		var i, l,
-			uv31 = utilVec31, uv32 = utilVec32,
-			uq1 = utilQ1, uq2 = utilQ2, uq3 = utilQ3,
+			uv31 = utilVec31Integrate, uv32 = utilVec32Integrate,
+			uq1 = utilQ1Integrate, uq2 = utilQ2Integrate, uq3 = utilQ3Integrate,
 			lerpDelta = 0.1,
 			rigidBody,
 			mesh,
@@ -646,7 +654,7 @@ var KAIOPUA = (function (main) {
 				
 				// negate gravity up
 				
-				gravDown = axisUp.clone().negate();//gravUp.clone().negate();//
+				gravDown = gravUp.clone().negate();//axisUp.clone().negate();//
 				
 				// handle movement velocity
 				
@@ -654,7 +662,7 @@ var KAIOPUA = (function (main) {
 				
 				// ray cast in the direction of gravity
 				
-				collisionGravity = raycast_in_direction( rigidBody, gravDown );
+				//collisionGravity = raycast_in_direction( rigidBody, gravDown );
 				
 				// handle collision to find new up orientation
 				
@@ -744,7 +752,7 @@ var KAIOPUA = (function (main) {
 				
 				// handle gravity velocity
 				
-				handle_velocity( rigidBody, velocityGravity, collisionGravity );
+				handle_velocity( rigidBody, velocityGravity );
 				
 			}
 			
@@ -752,19 +760,21 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function handle_velocity ( rigidBody, velocity, collision, offset ) {
+	function handle_velocity ( rigidBody, velocity, offset ) {
 		
 		var mesh = rigidBody.mesh,
 			position = mesh.position,
 			velocityForce = velocity.force,
 			velocityForceRotated,
 			velocityForceRotatedLength,
+			velocityForceScalar,
 			velocityDamping = velocity.damping,
 			velocityOffset = velocity.offset,
 			boundingOffset,
 			boundingOffsetLength,
 			collision,
-			collisionDist;
+			collisionDist,
+			uv31, uv32;
 		
 		if ( rigidBody.movable !== true || velocityForce.isZero() === true ) {
 			
@@ -809,11 +819,7 @@ var KAIOPUA = (function (main) {
 		
 		// get collision
 		
-		if ( typeof collision === 'undefined' ) {
-			
-			collision = raycast_in_direction( rigidBody, velocityForceRotated, velocityOffset, ( typeof offset === 'undefined' ? true : false) );
-			
-		}
+		collision = raycast_in_direction( rigidBody, velocityForceRotated, velocityOffset );
 		
 		// modify velocity based on collision distances to avoid passing through or into objects
 		
@@ -827,9 +833,9 @@ var KAIOPUA = (function (main) {
 			
 			if ( collisionDist - velocityForceRotatedLength <= boundingOffsetLength ) {
 				
-				var velForceScalar = ( collisionDist - boundingOffsetLength ) / velocityForceRotatedLength;
+				velocityForceScalar = ( collisionDist - boundingOffsetLength ) / velocityForceRotatedLength;
 				
-				velocityForceRotated.multiplyScalar( velForceScalar );
+				velocityForceRotated.multiplyScalar( velocityForceScalar );
 				
 				// set the base velocity to 0
 				
