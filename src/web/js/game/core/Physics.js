@@ -10,6 +10,7 @@ var KAIOPUA = (function (main) {
 		physics = core.physics = core.physics || {},
 		ready = false,
 		system,
+		cardinalAxes,
 		gravitySource,
 		gravityMagnitude,
 		linksBaseName = 'vis_to_phys_link_',
@@ -17,7 +18,7 @@ var KAIOPUA = (function (main) {
 		links = [],
 		utilVec31Integrate,
 		utilVec32Integrate,
-		utilVec31IntegrateOffset,
+		utilVec31Offset,
 		utilVec31Raycast,
 		utilVec31Velocity,
 		utilVec32Velocity,
@@ -83,11 +84,19 @@ var KAIOPUA = (function (main) {
 		set_gravity_source( new THREE.Vector3( 0, 0, 0 ) );
 		set_gravity_magnitude( new THREE.Vector3( 0, -1, 0 ) );
 		
+		// set cardinal axes
+		
+		cardinalAxes = {
+			up: new THREE.Vector3( 0, 1, 0 ),
+			forward: new THREE.Vector3( 0, 0, 1 ),
+			right: new THREE.Vector3( -1, 0, 0 )
+		}
+		
 		// utility / conversion objects
 		
 		utilVec31Integrate = new THREE.Vector3();
 		utilVec32Integrate = new THREE.Vector3();
-		utilVec31IntegrateOffset = new THREE.Vector3();
+		utilVec31Offset = new THREE.Vector3();
 		utilVec31Raycast = new THREE.Vector3();
 		utilVec31Velocity = new THREE.Vector3();
 		utilVec32Velocity = new THREE.Vector3();
@@ -456,7 +465,7 @@ var KAIOPUA = (function (main) {
 		var offset = new THREE.Vector3( length, length, length ),
 			maxDim,
 			localDirection,
-			uV33 = utilVec31IntegrateOffset,
+			uV33 = utilVec31Offset,
 			uQ4 = utilQ4Offset;
 		
 		// set in direction
@@ -476,7 +485,7 @@ var KAIOPUA = (function (main) {
 		var offset,
 			maxDim,
 			localDirection,
-			uV33 = utilVec31IntegrateOffset,
+			uV33 = utilVec31Offset,
 			uQ4 = utilQ4Offset;
 		
 		// set all dimensions to max dimension
@@ -588,6 +597,7 @@ var KAIOPUA = (function (main) {
 		var i, l,
 			uv31 = utilVec31Integrate, uv32 = utilVec32Integrate,
 			uq1 = utilQ1Integrate, uq2 = utilQ2Integrate, uq3 = utilQ3Integrate,
+			ca = cardinalAxes,
 			lerpDelta = 0.1,
 			rigidBody,
 			mesh,
@@ -662,7 +672,7 @@ var KAIOPUA = (function (main) {
 				
 				// ray cast in the direction of gravity
 				
-				//collisionGravity = raycast_in_direction( rigidBody, gravDown );
+				//collisionGravity = raycast_in_direction( rigidBody, gravDown, undefined, true );
 				
 				// handle collision to find new up orientation
 				
@@ -730,19 +740,13 @@ var KAIOPUA = (function (main) {
 						
 					}
 					
-					// store new axes
+					// find new axes based on new rotation
 					
-					THREE.Vector3.nlerp( axisUp, axisUpNew, axisUp, lerpDelta );
-					//axisUp.copy( axisUpNew );
+					rotation.multiplyVector3( axisUp.copy( ca.up ) );
 					
-					// necessary?
-					//
-					//
-					//
+					rotation.multiplyVector3( axisForward.copy( ca.forward ) );
 					
-					upToUpNewQ.multiplyVector3( axisForward );
-					
-					upToUpNewQ.multiplyVector3( axisRight );
+					rotation.multiplyVector3( axisRight.copy( ca.right ) );
 					
 				}
 				

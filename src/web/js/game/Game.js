@@ -500,6 +500,8 @@ var KAIOPUA = (function (main) {
 		
         set_section( sections.intro );
 		
+		//setTimeout( function () { game.pause(); }, 1000 );
+		
     }
 	
 	function stop_game () {
