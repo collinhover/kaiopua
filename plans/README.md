@@ -112,6 +112,7 @@ The player is given very little background before starting. At the beginning of 
 ![environment_001](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_environment_001.jpg "Environment")
 ![creatures_001](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_creatures_001.jpg "Creatures")
 ![creatures_002](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_creatures_002.jpg "Creatures")
+![environment_002](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_geography_001.jpg "Environment")
 
 ####Overall Objective
 *   Fix the worm
@@ -124,6 +125,9 @@ The player is given very little background before starting. At the beginning of 
 ####Puzzles
 *   All puzzles are simple individually: change the right parts of the environment or player
 *   Puzzles work in sequence, i.e. solve one to access the next
+
+![puzzle_001](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_puzzle_shaka_001.jpg "Puzzle: Shaka")
+![puzzle_002](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_puzzle_tiki_001.jpg "Puzzle: Tiki")
 
 ####Combine Objects
 *   Certain objects are collectable

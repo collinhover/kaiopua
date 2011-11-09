@@ -11,7 +11,7 @@
   * Facebook share url to domain name
   * Twitter share url to domain name
 * Get domain name and hosting
-* Physics - planetoid
+* Physics - gravity quirks
 * 3rd Person character camera
 * Character controls
 * Scaling mechanics:
@@ -21,20 +21,19 @@
   * Scale using mouse drag
 * Ambient occlusion
 
-#### Kapil
-* Learn Javascript
-* Research shaders and cell-shading
-
 #### Joshua
 * Model leihua flower bush
-* Model ti leaf plant
 * Model grass
 * Model clouds
+* Model Basic Hill
+* Model Lava crater
+* Model Lava rock plates
+* Model Curl Hill
+* Model Wave Hill
 
 #### Ian
 * Animate / morph player character in sections (arm left, arm right, body, and legs) with the following:
   * Idle
-  * Walk
   * Run
   * Jump
   * Grab / use
@@ -50,22 +49,23 @@
   * Mouth open
 
 #### Kevin
+* Pig animations:
+  * Bounce run
+  * Idle / flop on belly
+* Add whale fins to world head model
+* Rig Whale fins
+* Animate whale fins swimming
 * Power source morph targets
   * mouth open
   * mouth closed
   * sink into ground
-* Model pig
-* Rig pig
-* Pig animations:
-  * Bounce run
-  * Idle / flop on belly
 
 #### Houston
-* Model chicken
-* Rig chicken
 * Animate chicken
   * Walk / Run
   * Idle / Peck ground
+* Model Tiki puzzle pieces
+* Model Shaka puzzle pieces
 
 #### Amanda
 * Skybox - half stars and half blue skies
