@@ -44,7 +44,8 @@ var KAIOPUA = (function (main) {
             scale,
 			rotation,
 			position,
-            morphs;
+            morphs,
+			rigidBody;
         
         // handle parameters
         
@@ -52,7 +53,21 @@ var KAIOPUA = (function (main) {
             
         // geometry
         
-        geometry = parameters.geometry || new THREE.Geometry();
+		if ( parameters.hasOwnProperty( 'geometry' ) ) {
+			
+			geometry = parameters.geometry;
+			
+		}
+		else if ( parameters.hasOwnProperty( 'geometryAssetPath' ) ) {
+			
+			geometry = main.utils.loader.assets[ parameters.geometryAssetPath ];
+			
+		}
+		else {
+			
+			geometry = new THREE.Geometry();
+			
+		}
 		
 		//geometry.computeVertexNormals();
 		

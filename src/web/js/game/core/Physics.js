@@ -275,9 +275,9 @@ var KAIOPUA = (function (main) {
 				offset: parameters.gravityOffset
 			} ),
 			axes: {
-				up: new THREE.Vector3( 0, 1, 0 ),
-				forward: new THREE.Vector3( 0, 0, 1 ),
-				right: new THREE.Vector3( -1, 0, 0 )
+				up: cardinalAxes.up.clone(),
+				forward: cardinalAxes.forward.clone(),
+				right: cardinalAxes.right.clone()
 			}
 		};
 		
@@ -370,6 +370,8 @@ var KAIOPUA = (function (main) {
 		parameters = parameters || {};
 		
 		parameters.damping = parameters.damping || 0.98;
+		
+		// init velocity
 		
 		velocity.force = new THREE.Vector3();
 		velocity.damping = new THREE.Vector3().addScalar( parameters.damping );

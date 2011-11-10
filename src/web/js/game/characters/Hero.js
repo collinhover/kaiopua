@@ -1,14 +1,13 @@
 /*
 Hero.js
-Hero character module, generates hero and properties for use with character module.
+Hero character module, for use with character module.
 */
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
         game = main.game = main.game || {},
 		characters = game.characters = game.characters || {},
-		hero = characters.hero = characters.hero || {},
-		ready = false;
+		hero = characters.hero = characters.hero || {};
 	
 	/*===================================================
     
@@ -16,23 +15,17 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	hero.get_properties = get_properties;
+	Object.defineProperty( hero, 'id', { 
+		get : get_id
+	});
 	
-	/*===================================================
-    
-    internal init
-    
-    =====================================================*/
+	Object.defineProperty( hero, 'modelInfo', { 
+		get : get_model_info
+	});
 	
-	function init () {
-		
-		if ( ready !== true ) {
-			
-			ready = true;
-			
-		}
-		
-	}
+	Object.defineProperty( hero, 'rigidBodyInfo', { 
+		get : get_rigid_body_info
+	});
 	
 	/*===================================================
     
@@ -40,12 +33,33 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	function get_properties () {
+	function get_id () {
 		
-		var p = {};
+		return 'kaiopua_hero';
 		
+	}
+	
+	function get_model_info () {
 		
-		return p;
+		return {
+			
+			geometryAssetPath: "assets/models/Hero.js",
+			materials: [ new THREE.MeshNormalMaterial() ]
+			
+		};
+		
+	}
+		
+	function get_rigid_body_info () {
+		
+		return {
+			
+			bodyType: 'box',
+			width: 40,
+			height: 100,
+			depth: 40
+			
+		};
 		
 	}
 	
