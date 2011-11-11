@@ -21,7 +21,7 @@ var KAIOPUA = (function (main) {
 	
 	/*===================================================
     
-    custom functions
+    character
     
     =====================================================*/
 	
@@ -29,7 +29,8 @@ var KAIOPUA = (function (main) {
 		
 		var c = {},
 			objectmaker,
-			physics;
+			physics,
+			movementInfo;
 		
 		// setup
 		
@@ -44,10 +45,6 @@ var KAIOPUA = (function (main) {
 		
 		c.type = parameters.type || characters.emptycharacter;
 		
-		// properties
-		
-		c.id = parameters.id || c.type.id || characterIDBase;
-		
 		// model
 		
 		if ( parameters.hasOwnProperty( 'model' ) ) {
@@ -57,38 +54,44 @@ var KAIOPUA = (function (main) {
 		}
 		else {
 			
-			parameters.modelInfo = parameters.modelInfo || c.type.modelInfo;
-			console.log(parameters.modelInfo);
+			parameters.modelInfo = parameters.modelInfo || c.type.modelInfo || {};
+			
 			c.model = objectmaker.make_model( parameters.modelInfo ) ;
 			
 		}
 		
+		// give model reference back to parent character
+		
+		c.model.character = c;
+		
 		// movement
+		
+		movementInfo = parameters.movementInfo || c.type.movementInfo || {};
 		
 		c.movement = {
 			move: {
-				speed: parameters.moveSpeed || 2,
+				speed: movementInfo.moveSpeed || 2,
 				direction: new THREE.Vector3(),
 				vector: new THREE.Vector3()
 			},
 			rotate: {
-				speed: parameters.rotateSpeed || 0.01,
+				speed: movementInfo.rotateSpeed || 0.01,
 				direction: new THREE.Vector3(),
 				vector: new THREE.Quaternion(),
 				utilQ1: new THREE.Quaternion()
 			},
 			jump: {
-				speedStart: parameters.jumpSpeedStart || 6,
-				speedEnd: parameters.jumpSpeedEnd || 0,
+				speedStart: movementInfo.jumpSpeedStart || 6,
+				speedEnd: movementInfo.jumpSpeedEnd || 0,
 				timeTotal: 0,
-				timeMax: parameters.jumpTimeMax || 250,
+				timeMax: movementInfo.jumpTimeMax || 250,
 				timeAfterNotGrounded: 0,
-				timeAfterNotGroundedMax: parameters.jumpTimeAfterNotGroundedMax || 125,
+				timeAfterNotGroundedMax: 125,
 				ready: false,
 				stopped: false
 			},
 			state: {
-				up: 0, 
+				up: 0,				
 				down: 0, 
 				left: 0, 
 				right: 0, 
@@ -123,7 +126,43 @@ var KAIOPUA = (function (main) {
 			
 		}
 		
+		// properties
+		
+		c.id = parameters.id || c.type.id || characterIDBase;
+		
+		c.targeting = {
+			
+			targets: [],
+			targetsToRemove: [],
+			targetCurrent: undefined
+			
+		};
+		
+		c.actionData = {};
+		
 		// functions
+		
+		c.action = function ( actionName, parameters ) {
+			
+			var charType = c.type;
+			
+			// if character type has action
+			
+			if ( charType.hasOwnProperty( actionName ) ) {
+				
+				// handle parameters
+				
+				parameters = parameters || {};
+				
+				parameters.character = c;
+				
+				// pass parameters to character type's action
+				
+				charType[ actionName ]( parameters );
+				
+			}
+			
+		};
 		
 		c.update = function ( timeDelta ) {
 			

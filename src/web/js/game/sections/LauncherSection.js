@@ -125,10 +125,10 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
     
-    function on_mouse_moved () {
+    function on_mouse_moved ( e ) {
         
-        var pctX = ( shared.mouse.x / shared.screenWidth ),
-            pctY = ( shared.mouse.y / shared.screenHeight );
+        var pctX = ( shared.mice[ e.identifier ].x / shared.screenWidth ),
+            pctY = ( shared.mice[ e.identifier ].y / shared.screenHeight );
         
         mouse.x = pctX * mouse.rangeTransMaxX + (1 - pctX) * mouse.rangeTransMinX;
         mouse.y = pctY * mouse.rangeTransMaxY + (1 - pctY) * mouse.rangeTransMinY;

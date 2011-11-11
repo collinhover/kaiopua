@@ -152,6 +152,7 @@ var KAIOPUA = (function (main) {
     game.resume = resume;
     game.pause = pause;
     game.update_section_list = update_section_list;
+	game.get_mouse = get_mouse;
 	
 	// getters and setters
 	
@@ -500,8 +501,6 @@ var KAIOPUA = (function (main) {
 		
         set_section( sections.intro );
 		
-		//setTimeout( function () { game.pause(); }, 1000 );
-		
     }
 	
 	function stop_game () {
@@ -559,12 +558,10 @@ var KAIOPUA = (function (main) {
 		envPass = renderPasses.env;
 		
 		if ( envPass.scene !== scene ) {
-			console.log(' update env scene ');
 			envPass.scene = scene;
 		}
 		
 		if ( envPass.camera !== camera ) {
-			console.log(' update env camera ');
 			envPass.camera = camera;
 		}
 		
@@ -640,9 +637,38 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
+	/*===================================================
+    
+    mouse functions
+    
+    =====================================================*/
+	
+	function get_mouse ( parameters ) {
+		
+		var mouse;
+		
+		if ( typeof parameters === 'number' ) {
+			
+			mouse = shared.mice[ parameters ];
+			
+		}
+		else if ( typeof parameters === 'object' && parameters.hasOwnProperty( 'mouseIndex' ) ) {
+			
+			mouse = shared.mice[ parameters.mouseIndex ];
+			
+		}
+		else {
+			
+			mouse = shared.mice[ 0 ];
+			
+		}
+		
+		return mouse;
+	}
+	
     /*===================================================
     
-    functions
+    section functions
     
     =====================================================*/
     

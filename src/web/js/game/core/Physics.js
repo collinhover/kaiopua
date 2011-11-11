@@ -26,6 +26,7 @@ var KAIOPUA = (function (main) {
 		utilQ2Integrate,
 		utilQ3Integrate,
 		utilQ4Offset,
+		utilRay1Casting,
 		line4;
 	
 	/*===================================================
@@ -104,6 +105,7 @@ var KAIOPUA = (function (main) {
 		utilQ2Integrate = new THREE.Quaternion();
 		utilQ3Integrate = new THREE.Quaternion();
 		utilQ4Offset = new THREE.Quaternion();
+		utilRay1Casting = new THREE.Ray();
 		
 		// line testing
 		
@@ -871,9 +873,9 @@ var KAIOPUA = (function (main) {
 		var i, l,
 			mesh = rigidBody.mesh,
 			position = mesh.position,
+			ray = utilRay1Casting,
 			rayPosition,
 			rayDirection,
-			ray,
 			collisions,
 			collisionPotential,
 			collisionMeshRecast,
@@ -906,9 +908,10 @@ var KAIOPUA = (function (main) {
 			
 		}
 		
-		// create ray
+		// set ray
 		
-		ray = new THREE.Ray( rayPosition, rayDirection );
+		ray.origin = rayPosition;
+		ray.direction = rayDirection;
 		
 		// ray cast all
 		

@@ -181,6 +181,10 @@ var KAIOPUA = (function (main) {
         // morphs
         
         morphs = make_morphs_handler( mesh );
+		
+		// add reference to model in mesh
+		
+		mesh.kaiopuaModel = model;
         
         // public properties
         model.mesh = mesh;

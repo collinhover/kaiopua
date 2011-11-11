@@ -10,6 +10,7 @@ var KAIOPUA = (function (main) {
 		player = core.player = core.player || {},
 		characters = game.characters = game.characters || {},
 		ready = false,
+		enabled = false,
 		physics,
 		world,
 		scene,
@@ -24,9 +25,13 @@ var KAIOPUA = (function (main) {
 		keybindings = {},
 		keybindingsDefault = {},
 		playerCharacter,
-		utilVec31,
+		projector,
+		utilRay1Selection,
+		utilVec31Selection,
+		utilVec31CameraFollow,
 		utilQ1CameraFollow,
-		utilQ2CameraFollow;
+		utilQ2CameraFollow,
+		selecting;
 	
 	/*===================================================
     
@@ -41,11 +46,25 @@ var KAIOPUA = (function (main) {
 	player.hide = hide;
 	player.allow_control = allow_control;
 	player.remove_control = remove_control;
+	player.select_from_mouse_position = select_from_mouse_position;
+	player.deselect = deselect;
 	
 	// getters and setters
 	Object.defineProperty(player, 'cameraMode', { 
 		get : function () { return cameraMode; },
 		set : set_camera_mode
+	});
+	
+	Object.defineProperty(player, 'enabled', { 
+		get : function () { return enabled; },
+		set : function ( val ) { 
+			if ( val === true ) {
+				enable();
+			}
+			else {
+				disable();
+			}
+		}
 	});
 	
 	/*===================================================
@@ -60,9 +79,27 @@ var KAIOPUA = (function (main) {
 			
 			// utility objects
 			
-			utilVec31 = new THREE.Vector3();
+			utilVec31CameraFollow = new THREE.Vector3();
 			utilQ1CameraFollow = new THREE.Quaternion();
 			utilQ2CameraFollow = new THREE.Quaternion();
+			
+			utilRay1Selection = new THREE.Ray();
+			utilVec31Selection = new THREE.Vector3();
+			
+			projector = new THREE.Projector();
+			
+			// selecting
+			
+			selecting = {};
+			
+			selecting.opacityMin = 0.2;
+			selecting.opacityMax = 0.6;
+			selecting.opacityStart = selecting.opacityMin;
+			selecting.opacityTarget = selecting.opacityMax;
+			selecting.opacityCycleTime = 0;
+			selecting.opacityCycleTimeMax = 500;
+			
+			selecting.material = new THREE.MeshBasicMaterial( { color: 0xffffff, transparent: true, opacity: selecting.opacityStart, blending: THREE.AdditiveAlphaBlending } );
 			
 			// core
 			
@@ -142,7 +179,11 @@ var KAIOPUA = (function (main) {
 		
 		if ( modeType === cameraModes.freelook ) {
 			
-			remove_control();
+			if ( ready === true ) {
+				
+				disable();
+				
+			}
 			
 			if ( typeof cameraFreelookControls === 'undefined' ) {
 				
@@ -162,7 +203,11 @@ var KAIOPUA = (function (main) {
 		}
 		else {
 			
-			allow_control();
+			if ( ready === true ) {
+				
+				enable();
+				
+			}
 			
 		}
 		
@@ -218,7 +263,7 @@ var KAIOPUA = (function (main) {
 			pcQ = pcMesh.quaternion,
 			pcQLast = cameraFollowSettings.quaternionLast,
 			camQ = camera.quaternion,
-			camOffsetPos = utilVec31,
+			camOffsetPos = utilVec31CameraFollow,
 			camOffsetRot = utilQ1CameraFollow,
 			camOffsetRotHalf = utilQ2CameraFollow;
 		
@@ -270,41 +315,39 @@ var KAIOPUA = (function (main) {
 		
 		// mouse buttons
 		
-		kbMap[ 'clickleft' ] = {
-			mousedown: function () { 
-				console.log('key down: clickleft');
-			},
-			mouseup: function () { console.log('key up: clickleft'); }
+		kbMap[ 'mouseleft' ] = {
+			keydown: function ( mouseIndex ) { character_action( 'ability_001_start', { mouseIndex: mouseIndex } ); },
+			keyup: function ( mouseIndex ) { character_action( 'ability_001_end', { mouseIndex: mouseIndex } ); },
 		};
-		kbMap[ 'clickmiddle' ] = {
-			mousedown: function () { console.log('key down: clickmiddle'); },
-			mouseup: function () { console.log('key up: clickmiddle'); }
+		kbMap[ 'mousemiddle' ] = {
+			keydown: function () { console.log('key down: mousemiddle'); },
+			keyup: function () { console.log('key up: mousemiddle'); }
 		};
-		kbMap[ 'clickright' ] = {
-			mousedown: function () { console.log('key down: clickright'); },
-			mouseup: function () { console.log('key up: clickright'); }
+		kbMap[ 'mouseright' ] = {
+			keydown: function () { console.log('key down: mouseright'); },
+			keyup: function () { console.log('key up: mouseright'); }
 		};
 		
 		// wasd / uldr
 		
 		kbMap[ '38' /*up*/ ] = kbMap[ '87' /*w*/ ] = kbMap[ 'w' ] = {
-			keydown: function () { characterMove( 'forward' ); },
-			keyup: function () { characterMove( 'forward', true ); }
+			keydown: function () { character_move( 'forward' ); },
+			keyup: function () { character_move( 'forward', true ); }
 		};
 		
 		kbMap[ '40' /*down*/ ] = kbMap[ '83' /*s*/ ] = kbMap[ 's' ] = {
-			keydown: function () { characterMove( 'back' ); },
-			keyup: function () { characterMove( 'back', true ); }
+			keydown: function () { character_move( 'back' ); },
+			keyup: function () { character_move( 'back', true ); }
 		};
 		
 		kbMap[ '37' /*left*/ ] = kbMap[ '65' /*a*/ ] = kbMap[ 'a' ] = {
-			keydown: function () { characterMove( 'turnLeft' ); },
-			keyup: function () { characterMove( 'turnLeft', true ); }
+			keydown: function () { character_move( 'turnLeft' ); },
+			keyup: function () { character_move( 'turnLeft', true ); }
 		};
 		
 		kbMap[ '39' /*right*/ ] = kbMap[ '68' /*d*/ ] = kbMap[ 'd' ] = {
-			keydown: function () { characterMove( 'turnRight' ); },
-			keyup: function () { characterMove( 'turnRight', true ); }
+			keydown: function () { character_move( 'turnRight' ); },
+			keyup: function () { character_move( 'turnRight', true ); }
 		};
 		
 		// qe
@@ -345,8 +388,8 @@ var KAIOPUA = (function (main) {
 		};
 		
 		kbMap[ '32' /*space*/ ] = {
-			keydown: function () { characterMove( 'up' ); },
-			keyup: function () { characterMove( 'up', true ); }
+			keydown: function () { character_move( 'up' ); },
+			keyup: function () { character_move( 'up', true ); }
 		};
 		
 		kbMap[ '82' /*r*/ ] = kbMap[ 'r' ] = {
@@ -397,11 +440,11 @@ var KAIOPUA = (function (main) {
 		
 		// signals
 		
-		shared.signals.mousedown.add( onMouseClicked );
-		shared.signals.mouseup.add( onMouseClicked );
+		shared.signals.mousedown.add( on_mouse_pressed );
+		shared.signals.mouseup.add( on_mouse_pressed );
 		
-		shared.signals.keydown.add( onKeyboardUsed );
-		shared.signals.keyup.add( onKeyboardUsed );
+		shared.signals.keydown.add( on_keyboard_used );
+		shared.signals.keyup.add( on_keyboard_used );
 		
 	}
 	
@@ -409,32 +452,44 @@ var KAIOPUA = (function (main) {
 		
 		// signals
 		
-		shared.signals.mousedown.remove( onMouseClicked );
-		shared.signals.mouseup.remove( onMouseClicked );
+		shared.signals.mousedown.remove( on_mouse_pressed );
+		shared.signals.mouseup.remove( on_mouse_pressed );
 		
-		shared.signals.keydown.remove( onKeyboardUsed );
-		shared.signals.keyup.remove( onKeyboardUsed );
+		shared.signals.keydown.remove( on_keyboard_used );
+		shared.signals.keyup.remove( on_keyboard_used );
 		
 	}
 	
-	function onMouseClicked ( e ) {
+	function on_mouse_pressed ( e ) {
 		
 		var button,
+			type,
 			arguments = [];
+		
+		// handle button
 		
 		switch ( e.button ) {
 			
-			case 2: button = 'clickright'; break;
-			case 1: button = 'clickmiddle'; break;
-			case 0: button = 'clickleft'; break;
+			case 2: button = 'mouseright'; break;
+			case 1: button = 'mousemiddle'; break;
+			case 0: button = 'mouseleft'; break;
 			
 		}
 		
-		triggerKey( button, e.type );
+		// handle type
+		
+		switch ( e.type ) {
+			
+			case 'mousedown': case 'touchstart': type = 'keydown'; break;
+			case 'mouseup': case 'touchend': type = 'keyup'; break;
+			
+		}
+		
+		triggerKey( button, type, [ e.identifier ] );
 		
 	}
 	
-	function onKeyboardUsed ( e ) {
+	function on_keyboard_used ( e ) {
 		
 		triggerKey( (e.key || e.keyCode).toString().toLowerCase(), e.type );
 		
@@ -444,6 +499,8 @@ var KAIOPUA = (function (main) {
 		
 		var kbMap = keybindings,
 			kbInfo;
+		
+		// trigger by name
 		
 		if ( kbMap.hasOwnProperty( keyName ) === true ) {
 			
@@ -481,75 +538,319 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function characterMove ( type, stop ) {
+	function character_move ( movementTypeName, stop ) {
 			
-			var pc = playerCharacter,
-				movement = pc.movement,
-				move = movement.move,
-				rotate = movement.rotate,
-				state = movement.state,
-				moveDir = move.direction,
-				rotateDir = rotate.direction;
-			
-			if ( typeof stop === 'undefined' ) {
-				stop = false;
-			}
-			
-			if ( type === 'turnLeft' ) {
-				
-				state.turnLeft = stop === true ? 0 : 1;
-				
-			}
-			else if ( type === 'turnRight' ) {
-				
-				state.turnRight = stop === true ? 0 : 1;
-				
-			}
-			else if ( type === 'forward' ) {
-				
-				state.forward = stop === true ? 0 : 1;
-				
-			}
-			else if ( type === 'back' ) {
-				
-				state.back = stop === true ? 0 : 1;
-				
-			}
-			else if ( type === 'left' ) {
-				
-				state.left = stop === true ? 0 : 1;
-				
-			}
-			else if ( type === 'right' ) {
-				
-				state.right = stop === true ? 0 : 1;
-				
-			}
-			else if ( type === 'up' ) {
-				
-				if ( stop === true ) {
-					
-					movement.jump.stopped = true;
-					
-					state.up = 0;
-					
-				}
-				else {
-					
-					state.up = 1;
-					
-				}
-				
-			}
-			
-			// update vectors with state
-			
-			moveDir.x = ( state.left - state.right );
-			moveDir.z = ( state.forward - state.back );
-			
-			rotateDir.y = ( state.turnLeft - state.turnRight );
-				
+		var pc = playerCharacter,
+			movement = pc.movement,
+			move = movement.move,
+			rotate = movement.rotate,
+			state = movement.state,
+			moveDir = move.direction,
+			rotateDir = rotate.direction;
+		
+		if ( typeof stop === 'undefined' ) {
+			stop = false;
 		}
+		
+		// handle movement by type name
+		
+		if ( state.hasOwnProperty( movementTypeName ) ) {
+			
+			state[ movementTypeName ] = stop === true ? 0 : 1;
+			
+		}
+		
+		// special cases
+		
+		if ( movementTypeName === 'up' && stop === true ) {
+			
+			movement.jump.stopped = true;
+			
+		}
+		
+		// update vectors with state
+		
+		moveDir.x = ( state.left - state.right );
+		moveDir.z = ( state.forward - state.back );
+		
+		rotateDir.y = ( state.turnLeft - state.turnRight );
+			
+	}
+	
+	function character_action ( actionName, parameters ) {
+		
+		var pc = playerCharacter;
+		
+		// handle action
+		
+		pc.action( actionName, parameters );
+		
+	}
+	
+	/*===================================================
+    
+    selection functions
+    
+    =====================================================*/
+	
+	function select_from_mouse_position ( parameters ) {
+		
+		var selectedMesh,
+			selectedModel,
+			numTargets = 0,
+			character,
+			targeting,
+			targets,
+			targetsToRemove,
+			worldParts,
+			worldPartsIndex,
+			materialIndex;
+		
+		// handle parameters
+		
+		parameters = parameters || {};
+		
+		mouse = parameters.mouse = parameters.mouse || game.get_mouse( parameters );
+		
+		character = parameters.character || playerCharacter;
+		
+		targeting = character.targeting;
+		
+		targets = targeting.targets;
+		
+		targetsToRemove = targeting.targetsToRemove;
+		
+		// select
+			
+		selectedModel = find_selection( mouse );
+		
+		// if a selection was made
+		
+		if ( typeof selectedModel !== 'undefined' ) {
+			
+			// special selection cases
+			
+			// world selection
+			// select character instead
+			
+			worldParts = world.parts;
+			
+			worldPartsIndex = worldParts.indexOf( selectedModel );
+			
+			if ( worldPartsIndex !== -1 ) {
+				
+				selectedModel = playerCharacter.model;
+				
+			}
+		
+			// add selected to character targets
+			// unless already selected, then add to removal list
+			
+			if ( targets.indexOf( selectedModel ) === -1 ) {
+			
+				targets.push( selectedModel );
+				
+				selectedMesh = selectedModel.mesh;
+				
+				materialIndex = selectedMesh.materials.indexOf( selecting.material );
+				
+				if ( materialIndex === -1 ) {
+					
+					selectedMesh.materials.push( selecting.material );
+					
+				}
+				
+			}
+			else {
+				
+				targetsToRemove.push( selectedModel );
+				
+			}
+			
+			// update num targets
+			
+			numTargets = targets.length;
+			
+			// set selected as current selection
+			
+			targeting.targetCurrent = selectedModel;
+			
+		}
+		// else deselect all
+		else {
+			
+			if ( targets.length > 0 ) {
+				
+				targeting.targetsToRemove = targetsToRemove.concat( targets );
+				
+				deselect( parameters );
+				
+			}
+			
+		}
+		
+		return numTargets;
+	}
+	
+	function deselect ( parameters ) {
+		
+		var i, l,
+			character,
+			targeting,
+			targets,
+			targetsToRemove,
+			targetIndex,
+			targetModel,
+			targetMesh,
+			materialIndex;
+		
+		// handle parameters
+		
+		parameters = parameters || {};
+		
+		character = parameters.character || playerCharacter;
+		
+		targeting = character.targeting;
+		
+		targets = targeting.targets;
+		
+		targetsToRemove = targeting.targetsToRemove;
+		
+		// for each target to remove
+		
+		for ( i = targetsToRemove.length - 1, l = 0; i >= l; i -= 1 ) {
+			
+			targetModel = targetsToRemove[ i ];
+			
+			targetMesh = targetModel.mesh;
+			console.log('deselecting ');
+			console.log(targetModel);
+			// find in targets and remove
+			
+			targetIndex = targets.indexOf( targetModel );
+			
+			if ( targetIndex !== -1 ) {
+				
+				targets.splice( targetIndex, 1 );
+				
+				materialIndex = targetMesh.materials.indexOf( selecting.material );
+				
+				if ( materialIndex !== -1 ) {
+					
+					targetMesh.materials.splice( materialIndex, 1 );
+					
+				}
+				
+			}
+			
+			// remove from targetsToRemove
+			
+			targetsToRemove.splice( i, 1 );
+			
+		}
+		
+	}
+	
+	function find_selection ( mouse ) {
+		
+		var ray = utilRay1Selection,
+			mousePosition = utilVec31Selection,
+			intersections,
+			intersectedMesh;
+		
+		// handle mouse
+		
+		mouse = mouse || get_mouse();
+		
+		// get corrected mouse position
+		
+		mousePosition.x = ( mouse.x / shared.screenWidth ) * 2 - 1;
+		mousePosition.y = -( mouse.y / shared.screenHeight ) * 2 + 1;
+		mousePosition.z = 0.5;
+		
+		// unproject mouse position
+		
+		projector.unprojectVector( mousePosition, camera );
+		
+		// set ray
+
+		ray.origin = camera.position;
+		ray.direction = mousePosition.subSelf( camera.position ).normalize();
+		
+		// find ray intersections
+
+		intersections = ray.intersectScene( scene );
+		
+		if ( intersections.length > 0 ) {
+			
+			intersectedMesh = intersections[ 0 ].object;
+			
+			return intersectedMesh.kaiopuaModel;
+			
+		}
+		else {
+			
+			return;
+			
+		}
+		
+	}
+	
+	function update_selections ( timeDelta ) {
+		
+		var material = selecting.material,
+			opacityMax = selecting.opacityMax,
+			opacityMin = selecting.opacityMin,
+			opacityStart = selecting.opacityStart,
+			opacityTarget = selecting.opacityTarget,
+			opacityTargetLast,
+			opacityDelta = opacityTarget - opacityStart,
+			opacityCycleTime,
+			opacityCycleTimeMax = selecting.opacityCycleTimeMax;
+		
+		// update time
+		
+		selecting.opacityCycleTime += timeDelta;
+		
+		if ( selecting.opacityCycleTime >= opacityCycleTimeMax ) {
+			
+			material.opacity = opacityTarget;
+			
+			selecting.opacityCycleTime = 0;
+			
+			// update start and target
+			
+			opacityTargetLast = opacityTarget;
+			
+			selecting.opacityTarget = opacityStart;
+			
+			selecting.opacityStart = opacityTargetLast;
+			
+		}
+		else {
+		
+			opacityCycleTime = selecting.opacityCycleTime;
+			
+			// quadratic easing
+			
+			opacityCycleTime /= opacityCycleTimeMax * 0.5;
+			
+			if ( opacityCycleTime < 1 ) {
+				
+				material.opacity = opacityDelta * 0.5 * opacityCycleTime * opacityCycleTime + opacityStart;
+				
+			}
+			else {
+				
+				opacityCycleTime--;
+				
+				material.opacity = -opacityDelta * 0.5 * ( opacityCycleTime * ( opacityCycleTime - 2 ) - 1 ) + opacityStart;
+				
+			}
+			
+		}
+		
+	}
 	
 	/*===================================================
     
@@ -575,18 +876,29 @@ var KAIOPUA = (function (main) {
 	
 	function enable () {
 		
-		shared.signals.update.add( update );
+		if ( enabled !== true ) {
+			
+			enabled = true;
+			
+			shared.signals.update.add( update );
+			
+			allow_control();
 		
-		allow_control();
+		}
 		
 	}
 	
 	function disable () {
 		
-		remove_control();
-		
-		shared.signals.update.remove( update );
-		
+		if ( enabled === true ) {
+			
+			enabled = false;
+			
+			remove_control();
+			
+			shared.signals.update.remove( update );
+			
+		}
 	}
 	
 	function show () {
@@ -616,6 +928,10 @@ var KAIOPUA = (function (main) {
 		// camera
 		
 		update_camera();
+		
+		// selection material
+		
+		update_selections( timeDelta );
 		
 	}
 	

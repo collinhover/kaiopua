@@ -40,7 +40,7 @@ var KAIOPUA = (function (main) {
     function init_basics () {
         
         // shared
-        shared.mouse = { x: 0, y: 0 };
+        shared.mice = [];
         shared.screenWidth = $(window).width();
         shared.screenHeight = $(window).height();
         shared.originLink = window.location.pathname.toString();
@@ -79,22 +79,23 @@ var KAIOPUA = (function (main) {
         
         // add listeners for events
         // each listener dispatches shared signal
-        $(document).bind( 'mousedown touchstart', onDocumentMouseDown );
-        $(document).bind( 'mouseup touchend', onDocumentMouseUp );
-        $(document).bind( 'mousemove', onDocumentMouseMove );
-        $(document).bind( 'mousewheel', onDocumentMouseWheel );
-		$(shared.html.gameContainer).bind( 'contextmenu', onGameContextMenu );
+        $(document).bind( 'mousedown touchstart', on_mouse_down );
+        $(document).bind( 'mouseup touchend', on_mouse_up );
+        $(document).bind( 'mousemove touchmove', on_mouse_move );
+		$(document).bind( 'mouseleave touchleave', on_mouse_leave );
+        $(document).bind( 'mousewheel', on_mouse_wheel );
+		$(shared.html.gameContainer).bind( 'contextmenu', on_game_context_menu );
         
-        $(document).bind( 'keydown', onDocumentKeyDown );
-        $(document).bind( 'keyup', onDocumentKeyUp );
+        $(document).bind( 'keydown', on_key_down );
+        $(document).bind( 'keyup', on_key_up );
     
-        $(window).bind( 'deviceorientation', onWindowDeviceOrientation );
-        $(window).bind( 'MozOrientation', onWindowDeviceOrientation);
+        $(window).bind( 'deviceorientation', on_window_device_orientation );
+        $(window).bind( 'MozOrientation', on_window_device_orientation);
     
-        $(window).bind( 'resize', onWindowResize );
+        $(window).bind( 'resize', on_window_resize );
         
-        window.onerror = onError;
-        shared.signals.error.add(onError);
+        window.onerror = on_error;
+        shared.signals.error.add( on_error );
     }
     
     function init_setup () {
@@ -121,38 +122,69 @@ var KAIOPUA = (function (main) {
         }
         
         // resize once
-        onWindowResize();
+        on_window_resize();
     }
     
     /*===================================================
     
-    functions
+    event functions
     
     =====================================================*/
-    
-    function onDocumentMouseDown( e ) {
+	
+	function handle_touch_event ( e, eventActual ) {
 		
-		var eOriginal = e.originalEvent, i, l, fingers, touch;
+		var i, l, fingers, touch;
+		
+		// for each finger involved in the event
+		
+		fingers = e.changedTouches;
+		
+		for( i = 0, l = fingers.length; i < l; i += 1 ) {
+			
+			touch = fingers[ touchIndex ];
+			
+			touch.button = 0;
+			
+			// send as individual event
+			
+			eventActual( touch );
+			
+		}
+		
+	}
+	
+	function handle_mouse_identifier ( e ) {
+		
+		var id = e.identifier = e.identifier || 0;
+		
+		if ( id >= shared.mice.length ) {
+			shared.mice[ id ] = { 
+				x: 0,
+				lx: 0,
+				y: 0,
+				ly: 0,
+				down: false 
+			};
+		}
+		
+	}
+    
+    function on_mouse_down( e ) {
+		
+		var eOriginal = e.originalEvent;
 		
 		// is touch event
 		
 		if (typeof eOriginal !== "undefined" && typeof eOriginal.touches !== "undefined" && typeof eOriginal.changedTouches !== "undefined"){
 			
-			// for each finger involved in the event
+			handle_touch_event( eOriginal, on_mouse_down );
 			
-			fingers = eOriginal.changedTouches;
-			
-			for( i = 0, l = fingers.length; i < l; i += 1 ) {
-				
-				touch = fingers[i];
-				
-				// send as individual mouse event
-				
-				onDocumentMouseDown( touch );
-				
-			}
 		}
 		else {
+			
+			handle_mouse_identifier( e );
+			
+			shared.mice[ e.identifier ].down = true;
 		
 			shared.signals.mousedown.dispatch( e );
 			
@@ -163,29 +195,21 @@ var KAIOPUA = (function (main) {
         return false;
     }
     
-    function onDocumentMouseUp( e ) {
+    function on_mouse_up( e ) {
 		
-		var eOriginal = e.originalEvent, i, l, fingers, touch;
+		var eOriginal = e.originalEvent;
 		
 		// is touch event
 		
 		if (typeof eOriginal !== "undefined" && typeof eOriginal.touches !== "undefined" && typeof eOriginal.changedTouches !== "undefined"){
 			
-			// for each finger involved in the event
-			
-			fingers = eOriginal.changedTouches;
-			
-			for( i = 0, l = fingers.length; i < l; i += 1 ) {
-				
-				touch = fingers[i];
-				
-				// send as individual mouse event
-				
-				onDocumentMouseUp( touch );
-				
-			}
+			handle_touch_event( eOriginal, on_mouse_up );
 		}
 		else {
+			
+			handle_mouse_identifier( e );
+			
+			shared.mice[ e.identifier ].down = false;
 			
 			shared.signals.mouseup.dispatch( e );
         
@@ -196,32 +220,24 @@ var KAIOPUA = (function (main) {
         return false;
     }
     
-    function onDocumentMouseMove( e ) {
+    function on_mouse_move( e ) {
 		
-		var eOriginal = e.originalEvent, i, l, fingers, touch;
+		var eOriginal = e.originalEvent, mouse;
 		
 		// is touch event
 		
 		if (typeof eOriginal !== "undefined" && typeof eOriginal.touches !== "undefined" && typeof eOriginal.changedTouches !== "undefined"){
 			
-			// for each finger involved in the event
-			
-			fingers = eOriginal.changedTouches;
-			
-			for( i = 0, l = fingers.length; i < l; i += 1 ) {
-				
-				touch = fingers[i];
-				
-				// send as individual mouse event
-				
-				onDocumentMouseMove( touch );
-				
-			}
+			handle_touch_event( eOriginal, on_mouse_move );
 		}
 		else {
 			
-			shared.mouse.x = e.clientX;
-			shared.mouse.y = e.clientY;
+			handle_mouse_identifier( e );
+			
+			mouse = shared.mice[ e.identifier ];
+			
+			mouse.x = e.clientX;
+			mouse.y = e.clientY;
 			
 			shared.signals.mousemoved.dispatch( e );
 			
@@ -231,8 +247,37 @@ var KAIOPUA = (function (main) {
         e.stopPropagation();
         return false;
     }
+	
+	function on_mouse_leave ( e ) {
+		
+		var eOriginal = e.originalEvent, mouse;
+		
+		// is touch event
+		
+		if (typeof eOriginal !== "undefined" && typeof eOriginal.touches !== "undefined" && typeof eOriginal.changedTouches !== "undefined"){
+			
+			handle_touch_event( eOriginal, on_mouse_leave );
+		}
+		else {
+			
+			handle_mouse_identifier( e );
+			
+			mouse = shared.mice[ e.identifier ];
+			
+			if ( mouse.down === true ) {
+				
+				on_mouse_up( e );
+				
+			}
+			
+		}
+        
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }
     
-    function onDocumentMouseWheel( e ) {
+    function on_mouse_wheel( e ) {
         shared.signals.mousewheel.dispatch( e );
         
         e.preventDefault();
@@ -240,7 +285,7 @@ var KAIOPUA = (function (main) {
         return false;
     }
 	
-	function onGameContextMenu( e ) {
+	function on_game_context_menu( e ) {
         
         e.preventDefault();
         e.stopPropagation();
@@ -248,16 +293,16 @@ var KAIOPUA = (function (main) {
 		
     }
     
-    function onWindowDeviceOrientation( e ) {
-        var overThreshold, gamma, beta, x, y;
+    function on_window_device_orientation( e ) {
+        var i, l, mice, mouse, eCopy, overThreshold, gamma, beta, x, y;
         
         if ( ! e.gamma && !e.beta ) {
                 e.gamma = -(e.x * (180 / Math.PI));
                 e.beta = -(e.y * (180 / Math.PI));
         } 
         else if( e.alpha === null && e.beta === null && e.gamma === null ) {
-                $(window).unbind( "deviceorientation", onWindowDeviceOrientation );
-                $(window).unbind( "MozOrientation", onWindowDeviceOrientation );
+                $(window).unbind( "deviceorientation", on_window_device_orientation );
+                $(window).unbind( "MozOrientation", on_window_device_orientation );
         }
         
         overThreshold = Math.abs(e.gamma) > 4 || Math.abs(e.beta) > 4;
@@ -265,34 +310,47 @@ var KAIOPUA = (function (main) {
         beta = overThreshold ? e.beta : 0;
         
         if ( lastGamma !== gamma || lastBeta !== beta) {
-            x = Math.round( 1.5 * gamma ) + shared.mouse.x;
-            y = ( - Math.round( 1.5 * beta ) ) + shared.mouse.y;
-            
-            if( Math.abs( x ) > window.innerWidth ) {
-                    if( x < 0 ) {
-                            x = -window.innerWidth;
-                    } 
-                    else {
-                            x = window.innerWidth;
-                    }
-            }
-            
-            if( Math.abs( y ) > window.innerHeight ) {
-                    if( y < 0 ) {
-                            y = -window.innerHeight;
-                    } 
-                    else {
-                            y = window.innerHeight;
-                    }
-            }
-            
-            shared.mouse.x = x;
-            shared.mouse.y = y;
-            
-            lastGamma = gamma;
-            lastBeta = beta;
-            
-            shared.signals.mousemoved.dispatch( e );
+			
+			mice = shared.mice;
+			
+			for ( i = 0, l = mice.length; i < l; i += 1 ) {
+				
+				mouse = mice[ i ];
+			
+				x = Math.round( 1.5 * gamma ) + mouse.x;
+				y = ( - Math.round( 1.5 * beta ) ) + mouse.y;
+				
+				if( Math.abs( x ) > window.innerWidth ) {
+						if( x < 0 ) {
+								x = -window.innerWidth;
+						} 
+						else {
+								x = window.innerWidth;
+						}
+				}
+				
+				if( Math.abs( y ) > window.innerHeight ) {
+						if( y < 0 ) {
+								y = -window.innerHeight;
+						} 
+						else {
+								y = window.innerHeight;
+						}
+				}
+				
+				mouse.x = x;
+				mouse.y = y;
+				
+				eCopy = $.extend( {}, e );
+				
+				eCopy.identifier = i;
+				
+				shared.signals.mousemoved.dispatch( eCopy );
+			
+			}
+			
+			lastGamma = gamma;
+			lastBeta = beta;
             
             e.preventDefault();
             e.stopPropagation();
@@ -300,7 +358,7 @@ var KAIOPUA = (function (main) {
         }
     }
 
-    function onDocumentKeyDown( e ) {
+    function on_key_down( e ) {
         shared.signals.keydown.dispatch( e );
         
         /*
@@ -310,7 +368,7 @@ var KAIOPUA = (function (main) {
         */
     }
 
-    function onDocumentKeyUp( e ) {
+    function on_key_up( e ) {
         shared.signals.keyup.dispatch( e );
         
         /*
@@ -320,7 +378,7 @@ var KAIOPUA = (function (main) {
         */
     }
 
-    function onWindowResize( e ) {
+    function on_window_resize( e ) {
         
         shared.screenWidth = $(window).width();
         shared.screenHeight = $(window).height();
@@ -334,7 +392,7 @@ var KAIOPUA = (function (main) {
         return false;
     }
     
-    function onError ( error, url, lineNumber ) {
+    function on_error ( error, url, lineNumber ) {
         
         if (typeof main.game !== 'undefined') {
             main.game.pause();

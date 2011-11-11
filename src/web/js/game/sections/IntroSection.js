@@ -14,11 +14,11 @@ var KAIOPUA = (function (main) {
         objectmaker,
 		world,
 		player,
+		physics,
 		camera,
         scene,
 		addOnShow = [],
-		light,
-		lightSource;
+		light;
     
     /*===================================================
     
@@ -61,6 +61,11 @@ var KAIOPUA = (function (main) {
 		
 		world = game.core.world;
 		player = game.core.player;
+		physics = game.core.physics;
+		
+		// workers
+		
+		objectmaker = game.workers.objectmaker;
         
     }
     
@@ -93,16 +98,83 @@ var KAIOPUA = (function (main) {
 		
 		light = new THREE.SpotLight( 0xffffff );
         light.position = new THREE.Vector3(-1, 0, 1).normalize();
-        
-        // light visual
-        
-        lightSource = new THREE.Mesh( new THREE.SphereGeometry( 4, 8, 8 ), new THREE.MeshBasicMaterial( { color: 0xffffff } ) );
-        
-        lightSource.useQuaternion = true;
 		
 		// add on show items
 		
-		addOnShow.push( light, lightSource );
+		addOnShow.push( light );
+		
+		//
+		//
+		//
+		// boxes test grid
+		//
+		//
+		//
+		
+		var normalMat = new THREE.MeshNormalMaterial();
+		
+		var normalMatWire = new THREE.MeshBasicMaterial({
+			color: 0x000000,
+			wireframe: true
+		});
+		
+		var make_box = function ( x, y, z ) {
+			var geom = new THREE.CubeGeometry( 50, 50, 50, 1, 1 );
+			
+			// box
+			
+			var box = objectmaker.make_model({
+				geometry: geom,
+				materials: [normalMat, normalMatWire]
+			});
+			
+			box.mesh.position.set( x, y, z );
+			
+			box.rigidBody = physics.translate( box.mesh, {
+				bodyType: 'box'
+			});
+			
+			return box;
+		}
+		
+		var numRings = 6;
+		var radius = 2000;
+		
+		var deltaRotA = Math.PI / (numRings + 1);
+		var rotA = 0;
+		
+		var numBoxPerRing = 8;
+		var deltaRotB = (Math.PI * 2) / (numBoxPerRing);
+		var rotB = 0;
+		
+		for ( var i = 0, l = numRings; i < l; i += 1 ) {
+			
+			rotB = 0;
+			
+			rotA += deltaRotA;
+			
+			if ( rotA > Math.PI ) {
+				
+				rotA = 0;
+				
+			}
+			
+			var ny = radius * Math.cos( rotA );
+			
+			for ( var bi = 0, bl = numBoxPerRing; bi < bl; bi += 1 ) {
+				
+				var nx = radius * Math.sin( rotA ) * Math.cos( rotB );
+				var nz = radius * Math.sin( rotA ) * Math.sin( rotB );
+				
+				var box = make_box( nx, ny, nz );
+				
+				addOnShow.push( box );
+				
+				rotB += deltaRotB;
+			
+			}
+			
+		}
 		
     }
     
@@ -114,7 +186,8 @@ var KAIOPUA = (function (main) {
     
     function show () {
 		
-		var i, l;
+		var i, l,
+			item;
 		
 		// camera
         
@@ -136,7 +209,24 @@ var KAIOPUA = (function (main) {
 		
 		for ( i = 0, l = addOnShow.length; i < l; i += 1 ) {
 			
-			scene.add( addOnShow[ i ] );
+			item = addOnShow[ i ];
+			
+			if ( typeof item.mesh !== 'undefined' ) {
+			
+				scene.add( item.mesh );
+			
+				if ( typeof item.rigidBody !== 'undefined' ) {
+					
+					physics.add( item.mesh, { rigidBody: item.rigidBody } );
+					
+				}
+				
+			}
+			else {
+				
+				scene.add( item );
+				
+			}
 			
         }
 		
@@ -168,7 +258,8 @@ var KAIOPUA = (function (main) {
     
     function remove () {
         
-		var i, l;
+		var i, l,
+			item;
 		
 		// stop player
 		
@@ -184,7 +275,24 @@ var KAIOPUA = (function (main) {
 		
 		for ( i = 0, l = addOnShow.length; i < l; i += 1 ) {
 		
-			scene.remove( addOnShow[ i ] );
+			item = addOnShow[ i ];
+			
+			if ( typeof item.mesh !== 'undefined' ) {
+			
+				scene.remove( item.mesh );
+			
+				if ( typeof item.rigidBody !== 'undefined' ) {
+					
+					physics.remove( item.mesh );
+					
+				}
+				
+			}
+			else {
+				
+				scene.remove( item );
+				
+			}
 			
         }
 		
@@ -203,9 +311,6 @@ var KAIOPUA = (function (main) {
         newP.addSelf( camera.position );
         
 		light.position = newP;
-        lightSource.position = newP;
-		
-        lightSource.quaternion.copy( camera.quaternion );
         
     }
     
