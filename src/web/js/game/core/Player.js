@@ -31,6 +31,7 @@ var KAIOPUA = (function (main) {
 		utilVec31CameraFollow,
 		utilQ1CameraFollow,
 		utilQ2CameraFollow,
+		utilQ3CameraFollow,
 		selecting;
 	
 	/*===================================================
@@ -82,6 +83,7 @@ var KAIOPUA = (function (main) {
 			utilVec31CameraFollow = new THREE.Vector3();
 			utilQ1CameraFollow = new THREE.Quaternion();
 			utilQ2CameraFollow = new THREE.Quaternion();
+			utilQ3CameraFollow = new THREE.Quaternion();
 			
 			utilRay1Selection = new THREE.Ray();
 			utilVec31Selection = new THREE.Vector3();
@@ -181,7 +183,7 @@ var KAIOPUA = (function (main) {
 			
 			if ( ready === true ) {
 				
-				disable();
+				remove_control();
 				
 			}
 			
@@ -205,7 +207,7 @@ var KAIOPUA = (function (main) {
 			
 			if ( ready === true ) {
 				
-				enable();
+				allow_control();
 				
 			}
 			
@@ -259,9 +261,10 @@ var KAIOPUA = (function (main) {
 			srcOffsetPos = offset.pos,
 			srcOffsetRot = offset.rot,
 			clamps = cameraFollowSettings.clamps,
-			pcMesh = playerCharacter.model.mesh,
-			pcQ = pcMesh.quaternion,
-			pcQLast = cameraFollowSettings.quaternionLast,
+			mesh = playerCharacter.model.mesh,
+			meshScale = mesh.scale,
+			meshScaleMax = Math.max( meshScale.x, meshScale.y, meshScale.z ), 
+			meshQ = mesh.quaternion,
 			camQ = camera.quaternion,
 			camOffsetPos = utilVec31CameraFollow,
 			camOffsetRot = utilQ1CameraFollow,
@@ -269,8 +272,7 @@ var KAIOPUA = (function (main) {
 		
 		// set offset base position
 		
-		camPosNew = pcMesh.position.clone();
-		camOffsetPos.set( srcOffsetPos.x, srcOffsetPos.y, srcOffsetPos.z );
+		camOffsetPos.set( srcOffsetPos.x, srcOffsetPos.y, srcOffsetPos.z ).multiplyScalar( meshScaleMax );
 		
 		// set offset rotation
 		
@@ -283,17 +285,15 @@ var KAIOPUA = (function (main) {
 		
 		camOffsetRot.multiplyVector3( camOffsetPos );
 		
-		pcQ.multiplyVector3( camOffsetPos );
+		meshQ.multiplyVector3( camOffsetPos );
 		
 		// set new camera position
 		
-		camera.position.copy( pcMesh.position ).addSelf( camOffsetPos );
+		camera.position.copy( mesh.position ).addSelf( camOffsetPos );
 		
 		// set new camera rotation
 		
-		//pcQLast = THREE.Quaternion.slerp( pcQLast, pcQ, new THREE.Quaternion(), 0.1 );
-		
-		camQ.copy( pcQ ).multiplySelf( camOffsetRot ).multiplySelf( baseRotation );
+		camQ.copy( meshQ ).multiplySelf( camOffsetRot ).multiplySelf( baseRotation );
 		
 	}
 	

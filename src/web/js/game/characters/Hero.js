@@ -92,8 +92,12 @@ var KAIOPUA = (function (main) {
 	
 	function select_and_scale_start ( parameters ) {
 		
-		var numTargets,
+		var i, l,
+			numTargets,
 			character = parameters.character,
+			targeting = character.targeting,
+			targets = targeting.targets,
+			target,
 			actionData = character.actionData,
 			adObj;
 		
@@ -127,6 +131,19 @@ var KAIOPUA = (function (main) {
 				}
 				
 			};
+			
+			// create scale record for each target
+			// use model id as reference
+			
+			adObj.scaleRecords = {};
+			
+			for ( i = 0, l = targets.length; i < l; i += 1 ) {
+				
+				target = targets[ i ];
+				
+				adObj.scaleRecords[ target.id ] = target.mesh.scale.clone();
+				
+			}
 			
 			// signals
 			
@@ -170,35 +187,119 @@ var KAIOPUA = (function (main) {
 		var i, l,
 			mouse = parameters.mouse,
 			character = parameters.character,
+			actionData = character.actionData,
+			adObj,
 			targeting = character.targeting,
 			targets = targeting.targets,
 			targetsToRemove = targeting.targetsToRemove,
 			target,
-			removeIndex;
+			removeIndex,
+			scaleRecords,
+			scaleRecord,
+			scaleDelta,
+			mouseDeltaX,
+			mouseDeltaY,
+			mouseDelta,
+			mouseDeltaDivisorY = shared.screenHeight * 0.1;
 		
-		console.log('  scale update, num targets: ' + targets.length);
-		
-		// for all targets
-		for ( i = 0, l = targets.length; i < l; i += 1 ) {
+		if ( typeof actionData.select_and_scale !== 'undefined' ) {
 			
-			target = targets[ i ];
+			console.log('  scale update, num targets: ' + targets.length);
 			
-			// if on objects to remove list
-			// take out of list
+			adObj = actionData.select_and_scale;
 			
-			if ( targetsToRemove.length > 0 ) {
+			scaleRecords = adObj.scaleRecords;
+			
+			// mouse change
+			
+			mouseDeltaX = mouse.x - mouse.lx;
+			mouseDeltaY = -( mouse.y - mouse.ly );
+			mouseDelta = ( mouseDeltaX + mouseDeltaY ) * 0.5;
+			
+			// scale change
+			
+			scaleDelta = mouseDelta / mouseDeltaDivisorY;
+			
+			// for all targets
+			for ( i = 0, l = targets.length; i < l; i += 1 ) {
 				
-				removeIndex = targetsToRemove.indexOf( target );
+				target = targets[ i ];
 				
-				if ( removeIndex !== -1 ) {
+				scaleRecord = scaleRecords[ target.id ];
+				
+				// if on objects to remove list
+				// take out of list
+				
+				if ( targetsToRemove.length > 0 ) {
 					
-					targetsToRemove.splice( removeIndex, 1 );
+					removeIndex = targetsToRemove.indexOf( target );
+					
+					if ( removeIndex !== -1 ) {
+						
+						targetsToRemove.splice( removeIndex, 1 );
+						
+					}
 					
 				}
 				
+				// scale target
+				
+				scale_target( target, scaleRecord, scaleDelta );
+				
 			}
 			
-			// scale based on mouse position change
+		}
+		
+	}
+	
+	function scale_target ( target, scaleRecord, scaleDelta ) {
+		
+		var scaleX, scaleY, scaleZ,
+			scaleOrigin = 1,
+			scaleMax = 10,
+			scaleMin = 0.5,
+			scaleSnapOriginPct = 0.1,
+			scaleSnapOriginAboveDist = (scaleMax - scaleOrigin) * scaleSnapOriginPct,
+			scaleSnapOriginBelowDist = (scaleOrigin - scaleMin) * scaleSnapOriginPct;
+		
+		// scale based on mouse position change
+		
+		scaleX = scaleRecord.x = Math.max( scaleMin, Math.min( scaleMax, scaleRecord.x + scaleDelta ) );
+		scaleY = scaleRecord.y = Math.max( scaleMin, Math.min( scaleMax, scaleRecord.y + scaleDelta ) );
+		scaleZ = scaleRecord.z = Math.max( scaleMin, Math.min( scaleMax, scaleRecord.z + scaleDelta ) );
+		
+		// snap to origin
+		
+		if ( scaleOrigin - scaleSnapOriginBelowDist < scaleX && scaleX < scaleOrigin + scaleSnapOriginAboveDist ) {
+			
+			scaleX = scaleOrigin;
+			
+		}
+		
+		if ( scaleOrigin - scaleSnapOriginBelowDist < scaleY && scaleY < scaleOrigin + scaleSnapOriginAboveDist ) {
+			
+			scaleY = scaleOrigin;
+			
+		}
+		
+		if ( scaleOrigin - scaleSnapOriginBelowDist < scaleZ && scaleZ < scaleOrigin + scaleSnapOriginAboveDist ) {
+			
+			scaleZ = scaleOrigin;
+			
+		}
+		
+		// set new scale
+		
+		target.mesh.scale.set( scaleX, scaleY, scaleZ );
+		
+		if ( typeof target.rigidBody !== 'undefined' ) {
+			
+			var mt = new THREE.Matrix4();
+			
+			THREE.Matrix4.makeInvert( target.mesh.matrixWorld, mt );
+			
+			console.log( target.rigidBody.collider );
+			console.log( mt );
 			
 		}
 		

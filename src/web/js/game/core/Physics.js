@@ -42,6 +42,7 @@ var KAIOPUA = (function (main) {
 	physics.start = start;
 	physics.stop = stop;
 	physics.update = update;
+	physics.dimensions_from_collider_scaled = dimensions_from_collider_scaled;
 	
 	// getters and setters
 	
@@ -605,10 +606,10 @@ var KAIOPUA = (function (main) {
 			lerpDelta = 0.1,
 			rigidBody,
 			mesh,
+			scale,
 			collider,
 			position,
 			rotation,
-			rotationHelper,
 			axes,
 			axisUp,
 			axisUpNew,
@@ -630,17 +631,19 @@ var KAIOPUA = (function (main) {
 		
 		for ( i = 0, l = links.length; i < l; i += 1 ) {
 			
+			// localize rigidBody basics
+			
 			rigidBody = links[ i ];
 			
 			// is movable
 			
 			if ( rigidBody.movable === true ) {
 				
-				// localize basics
-				
-				mesh = rigidBody.mesh;
+				// localize movable basics
 				
 				collider = rigidBody.collider;
+				
+				mesh = rigidBody.mesh;
 				
 				position = mesh.position;
 				
@@ -772,6 +775,7 @@ var KAIOPUA = (function (main) {
 		
 		var mesh = rigidBody.mesh,
 			position = mesh.position,
+			scale = mesh.scale,
 			velocityForce = velocity.force,
 			velocityForceRotated,
 			velocityForceRotatedLength,
@@ -800,6 +804,10 @@ var KAIOPUA = (function (main) {
 		// rotate velocity to mesh's rotation
 		
 		velocityForceRotated = rotate_vector3_to_mesh_rotation( mesh, velocityForce );
+		
+		// scale velocity
+		
+		velocityForceRotated.multiplySelf( scale );
 		
 		// get rotated length
 		
@@ -918,41 +926,44 @@ var KAIOPUA = (function (main) {
 		collisions = system.rayCastAll( ray );
 		
 		// find nearest collision
-		
-		for ( i = 0, l = collisions.length; i < l; i += 1 ) {
+		if ( typeof collisions !== 'undefined' ) {
 			
-			collisionPotential = collisions[ i ];
-			
-			// if is collider for this object, skip
-			
-			if ( collisionPotential.mesh === rigidBody.mesh ) {
-				continue;
-			}
-			
-			// cast ray again if collider is mesh
-			// initial ray cast was to mesh collider's dynamic box
-			
-			if ( collisionPotential instanceof THREE.MeshCollider ) {
-			
-				collisionMeshRecast = system.rayMesh( ray, collisionPotential );
+			for ( i = 0, l = collisions.length; i < l; i += 1 ) {
 				
-				if ( collisionMeshRecast.dist < Number.MAX_VALUE ) {
-					collisionPotential.distance = collisionMeshRecast.dist;
-					collisionPotential.faceIndex = collisionMeshRecast.faceIndex;
-				}
-				else {
-					collisionPotential.distance = Number.MAX_VALUE;
+				collisionPotential = collisions[ i ];
+				
+				// if is collider for this object, skip
+				
+				if ( collisionPotential.mesh === rigidBody.mesh ) {
+					continue;
 				}
 				
-			}
-			
-			// if distance is less than last ( last starts at number max value )
-			// store as collision
-			
-			if ( collisionPotential.distance < collisionDistance ) {
+				// cast ray again if collider is mesh
+				// initial ray cast was to mesh collider's dynamic box
 				
-				collisionDistance = collisionPotential.distance;
-				collision = collisionPotential;
+				if ( collisionPotential instanceof THREE.MeshCollider ) {
+				
+					collisionMeshRecast = system.rayMesh( ray, collisionPotential );
+					
+					if ( collisionMeshRecast.dist < Number.MAX_VALUE ) {
+						collisionPotential.distance = collisionMeshRecast.dist;
+						collisionPotential.faceIndex = collisionMeshRecast.faceIndex;
+					}
+					else {
+						collisionPotential.distance = Number.MAX_VALUE;
+					}
+					
+				}
+				
+				// if distance is less than last ( last starts at number max value )
+				// store as collision
+				
+				if ( collisionPotential.distance < collisionDistance ) {
+					
+					collisionDistance = collisionPotential.distance;
+					collision = collisionPotential;
+					
+				}
 				
 			}
 			
@@ -961,7 +972,7 @@ var KAIOPUA = (function (main) {
 		//collision = system.rayCastNearest( ray );
 		//intersects = ray.intersectScene( game.scene );
 		//console.log('intersects.length: ' + intersects.length);
-		if ( intersects && intersects.length && intersects.length > 0 ) {
+		if ( typeof intersects !== 'undefined' ) {
 			
 			// loop through intersects for first object that is not self
 			

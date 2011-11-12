@@ -236,6 +236,9 @@ var KAIOPUA = (function (main) {
 			
 			mouse = shared.mice[ e.identifier ];
 			
+			mouse.lx = mouse.x;
+			mouse.ly = mouse.y;
+			
 			mouse.x = e.clientX;
 			mouse.y = e.clientY;
 			

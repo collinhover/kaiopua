@@ -373,6 +373,48 @@ var KAIOPUA = (function (main) {
 			
 		}
 		
+		// collisions making ray local
+		
+		THREE.CollisionSystem.prototype.makeRayLocal = function( ray, m ) {
+			
+			var mclone = m.matrixWorld.clone();
+			
+			var decomposeInfo = mclone.decompose();
+			var decomposeScale = decomposeInfo[ 2 ];
+			var scaleCopy = decomposeScale.clone();
+			scaleCopy.x = Math.pow( scaleCopy.x, Math.LN2 );
+			scaleCopy.y = Math.pow( scaleCopy.y, Math.LN2 );
+			scaleCopy.z = Math.pow( scaleCopy.z, Math.LN2 );
+			var scaleM = new THREE.Matrix4().setScale( scaleCopy.x, scaleCopy.y, scaleCopy.z );
+			var scaleMT = new THREE.Matrix4();
+			THREE.Matrix4.makeInvert( scaleM, scaleMT );
+			//console.log(decomposeScale.x + ', ' + decomposeScale.y + ', ' + decomposeScale.z);
+			
+			decomposeScale.x = 1;//Math.pow( decomposeScale.x, Math.log( 2 ) );
+			decomposeScale.y = 1;//Math.pow( decomposeScale.y, Math.log( 2 ) );
+			decomposeScale.z = 1;//Math.pow( decomposeScale.z, Math.log( 2 ) );
+			
+			mclone.compose( decomposeInfo[ 0 ], decomposeInfo[ 1 ], decomposeInfo[ 2 ] );
+			
+			var mt = THREE.CollisionSystem.__m;
+			THREE.Matrix4.makeInvert( mclone, mt );
+			
+			var rt = THREE.CollisionSystem.__r;
+			rt.origin.copy( ray.origin );
+			rt.direction.copy( ray.direction );
+			
+			mt.multiplyVector3( rt.origin );
+			mt.rotateAxis( rt.direction );
+			rt.direction.normalize();
+			
+			scaleMT.multiplyVector3( rt.origin );
+			scaleMT.rotateAxis( rt.direction );
+			rt.direction.normalize();
+			
+			return rt;
+			
+		};
+		
 	}
 	
 	/*===================================================

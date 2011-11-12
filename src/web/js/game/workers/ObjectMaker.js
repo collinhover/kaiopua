@@ -9,7 +9,8 @@ var KAIOPUA = (function (main) {
         game = main.game = main.game || {},
         workers = game.workers = game.workers || {},
         objectmaker = workers.objectmaker = workers.objectmaker || {},
-        durationBase = 1000;
+        durationBase = 1000,
+		objectCount = 0;
     
     /*===================================================
     
@@ -185,6 +186,12 @@ var KAIOPUA = (function (main) {
 		// add reference to model in mesh
 		
 		mesh.kaiopuaModel = model;
+		
+		// add id based on object count
+		
+		model.id = objectCount;
+		
+		objectCount += 1;
         
         // public properties
         model.mesh = mesh;
