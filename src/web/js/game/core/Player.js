@@ -597,7 +597,8 @@ var KAIOPUA = (function (main) {
 		
 		var selectedMesh,
 			selectedModel,
-			numTargets = 0,
+			targetsNum = 0,
+			targetsNumMax,
 			character,
 			targeting,
 			targets,
@@ -614,6 +615,8 @@ var KAIOPUA = (function (main) {
 		
 		character = parameters.character || playerCharacter;
 		
+		targetsNumMax = parameters.targetsNumMax || 1;
+		
 		targeting = character.targeting;
 		
 		targets = targeting.targets;
@@ -624,29 +627,34 @@ var KAIOPUA = (function (main) {
 			
 		selectedModel = find_selection( mouse );
 		
+		// check if selection is world
+		
+		worldParts = world.parts;
+			
+		worldPartsIndex = worldParts.indexOf( selectedModel );
+		
 		// if a selection was made
 		
-		if ( typeof selectedModel !== 'undefined' ) {
+		if ( typeof selectedModel !== 'undefined' && worldPartsIndex === -1 ) {
 			
+			// todo
 			// special selection cases
 			
-			// world selection
-			// select character instead
-			
-			worldParts = world.parts;
-			
-			worldPartsIndex = worldParts.indexOf( selectedModel );
-			
-			if ( worldPartsIndex !== -1 ) {
-				
-				selectedModel = playerCharacter.model;
-				
-			}
-		
 			// add selected to character targets
 			// unless already selected, then add to removal list
 			
 			if ( targets.indexOf( selectedModel ) === -1 ) {
+				
+				// check current length of targets
+				// if at or over max num targets, remove earliest
+				
+				if ( targets.length >= targetsNumMax ) {
+					
+					targetsToRemove.push( targets[ 0 ] );
+					
+					deselect( parameters );
+					
+				}
 			
 				targets.push( selectedModel );
 				
@@ -669,7 +677,7 @@ var KAIOPUA = (function (main) {
 			
 			// update num targets
 			
-			numTargets = targets.length;
+			targetsNum = targets.length;
 			
 			// set selected as current selection
 			
@@ -689,7 +697,7 @@ var KAIOPUA = (function (main) {
 			
 		}
 		
-		return numTargets;
+		return targetsNum;
 	}
 	
 	function deselect ( parameters ) {
@@ -723,8 +731,7 @@ var KAIOPUA = (function (main) {
 			targetModel = targetsToRemove[ i ];
 			
 			targetMesh = targetModel.mesh;
-			console.log('deselecting ');
-			console.log(targetModel);
+			
 			// find in targets and remove
 			
 			targetIndex = targets.indexOf( targetModel );
@@ -733,13 +740,15 @@ var KAIOPUA = (function (main) {
 				
 				targets.splice( targetIndex, 1 );
 				
-				materialIndex = targetMesh.materials.indexOf( selecting.material );
+			}
+			
+			// remove selecting material
+			
+			materialIndex = targetMesh.materials.indexOf( selecting.material );
+			
+			if ( materialIndex !== -1 ) {
 				
-				if ( materialIndex !== -1 ) {
-					
-					targetMesh.materials.splice( materialIndex, 1 );
-					
-				}
+				targetMesh.materials.splice( materialIndex, 1 );
 				
 			}
 			

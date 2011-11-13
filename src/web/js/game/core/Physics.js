@@ -42,7 +42,7 @@ var KAIOPUA = (function (main) {
 	physics.start = start;
 	physics.stop = stop;
 	physics.update = update;
-	physics.dimensions_from_collider_scaled = dimensions_from_collider_scaled;
+	physics.dimensions_from_collider = dimensions_from_collider;
 	
 	// getters and setters
 	
@@ -108,6 +108,10 @@ var KAIOPUA = (function (main) {
 		utilQ4Offset = new THREE.Quaternion();
 		utilRay1Casting = new THREE.Ray();
 		
+		// three collision fixes
+		
+		add_three_collision_fixes();
+		
 		// line testing
 		
 		var geom4 = new THREE.Geometry();
@@ -119,6 +123,222 @@ var KAIOPUA = (function (main) {
 		line4 = new THREE.Line(geom4, lineMat4);
 		
 		game.scene.add( line4 );
+		
+	}
+	
+	/*===================================================
+    
+    collision fixes
+    
+    =====================================================*/
+	
+	function add_three_collision_fixes () {
+		
+		var utilVec31RayBox = new THREE.Vector3(),
+			utilVec32RayBox = new THREE.Vector3();
+		
+		// ray mesh
+		
+		THREE.CollisionSystem.prototype.rayMesh = function( r, me ) {
+			
+			var i, l,
+				p0 = new THREE.Vector3(),
+				p1 = new THREE.Vector3(),
+				p2 = new THREE.Vector3(),
+				p3 = new THREE.Vector3(),
+				mesh = me.mesh,
+				geometry = mesh.geometry,
+				vertices = geometry.vertices,
+				matrixWorld = mesh.matrixWorld,
+				rt = THREE.CollisionSystem.__r;
+			
+			rt.origin.copy( r.origin );
+			rt.direction.copy( r.direction );
+			
+			var d = Number.MAX_VALUE;
+			var nearestface;
+			
+			for( i = 0, l = me.numFaces; i < l; i += 1 ) {
+				
+				var face = geometry.faces[ i ];
+				
+				matrixWorld.multiplyVector3( p0.copy( vertices[ face.a ].position ) );
+				matrixWorld.multiplyVector3( p1.copy( vertices[ face.b ].position ) );
+				matrixWorld.multiplyVector3( p2.copy( vertices[ face.c ].position ) );
+				
+				if ( face instanceof THREE.Face4 ) {
+					
+					matrixWorld.multiplyVector3( p3.copy( vertices[ face.d ].position ) );
+					
+					var nd = this.rayTriangle( rt, p0, p1, p3, d, this.collisionNormal, mesh );
+					
+					if( nd < d ) {
+						
+						d = nd;
+						nearestface = i;
+						me.normal.copy( this.collisionNormal );
+						me.normal.normalize();
+						
+					}
+					
+					nd = this.rayTriangle( rt, p1, p2, p3, d, this.collisionNormal, mesh );
+					
+					if( nd < d ) {
+						
+						d = nd;
+						nearestface = i;
+						me.normal.copy( this.collisionNormal );
+						me.normal.normalize();
+						
+					}
+					
+				}
+				else {
+					
+					var nd = this.rayTriangle( rt, p0, p1, p2, d, this.collisionNormal, mesh );
+					
+					if( nd < d ) {
+						
+						d = nd;
+						nearestface = i;
+						me.normal.copy( this.collisionNormal );
+						me.normal.normalize();
+						
+					}
+					
+				}
+				
+			}
+			
+			return {dist: d, faceIndex: nearestface};
+			
+		};
+		
+		// ray box
+		
+		THREE.CollisionSystem.prototype.rayBox = function( ray, ab ) {
+			
+			var rt = THREE.CollisionSystem.__r,
+				abMin = utilVec31RayBox.copy( ab.min );
+				abMax = utilVec32RayBox.copy( ab.max );
+			
+			rt.origin.copy( ray.origin );
+			rt.direction.copy( ray.direction );
+			
+			if ( ab.dynamic && ab.mesh && ab.mesh.matrixWorld ) {
+				
+				var matWorld = ab.mesh.matrixWorld;
+				
+				matWorld.multiplyVector3( abMin );
+				matWorld.multiplyVector3( abMax );
+				
+			}
+			
+			var xt = 0, yt = 0, zt = 0;
+			var xn = 0, yn = 0, zn = 0;
+			var ins = true;
+			
+			if( rt.origin.x < abMin.x ) {
+				
+				xt = abMin.x - rt.origin.x;
+				xt /= rt.direction.x;
+				ins = false;
+				xn = -1;
+				
+			} else if( rt.origin.x > abMax.x ) {
+				
+				xt = abMax.x - rt.origin.x;
+				xt /= rt.direction.x;
+				ins = false;
+				xn = 1;
+				
+			}
+			
+			if( rt.origin.y < abMin.y ) {
+				
+				yt = abMin.y - rt.origin.y;
+				yt /= rt.direction.y;
+				ins = false;
+				yn = -1;
+				
+			} else if( rt.origin.y > abMax.y ) {
+				
+				yt = abMax.y - rt.origin.y;
+				yt /= rt.direction.y;
+				ins = false;
+				yn = 1;
+				
+			}
+			
+			if( rt.origin.z < abMin.z ) {
+				
+				zt = abMin.z - rt.origin.z;
+				zt /= rt.direction.z;
+				ins = false;
+				zn = -1;
+				
+			} else if( rt.origin.z > abMax.z ) {
+				
+				zt = abMax.z - rt.origin.z;
+				zt /= rt.direction.z;
+				ins = false;
+				zn = 1;
+				
+			}
+			
+			if( ins ) return -1;
+			
+			var which = 0;
+			var t = xt;
+			
+			if( yt > t ) {
+				
+				which = 1;
+				t = yt;
+				
+			}
+			
+			if ( zt > t ) {
+				
+				which = 2;
+				t = zt;
+				
+			}
+			
+			switch( which ) {
+				
+				case 0:
+					
+					var y = rt.origin.y + rt.direction.y * t;
+					if ( y < abMin.y || y > abMax.y ) return Number.MAX_VALUE;
+					var z = rt.origin.z + rt.direction.z * t;
+					if ( z < abMin.z || z > abMax.z ) return Number.MAX_VALUE;
+					ab.normal.set( xn, 0, 0 );
+					break;
+					
+				case 1:
+					
+					var x = rt.origin.x + rt.direction.x * t;
+					if ( x < abMin.x || x > abMax.x ) return Number.MAX_VALUE;
+					var z = rt.origin.z + rt.direction.z * t;
+					if ( z < abMin.z || z > abMax.z ) return Number.MAX_VALUE;
+					ab.normal.set( 0, yn, 0) ;
+					break;
+					
+				case 2:
+					
+					var x = rt.origin.x + rt.direction.x * t;
+					if ( x < abMin.x || x > abMax.x ) return Number.MAX_VALUE;
+					var y = rt.origin.y + rt.direction.y * t;
+					if ( y < abMin.y || y > abMax.y ) return Number.MAX_VALUE;
+					ab.normal.set( 0, 0, zn );
+					break;
+					
+			}
+			
+			return t;
+			
+		};
 		
 	}
 	
@@ -353,7 +573,7 @@ var KAIOPUA = (function (main) {
 	
 	/*===================================================
     
-    physics functions
+    utility functions
     
     =====================================================*/
 	
@@ -377,6 +597,7 @@ var KAIOPUA = (function (main) {
 		// init velocity
 		
 		velocity.force = new THREE.Vector3();
+		velocity.forceRotated = new THREE.Vector3();
 		velocity.damping = new THREE.Vector3().addScalar( parameters.damping );
 		velocity.offset = parameters.offset && parameters.offset instanceof THREE.Vector3 ? parameters.offset : new THREE.Vector3();
 		velocity.moving = false;
@@ -405,10 +626,8 @@ var KAIOPUA = (function (main) {
 		return dimensions;
 	}
 	
-	function dimensions_from_collider_scaled ( rigidBody ) {
+	function dimensions_from_collider ( rigidBody ) {
 		var collider = rigidBody.collider,
-			mesh = rigidBody.mesh,
-			scale = mesh.scale,
 			colliderMin,
 			colliderMax,
 			dimensions = new THREE.Vector3();
@@ -438,9 +657,19 @@ var KAIOPUA = (function (main) {
 			return dimensions;
 		}
 		
-		dimensions.sub( colliderMax, colliderMin ).multiplySelf( scale );
+		dimensions.sub( colliderMax, colliderMin );
 		
 		return dimensions;
+	}
+	
+	function dimensions_from_collider_scaled ( rigidBody ) {
+		
+		var mesh = rigidBody.mesh,
+			scale = mesh.scale,
+			dimensions = dimensions_from_collider( rigidBody ).multiplySelf( scale );
+		
+		return dimensions;
+		
 	}
 	
 	function center_offset_from_bounding_box ( mesh ) {
@@ -529,9 +758,14 @@ var KAIOPUA = (function (main) {
 		return offset;
 	}
 	
-	function rotate_vector3_to_mesh_rotation ( mesh, vec3 ) {
+	function rotate_vector3_to_mesh_rotation ( mesh, vec3, rotatedVec3 ) {
 		
-		var rotatedVec3 = vec3.clone();
+		if ( rotatedVec3 instanceof THREE.Vector3 ) {
+			rotatedVec3.copy( vec3 );
+		}
+		else {
+			rotatedVec3 = vec3.clone();
+		}
 		
 		if ( mesh.useQuaternion === true ) {
 			
@@ -550,7 +784,7 @@ var KAIOPUA = (function (main) {
 	
 	/*===================================================
     
-    custom functions
+    start/stop/update functions
     
     =====================================================*/
 	
@@ -597,6 +831,12 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
+	/*===================================================
+    
+    integrate functions
+    
+    =====================================================*/
+	
 	function integrate ( timeStep ) {
 		
 		var i, l,
@@ -627,11 +867,9 @@ var KAIOPUA = (function (main) {
 			upToUpNewQ,
 			collisionGravity;
 		
-		// update links
+		// handle rotation and check velocity
 		
 		for ( i = 0, l = links.length; i < l; i += 1 ) {
-			
-			// localize rigidBody basics
 			
 			rigidBody = links[ i ];
 			
@@ -673,7 +911,7 @@ var KAIOPUA = (function (main) {
 				
 				gravDown = gravUp.clone().negate();//axisUp.clone().negate();//
 				
-				// handle movement velocity
+				// movement velocity
 				
 				handle_velocity( rigidBody, velocityMovement );
 				
@@ -761,7 +999,7 @@ var KAIOPUA = (function (main) {
 				
 				velocityGravity.force.addSelf( gravMag );
 				
-				// handle gravity velocity
+				// check gravity velocity
 				
 				handle_velocity( rigidBody, velocityGravity );
 				
@@ -771,17 +1009,23 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
+	/*===================================================
+    
+    velocity functions
+    
+    =====================================================*/
+	
 	function handle_velocity ( rigidBody, velocity, offset ) {
 		
 		var mesh = rigidBody.mesh,
 			position = mesh.position,
 			scale = mesh.scale,
 			velocityForce = velocity.force,
-			velocityForceRotated,
+			velocityForceRotated = velocity.forceRotated,
 			velocityForceRotatedLength,
 			velocityForceScalar,
-			velocityDamping = velocity.damping,
 			velocityOffset = velocity.offset,
+			velocityDamping = velocity.damping,
 			boundingOffset,
 			boundingOffsetLength,
 			collision,
@@ -803,7 +1047,7 @@ var KAIOPUA = (function (main) {
 		
 		// rotate velocity to mesh's rotation
 		
-		velocityForceRotated = rotate_vector3_to_mesh_rotation( mesh, velocityForce );
+		velocityForceRotated = rotate_vector3_to_mesh_rotation( mesh, velocityForce);//, velocityForceRotated );
 		
 		// scale velocity
 		
@@ -871,10 +1115,16 @@ var KAIOPUA = (function (main) {
 		
 		velocityForce.multiplySelf( velocityDamping );
 		
-		// return collision from ray
+		// return velocity
 		
 		return collision;
 	}
+	
+	/*===================================================
+    
+    raycast functions
+    
+    =====================================================*/
 	
 	function raycast_in_direction ( rigidBody, direction, offset, showLine ) {
 		

@@ -93,7 +93,8 @@ var KAIOPUA = (function (main) {
 	function select_and_scale_start ( parameters ) {
 		
 		var i, l,
-			numTargets,
+			targetsNum,
+			targetsNumMax = 1,
 			character = parameters.character,
 			targeting = character.targeting,
 			targets = targeting.targets,
@@ -103,11 +104,13 @@ var KAIOPUA = (function (main) {
 		
 		// select
 		
-		numTargets = game.core.player.select_from_mouse_position( parameters );
+		parameters.targetsNumMax = targetsNumMax;
+		
+		targetsNum = game.core.player.select_from_mouse_position( parameters );
 		
 		// start scale updating, if not already
 		
-		if ( numTargets > 0 && typeof actionData.select_and_scale === 'undefined' ) {
+		if ( targetsNum > 0 && typeof actionData.select_and_scale === 'undefined' ) {
 			
 			console.log('scale start');
 			
@@ -291,17 +294,6 @@ var KAIOPUA = (function (main) {
 		// set new scale
 		
 		target.mesh.scale.set( scaleX, scaleY, scaleZ );
-		
-		if ( typeof target.rigidBody !== 'undefined' ) {
-			
-			var mt = new THREE.Matrix4();
-			
-			THREE.Matrix4.makeInvert( target.mesh.matrixWorld, mt );
-			
-			console.log( target.rigidBody.collider );
-			console.log( mt );
-			
-		}
 		
 	}
 	

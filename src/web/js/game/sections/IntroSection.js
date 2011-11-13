@@ -118,7 +118,7 @@ var KAIOPUA = (function (main) {
 			wireframe: true
 		});
 		
-		var make_box = function ( x, y, z ) {
+		var make_box = function ( x, y, z, movable ) {
 			var geom = new THREE.CubeGeometry( 50, 50, 50, 1, 1 );
 			
 			// box
@@ -131,7 +131,8 @@ var KAIOPUA = (function (main) {
 			box.mesh.position.set( x, y, z );
 			
 			box.rigidBody = physics.translate( box.mesh, {
-				bodyType: 'box'
+				bodyType: 'box',
+				movable: typeof movable === 'undefined' ? false : movable
 			});
 			
 			return box;
@@ -175,6 +176,8 @@ var KAIOPUA = (function (main) {
 			}
 			
 		}
+		
+		addOnShow.push( make_box( 1, 3000, 100, true ) );
 		
     }
     
