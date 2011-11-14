@@ -12,13 +12,16 @@ var KAIOPUA = (function (main) {
         readyAll = false,
         assets,
         objectmaker,
+		skybox,
 		world,
 		player,
+		physics,
 		camera,
         scene,
+		sceneBG,
 		addOnShow = [],
-		light,
-		lightSource;
+		addBGOnShow = [],
+		light;
     
     /*===================================================
     
@@ -57,10 +60,19 @@ var KAIOPUA = (function (main) {
     
     function init_basics () {
 		
+		// utils
+		
+		assets = main.utils.loader.assets;
+		
 		// core
 		
 		world = game.core.world;
 		player = game.core.player;
+		physics = game.core.physics;
+		
+		// workers
+		
+		objectmaker = game.workers.objectmaker;
         
     }
     
@@ -89,21 +101,100 @@ var KAIOPUA = (function (main) {
     
     function init_environment () {
 		
+		// skybox
+		
+		skybox = objectmaker.make_skybox( "assets/textures/skybox_world" );
+		
 		// light
 		
 		light = new THREE.SpotLight( 0xffffff );
         light.position = new THREE.Vector3(-1, 0, 1).normalize();
-        
-        // light visual
-        
-        lightSource = new THREE.Mesh( new THREE.SphereGeometry( 4, 8, 8 ), new THREE.MeshBasicMaterial( { color: 0xffffff } ) );
-        
-        lightSource.useQuaternion = true;
 		
 		// add on show items
 		
-		addOnShow.push( light, lightSource );
+		addOnShow.push( light );
 		
+		addBGOnShow.push( skybox );
+		
+		//
+		//
+		//
+		// boxes test grid
+		//
+		//
+		//
+		
+		var normalMat = new THREE.MeshNormalMaterial();
+		
+		var normalMatWire = new THREE.MeshBasicMaterial({
+			color: 0x000000,
+			wireframe: true
+		});
+		
+		var make_box = function ( x, y, z, movable ) {
+			var geom = new THREE.CubeGeometry( 50, 50, 50, 1, 1 );
+			
+			// box
+			
+			var box = objectmaker.make_model({
+				geometry: geom,
+				materials: [normalMat, normalMatWire]
+			});
+			
+			box.mesh.position.set( x, y, z );
+			
+			box.rigidBody = physics.translate( box.mesh, {
+				bodyType: 'box',
+				movable: typeof movable === 'undefined' ? false : movable
+			});
+			
+			return box;
+		}
+		
+		var numRings = 6;
+		var radius = 2000;
+		
+		var deltaRotA = Math.PI / (numRings + 1);
+		var rotA = 0;
+		
+		var numBoxPerRing = 8;
+		var deltaRotB = (Math.PI * 2) / (numBoxPerRing);
+		var rotB = 0;
+		
+		for ( var i = 0, l = numRings; i < l; i += 1 ) {
+			
+			rotB = 0;
+			
+			rotA += deltaRotA;
+			
+			if ( rotA > Math.PI ) {
+				
+				rotA = 0;
+				
+			}
+			
+			var ny = radius * Math.cos( rotA );
+			
+			for ( var bi = 0, bl = numBoxPerRing; bi < bl; bi += 1 ) {
+				
+				var nx = radius * Math.sin( rotA ) * Math.cos( rotB );
+				var nz = radius * Math.sin( rotA ) * Math.sin( rotB );
+				
+				var box = make_box( nx, ny, nz );
+				
+				addOnShow.push( box );
+				
+				rotB += deltaRotB;
+			
+			}
+			
+		}
+		
+		addOnShow.push( make_box( 1, 2000, 100, true ) );
+		addOnShow.push( make_box( 1, 2000, -100, true ) );
+		addOnShow.push( make_box( 100, 2000, 1, true ) );
+		addOnShow.push( make_box( -100, 2000, 1, true ) );
+		addOnShow.push( make_box( -100, 2400, 1, true ) );
     }
     
     /*===================================================
@@ -113,8 +204,6 @@ var KAIOPUA = (function (main) {
     =====================================================*/
     
     function show () {
-		
-		var i, l;
 		
 		// camera
         
@@ -128,17 +217,17 @@ var KAIOPUA = (function (main) {
 		
 		scene = game.scene;
 		
+		sceneBG = game.sceneBG;
+		
 		// add world
 		
 		world.show();
 		
 		// add items
 		
-		for ( i = 0, l = addOnShow.length; i < l; i += 1 ) {
-			
-			scene.add( addOnShow[ i ] );
-			
-        }
+		game.add_to_scene( addOnShow, scene );
+		
+		game.add_to_scene( addBGOnShow, sceneBG );
 		
 		// start player
 		
@@ -167,8 +256,6 @@ var KAIOPUA = (function (main) {
     }
     
     function remove () {
-        
-		var i, l;
 		
 		// stop player
 		
@@ -182,11 +269,9 @@ var KAIOPUA = (function (main) {
 		
 		// remove added items
 		
-		for ( i = 0, l = addOnShow.length; i < l; i += 1 ) {
+		game.remove_from_scene( addOnShow, scene );
 		
-			scene.remove( addOnShow[ i ] );
-			
-        }
+		game.remove_from_scene( addBGOnShow, sceneBG );
 		
     }
     
@@ -203,9 +288,6 @@ var KAIOPUA = (function (main) {
         newP.addSelf( camera.position );
         
 		light.position = newP;
-        lightSource.position = newP;
-		
-        lightSource.quaternion.copy( camera.quaternion );
         
     }
     

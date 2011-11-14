@@ -9,7 +9,8 @@ var KAIOPUA = (function (main) {
         game = main.game = main.game || {},
         workers = game.workers = game.workers || {},
         objectmaker = workers.objectmaker = workers.objectmaker || {},
-        durationBase = 1000;
+        durationBase = 1000,
+		objectCount = 0;
     
     /*===================================================
     
@@ -32,6 +33,7 @@ var KAIOPUA = (function (main) {
     
     function make_model ( parameters ) {
         var i, l,
+			assets = main.utils.loader.assets,
             model = {},
             geometry,
 			vertices,
@@ -44,7 +46,8 @@ var KAIOPUA = (function (main) {
             scale,
 			rotation,
 			position,
-            morphs;
+            morphs,
+			rigidBody;
         
         // handle parameters
         
@@ -52,7 +55,21 @@ var KAIOPUA = (function (main) {
             
         // geometry
         
-        geometry = parameters.geometry || new THREE.Geometry();
+		if ( parameters.hasOwnProperty( 'geometry' ) ) {
+			
+			geometry = parameters.geometry;
+			
+		}
+		else if ( parameters.hasOwnProperty( 'geometryAssetPath' ) ) {
+			
+			geometry = assets[ parameters.geometryAssetPath ];
+			
+		}
+		else {
+			
+			geometry = new THREE.Geometry();
+			
+		}
 		
 		//geometry.computeVertexNormals();
 		
@@ -126,6 +143,14 @@ var KAIOPUA = (function (main) {
 			
 		}
 		
+		// flip sided
+		
+		if ( parameters.hasOwnProperty('flipSided') === true ) {
+			
+			mesh.flipSided = parameters.flipSided;
+			
+		}
+		
 		// rotation
 		
 		if ( parameters.hasOwnProperty('rotation') ) {
@@ -166,6 +191,16 @@ var KAIOPUA = (function (main) {
         // morphs
         
         morphs = make_morphs_handler( mesh );
+		
+		// add reference to model in mesh
+		
+		mesh.kaiopuaModel = model;
+		
+		// add id based on object count
+		
+		model.id = objectCount;
+		
+		objectCount += 1;
         
         // public properties
         model.mesh = mesh;
@@ -682,25 +717,54 @@ var KAIOPUA = (function (main) {
     
     // generates a skybox from array of images
     
-    function make_skybox ( images, width, height, depth ) {
-        
-        var textureCube = new THREE.Texture( images );
-        
-        var shader = THREE.ShaderUtils.lib["cube"];
-        
-    	shader.uniforms["tCube"].texture = textureCube;
-        
-		var material = new THREE.MeshShaderMaterial( {
-            
+    function make_skybox ( imagesAssetPath, mapping ) {
+		
+		var assets = main.utils.loader.assets,
+			images,
+			textureCube,
+			shader,
+			material,
+			model;
+		
+		// get images from assets
+		
+		ap = imagesAssetPath;
+		
+		images = [ assets[ap + "_posx.jpg"], assets[ap + "_negx.jpg"],
+						 assets[ap + "_posy.jpg"], assets[ap + "_negy.jpg"],
+						 assets[ap + "_posz.jpg"], assets[ap + "_negz.jpg"] ];
+		
+		// cube texture
+		
+		textureCube = new THREE.Texture( images, mapping );
+		textureCube.needsUpdate = true;
+		
+		// shader
+		
+		shader = THREE.ShaderUtils.lib[ "cube" ];
+		shader.uniforms[ "tCube" ].texture = textureCube;
+		
+		// material
+		
+		material = new THREE.ShaderMaterial( {
+
 			fragmentShader: shader.fragmentShader,
 			vertexShader: shader.vertexShader,
-			uniforms: shader.uniforms
-            
-		} ),
+			uniforms: shader.uniforms,
+			depthWrite: false
+			
+		} );
+		
+		// model
+		
+		model = make_model( {
+            geometry: new THREE.CubeGeometry( 100, 100, 100 ),
+			materials: material,
+			shading: THREE.SmoothShading,
+			flipSided: true
+        } );
         
-		mesh = new THREE.Mesh( new THREE.CubeGeometry( width || 100000, height || 100000, depth || 100000, 1, 1, 1, null, true ), material );
-        
-        return mesh;
+        return model;
         
     }
         

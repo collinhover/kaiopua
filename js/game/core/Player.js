@@ -8,9 +8,9 @@ var KAIOPUA = (function (main) {
         game = main.game = main.game || {},
 		core = game.core = game.core || {},
 		player = core.player = core.player || {},
+		characters = game.characters = game.characters || {},
 		ready = false,
-		assets,
-		objectmaker,
+		enabled = false,
 		physics,
 		world,
 		scene,
@@ -25,13 +25,14 @@ var KAIOPUA = (function (main) {
 		keybindings = {},
 		keybindingsDefault = {},
 		playerCharacter,
-		utilVec31,
-		utilQ1,
-		utilQ2,
-		utilQ3,
-		line1,
-		line2,
-		line3;
+		projector,
+		utilRay1Selection,
+		utilVec31Selection,
+		utilVec31CameraFollow,
+		utilQ1CameraFollow,
+		utilQ2CameraFollow,
+		utilQ3CameraFollow,
+		selecting;
 	
 	/*===================================================
     
@@ -46,11 +47,25 @@ var KAIOPUA = (function (main) {
 	player.hide = hide;
 	player.allow_control = allow_control;
 	player.remove_control = remove_control;
+	player.select_from_mouse_position = select_from_mouse_position;
+	player.deselect = deselect;
 	
 	// getters and setters
 	Object.defineProperty(player, 'cameraMode', { 
 		get : function () { return cameraMode; },
 		set : set_camera_mode
+	});
+	
+	Object.defineProperty(player, 'enabled', { 
+		get : function () { return enabled; },
+		set : function ( val ) { 
+			if ( val === true ) {
+				enable();
+			}
+			else {
+				disable();
+			}
+		}
 	});
 	
 	/*===================================================
@@ -62,21 +77,31 @@ var KAIOPUA = (function (main) {
 	function init () {
 		
 		if ( ready !== true ) {
-		
-			// assets
-			
-			assets = main.utils.loader.assets;
-			
-			// workers
-			
-			objectmaker = game.workers.objectmaker;
 			
 			// utility objects
 			
-			utilVec31 = new THREE.Vector3();
-			utilQ1 = new THREE.Quaternion();
-			utilQ2 = new THREE.Quaternion();
-			utilQ3 = new THREE.Quaternion();
+			utilVec31CameraFollow = new THREE.Vector3();
+			utilQ1CameraFollow = new THREE.Quaternion();
+			utilQ2CameraFollow = new THREE.Quaternion();
+			utilQ3CameraFollow = new THREE.Quaternion();
+			
+			utilRay1Selection = new THREE.Ray();
+			utilVec31Selection = new THREE.Vector3();
+			
+			projector = new THREE.Projector();
+			
+			// selecting
+			
+			selecting = {};
+			
+			selecting.opacityMin = 0.2;
+			selecting.opacityMax = 0.6;
+			selecting.opacityStart = selecting.opacityMin;
+			selecting.opacityTarget = selecting.opacityMax;
+			selecting.opacityCycleTime = 0;
+			selecting.opacityCycleTimeMax = 500;
+			
+			selecting.material = new THREE.MeshBasicMaterial( { color: 0xffffff, transparent: true, opacity: selecting.opacityStart, blending: THREE.AdditiveAlphaBlending } );
 			
 			// core
 			
@@ -104,6 +129,12 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
+	/*===================================================
+    
+    camera
+    
+    =====================================================*/
+	
 	function init_camera () {
 		
 		// init camera follow settings
@@ -112,8 +143,8 @@ var KAIOPUA = (function (main) {
 			baseRotation: new THREE.Quaternion().setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), Math.PI ),
 			quaternionLast: new THREE.Quaternion(),
 			offset: {
-				pos: new THREE.Vector3( 0, 0, 1000 ),
-				rot: new THREE.Vector3( 60, 0, 0 )
+				pos: new THREE.Vector3( 0, 100, 300 ),//1000 ),
+				rot: new THREE.Vector3( 25, 0, 0 )
 			},
 			clamps: {
 				minRotX: -0.4,
@@ -130,195 +161,6 @@ var KAIOPUA = (function (main) {
 		set_camera_mode();
 		
 	}
-	
-	function init_keybindings () {
-		
-		var kbMap;
-		
-		// init keybindings
-		
-		kbMap = keybindingsDefault;
-		
-		// default keybindings
-		
-		// mouse buttons
-		
-		kbMap[ 'clickleft' ] = {
-			mousedown: function () { 
-				console.log('key down: clickleft');
-			},
-			mouseup: function () { console.log('key up: clickleft'); }
-		};
-		kbMap[ 'clickmiddle' ] = {
-			mousedown: function () { console.log('key down: clickmiddle'); },
-			mouseup: function () { console.log('key up: clickmiddle'); }
-		};
-		kbMap[ 'clickright' ] = {
-			mousedown: function () { console.log('key down: clickright'); },
-			mouseup: function () { console.log('key up: clickright'); }
-		};
-		
-		// wasd / uldr
-		
-		kbMap[ '38' /*up*/ ] = kbMap[ '87' /*w*/ ] = kbMap[ 'w' ] = {
-			keydown: function () { characterMove( 'forward' ); },
-			keyup: function () { characterMove( 'forward', true ); }
-		};
-		
-		kbMap[ '40' /*down*/ ] = kbMap[ '83' /*s*/ ] = kbMap[ 's' ] = {
-			keydown: function () { characterMove( 'back' ); },
-			keyup: function () { characterMove( 'back', true ); }
-		};
-		
-		kbMap[ '37' /*left*/ ] = kbMap[ '65' /*a*/ ] = kbMap[ 'a' ] = {
-			keydown: function () { characterMove( 'turnLeft' ); },
-			keyup: function () { characterMove( 'turnLeft', true ); }
-		};
-		
-		kbMap[ '39' /*right*/ ] = kbMap[ '68' /*d*/ ] = kbMap[ 'd' ] = {
-			keydown: function () { characterMove( 'turnRight' ); },
-			keyup: function () { characterMove( 'turnRight', true ); }
-		};
-		
-		// qe
-		
-		kbMap[ '81' /*q*/ ] = kbMap[ 'q' ] = {
-			keydown: function () { characterMove( 'left' ); },
-			keyup: function () { characterMove( 'left', true ); }
-		};
-		
-		kbMap[ '69' /*e*/ ] = kbMap[ 'e' ] = {
-			keydown: function () { characterMove( 'right' ); },
-			keyup: function () { characterMove( 'right', true ); }
-		};
-		
-		// numbers
-		
-		kbMap[ '49' /*1*/ ] = kbMap[ '1' ] = {
-			keyup: function () { console.log('key up: 1'); }
-		};
-		kbMap[ '50' /*2*/ ] = kbMap[ '2' ] = {
-			keyup: function () { console.log('key up: 2'); }
-		};
-		kbMap[ '51' /*3*/ ] = kbMap[ '3' ] = {
-			keyup: function () { console.log('key up: 3'); }
-		};
-		kbMap[ '52' /*4*/ ] = kbMap[ '4' ] = {
-			keyup: function () { console.log('key up: 4'); }
-		};
-		kbMap[ '53' /*5*/ ] = kbMap[ '5' ] = {
-			keyup: function () { console.log('key up: 5'); }
-		};
-		kbMap[ '54' /*6*/ ] = kbMap[ '6' ] = {
-			keyup: function () { console.log('key up: 6'); }
-		};
-		
-		// misc
-		
-		kbMap[ '82' /*r*/ ] = kbMap[ 'r' ] = {
-			keyup: function () { console.log('key up: r'); }
-		};
-		
-		kbMap[ '70' /*f*/ ] = kbMap[ 'f' ] = {
-			keyup: camera_toggle_free_look
-		};
-		
-		// set default as current
-		
-		set_keybindings( kbMap );
-		
-	}
-	
-	function init_controls () {
-		
-		
-		
-	}
-	
-	function init_character () {
-		
-		playerCharacter = {};
-		
-		// model
-		
-		var mat = new THREE.MeshNormalMaterial();
-		
-		// three
-		
-		playerCharacter.model = objectmaker.make_model({
-			geometry: assets["assets/models/Hero.js"],
-			materials: mat
-		});
-		
-		playerCharacter.model.mesh.position.set( 1, 3000, 1 );
-		
-		// rigidbody
-		
-		playerCharacter.model.rigidBody = physics.translate( playerCharacter.model.mesh, {
-			bodyType: 'box',
-			width: 40,
-			height: 100,
-			depth: 40,
-			movable: true
-		});
-		
-		// movement
-		
-		playerCharacter.movement = {
-			move: {
-				speed: 0.25,
-				vector: new THREE.Vector3()
-			},
-			rotate: {
-				speed: 0.01,
-				vector: new THREE.Vector3(),
-				update: new THREE.Quaternion(),
-			},
-			state: {
-				up: 0, 
-				down: 0, 
-				left: 0, 
-				right: 0, 
-				forward: 0, 
-				back: 0, 
-				turnLeft: 0, 
-				turnRight: 0
-			}
-		}
-		
-		// lines for testing
-		
-		var geom = new THREE.Geometry();
-		geom.vertices.push( new THREE.Vertex( new THREE.Vector3(-100, 0, 0) ) );
-		geom.vertices.push( new THREE.Vertex( new THREE.Vector3( 100, 0, 0) ) );
-		
-		var lineMat1 = new THREE.LineBasicMaterial( { color: 0xff0000, opacity: 1, linewidth: 8 } );
-		
-		line1 = new THREE.Line(geom, lineMat1);
-		
-		var geom2 = new THREE.Geometry();
-		geom2.vertices.push( new THREE.Vertex( new THREE.Vector3(-100, 0, 0) ) );
-		geom2.vertices.push( new THREE.Vertex( new THREE.Vector3( 100, 0, 0) ) );
-		
-		var lineMat2 = new THREE.LineBasicMaterial( { color: 0x00ff00, opacity: 1, linewidth: 8 } );
-		
-		line2 = new THREE.Line(geom2, lineMat2);
-		
-		var geom3 = new THREE.Geometry();
-		geom3.vertices.push( new THREE.Vertex( new THREE.Vector3(-100, 0, 0) ) );
-		geom3.vertices.push( new THREE.Vertex( new THREE.Vector3( 100, 0, 0) ) );
-		
-		var lineMat3 = new THREE.LineBasicMaterial( { color: 0x0000ff, opacity: 1, linewidth: 8 } );
-		
-		line3 = new THREE.Line(geom3, lineMat3);
-		
-	}
-	
-	/*===================================================
-    
-    camera
-    
-    =====================================================*/
 	
 	function set_camera_mode ( modeType ) {
 		
@@ -339,7 +181,11 @@ var KAIOPUA = (function (main) {
 		
 		if ( modeType === cameraModes.freelook ) {
 			
-			remove_control();
+			if ( ready === true ) {
+				
+				remove_control();
+				
+			}
 			
 			if ( typeof cameraFreelookControls === 'undefined' ) {
 				
@@ -359,7 +205,11 @@ var KAIOPUA = (function (main) {
 		}
 		else {
 			
-			allow_control();
+			if ( ready === true ) {
+				
+				allow_control();
+				
+			}
 			
 		}
 		
@@ -406,23 +256,25 @@ var KAIOPUA = (function (main) {
 	
 	function camera_follow_character () {
 		
-		var baseRotation = cameraFollowSettings.baseRotation,
+		var cam = camera = game.camera,
+			baseRotation = cameraFollowSettings.baseRotation,
 			offset = cameraFollowSettings.offset,
 			srcOffsetPos = offset.pos,
 			srcOffsetRot = offset.rot,
 			clamps = cameraFollowSettings.clamps,
-			pcMesh = playerCharacter.model.mesh,
-			pcQ = pcMesh.quaternion,
-			pcQLast = cameraFollowSettings.quaternionLast,
-			camQ = camera.quaternion,
-			camOffsetPos = utilVec31,
-			camOffsetRot = utilQ1,
-			camOffsetRotHalf = utilQ2;
+			mesh = playerCharacter.model.mesh,
+			meshScale = mesh.scale,
+			meshScaleMax = Math.max( meshScale.x, meshScale.y, meshScale.z ), 
+			meshQ = mesh.quaternion,
+			camP = cam.position,
+			camQ = cam.quaternion,
+			camOffsetPos = utilVec31CameraFollow,
+			camOffsetRot = utilQ1CameraFollow,
+			camOffsetRotHalf = utilQ2CameraFollow;
 		
 		// set offset base position
 		
-		camPosNew = pcMesh.position.clone();
-		camOffsetPos.set( srcOffsetPos.x, srcOffsetPos.y, srcOffsetPos.z );
+		camOffsetPos.set( srcOffsetPos.x, srcOffsetPos.y, srcOffsetPos.z ).multiplyScalar( meshScaleMax );
 		
 		// set offset rotation
 		
@@ -435,17 +287,15 @@ var KAIOPUA = (function (main) {
 		
 		camOffsetRot.multiplyVector3( camOffsetPos );
 		
-		pcQ.multiplyVector3( camOffsetPos );
+		meshQ.multiplyVector3( camOffsetPos );
 		
 		// set new camera position
 		
-		camera.position.copy( pcMesh.position ).addSelf( camOffsetPos );
+		camP.copy( mesh.position ).addSelf( camOffsetPos );
 		
 		// set new camera rotation
 		
-		//pcQLast = THREE.Quaternion.slerp( pcQLast, pcQ, new THREE.Quaternion(), 0.1 );
-		
-		camQ.copy( pcQ ).multiplySelf( camOffsetRot ).multiplySelf( baseRotation );
+		camQ.copy( meshQ ).multiplySelf( camOffsetRot ).multiplySelf( baseRotation );
 		
 	}
 	
@@ -454,6 +304,109 @@ var KAIOPUA = (function (main) {
     keybindings
     
     =====================================================*/
+	
+	function init_keybindings () {
+		
+		var kbMap;
+		
+		// init keybindings
+		
+		kbMap = keybindingsDefault;
+		
+		// default keybindings
+		
+		// mouse buttons
+		
+		kbMap[ 'mouseleft' ] = {
+			keydown: function ( mouseIndex ) { character_action( 'ability_001_start', { mouseIndex: mouseIndex } ); },
+			keyup: function ( mouseIndex ) { character_action( 'ability_001_end', { mouseIndex: mouseIndex } ); },
+		};
+		kbMap[ 'mousemiddle' ] = {
+			keydown: function () { console.log('key down: mousemiddle'); },
+			keyup: function () { console.log('key up: mousemiddle'); }
+		};
+		kbMap[ 'mouseright' ] = {
+			keydown: function () { console.log('key down: mouseright'); },
+			keyup: function () { console.log('key up: mouseright'); }
+		};
+		
+		// wasd / uldr
+		
+		kbMap[ '38' /*up*/ ] = kbMap[ '87' /*w*/ ] = kbMap[ 'w' ] = {
+			keydown: function () { character_move( 'forward' ); },
+			keyup: function () { character_move( 'forward', true ); }
+		};
+		
+		kbMap[ '40' /*down*/ ] = kbMap[ '83' /*s*/ ] = kbMap[ 's' ] = {
+			keydown: function () { character_move( 'back' ); },
+			keyup: function () { character_move( 'back', true ); }
+		};
+		
+		kbMap[ '37' /*left*/ ] = kbMap[ '65' /*a*/ ] = kbMap[ 'a' ] = {
+			keydown: function () { character_move( 'turnLeft' ); },
+			keyup: function () { character_move( 'turnLeft', true ); }
+		};
+		
+		kbMap[ '39' /*right*/ ] = kbMap[ '68' /*d*/ ] = kbMap[ 'd' ] = {
+			keydown: function () { character_move( 'turnRight' ); },
+			keyup: function () { character_move( 'turnRight', true ); }
+		};
+		
+		// qe
+		
+		kbMap[ '81' /*q*/ ] = kbMap[ 'q' ] = {
+			keyup: function () { console.log('key up: q'); }
+		};
+		
+		kbMap[ '69' /*e*/ ] = kbMap[ 'e' ] = {
+			keyup: function () { console.log('key up: e'); }
+		};
+		
+		// numbers
+		
+		kbMap[ '49' /*1*/ ] = kbMap[ '1' ] = {
+			keyup: function () { console.log('key up: 1'); }
+		};
+		kbMap[ '50' /*2*/ ] = kbMap[ '2' ] = {
+			keyup: function () { console.log('key up: 2'); }
+		};
+		kbMap[ '51' /*3*/ ] = kbMap[ '3' ] = {
+			keyup: function () { console.log('key up: 3'); }
+		};
+		kbMap[ '52' /*4*/ ] = kbMap[ '4' ] = {
+			keyup: function () { console.log('key up: 4'); }
+		};
+		kbMap[ '53' /*5*/ ] = kbMap[ '5' ] = {
+			keyup: function () { console.log('key up: 5'); }
+		};
+		kbMap[ '54' /*6*/ ] = kbMap[ '6' ] = {
+			keyup: function () { console.log('key up: 6'); }
+		};
+		
+		// misc
+		
+		kbMap[ '27' /*escape*/ ] = {
+			keyup: function () { console.log('key up: escape'); }
+		};
+		
+		kbMap[ '32' /*space*/ ] = {
+			keydown: function () { character_move( 'up' ); },
+			keyup: function () { character_move( 'up', true ); }
+		};
+		
+		kbMap[ '82' /*r*/ ] = kbMap[ 'r' ] = {
+			keyup: function () { console.log('key up: r'); }
+		};
+		
+		kbMap[ '70' /*f*/ ] = kbMap[ 'f' ] = {
+			keyup: camera_toggle_free_look
+		};
+		
+		// set default as current
+		
+		set_keybindings( kbMap );
+		
+	}
 	
 	function set_keybindings ( map ) {
 		
@@ -479,15 +432,21 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
+	function init_controls () {
+		
+		
+		
+	}
+	
 	function allow_control () {
 		
 		// signals
 		
-		shared.signals.mousedown.add( onMouseClicked );
-		shared.signals.mouseup.add( onMouseClicked );
+		shared.signals.mousedown.add( on_mouse_pressed );
+		shared.signals.mouseup.add( on_mouse_pressed );
 		
-		shared.signals.keydown.add( onKeyboardUsed );
-		shared.signals.keyup.add( onKeyboardUsed );
+		shared.signals.keydown.add( on_keyboard_used );
+		shared.signals.keyup.add( on_keyboard_used );
 		
 	}
 	
@@ -495,32 +454,44 @@ var KAIOPUA = (function (main) {
 		
 		// signals
 		
-		shared.signals.mousedown.remove( onMouseClicked );
-		shared.signals.mouseup.remove( onMouseClicked );
+		shared.signals.mousedown.remove( on_mouse_pressed );
+		shared.signals.mouseup.remove( on_mouse_pressed );
 		
-		shared.signals.keydown.remove( onKeyboardUsed );
-		shared.signals.keyup.remove( onKeyboardUsed );
+		shared.signals.keydown.remove( on_keyboard_used );
+		shared.signals.keyup.remove( on_keyboard_used );
 		
 	}
 	
-	function onMouseClicked ( e ) {
+	function on_mouse_pressed ( e ) {
 		
 		var button,
+			type,
 			arguments = [];
+		
+		// handle button
 		
 		switch ( e.button ) {
 			
-			case 2: button = 'clickright'; break;
-			case 1: button = 'clickmiddle'; break;
-			case 0: button = 'clickleft'; break;
+			case 2: button = 'mouseright'; break;
+			case 1: button = 'mousemiddle'; break;
+			case 0: button = 'mouseleft'; break;
 			
 		}
 		
-		triggerKey( button, e.type );
+		// handle type
+		
+		switch ( e.type ) {
+			
+			case 'mousedown': case 'touchstart': type = 'keydown'; break;
+			case 'mouseup': case 'touchend': type = 'keyup'; break;
+			
+		}
+		
+		triggerKey( button, type, [ e.identifier ] );
 		
 	}
 	
-	function onKeyboardUsed ( e ) {
+	function on_keyboard_used ( e ) {
 		
 		triggerKey( (e.key || e.keyCode).toString().toLowerCase(), e.type );
 		
@@ -530,6 +501,8 @@ var KAIOPUA = (function (main) {
 		
 		var kbMap = keybindings,
 			kbInfo;
+		
+		// trigger by name
 		
 		if ( kbMap.hasOwnProperty( keyName ) === true ) {
 			
@@ -551,134 +524,343 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	function update_character () {
+	function init_character () {
 		
-		var pc = playerCharacter,
-			model = pc.model,
-			mesh = model.mesh,
-			meshQ = mesh.quaternion,
-			movement = pc.movement,
-			move = movement.move,
-			moveVec = move.vector,
-			moveSpeed = move.speed,
-			moveActual = moveVec.clone().multiplyScalar( moveSpeed ),
-			rotate = movement.rotate,
-			rotateVec = rotate.vector,
-			rotateUpdate = rotate.update,
-			rotateSpeed = rotate.speed,
-			rigidBody = model.rigidBody,
-			velocityMovement = rigidBody.velocityMovement,
-			velocityMovementForce = velocityMovement.force;
+		// create character
 		
-		// add move vec to rigidBody movement
+		playerCharacter = core.character.make_character( {
+			
+			type: characters.hero
+			
+		} );
 		
-		velocityMovementForce.addSelf( moveActual );
+		// testing position
 		
-		// rotate self
-		
-		rotateUpdate.set( rotateVec.x * rotateSpeed, rotateVec.y * rotateSpeed, rotateVec.z * rotateSpeed, 1 ).normalize();
-		
-		utilQ1.multiply( meshQ, rotateUpdate );
-		
-		meshQ.copy( utilQ1 );
-		
-		// line testing
-		
-		var position = model.mesh.position;
-		var axes = rigidBody.axes;
-		var up = axes.up;
-		var forward = new THREE.Vector3( 0, 0, 1 );//axes.forward;
-		var right = new THREE.Vector3( -1, 0, 0 );//axes.right;
-		
-		meshQ.multiplyVector3( forward );
-		meshQ.multiplyVector3( right );
-		
-		// forward
-		
-		var lineStart = forward.clone().addSelf( position );
-		var lineEnd = forward.clone().multiplyScalar( 100 ).addSelf( position );
-		
-		line1.geometry.vertices[0].position = lineStart;
-		line1.geometry.vertices[1].position = lineEnd;
-		line1.geometry.__dirtyVertices = true;
-		line1.geometry.__dirtyElements = true;
-		
-		// right
-		
-		var ls2 = right.clone().addSelf( position );
-		var le2 = right.clone().multiplyScalar( 100 ).addSelf( position );
-		
-		line2.geometry.vertices[0].position = ls2;
-		line2.geometry.vertices[1].position = le2;
-		line2.geometry.__dirtyVertices = true;
-		line2.geometry.__dirtyElements = true;
-		
-		// up
-		
-		var ls3 = up.clone().addSelf( position );
-		var le3 = up.clone().multiplyScalar( 100 ).addSelf( position );
-		
-		line3.geometry.vertices[0].position = ls3;
-		line3.geometry.vertices[1].position = le3;
-		line3.geometry.__dirtyVertices = true;
-		line3.geometry.__dirtyElements = true;
+		playerCharacter.model.mesh.position.set( 1, 3000, 1 );
 		
 	}
 	
-	function characterMove ( type, stop ) {
-		
+	function character_move ( movementTypeName, stop ) {
+			
 		var pc = playerCharacter,
 			movement = pc.movement,
 			move = movement.move,
 			rotate = movement.rotate,
 			state = movement.state,
-			moveV = move.vector,
-			rotateV = rotate.vector;
+			moveDir = move.direction,
+			rotateDir = rotate.direction;
 		
-		if ( type === 'turnLeft' ) {
-			
-			state.turnLeft = stop === true ? 0 : 1;
-			
+		if ( typeof stop === 'undefined' ) {
+			stop = false;
 		}
-		else if ( type === 'turnRight' ) {
+		
+		// handle movement by type name
+		
+		if ( state.hasOwnProperty( movementTypeName ) ) {
 			
-			state.turnRight = stop === true ? 0 : 1;
-			
-		}
-		else if ( type === 'forward' ) {
-			
-			state.forward = stop === true ? 0 : 1;
-			
-		}
-		else if ( type === 'back' ) {
-			
-			state.back = stop === true ? 0 : 1;
-			
-		}
-		else if ( type === 'left' ) {
-			
-			state.left = stop === true ? 0 : 1;
-			
-		}
-		else if ( type === 'right' ) {
-			
-			state.right = stop === true ? 0 : 1;
-			
-		}
-		else if ( type === 'up' ) {
-			
-			state.up = stop === true ? 0 : 1;
+			state[ movementTypeName ] = stop === true ? 0 : 1;
 			
 		}
 		
-		// update vectors
+		// special cases
 		
-		moveV.x = ( state.left - state.right );
-		moveV.y = ( state.up - state.down );
-		moveV.z = ( state.forward - state.back );
-		
-		rotateV.y = ( state.turnLeft - state.turnRight );
+		if ( movementTypeName === 'up' && stop === true ) {
 			
+			movement.jump.stopped = true;
+			
+		}
+		
+		// update vectors with state
+		
+		moveDir.x = ( state.left - state.right );
+		moveDir.z = ( state.forward - state.back );
+		
+		rotateDir.y = ( state.turnLeft - state.turnRight );
+			
+	}
+	
+	function character_action ( actionName, parameters ) {
+		
+		var pc = playerCharacter;
+		
+		// handle action
+		
+		pc.action( actionName, parameters );
+		
+	}
+	
+	/*===================================================
+    
+    selection functions
+    
+    =====================================================*/
+	
+	function select_from_mouse_position ( parameters ) {
+		
+		var selectedMesh,
+			selectedModel,
+			targetsNum = 0,
+			targetsNumMax,
+			character,
+			targeting,
+			targets,
+			targetsToRemove,
+			worldParts,
+			worldPartsIndex,
+			materialIndex;
+		
+		// handle parameters
+		
+		parameters = parameters || {};
+		
+		mouse = parameters.mouse = parameters.mouse || game.get_mouse( parameters );
+		
+		character = parameters.character || playerCharacter;
+		
+		targetsNumMax = parameters.targetsNumMax || 1;
+		
+		targeting = character.targeting;
+		
+		targets = targeting.targets;
+		
+		targetsToRemove = targeting.targetsToRemove;
+		
+		// select
+			
+		selectedModel = find_selection( mouse );
+		
+		// check if selection is world
+		
+		worldParts = world.parts;
+			
+		worldPartsIndex = worldParts.indexOf( selectedModel );
+		
+		// if a selection was made
+		
+		if ( typeof selectedModel !== 'undefined' && worldPartsIndex === -1 ) {
+			
+			// todo
+			// special selection cases
+			
+			// add selected to character targets
+			// unless already selected, then add to removal list
+			
+			if ( targets.indexOf( selectedModel ) === -1 ) {
+				
+				// check current length of targets
+				// if at or over max num targets, remove earliest
+				
+				if ( targets.length >= targetsNumMax ) {
+					
+					targetsToRemove.push( targets[ 0 ] );
+					
+					deselect( parameters );
+					
+				}
+			
+				targets.push( selectedModel );
+				
+				selectedMesh = selectedModel.mesh;
+				
+				materialIndex = selectedMesh.materials.indexOf( selecting.material );
+				
+				if ( materialIndex === -1 ) {
+					
+					selectedMesh.materials.push( selecting.material );
+					
+				}
+				
+			}
+			else {
+				
+				targetsToRemove.push( selectedModel );
+				
+			}
+			
+			// update num targets
+			
+			targetsNum = targets.length;
+			
+			// set selected as current selection
+			
+			targeting.targetCurrent = selectedModel;
+			
+		}
+		// else deselect all
+		else {
+			
+			if ( targets.length > 0 ) {
+				
+				targeting.targetsToRemove = targetsToRemove.concat( targets );
+				
+				deselect( parameters );
+				
+			}
+			
+		}
+		
+		return targetsNum;
+	}
+	
+	function deselect ( parameters ) {
+		
+		var i, l,
+			character,
+			targeting,
+			targets,
+			targetsToRemove,
+			targetIndex,
+			targetModel,
+			targetMesh,
+			materialIndex;
+		
+		// handle parameters
+		
+		parameters = parameters || {};
+		
+		character = parameters.character || playerCharacter;
+		
+		targeting = character.targeting;
+		
+		targets = targeting.targets;
+		
+		targetsToRemove = targeting.targetsToRemove;
+		
+		// for each target to remove
+		
+		for ( i = targetsToRemove.length - 1, l = 0; i >= l; i -= 1 ) {
+			
+			targetModel = targetsToRemove[ i ];
+			
+			targetMesh = targetModel.mesh;
+			
+			// find in targets and remove
+			
+			targetIndex = targets.indexOf( targetModel );
+			
+			if ( targetIndex !== -1 ) {
+				
+				targets.splice( targetIndex, 1 );
+				
+			}
+			
+			// remove selecting material
+			
+			materialIndex = targetMesh.materials.indexOf( selecting.material );
+			
+			if ( materialIndex !== -1 ) {
+				
+				targetMesh.materials.splice( materialIndex, 1 );
+				
+			}
+			
+			// remove from targetsToRemove
+			
+			targetsToRemove.splice( i, 1 );
+			
+		}
+		
+	}
+	
+	function find_selection ( mouse ) {
+		
+		var ray = utilRay1Selection,
+			mousePosition = utilVec31Selection,
+			intersections,
+			intersectedMesh;
+		
+		// handle mouse
+		
+		mouse = mouse || get_mouse();
+		
+		// get corrected mouse position
+		
+		mousePosition.x = ( mouse.x / shared.screenWidth ) * 2 - 1;
+		mousePosition.y = -( mouse.y / shared.screenHeight ) * 2 + 1;
+		mousePosition.z = 0.5;
+		
+		// unproject mouse position
+		
+		projector.unprojectVector( mousePosition, camera );
+		
+		// set ray
+
+		ray.origin = camera.position;
+		ray.direction = mousePosition.subSelf( camera.position ).normalize();
+		
+		// find ray intersections
+
+		intersections = ray.intersectScene( scene );
+		
+		if ( intersections.length > 0 ) {
+			
+			intersectedMesh = intersections[ 0 ].object;
+			
+			return intersectedMesh.kaiopuaModel;
+			
+		}
+		else {
+			
+			return;
+			
+		}
+		
+	}
+	
+	function update_selections ( timeDelta ) {
+		
+		var material = selecting.material,
+			opacityMax = selecting.opacityMax,
+			opacityMin = selecting.opacityMin,
+			opacityStart = selecting.opacityStart,
+			opacityTarget = selecting.opacityTarget,
+			opacityTargetLast,
+			opacityDelta = opacityTarget - opacityStart,
+			opacityCycleTime,
+			opacityCycleTimeMax = selecting.opacityCycleTimeMax;
+		
+		// update time
+		
+		selecting.opacityCycleTime += timeDelta;
+		
+		if ( selecting.opacityCycleTime >= opacityCycleTimeMax ) {
+			
+			material.opacity = opacityTarget;
+			
+			selecting.opacityCycleTime = 0;
+			
+			// update start and target
+			
+			opacityTargetLast = opacityTarget;
+			
+			selecting.opacityTarget = opacityStart;
+			
+			selecting.opacityStart = opacityTargetLast;
+			
+		}
+		else {
+		
+			opacityCycleTime = selecting.opacityCycleTime;
+			
+			// quadratic easing
+			
+			opacityCycleTime /= opacityCycleTimeMax * 0.5;
+			
+			if ( opacityCycleTime < 1 ) {
+				
+				material.opacity = opacityDelta * 0.5 * opacityCycleTime * opacityCycleTime + opacityStart;
+				
+			}
+			else {
+				
+				opacityCycleTime--;
+				
+				material.opacity = -opacityDelta * 0.5 * ( opacityCycleTime * ( opacityCycleTime - 2 ) - 1 ) + opacityStart;
+				
+			}
+			
+		}
+		
 	}
 	
 	/*===================================================
@@ -705,51 +887,58 @@ var KAIOPUA = (function (main) {
 	
 	function enable () {
 		
-		shared.signals.update.add( update );
+		if ( enabled !== true ) {
+			
+			enabled = true;
+			
+			shared.signals.update.add( update );
+			
+			allow_control();
 		
-		allow_control();
+		}
 		
 	}
 	
 	function disable () {
 		
-		remove_control();
-		
-		shared.signals.update.remove( update );
-		
+		if ( enabled === true ) {
+			
+			enabled = false;
+			
+			remove_control();
+			
+			shared.signals.update.remove( update );
+			
+		}
 	}
 	
 	function show () {
 		
 		scene = game.scene;
 		
-		scene.add( line1 );
-		scene.add( line2 );
-		scene.add( line3 );
-		
-		scene.add( playerCharacter.model.mesh );
-		
-		physics.add( playerCharacter.model.mesh, { rigidBody: playerCharacter.model.rigidBody } );
+		game.add_to_scene( [ playerCharacter ], scene );
 		
 	}
 	
 	function hide () {
 		
-		scene.remove( playerCharacter.model.mesh );
-		
-		physics.remove( playerCharacter.model.rigidBody );
+		game.remove_from_scene( [ playerCharacter ], scene );
 		
 	}
 	
-	function update () {
+	function update ( timeDelta ) {
 		
 		// character
 		
-		update_character();
+		playerCharacter.update( timeDelta );
 		
 		// camera
 		
 		update_camera();
+		
+		// selection material
+		
+		update_selections( timeDelta );
 		
 	}
 	

@@ -36,7 +36,7 @@ var KAIOPUA = (function (main) {
 	});
 	
 	Object.defineProperty(world, 'parts', { 
-		get : function () { return [head, tail]; }
+		get : function () { return parts; }
 	});
 	
 	Object.defineProperty(world, 'head', { 
@@ -90,91 +90,23 @@ var KAIOPUA = (function (main) {
 			wireframe: true
 		});
 		
-		var normalMaterials = [normalMat, normalMatWire];
-		
 		// body parts
         
         head = objectmaker.make_model({
             geometry: assets["assets/models/World_Head.js"],
-			materials: normalMaterials,
+			materials: [normalMat, normalMatWire],
 			shading: THREE.FlatShading
         });
 		
 		tail = objectmaker.make_model({
             geometry: assets["assets/models/World_Tail.js"],
-			materials: normalMaterials,
+			materials: [normalMat, normalMatWire],
 			shading: THREE.FlatShading
         });
 		
 		// store
 		
-		parts = [head, tail];
-		
-		//
-		//
-		//
-		// boxes test grid
-		//
-		//
-		//
-		
-		var make_box = function ( x, y, z ) {
-			var geom = new THREE.CubeGeometry( 50, 50, 50, 1, 1 );
-			
-			// box
-			
-			var box = objectmaker.make_model({
-				geometry: geom,
-				materials: normalMaterials
-			});
-			
-			box.mesh.position.set( x, y, z );
-			
-			box.rigidBody = physics.translate( box.mesh, {
-				bodyType: 'box'
-			});
-			
-			return box;
-		}
-		
-		var numRings = 6;
-		var radius = 2000;
-		
-		var deltaRotA = Math.PI / (numRings + 1);
-		var rotA = 0;
-		
-		var numBoxPerRing = 8;
-		var deltaRotB = (Math.PI * 2) / (numBoxPerRing);
-		var rotB = 0;
-		
-		for ( var i = 0, l = numRings; i < l; i += 1 ) {
-			
-			rotB = 0;
-			
-			rotA += deltaRotA;
-			
-			if ( rotA > Math.PI ) {
-				
-				rotA = 0;
-				
-			}
-			
-			var ny = radius * Math.cos( rotA );
-			
-			for ( var bi = 0, bl = numBoxPerRing; bi < bl; bi += 1 ) {
-				
-				var nx = radius * Math.sin( rotA ) * Math.cos( rotB );
-				var nz = radius * Math.sin( rotA ) * Math.sin( rotB );
-				
-				var box = make_box( nx, ny, nz );
-				
-				parts.push( box );
-				
-				rotB += deltaRotB;
-			
-			}
-			
-		}
+		parts = [ head, tail ];
 		
 	}
 	
@@ -202,9 +134,6 @@ var KAIOPUA = (function (main) {
 	
 	function show () {
 		
-		var i, l,
-			part;
-		
 		scene = game.scene;
 		
         // fog
@@ -213,42 +142,13 @@ var KAIOPUA = (function (main) {
 		
 		// add parts
 		
-		for ( i = 0, l = parts.length; i < l; i += 1 ) {
-			
-			part = parts[ i ];
-			
-			scene.add( part.mesh );
-			
-			if ( typeof part.rigidBody !== 'undefined' ) {
-				
-				physics.add( part.mesh, { rigidBody: part.rigidBody } );
-				
-			}
-			
-		}
+		game.add_to_scene( parts, scene );
 		
 	}
 	
 	function hide () {
 		
-		var i, l,
-			part;
-		
-		// remove parts
-		
-		for ( i = 0, l = parts.length; i < l; i += 1 ) {
-			
-			part = parts[ i ];
-			
-			scene.remove( part.mesh );
-			
-			if ( typeof part.rigidBody !== 'undefined' ) {
-				
-				physics.remove( part.mesh );
-				
-			}
-			
-		}
+		game.remove_from_scene( parts, scene );
 		
 	}
 	

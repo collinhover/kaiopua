@@ -12,15 +12,19 @@ var KAIOPUA = (function (main) {
         ready = false,
         camera,
         scene,
+		sceneBG,
 		addOnShow = [],
+		addBGOnShow = [],
 		ambientLight,
 		directional,
 		fogColor = 0x529ad1,
         water,
         sky,
         time,
-        cameraRotY = -90 * Math.PI / 180,
-        camLookTarget,
+        envRotationY = -90 * Math.PI / 180,
+		camRotationBaseQ,
+		camRotationOffset,
+		camRotationOffsetQ,
         mouse = { 
             x: 0, 
             y: 0,
@@ -32,10 +36,10 @@ var KAIOPUA = (function (main) {
             rangeTransMinY: -250,
             speedTransX: 0.01, 
             speedTransY: 0.01,
-            rangeRotMaxX: 1000,
-            rangeRotMinX: -1000,
-            rangeRotMaxY: 1000,
-            rangeRotMinY: 0,
+            rangeRotMaxX: 0,
+            rangeRotMinX: -15,
+            rangeRotMaxY: 10,
+            rangeRotMinY: -10,
             speedRotX: 0.05,
             speedRotY: 0.05
         };
@@ -82,12 +86,24 @@ var KAIOPUA = (function (main) {
 		
 		var waterEnv, skyEnv;
 		
+		// camera rotation
+		
+		camRotationBaseQ = new THREE.Quaternion().setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), -Math.PI * 0.5 );
+		
+		camRotationOffset = new THREE.Vector3();
+		
+		camRotationOffsetQ = new THREE.Quaternion();
+		
 		// lights
 		
 		ambientLight = new THREE.AmbientLight( 0xCCCCCC );
 		
 		directional = new THREE.DirectionalLight( 0xFFFFFF, 1.0 );
 		directional.position = new THREE.Vector3(-1, 1, -1).normalize();
+		
+		// skybox
+		
+		skybox = init_skybox();
 		
 		// water
 		
@@ -97,7 +113,7 @@ var KAIOPUA = (function (main) {
 		
 		waterEnv = water.get_environment();
 		
-		waterEnv.rotation.x = cameraRotY;
+		waterEnv.rotation.x = envRotationY;
 		
 		// sky
 		
@@ -111,11 +127,60 @@ var KAIOPUA = (function (main) {
 		skyEnv.position.x = 0;
 		skyEnv.position.y = 2000;
 		
-		skyEnv.rotation.y = cameraRotY;
+		skyEnv.rotation.y = envRotationY;
 		
 		// set items to add on show
 		
 		addOnShow.push( ambientLight, directional, waterEnv, skyEnv );
+		
+		addBGOnShow.push( skybox );
+		
+	}
+	
+	function init_skybox () {
+		
+		var assets = main.utils.loader.assets,
+			ap,
+			images,
+			textureCube,
+			shader,
+			material,
+			mesh;
+		
+		// images
+		ap = "assets/textures/skybox_launcher";
+		
+		images = [ assets[ap + "_xz.jpg"], assets[ap + "_xz.jpg"],
+				 assets[ap + "_posy.jpg"], assets[ap + "_negy.jpg"],
+				 assets[ap + "_xz.jpg"], assets[ap + "_xz.jpg"] ];
+				 
+		// cube texture
+		
+		textureCube = new THREE.Texture( images );
+		textureCube.needsUpdate = true;
+		
+		// shader
+		
+		shader = THREE.ShaderUtils.lib[ "cube" ];
+		shader.uniforms[ "tCube" ].texture = textureCube;
+		
+		// material
+		
+		material = new THREE.ShaderMaterial( {
+
+			fragmentShader: shader.fragmentShader,
+			vertexShader: shader.vertexShader,
+			uniforms: shader.uniforms,
+			depthWrite: false
+			
+		} );
+		
+		// mesh
+		
+		mesh = new THREE.Mesh( new THREE.CubeGeometry( 100, 100, 100 ), material );
+		mesh.flipSided = true;
+        
+        return mesh;
 		
 	}
     
@@ -125,16 +190,16 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
     
-    function on_mouse_moved () {
+    function on_mouse_moved ( e ) {
         
-        var pctX = ( shared.mouse.x / shared.screenWidth ),
-            pctY = ( shared.mouse.y / shared.screenHeight );
+        var pctX = ( shared.mice[ e.identifier ].x / shared.screenWidth ),
+            pctY = ( shared.mice[ e.identifier ].y / shared.screenHeight );
         
         mouse.x = pctX * mouse.rangeTransMaxX + (1 - pctX) * mouse.rangeTransMinX;
         mouse.y = pctY * mouse.rangeTransMaxY + (1 - pctY) * mouse.rangeTransMinY;
         
-        mouse.rx = (pctX) * mouse.rangeRotMaxX + (1 - pctX) * mouse.rangeRotMinX;
-        mouse.ry = (1 - pctY) * mouse.rangeRotMaxY + (pctY) * mouse.rangeRotMinY;
+        mouse.rx = (pctY)* mouse.rangeRotMaxX + (1 - pctY) * mouse.rangeRotMinX;
+        mouse.ry = (1 - pctX) * mouse.rangeRotMaxY + (pctX) * mouse.rangeRotMinY;
         
     }
     
@@ -146,35 +211,31 @@ var KAIOPUA = (function (main) {
     
     function show () {
 		
-		var i, l;
-		
 		// camera
         
         camera = game.camera;
         
         // starting position
         camera.position.set(-5800, 0, 0);
-        
-        // camera look target
-        
-        camLookTarget = new THREE.Vector3(0, 0, 0);
-        
-        camera.lookAt( camLookTarget );
+		
+		// set base quaternion
+		
+		camera.quaternion.copy( camRotationBaseQ );
 		
 		// scene
 		
 		scene = game.scene;
+		
+		sceneBG = game.sceneBG;
 		
 		// fog
         scene.fog = new THREE.Fog( fogColor, -100, 10000 );
 		
 		// add items
 		
-		for ( i = 0, l = addOnShow.length; i < l; i += 1 ) {
-			
-			scene.add( addOnShow[ i ] );
-			
-        }
+		game.add_to_scene( addOnShow, scene );
+		
+		game.add_to_scene( addBGOnShow, sceneBG );
 		
 		// shared
         
@@ -195,19 +256,15 @@ var KAIOPUA = (function (main) {
     }
     
     function remove () {
-        
-		var i, l;
 		
         // enable renderer object sorting
         shared.renderer.sortObjects = true;
 		
 		// remove added items
 		
-		for ( i = 0, l = addOnShow.length; i < l; i += 1 ) {
+		game.remove_from_scene( addOnShow, scene );
 		
-			scene.remove( addOnShow[ i ] );
-			
-        }
+		game.remove_from_scene( addBGOnShow, sceneBG );
         
     }
     
@@ -218,12 +275,15 @@ var KAIOPUA = (function (main) {
         camera.position.z += (  mouse.x - camera.position.z ) * mouse.speedTransX;
         camera.position.y += ( -mouse.y - camera.position.y ) * mouse.speedTransY;
         
-        // needs persistant tracking to add to
-        camLookTarget.z += ( mouse.rx - camLookTarget.z ) * mouse.speedRotX;
-        camLookTarget.y += ( mouse.ry - camLookTarget.y ) * mouse.speedRotY;
+        camRotationOffset.z += ( mouse.rx - camRotationOffset.z ) * mouse.speedRotX;
+        camRotationOffset.y += ( mouse.ry - camRotationOffset.y ) * mouse.speedRotY;
+		
+		// update rotation
+		
+		camRotationOffsetQ.setFromEuler( camRotationOffset ).normalize();
         
-        camera.lookAt( camLookTarget );
-        
+		camera.quaternion.set( 0, 0, 0, 1 ).multiplySelf( camRotationOffsetQ ).multiplySelf( camRotationBaseQ );
+		
         // update environment
         
         sky.wind_blow( time );

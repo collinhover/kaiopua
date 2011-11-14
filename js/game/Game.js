@@ -23,17 +23,20 @@ var KAIOPUA = (function (main) {
 		renderComposer,
         renderPasses,
 		scene,
+		sceneBG,
 		sceneDefault,
 		fog,
 		cameraDefault,
 		camera,
+		cameraBG,
 		physics,
+		bg,
 		world,
 		player,
 		character,
         sectionNames = [],
         currentSection, 
-        previousSection, 
+        previousSection,
         paused = false,
         transitionOut = 1000, 
         transitionIn = 400,
@@ -54,7 +57,10 @@ var KAIOPUA = (function (main) {
             "js/game/sections/launcher/Water.js",
             "js/game/sections/launcher/Sky.js",
             "assets/textures/cloud256.png",
-            "assets/textures/light_ray.png"
+            "assets/textures/light_ray.png",
+			"assets/textures/skybox_launcher_xz.jpg",
+			"assets/textures/skybox_launcher_posy.jpg",
+            "assets/textures/skybox_launcher_negy.jpg"
         ],
         assetsGame = [
 			/* JigLib Physics Library (2)
@@ -137,7 +143,13 @@ var KAIOPUA = (function (main) {
             "js/game/sections/IntroSection.js",
             { path: "assets/models/World_Head.js", type: 'model' },
 			{ path: "assets/models/World_Tail.js", type: 'model' },
-			{ path: "assets/models/Hero.js", type: 'model' }
+			{ path: "assets/models/Hero.js", type: 'model' },
+			"assets/textures/skybox_world_posx.jpg",
+            "assets/textures/skybox_world_negx.jpg",
+			"assets/textures/skybox_world_posy.jpg",
+            "assets/textures/skybox_world_negy.jpg",
+			"assets/textures/skybox_world_posz.jpg",
+            "assets/textures/skybox_world_negz.jpg"
         ];
     
     /*===================================================
@@ -152,6 +164,9 @@ var KAIOPUA = (function (main) {
     game.resume = resume;
     game.pause = pause;
     game.update_section_list = update_section_list;
+	game.get_mouse = get_mouse;
+	game.add_to_scene = add_to_scene;
+	game.remove_from_scene = remove_from_scene;
 	
 	// getters and setters
 	
@@ -168,9 +183,19 @@ var KAIOPUA = (function (main) {
 		set : set_scene
 	});
 	
+	Object.defineProperty(game, 'sceneBG', { 
+		get : function () { return sceneBG; },  
+		set : set_scene_bg
+	});
+	
 	Object.defineProperty(game, 'camera', { 
 		get : function () { return camera; },  
 		set : set_camera
+	});
+	
+	Object.defineProperty(game, 'cameraBG', { 
+		get : function () { return cameraBG; },  
+		set : set_camera_bg
 	});
     
     /*===================================================
@@ -283,9 +308,10 @@ var KAIOPUA = (function (main) {
         shared.renderer = renderer;
         shared.renderTarget = renderTarget;
 		
-		// scene
+		// scenes
 		
 		scene = sceneDefault = new THREE.Scene();
+		sceneBG = new THREE.Scene();
         
         // fog
 		
@@ -296,16 +322,22 @@ var KAIOPUA = (function (main) {
 		// camera
 		
 		camera = cameraDefault = new THREE.PerspectiveCamera(60, shared.screenWidth / shared.screenHeight, 1, 10000);
+		cameraBG = new THREE.PerspectiveCamera(60, shared.screenWidth / shared.screenHeight, 1, 10000);
+		
+		camera.useQuaternion = cameraBG.useQuaternion = true;
 		
 		// passes
         
         renderPasses = {
+			bg: new THREE.RenderPass( sceneBG, cameraBG ),
             env: new THREE.RenderPass( scene, camera ),
             screen: new THREE.ShaderPass( shaderScreen ),
             focusVignette: new THREE.ShaderPass ( shaderFocusVignette )
         };
         
 		// settings
+		
+		renderPasses.env.clear = false;
 		
         renderPasses.screen.renderToScreen = true;
 		
@@ -537,10 +569,12 @@ var KAIOPUA = (function (main) {
 	function set_render_processing ( parameters ) {
 		
 		var i, l,
-			requiredPasses = ['env', 'screen'],
+			requiredPasses = ['bg', 'env', 'screen'],
 			passesNames,
 			passName,
-			envPass;
+			bgPass = renderPasses.bg,
+			envPass = renderPasses.env,
+			defaultPassIndex;
 		
 		// handle parameters
 		
@@ -552,17 +586,25 @@ var KAIOPUA = (function (main) {
 		
 		renderComposer = new THREE.EffectComposer( renderer );
 		
-		// check that environment camera and scene match current
+		// check that passes camera and scene match current
 		
-		envPass = renderPasses.env;
+		// bg
+		
+		if ( bgPass.scene !== sceneBG ) {
+			bgPass.scene = sceneBG;
+		}
+		
+		if ( bgPass.camera !== cameraBG ) {
+			bgPass.camera = cameraBG;
+		}
+		
+		// env
 		
 		if ( envPass.scene !== scene ) {
-			console.log(' update env scene ');
 			envPass.scene = scene;
 		}
 		
 		if ( envPass.camera !== camera ) {
-			console.log(' update env camera ');
 			envPass.camera = camera;
 		}
 		
@@ -574,19 +616,33 @@ var KAIOPUA = (function (main) {
 			
 		}
 		
+		// if names includes bg, remove
+		
+		defaultPassIndex = passesNames.indexOf( 'bg' );
+		
+		if ( defaultPassIndex !== -1 ) {
+			
+			passesNames.splice( defaultPassIndex, 1 );
+			
+		}
+		
 		// if names includes env, remove
 		
-		if ( passesNames.indexOf( 'env' ) !== -1 ) {
+		defaultPassIndex = passesNames.indexOf( 'env' );
+		
+		if ( defaultPassIndex !== -1 ) {
 			
-			passesNames.splice( passesNames.indexOf( 'env' ), 1 );
+			passesNames.splice( defaultPassIndex, 1 );
 			
 		}
 		
 		// if names includes screen, remove
 		
-		if ( passesNames.indexOf( 'screen' ) !== -1 ) {
+		defaultPassIndex = passesNames.indexOf( 'screen' );
+		
+		if ( defaultPassIndex !== -1 ) {
 			
-			passesNames.splice( passesNames.indexOf( 'screen' ), 1 );
+			passesNames.splice( defaultPassIndex, 1 );
 			
 		}
 		
@@ -618,9 +674,91 @@ var KAIOPUA = (function (main) {
 	
 	function set_scene ( sceneNew ) {
 		
-		scene = sceneNew || sceneDefault;
+		renderPasses.env.scene = scene = sceneNew || sceneDefault;
 		
-		renderPasses.env.scene = scene;
+	}
+	
+	function set_scene_bg ( sceneNew ) {
+		
+		renderPasses.bg.scene = sceneBG = sceneNew;
+		
+	}
+	
+	function add_to_scene ( models, sceneTarget ) {
+		
+		var i, l, model;
+		
+		sceneTarget = sceneTarget || scene;
+		
+		for ( i = 0, l = models.length; i < l; i += 1 ) {
+		
+			model = models[ i ];
+			
+			// if is character
+			
+			if ( typeof model.model !== 'undefined' ) {
+				
+				model = model.model;
+				
+			}
+			
+			if ( typeof model.mesh !== 'undefined' ) {
+			
+				sceneTarget.add( model.mesh );
+			
+				if ( typeof model.rigidBody !== 'undefined' ) {
+					
+					physics.add( model.mesh, { rigidBody: model.rigidBody } );
+					
+				}
+				
+			}
+			else {
+				
+				sceneTarget.add( model );
+				
+			}
+			
+        }
+		
+	}
+	
+	function remove_from_scene ( models, sceneTarget ) {
+		
+		var i, l, model;
+		
+		sceneTarget = sceneTarget || scene;
+		
+		for ( i = 0, l = models.length; i < l; i += 1 ) {
+		
+			model = models[ i ];
+			
+			// if is character
+			
+			if ( typeof model.model !== 'undefined' ) {
+				
+				model = model.model;
+				
+			}
+			
+			if ( typeof model.mesh !== 'undefined' ) {
+			
+				sceneTarget.remove( model.mesh );
+			
+				if ( typeof model.rigidBody !== 'undefined' ) {
+					
+					physics.remove( model.mesh );
+					
+				}
+				
+			}
+			else {
+				
+				sceneTarget.remove( model );
+				
+			}
+			
+        }
 		
 	}
 	
@@ -632,15 +770,48 @@ var KAIOPUA = (function (main) {
 	
 	function set_camera ( cameraNew ) {
 		
-		camera = cameraNew || cameraDefault;
+		renderPasses.env.camera = camera = cameraNew || cameraDefault;
 		
-		renderPasses.env.camera = camera;
+	}
+	
+	function set_camera_bg ( cameraNew ) {
 		
+		renderPasses.bg.camera = cameraBG = cameraNew;
+		
+	}
+	
+	/*===================================================
+    
+    mouse functions
+    
+    =====================================================*/
+	
+	function get_mouse ( parameters ) {
+		
+		var mouse;
+		
+		if ( typeof parameters === 'number' ) {
+			
+			mouse = shared.mice[ parameters ];
+			
+		}
+		else if ( typeof parameters === 'object' && parameters.hasOwnProperty( 'mouseIndex' ) ) {
+			
+			mouse = shared.mice[ parameters.mouseIndex ];
+			
+		}
+		else {
+			
+			mouse = shared.mice[ 0 ];
+			
+		}
+		
+		return mouse;
 	}
 	
     /*===================================================
     
-    functions
+    section functions
     
     =====================================================*/
     
@@ -741,8 +912,18 @@ var KAIOPUA = (function (main) {
     }
     
     function animate () {
+    
+    	var timeDelta;
         
         requestAnimationFrame( animate );
+		
+		// handle time
+		
+		shared.timeLast = shared.time;
+		
+		shared.time = new Date().getTime();
+		
+		timeDelta = shared.time - shared.timeLast;
 		
 		// update
 		
@@ -751,14 +932,18 @@ var KAIOPUA = (function (main) {
 			// update physics
 			
 			if ( typeof physics !== 'undefined' ) {
-				physics.update();
+				physics.update( timeDelta );
 			}
 			
 			// update all others
 			
-			shared.signals.update.dispatch();
+			shared.signals.update.dispatch( timeDelta );
 			
 		}
+		
+		// have camera bg mimic camera rotation
+		
+		cameraBG.quaternion.copy( camera.quaternion );
 		
 		// render
         
@@ -783,10 +968,13 @@ var KAIOPUA = (function (main) {
         renderTarget.width = W;
         renderTarget.height = H;
 		
-		// camera
+		// cameras
 		
 		camera.aspect = W / H;
         camera.updateProjectionMatrix();
+		
+		cameraBG.aspect = W / H;
+        cameraBG.updateProjectionMatrix();
         
 		// composer
 		
