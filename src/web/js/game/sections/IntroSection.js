@@ -12,12 +12,15 @@ var KAIOPUA = (function (main) {
         readyAll = false,
         assets,
         objectmaker,
+		skybox,
 		world,
 		player,
 		physics,
 		camera,
         scene,
+		sceneBG,
 		addOnShow = [],
+		addBGOnShow = [],
 		light;
     
     /*===================================================
@@ -57,6 +60,10 @@ var KAIOPUA = (function (main) {
     
     function init_basics () {
 		
+		// utils
+		
+		assets = main.utils.loader.assets;
+		
 		// core
 		
 		world = game.core.world;
@@ -94,6 +101,10 @@ var KAIOPUA = (function (main) {
     
     function init_environment () {
 		
+		// skybox
+		
+		skybox = objectmaker.make_skybox( "assets/textures/skybox_world" );
+		
 		// light
 		
 		light = new THREE.SpotLight( 0xffffff );
@@ -102,6 +113,8 @@ var KAIOPUA = (function (main) {
 		// add on show items
 		
 		addOnShow.push( light );
+		
+		addBGOnShow.push( skybox );
 		
 		//
 		//
@@ -177,8 +190,11 @@ var KAIOPUA = (function (main) {
 			
 		}
 		
-		addOnShow.push( make_box( 1, 3000, 100, true ) );
-		
+		addOnShow.push( make_box( 1, 2000, 100, true ) );
+		addOnShow.push( make_box( 1, 2000, -100, true ) );
+		addOnShow.push( make_box( 100, 2000, 1, true ) );
+		addOnShow.push( make_box( -100, 2000, 1, true ) );
+		addOnShow.push( make_box( -100, 2400, 1, true ) );
     }
     
     /*===================================================
@@ -188,9 +204,6 @@ var KAIOPUA = (function (main) {
     =====================================================*/
     
     function show () {
-		
-		var i, l,
-			item;
 		
 		// camera
         
@@ -204,34 +217,17 @@ var KAIOPUA = (function (main) {
 		
 		scene = game.scene;
 		
+		sceneBG = game.sceneBG;
+		
 		// add world
 		
 		world.show();
 		
 		// add items
 		
-		for ( i = 0, l = addOnShow.length; i < l; i += 1 ) {
-			
-			item = addOnShow[ i ];
-			
-			if ( typeof item.mesh !== 'undefined' ) {
-			
-				scene.add( item.mesh );
-			
-				if ( typeof item.rigidBody !== 'undefined' ) {
-					
-					physics.add( item.mesh, { rigidBody: item.rigidBody } );
-					
-				}
-				
-			}
-			else {
-				
-				scene.add( item );
-				
-			}
-			
-        }
+		game.add_to_scene( addOnShow, scene );
+		
+		game.add_to_scene( addBGOnShow, sceneBG );
 		
 		// start player
 		
@@ -260,9 +256,6 @@ var KAIOPUA = (function (main) {
     }
     
     function remove () {
-        
-		var i, l,
-			item;
 		
 		// stop player
 		
@@ -276,28 +269,9 @@ var KAIOPUA = (function (main) {
 		
 		// remove added items
 		
-		for ( i = 0, l = addOnShow.length; i < l; i += 1 ) {
+		game.remove_from_scene( addOnShow, scene );
 		
-			item = addOnShow[ i ];
-			
-			if ( typeof item.mesh !== 'undefined' ) {
-			
-				scene.remove( item.mesh );
-			
-				if ( typeof item.rigidBody !== 'undefined' ) {
-					
-					physics.remove( item.mesh );
-					
-				}
-				
-			}
-			else {
-				
-				scene.remove( item );
-				
-			}
-			
-        }
+		game.remove_from_scene( addBGOnShow, sceneBG );
 		
     }
     

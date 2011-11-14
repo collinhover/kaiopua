@@ -7,7 +7,7 @@ var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
         utils = main.utils = main.utils || {},
-        loader, error, game,
+		loader, error, game,
         lastGamma, lastBeta,
         libList = [
             "js/lib/jquery-1.6.4.min.js",

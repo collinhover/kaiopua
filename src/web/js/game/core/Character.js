@@ -70,12 +70,12 @@ var KAIOPUA = (function (main) {
 		
 		c.movement = {
 			move: {
-				speed: movementInfo.moveSpeed || 2,
+				speed: movementInfo.moveSpeed || 6,
 				direction: new THREE.Vector3(),
 				vector: new THREE.Vector3()
 			},
 			rotate: {
-				speed: movementInfo.rotateSpeed || 0.01,
+				speed: movementInfo.rotateSpeed || 0.015,
 				direction: new THREE.Vector3(),
 				vector: new THREE.Quaternion(),
 				utilQ1: new THREE.Quaternion()
@@ -84,7 +84,7 @@ var KAIOPUA = (function (main) {
 				speedStart: movementInfo.jumpSpeedStart || 6,
 				speedEnd: movementInfo.jumpSpeedEnd || 0,
 				timeTotal: 0,
-				timeMax: movementInfo.jumpTimeMax || 250,
+				timeMax: movementInfo.jumpTimeMax || 50,
 				timeAfterNotGrounded: 0,
 				timeAfterNotGroundedMax: 125,
 				ready: false,
@@ -117,8 +117,7 @@ var KAIOPUA = (function (main) {
 			if ( typeof parameters.rigidBodyInfo !== 'undefined' ) {
 				
 				parameters.rigidBodyInfo.movable = true;
-				parameters.rigidBodyInfo.movementDamping = parameters.rigidBodyInfo.movementDamping || 0.85;
-				parameters.rigidBodyInfo.gravityDamping = parameters.rigidBodyInfo.gravityDamping || 0.95;
+				parameters.rigidBodyInfo.movementDamping = parameters.rigidBodyInfo.movementDamping || 0.5;
 				
 				c.model.rigidBody = physics.translate( c.model.mesh, parameters.rigidBodyInfo );
 				

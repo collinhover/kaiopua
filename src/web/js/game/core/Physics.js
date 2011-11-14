@@ -16,12 +16,12 @@ var KAIOPUA = (function (main) {
 		linksBaseName = 'vis_to_phys_link_',
 		linksCount = 0,
 		links = [],
+		scaleSpeedExp = Math.log( 1.5 ),
 		utilVec31Integrate,
 		utilVec32Integrate,
 		utilVec31Offset,
 		utilVec31Raycast,
 		utilVec31Velocity,
-		utilVec32Velocity,
 		utilQ1Integrate,
 		utilQ2Integrate,
 		utilQ3Integrate,
@@ -101,7 +101,6 @@ var KAIOPUA = (function (main) {
 		utilVec31Offset = new THREE.Vector3();
 		utilVec31Raycast = new THREE.Vector3();
 		utilVec31Velocity = new THREE.Vector3();
-		utilVec32Velocity = new THREE.Vector3();
 		utilQ1Integrate = new THREE.Quaternion();
 		utilQ2Integrate = new THREE.Quaternion();
 		utilQ3Integrate = new THREE.Quaternion();
@@ -134,8 +133,50 @@ var KAIOPUA = (function (main) {
 	
 	function add_three_collision_fixes () {
 		
-		var utilVec31RayBox = new THREE.Vector3(),
+		var utilMat1RayLocal = new THREE.Matrix4(),
+			utilVec31RayLocal = new THREE.Vector3(),
+			utilVec31RayBox = new THREE.Vector3(),
 			utilVec32RayBox = new THREE.Vector3();
+		
+		// localize ray to collider
+		
+		THREE.CollisionSystem.prototype.makeRayLocal = function( ray, m ) {
+			
+			var scale,
+				mMat,
+				mCopy;
+
+			var rt = THREE.CollisionSystem.__r;
+			rt.origin.copy( ray.origin );
+			rt.direction.copy( ray.direction );
+			
+			if ( m instanceof THREE.Mesh ) {
+				
+				scale = m.scale,
+				mMat = m.matrixWorld,
+				mCopy = utilMat1RayLocal;
+				
+				// get copy of m world matrix without scale applied
+				// matrix with scale does not seem to invert correctly
+				
+				mCopy.extractPosition( mMat );
+				mCopy.extractRotation( mMat, scale );
+				
+				// invert copy
+				
+				var mt = THREE.CollisionSystem.__m;
+				THREE.Matrix4.makeInvert( mCopy, mt );
+				//mt.getInverse( mCopy );
+				
+				mt.multiplyVector3( rt.origin );
+				mt.rotateAxis( rt.direction );
+				rt.direction.normalize();
+				
+			}
+
+			return rt;
+
+		};
 		
 		// ray mesh
 		
@@ -147,13 +188,10 @@ var KAIOPUA = (function (main) {
 				p2 = new THREE.Vector3(),
 				p3 = new THREE.Vector3(),
 				mesh = me.mesh,
+				scale = mesh.scale,
 				geometry = mesh.geometry,
 				vertices = geometry.vertices,
-				matrixWorld = mesh.matrixWorld,
-				rt = THREE.CollisionSystem.__r;
-			
-			rt.origin.copy( r.origin );
-			rt.direction.copy( r.direction );
+				rt = this.makeRayLocal( r, mesh );
 			
 			var d = Number.MAX_VALUE;
 			var nearestface;
@@ -162,13 +200,13 @@ var KAIOPUA = (function (main) {
 				
 				var face = geometry.faces[ i ];
 				
-				matrixWorld.multiplyVector3( p0.copy( vertices[ face.a ].position ) );
-				matrixWorld.multiplyVector3( p1.copy( vertices[ face.b ].position ) );
-				matrixWorld.multiplyVector3( p2.copy( vertices[ face.c ].position ) );
+				p0.copy( vertices[ face.a ].position ).multiplySelf( scale );
+				p1.copy( vertices[ face.b ].position ).multiplySelf( scale );
+				p2.copy( vertices[ face.c ].position ).multiplySelf( scale );
 				
 				if ( face instanceof THREE.Face4 ) {
 					
-					matrixWorld.multiplyVector3( p3.copy( vertices[ face.d ].position ) );
+					p3.copy( vertices[ face.d ].position ).multiplySelf( scale );
 					
 					var nd = this.rayTriangle( rt, p0, p1, p3, d, this.collisionNormal, mesh );
 					
@@ -218,19 +256,22 @@ var KAIOPUA = (function (main) {
 		
 		THREE.CollisionSystem.prototype.rayBox = function( ray, ab ) {
 			
-			var rt = THREE.CollisionSystem.__r,
-				abMin = utilVec31RayBox.copy( ab.min );
-				abMax = utilVec32RayBox.copy( ab.max );
+			var rt = this.makeRayLocal( ray, ab.mesh ),
+				abMin = utilVec31RayBox.copy( ab.min ),
+				abMax = utilVec32RayBox.copy( ab.max ),
+				origin = rt.origin,
+				direction = rt.direction,
+				scale;
 			
-			rt.origin.copy( ray.origin );
-			rt.direction.copy( ray.direction );
+			//rt.origin.copy( ray.origin );
+			//rt.direction.copy( ray.direction );
 			
-			if ( ab.dynamic && ab.mesh && ab.mesh.matrixWorld ) {
+			if ( ab.dynamic && ab.mesh && ab.mesh.scale ) {
 				
-				var matWorld = ab.mesh.matrixWorld;
+				scale = ab.mesh.scale;
 				
-				matWorld.multiplyVector3( abMin );
-				matWorld.multiplyVector3( abMax );
+				abMin.multiplySelf( scale );
+				abMax.multiplySelf( scale );
 				
 			}
 			
@@ -238,49 +279,49 @@ var KAIOPUA = (function (main) {
 			var xn = 0, yn = 0, zn = 0;
 			var ins = true;
 			
-			if( rt.origin.x < abMin.x ) {
+			if( origin.x < abMin.x ) {
 				
-				xt = abMin.x - rt.origin.x;
-				xt /= rt.direction.x;
+				xt = abMin.x - origin.x;
+				xt /= direction.x;
 				ins = false;
 				xn = -1;
 				
-			} else if( rt.origin.x > abMax.x ) {
+			} else if( origin.x > abMax.x ) {
 				
-				xt = abMax.x - rt.origin.x;
-				xt /= rt.direction.x;
+				xt = abMax.x - origin.x;
+				xt /= direction.x;
 				ins = false;
 				xn = 1;
 				
 			}
 			
-			if( rt.origin.y < abMin.y ) {
+			if( origin.y < abMin.y ) {
 				
-				yt = abMin.y - rt.origin.y;
-				yt /= rt.direction.y;
+				yt = abMin.y - origin.y;
+				yt /= direction.y;
 				ins = false;
 				yn = -1;
 				
-			} else if( rt.origin.y > abMax.y ) {
+			} else if( origin.y > abMax.y ) {
 				
-				yt = abMax.y - rt.origin.y;
-				yt /= rt.direction.y;
+				yt = abMax.y - origin.y;
+				yt /= direction.y;
 				ins = false;
 				yn = 1;
 				
 			}
 			
-			if( rt.origin.z < abMin.z ) {
+			if( origin.z < abMin.z ) {
 				
-				zt = abMin.z - rt.origin.z;
-				zt /= rt.direction.z;
+				zt = abMin.z - origin.z;
+				zt /= direction.z;
 				ins = false;
 				zn = -1;
 				
-			} else if( rt.origin.z > abMax.z ) {
+			} else if( origin.z > abMax.z ) {
 				
-				zt = abMax.z - rt.origin.z;
-				zt /= rt.direction.z;
+				zt = abMax.z - origin.z;
+				zt /= direction.z;
 				ins = false;
 				zn = 1;
 				
@@ -309,27 +350,27 @@ var KAIOPUA = (function (main) {
 				
 				case 0:
 					
-					var y = rt.origin.y + rt.direction.y * t;
+					var y = origin.y + direction.y * t;
 					if ( y < abMin.y || y > abMax.y ) return Number.MAX_VALUE;
-					var z = rt.origin.z + rt.direction.z * t;
+					var z = origin.z + direction.z * t;
 					if ( z < abMin.z || z > abMax.z ) return Number.MAX_VALUE;
 					ab.normal.set( xn, 0, 0 );
 					break;
 					
 				case 1:
 					
-					var x = rt.origin.x + rt.direction.x * t;
+					var x = origin.x + direction.x * t;
 					if ( x < abMin.x || x > abMax.x ) return Number.MAX_VALUE;
-					var z = rt.origin.z + rt.direction.z * t;
+					var z = origin.z + direction.z * t;
 					if ( z < abMin.z || z > abMax.z ) return Number.MAX_VALUE;
 					ab.normal.set( 0, yn, 0) ;
 					break;
 					
 				case 2:
 					
-					var x = rt.origin.x + rt.direction.x * t;
+					var x = origin.x + direction.x * t;
 					if ( x < abMin.x || x > abMax.x ) return Number.MAX_VALUE;
-					var y = rt.origin.y + rt.direction.y * t;
+					var y = origin.y + direction.y * t;
 					if ( y < abMin.y || y > abMax.y ) return Number.MAX_VALUE;
 					ab.normal.set( 0, 0, zn );
 					break;
@@ -592,7 +633,7 @@ var KAIOPUA = (function (main) {
 		
 		parameters = parameters || {};
 		
-		parameters.damping = parameters.damping || 0.98;
+		parameters.damping = parameters.damping || 0.99;
 		
 		// init velocity
 		
@@ -819,7 +860,7 @@ var KAIOPUA = (function (main) {
 		
 		// integrate
 		
-		for ( i = 0; i < l; i += 1 ) {
+		//for ( i = 0; i < l; i += 1 ) {
 			
 			currentInterval = refreshInterval;
 			
@@ -827,7 +868,7 @@ var KAIOPUA = (function (main) {
 		
 			integrate( timeStep );
 			
-		}
+		//}
 		
 	}
 	
@@ -1020,6 +1061,8 @@ var KAIOPUA = (function (main) {
 		var mesh = rigidBody.mesh,
 			position = mesh.position,
 			scale = mesh.scale,
+			scaleExp = scaleSpeedExp,
+			scaleModded = utilVec31Velocity.copy( scale ),
 			velocityForce = velocity.force,
 			velocityForceRotated = velocity.forceRotated,
 			velocityForceRotatedLength,
@@ -1029,8 +1072,7 @@ var KAIOPUA = (function (main) {
 			boundingOffset,
 			boundingOffsetLength,
 			collision,
-			collisionDist,
-			uv31, uv32;
+			collisionDist;
 		
 		if ( rigidBody.movable !== true || velocityForce.isZero() === true ) {
 			
@@ -1047,11 +1089,15 @@ var KAIOPUA = (function (main) {
 		
 		// rotate velocity to mesh's rotation
 		
-		velocityForceRotated = rotate_vector3_to_mesh_rotation( mesh, velocityForce);//, velocityForceRotated );
+		velocityForceRotated = rotate_vector3_to_mesh_rotation( mesh, velocityForce, velocityForceRotated );
 		
 		// scale velocity
 		
-		velocityForceRotated.multiplySelf( scale );
+		scaleModded.x = Math.pow( scaleModded.x, scaleExp );
+		scaleModded.y = Math.pow( scaleModded.y, scaleExp );
+		scaleModded.z = Math.pow( scaleModded.z, scaleExp );
+		
+		velocityForceRotated.multiplySelf( scaleModded );
 		
 		// get rotated length
 		

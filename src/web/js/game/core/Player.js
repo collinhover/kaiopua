@@ -143,8 +143,8 @@ var KAIOPUA = (function (main) {
 			baseRotation: new THREE.Quaternion().setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), Math.PI ),
 			quaternionLast: new THREE.Quaternion(),
 			offset: {
-				pos: new THREE.Vector3( 0, 0, 1000 ),
-				rot: new THREE.Vector3( 60, 0, 0 )
+				pos: new THREE.Vector3( 0, 100, 300 ),//1000 ),
+				rot: new THREE.Vector3( 25, 0, 0 )
 			},
 			clamps: {
 				minRotX: -0.4,
@@ -256,7 +256,8 @@ var KAIOPUA = (function (main) {
 	
 	function camera_follow_character () {
 		
-		var baseRotation = cameraFollowSettings.baseRotation,
+		var cam = camera = game.camera,
+			baseRotation = cameraFollowSettings.baseRotation,
 			offset = cameraFollowSettings.offset,
 			srcOffsetPos = offset.pos,
 			srcOffsetRot = offset.rot,
@@ -265,7 +266,8 @@ var KAIOPUA = (function (main) {
 			meshScale = mesh.scale,
 			meshScaleMax = Math.max( meshScale.x, meshScale.y, meshScale.z ), 
 			meshQ = mesh.quaternion,
-			camQ = camera.quaternion,
+			camP = cam.position,
+			camQ = cam.quaternion,
 			camOffsetPos = utilVec31CameraFollow,
 			camOffsetRot = utilQ1CameraFollow,
 			camOffsetRotHalf = utilQ2CameraFollow;
@@ -289,7 +291,7 @@ var KAIOPUA = (function (main) {
 		
 		// set new camera position
 		
-		camera.position.copy( mesh.position ).addSelf( camOffsetPos );
+		camP.copy( mesh.position ).addSelf( camOffsetPos );
 		
 		// set new camera rotation
 		
@@ -914,17 +916,13 @@ var KAIOPUA = (function (main) {
 		
 		scene = game.scene;
 		
-		scene.add( playerCharacter.model.mesh );
-		
-		physics.add( playerCharacter.model.mesh, { rigidBody: playerCharacter.model.rigidBody } );
+		game.add_to_scene( [ playerCharacter ], scene );
 		
 	}
 	
 	function hide () {
 		
-		scene.remove( playerCharacter.model.mesh );
-		
-		physics.remove( playerCharacter.model.rigidBody );
+		game.remove_from_scene( [ playerCharacter ], scene );
 		
 	}
 	

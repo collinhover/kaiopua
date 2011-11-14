@@ -106,7 +106,7 @@ var KAIOPUA = (function (main) {
 		
 		// store
 		
-		parts = [head, tail];
+		parts = [ head, tail ];
 		
 	}
 	
@@ -134,9 +134,6 @@ var KAIOPUA = (function (main) {
 	
 	function show () {
 		
-		var i, l,
-			part;
-		
 		scene = game.scene;
 		
         // fog
@@ -145,42 +142,13 @@ var KAIOPUA = (function (main) {
 		
 		// add parts
 		
-		for ( i = 0, l = parts.length; i < l; i += 1 ) {
-			
-			part = parts[ i ];
-			
-			scene.add( part.mesh );
-			
-			if ( typeof part.rigidBody !== 'undefined' ) {
-				
-				physics.add( part.mesh, { rigidBody: part.rigidBody } );
-				
-			}
-			
-		}
+		game.add_to_scene( parts, scene );
 		
 	}
 	
 	function hide () {
 		
-		var i, l,
-			part;
-		
-		// remove parts
-		
-		for ( i = 0, l = parts.length; i < l; i += 1 ) {
-			
-			part = parts[ i ];
-			
-			scene.remove( part.mesh );
-			
-			if ( typeof part.rigidBody !== 'undefined' ) {
-				
-				physics.remove( part.mesh );
-				
-			}
-			
-		}
+		game.remove_from_scene( parts, scene );
 		
 	}
 	

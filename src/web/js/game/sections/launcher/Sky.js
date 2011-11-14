@@ -12,15 +12,15 @@ var KAIOPUA = (function (main) {
         sections = game.sections = game.sections || {},
         launcher = sections.launcher = sections.launcher || {},
         sky = launcher.sky = launcher.sky || {},
-        skyWidth = 20000,
+        skyWidth = 30000,
         skyHeight = 2000, 
         skyDepth = 10000,
-        numClouds = 40, 
+        numClouds = 80, 
         lightAngle = (-Math.PI * 0.25), 
         lightAngleVariation = (Math.PI * 0.25),
         timePrev,
         windDirection = -1,
-        windSpeedMax = 4,
+        windSpeedMax = 2,
         windSpeedMin = 1,
         cloudWidth = 1000,
         cloudDepth = 500,
@@ -33,6 +33,8 @@ var KAIOPUA = (function (main) {
         cloudPlaneTextureLoading = false,
         cloudPlaneTexturePath = "assets/textures/cloud256.png",
         cloudPlaneTexture,
+		cloudFadeOutTime = 1000,
+		cloudFadeInTime = 1000,
         clouds = [],
         environment;
     
@@ -137,7 +139,7 @@ var KAIOPUA = (function (main) {
         var cloudMesh, cloudGeometry, cloudMaterial,
             cloudPlane, numPlanes, width, depth, heightStart, heightEnd,
             planeScaleStart, planeScaleEnd, scaleVariation,
-            pct, currScale, currPlaneHeightMax, currPlaneHeightMin, i;
+            pct, currScale, currPlaneHeightMax, currPlaneHeightMin, kp, i;
         
         // handle parameters
         
@@ -159,7 +161,6 @@ var KAIOPUA = (function (main) {
         
         depth = parameters.depth || cloudDepth;
         
-        
         // scale variation
         width = width + (Math.random() * width * scaleVariation.w - width * scaleVariation.w * 0.5);
         heightStart.max = heightStart.max + (Math.random() * heightStart.max * scaleVariation.h - heightStart.max * scaleVariation.h * 0.5);
@@ -170,7 +171,9 @@ var KAIOPUA = (function (main) {
         
         // material
         
-        cloudMaterial = new THREE.MeshBasicMaterial( { color: 0xFFFFFF, depthTest: false, map: cloudPlaneTexture } );
+        cloudMaterial = new THREE.MeshBasicMaterial( { color: 0xFFFFFF,
+														depthTest: false, 
+														map: cloudPlaneTexture } );
         
         // geometry
         
@@ -238,15 +241,20 @@ var KAIOPUA = (function (main) {
             pct = ((numClouds - i) / numClouds);
             
             cloud.position.x += timeDiff * windDirection * (windSpeedMax * pct + windSpeedMin * (1 - pct));
-            
+			
             // cloud bounds
             
             if (cloud.position.x > boundXPos) {
-                cloud.position.x = boundXNeg;
+				
+				cloud.position.x = boundXNeg;
+				
             }
             else if (cloud.position.x < boundXNeg) {
-                cloud.position.x = boundXPos;
+				
+				cloud.position.x = boundXPos;
+				
             }
+			
         }
     }
         
