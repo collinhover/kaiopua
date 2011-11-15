@@ -190,6 +190,7 @@ var KAIOPUA = (function (main) {
 			
 		}
 		
+		
 		addOnShow.push( make_box( 1, 2000, 100, true ) );
 		addOnShow.push( make_box( 1, 2000, -100, true ) );
 		addOnShow.push( make_box( 100, 2000, 1, true ) );

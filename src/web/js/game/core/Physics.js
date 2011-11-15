@@ -1364,6 +1364,8 @@ var KAIOPUA = (function (main) {
 		
 		boundingOffset = offset_from_dimensions_in_direction( mesh, velocityForceRotated, dimensions_from_collider_scaled( rigidBody ) );//dimensions_from_bounding_box_scaled( mesh ) );
 		
+		boundingOffsetLength = boundingOffset.length();
+		
 		// override offset
 		
 		if ( typeof offset !== 'undefined' ) {
@@ -1380,16 +1382,17 @@ var KAIOPUA = (function (main) {
 			
 		}
 		
-		// get collision
-		collision = raycast_in_direction( rigidBody, velocityForceRotated, velocityOffset );
+		var castDistance = boundingOffsetLength + velocityForceRotatedLength;
 		
+		// get collision
+		//for ( var i = 0; i < 2; i++ ) {
+			collision = raycast_in_direction( rigidBody, velocityForceRotated, castDistance, velocityOffset );
+		//}
 		// modify velocity based on collision distances to avoid passing through or into objects
 		
 		if ( collision ) {
 			
 			collisionDist = collision.distance;
-			
-			boundingOffsetLength = boundingOffset.length();
 			
 			// set the rotated velocity to be no more than collision distance
 			
@@ -1428,7 +1431,7 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	function raycast_in_direction ( rigidBody, direction, offset, showLine ) {
+	function raycast_in_direction ( rigidBody, direction, castDistance, offset, showLine ) {
 		
 		var i, l,
 			mesh = rigidBody.mesh,
@@ -1483,10 +1486,15 @@ var KAIOPUA = (function (main) {
 				continue;
 			}
 			
-			var cdist = system.distanceFromIntersection( rayPosition, rayDirection, cmesh.position );
+			var d1l = cmesh.position.distanceTo( rayPosition );
+			var d2l = cmesh.geometry.boundingSphere.radius * Math.max( cmesh.scale.x, cmesh.scale.y, cmesh.scale.z );
 			
-			if ( cdist === null || cdist > cmesh.geometry.boundingSphere.radius * Math.max( cmesh.scale.x, Math.max( cmesh.scale.y, cmesh.scale.z ) ) ) {
-
+			var cdist = d1l - d2l;//system.distanceFromIntersection( rayPosition, rayDirection, cmesh.position );//cmesh.geometry.boundingSphere.radius * Math.max( cmesh.scale.x, cmesh.scale.y, cmesh.scale.z )
+			
+			castDistance = castDistance || Math.MAX_NUMBER;
+			
+			if ( cdist === null || cdist > castDistance ) {
+				
 				continue;
 
 			}
