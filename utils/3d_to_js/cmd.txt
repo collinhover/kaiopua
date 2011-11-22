@@ -1,7 +1,21 @@
 cd desktop/github/kaiopua/
 
 
+
 python utils/3d_to_js/convert_obj_three.py -i src/models/world/World_Head.obj -o src/web/assets/models/World_Head.js
+
+
+
+python utils/3d_to_js/convert_obj_three.py -i src/models/hut/Hut.obj -o src/web/assets/models/Hut.js
+
+python utils/3d_to_js/convert_obj_three.py -i src/models/hut/Hut_Hill.obj -o src/web/assets/models/Hut_Hill.js
+
+python utils/3d_to_js/convert_obj_three.py -i src/models/hut/Hut_Fence.obj -o src/web/assets/models/Hut_Fence.js
+
+python utils/3d_to_js/convert_obj_three.py -i src/models/hut/Hut_Steps.obj -o src/web/assets/models/Hut_Steps.js
+
+python utils/3d_to_js/convert_obj_three.py -i src/models/hut/Hut_Surfboard.obj -o src/web/assets/models/Hut_Surfboard.js
+
 
 
 python utils/3d_to_js/convert_obj_three.py -i src/models/world/World_Tail.obj -o src/web/assets/models/World_Tail.js
