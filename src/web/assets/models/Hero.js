@@ -1,4 +1,4 @@
-// Converted from: hero\Hero.obj
+// Converted from: src/models/hero/Hero.obj
 //  vertices: 632
 //  faces: 1252
 //  normals: 632
@@ -21,7 +21,7 @@ var model = {
 	"DbgIndex" : 0,
 	"DbgName" : "Hero_Eye",
 	"colorAmbient" : [0.0, 0.0, 0.0],
-	"colorDiffuse" : [0.047919, 0.047919, 0.047919],
+	"colorDiffuse" : [0.047919000000000003, 0.047919000000000003, 0.047919000000000003],
 	"colorSpecular" : [0.5, 0.5, 0.5],
 	"illumination" : 2,
 	"opticalDensity" : 1.0,
@@ -34,7 +34,7 @@ var model = {
 	"DbgIndex" : 1,
 	"DbgName" : "Hero_Skin",
 	"colorAmbient" : [0.0, 0.0, 0.0],
-	"colorDiffuse" : [0.8, 0.8, 0.8],
+	"colorDiffuse" : [0.80000000000000004, 0.80000000000000004, 0.80000000000000004],
 	"colorSpecular" : [0.0, 0.0, 0.0],
 	"illumination" : 1,
 	"opticalDensity" : 1.0,

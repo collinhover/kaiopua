@@ -1,0 +1,12 @@
+cd desktop/github/kaiopua/
+
+
+python utils/3d_to_js/convert_obj_three.py -i src/models/world/World_Head.obj -o src/web/assets/models/World_Head.js
+
+
+python utils/3d_to_js/convert_obj_three.py -i src/models/world/World_Tail.obj -o src/web/assets/models/World_Tail.js
+
+
+python utils/3d_to_js/convert_obj_three.py -i src/models/hero/Hero.obj -o src/web/assets/models/Hero.js
+
+
