@@ -657,9 +657,10 @@ var KAIOPUA = (function (main) {
 					deselect( parameters );
 					
 				}
-			
-				targets.push( selectedModel );
 				
+				targets.push( selectedModel );
+				/*
+				 * TODO: fix for single material case
 				selectedMesh = selectedModel.mesh;
 				
 				materialIndex = selectedMesh.materials.indexOf( selecting.material );
@@ -669,7 +670,7 @@ var KAIOPUA = (function (main) {
 					selectedMesh.materials.push( selecting.material );
 					
 				}
-				
+				*/
 			}
 			else {
 				
@@ -744,6 +745,7 @@ var KAIOPUA = (function (main) {
 				
 			}
 			
+			/* TODO: fix for no multimaterials
 			// remove selecting material
 			
 			materialIndex = targetMesh.materials.indexOf( selecting.material );
@@ -753,6 +755,7 @@ var KAIOPUA = (function (main) {
 				targetMesh.materials.splice( materialIndex, 1 );
 				
 			}
+			*/
 			
 			// remove from targetsToRemove
 			

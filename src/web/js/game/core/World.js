@@ -83,6 +83,8 @@ var KAIOPUA = (function (main) {
 	
 	function init_environment () {
 		
+		// test materials
+		
 		var normalMat = new THREE.MeshNormalMaterial();
 		
 		var normalMatWire = new THREE.MeshBasicMaterial({
@@ -90,19 +92,30 @@ var KAIOPUA = (function (main) {
 			wireframe: true
 		});
 		
+		var shadowTestMat = new THREE.MeshLambertMaterial( { color: 0xffdd99 } );
+		THREE.ColorUtils.adjustHSV( shadowTestMat.color, 0, 0, 0.9 );
+		shadowTestMat.ambient = shadowTestMat.color;
+		
 		// body parts
         
         head = objectmaker.make_model({
             geometry: assets["assets/models/World_Head.js"],
-			materials: [normalMat, normalMatWire],
-			shading: THREE.FlatShading
+			materials: normalMat,//shadowTestMat,
+			shading: THREE.FlatShading, //THREE.SmoothShading,
+			receiveShadow: true
         });
 		
 		tail = objectmaker.make_model({
             geometry: assets["assets/models/World_Tail.js"],
-			materials: [normalMat, normalMatWire],
-			shading: THREE.FlatShading
+			materials: normalMat,//shadowTestMat,
+			shading: THREE.FlatShading, //THREE.SmoothShading,
+			receiveShadow: true
         });
+		
+		// rotate
+		
+		head.mesh.quaternion.setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), -Math.PI * 0.4 );
+		tail.mesh.quaternion.copy( head.mesh.quaternion );
 		
 		// store
 		

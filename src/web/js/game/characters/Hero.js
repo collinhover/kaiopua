@@ -51,7 +51,9 @@ var KAIOPUA = (function (main) {
 		return {
 			
 			geometryAssetPath: "assets/models/Hero.js",
-			materials: [ new THREE.MeshNormalMaterial() ]
+			materials: new THREE.MeshNormalMaterial(),
+			castShadow: true,
+			receiveShadow: false
 			
 		};
 		

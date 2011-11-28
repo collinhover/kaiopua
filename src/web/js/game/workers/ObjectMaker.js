@@ -19,7 +19,6 @@ var KAIOPUA = (function (main) {
     =====================================================*/
     
     objectmaker.make_model = make_model;
-    objectmaker.find_objs_with_materials = find_objs_with_materials;
     objectmaker.make_skybox = make_skybox;
     
     /*===================================================
@@ -71,8 +70,6 @@ var KAIOPUA = (function (main) {
 			
 		}
 		
-		//geometry.computeVertexNormals();
-		
         // materials
         
         materials = parameters.materials || [];
@@ -91,7 +88,7 @@ var KAIOPUA = (function (main) {
             
             for ( i = 0, l = geometry.materials.length; i < l; i += 1) {
 				
-				material = geometry.materials[i][0];
+				material = geometry.materials[ i ];
 				
                 materialsToModify.push( material );
             }
@@ -113,7 +110,12 @@ var KAIOPUA = (function (main) {
             material = materialsToModify[i];
             
             // morph targets
-			material.morphTargets = geometry.morphTargets && geometry.morphTargets.length > 0 ? true : false;
+			
+			if ( material.hasOwnProperty('morphTargets' ) ) {
+				
+				material.morphTargets = geometry.morphTargets && geometry.morphTargets.length > 0 ? true : false;
+				
+			}
 			
             // shading
             // (1 = flat, 2 = smooth )
@@ -123,7 +125,7 @@ var KAIOPUA = (function (main) {
 		
         // mesh
         
-        mesh = new THREE.Mesh( geometry, materials );
+        mesh = new THREE.Mesh( geometry, /* currently no multimaterials */ materials[0] );
 		
 		// force use quaternion
 		
@@ -148,6 +150,14 @@ var KAIOPUA = (function (main) {
 		if ( parameters.hasOwnProperty('flipSided') === true ) {
 			
 			mesh.flipSided = parameters.flipSided;
+			
+		}
+		
+		// double sided
+		
+		if ( parameters.hasOwnProperty('doubleSided') === true ) {
+			
+			mesh.doubleSided = parameters.doubleSided;
 			
 		}
 		
@@ -694,26 +704,6 @@ var KAIOPUA = (function (main) {
     misc
     
     =====================================================*/
-    
-    // finds all objects with own materials
-    // will iterate through all children recursively
-    
-    function find_objs_with_materials ( objsList ) {
-        var obj, objsWithMats = [], i;
-        
-        for (i = objsList.length - 1; i >= 0; i -= 1) {
-            obj = objsList[i];
-            
-            if (typeof obj.materials !== 'undefined' && obj.materials.length > 0) {
-                objsWithMats[objsWithMats.length] = obj;
-            }
-            else if (obj.children.length > 0)  {
-                objsWithMats = objsWithMats.concat(find_objs_with_materials(obj.children));
-            }
-        }
-        
-        return objsWithMats;
-    }
     
     // generates a skybox from array of images
     

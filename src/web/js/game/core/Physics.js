@@ -422,8 +422,7 @@ var KAIOPUA = (function (main) {
 				// invert copy
 				
 				var mt = THREE.CollisionSystem.__m;
-				THREE.Matrix4.makeInvert( mCopy, mt );
-				//mt.getInverse( mCopy );
+				mt.getInverse( mCopy );
 				
 				mt.multiplyVector3( rt.origin );
 				mt.rotateAxis( rt.direction );

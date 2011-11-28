@@ -34,14 +34,14 @@ THREE.ShaderPass.prototype = {
 
 		}
 
-		THREE.EffectComposer.quad.materials[ 0 ] = this.material;
+		THREE.EffectComposer.quad.material = this.material;
 
 		if ( this.renderToScreen ) {
-
+			
 			renderer.render( THREE.EffectComposer.scene, THREE.EffectComposer.camera );
 
 		} else {
-
+			
 			renderer.render( THREE.EffectComposer.scene, THREE.EffectComposer.camera, writeBuffer, this.clear );
 
 		}

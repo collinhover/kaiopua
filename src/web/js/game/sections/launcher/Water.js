@@ -134,6 +134,7 @@ var KAIOPUA = (function (main) {
         // water mesh
         wavesMesh = new THREE.Mesh( wavesGeometry, wavesMaterial );
         wavesMesh.doubleSided = true;
+		wavesMesh.dynamic = true;
         
         environment.add( wavesMesh );
         
@@ -265,6 +266,7 @@ var KAIOPUA = (function (main) {
         
         // tell three to update vertices
 		wavesGeometry.__dirtyVertices = true;
+		
 	}
     
     // bobs object with waves

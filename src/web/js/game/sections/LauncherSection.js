@@ -16,7 +16,7 @@ var KAIOPUA = (function (main) {
 		addOnShow = [],
 		addBGOnShow = [],
 		ambientLight,
-		directional,
+		light,
 		fogColor = 0x529ad1,
         water,
         sky,
@@ -96,10 +96,14 @@ var KAIOPUA = (function (main) {
 		
 		// lights
 		
-		ambientLight = new THREE.AmbientLight( 0xCCCCCC );
+		ambientLight = new THREE.AmbientLight( 0xcccccc );
 		
-		directional = new THREE.DirectionalLight( 0xFFFFFF, 1.0 );
-		directional.position = new THREE.Vector3(-1, 1, -1).normalize();
+		light = new THREE.DirectionalLight( 0xffffff, 1 );
+		light.position = new THREE.Vector3(-1, 1, -1).normalize();
+		
+		//light = new THREE.SpotLight( 0xffffff, 1, 10000 );
+		//light.position.set( 5000, 0, 0 );
+		//light.target.position.set( 0, 0, 0 );
 		
 		// skybox
 		
@@ -131,7 +135,7 @@ var KAIOPUA = (function (main) {
 		
 		// set items to add on show
 		
-		addOnShow.push( ambientLight, directional, waterEnv, skyEnv );
+		addOnShow.push( ambientLight, /*light,*/ waterEnv, skyEnv );
 		
 		addBGOnShow.push( skybox );
 		

@@ -108,7 +108,9 @@ var KAIOPUA = (function (main) {
 		// light
 		
 		light = new THREE.SpotLight( 0xffffff );
-        light.position = new THREE.Vector3(-1, 0, 1).normalize();
+		light.position.set( 0, 3000, 0 );
+		light.target.position.set( 0, 0, 0 );
+		light.castShadow = true;
 		
 		// add on show items
 		
@@ -138,7 +140,9 @@ var KAIOPUA = (function (main) {
 			
 			var box = objectmaker.make_model({
 				geometry: geom,
-				materials: [normalMat, normalMatWire]
+				materials: normalMat,// normalMatWire,
+				castShadow: true,
+				receiveShadow: false
 			});
 			
 			box.mesh.position.set( x, y, z );
@@ -190,12 +194,29 @@ var KAIOPUA = (function (main) {
 			
 		}
 		
-		
+		/*
+		// movable boxes
 		addOnShow.push( make_box( 1, 2000, 100, true ) );
 		addOnShow.push( make_box( 1, 2000, -100, true ) );
 		addOnShow.push( make_box( 100, 2000, 1, true ) );
 		addOnShow.push( make_box( -100, 2000, 1, true ) );
 		addOnShow.push( make_box( -100, 2400, 1, true ) );
+		*/
+	
+		// plane
+		
+		var geom = new THREE.PlaneGeometry( 10000, 10000, 1, 1 );
+		
+		var plane = objectmaker.make_model({
+			geometry: geom,
+			materials: normalMat,// normalMatWire,
+			doubleSided: true,
+			rotation: new THREE.Vector3( -90, 0, 0 ),
+			castShadow: false,
+			receiveShadow: false
+		});
+		
+		addOnShow.push( plane );
     }
     
     /*===================================================
@@ -238,8 +259,6 @@ var KAIOPUA = (function (main) {
 		
 		//player.cameraMode = 'freelook';
 		
-		//setTimeout( game.pause, 1000 );
-		
 		// signals
         
         shared.signals.windowresized.add( resize );
@@ -278,6 +297,7 @@ var KAIOPUA = (function (main) {
     
     function update () {
 		
+		/*
 		// position point light to always be 
         // above and infront of camera
 		
@@ -289,7 +309,7 @@ var KAIOPUA = (function (main) {
         newP.addSelf( camera.position );
         
 		light.position = newP;
-        
+        */
     }
     
     function resize ( W, H ) {
