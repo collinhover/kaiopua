@@ -96,14 +96,13 @@ var KAIOPUA = (function (main) {
 		
 		// lights
 		
-		ambientLight = new THREE.AmbientLight( 0xcccccc );
+		ambientLight = new THREE.AmbientLight( 0xeeeeee );
 		
-		light = new THREE.DirectionalLight( 0xffffff, 1 );
-		light.position = new THREE.Vector3(-1, 1, -1).normalize();
+		//light = new THREE.DirectionalLight( 0xffffff, 1 );
+		//light.position = new THREE.Vector3(-1, 1, -1).normalize();
 		
-		//light = new THREE.SpotLight( 0xffffff, 1, 10000 );
-		//light.position.set( 5000, 0, 0 );
-		//light.target.position.set( 0, 0, 0 );
+		light = new THREE.PointLight( 0xffffcc, 0.75, 40000 );
+		light.position.set( 0, 3000, 2000 );
 		
 		// skybox
 		
@@ -135,7 +134,7 @@ var KAIOPUA = (function (main) {
 		
 		// set items to add on show
 		
-		addOnShow.push( ambientLight, /*light,*/ waterEnv, skyEnv );
+		addOnShow.push( ambientLight, light, waterEnv, skyEnv );
 		
 		addBGOnShow.push( skybox );
 		

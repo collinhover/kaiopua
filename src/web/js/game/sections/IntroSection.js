@@ -21,6 +21,7 @@ var KAIOPUA = (function (main) {
 		sceneBG,
 		addOnShow = [],
 		addBGOnShow = [],
+		ambient,
 		light;
     
     /*===================================================
@@ -105,16 +106,19 @@ var KAIOPUA = (function (main) {
 		
 		skybox = objectmaker.make_skybox( "assets/textures/skybox_world" );
 		
-		// light
+		// lights
 		
-		light = new THREE.SpotLight( 0xffffff );
+		ambient = new THREE.AmbientLight( 0x333333 );
+		
+		light = new THREE.PointLight( 0xff0040, 2, 6000 );
 		light.position.set( 0, 3000, 0 );
-		light.target.position.set( 0, 0, 0 );
-		light.castShadow = true;
+		//light.target.position.set( 0, 0, 0 );
+		//light.castShadow = true;
+		//light.distance = 10000;
 		
 		// add on show items
 		
-		addOnShow.push( light );
+		addOnShow.push( ambient, light );
 		
 		addBGOnShow.push( skybox );
 		

@@ -119,8 +119,11 @@ var KAIOPUA = (function (main) {
 			
             // shading
             // (1 = flat, 2 = smooth )
-			material.shading = parameters.shading || THREE.SmoothShading;
+			if ( parameters.hasOwnProperty('shading' ) ) {
+				
+				material.shading = parameters.shading;
 			
+			}
         }
 		
         // mesh

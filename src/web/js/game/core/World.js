@@ -92,7 +92,8 @@ var KAIOPUA = (function (main) {
 			wireframe: true
 		});
 		
-		var shadowTestMat = new THREE.MeshLambertMaterial( { color: 0xffdd99 } );
+		var stmatColor = 0xffdd99;
+		var shadowTestMat = new THREE.MeshLambertMaterial( { ambient: stmatColor, color: stmatColor, shading: THREE.SmoothShading }  );
 		THREE.ColorUtils.adjustHSV( shadowTestMat.color, 0, 0, 0.9 );
 		shadowTestMat.ambient = shadowTestMat.color;
 		
@@ -100,14 +101,14 @@ var KAIOPUA = (function (main) {
         
         head = objectmaker.make_model({
             geometry: assets["assets/models/World_Head.js"],
-			materials: normalMat,//shadowTestMat,
+			materials: shadowTestMat,//normalMat,//
 			shading: THREE.FlatShading, //THREE.SmoothShading,
 			receiveShadow: true
         });
 		
 		tail = objectmaker.make_model({
             geometry: assets["assets/models/World_Tail.js"],
-			materials: normalMat,//shadowTestMat,
+			materials: shadowTestMat,//normalMat,//
 			shading: THREE.FlatShading, //THREE.SmoothShading,
 			receiveShadow: true
         });

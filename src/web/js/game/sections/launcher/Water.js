@@ -129,7 +129,8 @@ var KAIOPUA = (function (main) {
         }
         
         // water material
-        wavesMaterial = new THREE.MeshLambertMaterial( { color: wavesColor } );
+        wavesMaterial = new THREE.MeshPhongMaterial( { ambient: wavesColor, color: wavesColor, specular: 0x00daff, shininess: 10, shading: THREE.SmoothShading }  );
+		//wavesMaterial = new THREE.MeshLambertMaterial( { color: wavesColor, ambient: wavesColor, specular: 0x00daff } );
         
         // water mesh
         wavesMesh = new THREE.Mesh( wavesGeometry, wavesMaterial );
@@ -147,7 +148,7 @@ var KAIOPUA = (function (main) {
         
         for ( i = 0; i < numRays; i += 1 ) {
         
-            rayMaterial = new THREE.MeshLambertMaterial( { color: wavesColor, map: rayTexture, opacity: 0, depthTest: false } );
+            rayMaterial = new THREE.MeshBasicMaterial( { color: wavesColor, map: rayTexture, opacity: 0, depthTest: false } );
             
 			ray = new THREE.Mesh( rayGeometry, rayMaterial );
             
@@ -203,7 +204,7 @@ var KAIOPUA = (function (main) {
     }
     
     function waves( time ) {
-        
+		
         var wavesVerts = wavesGeometry.vertices, 
             vert, variation, vvw = wavesVertsW - 1, vvh = wavesVertsH - 1,
             waterRayInfo, waterRay, i, l;
@@ -266,7 +267,7 @@ var KAIOPUA = (function (main) {
         
         // tell three to update vertices
 		wavesGeometry.__dirtyVertices = true;
-		
+		wavesGeometry.__dirtyNormals = true;
 	}
     
     // bobs object with waves

@@ -335,19 +335,19 @@ var KAIOPUA = (function (main) {
         renderer.autoClear = false;
 		
 		// shadows
-		
+		/*
 		renderer.shadowCameraNear = 3;
 		renderer.shadowCameraFar = 3000;
 		renderer.shadowCameraFov = 60;
 		
 		renderer.shadowMapBias = 0.0039;
 		renderer.shadowMapDarkness = 0.5;
-		renderer.shadowMapWidth = 1024;
-		renderer.shadowMapHeight = 1024;
+		renderer.shadowMapWidth = 2048;
+		renderer.shadowMapHeight = 2048;
 		
 		renderer.shadowMapEnabled = true;
 		renderer.shadowMapSoft = true;
-		
+		*/
         // render target
         renderTarget = new THREE.WebGLRenderTarget( shared.screenWidth, shared.screenHeight, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter } );
         
