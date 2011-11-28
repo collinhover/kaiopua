@@ -734,7 +734,7 @@ var KAIOPUA = (function (main) {
 		
 		// shader
 		
-		shader = THREE.ShaderUtils.lib[ "cube" ];
+		shader = $.extend(true, {}, THREE.ShaderUtils.lib[ "cube" ]);
 		shader.uniforms[ "tCube" ].texture = textureCube;
 		
 		// material

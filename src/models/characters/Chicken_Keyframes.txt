@@ -1,0 +1,4 @@
+0-42 Walk cycle
+66-219 Peck
+251-676 Sleep
+680-749 Cluck

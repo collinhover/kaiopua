@@ -337,8 +337,8 @@ var KAIOPUA = (function (main) {
 		// shadows
 		/*
 		renderer.shadowCameraNear = 3;
-		renderer.shadowCameraFar = 3000;
-		renderer.shadowCameraFov = 60;
+		renderer.shadowCameraFar = 20000;
+		renderer.shadowCameraFov = 90;
 		
 		renderer.shadowMapBias = 0.0039;
 		renderer.shadowMapDarkness = 0.5;
@@ -360,10 +360,11 @@ var KAIOPUA = (function (main) {
 		sceneDefault = new THREE.Scene();
 		sceneBGDefault = new THREE.Scene();
         
+        
         // fog
 		
 		fog = new THREE.Fog( 0xffffff, -100, 10000 );
-        
+		
         sceneDefault.fog = fog;
 		
 		// camera
@@ -766,6 +767,10 @@ var KAIOPUA = (function (main) {
 		
 		var i, l, object;
 		
+		if ( objects.hasOwnProperty('length') === false ) {
+			objects = [ objects ];
+		}
+		
 		sceneTarget = sceneTarget || scene;
 		
 		for ( i = 0, l = objects.length; i < l; i += 1 ) {
@@ -804,6 +809,10 @@ var KAIOPUA = (function (main) {
 	function remove_from_scene ( objects, sceneTarget ) {
 		
 		var i, l, object;
+		
+		if ( objects.hasOwnProperty('length') === false ) {
+			objects = [ objects ];
+		}
 		
 		sceneTarget = sceneTarget || scene;
 		

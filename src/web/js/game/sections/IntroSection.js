@@ -102,26 +102,6 @@ var KAIOPUA = (function (main) {
     
     function init_environment () {
 		
-		// skybox
-		
-		skybox = objectmaker.make_skybox( "assets/textures/skybox_world" );
-		
-		// lights
-		
-		ambient = new THREE.AmbientLight( 0x333333 );
-		
-		light = new THREE.PointLight( 0xff0040, 2, 6000 );
-		light.position.set( 0, 3000, 0 );
-		//light.target.position.set( 0, 0, 0 );
-		//light.castShadow = true;
-		//light.distance = 10000;
-		
-		// add on show items
-		
-		addOnShow.push( ambient, light );
-		
-		addBGOnShow.push( skybox );
-		
 		//
 		//
 		//
@@ -216,8 +196,8 @@ var KAIOPUA = (function (main) {
 			materials: normalMat,// normalMatWire,
 			doubleSided: true,
 			rotation: new THREE.Vector3( -90, 0, 0 ),
-			castShadow: false,
-			receiveShadow: false
+			castShadow: true,
+			receiveShadow: true
 		});
 		
 		addOnShow.push( plane );

@@ -20,6 +20,7 @@ var KAIOPUA = (function (main) {
 		fogColor = 0x529ad1,
         water,
         sky,
+        skybox,
         time,
         envRotationY = -90 * Math.PI / 180,
 		camRotationBaseQ,

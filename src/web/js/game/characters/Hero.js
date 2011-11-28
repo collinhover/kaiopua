@@ -51,10 +51,10 @@ var KAIOPUA = (function (main) {
 		return {
 			
 			geometryAssetPath: "assets/models/Hero.js",
-			materials: new THREE.MeshNormalMaterial(),
+			materials: new THREE.MeshLambertMaterial( { ambient: 0x999999, color: 0xffeeee, shading: THREE.SmoothShading }  ),//new THREE.MeshNormalMaterial(),
 			shading: THREE.SmoothShading,
 			castShadow: true,
-			receiveShadow: false
+			receiveShadow: true
 			
 		};
 		

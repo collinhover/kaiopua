@@ -1,0 +1,7 @@
+walk cycle 1-76
+run cycle 87-141
+Idle One 163-307
+Idle Two 457-603
+Jump 645-762
+raise lantern 801-913
+Hurt 946-1000

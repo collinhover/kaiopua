@@ -13,10 +13,13 @@ var KAIOPUA = (function (main) {
 		objectmaker,
 		physics,
 		scene,
+		skybox,
+		ambientLight,
+		sunLight,
 		body,
 		head,
 		tail,
-		parts,
+		parts = [],
 		gravityMagnitude = 9.8;
 	
 	/*===================================================
@@ -83,6 +86,21 @@ var KAIOPUA = (function (main) {
 	
 	function init_environment () {
 		
+		// skybox
+		
+		skybox = objectmaker.make_skybox( "assets/textures/skybox_world" );
+		
+		// lights
+		
+		ambientLight = new THREE.AmbientLight( 0x333333 );
+		
+		sunLight = new THREE.PointLight( 0xffffcc, 1.5, 8000 );
+		sunLight.position.set( 0, 6000, 0 );
+		//sunLight.target.position.set( 0, 0, 0 );
+		//sunLight.castShadow = true;
+		
+		parts.push( ambientLight, sunLight );
+		
 		// test materials
 		
 		var normalMat = new THREE.MeshNormalMaterial();
@@ -92,10 +110,9 @@ var KAIOPUA = (function (main) {
 			wireframe: true
 		});
 		
-		var stmatColor = 0xffdd99;
-		var shadowTestMat = new THREE.MeshLambertMaterial( { ambient: stmatColor, color: stmatColor, shading: THREE.SmoothShading }  );
-		THREE.ColorUtils.adjustHSV( shadowTestMat.color, 0, 0, 0.9 );
-		shadowTestMat.ambient = shadowTestMat.color;
+		var shadowTestMat = new THREE.MeshLambertMaterial( { ambient: 0x999999, color: 0xffdd99, shading: THREE.SmoothShading }  );
+		//THREE.ColorUtils.adjustHSV( shadowTestMat.color, 0, 0, 0.9 );
+		//shadowTestMat.ambient = shadowTestMat.color;
 		
 		// body parts
         
@@ -103,14 +120,16 @@ var KAIOPUA = (function (main) {
             geometry: assets["assets/models/World_Head.js"],
 			materials: shadowTestMat,//normalMat,//
 			shading: THREE.FlatShading, //THREE.SmoothShading,
-			receiveShadow: true
+			receiveShadow: true,
+			castShadow: false
         });
 		
 		tail = objectmaker.make_model({
             geometry: assets["assets/models/World_Tail.js"],
 			materials: shadowTestMat,//normalMat,//
 			shading: THREE.FlatShading, //THREE.SmoothShading,
-			receiveShadow: true
+			receiveShadow: true,
+			castShadow: false
         });
 		
 		// rotate
@@ -120,7 +139,7 @@ var KAIOPUA = (function (main) {
 		
 		// store
 		
-		parts = [ head, tail ];
+		parts.push( head, tail );
 		
 	}
 	
@@ -152,17 +171,23 @@ var KAIOPUA = (function (main) {
 		
         // fog
         
-        scene.fog = new THREE.Fog( 0xffffff, -100, 10000 );
+        scene.fog = null;
 		
 		// add parts
 		
 		game.add_to_scene( parts, scene );
+		
+		// add skybox
+		
+		game.add_to_scene( skybox, game.sceneBG );
 		
 	}
 	
 	function hide () {
 		
 		game.remove_from_scene( parts, scene );
+		
+		game.remove_from_scene( skybox, game.sceneBG );
 		
 	}
 	
