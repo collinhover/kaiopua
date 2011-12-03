@@ -65,7 +65,7 @@ var KAIOPUA = (function (main) {
 		return {
 			
 			moveSpeed: 6,
-			rotateSpeed: 0.015,
+			rotateSpeed: 0.019,
 			jumpSpeedStart: 6,
 			jumpSpeedEnd: 0,
 			jumpTimeMax: 100
@@ -79,9 +79,6 @@ var KAIOPUA = (function (main) {
 		return {
 			
 			bodyType: 'box',
-			width: 40,
-			height: 100,
-			depth: 40,
 			movementDamping: 0.5
 			
 		};

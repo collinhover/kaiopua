@@ -9,6 +9,8 @@ var KAIOPUA = (function (main) {
         game = main.game = main.game || {},
         workers = game.workers = game.workers || {},
         objectmaker = workers.objectmaker = workers.objectmaker || {},
+		core = game.core = game.core || {},
+		physics = core.physics = core.physics || {},
         durationBase = 1000,
 		objectCount = 0;
     
@@ -216,9 +218,23 @@ var KAIOPUA = (function (main) {
 		objectCount += 1;
         
         // public properties
+		
         model.mesh = mesh;
         model.morphs = morphs;
         
+		// physics
+		
+		if ( parameters.hasOwnProperty( 'rigidBody' ) ) {
+			
+			model.rigidBody = parameters.rigidBody;
+			
+		}
+		else if ( parameters.hasOwnProperty( 'rigidBodyInfo' ) ) {
+				
+			model.rigidBody = physics.translate( model.mesh, parameters.rigidBodyInfo );
+			
+		}
+		
         return model;
     }
     

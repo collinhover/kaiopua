@@ -1,0 +1,29 @@
+character (ON EXPORT)
+4.5
+
+hut hill 
+49.3
+
+sun 
+210.8
+
+kukui 
+38.7
+
+fence 
+50
+
+taro 
+33.3
+
+palm 
+52.2
+
+banana leaf
+55.1
+
+lantern
+0.03
+
+grass
+55.1

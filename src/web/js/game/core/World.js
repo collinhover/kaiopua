@@ -11,7 +11,6 @@ var KAIOPUA = (function (main) {
 		ready = false,
 		assets,
 		objectmaker,
-		physics,
 		scene,
 		skybox,
 		ambientLight,
@@ -68,15 +67,11 @@ var KAIOPUA = (function (main) {
 			
 			objectmaker = game.workers.objectmaker;
 			
-			// core
-			
-			physics = core.physics;
-			
 			// initialization
 			
-			init_environment();
+			init_world_base();
 			
-			init_physics();
+			init_environment();
 			
 			ready = true;
 			
@@ -84,7 +79,7 @@ var KAIOPUA = (function (main) {
 			
 	}
 	
-	function init_environment () {
+	function init_world_base () {
 		
 		// skybox
 		
@@ -96,19 +91,10 @@ var KAIOPUA = (function (main) {
 		
 		sunLight = new THREE.PointLight( 0xffffcc, 1.5, 8000 );
 		sunLight.position.set( 0, 6000, 0 );
-		//sunLight.target.position.set( 0, 0, 0 );
-		//sunLight.castShadow = true;
 		
 		parts.push( ambientLight, sunLight );
 		
 		// test materials
-		
-		var normalMat = new THREE.MeshNormalMaterial();
-		
-		var normalMatWire = new THREE.MeshBasicMaterial({
-			color: 0x000000,
-			wireframe: true
-		});
 		
 		var shadowTestMat = new THREE.MeshLambertMaterial( { ambient: 0x999999, color: 0xffdd99, shading: THREE.SmoothShading }  );
 		//THREE.ColorUtils.adjustHSV( shadowTestMat.color, 0, 0, 0.9 );
@@ -118,44 +104,159 @@ var KAIOPUA = (function (main) {
         
         head = objectmaker.make_model({
             geometry: assets["assets/models/World_Head.js"],
+			rigidBodyInfo: {
+				bodyType: 'trimesh'
+			},
 			materials: shadowTestMat,//normalMat,//
-			shading: THREE.FlatShading, //THREE.SmoothShading,
-			receiveShadow: true,
-			castShadow: false
+			shading: THREE.SmoothShading,//THREE.FlatShading, //
         });
 		
 		tail = objectmaker.make_model({
             geometry: assets["assets/models/World_Tail.js"],
+			rigidBodyInfo: {
+				bodyType: 'trimesh'
+			},
 			materials: shadowTestMat,//normalMat,//
-			shading: THREE.FlatShading, //THREE.SmoothShading,
-			receiveShadow: true,
-			castShadow: false
+			shading: THREE.SmoothShading,//THREE.FlatShading, //
         });
 		
-		// rotate
-		
 		head.mesh.quaternion.setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), -Math.PI * 0.4 );
-		tail.mesh.quaternion.copy( head.mesh.quaternion );
-		
-		// store
+		tail.mesh.quaternion.copy( head.mesh.quaternion ); 
 		
 		parts.push( head, tail );
 		
 	}
 	
-	function init_physics () {
+	function init_environment () {
 		
-		// translate model to physics
+		// environment objects
 		
-		head.rigidBody = physics.translate( head.mesh, {
-			bodyType: 'trimesh',
-			geometry: head.mesh.geometry
-		});
+		// hill for hut
 		
-		tail.rigidBody = physics.translate( tail.mesh, {
-			bodyType: 'trimesh',
-			geometry: tail.mesh.geometry
-		});
+		var hutHill = objectmaker.make_model({
+            geometry: assets["assets/models/Hut_Hill.js"],
+			rigidBodyInfo: {
+				bodyType: 'trimesh'
+			},
+			materials: new THREE.MeshNormalMaterial(),//shadowTestMat,//
+			shading: THREE.SmoothShading,//THREE.FlatShading, //
+        });
+		
+		hutHill.mesh.position.set( 0, 1590, 0 );
+		
+		parts.push( hutHill );
+		
+		// steps
+		
+		var steps = objectmaker.make_model({
+            geometry: assets["assets/models/Hut_Steps.js"],
+			rigidBodyInfo: {
+				bodyType: 'trimesh'
+			},
+			materials: new THREE.MeshNormalMaterial(),
+			shading: THREE.SmoothShading,
+        });
+		
+		steps.mesh.position.set( -10, 1860, 130 );
+		
+		parts.push( steps );
+		
+		// hut
+		
+		var hut = objectmaker.make_model({
+            geometry: assets["assets/models/Hut.js"],
+			rigidBodyInfo: {
+				bodyType: 'trimesh'
+			},
+			materials: new THREE.MeshNormalMaterial(),//shadowTestMat,//
+			shading: THREE.FlatShading,
+        });
+		
+		hut.mesh.position.set( 0, 1925, 0 );
+		
+		parts.push( hut );
+		
+		// bed
+		
+		var bed = objectmaker.make_model({
+            geometry: assets["assets/models/Bed.js"],
+			rigidBodyInfo: {
+				bodyType: 'box'
+			},
+			materials: new THREE.MeshNormalMaterial(),
+			shading: THREE.FlatShading,
+        });
+		
+		bed.mesh.position.set( 0, 1930, 0 );
+		
+		parts.push( bed );
+		
+		// banana leaf door
+		
+		var bananaLeafDoor = objectmaker.make_model({
+            geometry: assets["assets/models/Banana_Leaf_Door.js"],
+			materials: new THREE.MeshNormalMaterial(),
+			shading: THREE.SmoothShading,
+			doubleSided: true,
+			rotation: new THREE.Vector3( 0, 0, 5 ),
+        });
+		
+		bananaLeafDoor.mesh.position.set( -10, 2070, 100 );
+		
+		parts.push( bananaLeafDoor );
+		
+		// surfboard
+		
+		var surfboard = objectmaker.make_model({
+            geometry: assets["assets/models/Surfboard.js"],
+			rigidBodyInfo: {
+				bodyType: 'box'
+			},
+			materials: new THREE.MeshNormalMaterial(),
+			shading: THREE.SmoothShading,
+        });
+		
+		surfboard.mesh.position.set( 110, 1860, 110 );
+		
+		parts.push( surfboard );
+		
+		// palm tree
+		
+		var palmTree = objectmaker.make_model({
+            geometry: assets["assets/models/Palm_Tree.js"],
+			materials: new THREE.MeshNormalMaterial(),
+			shading: THREE.SmoothShading,
+			rigidBodyInfo: {
+				bodyType: 'trimesh'
+			}
+        });
+		
+		palmTree.mesh.position.set( 180, 1850, 25 );
+		
+		parts.push( palmTree );
+		
+		// taro plants
+		
+		var taroPlant1 = objectmaker.make_model({
+            geometry: assets["assets/models/Taro_Plant.js"],
+			materials: new THREE.MeshNormalMaterial(),
+			shading: THREE.SmoothShading
+        });
+		
+		taroPlant1.mesh.position.set( -170, 1850, 130 );
+		
+		parts.push( taroPlant1 );
+		
+		var taroPlant2 = objectmaker.make_model({
+            geometry: assets["assets/models/Taro_Plant.js"],
+			materials: new THREE.MeshNormalMaterial(),
+			shading: THREE.SmoothShading,
+			rotation: new THREE.Vector3(0, -45, 0)
+        });
+		
+		taroPlant2.mesh.position.set( -190, 1835, 105 );
+		
+		parts.push( taroPlant2 );
 		
 	}
 	
