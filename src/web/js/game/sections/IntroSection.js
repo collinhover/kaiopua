@@ -124,9 +124,7 @@ var KAIOPUA = (function (main) {
 			
 			var box = objectmaker.make_model({
 				geometry: geom,
-				materials: normalMat,// normalMatWire,
-				castShadow: true,
-				receiveShadow: false
+				materials: normalMat
 			});
 			
 			box.mesh.position.set( x, y, z );
@@ -186,21 +184,6 @@ var KAIOPUA = (function (main) {
 		addOnShow.push( make_box( -100, 2000, 1, true ) );
 		addOnShow.push( make_box( -100, 2400, 1, true ) );
 		*/
-	
-		// plane
-		
-		var geom = new THREE.PlaneGeometry( 10000, 10000, 1, 1 );
-		
-		var plane = objectmaker.make_model({
-			geometry: geom,
-			materials: normalMat,// normalMatWire,
-			doubleSided: true,
-			rotation: new THREE.Vector3( -90, 0, 0 ),
-			castShadow: true,
-			receiveShadow: true
-		});
-		
-		addOnShow.push( plane );
     }
     
     /*===================================================

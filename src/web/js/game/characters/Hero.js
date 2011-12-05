@@ -51,10 +51,8 @@ var KAIOPUA = (function (main) {
 		return {
 			
 			geometryAssetPath: "assets/models/Hero.js",
-			materials: new THREE.MeshLambertMaterial( { ambient: 0x999999, color: 0xffeeee, shading: THREE.SmoothShading }  ),//new THREE.MeshNormalMaterial(),
-			shading: THREE.SmoothShading,
-			castShadow: true,
-			receiveShadow: true
+			materials: new THREE.MeshLambertMaterial( { ambient: 0x333333, color: 0xffeeee, shading: THREE.SmoothShading }  ),//new THREE.MeshNormalMaterial(),
+			shading: THREE.SmoothShading
 			
 		};
 		
@@ -145,7 +143,11 @@ var KAIOPUA = (function (main) {
 				
 				target = targets[ i ];
 				
-				adObj.scaleRecords[ target.id ] = target.mesh.scale.clone();
+				if ( target.interactive === true ) {
+				
+					adObj.scaleRecords[ target.id ] = target.mesh.scale.clone();
+					
+				}
 				
 			}
 			
@@ -224,31 +226,35 @@ var KAIOPUA = (function (main) {
 			
 			scaleDelta = mouseDelta / mouseDeltaDivisorY;
 			
-			// for all targets
+			// for all interactive targets
 			for ( i = 0, l = targets.length; i < l; i += 1 ) {
 				
 				target = targets[ i ];
 				
-				scaleRecord = scaleRecords[ target.id ];
-				
-				// if on objects to remove list
-				// take out of list
-				
-				if ( targetsToRemove.length > 0 ) {
+				if ( target.interactive === true ) {
 					
-					removeIndex = targetsToRemove.indexOf( target );
+					scaleRecord = scaleRecords[ target.id ];
 					
-					if ( removeIndex !== -1 ) {
+					// if on objects to remove list
+					// take out of list
+					
+					if ( targetsToRemove.length > 0 ) {
 						
-						targetsToRemove.splice( removeIndex, 1 );
+						removeIndex = targetsToRemove.indexOf( target );
+						
+						if ( removeIndex !== -1 ) {
+							
+							targetsToRemove.splice( removeIndex, 1 );
+							
+						}
 						
 					}
 					
+					// scale target
+					
+					scale_target( target, scaleRecord, scaleDelta );
+					
 				}
-				
-				// scale target
-				
-				scale_target( target, scaleRecord, scaleDelta );
 				
 			}
 			

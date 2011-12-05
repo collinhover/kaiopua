@@ -8,6 +8,7 @@ var KAIOPUA = (function (main) {
         game = main.game = main.game || {},
 		core = game.core = game.core || {},
 		world = core.world = core.world || {},
+		env = game.env = game.env || {},
 		ready = false,
 		assets,
 		objectmaker,
@@ -15,9 +16,11 @@ var KAIOPUA = (function (main) {
 		skybox,
 		ambientLight,
 		sunLight,
+		fog,
 		body,
 		head,
 		tail,
+		water,
 		parts = [],
 		gravityMagnitude = 9.8;
 	
@@ -87,16 +90,20 @@ var KAIOPUA = (function (main) {
 		
 		// lights
 		
-		ambientLight = new THREE.AmbientLight( 0x333333 );
+		ambientLight = new THREE.AmbientLight( 0x999999 );
 		
-		sunLight = new THREE.PointLight( 0xffffcc, 1.5, 8000 );
+		sunLight = new THREE.PointLight( 0xffffcc, 1, 10000 );
 		sunLight.position.set( 0, 6000, 0 );
 		
 		parts.push( ambientLight, sunLight );
 		
+		// fog
+		
+		fog = null;//new THREE.Fog( 0x226fb3, 1, 10000 );
+		
 		// test materials
 		
-		var shadowTestMat = new THREE.MeshLambertMaterial( { ambient: 0x999999, color: 0xffdd99, shading: THREE.SmoothShading }  );
+		var shadowTestMat = new THREE.MeshLambertMaterial( { ambient: 0x333333, color: 0xffdd99, shading: THREE.SmoothShading }  );
 		//THREE.ColorUtils.adjustHSV( shadowTestMat.color, 0, 0, 0.9 );
 		//shadowTestMat.ambient = shadowTestMat.color;
 		
@@ -109,6 +116,8 @@ var KAIOPUA = (function (main) {
 			},
 			materials: shadowTestMat,//normalMat,//
 			shading: THREE.SmoothShading,//THREE.FlatShading, //
+			targetable: false,
+			interactive: false
         });
 		
 		tail = objectmaker.make_model({
@@ -118,6 +127,8 @@ var KAIOPUA = (function (main) {
 			},
 			materials: shadowTestMat,//normalMat,//
 			shading: THREE.SmoothShading,//THREE.FlatShading, //
+			targetable: false,
+			interactive: false
         });
 		
 		head.mesh.quaternion.setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), -Math.PI * 0.4 );
@@ -140,6 +151,8 @@ var KAIOPUA = (function (main) {
 			},
 			materials: new THREE.MeshNormalMaterial(),//shadowTestMat,//
 			shading: THREE.SmoothShading,//THREE.FlatShading, //
+			targetable: false,
+			interactive: false
         });
 		
 		hutHill.mesh.position.set( 0, 1590, 0 );
@@ -169,7 +182,7 @@ var KAIOPUA = (function (main) {
 				bodyType: 'trimesh'
 			},
 			materials: new THREE.MeshNormalMaterial(),//shadowTestMat,//
-			shading: THREE.FlatShading,
+			shading: THREE.FlatShading
         });
 		
 		hut.mesh.position.set( 0, 1925, 0 );
@@ -184,7 +197,7 @@ var KAIOPUA = (function (main) {
 				bodyType: 'box'
 			},
 			materials: new THREE.MeshNormalMaterial(),
-			shading: THREE.FlatShading,
+			shading: THREE.FlatShading
         });
 		
 		bed.mesh.position.set( 0, 1930, 0 );
@@ -198,7 +211,7 @@ var KAIOPUA = (function (main) {
 			materials: new THREE.MeshNormalMaterial(),
 			shading: THREE.SmoothShading,
 			doubleSided: true,
-			rotation: new THREE.Vector3( 0, 0, 5 ),
+			rotation: new THREE.Vector3( 0, 0, 5 )
         });
 		
 		bananaLeafDoor.mesh.position.set( -10, 2070, 100 );
@@ -209,11 +222,11 @@ var KAIOPUA = (function (main) {
 		
 		var surfboard = objectmaker.make_model({
             geometry: assets["assets/models/Surfboard.js"],
-			rigidBodyInfo: {
-				bodyType: 'box'
-			},
 			materials: new THREE.MeshNormalMaterial(),
 			shading: THREE.SmoothShading,
+			rigidBodyInfo: {
+				bodyType: 'box'
+			}
         });
 		
 		surfboard.mesh.position.set( 110, 1860, 110 );
@@ -258,6 +271,12 @@ var KAIOPUA = (function (main) {
 		
 		parts.push( taroPlant2 );
 		
+		// water
+		
+		water = env.water.make_water_env();
+		
+		parts.push( water.container );
+		
 	}
 	
 	/*===================================================
@@ -272,7 +291,7 @@ var KAIOPUA = (function (main) {
 		
         // fog
         
-        scene.fog = null;
+        scene.fog = fog;
 		
 		// add parts
 		
@@ -282,6 +301,10 @@ var KAIOPUA = (function (main) {
 		
 		game.add_to_scene( skybox, game.sceneBG );
 		
+		// update
+		
+		shared.signals.update.add( update );
+		
 	}
 	
 	function hide () {
@@ -289,6 +312,16 @@ var KAIOPUA = (function (main) {
 		game.remove_from_scene( parts, scene );
 		
 		game.remove_from_scene( skybox, game.sceneBG );
+		
+		shared.signals.update.remove( update );
+		
+	}
+	
+	function update ( timeDelta ) {
+		
+		// water
+		
+		//water.make_waves( timeDelta );
 		
 	}
 	

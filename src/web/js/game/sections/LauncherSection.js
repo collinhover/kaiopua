@@ -294,8 +294,6 @@ var KAIOPUA = (function (main) {
         
         water.waves( time );
         
-        //water.bob( camera );
-        
     }
 	
 	function resize () {

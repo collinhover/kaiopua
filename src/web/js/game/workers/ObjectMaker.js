@@ -87,7 +87,7 @@ var KAIOPUA = (function (main) {
         if ( geometry.materials && geometry.materials.length > 0 ) {
             
             // add to all
-            
+			
             for ( i = 0, l = geometry.materials.length; i < l; i += 1) {
 				
 				material = geometry.materials[ i ];
@@ -102,15 +102,15 @@ var KAIOPUA = (function (main) {
             
             materials = [ new THREE.MeshFaceMaterial() ];
             
-            materialsToModify = materialsToModify.push( material );
+            materialsToModify = materialsToModify.concat( materials );
             
         }
 		
         // material properties
-        
+		
         for ( i = 0, l = materialsToModify.length; i < l; i += 1) {
             material = materialsToModify[i];
-            
+			
             // morph targets
 			
 			if ( material.hasOwnProperty('morphTargets' ) ) {
@@ -163,6 +163,14 @@ var KAIOPUA = (function (main) {
 		if ( parameters.hasOwnProperty('doubleSided') === true ) {
 			
 			mesh.doubleSided = parameters.doubleSided;
+			
+		}
+		
+		// dynamic
+		
+		if ( parameters.hasOwnProperty('dynamic') === true ) {
+			
+			mesh.dynamic = parameters.dynamic;
 			
 		}
 		
@@ -221,7 +229,33 @@ var KAIOPUA = (function (main) {
 		
         model.mesh = mesh;
         model.morphs = morphs;
-        
+		
+		// targetable, default to true
+		
+		if ( parameters.hasOwnProperty( 'targetable' ) ) {
+			
+			model.targetable = parameters.targetable;
+			
+		}
+		else {
+			
+			model.targetable = true;
+			
+		}
+		
+		// interactive, default to true
+		
+		if ( parameters.hasOwnProperty( 'interactive' ) ) {
+			
+			model.interactive = parameters.interactive;
+			
+		}
+		else {
+			
+			model.interactive = true;
+			
+		}
+		
 		// physics
 		
 		if ( parameters.hasOwnProperty( 'rigidBody' ) ) {
@@ -274,36 +308,76 @@ var KAIOPUA = (function (main) {
                 uList = updates.list,
                 updaterIndex,
                 updater,
-                info,
                 morphsMap;
-            
-            // get if updater for animation exists
-            
-            updaterIndex = uNames.indexOf( name );
+				
+			// if morph name exists
 			
-            // new updater
-            
-            if ( updaterIndex === -1 && typeof shapesList[ name ] !== 'undefined' && shapesList[ name ].map.length !== 0 ) {
-			
+			if ( typeof shapesList[ name ] !== 'undefined' && shapesList[ name ].map.length !== 0 ) {
+				
+				// get morphs map
+				
 				morphsMap = shapesList[ name ].map;
 				
-                updater = make_morph_updater( name );
-                
-                info = updater.info;
-                
-                // add to lists
-                
-                uNames.push( name );
-                
-                uList[ name ] = updater;
-                
-                // start updating
-                
-                updater.start( mesh, morphsMap, parameters );
-            
+				// get if updater for animation exists
+				
+				updaterIndex = uNames.indexOf( name );
+				
+				// new updater
+				
+				if ( updaterIndex === -1 ) {
+					
+					updater = make_morph_updater( name );
+					
+					// add to lists
+					
+					uNames.push( name );
+					
+					uList[ name ] = updater;
+					
+				}
+				// get existing
+				else {
+					
+					updater = uList[ name ];
+					
+				}
+				
+				// start updating
+				
+				updater.start( mesh, morphsMap, parameters );
+				
             }
-            
+			
         };
+		
+		morphs.clear = function ( name ) {
+			
+			var shapesList = shapes.list,
+                updates = shapes.updates,
+                uNames = updates.names,
+                uList = updates.list,
+                updaterIndex,
+                updater;
+				
+			// if morph name exists
+			
+			if ( typeof shapesList[ name ] !== 'undefined' && shapesList[ name ].map.length !== 0 ) {
+				
+				// get if updater for animation exists
+				
+				updaterIndex = uNames.indexOf( name );
+				
+				if ( updaterIndex !== -1 ) {
+					
+					updater = uList[ name ];
+					
+					updater.clearMorph();
+					
+				}
+				
+			}
+			
+		};
         
         morphs.stop = function () {
             
@@ -531,7 +605,7 @@ var KAIOPUA = (function (main) {
         };
         
         updater.reset = function ( isLooping ) {
-            
+			
             info.timeStart = new Date().getTime();
             
             info.numFramesUpdated = 0;
@@ -541,19 +615,33 @@ var KAIOPUA = (function (main) {
                 info.time = info.timeLast = info.timeStart;
                 
                 info.frameTimeDelta = 0;
-                
-                if ( info.direction === -1 ) {
-                    info.frame = info.morphsMap.length - 1;
-                }
-                else {
-                    info.frame = 0;
-                }
-                
-                info.frameLast = -1;
-                
+				
+				if ( info.direction === -1 ) {
+					info.frame = info.morphsMap.length - 1;
+				}
+				else {
+					info.frame = 0;
+				}
+				
+				info.frameLast = info.frameLast || -1;
+				
             }
             
         };
+		
+		updater.clearMorph = function () {
+			var i, l,
+				influences = info.mesh.morphTargetInfluences,
+				morphsMap = info.morphsMap;
+			
+			// reset influences
+				
+			for ( i = 0, l = morphsMap.length; i < l; i += 1 ) {
+				
+				influences[ morphsMap[ i ].index ] = 0;
+				
+			}
+		}
         
         updater.reverseDirection = function () {
             
@@ -566,39 +654,39 @@ var KAIOPUA = (function (main) {
             info.interpolationDirection = -info.interpolationDirection;
             
         };
-        
-        updater.update = function () {
-            
+		
+        updater.update = function ( timeDelta ) {
+			
             var mesh = info.mesh,
-                loop,
+                loop = info.loop,
                 callback,
                 morphsMap = info.morphsMap,
                 numFrames = morphsMap.length,
                 time = info.time,
                 timeStart = info.timeStart,
                 timeLast = info.timeLast,
-                timeDelta = (time - timeLast),
+                //timeDelta = (time - timeLast),
                 timeFromStart = time - timeStart,
                 frameTimeDelta = info.frameTimeDelta,
-                direction = info.direction,
-                duration = info.duration,
-                durationFrame = duration / numFrames,
                 frame = info.frame,
                 frameLast = info.frameLast,
                 morphIndex = morphsMap[ frame ].index,
                 morphIndexLast,
+				direction = info.direction,
+                duration = info.duration,
+                durationFrame = duration / numFrames,
                 cyclePct = timeFromStart / duration,
                 interpolationDirection = info.interpolationDirection,
                 interpolationDelta = (timeDelta / durationFrame) * interpolationDirection;
-            
+			
             // update frameTimeDelta
             
             info.frameTimeDelta = frameTimeDelta += timeDelta;
-            
+			
             // if frame should swap
             
             if ( frameTimeDelta >= durationFrame ) {
-                
+				
                 // reset frame time delta
                 // account for large time delta
                 info.frameTimeDelta = Math.max( 0, frameTimeDelta - durationFrame );
@@ -675,13 +763,11 @@ var KAIOPUA = (function (main) {
             // update time
             
             info.timeLast = info.time;
-            info.time = new Date().getTime();
+			info.time += timeDelta;
             
             // reset, looping and callback
             
             if ( info.numFramesUpdated >= numFrames ) {
-                
-                loop = info.loop;
                 
                 if ( loop !== true ) {
                     

@@ -54,7 +54,6 @@ var KAIOPUA = (function (main) {
     water.init = init;
     water.waves = waves;
     water.get_environment = function () { return environment; };
-    water.bob = bob;
         
     /*===================================================
     
@@ -269,12 +268,6 @@ var KAIOPUA = (function (main) {
 		wavesGeometry.__dirtyVertices = true;
 		wavesGeometry.__dirtyNormals = true;
 	}
-    
-    // bobs object with waves
-    function bob ( object ) {
-        object.position.y = (Math.sin(waveTime) * bobAmp);
-        object.rotation.x = Math.sin(waveTime + bobTiltCycleMod) * bobTiltAmp;
-    }
     
     return main; 
     

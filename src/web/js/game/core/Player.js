@@ -14,6 +14,7 @@ var KAIOPUA = (function (main) {
 		physics,
 		world,
 		scene,
+		addOnShow = [],
 		camera,
 		cameraModes = {
 			follow: 'follow',
@@ -25,6 +26,9 @@ var KAIOPUA = (function (main) {
 		keybindings = {},
 		keybindingsDefault = {},
 		playerCharacter,
+		playerLight,
+		playerLightFollowSettings,
+		following = [],
 		projector,
 		utilRay1Selection,
 		utilVec31Selection,
@@ -140,12 +144,9 @@ var KAIOPUA = (function (main) {
 		// init camera follow settings
 		
 		cameraFollowSettings = {
-			baseRotation: new THREE.Quaternion().setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), Math.PI ),
-			quaternionLast: new THREE.Quaternion(),
-			offset: {
-				pos: new THREE.Vector3( 0, 100, 300 ),//1000 ),
-				rot: new THREE.Vector3( 25, 0, 0 )
-			},
+			rotationBase: new THREE.Quaternion().setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), Math.PI ),
+			rotationOffset: new THREE.Vector3( 25, 0, 0 ),
+			positionOffset: new THREE.Vector3( 0, 100, 300 ),
 			clamps: {
 				minRotX: -0.4,
 				maxRotX: 0.1,
@@ -164,11 +165,12 @@ var KAIOPUA = (function (main) {
 	
 	function set_camera_mode ( modeType ) {
 		
-		var cameraRot = new THREE.Quaternion();
+		var cameraRot = new THREE.Quaternion(),
+			followIndex = following.indexOf( cameraFollowSettings );
 		
 		// update camera
 		
-		camera = game.camera;
+		cameraFollowSettings.obj = camera = game.camera;
 		
 		cameraRot.setFromRotationMatrix( camera.matrix );
 		
@@ -179,6 +181,8 @@ var KAIOPUA = (function (main) {
 		
 		cameraMode = modeType;
 		
+		// free look
+		
 		if ( modeType === cameraModes.freelook ) {
 			
 			if ( ready === true ) {
@@ -187,11 +191,17 @@ var KAIOPUA = (function (main) {
 				
 			}
 			
+			if ( followIndex !== -1 ) {
+				
+				following.splice( followIndex, 1 );
+				
+			}
+			
 			if ( typeof cameraFreelookControls === 'undefined' ) {
 				
 				cameraFreelookControls = new THREE.FlyControls( camera );
-				cameraFreelookControls.rollSpeed = 0.5;
-				cameraFreelookControls.movementSpeed = 800;
+				cameraFreelookControls.rollSpeed = 0.001;
+				cameraFreelookControls.movementSpeed = 1;
 				
 			}
 			else {
@@ -203,7 +213,16 @@ var KAIOPUA = (function (main) {
 			}
 			
 		}
+		// follow camera
 		else {
+			
+			// add new following object if needed
+			
+			if ( followIndex === -1 ) {
+				
+				following.push( cameraFollowSettings );
+				
+			}
 			
 			if ( ready === true ) {
 				
@@ -215,18 +234,13 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function update_camera () {
+	function update_camera ( timeDelta ) {
 		
 		// update camera based on mode
 		
 		if ( cameraMode === cameraModes.freelook ) {
 			
-			camera_free_look();
-			
-		}
-		else {
-			
-			camera_follow_character();
+			cameraFreelookControls.update( timeDelta );
 			
 		}
 		
@@ -244,58 +258,6 @@ var KAIOPUA = (function (main) {
 			set_camera_mode( 'freelook' );
 			
 		}
-		
-	}
-	
-	function camera_free_look () {
-		
-		// update camera controls
-		cameraFreelookControls.update();
-		
-	}
-	
-	function camera_follow_character () {
-		
-		var cam = camera = game.camera,
-			baseRotation = cameraFollowSettings.baseRotation,
-			offset = cameraFollowSettings.offset,
-			srcOffsetPos = offset.pos,
-			srcOffsetRot = offset.rot,
-			clamps = cameraFollowSettings.clamps,
-			mesh = playerCharacter.model.mesh,
-			meshScale = mesh.scale,
-			meshScaleMax = Math.max( meshScale.x, meshScale.y, meshScale.z ), 
-			meshQ = mesh.quaternion,
-			camP = cam.position,
-			camQ = cam.quaternion,
-			camOffsetPos = utilVec31CameraFollow,
-			camOffsetRot = utilQ1CameraFollow,
-			camOffsetRotHalf = utilQ2CameraFollow;
-		
-		// set offset base position
-		
-		camOffsetPos.set( srcOffsetPos.x, srcOffsetPos.y, srcOffsetPos.z ).multiplyScalar( meshScaleMax );
-		
-		// set offset rotation
-		
-		camOffsetRot.setFromEuler( srcOffsetRot ).normalize();
-		camOffsetRotHalf.set( camOffsetRot.x * 0.5, camOffsetRot.y * 0.5, camOffsetRot.z * 0.5, camOffsetRot.w).normalize();
-		
-		// create new camera offset position
-		
-		baseRotation.multiplyVector3( camOffsetPos );
-		
-		camOffsetRot.multiplyVector3( camOffsetPos );
-		
-		meshQ.multiplyVector3( camOffsetPos );
-		
-		// set new camera position
-		
-		camP.copy( mesh.position ).addSelf( camOffsetPos );
-		
-		// set new camera rotation
-		
-		camQ.copy( meshQ ).multiplySelf( camOffsetRot ).multiplySelf( baseRotation );
 		
 	}
 	
@@ -538,6 +500,23 @@ var KAIOPUA = (function (main) {
 		
 		playerCharacter.model.mesh.position.set( 1, 3000, 1 );
 		
+		// init light to follow character
+		
+		playerLight = new THREE.PointLight( 0xfeb41c, 0.35, 400 );
+		
+		playerLightFollowSettings = {
+			obj: playerLight,
+			rotationBase: new THREE.Quaternion(),
+			rotationOffset: new THREE.Vector3( 0, 0, 0 ),
+			positionOffset: new THREE.Vector3( 0, 40, 0 )
+		};
+		
+		following.push( playerLightFollowSettings );
+		
+		// add on show
+		
+		addOnShow.push( playerCharacter, playerLight );
+		
 	}
 	
 	function character_move ( movementTypeName, stop ) {
@@ -605,8 +584,6 @@ var KAIOPUA = (function (main) {
 			targeting,
 			targets,
 			targetsToRemove,
-			worldParts,
-			worldPartsIndex,
 			materialIndex;
 		
 		// handle parameters
@@ -629,15 +606,9 @@ var KAIOPUA = (function (main) {
 			
 		selectedModel = find_selection( mouse );
 		
-		// check if selection is world
-		
-		worldParts = world.parts;
-			
-		worldPartsIndex = worldParts.indexOf( selectedModel );
-		
 		// if a selection was made
 		
-		if ( typeof selectedModel !== 'undefined' && worldPartsIndex === -1 ) {
+		if ( typeof selectedModel !== 'undefined' ) {
 			
 			// todo
 			// special selection cases
@@ -770,7 +741,8 @@ var KAIOPUA = (function (main) {
 		var ray = utilRay1Selection,
 			mousePosition = utilVec31Selection,
 			intersections,
-			intersectedMesh;
+			intersectedMesh,
+			intersectedModel;
 		
 		// handle mouse
 		
@@ -799,12 +771,13 @@ var KAIOPUA = (function (main) {
 			
 			intersectedMesh = intersections[ 0 ].object;
 			
-			return intersectedMesh.kaiopuaModel;
+			intersectedModel = intersectedMesh.kaiopuaModel;
 			
-		}
-		else {
+			if ( typeof intersectedModel !== 'undefined' && intersectedModel.targetable === true ) {
 			
-			return;
+				return intersectedModel;
+				
+			}
 			
 		}
 		
@@ -868,6 +841,71 @@ var KAIOPUA = (function (main) {
 	
 	/*===================================================
     
+    following
+    
+    =====================================================*/
+	
+	function update_following () {
+		
+		var i, l,
+			mesh = playerCharacter.model.mesh,
+			meshScale = mesh.scale,
+			meshScaleMax = Math.max( meshScale.x, meshScale.y, meshScale.z ), 
+			meshQ = mesh.quaternion,
+			fSettings,
+			obj,
+			rotationBase,
+			rotationOffset,
+			positionOffset,
+			clamps,
+			objP,
+			objQ,
+			objOffsetPos = utilVec31CameraFollow,
+			objOffsetRot = utilQ1CameraFollow,
+			objOffsetRotHalf = utilQ2CameraFollow;
+		
+		for ( i = 0, l = following.length; i < l; i += 1 ) {
+			
+			fSettings = following[ i ];
+			obj = fSettings.obj;
+			rotationBase = fSettings.rotationBase;
+			rotationOffset = fSettings.rotationOffset;
+			positionOffset = fSettings.positionOffset;
+			clamps = fSettings.clamps;
+			objP = obj.position;
+			objQ = obj.quaternion;
+			
+			// set offset base position
+			
+			objOffsetPos.set( positionOffset.x, positionOffset.y, positionOffset.z ).multiplyScalar( meshScaleMax );
+			
+			// set offset rotation
+			
+			objOffsetRot.setFromEuler( rotationOffset ).normalize();
+			objOffsetRotHalf.set( objOffsetRot.x * 0.5, objOffsetRot.y * 0.5, objOffsetRot.z * 0.5, objOffsetRot.w).normalize();
+			
+			// create new camera offset position
+			
+			rotationBase.multiplyVector3( objOffsetPos );
+			
+			objOffsetRot.multiplyVector3( objOffsetPos );
+			
+			meshQ.multiplyVector3( objOffsetPos );
+			
+			// set new camera position
+			
+			objP.copy( mesh.position ).addSelf( objOffsetPos );
+			
+			// set new camera rotation
+			
+			objQ.copy( meshQ ).multiplySelf( objOffsetRot ).multiplySelf( rotationBase );
+				
+		}
+		
+	}
+	
+	/*===================================================
+    
     custom functions
     
     =====================================================*/
@@ -919,13 +957,13 @@ var KAIOPUA = (function (main) {
 		
 		scene = game.scene;
 		
-		game.add_to_scene( [ playerCharacter ], scene );
+		game.add_to_scene( addOnShow, scene );
 		
 	}
 	
 	function hide () {
 		
-		game.remove_from_scene( [ playerCharacter ], scene );
+		game.remove_from_scene( addOnShow, scene );
 		
 	}
 	
@@ -935,9 +973,13 @@ var KAIOPUA = (function (main) {
 		
 		playerCharacter.update( timeDelta );
 		
-		// camera
+		// update camera
 		
-		update_camera();
+		update_camera( timeDelta );
+		
+		// items that follow character
+		
+		update_following();
 		
 		// selection material
 		

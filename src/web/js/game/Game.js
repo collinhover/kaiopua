@@ -59,6 +59,7 @@ var KAIOPUA = (function (main) {
         assetsLauncher = [
             "js/game/sections/LauncherSection.js",
             "js/game/sections/launcher/Water.js",
+			"js/game/env/Water.js",
             "js/game/sections/launcher/Sky.js",
             "assets/textures/cloud256.png",
             "assets/textures/light_ray.png",
@@ -372,8 +373,8 @@ var KAIOPUA = (function (main) {
 		
 		// camera
 		
-		cameraDefault = new THREE.PerspectiveCamera(60, shared.screenWidth / shared.screenHeight, 1, 10000);
-		cameraBGDefault = new THREE.PerspectiveCamera(60, shared.screenWidth / shared.screenHeight, 1, 10000);
+		cameraDefault = new THREE.PerspectiveCamera(60, shared.screenWidth / shared.screenHeight, 1, 20000);
+		cameraBGDefault = new THREE.PerspectiveCamera(60, shared.screenWidth / shared.screenHeight, 1, 20000);
 		
 		cameraDefault.useQuaternion = cameraBGDefault.useQuaternion = true;
 		
