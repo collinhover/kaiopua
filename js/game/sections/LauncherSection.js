@@ -16,10 +16,11 @@ var KAIOPUA = (function (main) {
 		addOnShow = [],
 		addBGOnShow = [],
 		ambientLight,
-		directional,
+		light,
 		fogColor = 0x529ad1,
         water,
         sky,
+        skybox,
         time,
         envRotationY = -90 * Math.PI / 180,
 		camRotationBaseQ,
@@ -96,10 +97,13 @@ var KAIOPUA = (function (main) {
 		
 		// lights
 		
-		ambientLight = new THREE.AmbientLight( 0xCCCCCC );
+		ambientLight = new THREE.AmbientLight( 0xeeeeee );
 		
-		directional = new THREE.DirectionalLight( 0xFFFFFF, 1.0 );
-		directional.position = new THREE.Vector3(-1, 1, -1).normalize();
+		//light = new THREE.DirectionalLight( 0xffffff, 1 );
+		//light.position = new THREE.Vector3(-1, 1, -1).normalize();
+		
+		light = new THREE.PointLight( 0xffffcc, 0.75, 40000 );
+		light.position.set( 0, 3000, 2000 );
 		
 		// skybox
 		
@@ -131,7 +135,7 @@ var KAIOPUA = (function (main) {
 		
 		// set items to add on show
 		
-		addOnShow.push( ambientLight, directional, waterEnv, skyEnv );
+		addOnShow.push( ambientLight, light, waterEnv, skyEnv );
 		
 		addBGOnShow.push( skybox );
 		
@@ -289,8 +293,6 @@ var KAIOPUA = (function (main) {
         sky.wind_blow( time );
         
         water.waves( time );
-        
-        //water.bob( camera );
         
     }
 	

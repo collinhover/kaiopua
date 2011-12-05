@@ -25,10 +25,12 @@ var KAIOPUA = (function (main) {
 		scene,
 		sceneBG,
 		sceneDefault,
+		sceneBGDefault,
 		fog,
-		cameraDefault,
 		camera,
 		cameraBG,
+		cameraDefault,
+		cameraBGDefault,
 		physics,
 		bg,
 		world,
@@ -44,6 +46,8 @@ var KAIOPUA = (function (main) {
         assetsBasic = [
             "js/lib/three/Three.js",
             "js/lib/three/ThreeExtras.js",
+			"js/lib/three/physics/Collisions.js",
+			"js/lib/three/physics/CollisionUtils.js",
             "js/lib/three/postprocessing/ShaderExtras.js",
             "js/lib/three/postprocessing/EffectComposer.js",
             "js/lib/three/postprocessing/RenderPass.js",
@@ -133,23 +137,52 @@ var KAIOPUA = (function (main) {
 			"js/lib/jiglibjs2/vehicles/JWheel.js",
 			"js/lib/jiglibjs2/vehicles/JCar.js",
 			end JigLib 2 library */
-			"js/game/workers/MenuMaker.js",
 			"js/game/workers/ObjectMaker.js",
+			"js/game/workers/MenuMaker.js",
 			"js/game/core/Physics.js",
 			"js/game/core/World.js",
 			"js/game/core/Player.js",
 			"js/game/core/Character.js",
+			"js/game/env/Water.js",
 			"js/game/characters/Hero.js",
             "js/game/sections/IntroSection.js",
             { path: "assets/models/World_Head.js", type: 'model' },
 			{ path: "assets/models/World_Tail.js", type: 'model' },
 			{ path: "assets/models/Hero.js", type: 'model' },
+			{ path: "assets/models/Hut.js", type: 'model' },
+			{ path: "assets/models/Hut_Hill.js", type: 'model' },
+			{ path: "assets/models/Hut_Steps.js", type: 'model' },
+			{ path: "assets/models/Bed.js", type: 'model' },
+			{ path: "assets/models/Banana_Leaf_Door.js", type: 'model' },
+			{ path: "assets/models/Surfboard.js", type: 'model' },
+			{ path: "assets/models/Palm_Tree.js", type: 'model' },
+			{ path: "assets/models/Kukui_Tree.js", type: 'model' },
+			{ path: "assets/models/Taro_Plant.js", type: 'model' },
 			"assets/textures/skybox_world_posx.jpg",
             "assets/textures/skybox_world_negx.jpg",
 			"assets/textures/skybox_world_posy.jpg",
             "assets/textures/skybox_world_negy.jpg",
 			"assets/textures/skybox_world_posz.jpg",
-            "assets/textures/skybox_world_negz.jpg"
+            "assets/textures/skybox_world_negz.jpg",
+            "assets/textures/waves_512.png"
+        ],
+		loadingHeader = 'Hold on, we need some stuff from Hawaii...';
+		loadingTips = [
+            ///////////////////////////////////////////// = bad sentence size
+            "Aloha kaua means may there be friendship or love between us.",
+            "Mahalo nui loa means thanks very much.",
+            "Kali iki means wait a moment.",
+            "Ko'u hoaloha means my friend.",
+            "Kane means male or man.",
+            "Wahine means female or woman.",
+            "Ali'i kane means king or chieftan.",
+            "Ali'i wahine means queen or chiefess.",
+            "He mea ho'opa'ani means to play a game.",
+            "Kai means sea or ocean.",
+            "'opua means puffy clouds.",
+			"Kai 'opua means clouds over the ocean.",
+            "Iki means small or little.",
+            "Nui means large or huge."
         ];
     
     /*===================================================
@@ -205,6 +238,11 @@ var KAIOPUA = (function (main) {
     =====================================================*/
     
     function init() {
+		
+		// set loading messages
+		
+		loader.loadingHeader = loadingHeader;
+		loader.loadingTips = loadingTips;
         
         // start loading
 		
@@ -297,10 +335,24 @@ var KAIOPUA = (function (main) {
         shared.signals.update = new signals.Signal();
 		
 		// renderer
-        renderer = new THREE.WebGLRenderer( { antialias: false, clearColor: 0x000000, clearAlpha: 0 } );
+        renderer = new THREE.WebGLRenderer( { antialias: false, clearColor: 0x000000, clearAlpha: 0/*, maxLights: 10 */} );
         renderer.setSize( shared.screenWidth, shared.screenHeight );
         renderer.autoClear = false;
-        
+		
+		// shadows
+		/*
+		renderer.shadowCameraNear = 3;
+		renderer.shadowCameraFar = 20000;
+		renderer.shadowCameraFov = 90;
+		
+		renderer.shadowMapBias = 0.0039;
+		renderer.shadowMapDarkness = 0.5;
+		renderer.shadowMapWidth = 2048;
+		renderer.shadowMapHeight = 2048;
+		
+		renderer.shadowMapEnabled = true;
+		renderer.shadowMapSoft = true;
+		*/
         // render target
         renderTarget = new THREE.WebGLRenderTarget( shared.screenWidth, shared.screenHeight, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter } );
         
@@ -310,27 +362,28 @@ var KAIOPUA = (function (main) {
 		
 		// scenes
 		
-		scene = sceneDefault = new THREE.Scene();
-		sceneBG = new THREE.Scene();
+		sceneDefault = new THREE.Scene();
+		sceneBGDefault = new THREE.Scene();
+        
         
         // fog
 		
 		fog = new THREE.Fog( 0xffffff, -100, 10000 );
-        
-        scene.fog = fog;
+		
+        sceneDefault.fog = fog;
 		
 		// camera
 		
-		camera = cameraDefault = new THREE.PerspectiveCamera(60, shared.screenWidth / shared.screenHeight, 1, 10000);
-		cameraBG = new THREE.PerspectiveCamera(60, shared.screenWidth / shared.screenHeight, 1, 10000);
+		cameraDefault = new THREE.PerspectiveCamera(60, shared.screenWidth / shared.screenHeight, 1, 20000);
+		cameraBGDefault = new THREE.PerspectiveCamera(60, shared.screenWidth / shared.screenHeight, 1, 20000);
 		
-		camera.useQuaternion = cameraBG.useQuaternion = true;
+		cameraDefault.useQuaternion = cameraBGDefault.useQuaternion = true;
 		
 		// passes
         
         renderPasses = {
-			bg: new THREE.RenderPass( sceneBG, cameraBG ),
-            env: new THREE.RenderPass( scene, camera ),
+			bg: new THREE.RenderPass( sceneBGDefault, cameraBGDefault ),
+            env: new THREE.RenderPass( sceneDefault, cameraDefault ),
             screen: new THREE.ShaderPass( shaderScreen ),
             focusVignette: new THREE.ShaderPass ( shaderFocusVignette )
         };
@@ -347,7 +400,11 @@ var KAIOPUA = (function (main) {
         renderPasses.focusVignette.uniforms[ "vingenettingDarkening" ].value = 0.5;
         renderPasses.focusVignette.uniforms[ "sampleDistance" ].value = 0.2;
         renderPasses.focusVignette.uniforms[ "waveFactor" ].value = 0.3;
-        
+		
+		// set default scene and camera
+		
+		set_default_cameras_scenes();
+		
         // composer
         
         set_render_processing();
@@ -674,48 +731,76 @@ var KAIOPUA = (function (main) {
 	
 	function set_scene ( sceneNew ) {
 		
+		var scenePrev = scene;
+		
 		renderPasses.env.scene = scene = sceneNew || sceneDefault;
+		
+		if( scene !== scenePrev && typeof camera !== 'undefined') {
+			
+			if ( typeof scenePrev !== 'undefined' ) {
+				scenePrev.remove( camera );
+			}
+			
+			scene.add( camera );
+			
+		}
 		
 	}
 	
 	function set_scene_bg ( sceneNew ) {
 		
-		renderPasses.bg.scene = sceneBG = sceneNew;
+		var sceneBGPrev = sceneBG;
+		
+		renderPasses.bg.scene = sceneBG = sceneNew || sceneBGDefault;
+		
+		if( sceneBG !== sceneBGPrev && typeof cameraBG !== 'undefined') {
+			
+			if ( typeof sceneBGPrev !== 'undefined' ) {
+				sceneBGPrev.remove( cameraBG );
+			}
+			
+			sceneBG.add( cameraBG );
+			
+		}
 		
 	}
 	
-	function add_to_scene ( models, sceneTarget ) {
+	function add_to_scene ( objects, sceneTarget ) {
 		
-		var i, l, model;
+		var i, l, object;
+		
+		if ( objects.hasOwnProperty('length') === false ) {
+			objects = [ objects ];
+		}
 		
 		sceneTarget = sceneTarget || scene;
 		
-		for ( i = 0, l = models.length; i < l; i += 1 ) {
-		
-			model = models[ i ];
+		for ( i = 0, l = objects.length; i < l; i += 1 ) {
+			
+			object = objects[ i ];
 			
 			// if is character
 			
-			if ( typeof model.model !== 'undefined' ) {
+			if ( typeof object.model !== 'undefined' ) {
 				
-				model = model.model;
+				object = object.model;
 				
 			}
 			
-			if ( typeof model.mesh !== 'undefined' ) {
+			if ( typeof object.mesh !== 'undefined' ) {
 			
-				sceneTarget.add( model.mesh );
-			
-				if ( typeof model.rigidBody !== 'undefined' ) {
+				sceneTarget.add( object.mesh );
+				
+				if ( typeof object.rigidBody !== 'undefined' ) {
 					
-					physics.add( model.mesh, { rigidBody: model.rigidBody } );
+					physics.add( object.mesh, { rigidBody: object.rigidBody } );
 					
 				}
 				
 			}
 			else {
 				
-				sceneTarget.add( model );
+				sceneTarget.add( object );
 				
 			}
 			
@@ -723,38 +808,42 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function remove_from_scene ( models, sceneTarget ) {
+	function remove_from_scene ( objects, sceneTarget ) {
 		
-		var i, l, model;
+		var i, l, object;
+		
+		if ( objects.hasOwnProperty('length') === false ) {
+			objects = [ objects ];
+		}
 		
 		sceneTarget = sceneTarget || scene;
 		
-		for ( i = 0, l = models.length; i < l; i += 1 ) {
+		for ( i = 0, l = objects.length; i < l; i += 1 ) {
 		
-			model = models[ i ];
+			object = objects[ i ];
 			
 			// if is character
 			
-			if ( typeof model.model !== 'undefined' ) {
+			if ( typeof object.model !== 'undefined' ) {
 				
-				model = model.model;
+				object = object.model;
 				
 			}
 			
-			if ( typeof model.mesh !== 'undefined' ) {
+			if ( typeof object.mesh !== 'undefined' ) {
 			
-				sceneTarget.remove( model.mesh );
+				sceneTarget.remove( object.mesh );
 			
-				if ( typeof model.rigidBody !== 'undefined' ) {
+				if ( typeof object.rigidBody !== 'undefined' ) {
 					
-					physics.remove( model.mesh );
+					physics.remove( object.mesh );
 					
 				}
 				
 			}
 			else {
 				
-				sceneTarget.remove( model );
+				sceneTarget.remove( object );
 				
 			}
 			
@@ -770,13 +859,41 @@ var KAIOPUA = (function (main) {
 	
 	function set_camera ( cameraNew ) {
 		
+		var cameraPrev = camera;
+		
+		if ( typeof cameraPrev !== 'undefined' && typeof scene !== 'undefined' ) {
+			
+			scene.remove( cameraPrev );
+			
+		}
+		
 		renderPasses.env.camera = camera = cameraNew || cameraDefault;
+		
+		if ( typeof scene !== 'undefined' ) {
+			
+			scene.add( camera );
+			
+		}
 		
 	}
 	
 	function set_camera_bg ( cameraNew ) {
 		
-		renderPasses.bg.camera = cameraBG = cameraNew;
+		var cameraBGPrev = cameraBG;
+		
+		if ( typeof cameraBGPrev !== 'undefined' && typeof sceneBG !== 'undefined' ) {
+			
+			sceneBG.remove( cameraBGPrev );
+			
+		}
+		
+		renderPasses.bg.camera = cameraBG = cameraNew || cameraBGDefault;
+		
+		if ( typeof sceneBG !== 'undefined' ) {
+			
+			sceneBG.add( cameraBG );
+			
+		}
 		
 	}
 	
@@ -814,6 +931,16 @@ var KAIOPUA = (function (main) {
     section functions
     
     =====================================================*/
+	
+	function set_default_cameras_scenes () {
+		
+		set_scene();
+		set_scene_bg();
+		
+		set_camera();
+		set_camera_bg();
+		
+	}
     
     function update_section_list () {
         var i, l,
@@ -861,9 +988,7 @@ var KAIOPUA = (function (main) {
 		
 		// default scene and camera
 		
-		set_scene();
-		
-		set_camera();
+		set_default_cameras_scenes();	
         
         // start and show new section
         if (typeof section !== 'undefined') {

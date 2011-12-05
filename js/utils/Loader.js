@@ -13,24 +13,9 @@ var KAIOPUA = (function ( main ) {
         threeLoaderBIN,
         threeLoaderErrorMessage = 'Attempted to load model before THREE',
         listIDBase = 'loadList',
-        loadingHeaderBase = 'Loading &hearts; from Hawaii',
-        loadingMessageBase = '"Kali iki" means wait a moment.',
+        loadingHeaderBase = 'Loading...',
         loadingTips = [
-            ///////////////////////////////////////////// = bad sentence size
-            '"Aloha kāua" means may there be friendship or love between us.',
-            '"Mahalo nui loa" means thanks very much.',
-            '"Kali iki" means wait a moment.',
-            '"Koʻu hoaloha" means my friend.',
-            '"Kāne" means male or man.',
-            '"Wahine" means female or woman.',
-            '"Aliʻi kāne" means king or chieftan.',
-            '"Aliʻi wahine" means queen or chiefess.',
-            '"He mea hoʻopāʻani" means to play a game.',
-            '"Kai" means sea or ocean.',
-            '"ʻōpua" means puffy clouds.',
-            '"Kaiʻōpua" means clouds over the ocean.',
-            '"Iki" means small or little.',
-            '"Nui" means large or huge.'
+            'Please wait.'
         ],
         listNumber = 0,
         loading = false,
@@ -54,9 +39,28 @@ var KAIOPUA = (function ( main ) {
     
     /*===================================================
     
-    external init
+    public properties
     
     =====================================================*/
+	
+	loader.init_ui = init_ui;
+    loader.clear_ui_progress = clear_ui_progress;
+    loader.load = load_list;
+    loader.assets = assets;
+	
+	Object.defineProperty(loader, 'loadingHeader', { 
+		get : function () { return loadingHeaderBase; },
+		set: function ( newHeader ) {
+			loadingHeaderBase = newHeader;
+		}
+	});
+	
+	Object.defineProperty(loader, 'loadingTips', { 
+		get : function () { return loadingTips; },
+		set: function ( newTips ) {
+			loadingTips = newTips.slice( 1 );
+		}
+	});
     
     /*===================================================
     
@@ -122,7 +126,7 @@ var KAIOPUA = (function ( main ) {
             elementType: 'p',
             staticPosition: true,
             width: barWidth,
-            text: loadingMessageBase
+            text: loadingTips[0]
         });
         
         // display
@@ -244,7 +248,7 @@ var KAIOPUA = (function ( main ) {
             
             // set loading message
             
-            $(message).html(loadingMessages[listCurrent]);
+            $(message.domElement).html( loadingMessages[listCurrent] );
             
             // get locations
             
@@ -324,10 +328,7 @@ var KAIOPUA = (function ( main ) {
                         threeLoaderJSON = new THREE.JSONLoader( true );
                     }
                     
-                    threeLoaderJSON.load( {
-                        model: path,
-                        callback: modelCallback
-                    } );
+                    threeLoaderJSON.load( path, modelCallback );
                 }
             }
             else if ( loadType === 'model_bin' ) {
@@ -343,10 +344,7 @@ var KAIOPUA = (function ( main ) {
                         threeLoaderBIN = new THREE.BinaryLoader( true );
                     }
                     
-                    threeLoaderBIN.load( {
-                        model: path,
-                        callback: modelCallback
-                    } );
+                    threeLoaderBIN.load( path, modelCallback );
                     
                 }
             }
@@ -457,17 +455,6 @@ var KAIOPUA = (function ( main ) {
         
         return ext;
     }
-    
-    /*===================================================
-    
-    public properties
-    
-    =====================================================*/
-    
-    loader.init_ui = init_ui;
-    loader.clear_ui_progress = clear_ui_progress;
-    loader.load = load_list;
-    loader.assets = assets;
     
     return main; 
     

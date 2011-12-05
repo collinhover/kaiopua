@@ -21,6 +21,7 @@ var KAIOPUA = (function (main) {
 		sceneBG,
 		addOnShow = [],
 		addBGOnShow = [],
+		ambient,
 		light;
     
     /*===================================================
@@ -101,21 +102,6 @@ var KAIOPUA = (function (main) {
     
     function init_environment () {
 		
-		// skybox
-		
-		skybox = objectmaker.make_skybox( "assets/textures/skybox_world" );
-		
-		// light
-		
-		light = new THREE.SpotLight( 0xffffff );
-        light.position = new THREE.Vector3(-1, 0, 1).normalize();
-		
-		// add on show items
-		
-		addOnShow.push( light );
-		
-		addBGOnShow.push( skybox );
-		
 		//
 		//
 		//
@@ -138,7 +124,7 @@ var KAIOPUA = (function (main) {
 			
 			var box = objectmaker.make_model({
 				geometry: geom,
-				materials: [normalMat, normalMatWire]
+				materials: normalMat
 			});
 			
 			box.mesh.position.set( x, y, z );
@@ -190,11 +176,14 @@ var KAIOPUA = (function (main) {
 			
 		}
 		
+		/*
+		// movable boxes
 		addOnShow.push( make_box( 1, 2000, 100, true ) );
 		addOnShow.push( make_box( 1, 2000, -100, true ) );
 		addOnShow.push( make_box( 100, 2000, 1, true ) );
 		addOnShow.push( make_box( -100, 2000, 1, true ) );
 		addOnShow.push( make_box( -100, 2400, 1, true ) );
+		*/
     }
     
     /*===================================================
@@ -237,8 +226,6 @@ var KAIOPUA = (function (main) {
 		
 		//player.cameraMode = 'freelook';
 		
-		//setTimeout( game.pause, 1000 );
-		
 		// signals
         
         shared.signals.windowresized.add( resize );
@@ -277,6 +264,7 @@ var KAIOPUA = (function (main) {
     
     function update () {
 		
+		/*
 		// position point light to always be 
         // above and infront of camera
 		
@@ -288,7 +276,7 @@ var KAIOPUA = (function (main) {
         newP.addSelf( camera.position );
         
 		light.position = newP;
-        
+        */
     }
     
     function resize ( W, H ) {

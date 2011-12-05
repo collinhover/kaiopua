@@ -133,3 +133,5 @@ THREE.EffectComposer.scene.add( THREE.EffectComposer.quad );
 // shared ortho camera
 
 THREE.EffectComposer.camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, -10000, 10000 );
+
+THREE.EffectComposer.scene.add( THREE.EffectComposer.camera );

@@ -9,6 +9,8 @@ var KAIOPUA = (function (main) {
         game = main.game = main.game || {},
         workers = game.workers = game.workers || {},
         objectmaker = workers.objectmaker = workers.objectmaker || {},
+		core = game.core = game.core || {},
+		physics = core.physics = core.physics || {},
         durationBase = 1000,
 		objectCount = 0;
     
@@ -19,7 +21,6 @@ var KAIOPUA = (function (main) {
     =====================================================*/
     
     objectmaker.make_model = make_model;
-    objectmaker.find_objs_with_materials = find_objs_with_materials;
     objectmaker.make_skybox = make_skybox;
     
     /*===================================================
@@ -71,8 +72,6 @@ var KAIOPUA = (function (main) {
 			
 		}
 		
-		//geometry.computeVertexNormals();
-		
         // materials
         
         materials = parameters.materials || [];
@@ -88,42 +87,49 @@ var KAIOPUA = (function (main) {
         if ( geometry.materials && geometry.materials.length > 0 ) {
             
             // add to all
-            
+			
             for ( i = 0, l = geometry.materials.length; i < l; i += 1) {
 				
-				material = geometry.materials[i][0];
+				material = geometry.materials[ i ];
 				
                 materialsToModify.push( material );
             }
             
         }
-		
+        
 		// if no materials yet, add default
         if ( materials.length === 0 ) {
             
             materials = [ new THREE.MeshFaceMaterial() ];
             
-            materialsToModify = materialsToModify.push( material );
+            materialsToModify = materialsToModify.concat( materials );
             
         }
 		
         // material properties
-        
+		
         for ( i = 0, l = materialsToModify.length; i < l; i += 1) {
             material = materialsToModify[i];
-            
+			
             // morph targets
-			material.morphTargets = geometry.morphTargets && geometry.morphTargets.length > 0 ? true : false;
+			if ( material.hasOwnProperty('morphTargets' ) ) {
+				
+				material.morphTargets = geometry.morphTargets && geometry.morphTargets.length > 0 ? true : false;
+				
+			}
 			
             // shading
             // (1 = flat, 2 = smooth )
-			material.shading = parameters.shading || THREE.SmoothShading;
+			if ( parameters.hasOwnProperty('shading' ) ) {
+				
+				material.shading = parameters.shading;
 			
+			}
         }
 		
         // mesh
         
-        mesh = new THREE.Mesh( geometry, materials );
+        mesh = new THREE.Mesh( geometry, /* currently no multimaterials */ materials[0] );
 		
 		// force use quaternion
 		
@@ -148,6 +154,22 @@ var KAIOPUA = (function (main) {
 		if ( parameters.hasOwnProperty('flipSided') === true ) {
 			
 			mesh.flipSided = parameters.flipSided;
+			
+		}
+		
+		// double sided
+		
+		if ( parameters.hasOwnProperty('doubleSided') === true ) {
+			
+			mesh.doubleSided = parameters.doubleSided;
+			
+		}
+		
+		// dynamic
+		
+		if ( parameters.hasOwnProperty('dynamic') === true ) {
+			
+			mesh.dynamic = parameters.dynamic;
 			
 		}
 		
@@ -203,9 +225,49 @@ var KAIOPUA = (function (main) {
 		objectCount += 1;
         
         // public properties
+		
         model.mesh = mesh;
         model.morphs = morphs;
-        
+		
+		// targetable, default to true
+		
+		if ( parameters.hasOwnProperty( 'targetable' ) ) {
+			
+			model.targetable = parameters.targetable;
+			
+		}
+		else {
+			
+			model.targetable = true;
+			
+		}
+		
+		// interactive, default to true
+		
+		if ( parameters.hasOwnProperty( 'interactive' ) ) {
+			
+			model.interactive = parameters.interactive;
+			
+		}
+		else {
+			
+			model.interactive = true;
+			
+		}
+		
+		// physics
+		
+		if ( parameters.hasOwnProperty( 'rigidBody' ) ) {
+			
+			model.rigidBody = parameters.rigidBody;
+			
+		}
+		else if ( parameters.hasOwnProperty( 'rigidBodyInfo' ) ) {
+				
+			model.rigidBody = physics.translate( model.mesh, parameters.rigidBodyInfo );
+			
+		}
+		
         return model;
     }
     
@@ -245,47 +307,94 @@ var KAIOPUA = (function (main) {
                 uList = updates.list,
                 updaterIndex,
                 updater,
-                info,
                 morphsMap;
-            
-            // get if updater for animation exists
-            
-            updaterIndex = uNames.indexOf( name );
+				
+			// if morph name exists
 			
-            // new updater
-            
-            if ( updaterIndex === -1 && typeof shapesList[ name ] !== 'undefined' && shapesList[ name ].map.length !== 0 ) {
-			
+			if ( typeof shapesList[ name ] !== 'undefined' && shapesList[ name ].map.length !== 0 ) {
+				
+				// get morphs map
+				
 				morphsMap = shapesList[ name ].map;
 				
-                updater = make_morph_updater( name );
-                
-                info = updater.info;
-                
-                // add to lists
-                
-                uNames.push( name );
-                
-                uList[ name ] = updater;
-                
-                // start updating
-                
-                updater.start( mesh, morphsMap, parameters );
-            
+				// get if updater for animation exists
+				
+				updaterIndex = uNames.indexOf( name );
+				
+				// new updater
+				
+				if ( updaterIndex === -1 ) {
+					
+					updater = make_morph_updater( name );
+					
+					// add to lists
+					
+					uNames.push( name );
+					
+					uList[ name ] = updater;
+					
+				}
+				// get existing
+				else {
+					
+					updater = uList[ name ];
+					
+				}
+				
+				// start updating
+				
+				updater.start( mesh, morphsMap, parameters );
+				
             }
-            
+			
         };
+		
+		morphs.clear = function ( name ) {
+			
+			var shapesList = shapes.list,
+                updates = shapes.updates,
+                uNames = updates.names,
+                uList = updates.list,
+                updaterIndex,
+                updater;
+				
+			// if morph name exists
+			
+			if ( typeof shapesList[ name ] !== 'undefined' && shapesList[ name ].map.length !== 0 ) {
+				
+				// get if updater for animation exists
+				
+				updaterIndex = uNames.indexOf( name );
+				
+				if ( updaterIndex !== -1 ) {
+					
+					updater = uList[ name ];
+					
+					updater.clearMorph();
+					
+				}
+				
+			}
+			
+		};
         
-        morphs.stop = function () {
+        morphs.stop = function ( name ) {
             
             var i, l,
                 updates = shapes.updates,
                 uNames = updates.names,
+                uName,
                 uList = updates.list;
             
             for ( i = 0, l = uNames.length; i < l; i += 1 ) {
                 
-                uList[ uNames[i] ].stop();
+                uName = uNames[ i ];
+                
+                if ( typeof name === 'undefined' || uName === name ) {
+                	
+                	uList[ uNames[i] ].stop();
+                	
+                }
                 
             }
             
@@ -502,7 +611,7 @@ var KAIOPUA = (function (main) {
         };
         
         updater.reset = function ( isLooping ) {
-            
+			
             info.timeStart = new Date().getTime();
             
             info.numFramesUpdated = 0;
@@ -512,19 +621,33 @@ var KAIOPUA = (function (main) {
                 info.time = info.timeLast = info.timeStart;
                 
                 info.frameTimeDelta = 0;
-                
-                if ( info.direction === -1 ) {
-                    info.frame = info.morphsMap.length - 1;
-                }
-                else {
-                    info.frame = 0;
-                }
-                
-                info.frameLast = -1;
-                
+				
+				if ( info.direction === -1 ) {
+					info.frame = info.morphsMap.length - 1;
+				}
+				else {
+					info.frame = 0;
+				}
+				
+				info.frameLast = info.frameLast || -1;
+				
             }
             
         };
+		
+		updater.clearMorph = function () {
+			var i, l,
+				influences = info.mesh.morphTargetInfluences,
+				morphsMap = info.morphsMap;
+			
+			// reset influences
+				
+			for ( i = 0, l = morphsMap.length; i < l; i += 1 ) {
+				
+				influences[ morphsMap[ i ].index ] = 0;
+				
+			}
+		}
         
         updater.reverseDirection = function () {
             
@@ -537,39 +660,39 @@ var KAIOPUA = (function (main) {
             info.interpolationDirection = -info.interpolationDirection;
             
         };
-        
-        updater.update = function () {
-            
+		
+        updater.update = function ( timeDelta ) {
+			
             var mesh = info.mesh,
-                loop,
+                loop = info.loop,
                 callback,
                 morphsMap = info.morphsMap,
                 numFrames = morphsMap.length,
                 time = info.time,
                 timeStart = info.timeStart,
                 timeLast = info.timeLast,
-                timeDelta = (time - timeLast),
+                //timeDelta = (time - timeLast),
                 timeFromStart = time - timeStart,
                 frameTimeDelta = info.frameTimeDelta,
-                direction = info.direction,
-                duration = info.duration,
-                durationFrame = duration / numFrames,
                 frame = info.frame,
                 frameLast = info.frameLast,
                 morphIndex = morphsMap[ frame ].index,
                 morphIndexLast,
+				direction = info.direction,
+                duration = info.duration,
+                durationFrame = duration / numFrames,
                 cyclePct = timeFromStart / duration,
                 interpolationDirection = info.interpolationDirection,
                 interpolationDelta = (timeDelta / durationFrame) * interpolationDirection;
-            
+			
             // update frameTimeDelta
             
             info.frameTimeDelta = frameTimeDelta += timeDelta;
-            
+			
             // if frame should swap
             
             if ( frameTimeDelta >= durationFrame ) {
-                
+				
                 // reset frame time delta
                 // account for large time delta
                 info.frameTimeDelta = Math.max( 0, frameTimeDelta - durationFrame );
@@ -644,15 +767,13 @@ var KAIOPUA = (function (main) {
             }
             
             // update time
-            
+			
             info.timeLast = info.time;
-            info.time = new Date().getTime();
+			info.time += timeDelta;
             
             // reset, looping and callback
             
             if ( info.numFramesUpdated >= numFrames ) {
-                
-                loop = info.loop;
                 
                 if ( loop !== true ) {
                     
@@ -695,26 +816,6 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
     
-    // finds all objects with own materials
-    // will iterate through all children recursively
-    
-    function find_objs_with_materials ( objsList ) {
-        var obj, objsWithMats = [], i;
-        
-        for (i = objsList.length - 1; i >= 0; i -= 1) {
-            obj = objsList[i];
-            
-            if (typeof obj.materials !== 'undefined' && obj.materials.length > 0) {
-                objsWithMats[objsWithMats.length] = obj;
-            }
-            else if (obj.children.length > 0)  {
-                objsWithMats = objsWithMats.concat(find_objs_with_materials(obj.children));
-            }
-        }
-        
-        return objsWithMats;
-    }
-    
     // generates a skybox from array of images
     
     function make_skybox ( imagesAssetPath, mapping ) {
@@ -741,7 +842,7 @@ var KAIOPUA = (function (main) {
 		
 		// shader
 		
-		shader = THREE.ShaderUtils.lib[ "cube" ];
+		shader = $.extend(true, {}, THREE.ShaderUtils.lib[ "cube" ]);
 		shader.uniforms[ "tCube" ].texture = textureCube;
 		
 		// material

@@ -56,6 +56,17 @@ var KAIOPUA = (function (main) {
 			
 			parameters.modelInfo = parameters.modelInfo || c.type.modelInfo || {};
 			
+			// physics
+			
+			parameters.modelInfo.rigidBodyInfo = parameters.modelInfo.rigidBodyInfo || c.type.rigidBodyInfo;
+			
+			if ( typeof parameters.modelInfo.rigidBodyInfo !== 'undefined' ) {
+				
+				parameters.modelInfo.rigidBodyInfo.movable = true;
+				parameters.modelInfo.rigidBodyInfo.movementDamping = parameters.modelInfo.rigidBodyInfo.movementDamping || 0.5;
+				
+			}
+			
 			c.model = objectmaker.make_model( parameters.modelInfo ) ;
 			
 		}
@@ -102,28 +113,6 @@ var KAIOPUA = (function (main) {
 				grounded: false
 			}
 		};
-		
-		// physics
-		
-		if ( parameters.hasOwnProperty( 'rigidBody' ) ) {
-			
-			c.model.rigidBody = parameters.rigidBody;
-			
-		}
-		else {
-			
-			parameters.rigidBodyInfo = parameters.rigidBodyInfo || c.type.rigidBodyInfo;
-			
-			if ( typeof parameters.rigidBodyInfo !== 'undefined' ) {
-				
-				parameters.rigidBodyInfo.movable = true;
-				parameters.rigidBodyInfo.movementDamping = parameters.rigidBodyInfo.movementDamping || 0.5;
-				
-				c.model.rigidBody = physics.translate( c.model.mesh, parameters.rigidBodyInfo );
-				
-			}
-			
-		}
 		
 		// properties
 		

@@ -138,6 +138,263 @@ var KAIOPUA = (function (main) {
 			utilVec31RayBox = new THREE.Vector3(),
 			utilVec32RayBox = new THREE.Vector3();
 		
+		// temporary
+		
+		var v0 = new THREE.Vector3(), v1 = new THREE.Vector3(), v2 = new THREE.Vector3();
+		var dot, intersect, distance;
+		
+		THREE.CollisionSystem.prototype.distanceFromIntersection = function ( origin, direction, position ) {
+	
+			v0.sub( position, origin );
+			dot = v0.dot( direction );
+	
+			if ( dot <= 0 ) return null; // check if position behind origin.
+	
+			intersect = v1.add( origin, v2.copy( direction ).multiplyScalar( dot ) );
+			distance = position.distanceTo( intersect );
+	
+			return distance;
+	
+		}
+		
+		THREE.Matrix4.prototype.extractRotation = function ( m ) {
+	
+			var vector = THREE.Matrix4.__v1;
+	
+			var scaleX = 1 / vector.set( m.n11, m.n21, m.n31 ).length();
+			var scaleY = 1 / vector.set( m.n12, m.n22, m.n32 ).length();
+			var scaleZ = 1 / vector.set( m.n13, m.n23, m.n33 ).length();
+	
+			this.n11 = m.n11 * scaleX;
+			this.n21 = m.n21 * scaleX;
+			this.n31 = m.n31 * scaleX;
+	
+			this.n12 = m.n12 * scaleY;
+			this.n22 = m.n22 * scaleY;
+			this.n32 = m.n32 * scaleY;
+	
+			this.n13 = m.n13 * scaleZ;
+			this.n23 = m.n23 * scaleZ;
+			this.n33 = m.n33 * scaleZ;
+	
+			return this;
+	
+		}
+		
+		// r46 ray
+
+		THREE.Ray = function ( origin, direction ) {
+		
+			this.origin = origin || new THREE.Vector3();
+			this.direction = direction || new THREE.Vector3();
+		
+			this.intersectScene = function ( scene ) {
+		
+				return this.intersectObjects( scene.children );
+		
+			};
+		
+			this.intersectObjects = function ( objects ) {
+		
+				var i, l, object,
+				intersects = [];
+		
+				for ( i = 0, l = objects.length; i < l; i ++ ) {
+		
+					Array.prototype.push.apply( intersects, this.intersectObject( objects[ i ] ) );
+		
+				}
+		
+				intersects.sort( function ( a, b ) { return a.distance - b.distance; } );
+		
+				return intersects;
+		
+			};
+		
+			var a = new THREE.Vector3();
+			var b = new THREE.Vector3();
+			var c = new THREE.Vector3();
+			var d = new THREE.Vector3();
+		
+			var origin = new THREE.Vector3();
+			var direction = new THREE.Vector3();
+			var vector = new THREE.Vector3();
+			var normal = new THREE.Vector3();
+			var intersectPoint = new THREE.Vector3()
+		
+			this.intersectObject = function ( object ) {
+		
+				var intersect, intersects = [];
+		
+				for ( var i = 0, l = object.children.length; i < l; i ++ ) {
+		
+					Array.prototype.push.apply( intersects, this.intersectObject( object.children[ i ] ) );
+		
+				}
+		
+				if ( object instanceof THREE.Particle ) {
+		
+					var distance = distanceFromIntersection( this.origin, this.direction, object.matrixWorld.getPosition() );
+		
+					if ( distance === null || distance > object.scale.x ) {
+		
+						return [];
+		
+					}
+		
+					intersect = {
+		
+						distance: distance,
+						point: object.position,
+						face: null,
+						object: object
+		
+					};
+		
+					intersects.push( intersect );
+		
+				} else if ( object instanceof THREE.Mesh ) {
+		
+					// Checking boundingSphere
+		
+					var distance = distanceFromIntersection( this.origin, this.direction, object.matrixWorld.getPosition() );
+		
+					if ( distance === null || distance > object.geometry.boundingSphere.radius * Math.max( object.scale.x, Math.max( object.scale.y, object.scale.z ) ) ) {
+		
+						return intersects;
+		
+					}
+		
+					// Checking faces
+		
+					var f, fl, face, dot, scalar,
+					geometry = object.geometry,
+					vertices = geometry.vertices,
+					objMatrix;
+		
+					object.matrixRotationWorld.extractRotation( object.matrixWorld );
+		
+					for ( f = 0, fl = geometry.faces.length; f < fl; f ++ ) {
+		
+						face = geometry.faces[ f ];
+		
+						origin.copy( this.origin );
+						direction.copy( this.direction );
+		
+						objMatrix = object.matrixWorld;
+		
+						// check if face.centroid is behind the origin
+		
+						vector = objMatrix.multiplyVector3( vector.copy( face.centroid ) ).subSelf( origin );
+						dot = vector.dot( direction );
+		
+						if ( dot <= 0 ) continue;
+		
+						//
+		
+						a = objMatrix.multiplyVector3( a.copy( vertices[ face.a ].position ) );
+						b = objMatrix.multiplyVector3( b.copy( vertices[ face.b ].position ) );
+						c = objMatrix.multiplyVector3( c.copy( vertices[ face.c ].position ) );
+						
+						normal = object.matrixRotationWorld.multiplyVector3( normal.copy( face.normal ) );
+						dot = direction.dot( normal );
+		
+						if ( object.doubleSided || ( object.flipSided ? dot > 0 : dot < 0 ) ) { // Math.abs( dot ) > 0.0001
+		
+							scalar = normal.dot( vector.sub( a, origin ) ) / dot;
+							intersectPoint.add( origin, direction.multiplyScalar( scalar ) );
+		
+							if ( face instanceof THREE.Face3 ) {
+		
+								if ( pointInFace3( intersectPoint, a, b, c ) ) {
+		
+									intersect = {
+		
+										distance: origin.distanceTo( intersectPoint ),
+										point: intersectPoint.clone(),
+										face: face,
+										object: object
+		
+									};
+		
+									intersects.push( intersect );
+		
+								}
+		
+							} else if ( face instanceof THREE.Face4 ) {
+								
+								d = objMatrix.multiplyVector3( d.copy( vertices[ face.d ].position ) );
+								
+								if ( pointInFace3( intersectPoint, a, b, d ) || pointInFace3( intersectPoint, b, c, d ) ) {
+		
+									intersect = {
+		
+										distance: origin.distanceTo( intersectPoint ),
+										point: intersectPoint.clone(),
+										face: face,
+										object: object
+		
+									};
+		
+									intersects.push( intersect );
+		
+								}
+		
+							}
+		
+						}
+		
+					}
+		
+				}
+		
+				return intersects;
+		
+			}
+		
+			var v0 = new THREE.Vector3(), v1 = new THREE.Vector3(), v2 = new THREE.Vector3();
+			var dot, intersect, distance;
+		
+			function distanceFromIntersection( origin, direction, position ) {
+		
+				v0.sub( position, origin );
+				dot = v0.dot( direction );
+		
+				if ( dot <= 0 ) return null; // check if position behind origin.
+		
+				intersect = v1.add( origin, v2.copy( direction ).multiplyScalar( dot ) );
+				distance = position.distanceTo( intersect );
+		
+				return distance;
+		
+			}
+		
+			// http://www.blackpawn.com/texts/pointinpoly/default.html
+		
+			var dot00, dot01, dot02, dot11, dot12, invDenom, u, v;
+		
+			function pointInFace3( p, a, b, c ) {
+		
+				v0.sub( c, a );
+				v1.sub( b, a );
+				v2.sub( p, a );
+		
+				dot00 = v0.dot( v0 );
+				dot01 = v0.dot( v1 );
+				dot02 = v0.dot( v2 );
+				dot11 = v1.dot( v1 );
+				dot12 = v1.dot( v2 );
+		
+				invDenom = 1 / ( dot00 * dot11 - dot01 * dot01 );
+				u = ( dot11 * dot02 - dot01 * dot12 ) * invDenom;
+				v = ( dot00 * dot12 - dot01 * dot02 ) * invDenom;
+		
+				return ( u >= 0 ) && ( v >= 0 ) && ( u + v < 1 );
+		
+			}
+		
+		};
+		
 		// localize ray to collider
 		
 		THREE.CollisionSystem.prototype.makeRayLocal = function( ray, m ) {
@@ -165,8 +422,7 @@ var KAIOPUA = (function (main) {
 				// invert copy
 				
 				var mt = THREE.CollisionSystem.__m;
-				THREE.Matrix4.makeInvert( mCopy, mt );
-				//mt.getInverse( mCopy );
+				mt.getInverse( mCopy );
 				
 				mt.multiplyVector3( rt.origin );
 				mt.rotateAxis( rt.direction );
@@ -1107,6 +1363,8 @@ var KAIOPUA = (function (main) {
 		
 		boundingOffset = offset_from_dimensions_in_direction( mesh, velocityForceRotated, dimensions_from_collider_scaled( rigidBody ) );//dimensions_from_bounding_box_scaled( mesh ) );
 		
+		boundingOffsetLength = boundingOffset.length();
+		
 		// override offset
 		
 		if ( typeof offset !== 'undefined' ) {
@@ -1123,17 +1381,17 @@ var KAIOPUA = (function (main) {
 			
 		}
 		
+		var castDistance = boundingOffsetLength + velocityForceRotatedLength;
+		
 		// get collision
-		
-		collision = raycast_in_direction( rigidBody, velocityForceRotated, velocityOffset );
-		
+		//for ( var i = 0; i < 2; i++ ) {
+			collision = raycast_in_direction( rigidBody, velocityForceRotated, castDistance, velocityOffset );
+		//}
 		// modify velocity based on collision distances to avoid passing through or into objects
 		
 		if ( collision ) {
 			
 			collisionDist = collision.distance;
-			
-			boundingOffsetLength = boundingOffset.length();
 			
 			// set the rotated velocity to be no more than collision distance
 			
@@ -1172,7 +1430,7 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	function raycast_in_direction ( rigidBody, direction, offset, showLine ) {
+	function raycast_in_direction ( rigidBody, direction, castDistance, offset, showLine ) {
 		
 		var i, l,
 			mesh = rigidBody.mesh,
@@ -1180,7 +1438,7 @@ var KAIOPUA = (function (main) {
 			ray = utilRay1Casting,
 			rayPosition,
 			rayDirection,
-			collisions,
+			collisions = [],
 			collisionPotential,
 			collisionMeshRecast,
 			collisionDistance = Number.MAX_VALUE,
@@ -1217,9 +1475,57 @@ var KAIOPUA = (function (main) {
 		ray.origin = rayPosition;
 		ray.direction = rayDirection;
 		
+		// ray cast individually using collision system r45
+		for ( i = 0, l = system.colliders.length; i < l; i += 1 ) {
+			
+			var collider = system.colliders[ i ];
+			var cmesh = collider.mesh;
+			
+			if ( mesh === cmesh || typeof cmesh.parent == 'undefined' ) {
+				continue;
+			}
+			
+			var cmeshPos = cmesh.position.clone();
+			
+			/*
+			// if parent is not scene, add parent position to position
+			
+			if ( cmesh.parent !== game.scene ) {
+				
+				cmeshPos.addSelf( cmesh.parent.position );
+				console.log(cmesh.parent);
+				
+			}
+			*/
+			
+			var d1l = cmeshPos.distanceTo( rayPosition );
+			var d2l = cmesh.geometry.boundingSphere.radius * Math.max( cmesh.scale.x, cmesh.scale.y, cmesh.scale.z );
+			
+			var cdist = d1l - d2l;//system.distanceFromIntersection( rayPosition, rayDirection, cmesh.position );//cmesh.geometry.boundingSphere.radius * Math.max( cmesh.scale.x, cmesh.scale.y, cmesh.scale.z )
+			
+			castDistance = castDistance || Math.MAX_NUMBER;
+			
+			if ( cdist === null || cdist > castDistance ) {
+				
+				continue;
+
+			}
+			
+			cdist = system.rayCast( ray, collider );
+			
+			if ( cdist < Number.MAX_VALUE ) {
+				
+				collider.distance = cdist;
+				
+				collisions.push( collider );
+				
+			}
+			
+		}
+		
 		// ray cast all
 		
-		collisions = system.rayCastAll( ray );
+		//collisions = system.rayCastAll( ray );
 		
 		// find nearest collision
 		if ( typeof collisions !== 'undefined' ) {
@@ -1265,9 +1571,39 @@ var KAIOPUA = (function (main) {
 			
 		}
 		
+		// ray casting individually using ray intersect object r46
+		/*for ( i = 0, l = system.colliders.length; i < l; i += 1 ) {
+			
+			var collider = system.colliders[ i ];
+			var cmesh = collider.mesh;
+			
+			if ( mesh === cmesh ) {
+				continue;
+			}
+			
+			intersects = ray.intersectObject( cmesh );
+			
+			var j, k;
+			
+			for ( j = 0, k = intersects.length; j < k; j += 1 ) {
+				
+				intersect = intersects[ j ];
+				
+				if ( intersect.distance < collisionDistance ) {
+					
+					collisionDistance = intersect.distance;
+					collision = intersect;
+					
+				}
+				
+			}
+			
+		}*/
+		
 		//collision = system.rayCastNearest( ray );
 		//intersects = ray.intersectScene( game.scene );
 		//console.log('intersects.length: ' + intersects.length);
+		/*
 		if ( typeof intersects !== 'undefined' ) {
 			
 			// loop through intersects for first object that is not self
@@ -1292,6 +1628,7 @@ var KAIOPUA = (function (main) {
 			}
 			
 		}
+		*/
 		
 		// test
 		
