@@ -61,8 +61,10 @@ var KAIOPUA = (function (main) {
 			face,
 			faceCentroid,
 			faceDist,
-			faceDistMax,
-			faceDistMin,
+			darknessDistMin,
+			darknessDistMax,
+			opacityDistMin,
+			opacityDistMax,
 			centerPoint,
 			vvAmpMax,
 			vvAmpMin,
@@ -198,8 +200,10 @@ var KAIOPUA = (function (main) {
 		// assign opacity materials to faces based on distance from center
 		
 		wavesFaces = wavesGeometry.faces;
-		faceDistMax = parameters.faceDistMax || wavesSize * 0.5,
-		faceDistMin = parameters.faceDistMin || wavesSize * 0,
+		darknessDistMin = parameters.darknessDistMin || 1200;
+		darknessDistMax = parameters.darknessOpacityDistMeet || 1850;
+		opacityDistMin = Math.max( parameters.opacityDistMin || wavesSize * 0.35, darknessDistMax );
+		opacityDistMax = parameters.opacityDistMax || wavesSize * 0.5;
 		centerPoint = new THREE.Vector3( 0, 0, 0 );
 		
 		for ( i = 0, l = wavesFaces.length; i < l; i += 1 ) {
@@ -209,7 +213,19 @@ var KAIOPUA = (function (main) {
 			
 			faceDist = faceCentroid.distanceTo( centerPoint );
 			
-			face.materialIndex = Math.round( (wavesGeomMaterials.length - 1) * Math.min( 1, Math.max( 0, (faceDist - faceDistMin) / (faceDistMax - faceDistMin) ) ) );
+			// in darkness
+			
+			if ( faceDist < darknessDistMax ) {
+				
+				face.materialIndex = Math.round( (wavesMaterialsDarknessSteps - 1) * Math.min( 1, Math.max( 0, (faceDist - darknessDistMin) / (darknessDistMax - darknessDistMin) ) ) );
+				
+			}
+			// or opacity
+			else {
+			
+				face.materialIndex = (wavesMaterialsDarknessSteps - 1) + Math.round( (wavesMaterialsOpacitySteps- 1) * Math.min( 1, Math.max( 0, (faceDist - opacityDistMin) / (opacityDistMax - opacityDistMin) ) ) );
+			
+			}
 			
 		}
 		
