@@ -153,7 +153,7 @@ var KAIOPUA = (function (main) {
         }
         
         // single material, much more efficient
-        
+		
         if ( typeof assets[ wavesTexturePath ] !== 'undefined' ) {
 			
 			var wavesTexture = new THREE.Texture( assets[ wavesTexturePath ] );
@@ -165,7 +165,9 @@ var KAIOPUA = (function (main) {
 				map: wavesTexture,
 				specular: 0x00daff, 
 				shininess: 10, 
-				shading: THREE.SmoothShading
+				shading: THREE.SmoothShading,
+				transparent: true,
+				opacity: 0.9
 			} );
 			
 		}

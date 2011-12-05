@@ -767,7 +767,7 @@ var KAIOPUA = (function (main) {
             }
             
             // update time
-            
+			
             info.timeLast = info.time;
 			info.time += timeDelta;
             

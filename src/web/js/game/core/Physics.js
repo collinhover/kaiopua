@@ -1481,11 +1481,24 @@ var KAIOPUA = (function (main) {
 			var collider = system.colliders[ i ];
 			var cmesh = collider.mesh;
 			
-			if ( mesh === cmesh ) {
+			if ( mesh === cmesh || typeof cmesh.parent == 'undefined' ) {
 				continue;
 			}
 			
-			var d1l = cmesh.position.distanceTo( rayPosition );
+			var cmeshPos = cmesh.position.clone();
+			
+			/*
+			// if parent is not scene, add parent position to position
+			
+			if ( cmesh.parent !== game.scene ) {
+				
+				cmeshPos.addSelf( cmesh.parent.position );
+				console.log(cmesh.parent);
+				
+			}
+			*/
+			
+			var d1l = cmeshPos.distanceTo( rayPosition );
 			var d2l = cmesh.geometry.boundingSphere.radius * Math.max( cmesh.scale.x, cmesh.scale.y, cmesh.scale.z );
 			
 			var cdist = d1l - d2l;//system.distanceFromIntersection( rayPosition, rayDirection, cmesh.position );//cmesh.geometry.boundingSphere.radius * Math.max( cmesh.scale.x, cmesh.scale.y, cmesh.scale.z )

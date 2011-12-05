@@ -92,7 +92,7 @@ var KAIOPUA = (function (main) {
 		
 		ambientLight = new THREE.AmbientLight( 0x999999 );
 		
-		sunLight = new THREE.PointLight( 0xffffcc, 1, 10000 );
+		sunLight = new THREE.PointLight( 0xffffcc, 1.5, 10000 );
 		sunLight.position.set( 0, 6000, 0 );
 		
 		parts.push( ambientLight, sunLight );
@@ -101,12 +101,6 @@ var KAIOPUA = (function (main) {
 		
 		fog = null;//new THREE.Fog( 0x226fb3, 1, 10000 );
 		
-		// test materials
-		
-		var shadowTestMat = new THREE.MeshLambertMaterial( { ambient: 0x333333, color: 0xffdd99, shading: THREE.SmoothShading }  );
-		//THREE.ColorUtils.adjustHSV( shadowTestMat.color, 0, 0, 0.9 );
-		//shadowTestMat.ambient = shadowTestMat.color;
-		
 		// body parts
         
         head = objectmaker.make_model({
@@ -114,7 +108,7 @@ var KAIOPUA = (function (main) {
 			rigidBodyInfo: {
 				bodyType: 'trimesh'
 			},
-			materials: shadowTestMat,//normalMat,//
+			materials: new THREE.MeshLambertMaterial( { ambient: 0x333333, color: 0xffdd99, shading: THREE.SmoothShading }  ),
 			shading: THREE.SmoothShading,//THREE.FlatShading, //
 			targetable: false,
 			interactive: false
@@ -125,7 +119,7 @@ var KAIOPUA = (function (main) {
 			rigidBodyInfo: {
 				bodyType: 'trimesh'
 			},
-			materials: shadowTestMat,//normalMat,//
+			materials: new THREE.MeshLambertMaterial( { ambient: 0x333333, color: 0xffdd99, shading: THREE.SmoothShading }  ),//new THREE.MeshNormalMaterial(),
 			shading: THREE.SmoothShading,//THREE.FlatShading, //
 			targetable: false,
 			interactive: false
@@ -155,7 +149,9 @@ var KAIOPUA = (function (main) {
 			interactive: false
         });
 		
-		hutHill.mesh.position.set( 0, 1590, 0 );
+		var hhPos = new THREE.Vector3( 0, 1590, 0 );
+		
+		hutHill.mesh.position = hhPos;
 		
 		parts.push( hutHill );
 		
@@ -170,9 +166,11 @@ var KAIOPUA = (function (main) {
 			shading: THREE.SmoothShading,
         });
 		
-		steps.mesh.position.set( -10, 1860, 130 );
+		//steps.mesh.position.set( hhPos.x - 10, hhPos.y + 270, hhPos.z + 130 );
+		steps.mesh.position.set( -10, 270, 130 );
 		
-		parts.push( steps );
+		//parts.push( steps );
+		hutHill.mesh.add( steps.mesh );
 		
 		// hut
 		
@@ -185,9 +183,11 @@ var KAIOPUA = (function (main) {
 			shading: THREE.FlatShading
         });
 		
-		hut.mesh.position.set( 0, 1925, 0 );
+		//hut.mesh.position.set( hhPos.x, hhPos.y + 335, hhPos.z );
+		hut.mesh.position.set( 0, 335, 0 );
 		
-		parts.push( hut );
+		//parts.push( hut );
+		hutHill.mesh.add( hut.mesh );
 		
 		// bed
 		
@@ -214,9 +214,11 @@ var KAIOPUA = (function (main) {
 			rotation: new THREE.Vector3( 0, 0, 5 )
         });
 		
-		bananaLeafDoor.mesh.position.set( -10, 2070, 100 );
+		//bananaLeafDoor.mesh.position.set( -10, 2070, 100 );
+		bananaLeafDoor.mesh.position.set( -10, 145, 100 );
 		
-		parts.push( bananaLeafDoor );
+		//parts.push( bananaLeafDoor );
+		hut.mesh.add( bananaLeafDoor.mesh );
 		
 		// surfboard
 		
@@ -304,6 +306,10 @@ var KAIOPUA = (function (main) {
 		// start water
 		
 		water.waves.model.morphs.play( 'waves', { duration: 5000, loop: true } );
+		
+		// start swim
+		
+		tail.morphs.play( 'swim_tail', { duration: 5000, loop: true } );
 		
 	}
 	

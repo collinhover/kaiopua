@@ -59,7 +59,6 @@ var KAIOPUA = (function (main) {
         assetsLauncher = [
             "js/game/sections/LauncherSection.js",
             "js/game/sections/launcher/Water.js",
-			"js/game/env/Water.js",
             "js/game/sections/launcher/Sky.js",
             "assets/textures/cloud256.png",
             "assets/textures/light_ray.png",
@@ -138,12 +137,13 @@ var KAIOPUA = (function (main) {
 			"js/lib/jiglibjs2/vehicles/JWheel.js",
 			"js/lib/jiglibjs2/vehicles/JCar.js",
 			end JigLib 2 library */
-			"js/game/workers/MenuMaker.js",
 			"js/game/workers/ObjectMaker.js",
+			"js/game/workers/MenuMaker.js",
 			"js/game/core/Physics.js",
 			"js/game/core/World.js",
 			"js/game/core/Player.js",
 			"js/game/core/Character.js",
+			"js/game/env/Water.js",
 			"js/game/characters/Hero.js",
             "js/game/sections/IntroSection.js",
             { path: "assets/models/World_Head.js", type: 'model' },
@@ -738,10 +738,9 @@ var KAIOPUA = (function (main) {
 		if( scene !== scenePrev && typeof camera !== 'undefined') {
 			
 			if ( typeof scenePrev !== 'undefined' ) {
-				console.log('rem s1');
 				scenePrev.remove( camera );
 			}
-			console.log('add s1');
+			
 			scene.add( camera );
 			
 		}
@@ -757,11 +756,9 @@ var KAIOPUA = (function (main) {
 		if( sceneBG !== sceneBGPrev && typeof cameraBG !== 'undefined') {
 			
 			if ( typeof sceneBGPrev !== 'undefined' ) {
-				console.log('rem s2');
 				sceneBGPrev.remove( cameraBG );
 			}
 			
-			console.log('add s2');
 			sceneBG.add( cameraBG );
 			
 		}
@@ -865,7 +862,7 @@ var KAIOPUA = (function (main) {
 		var cameraPrev = camera;
 		
 		if ( typeof cameraPrev !== 'undefined' && typeof scene !== 'undefined' ) {
-			console.log('rem c1');
+			
 			scene.remove( cameraPrev );
 			
 		}
@@ -873,7 +870,7 @@ var KAIOPUA = (function (main) {
 		renderPasses.env.camera = camera = cameraNew || cameraDefault;
 		
 		if ( typeof scene !== 'undefined' ) {
-			console.log('add c1');
+			
 			scene.add( camera );
 			
 		}
@@ -885,7 +882,7 @@ var KAIOPUA = (function (main) {
 		var cameraBGPrev = cameraBG;
 		
 		if ( typeof cameraBGPrev !== 'undefined' && typeof sceneBG !== 'undefined' ) {
-			console.log('rem c2');
+			
 			sceneBG.remove( cameraBGPrev );
 			
 		}
@@ -893,7 +890,7 @@ var KAIOPUA = (function (main) {
 		renderPasses.bg.camera = cameraBG = cameraNew || cameraBGDefault;
 		
 		if ( typeof sceneBG !== 'undefined' ) {
-			console.log('add c2');
+			
 			sceneBG.add( cameraBG );
 			
 		}
