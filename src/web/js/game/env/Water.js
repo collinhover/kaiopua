@@ -9,7 +9,8 @@ var KAIOPUA = (function (main) {
         game = main.game = main.game || {},
 		env = game.env = game.env || {},
         water = env.water = env.water || {},
-		rayTexturePath = "assets/textures/light_ray.png";
+		rayTexturePath = "assets/textures/light_ray.png",
+		wavesTexturePath = "assets/textures/waves_512.png";
     
     /*===================================================
     
@@ -32,7 +33,6 @@ var KAIOPUA = (function (main) {
         var i, l,
 			assets = main.utils.loader.assets,
 			environment,
-			waterInfo,
 			wavesInfo,
 			vvInfo,
 			raysInfo,
@@ -90,13 +90,9 @@ var KAIOPUA = (function (main) {
         
         environment = {};
 		
-		// water info
-		
-		waterInfo = environment.water = {};
-		
 		// waves info
 		
-		wavesInfo = waterInfo.waves = {};
+		wavesInfo = environment.waves = {};
 		wavesInfo.time = 0;
 		wavesColor = parameters.wavesColor || 0x0bdafa;
 		wavesSize = parameters.wavesSize || 10000;
@@ -155,76 +151,98 @@ var KAIOPUA = (function (main) {
 			vvFreqLast = vvInfo.list[ i ].frequency;
 			
         }
-		
-		wavesGeomMaterials = wavesGeometry.materials;
-		
-		// create darkness materials
-		
-		var colorOriginal = new THREE.Color( wavesColor );
-		var colorDarkness = new THREE.Color( wavesDarknessColor );
-		
-		for ( i = 0, l = wavesMaterialsDarknessSteps; i < l; i += 1 ) {
+        
+        // single material, much more efficient
+        
+        if ( typeof assets[ wavesTexturePath ] !== 'undefined' ) {
 			
-			materialStep = i / (wavesMaterialsDarknessSteps - 1);
-			var colorDist = new THREE.Color().setRGB( colorOriginal.r * materialStep + colorDarkness.r * ( 1 - materialStep ), colorOriginal.g * materialStep + colorDarkness.g * ( 1 - materialStep ), colorOriginal.b * materialStep + colorDarkness.b * ( 1 - materialStep ) ); 
+			var wavesTexture = new THREE.Texture( assets[ wavesTexturePath ] );
+			wavesTexture.needsUpdate = true;
 			
-			wavesGeomMaterials.push( new THREE.MeshPhongMaterial( { 
-				ambient: colorDist.getHex(), 
-				color: colorDist.getHex(), 
-				specular: 0x00daff, 
-				shininess: 10, 
-				shading: THREE.SmoothShading,
-				transparent: true,
-				opacity: wavesMaterialsOpacityBase
-			} ) );
-		}
-		
-		// create opacity materials
-		
-		for ( i = 0, l = wavesMaterialsOpacitySteps; i < l; i += 1 ) {
-			
-			materialStep = i / (wavesMaterialsOpacitySteps - 1);
-			var opacityDist = 1 - materialStep;
-			
-			wavesGeomMaterials.push( new THREE.MeshPhongMaterial( { 
+			wavesMaterial = new THREE.MeshPhongMaterial( { 
 				ambient: wavesColor, 
-				color: wavesColor, 
+				color: wavesColor,
+				map: wavesTexture,
 				specular: 0x00daff, 
 				shininess: 10, 
-				shading: THREE.SmoothShading,
-				transparent: true,
-				opacity: wavesMaterialsOpacityBase * opacityDist
-			} ) );
+				shading: THREE.SmoothShading
+			} );
+			
 		}
-		
-		// assign opacity materials to faces based on distance from center
-		
-		wavesFaces = wavesGeometry.faces;
-		darknessDistMin = parameters.darknessDistMin || 1200;
-		darknessDistMax = parameters.darknessOpacityDistMeet || 1850;
-		opacityDistMin = Math.max( parameters.opacityDistMin || wavesSize * 0.35, darknessDistMax );
-		opacityDistMax = parameters.opacityDistMax || wavesSize * 0.5;
-		centerPoint = new THREE.Vector3( 0, 0, 0 );
-		
-		for ( i = 0, l = wavesFaces.length; i < l; i += 1 ) {
+		// per face materials, similar effect but not smooth
+		else {
 			
-			face = wavesFaces[ i ];
-			faceCentroid = face.centroid;
+			wavesGeomMaterials = wavesGeometry.materials;
 			
-			faceDist = faceCentroid.distanceTo( centerPoint );
+			// create darkness materials
 			
-			// in darkness
+			var colorOriginal = new THREE.Color( wavesColor );
+			var colorDarkness = new THREE.Color( wavesDarknessColor );
 			
-			if ( faceDist < darknessDistMax ) {
+			for ( i = 0, l = wavesMaterialsDarknessSteps; i < l; i += 1 ) {
 				
-				face.materialIndex = Math.round( (wavesMaterialsDarknessSteps - 1) * Math.min( 1, Math.max( 0, (faceDist - darknessDistMin) / (darknessDistMax - darknessDistMin) ) ) );
+				materialStep = i / (wavesMaterialsDarknessSteps - 1);
+				var colorDist = new THREE.Color().setRGB( colorOriginal.r * materialStep + colorDarkness.r * ( 1 - materialStep ), colorOriginal.g * materialStep + colorDarkness.g * ( 1 - materialStep ), colorOriginal.b * materialStep + colorDarkness.b * ( 1 - materialStep ) ); 
 				
+				wavesGeomMaterials.push( new THREE.MeshPhongMaterial( { 
+					ambient: colorDist.getHex(), 
+					color: colorDist.getHex(), 
+					specular: 0x00daff, 
+					shininess: 10, 
+					shading: THREE.SmoothShading,
+					transparent: true,
+					opacity: wavesMaterialsOpacityBase
+				} ) );
 			}
-			// or opacity
-			else {
 			
-				face.materialIndex = (wavesMaterialsDarknessSteps - 1) + Math.round( (wavesMaterialsOpacitySteps- 1) * Math.min( 1, Math.max( 0, (faceDist - opacityDistMin) / (opacityDistMax - opacityDistMin) ) ) );
+			// create opacity materials
 			
+			for ( i = 0, l = wavesMaterialsOpacitySteps; i < l; i += 1 ) {
+				
+				materialStep = i / (wavesMaterialsOpacitySteps - 1);
+				var opacityDist = 1 - materialStep;
+				
+				wavesGeomMaterials.push( new THREE.MeshPhongMaterial( { 
+					ambient: wavesColor, 
+					color: wavesColor, 
+					specular: 0x00daff, 
+					shininess: 10, 
+					shading: THREE.SmoothShading,
+					transparent: true,
+					opacity: wavesMaterialsOpacityBase * opacityDist
+				} ) );
+			}
+			
+			// assign opacity materials to faces based on distance from center
+			
+			wavesFaces = wavesGeometry.faces;
+			darknessDistMin = parameters.darknessDistMin || 1200;
+			darknessDistMax = parameters.darknessOpacityDistMeet || 1850;
+			opacityDistMin = Math.max( parameters.opacityDistMin || wavesSize * 0.35, darknessDistMax );
+			opacityDistMax = parameters.opacityDistMax || wavesSize * 0.5;
+			centerPoint = new THREE.Vector3( 0, 0, 0 );
+			
+			for ( i = 0, l = wavesFaces.length; i < l; i += 1 ) {
+				
+				face = wavesFaces[ i ];
+				faceCentroid = face.centroid;
+				
+				faceDist = faceCentroid.distanceTo( centerPoint );
+				
+				// in darkness
+				
+				if ( faceDist < darknessDistMax ) {
+					
+					face.materialIndex = Math.round( (wavesMaterialsDarknessSteps - 1) * Math.min( 1, Math.max( 0, (faceDist - darknessDistMin) / (darknessDistMax - darknessDistMin) ) ) );
+					
+				}
+				// or opacity
+				else {
+				
+					face.materialIndex = (wavesMaterialsDarknessSteps - 1) + Math.round( (wavesMaterialsOpacitySteps- 1) * Math.min( 1, Math.max( 0, (faceDist - opacityDistMin) / (opacityDistMax - opacityDistMin) ) ) );
+				
+				}
+				
 			}
 			
 		}
@@ -294,23 +312,19 @@ var KAIOPUA = (function (main) {
 			morphTargetVertices.push( new THREE.Vertex( new THREE.Vector3( morphTargetVertex.position.x, morphTargetVertex.position.y, morphTargetVertex.position.z ) ) );
 			
 		}
-	
+		
         // water mesh
         wavesInfo.model = game.workers.objectmaker.make_model({
 			geometry: wavesGeometry,
+			materials: wavesMaterial,
 			doubleSided: true,
-			dynamic: true,
+			targetable: false,
+			interactive: false,
 			rotation: new THREE.Vector3( -90, 0, 0 )
 		});
-		wavesMesh = wavesInfo.model.mesh;
 		
-		main.utils.dev.commands.add({
-            p: function() {
-				wavesInfo.model.morphs.clear( 'waves' );
-                wavesInfo.model.morphs.play( 'waves', { duration: 5000, loop: false } );
-            }
-        });
-        wavesInfo.model.morphs.play( 'waves', { duration: 5000, loop: true } );
+		wavesMesh = wavesInfo.model.mesh;
+        
         container.add( wavesMesh );
         
         // water rays

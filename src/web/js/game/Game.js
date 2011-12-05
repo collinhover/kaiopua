@@ -163,7 +163,8 @@ var KAIOPUA = (function (main) {
 			"assets/textures/skybox_world_posy.jpg",
             "assets/textures/skybox_world_negy.jpg",
 			"assets/textures/skybox_world_posz.jpg",
-            "assets/textures/skybox_world_negz.jpg"
+            "assets/textures/skybox_world_negz.jpg",
+            "assets/textures/waves_512.png"
         ],
 		loadingHeader = 'Hold on, we need some stuff from Hawaii...';
 		loadingTips = [

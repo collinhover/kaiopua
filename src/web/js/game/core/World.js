@@ -301,9 +301,9 @@ var KAIOPUA = (function (main) {
 		
 		game.add_to_scene( skybox, game.sceneBG );
 		
-		// update
+		// start water
 		
-		shared.signals.update.add( update );
+		water.waves.model.morphs.play( 'waves', { duration: 5000, loop: true } );
 		
 	}
 	
@@ -313,15 +313,13 @@ var KAIOPUA = (function (main) {
 		
 		game.remove_from_scene( skybox, game.sceneBG );
 		
-		shared.signals.update.remove( update );
+		water.waves.model.morphs.stop('waves');
 		
 	}
 	
 	function update ( timeDelta ) {
 		
-		// water
 		
-		//water.make_waves( timeDelta );
 		
 	}
 	

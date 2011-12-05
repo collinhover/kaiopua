@@ -96,7 +96,7 @@ var KAIOPUA = (function (main) {
             }
             
         }
-		
+        
 		// if no materials yet, add default
         if ( materials.length === 0 ) {
             
@@ -112,7 +112,6 @@ var KAIOPUA = (function (main) {
             material = materialsToModify[i];
 			
             // morph targets
-			
 			if ( material.hasOwnProperty('morphTargets' ) ) {
 				
 				material.morphTargets = geometry.morphTargets && geometry.morphTargets.length > 0 ? true : false;
@@ -379,16 +378,23 @@ var KAIOPUA = (function (main) {
 			
 		};
         
-        morphs.stop = function () {
+        morphs.stop = function ( name ) {
             
             var i, l,
                 updates = shapes.updates,
                 uNames = updates.names,
+                uName,
                 uList = updates.list;
             
             for ( i = 0, l = uNames.length; i < l; i += 1 ) {
                 
-                uList[ uNames[i] ].stop();
+                uName = uNames[ i ];
+                
+                if ( typeof name === 'undefined' || uName === name ) {
+                	
+                	uList[ uNames[i] ].stop();
+                	
+                }
                 
             }
             
