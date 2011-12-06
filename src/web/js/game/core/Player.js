@@ -32,10 +32,6 @@ var KAIOPUA = (function (main) {
 		projector,
 		utilRay1Selection,
 		utilVec31Selection,
-		utilVec31CameraFollow,
-		utilQ1CameraFollow,
-		utilQ2CameraFollow,
-		utilQ3CameraFollow,
 		selecting;
 	
 	/*===================================================
@@ -72,6 +68,10 @@ var KAIOPUA = (function (main) {
 		}
 	});
 	
+	Object.defineProperty(player, 'character', { 
+		get : function () { return playerCharacter; }
+	});
+	
 	/*===================================================
     
     external init
@@ -83,11 +83,6 @@ var KAIOPUA = (function (main) {
 		if ( ready !== true ) {
 			
 			// utility objects
-			
-			utilVec31CameraFollow = new THREE.Vector3();
-			utilQ1CameraFollow = new THREE.Quaternion();
-			utilQ2CameraFollow = new THREE.Quaternion();
-			utilQ3CameraFollow = new THREE.Quaternion();
 			
 			utilRay1Selection = new THREE.Ray();
 			utilVec31Selection = new THREE.Vector3();
@@ -291,6 +286,10 @@ var KAIOPUA = (function (main) {
 			keydown: function () { console.log('key down: mouseright'); },
 			keyup: function () { console.log('key up: mouseright'); }
 		};
+		kbMap[ 'mousewheel' ] = {
+			keyup: function () { console.log('key up: mousewheel'); }
+		};
+			
 		
 		// wasd / uldr
 		
@@ -348,7 +347,16 @@ var KAIOPUA = (function (main) {
 		// misc
 		
 		kbMap[ '27' /*escape*/ ] = {
-			keyup: function () { console.log('key up: escape'); }
+			keyup: function () { 
+				
+				if ( game.paused === true ) {
+					game.resume();
+				}
+				else {
+					game.pause();
+				}
+			
+			}
 		};
 		
 		kbMap[ '32' /*space*/ ] = {
@@ -406,6 +414,7 @@ var KAIOPUA = (function (main) {
 		
 		shared.signals.mousedown.add( on_mouse_pressed );
 		shared.signals.mouseup.add( on_mouse_pressed );
+		shared.signals.mousewheel.add( on_mouse_pressed );
 		
 		shared.signals.keydown.add( on_keyboard_used );
 		shared.signals.keyup.add( on_keyboard_used );
@@ -414,10 +423,15 @@ var KAIOPUA = (function (main) {
 	
 	function remove_control () {
 		
+		// clear keys
+		
+		clear_keys_active();
+		
 		// signals
 		
 		shared.signals.mousedown.remove( on_mouse_pressed );
 		shared.signals.mouseup.remove( on_mouse_pressed );
+		shared.signals.mousewheel.remove( on_mouse_pressed );
 		
 		shared.signals.keydown.remove( on_keyboard_used );
 		shared.signals.keyup.remove( on_keyboard_used );
@@ -446,20 +460,21 @@ var KAIOPUA = (function (main) {
 			
 			case 'mousedown': case 'touchstart': type = 'keydown'; break;
 			case 'mouseup': case 'touchend': type = 'keyup'; break;
+			case 'mousewheel': button = 'mousewheel'; type = 'keyup'; break;
 			
 		}
 		
-		triggerKey( button, type, [ e.identifier ] );
+		trigger_key( button, type, [ e.identifier ] );
 		
 	}
 	
 	function on_keyboard_used ( e ) {
 		
-		triggerKey( (e.key || e.keyCode).toString().toLowerCase(), e.type );
+		trigger_key( (e.key || e.keyCode).toString().toLowerCase(), e.type );
 		
 	}
 	
-	function triggerKey ( keyName, eventType, arguments ) {
+	function trigger_key ( keyName, eventType, arguments ) {
 		
 		var kbMap = keybindings,
 			kbInfo;
@@ -472,7 +487,37 @@ var KAIOPUA = (function (main) {
 			
 			if ( kbInfo.hasOwnProperty( eventType ) === true ) {
 				
+				if ( eventType === 'keydown' ) {
+					
+					kbInfo.active = true;
+					
+				}
+				else {
+					
+					kbInfo.active = false;
+					
+				}
+				
 				kbInfo[ eventType ].apply( this, arguments );
+				
+			}
+			
+		}
+		
+	}
+	
+	function clear_keys_active () {
+		
+		var keyName,
+			kbInfo;
+		
+		for ( keyName in keybindings ) {
+			
+			kbInfo = keybindings[ keyName ];
+			
+			if ( kbInfo.active === true ) {
+				
+				trigger_key( keyName, 'keyup' );
 				
 			}
 			
@@ -495,10 +540,6 @@ var KAIOPUA = (function (main) {
 			type: characters.hero
 			
 		} );
-		
-		// testing position
-		
-		playerCharacter.model.mesh.position.set( 1, 3000, 1 );
 		
 		// init light to follow character
 		
@@ -848,57 +889,14 @@ var KAIOPUA = (function (main) {
 	function update_following () {
 		
 		var i, l,
-			mesh = playerCharacter.model.mesh,
-			meshScale = mesh.scale,
-			meshScaleMax = Math.max( meshScale.x, meshScale.y, meshScale.z ), 
-			meshQ = mesh.quaternion,
-			fSettings,
-			obj,
-			rotationBase,
-			rotationOffset,
-			positionOffset,
-			clamps,
-			objP,
-			objQ,
-			objOffsetPos = utilVec31CameraFollow,
-			objOffsetRot = utilQ1CameraFollow,
-			objOffsetRotHalf = utilQ2CameraFollow;
+			pcMesh = playerCharacter.model.mesh,
+			followSettings;
 		
 		for ( i = 0, l = following.length; i < l; i += 1 ) {
 			
-			fSettings = following[ i ];
-			obj = fSettings.obj;
-			rotationBase = fSettings.rotationBase;
-			rotationOffset = fSettings.rotationOffset;
-			positionOffset = fSettings.positionOffset;
-			clamps = fSettings.clamps;
-			objP = obj.position;
-			objQ = obj.quaternion;
+			followSettings = following[ i ];
 			
-			// set offset base position
-			
-			objOffsetPos.set( positionOffset.x, positionOffset.y, positionOffset.z ).multiplyScalar( meshScaleMax );
-			
-			// set offset rotation
-			
-			objOffsetRot.setFromEuler( rotationOffset ).normalize();
-			objOffsetRotHalf.set( objOffsetRot.x * 0.5, objOffsetRot.y * 0.5, objOffsetRot.z * 0.5, objOffsetRot.w).normalize();
-			
-			// create new camera offset position
-			
-			rotationBase.multiplyVector3( objOffsetPos );
-			
-			objOffsetRot.multiplyVector3( objOffsetPos );
-			
-			meshQ.multiplyVector3( objOffsetPos );
-			
-			// set new camera position
-			
-			objP.copy( mesh.position ).addSelf( objOffsetPos );
-			
-			// set new camera rotation
-			
-			objQ.copy( meshQ ).multiplySelf( objOffsetRot ).multiplySelf( rotationBase );
+			game.object_follow_object( pcMesh, followSettings.obj, followSettings );
 				
 		}
 		
@@ -919,7 +917,7 @@ var KAIOPUA = (function (main) {
 	}
 	
 	function resume () {
-		
+			
 		shared.signals.resumed.remove( resume );
 		
 		enable();
@@ -928,7 +926,7 @@ var KAIOPUA = (function (main) {
 	
 	function enable () {
 		
-		if ( enabled !== true ) {
+		if ( game.started === true && enabled !== true ) {
 			
 			enabled = true;
 			
@@ -942,7 +940,7 @@ var KAIOPUA = (function (main) {
 	
 	function disable () {
 		
-		if ( enabled === true ) {
+		if ( game.started === true && enabled === true ) {
 			
 			enabled = false;
 			

@@ -10,7 +10,7 @@ var KAIOPUA = (function (main) {
 		loader, error, game,
         lastGamma, lastBeta,
         libList = [
-            "js/lib/jquery-1.6.4.min.js",
+            "js/lib/jquery-1.7.1.min.js",
             "js/lib/RequestAnimationFrame.js",
             "js/lib/requestInterval.js",
             "js/lib/requestTimeout.js",
@@ -51,13 +51,16 @@ var KAIOPUA = (function (main) {
         shared.timeLast = shared.time;
         shared.refreshInterval = 1000 / 60;
         
-        shared.html= {
+        shared.html = {
             staticMenu: $('#static_menu'),
             gameContainer: $('#game'),
             errorContainer: $('#error_container')
         };
         
         shared.signals = {
+			
+			focuslose: new signals.Signal(),
+			focusgain: new signals.Signal(),
     
             mousedown : new signals.Signal(),
             mouseup : new signals.Signal(),
@@ -79,6 +82,9 @@ var KAIOPUA = (function (main) {
         
         // add listeners for events
         // each listener dispatches shared signal
+		$(window).bind( 'blur', on_focus_lose );
+		$(window).bind( 'focus', on_focus_gain );
+		
         $(document).bind( 'mousedown touchstart', on_mouse_down );
         $(document).bind( 'mouseup touchend', on_mouse_up );
         $(document).bind( 'mousemove touchmove', on_mouse_move );
@@ -130,6 +136,30 @@ var KAIOPUA = (function (main) {
     event functions
     
     =====================================================*/
+	
+	function on_focus_lose ( e ) {
+		
+		shared.signals.focuslose.dispatch( e );
+		
+		if ( typeof game !== 'undefined' ) {
+			
+			game.pause();
+			
+		}
+		
+	}
+	
+	function on_focus_gain ( e ) {
+		
+		shared.signals.focusgain.dispatch( e );
+		
+		if ( typeof game !== 'undefined' && game.started !== true ) {
+			
+			game.resume();
+			
+		}
+		
+	}
 	
 	function handle_touch_event ( e, eventActual ) {
 		

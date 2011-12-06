@@ -166,11 +166,11 @@ var KAIOPUA = (function (main) {
 			shading: THREE.SmoothShading,
         });
 		
-		//steps.mesh.position.set( hhPos.x - 10, hhPos.y + 270, hhPos.z + 130 );
-		steps.mesh.position.set( -10, 270, 130 );
+		steps.mesh.position.set( hhPos.x - 10, hhPos.y + 270, hhPos.z + 130 );
+		//steps.mesh.position.set( -10, 270, 130 );
 		
-		//parts.push( steps );
-		hutHill.mesh.add( steps.mesh );
+		parts.push( steps );
+		//hutHill.mesh.add( steps.mesh );
 		
 		// hut
 		
@@ -183,11 +183,11 @@ var KAIOPUA = (function (main) {
 			shading: THREE.FlatShading
         });
 		
-		//hut.mesh.position.set( hhPos.x, hhPos.y + 335, hhPos.z );
-		hut.mesh.position.set( 0, 335, 0 );
+		hut.mesh.position.set( hhPos.x, hhPos.y + 335, hhPos.z );
+		//hut.mesh.position.set( 0, 335, 0 );
 		
-		//parts.push( hut );
-		hutHill.mesh.add( hut.mesh );
+		parts.push( hut );
+		//hutHill.mesh.add( hut.mesh );
 		
 		// bed
 		

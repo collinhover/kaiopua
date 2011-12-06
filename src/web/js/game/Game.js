@@ -40,6 +40,7 @@ var KAIOPUA = (function (main) {
         currentSection, 
         previousSection,
         paused = false,
+		started = false,
         transitionOut = 1000, 
         transitionIn = 400,
         loadAssetsDelay = 500,
@@ -166,7 +167,7 @@ var KAIOPUA = (function (main) {
             "assets/textures/skybox_world_negz.jpg",
             "assets/textures/waves_512.png"
         ],
-		loadingHeader = 'Hold on, we need some stuff from Hawaii...';
+		loadingHeader = 'Hold on, we need some stuff from Hawaii...',
 		loadingTips = [
             ///////////////////////////////////////////// = bad sentence size
             "Aloha kaua means may there be friendship or love between us.",
@@ -183,7 +184,10 @@ var KAIOPUA = (function (main) {
 			"Kai 'opua means clouds over the ocean.",
             "Iki means small or little.",
             "Nui means large or huge."
-        ];
+        ],
+		utilVec31Follow,
+		utilQ1Follow,
+		utilQ2Follow;
     
     /*===================================================
     
@@ -200,6 +204,7 @@ var KAIOPUA = (function (main) {
 	game.get_mouse = get_mouse;
 	game.add_to_scene = add_to_scene;
 	game.remove_from_scene = remove_from_scene;
+	game.object_follow_object = object_follow_object;
 	
 	// getters and setters
 	
@@ -209,6 +214,10 @@ var KAIOPUA = (function (main) {
 	
 	Object.defineProperty(game, 'paused', { 
 		get : function () { return paused; }
+	});
+	
+	Object.defineProperty(game, 'started', { 
+		get : function () { return started; }
 	});
 	
 	Object.defineProperty(game, 'scene', { 
@@ -319,6 +328,12 @@ var KAIOPUA = (function (main) {
 				startBottom: true
 			} )*/
 		
+		// utility
+		
+		utilVec31Follow = new THREE.Vector3();
+		utilQ1Follow = new THREE.Quaternion();
+		utilQ2Follow = new THREE.Quaternion();
+		
 		// modify THREE classes
 		
 		add_three_modifications();
@@ -364,7 +379,6 @@ var KAIOPUA = (function (main) {
 		
 		sceneDefault = new THREE.Scene();
 		sceneBGDefault = new THREE.Scene();
-        
         
         // fog
 		
@@ -483,13 +497,17 @@ var KAIOPUA = (function (main) {
     
     function init_game () {
 		
-		// core
+		// init menus
 		
-		init_core();
-		
-		// start menu
+		menumaker = game.workers.menumaker;
 		
 		init_start_menu();
+		
+		init_pause_menu();
+		
+		// show start menu
+		
+		menus.start.ui_show( domElement );
 		
     }
 	
@@ -519,21 +537,23 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
+	/*===================================================
+    
+    game menus
+    
+    =====================================================*/
+	
 	function init_start_menu () {
-		var ms;
-		
-		// workers
-        
-        menumaker = game.workers.menumaker;
+		var menu;
         
         // init start menu
         
-        ms = menus.start = menumaker.make_menu( {
+        menu = menus.start = menumaker.make_menu( {
             id: 'start_menu',
             width: 260
         } );
         
-        ms.add_item( menumaker.make_button( {
+        menu.add_item( menumaker.make_button( {
             id: 'Start', 
             callback: function () {
                 start_game();
@@ -541,80 +561,67 @@ var KAIOPUA = (function (main) {
             staticPosition: true,
             classes: 'item_big'
         } ) );
-        ms.add_item( menumaker.make_button( {
+        menu.add_item( menumaker.make_button( {
             id: 'Continue', 
             callback: function () {},
             staticPosition: true,
             disabled: true
         } ) );
-        ms.add_item( menumaker.make_button( {
+        menu.add_item( menumaker.make_button( {
             id: 'Options', 
             callback: function () {},
             staticPosition: true,
             disabled: true
         } ) );
         
-        ms.ui_keep_centered();
+        menu.ui_keep_centered();
         
-        // hide instantly then show start menu
-        
-        ms.ui_hide( false, 0 );
-        
-        ms.ui_show( domElement );
+        menu.ui_hide( true, 0 );
         
 	}
-    
-    /*===================================================
-    
-    start / stop game
-    
-    =====================================================*/
-    
-    function start_game () {
-        var ms = menus.start;
-		
-		// hide static menu
-		
-		$(shared.html.staticMenu).fadeOut( transitionIn );
-		
-        // disable start menu
-		
-        ms.disable();
-        
-        // hide start menu
-		
-        ms.ui_hide( true );
-        
-        // set intro section
-		
-        set_section( sections.intro );
-		
-    }
 	
-	function stop_game () {
-		
-		// pause game
-		
-		pause();
-		
-		// show static menu
-		
-		$(shared.html.staticMenu).fadeIn( transitionOut );
+	function init_pause_menu () {
+		var menu;
         
-        // show start menu
-		
-        ms.ui_show( domElement, undefined, function () {
-			
-			// enable start menu
-			
-			ms.enable();
-			
-		});
-		
-		// set launcher section
-		
-        set_section( sections.launcher );
-		
+        // init menu
+        
+        menu = menus.pause = menumaker.make_menu( {
+            id: 'pause_menu',
+            width: 260
+        } );
+        
+        menu.add_item( menumaker.make_button( {
+            id: 'Resume', 
+            callback: function () {
+                resume();
+            },
+            staticPosition: true,
+            classes: 'item_big'
+        } ) );
+		menu.add_item( menumaker.make_button( {
+            id: 'Options', 
+            callback: function () {},
+            staticPosition: true,
+            disabled: true
+        } ) );
+        menu.add_item( menumaker.make_button( {
+            id: 'Save', 
+            callback: function () {},
+            staticPosition: true,
+            disabled: true
+        } ) );
+		menu.add_item( menumaker.make_button( {
+            id: 'End Game', 
+            callback: function () {
+				stop_game();
+			},
+            staticPosition: true
+        } ) );
+        
+        menu.ui_keep_centered();
+        
+        menu.ui_hide( true, 0 );
+        
 	}
 	
 	/*===================================================
@@ -851,6 +858,48 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
+	function object_follow_object ( leader, follower, followSettings ) {
+		
+		var leaderScale = leader.scale,
+			leaderScaleMax = Math.max( leaderScale.x, leaderScale.y, leaderScale.z ), 
+			leaderQ = leader.quaternion,
+			rotationBase = followSettings.rotationBase,
+			rotationOffset = followSettings.rotationOffset,
+			positionOffset = followSettings.positionOffset,
+			clamps = followSettings.clamps,
+			followerP = follower.position,
+			followerQ = follower.quaternion,
+			followerOffsetPos = utilVec31Follow,
+			followerOffsetRot = utilQ1Follow,
+			followerOffsetRotHalf = utilQ2Follow;
+		
+		// set offset base position
+		
+		followerOffsetPos.set( positionOffset.x, positionOffset.y, positionOffset.z ).multiplyScalar( leaderScaleMax );
+		
+		// set offset rotation
+		
+		followerOffsetRot.setFromEuler( rotationOffset ).normalize();
+		followerOffsetRotHalf.set( followerOffsetRot.x * 0.5, followerOffsetRot.y * 0.5, followerOffsetRot.z * 0.5, followerOffsetRot.w).normalize();
+		
+		// create new camera offset position
+		
+		rotationBase.multiplyVector3( followerOffsetPos );
+		
+		followerOffsetRot.multiplyVector3( followerOffsetPos );
+		
+		leaderQ.multiplyVector3( followerOffsetPos );
+		
+		// set new camera position
+		
+		followerP.copy( leader.position ).addSelf( followerOffsetPos );
+		
+		// set new camera rotation
+		
+		followerQ.copy( leaderQ ).multiplySelf( followerOffsetRot ).multiplySelf( rotationBase );
+		
+	}
+	
 	/*===================================================
     
     camera functions
@@ -926,6 +975,78 @@ var KAIOPUA = (function (main) {
 		return mouse;
 	}
 	
+	/*===================================================
+    
+    start / stop game
+    
+    =====================================================*/
+    
+    function start_game () {
+        var ms = menus.start;
+		
+		// core
+		
+		init_core();
+		
+		// hide static menu
+		
+		$(shared.html.staticMenu).fadeOut( transitionIn );
+		
+        // disable start menu
+		
+        ms.disable();
+        
+        // hide start menu
+		
+        ms.ui_hide( true );
+        
+        // set intro section
+		
+        set_section( sections.intro );
+		
+		// set started
+		
+		started = true;
+		
+    }
+	
+	function stop_game () {
+		
+		var ms = menus.start,
+			mp = menus.pause;
+		
+		// set started
+		
+		started = false;
+		
+		// hide and disable pause menu
+		
+		if ( typeof mp !== 'undefined' ) {
+			
+			mp.disable();
+		
+			mp.ui_hide( true );
+			
+		}
+		
+		// show static menu
+		
+		$(shared.html.staticMenu).fadeIn( transitionOut );
+		
+		// set launcher section
+		
+        set_section( sections.launcher, function () {
+			
+			// show / enable start menu
+			
+			ms.ui_show( domElement );
+			
+			ms.enable();
+			
+		});
+		
+	}
+	
     /*===================================================
     
     section functions
@@ -961,7 +1082,9 @@ var KAIOPUA = (function (main) {
         
     }
 
-    function set_section ( section ) {
+    function set_section ( section, callback ) {
+		
+		pause();
 		
         // hide current section
         if (typeof currentSection !== 'undefined') {
@@ -972,7 +1095,7 @@ var KAIOPUA = (function (main) {
             
             $(domElement).append(transitioner.domElement);
             
-            $(transitioner.domElement).fadeTo(transitionIn, 1).promise().done( function () {
+            $(transitioner.domElement).stop(true).fadeTo(transitionIn, 1, function () {
                 
                 $(transitioner.domElement).detach();
                 
@@ -988,7 +1111,15 @@ var KAIOPUA = (function (main) {
 		
 		// default scene and camera
 		
-		set_default_cameras_scenes();	
+		set_default_cameras_scenes();
+		
+		// set started
+		
+		if ( typeof startedValue !== 'undefined' ) {
+		
+			started = startedValue;
+			
+		}
         
         // start and show new section
         if (typeof section !== 'undefined') {
@@ -1005,10 +1136,20 @@ var KAIOPUA = (function (main) {
                 section.show();
 				
                 currentSection = section;
+				
+				resume();
                 
-                $(transitioner.domElement).fadeTo(transitionOut, 0).promise().done(function () {
+                $(transitioner.domElement).stop(true).fadeTo(transitionOut, 0, function () {
+					
                     $(transitioner.domElement).detach();
-                });
+					
+					if ( typeof callback !== 'undefined' ) {
+						
+						callback.call();
+						
+					}
+					
+				});
                 
             });
             
@@ -1020,6 +1161,18 @@ var KAIOPUA = (function (main) {
         if (paused === false) {
             
             paused = true;
+			
+			$(domElement).append(transitioner.domElement);
+            
+			$(transitioner.domElement).stop(true).fadeTo(transitionIn, 0.75);
+			
+			if ( started === true ) {
+				
+				menus.pause.ui_show( domElement );
+				
+				menus.pause.enable();
+				
+			}
             
             shared.signals.paused.dispatch();
             
@@ -1027,11 +1180,37 @@ var KAIOPUA = (function (main) {
     }
     
     function resume () {
+		
+		var on_menu_hidden = function () {
+			
+			paused = false;
+			
+			shared.signals.resumed.dispatch();
+			
+		};
+		
         if (paused === true) {
-            
-            paused = false;
-            
-            shared.signals.resumed.dispatch();
+			
+			$(domElement).append(transitioner.domElement);
+			
+			$(transitioner.domElement).stop(true).fadeTo(transitionOut, 0, function () {
+				
+				$(transitioner.domElement).detach();
+				
+			});
+			
+			if ( started === true ) {
+				
+				menus.pause.disable();
+				
+				menus.pause.ui_hide( true, undefined, on_menu_hidden );
+				
+			}
+			else {
+				
+				on_menu_hidden();
+				
+			}
             
         }
     }

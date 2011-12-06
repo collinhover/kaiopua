@@ -133,6 +133,15 @@ var KAIOPUA = (function (main) {
         };
         
         el.ui_show = function ( container, time, callback ) {
+			
+			var on_show_callback = function () {
+                
+				if ( typeof callback !== 'undefined' ) {
+                    callback.call();
+                }
+                
+            };
+			
             if ( typeof container !== 'undefined' ) {
                 $( container ).append( el.domElement );
             }
@@ -142,30 +151,23 @@ var KAIOPUA = (function (main) {
             }
             
             if ( time === 0 || uiElementShowTime === 0 ) {
-                $( el.domElement ).show();
+				
+                $( el.domElement ).stop( true ).show();
+				
+				on_show_callback();
+				
             } 
             else {
-                $( el.domElement ).fadeIn(time || uiElementShowTime);
+				
+                $( el.domElement ).stop( true ).fadeTo( time || uiElementShowTime, 1, on_show_callback );
+				
             }
-            
-            $( el.domElement ).promise().done(function () {
-                
-                if ( typeof callback !== 'undefined' ) {
-                    callback.call();
-                }
-                
-            });
+			
         };
         
         el.ui_hide = function ( remove, time, callback ) {
-            if ( time === 0 || uiElementHideTime === 0 ) {
-                $( el.domElement ).hide();
-            } 
-            else {
-                $( el.domElement ).fadeOut(time || uiElementHideTime);
-            }
-            
-            $( el.domElement ).promise().done(function () {
+			
+			var on_hide_callback = function () {
                 
                 if ( typeof callback !== 'undefined' ) {
                     callback.call();
@@ -175,7 +177,21 @@ var KAIOPUA = (function (main) {
                     $( el.domElement ).detach();
                 }
                 
-            });
+            };
+			
+            if ( time === 0 || uiElementHideTime === 0 ) {
+				
+                $( el.domElement ).stop( true ).hide();
+				
+				on_hide_callback();
+				
+            } 
+            else {
+				
+                $( el.domElement ).stop( true ).fadeTo(time || uiElementHideTime, 0, on_hide_callback);
+				
+            }
+			
         };
         
         return el;
