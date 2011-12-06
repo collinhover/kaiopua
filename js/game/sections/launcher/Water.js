@@ -43,7 +43,8 @@ var KAIOPUA = (function (main) {
         rayShowChance = 0.001,
         rayOpacityOn = 0.6,
         rayOpacityDelta = 0.02,
-        environment;
+        environment,
+		time = 0;
     
     /*===================================================
     
@@ -202,13 +203,16 @@ var KAIOPUA = (function (main) {
         
     }
     
-    function waves( time ) {
+    function waves( timeDelta ) {
 		
         var wavesVerts = wavesGeometry.vertices, 
             vert, variation, vvw = wavesVertsW - 1, vvh = wavesVertsH - 1,
             waterRayInfo, waterRay, i, l;
         
         // update wave time
+		
+		time += timeDelta;
+		
         waveTime = time * wavesSpeed;
         
         for ( i = 0; i < wavesVertsW; i += 1 ) {

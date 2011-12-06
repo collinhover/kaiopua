@@ -224,6 +224,8 @@ var KAIOPUA = (function (main) {
 		
 		player.enable();
 		
+		player.character.model.mesh.position.set( 1, 3000, 1 );
+		
 		//player.cameraMode = 'freelook';
 		
 		// signals
@@ -246,9 +248,9 @@ var KAIOPUA = (function (main) {
 		
 		// stop player
 		
-		player.hide();
-		
 		player.disable();
+		
+		player.hide();
 		
 		// hide world
 		
@@ -264,19 +266,6 @@ var KAIOPUA = (function (main) {
     
     function update () {
 		
-		/*
-		// position point light to always be 
-        // above and infront of camera
-		
-        var camP = camera.position.clone();
-        var newP = new THREE.Vector3( 0, 200, -100);
-		
-        camera.quaternion.multiplyVector3( newP );
-        
-        newP.addSelf( camera.position );
-        
-		light.position = newP;
-        */
     }
     
     function resize ( W, H ) {

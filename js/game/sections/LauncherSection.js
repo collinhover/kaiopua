@@ -272,9 +272,7 @@ var KAIOPUA = (function (main) {
         
     }
     
-    function update () {
-        
-        time = new Date().getTime();
+    function update ( timeDelta ) {
         
         camera.position.z += (  mouse.x - camera.position.z ) * mouse.speedTransX;
         camera.position.y += ( -mouse.y - camera.position.y ) * mouse.speedTransY;
@@ -290,9 +288,9 @@ var KAIOPUA = (function (main) {
 		
         // update environment
         
-        sky.wind_blow( time );
+        sky.wind_blow( timeDelta );
         
-        water.waves( time );
+        water.waves( timeDelta );
         
     }
 	
