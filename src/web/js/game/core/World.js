@@ -309,7 +309,7 @@ var KAIOPUA = (function (main) {
 		
 		// start swim
 		
-		tail.morphs.play( 'swim_tail', { duration: 5000, loop: true } );
+		tail.morphs.play( 'swim', { duration: 5000, loop: true } );
 		
 	}
 	
@@ -320,6 +320,8 @@ var KAIOPUA = (function (main) {
 		game.remove_from_scene( skybox, game.sceneBG );
 		
 		water.waves.model.morphs.stop('waves');
+		
+		tail.morphs.stop( 'swim' );
 		
 	}
 	

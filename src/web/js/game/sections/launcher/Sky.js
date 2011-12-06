@@ -18,7 +18,8 @@ var KAIOPUA = (function (main) {
         numClouds = 80, 
         lightAngle = (-Math.PI * 0.25), 
         lightAngleVariation = (Math.PI * 0.25),
-        timePrev,
+        timePrev = 0,
+		time = 0,
         windDirection = -1,
         windSpeedMax = 2,
         windSpeedMin = 1,
@@ -211,12 +212,12 @@ var KAIOPUA = (function (main) {
         return cloudMesh;
     }
     
-    function wind_blow ( time, direction, speedMax, speedMin ) {
+    function wind_blow ( timeDelta, direction, speedMax, speedMin ) {
         var i, timeDiff, pct, boundXNeg, boundXPos;
         
         // handle time change
-        
-        timePrev = timePrev || time;
+		
+		time += timeDelta;
         
         timeDiff = 1 - (time - timePrev) / 60;
         

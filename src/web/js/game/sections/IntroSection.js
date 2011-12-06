@@ -248,9 +248,9 @@ var KAIOPUA = (function (main) {
 		
 		// stop player
 		
-		player.hide();
-		
 		player.disable();
+		
+		player.hide();
 		
 		// hide world
 		

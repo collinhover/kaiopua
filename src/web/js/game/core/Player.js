@@ -11,6 +11,7 @@ var KAIOPUA = (function (main) {
 		characters = game.characters = game.characters || {},
 		ready = false,
 		enabled = false,
+		showing = false,
 		physics,
 		world,
 		scene,
@@ -143,12 +144,38 @@ var KAIOPUA = (function (main) {
 			rotationOffset: new THREE.Vector3( 25, 0, 0 ),
 			positionOffset: new THREE.Vector3( 0, 100, 300 ),
 			clamps: {
+				minPosX: 0,
+				maxPosX: 0,
+				minPosY: 0,
+				maxPosY: 0,
+				minPosZ: 0,
+				maxPosZ: 1000,
 				minRotX: -0.4,
 				maxRotX: 0.1,
 				minRotY: -1,
 				maxRotY: 1,
-				minPosZ: -100,
-				maxPosZ: 300
+				minRotZ: 0,
+				maxRotZ: 0,
+			},
+			state: {
+				up: 0,				
+				down: 0, 
+				left: 0, 
+				right: 0, 
+				forward: 0, 
+				back: 0,
+				pitchUp: 0,				
+				pitchDown: 0, 
+				yawLeft: 0, 
+				yawRight: 0,
+				rollLeft: 0,
+				rollRight: 0
+			},
+			speed: {
+				move: 1,
+				rotate: 1,
+				zoomGrow: 5,
+				zoomDecay: 1,
 			}
 		}
 		
@@ -231,11 +258,20 @@ var KAIOPUA = (function (main) {
 	
 	function update_camera ( timeDelta ) {
 		
+		var state = cameraFollowSettings.state,
+			speed = cameraFollowSettings.speed;
+		
 		// update camera based on mode
 		
 		if ( cameraMode === cameraModes.freelook ) {
 			
 			cameraFreelookControls.update( timeDelta );
+			
+		}
+		else {
+			
+			state.forward = Math.max( 0, state.forward - 1 * speed.zoomDecay );
+			state.back = Math.max( 0, state.back - 1 * speed.zoomDecay );
 			
 		}
 		
@@ -251,6 +287,26 @@ var KAIOPUA = (function (main) {
 		else {
 			
 			set_camera_mode( 'freelook' );
+			
+		}
+		
+	}
+	
+	function camera_zoom ( e ) {
+		
+		var eo = e.originalEvent || e,
+			wheelDelta = eo.wheelDelta,
+			state = cameraFollowSettings.state,
+			speed = cameraFollowSettings.speed;
+		
+		if ( wheelDelta > 0 ) {
+			
+			state.back += 1 * speed.zoomGrow;
+			
+		}
+		else {
+			
+			state.forward += 1 * speed.zoomGrow;
 			
 		}
 		
@@ -275,8 +331,8 @@ var KAIOPUA = (function (main) {
 		// mouse buttons
 		
 		kbMap[ 'mouseleft' ] = {
-			keydown: function ( mouseIndex ) { character_action( 'ability_001_start', { mouseIndex: mouseIndex } ); },
-			keyup: function ( mouseIndex ) { character_action( 'ability_001_end', { mouseIndex: mouseIndex } ); },
+			keydown: function ( e ) { character_action( 'ability_001_start', { mouseIndex: e ? e.identifier : 0 } ); },
+			keyup: function ( e ) { character_action( 'ability_001_end', { mouseIndex: e ? e.identifier : 0 } ); },
 		};
 		kbMap[ 'mousemiddle' ] = {
 			keydown: function () { console.log('key down: mousemiddle'); },
@@ -287,7 +343,7 @@ var KAIOPUA = (function (main) {
 			keyup: function () { console.log('key up: mouseright'); }
 		};
 		kbMap[ 'mousewheel' ] = {
-			keyup: function () { console.log('key up: mousewheel'); }
+			keyup: function ( e ) { camera_zoom( e ); }
 		};
 			
 		
@@ -410,14 +466,18 @@ var KAIOPUA = (function (main) {
 	
 	function allow_control () {
 		
-		// signals
-		
-		shared.signals.mousedown.add( on_mouse_pressed );
-		shared.signals.mouseup.add( on_mouse_pressed );
-		shared.signals.mousewheel.add( on_mouse_pressed );
-		
-		shared.signals.keydown.add( on_keyboard_used );
-		shared.signals.keyup.add( on_keyboard_used );
+		if ( showing === true && cameraMode !== cameraModes.freelook ) {
+			
+			// signals
+			
+			shared.signals.mousedown.add( on_mouse_pressed );
+			shared.signals.mouseup.add( on_mouse_pressed );
+			shared.signals.mousewheel.add( on_mouse_pressed );
+			
+			shared.signals.keydown.add( on_keyboard_used );
+			shared.signals.keyup.add( on_keyboard_used );
+			
+		}
 		
 	}
 	
@@ -464,7 +524,7 @@ var KAIOPUA = (function (main) {
 			
 		}
 		
-		trigger_key( button, type, [ e.identifier ] );
+		trigger_key( button, type, e );
 		
 	}
 	
@@ -496,6 +556,12 @@ var KAIOPUA = (function (main) {
 					
 					kbInfo.active = false;
 					
+				}
+				
+				// check arguments
+				
+				if ( typeof arguments !== 'undefined' && arguments.hasOwnProperty('length') === false ) {
+					arguments = [ arguments ];
 				}
 				
 				kbInfo[ eventType ].apply( this, arguments );
@@ -940,28 +1006,37 @@ var KAIOPUA = (function (main) {
 	
 	function disable () {
 		
-		if ( game.started === true && enabled === true ) {
-			
-			enabled = false;
-			
-			remove_control();
-			
-			shared.signals.update.remove( update );
-			
-		}
+		enabled = false;
+		
+		remove_control();
+		
+		shared.signals.update.remove( update );
+		
 	}
 	
 	function show () {
 		
-		scene = game.scene;
-		
-		game.add_to_scene( addOnShow, scene );
+		if ( showing === false ) {
+			
+			scene = game.scene;
+			
+			game.add_to_scene( addOnShow, scene );
+			
+			showing = true;
+			
+		}
 		
 	}
 	
 	function hide () {
 		
-		game.remove_from_scene( addOnShow, scene );
+		if ( showing === true ) {
+		
+			game.remove_from_scene( addOnShow, scene );
+			
+			showing = false;
+			
+		}
 		
 	}
 	

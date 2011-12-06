@@ -187,7 +187,8 @@ var KAIOPUA = (function (main) {
         ],
 		utilVec31Follow,
 		utilQ1Follow,
-		utilQ2Follow;
+		utilQ2Follow,
+		utilFollowSettings;
     
     /*===================================================
     
@@ -333,6 +334,20 @@ var KAIOPUA = (function (main) {
 		utilVec31Follow = new THREE.Vector3();
 		utilQ1Follow = new THREE.Quaternion();
 		utilQ2Follow = new THREE.Quaternion();
+		utilFollowSettings = {
+			clamps: {
+				minRotX: 0,
+				maxRotX: 0,
+				minRotY: 0,
+				maxRotY: 0,
+				minPosZ: 0,
+				maxPosZ: 0
+			},
+			speed: {
+				move: 0,
+				rotate: 0
+			}
+		}
 		
 		// modify THREE classes
 		
@@ -860,18 +875,34 @@ var KAIOPUA = (function (main) {
 	
 	function object_follow_object ( leader, follower, followSettings ) {
 		
+		followSettings = followSettings || utilFollowSettings;
+		
 		var leaderScale = leader.scale,
 			leaderScaleMax = Math.max( leaderScale.x, leaderScale.y, leaderScale.z ), 
 			leaderQ = leader.quaternion,
 			rotationBase = followSettings.rotationBase,
 			rotationOffset = followSettings.rotationOffset,
 			positionOffset = followSettings.positionOffset,
-			clamps = followSettings.clamps,
+			state = followSettings.state,
+			clamps = followSettings.clamps || utilFollowSettings.clamps,
+			speed = followSettings.speed || utilFollowSettings.speed,
 			followerP = follower.position,
 			followerQ = follower.quaternion,
 			followerOffsetPos = utilVec31Follow,
 			followerOffsetRot = utilQ1Follow,
 			followerOffsetRotHalf = utilQ2Follow;
+		
+		// update state if present
+		
+		if ( typeof state !== 'undefined' ) {
+			
+			// update vectors with state
+			
+			positionOffset.x = Math.max( clamps.minPosX, Math.min( clamps.maxPosX, positionOffset.x + ( state.left - state.right ) * speed.move ) );
+			positionOffset.y = Math.max( clamps.minPosY, Math.min( clamps.maxPosY, positionOffset.y + ( state.up - state.down ) * speed.move ) );
+			positionOffset.z = Math.max( clamps.minPosZ, Math.min( clamps.maxPosZ, positionOffset.z + ( state.forward - state.back ) * speed.move ) );
+			
+		}
 		
 		// set offset base position
 		
@@ -961,7 +992,7 @@ var KAIOPUA = (function (main) {
 			mouse = shared.mice[ parameters ];
 			
 		}
-		else if ( typeof parameters === 'object' && parameters.hasOwnProperty( 'mouseIndex' ) ) {
+		else if ( typeof parameters === 'object' && parameters.hasOwnProperty( 'mouseIndex' ) && parameters.mouseIndex > 0 && parameters.mouseIndex < shared.mice.length ) {
 			
 			mouse = shared.mice[ parameters.mouseIndex ];
 			
@@ -1084,10 +1115,53 @@ var KAIOPUA = (function (main) {
 
     function set_section ( section, callback ) {
 		
+		var hadPreviousSection = false,
+			newSectionCallback = function () {
+				
+				if ( typeof previousSection !== 'undefined' ) {
+					
+					previousSection.remove();
+					
+				}
+				
+				$(domElement).append(transitioner.domElement);
+				
+                section.init();
+				
+				section.resize(shared.screenWidth, shared.screenHeight);
+				
+                section.show();
+				
+                currentSection = section;
+				
+				resume();
+                
+                $(transitioner.domElement).stop(true).fadeTo(transitionOut, 0, function () {
+					
+                    $(transitioner.domElement).detach();
+					
+				});
+				
+				// callback after transition out time
+				
+				window.requestTimeout( function () {
+					if ( typeof callback !== 'undefined' ) {
+						
+						callback.call();
+						
+					}
+				}, transitionOut );
+				
+			};
+		
+		// pause game while switching
+		
 		pause();
 		
         // hide current section
         if (typeof currentSection !== 'undefined') {
+			
+			hadPreviousSection = true;
             
             previousSection = currentSection;
             
@@ -1095,13 +1169,7 @@ var KAIOPUA = (function (main) {
             
             $(domElement).append(transitioner.domElement);
             
-            $(transitioner.domElement).stop(true).fadeTo(transitionIn, 1, function () {
-                
-                $(transitioner.domElement).detach();
-                
-                previousSection.remove();
-                
-            });
+            $(transitioner.domElement).stop(true).fadeTo(transitionIn, 1 );
             
         }
 		
@@ -1125,33 +1193,22 @@ var KAIOPUA = (function (main) {
         if (typeof section !== 'undefined') {
 			
             // wait for transitioner to finish fading in
-            $(transitioner.domElement).promise().done(function () {
+			
+			if ( hadPreviousSection === true ) {
 				
-                $(domElement).append(transitioner.domElement);
-				
-                section.init();
-				
-				section.resize(shared.screenWidth, shared.screenHeight);
-				
-                section.show();
-				
-                currentSection = section;
-				
-				resume();
-                
-                $(transitioner.domElement).stop(true).fadeTo(transitionOut, 0, function () {
+				window.requestTimeout( function () {
 					
-                    $(transitioner.domElement).detach();
+					newSectionCallback();
 					
-					if ( typeof callback !== 'undefined' ) {
-						
-						callback.call();
-						
-					}
-					
-				});
-                
-            });
+				}, transitionIn );
+			
+			}
+			// no previous section, create new immediately
+			else {
+				
+				newSectionCallback();
+				
+			}
             
         }
 		
