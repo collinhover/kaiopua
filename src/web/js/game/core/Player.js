@@ -31,6 +31,7 @@ var KAIOPUA = (function (main) {
 		playerLightFollowSettings,
 		following = [],
 		projector,
+		mathhelper,
 		utilRay1Selection,
 		utilVec31Selection,
 		selecting;
@@ -84,6 +85,8 @@ var KAIOPUA = (function (main) {
 		if ( ready !== true ) {
 			
 			// utility objects
+			
+			mathhelper = game.workers.mathhelper;
 			
 			utilRay1Selection = new THREE.Ray();
 			utilVec31Selection = new THREE.Vector3();
@@ -143,34 +146,38 @@ var KAIOPUA = (function (main) {
 			mice: {},
 			rotationBase: new THREE.Quaternion().setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), Math.PI ),
 			rotationOffset: new THREE.Vector3( 25, 0, 0 ),
+			rotationDelta: new THREE.Vector3(),
 			positionOffset: new THREE.Vector3( 0, 50, 300 ),
+			positionDelta: new THREE.Vector3(),
 			clamps: {
 				position: {
 					min: {
 						x: 0,
 						y: 0,
-						z: -25
+						z: -25,
+						delta: -20
 					},
 					max: {
 						x: 0,
 						y: 50,
-						z: 1000
+						z: 1000,
+						delta: 20
 					}
 				},
 				rotate: {
 					min: {
 						x: -75,
 						y: -360,
-						z: 0
+						z: 0,
+						delta: -40
 					},
 					max: {
 						x: 75,
 						y: 360,
-						z: 0
+						z: 0,
+						delta: 40
 					}
-				},
-				statePosition: 20,
-				stateRotate: 40
+				}
 			},
 			state: {
 				up: 0,				
@@ -191,8 +198,8 @@ var KAIOPUA = (function (main) {
 				rotate: 0.05,
 				zoomGrow: 5,
 				zoomDecay: 1,
-				rotateGrow: 1.25,
-				rotateDecay: 1
+				rotateGrow: 0.1,
+				rotateDecay: 0.8
 			}
 		}
 		
@@ -290,10 +297,16 @@ var KAIOPUA = (function (main) {
 	
 	function update_camera ( timeDelta ) {
 		
-		var mice,
-			mouseRotation,
+		var rotationOffset,
+			rotationDelta,
 			state,
-			speed;
+			speed,
+			clamps,
+			clampsRotate,
+			maxRX, 
+			minRX,
+			maxRY,
+			minRY;
 		
 		// update camera based on mode
 		
@@ -304,20 +317,25 @@ var KAIOPUA = (function (main) {
 		}
 		else {
 			
-			mice = cameraFollowSettings.mice;
-			mouseRotation = mice.rotation;
+			rotationOffset = cameraFollowSettings.rotationOffset;
+			rotationDelta = cameraFollowSettings.rotationDelta;
 			state = cameraFollowSettings.state;
 			speed = cameraFollowSettings.speed;
+			clamps = cameraFollowSettings.clamps;
+			clampsRotate = clamps.rotate;
+			maxRX = clampsRotate.max.x;
+			minRX = clampsRotate.min.x;
+			maxRY = clampsRotate.max.y;
+			minRY = clampsRotate.min.y;
+			
+			// add delta to offset
+			
+			rotationOffset.x = mathhelper.clamp( rotationOffset.x + rotationDelta.x, minRX, maxRX ) % 360;
+			rotationOffset.y = mathhelper.clamp( rotationOffset.y + rotationDelta.y, minRY, maxRY ) % 360;
 			
 			// decay
 			
-			state.forward = Math.max( 0, state.forward - speed.zoomDecay );
-			state.back = Math.max( 0, state.back - speed.zoomDecay );
-			
-			state.pitchUp = Math.max( 0, state.pitchUp - speed.rotateDecay );
-			state.pitchDown = Math.max( 0, state.pitchDown - speed.rotateDecay );
-			state.yawLeft = Math.max( 0, state.yawLeft - speed.rotateDecay );
-			state.yawRight = Math.max( 0, state.yawRight - speed.rotateDecay );
+			rotationDelta.multiplyScalar( speed.rotateDecay );
 			
 		}
 		
@@ -350,37 +368,21 @@ var KAIOPUA = (function (main) {
 	
 	function camera_rotate_update ( e ) {
 		
-		var state = cameraFollowSettings.state,
+		var rotationDelta = cameraFollowSettings.rotationDelta,
+			state = cameraFollowSettings.state,
 			clamps = cameraFollowSettings.clamps,
+			clampsRotate = clamps.rotate,
 			speed = cameraFollowSettings.speed,
 			mice = cameraFollowSettings.mice,
 			mouse = mice.rotation;
 		
 		// pitch
 		
-		if ( mouse.dy > 0 ) {
-			
-			state.pitchUp = Math.min( clamps.stateRotate, state.pitchUp + speed.rotateGrow );
-			
-		}
-		else if ( mouse.dy < 0 ) {
-			
-			state.pitchDown = Math.min( clamps.stateRotate, state.pitchDown + speed.rotateGrow );
-			
-		}
+		rotationDelta.x = mathhelper.clamp( rotationDelta.x + mouse.dy * speed.rotateGrow, clampsRotate.min.delta, clampsRotate.max.delta );
 		
 		// yaw
 		
-		if ( mouse.dx > 0 ) {
-			
-			state.yawRight = Math.min( clamps.stateRotate, state.yawRight + speed.rotateGrow );
-			
-		}
-		else if ( mouse.dx < 0 ) {
-			
-			state.yawLeft = Math.min( clamps.stateRotate, state.yawLeft + speed.rotateGrow );
-			
-		}
+		rotationDelta.y = mathhelper.clamp( rotationDelta.y + mouse.dx * speed.rotateGrow, clampsRotate.min.delta, clampsRotate.max.delta );
 		
 	}
 	
@@ -424,8 +426,10 @@ var KAIOPUA = (function (main) {
 		// mouse buttons
 		
 		kbMap[ 'mouseleft' ] = {
-			keydown: function ( e ) { character_action( 'ability_001_start', { mouseIndex: e ? e.identifier : 0 } ); },
-			keyup: function ( e ) { character_action( 'ability_001_end', { mouseIndex: e ? e.identifier : 0 } ); },
+			keydown: function ( e ) { camera_rotate( e ); },
+			keyup: function ( e ) { camera_rotate( e, true ); }
+			/*keydown: function ( e ) { character_action( 'ability_001_start', { mouseIndex: e ? e.identifier : 0 } ); },
+			keyup: function ( e ) { character_action( 'ability_001_end', { mouseIndex: e ? e.identifier : 0 } ); },*/
 		};
 		kbMap[ 'mousemiddle' ] = {
 			keydown: function ( e ) { console.log('key down: mousemiddle'); },

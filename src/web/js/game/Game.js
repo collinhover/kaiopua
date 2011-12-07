@@ -908,7 +908,7 @@ var KAIOPUA = (function (main) {
 			followerOffsetPos = utilVec31Follow,
 			followerOffsetRot = utilQ1Follow,
 			followerOffsetRotHalf = utilQ2Follow;
-		
+		/*
 		// update state if present
 		
 		if ( typeof state !== 'undefined' ) {
@@ -962,7 +962,7 @@ var KAIOPUA = (function (main) {
 			}
 			
 		}
-		
+		*/
 		// set offset base position
 		
 		followerOffsetPos.set( positionOffset.x, positionOffset.y, positionOffset.z ).multiplyScalar( leaderScaleMax );
