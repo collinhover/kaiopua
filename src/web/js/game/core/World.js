@@ -8,6 +8,7 @@ var KAIOPUA = (function (main) {
         game = main.game = main.game || {},
 		core = game.core = game.core || {},
 		world = core.world = core.world || {},
+		model = core.model = core.model || {},
 		env = game.env = game.env || {},
 		ready = false,
 		assets,
@@ -103,7 +104,7 @@ var KAIOPUA = (function (main) {
 		
 		// body parts
         
-        head = objectmaker.make_model({
+        head = model.instantiate({
             geometry: assets["assets/models/World_Head.js"],
 			rigidBodyInfo: {
 				bodyType: 'trimesh'
@@ -114,7 +115,7 @@ var KAIOPUA = (function (main) {
 			interactive: false
         });
 		
-		tail = objectmaker.make_model({
+		tail = model.instantiate({
             geometry: assets["assets/models/World_Tail.js"],
 			rigidBodyInfo: {
 				bodyType: 'trimesh'
@@ -138,7 +139,7 @@ var KAIOPUA = (function (main) {
 		
 		// hill for hut
 		
-		var hutHill = objectmaker.make_model({
+		var hutHill = model.instantiate({
             geometry: assets["assets/models/Hut_Hill.js"],
 			rigidBodyInfo: {
 				bodyType: 'trimesh'
@@ -157,7 +158,7 @@ var KAIOPUA = (function (main) {
 		
 		// steps
 		
-		var steps = objectmaker.make_model({
+		var steps = model.instantiate({
             geometry: assets["assets/models/Hut_Steps.js"],
 			rigidBodyInfo: {
 				bodyType: 'trimesh'
@@ -174,7 +175,7 @@ var KAIOPUA = (function (main) {
 		
 		// hut
 		
-		var hut = objectmaker.make_model({
+		var hut = model.instantiate({
             geometry: assets["assets/models/Hut.js"],
 			rigidBodyInfo: {
 				bodyType: 'trimesh'
@@ -191,7 +192,7 @@ var KAIOPUA = (function (main) {
 		
 		// bed
 		
-		var bed = objectmaker.make_model({
+		var bed = model.instantiate({
             geometry: assets["assets/models/Bed.js"],
 			rigidBodyInfo: {
 				bodyType: 'box'
@@ -206,7 +207,7 @@ var KAIOPUA = (function (main) {
 		
 		// banana leaf door
 		
-		var bananaLeafDoor = objectmaker.make_model({
+		var bananaLeafDoor = model.instantiate({
             geometry: assets["assets/models/Banana_Leaf_Door.js"],
 			materials: new THREE.MeshNormalMaterial(),
 			shading: THREE.SmoothShading,
@@ -222,7 +223,7 @@ var KAIOPUA = (function (main) {
 		
 		// surfboard
 		
-		var surfboard = objectmaker.make_model({
+		var surfboard = model.instantiate({
             geometry: assets["assets/models/Surfboard.js"],
 			materials: new THREE.MeshNormalMaterial(),
 			shading: THREE.SmoothShading,
@@ -237,7 +238,7 @@ var KAIOPUA = (function (main) {
 		
 		// palm tree
 		
-		var palmTree = objectmaker.make_model({
+		var palmTree = model.instantiate({
             geometry: assets["assets/models/Palm_Tree.js"],
 			materials: new THREE.MeshNormalMaterial(),
 			shading: THREE.SmoothShading,
@@ -252,7 +253,7 @@ var KAIOPUA = (function (main) {
 		
 		// taro plants
 		
-		var taroPlant1 = objectmaker.make_model({
+		var taroPlant1 = model.instantiate({
             geometry: assets["assets/models/Taro_Plant.js"],
 			materials: new THREE.MeshNormalMaterial(),
 			shading: THREE.SmoothShading
@@ -262,7 +263,7 @@ var KAIOPUA = (function (main) {
 		
 		parts.push( taroPlant1 );
 		
-		var taroPlant2 = objectmaker.make_model({
+		var taroPlant2 = model.instantiate({
             geometry: assets["assets/models/Taro_Plant.js"],
 			materials: new THREE.MeshNormalMaterial(),
 			shading: THREE.SmoothShading,
@@ -275,7 +276,7 @@ var KAIOPUA = (function (main) {
 		
 		// water
 		
-		water = env.water.make_water_env();
+		water = env.water.instantiate();
 		
 		parts.push( water.container );
 		

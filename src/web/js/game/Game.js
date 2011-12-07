@@ -13,6 +13,7 @@ var KAIOPUA = (function (main) {
 		core = game.core = game.core || {},
         sections = game.sections = game.sections || {},
         workers = game.workers = game.workers || {},
+		mathhelper = workers.mathhelper = workers.mathhelper || {},
         menus = game.menus = game.menus || {},
 		effects = main.effects = main.effects || {},
         transitioner,
@@ -138,12 +139,14 @@ var KAIOPUA = (function (main) {
 			"js/lib/jiglibjs2/vehicles/JWheel.js",
 			"js/lib/jiglibjs2/vehicles/JCar.js",
 			end JigLib 2 library */
-			"js/game/workers/ObjectMaker.js",
-			"js/game/workers/MenuMaker.js",
 			"js/game/core/Physics.js",
+			"js/game/core/Model.js",
 			"js/game/core/World.js",
 			"js/game/core/Player.js",
 			"js/game/core/Character.js",
+			"js/game/workers/ObjectMaker.js",
+			"js/game/workers/MenuMaker.js",
+			"js/game/workers/MathHelper.js",
 			"js/game/env/Water.js",
 			"js/game/characters/Hero.js",
             "js/game/sections/IntroSection.js",
@@ -731,7 +734,7 @@ var KAIOPUA = (function (main) {
         
 		// add each pass in passes names
 		
-		for ( i = 0, l = passesNames.length; i < l; i += 1 ) {
+		for ( i = 0, l = passesNames.length; i < l; i ++ ) {
 			
 			passName = passesNames[ i ];
 			
@@ -797,7 +800,7 @@ var KAIOPUA = (function (main) {
 		
 		sceneTarget = sceneTarget || scene;
 		
-		for ( i = 0, l = objects.length; i < l; i += 1 ) {
+		for ( i = 0, l = objects.length; i < l; i ++ ) {
 			
 			object = objects[ i ];
 			
@@ -840,7 +843,7 @@ var KAIOPUA = (function (main) {
 		
 		sceneTarget = sceneTarget || scene;
 		
-		for ( i = 0, l = objects.length; i < l; i += 1 ) {
+		for ( i = 0, l = objects.length; i < l; i ++ ) {
 		
 			object = objects[ i ];
 			
@@ -883,8 +886,22 @@ var KAIOPUA = (function (main) {
 			rotationBase = followSettings.rotationBase,
 			rotationOffset = followSettings.rotationOffset,
 			positionOffset = followSettings.positionOffset,
+			pX,
+			pY,
+			pZ,
+			rX,
+			rY,
+			rZ,
 			state = followSettings.state,
 			clamps = followSettings.clamps || utilFollowSettings.clamps,
+			clampsPosition = clamps.position,
+			clampsRotate = clamps.rotate,
+			maxPX, minPX,
+			maxPY, minPY,
+			maxPZ, minPZ,
+			maxRX, minRX,
+			maxRY, minRY,
+			maxRZ, minRZ,
 			speed = followSettings.speed || utilFollowSettings.speed,
 			followerP = follower.position,
 			followerQ = follower.quaternion,
@@ -896,11 +913,53 @@ var KAIOPUA = (function (main) {
 		
 		if ( typeof state !== 'undefined' ) {
 			
-			// update vectors with state
+			// set clamps
 			
-			positionOffset.x = Math.max( clamps.minPosX, Math.min( clamps.maxPosX, positionOffset.x + ( state.left - state.right ) * speed.move ) );
-			positionOffset.y = Math.max( clamps.minPosY, Math.min( clamps.maxPosY, positionOffset.y + ( state.up - state.down ) * speed.move ) );
-			positionOffset.z = Math.max( clamps.minPosZ, Math.min( clamps.maxPosZ, positionOffset.z + ( state.forward - state.back ) * speed.move ) );
+			maxPX = clampsPosition.max.x, minPX = clampsPosition.min.x,
+			maxPY = clampsPosition.max.y, minPY = clampsPosition.min.y,
+			maxPZ = clampsPosition.max.z, minPZ = clampsPosition.min.z,
+			maxRX = clampsRotate.max.x, minRX = clampsRotate.min.x,
+			maxRY = clampsRotate.max.y, minRY = clampsRotate.min.y,
+			maxRZ = clampsRotate.max.z, minRZ = clampsRotate.min.z,
+			
+			// update position
+			
+			positionOffset.x = pX = mathhelper.clamp( positionOffset.x + ( state.left - state.right ) * speed.move, minPX, maxPX );
+			positionOffset.y = pY = mathhelper.clamp( positionOffset.y + ( state.up - state.down ) * speed.move, minPY, maxPY );
+			positionOffset.z = pZ = mathhelper.clamp( positionOffset.z + ( state.forward - state.back ) * speed.move, minPZ, maxPZ );
+			
+			// update rotation
+			
+			rX = mathhelper.clamp( rotationOffset.x + ( state.pitchUp - state.pitchDown ) * speed.rotate, minRX, maxRX );
+			rY = mathhelper.clamp( rotationOffset.y + ( state.yawLeft - state.yawRight ) * speed.rotate, minRY, maxRY );
+			rZ = mathhelper.clamp( rotationOffset.z + ( state.rollLeft - state.rollRight ) * speed.rotate, minRZ, maxRZ );
+			
+			// fix rotations
+			
+			rotationOffset.x = rX = rX % 360;
+			rotationOffset.y = rY = rY % 360;
+			rotationOffset.z = rZ = rZ % 360;
+			
+			// clear state if at clamp
+			
+			if ( pX === maxPX || pX === minPX ) {
+				state.left = state.right = 0;
+			}
+			if ( pY === maxPY || pY === minPY ) {
+				state.up = state.down = 0;
+			}
+			if ( pZ === maxPZ || pZ === minPZ ) {
+				state.forward = state.back = 0;
+			}
+			if ( rX === maxRX || rX === minRX ) {
+				state.pitchUp = state.pitchDown = 0;
+			}
+			if ( rY === maxRY || rY === minRY ) {
+				state.yawLeft = state.yawRight = 0;
+			}
+			if ( rZ === maxRZ || rZ === minRZ ) {
+				state.rollLeft = state.rollRight = 0;
+			}
 			
 		}
 		

@@ -140,22 +140,37 @@ var KAIOPUA = (function (main) {
 		// init camera follow settings
 		
 		cameraFollowSettings = {
+			mice: {},
 			rotationBase: new THREE.Quaternion().setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), Math.PI ),
 			rotationOffset: new THREE.Vector3( 25, 0, 0 ),
-			positionOffset: new THREE.Vector3( 0, 100, 300 ),
+			positionOffset: new THREE.Vector3( 0, 50, 300 ),
 			clamps: {
-				minPosX: 0,
-				maxPosX: 0,
-				minPosY: 0,
-				maxPosY: 0,
-				minPosZ: 0,
-				maxPosZ: 1000,
-				minRotX: -0.4,
-				maxRotX: 0.1,
-				minRotY: -1,
-				maxRotY: 1,
-				minRotZ: 0,
-				maxRotZ: 0,
+				position: {
+					min: {
+						x: 0,
+						y: 0,
+						z: -25
+					},
+					max: {
+						x: 0,
+						y: 50,
+						z: 1000
+					}
+				},
+				rotate: {
+					min: {
+						x: -75,
+						y: -360,
+						z: 0
+					},
+					max: {
+						x: 75,
+						y: 360,
+						z: 0
+					}
+				},
+				statePosition: 20,
+				stateRotate: 40
 			},
 			state: {
 				up: 0,				
@@ -173,9 +188,11 @@ var KAIOPUA = (function (main) {
 			},
 			speed: {
 				move: 1,
-				rotate: 1,
+				rotate: 0.05,
 				zoomGrow: 5,
 				zoomDecay: 1,
+				rotateGrow: 1.25,
+				rotateDecay: 1
 			}
 		}
 		
@@ -256,27 +273,6 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function update_camera ( timeDelta ) {
-		
-		var state = cameraFollowSettings.state,
-			speed = cameraFollowSettings.speed;
-		
-		// update camera based on mode
-		
-		if ( cameraMode === cameraModes.freelook ) {
-			
-			cameraFreelookControls.update( timeDelta );
-			
-		}
-		else {
-			
-			state.forward = Math.max( 0, state.forward - 1 * speed.zoomDecay );
-			state.back = Math.max( 0, state.back - 1 * speed.zoomDecay );
-			
-		}
-		
-	}
-	
 	function camera_toggle_free_look () {
 		
 		if ( cameraMode === cameraModes.freelook ) {
@@ -292,21 +288,118 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
+	function update_camera ( timeDelta ) {
+		
+		var mice,
+			mouseRotation,
+			state,
+			speed;
+		
+		// update camera based on mode
+		
+		if ( cameraMode === cameraModes.freelook ) {
+			
+			cameraFreelookControls.update( timeDelta );
+			
+		}
+		else {
+			
+			mice = cameraFollowSettings.mice;
+			mouseRotation = mice.rotation;
+			state = cameraFollowSettings.state;
+			speed = cameraFollowSettings.speed;
+			
+			// decay
+			
+			state.forward = Math.max( 0, state.forward - speed.zoomDecay );
+			state.back = Math.max( 0, state.back - speed.zoomDecay );
+			
+			state.pitchUp = Math.max( 0, state.pitchUp - speed.rotateDecay );
+			state.pitchDown = Math.max( 0, state.pitchDown - speed.rotateDecay );
+			state.yawLeft = Math.max( 0, state.yawLeft - speed.rotateDecay );
+			state.yawRight = Math.max( 0, state.yawRight - speed.rotateDecay );
+			
+		}
+		
+	}
+	
+	function camera_rotate ( e, end ) {
+		
+		var state = cameraFollowSettings.state,
+			mice = cameraFollowSettings.mice,
+			mouse = shared.mice[ e.identifier ];
+		
+		// end rotation
+		if ( end === true ) {
+			
+			shared.signals.mousemoved.remove( camera_rotate_update );
+			
+		}
+		// start rotation
+		else {
+			
+			// store mouse
+			
+			mice.rotation = mouse;
+			
+			shared.signals.mousemoved.add( camera_rotate_update );
+			
+		}
+		
+	}
+	
+	function camera_rotate_update ( e ) {
+		
+		var state = cameraFollowSettings.state,
+			clamps = cameraFollowSettings.clamps,
+			speed = cameraFollowSettings.speed,
+			mice = cameraFollowSettings.mice,
+			mouse = mice.rotation;
+		
+		// pitch
+		
+		if ( mouse.dy > 0 ) {
+			
+			state.pitchUp = Math.min( clamps.stateRotate, state.pitchUp + speed.rotateGrow );
+			
+		}
+		else if ( mouse.dy < 0 ) {
+			
+			state.pitchDown = Math.min( clamps.stateRotate, state.pitchDown + speed.rotateGrow );
+			
+		}
+		
+		// yaw
+		
+		if ( mouse.dx > 0 ) {
+			
+			state.yawRight = Math.min( clamps.stateRotate, state.yawRight + speed.rotateGrow );
+			
+		}
+		else if ( mouse.dx < 0 ) {
+			
+			state.yawLeft = Math.min( clamps.stateRotate, state.yawLeft + speed.rotateGrow );
+			
+		}
+		
+	}
+	
 	function camera_zoom ( e ) {
 		
 		var eo = e.originalEvent || e,
 			wheelDelta = eo.wheelDelta,
 			state = cameraFollowSettings.state,
+			clamps = cameraFollowSettings.clamps,
 			speed = cameraFollowSettings.speed;
 		
 		if ( wheelDelta > 0 ) {
 			
-			state.back += 1 * speed.zoomGrow;
+			state.back = Math.min( clamps.statePosition, state.back + speed.zoomGrow );
 			
 		}
 		else {
 			
-			state.forward += 1 * speed.zoomGrow;
+			state.forward = Math.min( clamps.statePosition, state.forward + speed.zoomGrow );
 			
 		}
 		
@@ -335,12 +428,12 @@ var KAIOPUA = (function (main) {
 			keyup: function ( e ) { character_action( 'ability_001_end', { mouseIndex: e ? e.identifier : 0 } ); },
 		};
 		kbMap[ 'mousemiddle' ] = {
-			keydown: function () { console.log('key down: mousemiddle'); },
-			keyup: function () { console.log('key up: mousemiddle'); }
+			keydown: function ( e ) { console.log('key down: mousemiddle'); },
+			keyup: function ( e ) { console.log('key up: mousemiddle'); }
 		};
 		kbMap[ 'mouseright' ] = {
-			keydown: function () { console.log('key down: mouseright'); },
-			keyup: function () { console.log('key up: mouseright'); }
+			keydown: function ( e ) { camera_rotate( e ); },
+			keyup: function ( e ) { camera_rotate( e, true ); }
 		};
 		kbMap[ 'mousewheel' ] = {
 			keyup: function ( e ) { camera_zoom( e ); }
@@ -601,7 +694,7 @@ var KAIOPUA = (function (main) {
 		
 		// create character
 		
-		playerCharacter = core.character.make_character( {
+		playerCharacter = core.character.instantiate( {
 			
 			type: characters.hero
 			
@@ -958,7 +1051,7 @@ var KAIOPUA = (function (main) {
 			pcMesh = playerCharacter.model.mesh,
 			followSettings;
 		
-		for ( i = 0, l = following.length; i < l; i += 1 ) {
+		for ( i = 0, l = following.length; i < l; i ++ ) {
 			
 			followSettings = following[ i ];
 			

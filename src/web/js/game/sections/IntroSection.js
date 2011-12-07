@@ -11,7 +11,7 @@ var KAIOPUA = (function (main) {
         readyInternal = false,
         readyAll = false,
         assets,
-        objectmaker,
+        model,
 		skybox,
 		world,
 		player,
@@ -70,10 +70,7 @@ var KAIOPUA = (function (main) {
 		world = game.core.world;
 		player = game.core.player;
 		physics = game.core.physics;
-		
-		// workers
-		
-		objectmaker = game.workers.objectmaker;
+		model = game.core.model;
         
     }
     
@@ -122,7 +119,7 @@ var KAIOPUA = (function (main) {
 			
 			// box
 			
-			var box = objectmaker.make_model({
+			var box = model.instantiate({
 				geometry: geom,
 				materials: normalMat
 			});
@@ -147,7 +144,7 @@ var KAIOPUA = (function (main) {
 		var deltaRotB = (Math.PI * 2) / (numBoxPerRing);
 		var rotB = 0;
 		
-		for ( var i = 0, l = numRings; i < l; i += 1 ) {
+		for ( var i = 0, l = numRings; i < l; i ++ ) {
 			
 			rotB = 0;
 			
@@ -161,7 +158,7 @@ var KAIOPUA = (function (main) {
 			
 			var ny = radius * Math.cos( rotA );
 			
-			for ( var bi = 0, bl = numBoxPerRing; bi < bl; bi += 1 ) {
+			for ( var bi = 0, bl = numBoxPerRing; bi < bl; bi ++ ) {
 				
 				var nx = radius * Math.sin( rotA ) * Math.cos( rotB );
 				var nz = radius * Math.sin( rotA ) * Math.sin( rotB );

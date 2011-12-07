@@ -119,7 +119,7 @@ var KAIOPUA = (function (main) {
         
         // per vert variation
         wavesVertsNum = wavesGeometry.vertices.length;
-        for ( i = 0; i < wavesVertsNum; i += 1 ) {
+        for ( i = 0; i < wavesVertsNum; i ++ ) {
             vertVariations[ i ] = {
                 amplitude : Math.random() * (vvMax - vvMin) + vvMin,
                 dir : 1,
@@ -146,7 +146,7 @@ var KAIOPUA = (function (main) {
         rayTexture = new THREE.Texture( main.utils.loader.assets[rayTexturePath] ); 
         rayTexture.needsUpdate = true;
         
-        for ( i = 0; i < numRays; i += 1 ) {
+        for ( i = 0; i < numRays; i ++ ) {
         
             rayMaterial = new THREE.MeshBasicMaterial( { color: wavesColor, map: rayTexture, opacity: 0, depthTest: false } );
             
@@ -215,8 +215,8 @@ var KAIOPUA = (function (main) {
 		
         waveTime = time * wavesSpeed;
         
-        for ( i = 0; i < wavesVertsW; i += 1 ) {
-            for ( l = 0; l < wavesVertsH; l += 1 ) {
+        for ( i = 0; i < wavesVertsW; i ++ ) {
+            for ( l = 0; l < wavesVertsH; l ++ ) {
                 vert = wavesVerts[ i + l * wavesVertsH ];
                 
                 // set water vert
@@ -234,7 +234,7 @@ var KAIOPUA = (function (main) {
                         variation.dir = -variation.dir;
                         variation.dirSwitch = 0;
                     }
-                    variation.dirSwitch += 1;
+                    variation.dirSwitch ++;
                     
                     // add variation to vert z
                     vert.position.z += variation.amplitude;

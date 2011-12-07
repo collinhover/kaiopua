@@ -139,7 +139,7 @@ var KAIOPUA = (function (main) {
 			
 			adObj.scaleRecords = {};
 			
-			for ( i = 0, l = targets.length; i < l; i += 1 ) {
+			for ( i = 0, l = targets.length; i < l; i ++ ) {
 				
 				target = targets[ i ];
 				
@@ -203,8 +203,6 @@ var KAIOPUA = (function (main) {
 			scaleRecords,
 			scaleRecord,
 			scaleDelta,
-			mouseDeltaX,
-			mouseDeltaY,
 			mouseDelta,
 			mouseDeltaDivisorY = shared.screenHeight * 0.1;
 		
@@ -218,16 +216,14 @@ var KAIOPUA = (function (main) {
 			
 			// mouse change
 			
-			mouseDeltaX = mouse.x - mouse.lx;
-			mouseDeltaY = -( mouse.y - mouse.ly );
-			mouseDelta = ( mouseDeltaX + mouseDeltaY ) * 0.5;
+			mouseDelta = ( mouse.dx - mouse.dy ) * 0.5;
 			
 			// scale change
 			
 			scaleDelta = mouseDelta / mouseDeltaDivisorY;
 			
 			// for all interactive targets
-			for ( i = 0, l = targets.length; i < l; i += 1 ) {
+			for ( i = 0, l = targets.length; i < l; i ++ ) {
 				
 				target = targets[ i ];
 				

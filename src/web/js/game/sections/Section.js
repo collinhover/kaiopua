@@ -11,7 +11,7 @@ var KAIOPUA = (function (main) {
         readyInternal = false,
         readyAll = false,
         assets,
-        objectmaker,
+        model,
 		world,
 		player,
 		camera,
@@ -103,7 +103,7 @@ var KAIOPUA = (function (main) {
 		
 		// add items
 		
-		for ( i = 0, l = addOnShow.length; i < l; i += 1 ) {
+		for ( i = 0, l = addOnShow.length; i < l; i ++ ) {
 			
 			scene.add( addOnShow[ i ] );
 			
@@ -131,7 +131,7 @@ var KAIOPUA = (function (main) {
 		
 		// remove added items
 		
-		for ( i = 0, l = addOnShow.length; i < l; i += 1 ) {
+		for ( i = 0, l = addOnShow.length; i < l; i ++ ) {
 		
 			scene.remove( addOnShow[ i ] );
 			

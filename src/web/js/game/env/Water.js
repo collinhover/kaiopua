@@ -18,7 +18,7 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
     
-    water.make_water_env = make_water_env;
+    water.instantiate = instantiate;
         
     /*===================================================
     
@@ -26,12 +26,13 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
     
-    function make_water_env ( parameters ) {
+    function instantiate ( parameters ) {
 		
 		parameters = parameters || {};
 		
         var i, l,
 			assets = main.utils.loader.assets,
+			model = game.core.model,
 			environment,
 			wavesInfo,
 			vvInfo,
@@ -138,7 +139,7 @@ var KAIOPUA = (function (main) {
 		
 		vvFreqLast = (vvFreqMax - vvFreqMin) * 0.5;
 		
-        for ( i = 0; i < wavesVertsNum; i += 1 ) {
+        for ( i = 0; i < wavesVertsNum; i ++ ) {
 			
             vvInfo.list[ i ] = {
                 amplitude: Math.random() * (vvAmpMax - vvAmpMin) + vvAmpMin,
@@ -181,7 +182,7 @@ var KAIOPUA = (function (main) {
 			var colorOriginal = new THREE.Color( wavesColor );
 			var colorDarkness = new THREE.Color( wavesDarknessColor );
 			
-			for ( i = 0, l = wavesMaterialsDarknessSteps; i < l; i += 1 ) {
+			for ( i = 0, l = wavesMaterialsDarknessSteps; i < l; i ++ ) {
 				
 				materialStep = i / (wavesMaterialsDarknessSteps - 1);
 				var colorDist = new THREE.Color().setRGB( colorOriginal.r * materialStep + colorDarkness.r * ( 1 - materialStep ), colorOriginal.g * materialStep + colorDarkness.g * ( 1 - materialStep ), colorOriginal.b * materialStep + colorDarkness.b * ( 1 - materialStep ) ); 
@@ -199,7 +200,7 @@ var KAIOPUA = (function (main) {
 			
 			// create opacity materials
 			
-			for ( i = 0, l = wavesMaterialsOpacitySteps; i < l; i += 1 ) {
+			for ( i = 0, l = wavesMaterialsOpacitySteps; i < l; i ++ ) {
 				
 				materialStep = i / (wavesMaterialsOpacitySteps - 1);
 				var opacityDist = 1 - materialStep;
@@ -224,7 +225,7 @@ var KAIOPUA = (function (main) {
 			opacityDistMax = parameters.opacityDistMax || wavesSize * 0.5;
 			centerPoint = new THREE.Vector3( 0, 0, 0 );
 			
-			for ( i = 0, l = wavesFaces.length; i < l; i += 1 ) {
+			for ( i = 0, l = wavesFaces.length; i < l; i ++ ) {
 				
 				face = wavesFaces[ i ];
 				faceCentroid = face.centroid;
@@ -269,7 +270,7 @@ var KAIOPUA = (function (main) {
 			return numZeropad;
 		}
 		
-		for ( i = 0, l = numWavesMorphs; i < l; i += 1 ) {
+		for ( i = 0, l = numWavesMorphs; i < l; i ++ ) {
 			
 			// init next morph target
 			morphTarget = wavesGeometry.morphTargets[ i ] = {};
@@ -284,7 +285,7 @@ var KAIOPUA = (function (main) {
 			
 			morphTargetVertices = morphTarget.vertices;
 			
-			for ( v = 0; v < wavesVertsW * wavesVertsH; v += 1 ) {
+			for ( v = 0; v < wavesVertsW * wavesVertsH; v ++ ) {
 					
 				morphTargetVertexIndex = v;
 				
@@ -305,7 +306,7 @@ var KAIOPUA = (function (main) {
 		
 		morphTargetVertices = morphTarget.vertices;
 		
-		for ( v = 0; v < wavesVertsW * wavesVertsH; v += 1 ) {
+		for ( v = 0; v < wavesVertsW * wavesVertsH; v ++ ) {
 				
 			morphTargetVertexIndex = v;
 			
@@ -316,7 +317,7 @@ var KAIOPUA = (function (main) {
 		}
 		
         // water mesh
-        wavesInfo.model = game.workers.objectmaker.make_model({
+        wavesInfo.model = model.instantiate({
 			geometry: wavesGeometry,
 			materials: wavesMaterial,
 			doubleSided: true,
@@ -349,7 +350,7 @@ var KAIOPUA = (function (main) {
         rayTexture = new THREE.Texture( assets[rayTexturePath] ); 
         rayTexture.needsUpdate = true;
         
-        for ( i = 0; i < numRays; i += 1 ) {
+        for ( i = 0; i < numRays; i ++ ) {
         
             rayMaterial = new THREE.MeshBasicMaterial( { color: wavesColor, map: rayTexture, opacity: 0, depthTest: false } );
             
@@ -392,8 +393,8 @@ var KAIOPUA = (function (main) {
 			// update wave time
 			wavesTime = wavesInfo.time += time * wavesSpeed;
 			
-			for ( i = 0; i < wavesVertsW; i += 1 ) {
-				for ( l = 0; l < wavesVertsH; l += 1 ) {
+			for ( i = 0; i < wavesVertsW; i ++ ) {
+				for ( l = 0; l < wavesVertsH; l ++ ) {
 					
 					vertIndex = i + l * wavesVertsH;
 					

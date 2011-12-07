@@ -8,6 +8,8 @@ var KAIOPUA = (function (main) {
         game = main.game = main.game || {},
 		core = game.core = game.core || {},
 		character = core.character = core.character || {},
+		model = core.model = core.model || {},
+		physics = core.physics = core.physics || {},
 		characters = game.characters = game.characters || {}, 
 		characterIDBase = 'kaiopua_character';
 	
@@ -17,7 +19,7 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	character.make_character = make_character;
+	character.instantiate = instantiate;
 	
 	/*===================================================
     
@@ -25,17 +27,10 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	function make_character ( parameters ) {
+	function instantiate ( parameters ) {
 		
 		var c = {},
-			objectmaker,
-			physics,
 			movementInfo;
-		
-		// setup
-		
-		objectmaker = game.workers.objectmaker;
-		physics = core.physics;
 		
 		// handle parameters
 		
@@ -67,7 +62,7 @@ var KAIOPUA = (function (main) {
 				
 			}
 			
-			c.model = objectmaker.make_model( parameters.modelInfo ) ;
+			c.model = model.instantiate( parameters.modelInfo ) ;
 			
 		}
 		
