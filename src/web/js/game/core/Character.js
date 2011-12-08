@@ -160,9 +160,7 @@ var KAIOPUA = (function (main) {
 				rotate = movement.rotate,
 				rotateDir = rotate.direction,
 				rotateDelta = rotate.delta,
-				rotateVec = rotate.vector,
 				rotateSpeed = rotate.speed,
-				rotateUtilQ1 = rotate.utilQ1,
 				move,
 				moveDir,
 				moveVec,
@@ -181,13 +179,7 @@ var KAIOPUA = (function (main) {
 			
 			// rotate self
 			
-			rotateDelta.set( rotateDir.x * rotateSpeed, rotateDir.y * rotateSpeed, rotateDir.z * rotateSpeed, 1 ).normalize();
-			
-			rotateVec.multiplySelf( rotateDelta );
-			
-			rotateUtilQ1.multiply( meshQ, rotateDelta );
-			
-			meshQ.copy( rotateUtilQ1 );
+			c.rotate_by_delta( rotateDir.x * rotateSpeed, rotateDir.y * rotateSpeed, rotateDir.z * rotateSpeed, 1 );
 			
 			// velocity
 			
@@ -271,6 +263,27 @@ var KAIOPUA = (function (main) {
 				velocityMovementForce.addSelf( moveVec );
 				
 			}
+			
+		};
+		
+		c.rotate_by_delta = function ( dx, dy, dz, dw ) {
+			
+			var model = c.model,
+				mesh = model.mesh,
+				meshQ = mesh.quaternion,
+				movement = c.movement,
+				rotate = movement.rotate,
+				rotateDelta = rotate.delta,
+				rotateVec = rotate.vector,
+				rotateUtilQ1 = rotate.utilQ1;
+			
+			rotateDelta.set( dx || 0, dy || 0, dz || 0, dw || 1 ).normalize();
+			
+			rotateVec.multiplySelf( rotateDelta );
+			
+			rotateUtilQ1.multiply( meshQ, rotateDelta );
+			
+			meshQ.copy( rotateUtilQ1 );
 			
 		};
 		

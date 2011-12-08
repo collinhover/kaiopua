@@ -12,7 +12,9 @@ var KAIOPUA = (function (main) {
 		camera,
 		player,
 		csRot,
-		csPos;
+		csPos,
+		firstPersonDist = 200,
+		firstPerson = false;
 	
 	/*===================================================
     
@@ -209,7 +211,8 @@ var KAIOPUA = (function (main) {
 			rotOffsetMax = csRot.offsetMax,
 			rotDelta = csRot.delta,
 			rotDeltaDecay = csRot.deltaDecay,
-			playerMoving = player.moving;
+			playerMoving = player.moving,
+			pc = player.character;
 		
 		// add delta to offset
 		
@@ -217,12 +220,6 @@ var KAIOPUA = (function (main) {
 		
 		rotOffset.x = mathhelper.clamp( rotOffset.x + rotDelta.x, rotOffsetMin.x, rotOffsetMax.x );
 		rotOffset.y = mathhelper.clamp( rotOffset.y + rotDelta.y, rotOffsetMin.y, rotOffsetMax.y );
-		
-		// decay
-		
-		posDelta.multiplyScalar( posDeltaDecay );
-		
-		rotDelta.multiplyScalar( rotDeltaDecay );
 		
 		// normalize rotation (between 180 and -180)
 		
@@ -239,10 +236,54 @@ var KAIOPUA = (function (main) {
 			rotOffset.y += 360;
 		}
 		
-		// if player is moving but not rotating camera
-		// move rotation offset back towards original
 		
-		if ( typeof csRot.mouse === 'undefined' && playerMoving === true ) {
+		// check if should switch between third and first
+		
+		if ( posOffset.z - posOffsetMin.z <= firstPersonDist ) {
+			
+			firstPerson = true;
+			
+			/*
+			 * BROKEN - snaps short of actual angle
+			if ( rotOffset.y !== 0 ) {
+				
+				// update player rotation y
+				
+				pc.rotate_by_delta( 0, rotOffset.y / 180, 0, 1 );
+				
+				// remove rot delta from offset
+				// as will be copied when camera follows player
+				
+				rotOffset.y = 0;
+				
+			}
+			*/
+			
+		}
+		else {
+			
+			firstPerson = false;
+			
+		}
+		
+		// if in first person mode
+		// rotate character on y axis with camera
+		
+		if ( firstPerson === true ) {
+			
+			// update player rotation y
+			
+			pc.rotate_by_delta( 0, rotDelta.y / 180, 0, 1 );
+			
+			// remove rot delta from offset
+			// as will be copied when camera follows player
+			
+			rotOffset.y -= rotDelta.y;
+			
+		}
+		// if player is not in first person and moving but not rotating camera
+		// move rotation offset back towards original
+		else if ( typeof csRot.mouse === 'undefined' && playerMoving === true ) {
 			
 			if ( rotOffset.x !== rotOffsetBase.x ) rotOffset.x += (rotOffsetBase.x - rotOffset.x) * rotBaseRevertSpeed;
 			if ( rotOffset.y !== rotOffsetBase.y ) rotOffset.y += (rotOffsetBase.y - rotOffset.y) * rotBaseRevertSpeed;
@@ -250,45 +291,14 @@ var KAIOPUA = (function (main) {
 		}
 		
 		// follow player
-		
+	
 		game.object_follow_object( player.character.model.mesh, camera, rotBase, rotOffset, posOffset );
 		
-		/*
-		// 
-		//
-		// BROKEN
-		// issue is camera follows player character regardless, even if camera is turning player character
-		// probably need to pull camera follow character function internal to camera
-		// that way camera decides either to lead or to follow
-		//
-		//
+		// decay deltas
 		
-		// check if should switch between third and first
+		posDelta.multiplyScalar( posDeltaDecay );
 		
-		cameraFollowSettings.firstPersonMode = true;
-		
-		// if in first person mode
-		// rotate character on y axis with camera
-		
-		if ( cameraFollowSettings.firstPersonMode === true && playerMoving === false ) {
-			
-			
-			console.log('-----');
-			console.log(rotationOffset.y);
-			console.log((rotationOffset.y / 360));
-			console.log(playerMovementRotateVec.y);
-			
-			playerMovementRotate.delta.set( 0, (rotationOffset.y / 360) - playerMovementRotateVec.y, 0, 1 ).normalize();
-			
-			playerMovementRotateVec.multiplySelf( playerMovementRotate.delta ).normalize();
-			
-			playerMovementRotate.utilQ1.multiply( playerCharacter.model.mesh.quaternion, playerMovementRotate.delta );
-			
-			playerCharacter.model.mesh.quaternion.copy( playerMovementRotate.utilQ1 );
-			
-		}
-		*/
-		
+		rotDelta.multiplyScalar( rotDeltaDecay );
 		
 	}
 	

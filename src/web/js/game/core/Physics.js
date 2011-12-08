@@ -789,6 +789,7 @@ var KAIOPUA = (function (main) {
 			collider: collider,
 			movable: movable,
 			mass: mass,
+			rotationGravity: new THREE.Quaternion(),
 			velocityMovement: generate_velocity_tracker( { 
 				damping: parameters.movementDamping,
 				offset: parameters.movementOffset
@@ -1187,6 +1188,8 @@ var KAIOPUA = (function (main) {
 				
 				rotation = ( mesh.useQuaternion === true ? mesh.quaternion : mesh.matrix );
 				
+				rotationGravity = rigidBody.rotationGravity;
+				
 				velocityGravity = rigidBody.velocityGravity;
 				
 				velocityMovement = rigidBody.velocityMovement;
@@ -1261,6 +1264,10 @@ var KAIOPUA = (function (main) {
 					upToUpNewQ = uq3.setFromAxisAngle( upToUpNewAxis, upToUpNewAngle );
 					
 					// add to rotation
+					
+					uq1.multiply( upToUpNewQ, rotationGravity );
+					
+					THREE.Quaternion.nlerp( rotationGravity, uq1, rotationGravity, lerpDelta );
 					
 					if ( mesh.useQuaternion === true ) {
 						
