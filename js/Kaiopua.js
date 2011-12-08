@@ -272,6 +272,9 @@ var KAIOPUA = (function (main) {
 			mouse.x = e.clientX;
 			mouse.y = e.clientY;
 			
+			mouse.dx = mouse.x - mouse.lx;
+			mouse.dy = mouse.y - mouse.ly;
+			
 			shared.signals.mousemoved.dispatch( e );
 			
 		}

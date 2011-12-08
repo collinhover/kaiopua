@@ -112,7 +112,7 @@ var KAIOPUA = (function (main) {
         
         // cloud meshes
         
-        for ( i = 0; i < numClouds; i += 1) {
+        for ( i = 0; i < numClouds; i ++) {
             
             pct = ((numClouds - i) / numClouds);
             
@@ -185,7 +185,7 @@ var KAIOPUA = (function (main) {
         cloudPlane = new THREE.Mesh( new THREE.PlaneGeometry( 256, 256 ) );
         
         // position each cloud plane and merge into cloud geometry
-        for ( i = 0; i < numPlanes; i += 1 ) {
+        for ( i = 0; i < numPlanes; i ++ ) {
             
             pct = ((numPlanes - i) / numPlanes);
             
@@ -236,7 +236,7 @@ var KAIOPUA = (function (main) {
         
         // push each cloud
         
-        for ( i = 0; i < numClouds; i += 1) {
+        for ( i = 0; i < numClouds; i ++) {
             cloud = clouds[i];
             
             pct = ((numClouds - i) / numClouds);

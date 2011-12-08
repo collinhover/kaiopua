@@ -14,16 +14,9 @@ var KAIOPUA = (function (main) {
 		showing = false,
 		physics,
 		world,
+		cameracontrols,
 		scene,
 		addOnShow = [],
-		camera,
-		cameraModes = {
-			follow: 'follow',
-			freelook: 'freelook'
-		},
-		cameraMode = cameraModes.follow,
-		cameraFollowSettings,
-		cameraFreelookControls,
 		keybindings = {},
 		keybindingsDefault = {},
 		playerCharacter,
@@ -31,6 +24,7 @@ var KAIOPUA = (function (main) {
 		playerLightFollowSettings,
 		following = [],
 		projector,
+		mathhelper,
 		utilRay1Selection,
 		utilVec31Selection,
 		selecting;
@@ -52,10 +46,6 @@ var KAIOPUA = (function (main) {
 	player.deselect = deselect;
 	
 	// getters and setters
-	Object.defineProperty(player, 'cameraMode', { 
-		get : function () { return cameraMode; },
-		set : set_camera_mode
-	});
 	
 	Object.defineProperty(player, 'enabled', { 
 		get : function () { return enabled; },
@@ -73,6 +63,10 @@ var KAIOPUA = (function (main) {
 		get : function () { return playerCharacter; }
 	});
 	
+	Object.defineProperty(player, 'moving', { 
+		get : function () { return playerCharacter.movement.state.moving; }
+	});
+	
 	/*===================================================
     
     external init
@@ -84,6 +78,8 @@ var KAIOPUA = (function (main) {
 		if ( ready !== true ) {
 			
 			// utility objects
+			
+			mathhelper = game.workers.mathhelper;
 			
 			utilRay1Selection = new THREE.Ray();
 			utilVec31Selection = new THREE.Vector3();
@@ -109,9 +105,11 @@ var KAIOPUA = (function (main) {
 			
 			world = core.world;
 			
+			cameracontrols = core.cameracontrols;
+			
 			// initialization
 			
-			init_camera();
+			init_cameracontrols();
 			
 			init_keybindings();
 			
@@ -135,180 +133,9 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	function init_camera () {
+	function init_cameracontrols () {
 		
-		// init camera follow settings
-		
-		cameraFollowSettings = {
-			rotationBase: new THREE.Quaternion().setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), Math.PI ),
-			rotationOffset: new THREE.Vector3( 25, 0, 0 ),
-			positionOffset: new THREE.Vector3( 0, 100, 300 ),
-			clamps: {
-				minPosX: 0,
-				maxPosX: 0,
-				minPosY: 0,
-				maxPosY: 0,
-				minPosZ: 0,
-				maxPosZ: 1000,
-				minRotX: -0.4,
-				maxRotX: 0.1,
-				minRotY: -1,
-				maxRotY: 1,
-				minRotZ: 0,
-				maxRotZ: 0,
-			},
-			state: {
-				up: 0,				
-				down: 0, 
-				left: 0, 
-				right: 0, 
-				forward: 0, 
-				back: 0,
-				pitchUp: 0,				
-				pitchDown: 0, 
-				yawLeft: 0, 
-				yawRight: 0,
-				rollLeft: 0,
-				rollRight: 0
-			},
-			speed: {
-				move: 1,
-				rotate: 1,
-				zoomGrow: 5,
-				zoomDecay: 1,
-			}
-		}
-		
-		// set default camera mode
-		
-		set_camera_mode();
-		
-	}
-	
-	function set_camera_mode ( modeType ) {
-		
-		var cameraRot = new THREE.Quaternion(),
-			followIndex = following.indexOf( cameraFollowSettings );
-		
-		// update camera
-		
-		cameraFollowSettings.obj = camera = game.camera;
-		
-		cameraRot.setFromRotationMatrix( camera.matrix );
-		
-		camera.useQuaternion = true;
-		camera.quaternion = cameraRot;
-		
-		// set mode
-		
-		cameraMode = modeType;
-		
-		// free look
-		
-		if ( modeType === cameraModes.freelook ) {
-			
-			if ( ready === true ) {
-				
-				remove_control();
-				
-			}
-			
-			if ( followIndex !== -1 ) {
-				
-				following.splice( followIndex, 1 );
-				
-			}
-			
-			if ( typeof cameraFreelookControls === 'undefined' ) {
-				
-				cameraFreelookControls = new THREE.FlyControls( camera );
-				cameraFreelookControls.rollSpeed = 0.001;
-				cameraFreelookControls.movementSpeed = 1;
-				
-			}
-			else {
-				
-				cameraFreelookControls.object = camera;
-				cameraFreelookControls.moveVector.set( 0, 0, 0 );
-				cameraFreelookControls.rotationVector.set( 0, 0, 0 );
-				
-			}
-			
-		}
-		// follow camera
-		else {
-			
-			// add new following object if needed
-			
-			if ( followIndex === -1 ) {
-				
-				following.push( cameraFollowSettings );
-				
-			}
-			
-			if ( ready === true ) {
-				
-				allow_control();
-				
-			}
-			
-		}
-		
-	}
-	
-	function update_camera ( timeDelta ) {
-		
-		var state = cameraFollowSettings.state,
-			speed = cameraFollowSettings.speed;
-		
-		// update camera based on mode
-		
-		if ( cameraMode === cameraModes.freelook ) {
-			
-			cameraFreelookControls.update( timeDelta );
-			
-		}
-		else {
-			
-			state.forward = Math.max( 0, state.forward - 1 * speed.zoomDecay );
-			state.back = Math.max( 0, state.back - 1 * speed.zoomDecay );
-			
-		}
-		
-	}
-	
-	function camera_toggle_free_look () {
-		
-		if ( cameraMode === cameraModes.freelook ) {
-			
-			set_camera_mode();
-			
-		}
-		else {
-			
-			set_camera_mode( 'freelook' );
-			
-		}
-		
-	}
-	
-	function camera_zoom ( e ) {
-		
-		var eo = e.originalEvent || e,
-			wheelDelta = eo.wheelDelta,
-			state = cameraFollowSettings.state,
-			speed = cameraFollowSettings.speed;
-		
-		if ( wheelDelta > 0 ) {
-			
-			state.back += 1 * speed.zoomGrow;
-			
-		}
-		else {
-			
-			state.forward += 1 * speed.zoomGrow;
-			
-		}
+		cameracontrols.init();
 		
 	}
 	
@@ -332,18 +159,18 @@ var KAIOPUA = (function (main) {
 		
 		kbMap[ 'mouseleft' ] = {
 			keydown: function ( e ) { character_action( 'ability_001_start', { mouseIndex: e ? e.identifier : 0 } ); },
-			keyup: function ( e ) { character_action( 'ability_001_end', { mouseIndex: e ? e.identifier : 0 } ); },
+			keyup: function ( e ) { character_action( 'ability_001_end', { mouseIndex: e ? e.identifier : 0 } ); }
 		};
 		kbMap[ 'mousemiddle' ] = {
-			keydown: function () { console.log('key down: mousemiddle'); },
-			keyup: function () { console.log('key up: mousemiddle'); }
+			keydown: function ( e ) { console.log('key down: mousemiddle'); },
+			keyup: function ( e ) { console.log('key up: mousemiddle'); }
 		};
 		kbMap[ 'mouseright' ] = {
-			keydown: function () { console.log('key down: mouseright'); },
-			keyup: function () { console.log('key up: mouseright'); }
+			keydown: function ( e ) { cameracontrols.rotate( e ); },
+			keyup: function ( e ) { cameracontrols.rotate( e, true ); }
 		};
 		kbMap[ 'mousewheel' ] = {
-			keyup: function ( e ) { camera_zoom( e ); }
+			keyup: function ( e ) { cameracontrols.zoom( e ); }
 		};
 			
 		
@@ -425,7 +252,7 @@ var KAIOPUA = (function (main) {
 		};
 		
 		kbMap[ '70' /*f*/ ] = kbMap[ 'f' ] = {
-			keyup: camera_toggle_free_look
+			keyup: function () { console.log('key up: f'); }
 		};
 		
 		// set default as current
@@ -466,7 +293,7 @@ var KAIOPUA = (function (main) {
 	
 	function allow_control () {
 		
-		if ( showing === true && cameraMode !== cameraModes.freelook ) {
+		if ( showing === true ) {
 			
 			// signals
 			
@@ -601,7 +428,7 @@ var KAIOPUA = (function (main) {
 		
 		// create character
 		
-		playerCharacter = core.character.make_character( {
+		playerCharacter = core.character.instantiate( {
 			
 			type: characters.hero
 			
@@ -653,6 +480,19 @@ var KAIOPUA = (function (main) {
 		if ( movementTypeName === 'up' && stop === true ) {
 			
 			movement.jump.stopped = true;
+			
+		}
+		
+		// set moving
+				
+		if ( state.forward === 1 || state.back === 1 || state.turnLeft === 1 || state.turnRight === 1 || state.up === 1 || state.down === 1 || state.left === 1 || state.right === 1 ) {
+			
+			state.moving = true;
+			
+		}
+		else {
+			
+			state.moving = false;
 			
 		}
 		
@@ -847,6 +687,7 @@ var KAIOPUA = (function (main) {
 		
 		var ray = utilRay1Selection,
 			mousePosition = utilVec31Selection,
+			camera = cameracontrols.camera,
 			intersections,
 			intersectedMesh,
 			intersectedModel;
@@ -958,11 +799,11 @@ var KAIOPUA = (function (main) {
 			pcMesh = playerCharacter.model.mesh,
 			followSettings;
 		
-		for ( i = 0, l = following.length; i < l; i += 1 ) {
+		for ( i = 0, l = following.length; i < l; i ++ ) {
 			
 			followSettings = following[ i ];
 			
-			game.object_follow_object( pcMesh, followSettings.obj, followSettings );
+			game.object_follow_object( pcMesh, followSettings.obj, followSettings.rotationBase, followSettings.rotationOffset, followSettings.positionOffset );
 				
 		}
 		
@@ -1048,7 +889,7 @@ var KAIOPUA = (function (main) {
 		
 		// update camera
 		
-		update_camera( timeDelta );
+		cameracontrols.update( timeDelta );
 		
 		// items that follow character
 		

@@ -13,6 +13,7 @@ var KAIOPUA = (function (main) {
 		core = game.core = game.core || {},
         sections = game.sections = game.sections || {},
         workers = game.workers = game.workers || {},
+		mathhelper = workers.mathhelper = workers.mathhelper || {},
         menus = game.menus = game.menus || {},
 		effects = main.effects = main.effects || {},
         transitioner,
@@ -138,12 +139,15 @@ var KAIOPUA = (function (main) {
 			"js/lib/jiglibjs2/vehicles/JWheel.js",
 			"js/lib/jiglibjs2/vehicles/JCar.js",
 			end JigLib 2 library */
-			"js/game/workers/ObjectMaker.js",
-			"js/game/workers/MenuMaker.js",
 			"js/game/core/Physics.js",
+			"js/game/core/Model.js",
 			"js/game/core/World.js",
 			"js/game/core/Player.js",
+			"js/game/core/CameraControls.js",
 			"js/game/core/Character.js",
+			"js/game/workers/ObjectMaker.js",
+			"js/game/workers/MenuMaker.js",
+			"js/game/workers/MathHelper.js",
 			"js/game/env/Water.js",
 			"js/game/characters/Hero.js",
             "js/game/sections/IntroSection.js",
@@ -731,7 +735,7 @@ var KAIOPUA = (function (main) {
         
 		// add each pass in passes names
 		
-		for ( i = 0, l = passesNames.length; i < l; i += 1 ) {
+		for ( i = 0, l = passesNames.length; i < l; i ++ ) {
 			
 			passName = passesNames[ i ];
 			
@@ -797,7 +801,7 @@ var KAIOPUA = (function (main) {
 		
 		sceneTarget = sceneTarget || scene;
 		
-		for ( i = 0, l = objects.length; i < l; i += 1 ) {
+		for ( i = 0, l = objects.length; i < l; i ++ ) {
 			
 			object = objects[ i ];
 			
@@ -840,7 +844,7 @@ var KAIOPUA = (function (main) {
 		
 		sceneTarget = sceneTarget || scene;
 		
-		for ( i = 0, l = objects.length; i < l; i += 1 ) {
+		for ( i = 0, l = objects.length; i < l; i ++ ) {
 		
 			object = objects[ i ];
 			
@@ -873,36 +877,15 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function object_follow_object ( leader, follower, followSettings ) {
-		
-		followSettings = followSettings || utilFollowSettings;
+	function object_follow_object ( leader, follower, rotationBase, rotationOffset, positionOffset ) {
 		
 		var leaderScale = leader.scale,
 			leaderScaleMax = Math.max( leaderScale.x, leaderScale.y, leaderScale.z ), 
 			leaderQ = leader.quaternion,
-			rotationBase = followSettings.rotationBase,
-			rotationOffset = followSettings.rotationOffset,
-			positionOffset = followSettings.positionOffset,
-			state = followSettings.state,
-			clamps = followSettings.clamps || utilFollowSettings.clamps,
-			speed = followSettings.speed || utilFollowSettings.speed,
 			followerP = follower.position,
 			followerQ = follower.quaternion,
 			followerOffsetPos = utilVec31Follow,
-			followerOffsetRot = utilQ1Follow,
-			followerOffsetRotHalf = utilQ2Follow;
-		
-		// update state if present
-		
-		if ( typeof state !== 'undefined' ) {
-			
-			// update vectors with state
-			
-			positionOffset.x = Math.max( clamps.minPosX, Math.min( clamps.maxPosX, positionOffset.x + ( state.left - state.right ) * speed.move ) );
-			positionOffset.y = Math.max( clamps.minPosY, Math.min( clamps.maxPosY, positionOffset.y + ( state.up - state.down ) * speed.move ) );
-			positionOffset.z = Math.max( clamps.minPosZ, Math.min( clamps.maxPosZ, positionOffset.z + ( state.forward - state.back ) * speed.move ) );
-			
-		}
+			followerOffsetRot = utilQ1Follow;
 		
 		// set offset base position
 		
@@ -911,7 +894,6 @@ var KAIOPUA = (function (main) {
 		// set offset rotation
 		
 		followerOffsetRot.setFromEuler( rotationOffset ).normalize();
-		followerOffsetRotHalf.set( followerOffsetRot.x * 0.5, followerOffsetRot.y * 0.5, followerOffsetRot.z * 0.5, followerOffsetRot.w).normalize();
 		
 		// create new camera offset position
 		
@@ -1021,7 +1003,7 @@ var KAIOPUA = (function (main) {
 		
 		// hide static menu
 		
-		$(shared.html.staticMenu).fadeOut( transitionIn );
+		$(shared.html.staticMenu).stop(true).fadeTo( transitionIn, 0 );
 		
         // disable start menu
 		
@@ -1062,7 +1044,7 @@ var KAIOPUA = (function (main) {
 		
 		// show static menu
 		
-		$(shared.html.staticMenu).fadeIn( transitionOut );
+		$(shared.html.staticMenu).stop(true).fadeTo( transitionOut, 1 );
 		
 		// set launcher section
 		
@@ -1229,6 +1211,8 @@ var KAIOPUA = (function (main) {
 				
 				menus.pause.enable();
 				
+				$(shared.html.staticMenu).stop(true).fadeTo( transitionOut, 1 );
+				
 			}
             
             shared.signals.paused.dispatch();
@@ -1261,6 +1245,8 @@ var KAIOPUA = (function (main) {
 				menus.pause.disable();
 				
 				menus.pause.ui_hide( true, undefined, on_menu_hidden );
+				
+				$(shared.html.staticMenu).stop(true).fadeTo( transitionIn, 0 );
 				
 			}
 			else {

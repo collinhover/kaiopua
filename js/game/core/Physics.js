@@ -8,6 +8,7 @@ var KAIOPUA = (function (main) {
         game = main.game = main.game || {},
 		core = game.core = game.core || {},
 		physics = core.physics = core.physics || {},
+		mathhelper,
 		ready = false,
 		system,
 		cardinalAxes,
@@ -106,6 +107,8 @@ var KAIOPUA = (function (main) {
 		utilQ3Integrate = new THREE.Quaternion();
 		utilQ4Offset = new THREE.Quaternion();
 		utilRay1Casting = new THREE.Ray();
+		
+		mathhelper = game.workers.mathhelper;
 		
 		// three collision fixes
 		
@@ -452,7 +455,7 @@ var KAIOPUA = (function (main) {
 			var d = Number.MAX_VALUE;
 			var nearestface;
 			
-			for( i = 0, l = me.numFaces; i < l; i += 1 ) {
+			for( i = 0, l = me.numFaces; i < l; i ++ ) {
 				
 				var face = geometry.faces[ i ];
 				
@@ -699,19 +702,19 @@ var KAIOPUA = (function (main) {
 		
 		depth = parameters.depth;
 		
-		if ( isNaN( width ) || isFinite( width ) === false ) {
+		if ( mathhelper.is_number( width ) === false ) {
 			
 			needWidth = true;
 			
 		}
 		
-		if ( isNaN( height ) || isFinite( height ) === false ) {
+		if ( mathhelper.is_number( height ) === false ) {
 			
 			needHeight = true;
 			
 		}
 		
-		if ( isNaN( depth ) || isFinite( depth ) === false ) {
+		if ( mathhelper.is_number( depth ) === false ) {
 			
 			needDepth = true;
 			
@@ -786,6 +789,7 @@ var KAIOPUA = (function (main) {
 			collider: collider,
 			movable: movable,
 			mass: mass,
+			rotationGravity: new THREE.Quaternion(),
 			velocityMovement: generate_velocity_tracker( { 
 				damping: parameters.movementDamping,
 				offset: parameters.movementOffset
@@ -827,7 +831,7 @@ var KAIOPUA = (function (main) {
 		
 		// add to links
 		
-		linksCount += 1;
+		linksCount ++;
 		
 		links.push( rigidBody );
 		
@@ -844,7 +848,7 @@ var KAIOPUA = (function (main) {
 			name,
 			index;
 			
-		for ( i = 0, l = links.length; i < l; i += 1 ) {
+		for ( i = 0, l = links.length; i < l; i ++ ) {
 			
 			rigidBody = links[ i ];
 			
@@ -1116,7 +1120,7 @@ var KAIOPUA = (function (main) {
 		
 		// integrate
 		
-		//for ( i = 0; i < l; i += 1 ) {
+		//for ( i = 0; i < l; i ++ ) {
 			
 			currentInterval = refreshInterval;
 			
@@ -1166,7 +1170,7 @@ var KAIOPUA = (function (main) {
 		
 		// handle rotation and check velocity
 		
-		for ( i = 0, l = links.length; i < l; i += 1 ) {
+		for ( i = 0, l = links.length; i < l; i ++ ) {
 			
 			rigidBody = links[ i ];
 			
@@ -1183,6 +1187,8 @@ var KAIOPUA = (function (main) {
 				position = mesh.position;
 				
 				rotation = ( mesh.useQuaternion === true ? mesh.quaternion : mesh.matrix );
+				
+				rotationGravity = rigidBody.rotationGravity;
 				
 				velocityGravity = rigidBody.velocityGravity;
 				
@@ -1258,6 +1264,10 @@ var KAIOPUA = (function (main) {
 					upToUpNewQ = uq3.setFromAxisAngle( upToUpNewAxis, upToUpNewAngle );
 					
 					// add to rotation
+					
+					uq1.multiply( upToUpNewQ, rotationGravity );
+					
+					THREE.Quaternion.nlerp( rotationGravity, uq1, rotationGravity, lerpDelta );
 					
 					if ( mesh.useQuaternion === true ) {
 						
@@ -1476,7 +1486,7 @@ var KAIOPUA = (function (main) {
 		ray.direction = rayDirection;
 		
 		// ray cast individually using collision system r45
-		for ( i = 0, l = system.colliders.length; i < l; i += 1 ) {
+		for ( i = 0, l = system.colliders.length; i < l; i ++ ) {
 			
 			var collider = system.colliders[ i ];
 			var cmesh = collider.mesh;
@@ -1530,7 +1540,7 @@ var KAIOPUA = (function (main) {
 		// find nearest collision
 		if ( typeof collisions !== 'undefined' ) {
 			
-			for ( i = 0, l = collisions.length; i < l; i += 1 ) {
+			for ( i = 0, l = collisions.length; i < l; i ++ ) {
 				
 				collisionPotential = collisions[ i ];
 				
@@ -1572,7 +1582,7 @@ var KAIOPUA = (function (main) {
 		}
 		
 		// ray casting individually using ray intersect object r46
-		/*for ( i = 0, l = system.colliders.length; i < l; i += 1 ) {
+		/*for ( i = 0, l = system.colliders.length; i < l; i ++ ) {
 			
 			var collider = system.colliders[ i ];
 			var cmesh = collider.mesh;
@@ -1585,7 +1595,7 @@ var KAIOPUA = (function (main) {
 			
 			var j, k;
 			
-			for ( j = 0, k = intersects.length; j < k; j += 1 ) {
+			for ( j = 0, k = intersects.length; j < k; j ++ ) {
 				
 				intersect = intersects[ j ];
 				
@@ -1608,7 +1618,7 @@ var KAIOPUA = (function (main) {
 			
 			// loop through intersects for first object that is not self
 			
-			for ( i = 0, l = intersects.length; i < l; i += 1 ) {
+			for ( i = 0, l = intersects.length; i < l; i ++ ) {
 				
 				intersect = intersects[ i ];
 				

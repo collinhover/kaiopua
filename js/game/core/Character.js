@@ -8,6 +8,8 @@ var KAIOPUA = (function (main) {
         game = main.game = main.game || {},
 		core = game.core = game.core || {},
 		character = core.character = core.character || {},
+		model = core.model = core.model || {},
+		physics = core.physics = core.physics || {},
 		characters = game.characters = game.characters || {}, 
 		characterIDBase = 'kaiopua_character';
 	
@@ -17,7 +19,7 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	character.make_character = make_character;
+	character.instantiate = instantiate;
 	
 	/*===================================================
     
@@ -25,17 +27,10 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	function make_character ( parameters ) {
+	function instantiate ( parameters ) {
 		
 		var c = {},
-			objectmaker,
-			physics,
 			movementInfo;
-		
-		// setup
-		
-		objectmaker = game.workers.objectmaker;
-		physics = core.physics;
 		
 		// handle parameters
 		
@@ -67,7 +62,7 @@ var KAIOPUA = (function (main) {
 				
 			}
 			
-			c.model = objectmaker.make_model( parameters.modelInfo ) ;
+			c.model = model.instantiate( parameters.modelInfo ) ;
 			
 		}
 		
@@ -88,6 +83,7 @@ var KAIOPUA = (function (main) {
 			rotate: {
 				speed: movementInfo.rotateSpeed || 0.015,
 				direction: new THREE.Vector3(),
+				delta: new THREE.Quaternion(),
 				vector: new THREE.Quaternion(),
 				utilQ1: new THREE.Quaternion()
 			},
@@ -110,7 +106,8 @@ var KAIOPUA = (function (main) {
 				back: 0, 
 				turnLeft: 0, 
 				turnRight: 0,
-				grounded: false
+				grounded: false,
+				moving: false
 			}
 		};
 		
@@ -162,9 +159,8 @@ var KAIOPUA = (function (main) {
 				state,
 				rotate = movement.rotate,
 				rotateDir = rotate.direction,
-				rotateVec = rotate.vector,
+				rotateDelta = rotate.delta,
 				rotateSpeed = rotate.speed,
-				rotateUtilQ1 = rotate.utilQ1,
 				move,
 				moveDir,
 				moveVec,
@@ -183,11 +179,7 @@ var KAIOPUA = (function (main) {
 			
 			// rotate self
 			
-			rotateVec.set( rotateDir.x * rotateSpeed, rotateDir.y * rotateSpeed, rotateDir.z * rotateSpeed, 1 ).normalize();
-			
-			rotateUtilQ1.multiply( meshQ, rotateVec );
-			
-			meshQ.copy( rotateUtilQ1 );
+			c.rotate_by_delta( rotateDir.x * rotateSpeed, rotateDir.y * rotateSpeed, rotateDir.z * rotateSpeed, 1 );
 			
 			// velocity
 			
@@ -271,6 +263,27 @@ var KAIOPUA = (function (main) {
 				velocityMovementForce.addSelf( moveVec );
 				
 			}
+			
+		};
+		
+		c.rotate_by_delta = function ( dx, dy, dz, dw ) {
+			
+			var model = c.model,
+				mesh = model.mesh,
+				meshQ = mesh.quaternion,
+				movement = c.movement,
+				rotate = movement.rotate,
+				rotateDelta = rotate.delta,
+				rotateVec = rotate.vector,
+				rotateUtilQ1 = rotate.utilQ1;
+			
+			rotateDelta.set( dx || 0, dy || 0, dz || 0, dw || 1 ).normalize();
+			
+			rotateVec.multiplySelf( rotateDelta );
+			
+			rotateUtilQ1.multiply( meshQ, rotateDelta );
+			
+			meshQ.copy( rotateUtilQ1 );
 			
 		};
 		

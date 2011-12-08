@@ -54,7 +54,7 @@ var KAIOPUA = (function (main) {
         menu.add_items = function ( items ) {
             var i, l;
             
-            for ( i = 0, l = items.length; i < l; i += 1) {
+            for ( i = 0, l = items.length; i < l; i ++) {
                 menu.addItem( items[i] );
             }
             
@@ -77,7 +77,7 @@ var KAIOPUA = (function (main) {
         menu.remove_all = function () {
             var items = [], i, l;
             
-            for ( i = 0, l = menu.items.length; i < l; i += 1) {
+            for ( i = 0, l = menu.items.length; i < l; i ++) {
                 items.push( menu.removeItem( menu.items[i] ) );
             }
             
@@ -105,7 +105,7 @@ var KAIOPUA = (function (main) {
             
             menu.enabled = true;
             
-            for ( i = 0, l = menu.items.length; i < l; i += 1) {
+            for ( i = 0, l = menu.items.length; i < l; i ++) {
                 item = menu.items[i];
                 if ( item.enabled === true ) {
                     item.enable_visual();
@@ -117,7 +117,7 @@ var KAIOPUA = (function (main) {
             
             menu.enabled = false;
             
-            for ( i = 0, l = menu.items.length; i < l; i += 1) {
+            for ( i = 0, l = menu.items.length; i < l; i ++) {
                 item = menu.items[i];
                 item.disable_visual();
             }

@@ -218,7 +218,7 @@ var KAIOPUA = (function (main) {
 			
 			vertsJig = [];
 			
-			for( i = 0, l = vertsThree.length; i < l; i += 1 ){
+			for( i = 0, l = vertsThree.length; i < l; i ++ ){
 				
 				vertex = vertsThree[ i ];
 				
@@ -234,7 +234,7 @@ var KAIOPUA = (function (main) {
 			
 			facesJig = [];
 			
-			for( i = 0, l = facesThree.length; i < l; i += 1 ){
+			for( i = 0, l = facesThree.length; i < l; i ++ ){
 				
 				face = facesThree[ i ];
 				
@@ -330,7 +330,7 @@ var KAIOPUA = (function (main) {
 		
 		// add to links
 		
-		linksCount += 1;
+		linksCount ++;
 		
 		linksNames.push( name );
 		
@@ -349,7 +349,7 @@ var KAIOPUA = (function (main) {
 			index, 
 			info;
 			
-		for ( i = 0, l = linksNames.length; i < l; i += 1 ) {
+		for ( i = 0, l = linksNames.length; i < l; i ++ ) {
 			
 			name = linksNames[ i ];
 			
@@ -531,7 +531,7 @@ var KAIOPUA = (function (main) {
 		
 		// update links
 		
-		for ( i = 0, l = linksNames.length; i < l; i += 1 ) {
+		for ( i = 0, l = linksNames.length; i < l; i ++ ) {
 			
 			link = linksMap[ linksNames[ i ] ];
 			
