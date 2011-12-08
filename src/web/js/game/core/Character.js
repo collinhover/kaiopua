@@ -83,6 +83,7 @@ var KAIOPUA = (function (main) {
 			rotate: {
 				speed: movementInfo.rotateSpeed || 0.015,
 				direction: new THREE.Vector3(),
+				delta: new THREE.Quaternion(),
 				vector: new THREE.Quaternion(),
 				utilQ1: new THREE.Quaternion()
 			},
@@ -105,7 +106,8 @@ var KAIOPUA = (function (main) {
 				back: 0, 
 				turnLeft: 0, 
 				turnRight: 0,
-				grounded: false
+				grounded: false,
+				moving: false
 			}
 		};
 		
@@ -157,6 +159,7 @@ var KAIOPUA = (function (main) {
 				state,
 				rotate = movement.rotate,
 				rotateDir = rotate.direction,
+				rotateDelta = rotate.delta,
 				rotateVec = rotate.vector,
 				rotateSpeed = rotate.speed,
 				rotateUtilQ1 = rotate.utilQ1,
@@ -178,9 +181,11 @@ var KAIOPUA = (function (main) {
 			
 			// rotate self
 			
-			rotateVec.set( rotateDir.x * rotateSpeed, rotateDir.y * rotateSpeed, rotateDir.z * rotateSpeed, 1 ).normalize();
+			rotateDelta.set( rotateDir.x * rotateSpeed, rotateDir.y * rotateSpeed, rotateDir.z * rotateSpeed, 1 ).normalize();
 			
-			rotateUtilQ1.multiply( meshQ, rotateVec );
+			rotateVec.multiplySelf( rotateDelta );
+			
+			rotateUtilQ1.multiply( meshQ, rotateDelta );
 			
 			meshQ.copy( rotateUtilQ1 );
 			

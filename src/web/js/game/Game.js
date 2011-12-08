@@ -143,6 +143,7 @@ var KAIOPUA = (function (main) {
 			"js/game/core/Model.js",
 			"js/game/core/World.js",
 			"js/game/core/Player.js",
+			"js/game/core/Camera.js",
 			"js/game/core/Character.js",
 			"js/game/workers/ObjectMaker.js",
 			"js/game/workers/MenuMaker.js",
@@ -886,83 +887,11 @@ var KAIOPUA = (function (main) {
 			rotationBase = followSettings.rotationBase,
 			rotationOffset = followSettings.rotationOffset,
 			positionOffset = followSettings.positionOffset,
-			pX,
-			pY,
-			pZ,
-			rX,
-			rY,
-			rZ,
-			state = followSettings.state,
-			clamps = followSettings.clamps || utilFollowSettings.clamps,
-			clampsPosition = clamps.position,
-			clampsRotate = clamps.rotate,
-			maxPX, minPX,
-			maxPY, minPY,
-			maxPZ, minPZ,
-			maxRX, minRX,
-			maxRY, minRY,
-			maxRZ, minRZ,
-			speed = followSettings.speed || utilFollowSettings.speed,
 			followerP = follower.position,
 			followerQ = follower.quaternion,
 			followerOffsetPos = utilVec31Follow,
-			followerOffsetRot = utilQ1Follow,
-			followerOffsetRotHalf = utilQ2Follow;
-		/*
-		// update state if present
+			followerOffsetRot = utilQ1Follow;
 		
-		if ( typeof state !== 'undefined' ) {
-			
-			// set clamps
-			
-			maxPX = clampsPosition.max.x, minPX = clampsPosition.min.x,
-			maxPY = clampsPosition.max.y, minPY = clampsPosition.min.y,
-			maxPZ = clampsPosition.max.z, minPZ = clampsPosition.min.z,
-			maxRX = clampsRotate.max.x, minRX = clampsRotate.min.x,
-			maxRY = clampsRotate.max.y, minRY = clampsRotate.min.y,
-			maxRZ = clampsRotate.max.z, minRZ = clampsRotate.min.z,
-			
-			// update position
-			
-			positionOffset.x = pX = mathhelper.clamp( positionOffset.x + ( state.left - state.right ) * speed.move, minPX, maxPX );
-			positionOffset.y = pY = mathhelper.clamp( positionOffset.y + ( state.up - state.down ) * speed.move, minPY, maxPY );
-			positionOffset.z = pZ = mathhelper.clamp( positionOffset.z + ( state.forward - state.back ) * speed.move, minPZ, maxPZ );
-			
-			// update rotation
-			
-			rX = mathhelper.clamp( rotationOffset.x + ( state.pitchUp - state.pitchDown ) * speed.rotate, minRX, maxRX );
-			rY = mathhelper.clamp( rotationOffset.y + ( state.yawLeft - state.yawRight ) * speed.rotate, minRY, maxRY );
-			rZ = mathhelper.clamp( rotationOffset.z + ( state.rollLeft - state.rollRight ) * speed.rotate, minRZ, maxRZ );
-			
-			// fix rotations
-			
-			rotationOffset.x = rX = rX % 360;
-			rotationOffset.y = rY = rY % 360;
-			rotationOffset.z = rZ = rZ % 360;
-			
-			// clear state if at clamp
-			
-			if ( pX === maxPX || pX === minPX ) {
-				state.left = state.right = 0;
-			}
-			if ( pY === maxPY || pY === minPY ) {
-				state.up = state.down = 0;
-			}
-			if ( pZ === maxPZ || pZ === minPZ ) {
-				state.forward = state.back = 0;
-			}
-			if ( rX === maxRX || rX === minRX ) {
-				state.pitchUp = state.pitchDown = 0;
-			}
-			if ( rY === maxRY || rY === minRY ) {
-				state.yawLeft = state.yawRight = 0;
-			}
-			if ( rZ === maxRZ || rZ === minRZ ) {
-				state.rollLeft = state.rollRight = 0;
-			}
-			
-		}
-		*/
 		// set offset base position
 		
 		followerOffsetPos.set( positionOffset.x, positionOffset.y, positionOffset.z ).multiplyScalar( leaderScaleMax );
@@ -970,7 +899,6 @@ var KAIOPUA = (function (main) {
 		// set offset rotation
 		
 		followerOffsetRot.setFromEuler( rotationOffset ).normalize();
-		followerOffsetRotHalf.set( followerOffsetRot.x * 0.5, followerOffsetRot.y * 0.5, followerOffsetRot.z * 0.5, followerOffsetRot.w).normalize();
 		
 		// create new camera offset position
 		
@@ -1080,7 +1008,7 @@ var KAIOPUA = (function (main) {
 		
 		// hide static menu
 		
-		$(shared.html.staticMenu).fadeOut( transitionIn );
+		$(shared.html.staticMenu).stop(true).fadeTo( transitionIn, 0 );
 		
         // disable start menu
 		
@@ -1121,7 +1049,7 @@ var KAIOPUA = (function (main) {
 		
 		// show static menu
 		
-		$(shared.html.staticMenu).fadeIn( transitionOut );
+		$(shared.html.staticMenu).stop(true).fadeTo( transitionOut, 1 );
 		
 		// set launcher section
 		
@@ -1288,6 +1216,8 @@ var KAIOPUA = (function (main) {
 				
 				menus.pause.enable();
 				
+				$(shared.html.staticMenu).stop(true).fadeTo( transitionOut, 1 );
+				
 			}
             
             shared.signals.paused.dispatch();
@@ -1320,6 +1250,8 @@ var KAIOPUA = (function (main) {
 				menus.pause.disable();
 				
 				menus.pause.ui_hide( true, undefined, on_menu_hidden );
+				
+				$(shared.html.staticMenu).stop(true).fadeTo( transitionIn, 0 );
 				
 			}
 			else {
