@@ -143,7 +143,7 @@ var KAIOPUA = (function (main) {
 			"js/game/core/Model.js",
 			"js/game/core/World.js",
 			"js/game/core/Player.js",
-			"js/game/core/Camera.js",
+			"js/game/core/CameraControls.js",
 			"js/game/core/Character.js",
 			"js/game/workers/ObjectMaker.js",
 			"js/game/workers/MenuMaker.js",
@@ -877,16 +877,11 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function object_follow_object ( leader, follower, followSettings ) {
-		
-		followSettings = followSettings || utilFollowSettings;
+	function object_follow_object ( leader, follower, rotationBase, rotationOffset, positionOffset ) {
 		
 		var leaderScale = leader.scale,
 			leaderScaleMax = Math.max( leaderScale.x, leaderScale.y, leaderScale.z ), 
 			leaderQ = leader.quaternion,
-			rotationBase = followSettings.rotationBase,
-			rotationOffset = followSettings.rotationOffset,
-			positionOffset = followSettings.positionOffset,
 			followerP = follower.position,
 			followerQ = follower.quaternion,
 			followerOffsetPos = utilVec31Follow,

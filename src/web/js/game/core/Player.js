@@ -14,16 +14,9 @@ var KAIOPUA = (function (main) {
 		showing = false,
 		physics,
 		world,
+		cameracontrols,
 		scene,
 		addOnShow = [],
-		camera,
-		cameraModes = {
-			follow: 'follow',
-			freelook: 'freelook'
-		},
-		cameraMode = cameraModes.follow,
-		cameraFollowSettings,
-		cameraFreelookControls,
 		keybindings = {},
 		keybindingsDefault = {},
 		playerCharacter,
@@ -53,10 +46,6 @@ var KAIOPUA = (function (main) {
 	player.deselect = deselect;
 	
 	// getters and setters
-	Object.defineProperty(player, 'cameraMode', { 
-		get : function () { return cameraMode; },
-		set : set_camera_mode
-	});
 	
 	Object.defineProperty(player, 'enabled', { 
 		get : function () { return enabled; },
@@ -72,6 +61,10 @@ var KAIOPUA = (function (main) {
 	
 	Object.defineProperty(player, 'character', { 
 		get : function () { return playerCharacter; }
+	});
+	
+	Object.defineProperty(player, 'moving', { 
+		get : function () { return playerCharacter.movement.state.moving; }
 	});
 	
 	/*===================================================
@@ -112,9 +105,11 @@ var KAIOPUA = (function (main) {
 			
 			world = core.world;
 			
+			cameracontrols = core.cameracontrols;
+			
 			// initialization
 			
-			init_camera();
+			init_cameracontrols();
 			
 			init_keybindings();
 			
@@ -138,349 +133,9 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	function init_camera () {
+	function init_cameracontrols () {
 		
-		// init camera follow settings
-		
-		cameraFollowSettings = {
-			mice: {},
-			rotationBase: new THREE.Quaternion().setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), Math.PI ),
-			rotationOffsetBase: new THREE.Vector3( 25, 0, 0 ),
-			rotationOffset: new THREE.Vector3(),
-			rotationDelta: new THREE.Vector3(),
-			positionOffsetBase: new THREE.Vector3( 0, 50, 300 ),
-			positionOffset: new THREE.Vector3(),
-			positionDelta: new THREE.Vector3(),
-			firstPersonSwitchDistance: 50,
-			firstPersonMode: false,
-			clamps: {
-				position: {
-					min: {
-						x: 0,
-						y: 0,
-						z: -25,
-						delta: -20
-					},
-					max: {
-						x: 0,
-						y: 50,
-						z: 1000,
-						delta: 20
-					}
-				},
-				rotate: {
-					min: {
-						x: -75,
-						y: -360,
-						z: 0,
-						delta: -40
-					},
-					max: {
-						x: 75,
-						y: 360,
-						z: 0,
-						delta: 40
-					}
-				}
-			},
-			speed: {
-				move: 0.025,
-				rotate: 0.1,
-				positionDecay: 0.8,
-				rotateDecay: 0.8,
-				revertToBase: 0.05
-			}
-		}
-		
-		// set current as original
-		
-		cameraFollowSettings.rotationOffset.copy( cameraFollowSettings.rotationOffsetBase );
-		cameraFollowSettings.positionOffset.copy( cameraFollowSettings.positionOffsetBase );
-		
-		// set default camera mode
-		
-		set_camera_mode();
-		
-	}
-	
-	function set_camera_mode ( modeType ) {
-		
-		var cameraRot = new THREE.Quaternion(),
-			followIndex = following.indexOf( cameraFollowSettings );
-		
-		// update camera
-		
-		cameraFollowSettings.obj = camera = game.camera;
-		
-		cameraRot.setFromRotationMatrix( camera.matrix );
-		
-		camera.useQuaternion = true;
-		camera.quaternion = cameraRot;
-		
-		// set mode
-		
-		cameraMode = modeType;
-		
-		// free look
-		
-		if ( modeType === cameraModes.freelook ) {
-			
-			if ( ready === true ) {
-				
-				remove_control();
-				
-			}
-			
-			if ( followIndex !== -1 ) {
-				
-				following.splice( followIndex, 1 );
-				
-			}
-			
-			if ( typeof cameraFreelookControls === 'undefined' ) {
-				
-				cameraFreelookControls = new THREE.FlyControls( camera );
-				cameraFreelookControls.rollSpeed = 0.001;
-				cameraFreelookControls.movementSpeed = 1;
-				
-			}
-			else {
-				
-				cameraFreelookControls.object = camera;
-				cameraFreelookControls.moveVector.set( 0, 0, 0 );
-				cameraFreelookControls.rotationVector.set( 0, 0, 0 );
-				
-			}
-			
-		}
-		// follow camera
-		else {
-			
-			// add new following object if needed
-			
-			if ( followIndex === -1 ) {
-				
-				following.push( cameraFollowSettings );
-				
-			}
-			
-			if ( ready === true ) {
-				
-				allow_control();
-				
-			}
-			
-		}
-		
-	}
-	
-	function camera_toggle_free_look () {
-		
-		if ( cameraMode === cameraModes.freelook ) {
-			
-			set_camera_mode();
-			
-		}
-		else {
-			
-			set_camera_mode( 'freelook' );
-			
-		}
-		
-	}
-	
-	function update_camera ( timeDelta ) {
-		
-		var positionOffset,
-			positionDelta,
-			rotationOffsetBase,
-			rotationOffset,
-			rotationDelta,
-			state,
-			speed,
-			clamps,
-			clampsRotate,
-			maxRX, 
-			minRX,
-			maxRY,
-			minRY,
-			playerMovement,
-			playerMovementState,
-			playerMoving,
-			playerMovementRotate,
-			playerMovementRotateDir,
-			playerMovementRotateVec;
-		
-		// update camera based on mode
-		
-		if ( cameraMode === cameraModes.freelook ) {
-			
-			cameraFreelookControls.update( timeDelta );
-			
-		}
-		else {
-			
-			positionOffset = cameraFollowSettings.positionOffset;
-			positionDelta = cameraFollowSettings.positionDelta;
-			positionSnap = cameraFollowSettings.positionSnap;
-			positionSnapDistance = cameraFollowSettings.positionSnapDistance;
-			rotationOffsetBase = cameraFollowSettings.rotationOffsetBase;
-			rotationOffset = cameraFollowSettings.rotationOffset;
-			rotationDelta = cameraFollowSettings.rotationDelta;
-			state = cameraFollowSettings.state;
-			speed = cameraFollowSettings.speed;
-			clamps = cameraFollowSettings.clamps;
-			clampsPosition = clamps.position;
-			clampsRotate = clamps.rotate;
-			maxPZ = clampsPosition.max.z;
-			minPZ = clampsPosition.min.z;
-			maxRX = clampsRotate.max.x;
-			minRX = clampsRotate.min.x;
-			maxRY = clampsRotate.max.y;
-			minRY = clampsRotate.min.y;
-			playerMovement = playerCharacter.movement;
-			playerMovementState = playerMovement.state;
-			playerMoving = playerMovementState.moving;
-			playerMovementRotate = playerMovement.rotate;
-			playerMovementRotateDir = playerMovementRotate.direction,
-			playerMovementRotateVec = playerMovementRotate.vector;
-			
-			// add delta to offset
-			
-			positionOffset.z = mathhelper.clamp( positionOffset.z + positionDelta.z, minPZ, maxPZ );
-			
-			rotationOffset.x = mathhelper.clamp( rotationOffset.x + rotationDelta.x, minRX, maxRX );
-			rotationOffset.y = mathhelper.clamp( rotationOffset.y + rotationDelta.y, minRY, maxRY );
-			
-			// decay
-			
-			positionDelta.multiplyScalar( speed.positionDecay );
-			
-			rotationDelta.multiplyScalar( speed.rotateDecay );
-			
-			// normalize rotation (between 180 and -180)
-			
-			if ( rotationOffset.x > 180 ) {
-				rotationOffset.x -= 360;
-			}
-			else if ( rotationOffset.x < -180 ) {
-				rotationOffset.x += 360;
-			}
-			if ( rotationOffset.y > 180 ) {
-				rotationOffset.y -= 360;
-			}
-			else if ( rotationOffset.y < -180 ) {
-				rotationOffset.y += 360;
-			}
-			
-			// if player is moving but not rotating camera
-			// move rotation offset back towards original
-			
-			if ( typeof cameraFollowSettings.mice.rotation === 'undefined' && playerMoving === true ) {
-				
-				if ( rotationOffset.x !== rotationOffsetBase.x ) rotationOffset.x += (rotationOffsetBase.x - rotationOffset.x) * speed.revertToBase;
-				if ( rotationOffset.y !== rotationOffsetBase.y ) rotationOffset.y += (rotationOffsetBase.y - rotationOffset.y) * speed.revertToBase;
-				
-			}
-			
-			
-			/*
-			
-			// 
-			//
-			// BROKEN
-			// issue is camera follows player character regardless, even if camera is turning player character
-			// probably need to pull camera follow character function internal to camera
-			// that way camera decides either to lead or to follow
-			//
-			//
-			
-			// check if should switch between third and first
-			
-			cameraFollowSettings.firstPersonMode = true;
-			
-			// if in first person mode
-			// rotate character on y axis with camera
-			
-			if ( cameraFollowSettings.firstPersonMode === true && playerMoving === false ) {
-				
-				
-				console.log('-----');
-				console.log(rotationOffset.y);
-				console.log((rotationOffset.y / 360));
-				console.log(playerMovementRotateVec.y);
-				
-				playerMovementRotate.delta.set( 0, (rotationOffset.y / 360) - playerMovementRotateVec.y, 0, 1 ).normalize();
-				
-				playerMovementRotateVec.multiplySelf( playerMovementRotate.delta ).normalize();
-				
-				playerMovementRotate.utilQ1.multiply( playerCharacter.model.mesh.quaternion, playerMovementRotate.delta );
-				
-				playerCharacter.model.mesh.quaternion.copy( playerMovementRotate.utilQ1 );
-				
-			}
-			*/
-			
-		}
-		
-	}
-	
-	function camera_rotate ( e, end ) {
-		
-		var state = cameraFollowSettings.state,
-			mice = cameraFollowSettings.mice,
-			mouse = shared.mice[ e.identifier ];
-		
-		// end rotation
-		if ( end === true ) {
-			
-			shared.signals.mousemoved.remove( camera_rotate_update );
-			
-			mice.rotation = undefined;
-			
-		}
-		// start rotation
-		else {
-			
-			// store mouse
-			
-			mice.rotation = mouse;
-			
-			shared.signals.mousemoved.add( camera_rotate_update );
-			
-		}
-		
-	}
-	
-	function camera_rotate_update ( e ) {
-		
-		var rotationDelta = cameraFollowSettings.rotationDelta,
-			clamps = cameraFollowSettings.clamps,
-			clampsRotate = clamps.rotate,
-			speed = cameraFollowSettings.speed,
-			mice = cameraFollowSettings.mice,
-			mouse = mice.rotation;
-		
-		// pitch
-		
-		rotationDelta.x = mathhelper.clamp( rotationDelta.x + mouse.dy * speed.rotate, clampsRotate.min.delta, clampsRotate.max.delta );
-		
-		// yaw
-		
-		rotationDelta.y = mathhelper.clamp( rotationDelta.y - mouse.dx * speed.rotate, clampsRotate.min.delta, clampsRotate.max.delta );
-		
-	}
-	
-	function camera_zoom ( e ) {
-		
-		var eo = e.originalEvent || e,
-			wheelDelta = eo.wheelDelta,
-			positionDelta = cameraFollowSettings.positionDelta,
-			clamps = cameraFollowSettings.clamps,
-			clampsPosition = clamps.position,
-			speed = cameraFollowSettings.speed;
-		
-		positionDelta.z = mathhelper.clamp( positionDelta.z - wheelDelta * speed.move, clampsPosition.min.delta, clampsPosition.max.delta );
+		cameracontrols.init();
 		
 	}
 	
@@ -503,21 +158,19 @@ var KAIOPUA = (function (main) {
 		// mouse buttons
 		
 		kbMap[ 'mouseleft' ] = {
-			keydown: function ( e ) { camera_rotate( e ); },
-			keyup: function ( e ) { camera_rotate( e, true ); }
-			/*keydown: function ( e ) { character_action( 'ability_001_start', { mouseIndex: e ? e.identifier : 0 } ); },
-			keyup: function ( e ) { character_action( 'ability_001_end', { mouseIndex: e ? e.identifier : 0 } ); },*/
+			keydown: function ( e ) { character_action( 'ability_001_start', { mouseIndex: e ? e.identifier : 0 } ); },
+			keyup: function ( e ) { character_action( 'ability_001_end', { mouseIndex: e ? e.identifier : 0 } ); }
 		};
 		kbMap[ 'mousemiddle' ] = {
 			keydown: function ( e ) { console.log('key down: mousemiddle'); },
 			keyup: function ( e ) { console.log('key up: mousemiddle'); }
 		};
 		kbMap[ 'mouseright' ] = {
-			keydown: function ( e ) { camera_rotate( e ); },
-			keyup: function ( e ) { camera_rotate( e, true ); }
+			keydown: function ( e ) { cameracontrols.rotate( e ); },
+			keyup: function ( e ) { cameracontrols.rotate( e, true ); }
 		};
 		kbMap[ 'mousewheel' ] = {
-			keyup: function ( e ) { camera_zoom( e ); }
+			keyup: function ( e ) { cameracontrols.zoom( e ); }
 		};
 			
 		
@@ -599,7 +252,7 @@ var KAIOPUA = (function (main) {
 		};
 		
 		kbMap[ '70' /*f*/ ] = kbMap[ 'f' ] = {
-			keyup: camera_toggle_free_look
+			keyup: function () { console.log('key up: f'); }
 		};
 		
 		// set default as current
@@ -640,7 +293,7 @@ var KAIOPUA = (function (main) {
 	
 	function allow_control () {
 		
-		if ( showing === true && cameraMode !== cameraModes.freelook ) {
+		if ( showing === true ) {
 			
 			// signals
 			
@@ -1034,6 +687,7 @@ var KAIOPUA = (function (main) {
 		
 		var ray = utilRay1Selection,
 			mousePosition = utilVec31Selection,
+			camera = cameracontrols.camera,
 			intersections,
 			intersectedMesh,
 			intersectedModel;
@@ -1149,7 +803,7 @@ var KAIOPUA = (function (main) {
 			
 			followSettings = following[ i ];
 			
-			game.object_follow_object( pcMesh, followSettings.obj, followSettings );
+			game.object_follow_object( pcMesh, followSettings.obj, followSettings.rotationBase, followSettings.rotationOffset, followSettings.positionOffset );
 				
 		}
 		
@@ -1235,7 +889,7 @@ var KAIOPUA = (function (main) {
 		
 		// update camera
 		
-		update_camera( timeDelta );
+		cameracontrols.update( timeDelta );
 		
 		// items that follow character
 		
