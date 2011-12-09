@@ -9,12 +9,18 @@ var KAIOPUA = (function (main) {
 		core = game.core = game.core || {},
 		cameracontrols = core.cameracontrols = core.cameracontrols || {},
 		mathhelper,
+		physics,
 		camera,
 		player,
 		csRot,
 		csPos,
-		firstPersonDist = 200,
-		firstPerson = false;
+		firstPersonDist = 50,
+		firstPerson = false,
+		utilVec31Update,
+		utilVec32Update,
+		utilVec33Update,
+		utilQ31Update,
+		utilQ32Update;
 	
 	/*===================================================
     
@@ -46,9 +52,16 @@ var KAIOPUA = (function (main) {
 		
 		mathhelper = game.workers.mathhelper;
 		
+		utilVec31Update = new THREE.Vector3();
+		utilVec32Update = new THREE.Vector3();
+		utilVec33Update = new THREE.Vector3();
+		utilQ31Update = new THREE.Quaternion();
+		utilQ32Update = new THREE.Quaternion();
+		
 		// core
 		
 		player = core.player;
+		physics = core.physics;
 		
 		// handle parameters
 		
@@ -70,16 +83,20 @@ var KAIOPUA = (function (main) {
 		csRot.offsetMax.set( 75, 360, 0 );
 		csRot.deltaMin.set( -40, -40, -40 );
 		csRot.deltaMax.set( 40, 40, 40 );
-		csRot.deltaSpeed = 0.1;
+		csRot.deltaSpeedMax = csRot.deltaSpeedMin = 0.1;
 		csRot.baseRevertSpeed = 0.05;
 		
 		csPos.offsetBase.set( 0, 50, 300 );
 		csPos.offset.copy( csPos.offsetBase );
 		csPos.offsetMin.set( 0, 0, -25 );
 		csPos.offsetMax.set( 0, 50, 1000 );
-		csPos.deltaMin.set( -20, -20, -20 );
-		csPos.deltaMax.set( 20, 20, 20 );
-		csPos.deltaSpeed = 0.025;
+		csPos.offsetSnap.copy( csPos.offset );
+		csPos.offsetSnapToMinDist.set( 0, 0, firstPersonDist );
+		csPos.deltaMin.set( -80, -80, -80 );
+		csPos.deltaMax.set( 80, 80, 80 );
+		csPos.deltaSpeedMin = 0.01;
+		csPos.deltaSpeedMax = 0.25;
+		csPos.deltaDecay = 0.7;
 		
 	}
 	
@@ -109,13 +126,17 @@ var KAIOPUA = (function (main) {
 		cs.base = new THREE.Quaternion();
 		cs.baseRevertSpeed = 1;
 		cs.offsetBase = new THREE.Vector3();
+		cs.offsetSnap = new THREE.Vector3();
 		cs.offset = new THREE.Vector3();
 		cs.offsetMin = new THREE.Vector3();
 		cs.offsetMax = new THREE.Vector3();
+		cs.offsetSnapToMinDist = new THREE.Vector3();
+		cs.offsetSnapToMaxDist = new THREE.Vector3();
 		cs.delta = new THREE.Vector3();
 		cs.deltaMin = new THREE.Vector3();
 		cs.deltaMax = new THREE.Vector3();
-		cs.deltaSpeed = 0;
+		cs.deltaSpeedMin = 0;
+		cs.deltaSpeedMax = 0;
 		cs.deltaDecay = 0.8;
 		
 		return cs;
@@ -158,7 +179,7 @@ var KAIOPUA = (function (main) {
 		var rotDelta = csRot.delta,
 			rotDeltaMin = csRot.deltaMin,
 			rotDeltaMax = csRot.deltaMax,
-			rotDeltaSpeed = csRot.deltaSpeed,
+			rotDeltaSpeed = csRot.deltaSpeedMin,
 			mouse = csRot.mouse;
 		
 		// pitch
@@ -181,10 +202,17 @@ var KAIOPUA = (function (main) {
 		
 		var eo = e.originalEvent || e,
 			wheelDelta = eo.wheelDelta,
+			posOffset = csPos.offset,
+			posOffsetMin = csPos.offsetMin,
+			posOffsetMax = csPos.offsetMax,
 			posDelta = csPos.delta,
 			posDeltaMin = csPos.deltaMin,
 			posDeltaMax = csPos.deltaMax,
-			posDeltaSpeed = csRot.deltaSpeed;
+			posDeltaSpeed,
+			posOffsetZMinMaxDist = posOffsetMax.z - posOffsetMin.z,
+			posOffsetPctToMin = (posOffset.z - posOffsetMin.z) / posOffsetZMinMaxDist;
+		
+		posDeltaSpeed = csPos.deltaSpeedMin * ( 1 - posOffsetPctToMin ) + csPos.deltaSpeedMax * posOffsetPctToMin;
 		
 		posDelta.z = mathhelper.clamp( posDelta.z - wheelDelta * posDeltaSpeed, posDeltaMin.z, posDeltaMax.z );
 		
@@ -201,6 +229,8 @@ var KAIOPUA = (function (main) {
 		var posOffset = csPos.offset,
 			posOffsetMin = csPos.offsetMin,
 			posOffsetMax = csPos.offsetMax,
+			posOffsetSnap = csPos.offsetSnap,
+			posOffsetSnapToMinDist = csPos.offsetSnapToMinDist,
 			posDelta = csPos.delta,
 			posDeltaDecay = csRot.deltaDecay,
 			rotBase = csRot.base,
@@ -212,11 +242,33 @@ var KAIOPUA = (function (main) {
 			rotDelta = csRot.delta,
 			rotDeltaDecay = csRot.deltaDecay,
 			playerMoving = player.moving,
-			pc = player.character;
+			pc = player.character,
+			cardinalAxes,
+			caForward,
+			caUp,
+			rotOffsetQ,
+			rotOffsetAxis,
+			pcRotToRotOffsetDist,
+			pcRotToRotOffsetAngle,
+			pcRotToRotOffsetAxis,
+			pcRotToRotOffsetQ;
 		
 		// add delta to offset
+		// snap to min when within snapping dist
 		
-		posOffset.z = mathhelper.clamp( posOffset.z + posDelta.z, posOffsetMin.z, posOffsetMax.z );
+		if ( posDelta.z > 0 && posOffset.z === posOffsetMin.z ) {
+			
+			posOffsetSnap.z = posOffsetMin.z + posOffsetSnapToMinDist.z;
+			
+		}
+		
+		posOffset.z = posOffsetSnap.z = mathhelper.clamp( posOffsetSnap.z + posDelta.z, posOffsetMin.z, posOffsetMax.z );
+		
+		if ( posOffsetSnap.z - posOffsetSnapToMinDist.z <= posOffsetMin.z ) {
+			
+			posOffset.z = posOffsetMin.z;
+			
+		}
 		
 		rotOffset.x = mathhelper.clamp( rotOffset.x + rotDelta.x, rotOffsetMin.x, rotOffsetMax.x );
 		rotOffset.y = mathhelper.clamp( rotOffset.y + rotDelta.y, rotOffsetMin.y, rotOffsetMax.y );
@@ -236,28 +288,49 @@ var KAIOPUA = (function (main) {
 			rotOffset.y += 360;
 		}
 		
-		
 		// check if should switch between third and first
 		
-		if ( posOffset.z - posOffsetMin.z <= firstPersonDist ) {
+		if ( posOffset.z - firstPersonDist <= posOffsetMin.z ) {
 			
-			firstPerson = true;
-			
-			/*
-			 * BROKEN - snaps short of actual angle
-			if ( rotOffset.y !== 0 ) {
+			if ( firstPerson !== true && rotOffset.y !== 0 ) {
+				
+				// get cardinal axes from physics
+				
+				cardinalAxes = physics.cardinalAxes;
+				caForward = cardinalAxes.forward;
+				caUp = cardinalAxes.up;
+				
+				// get axis and angle between rot offset y rotation and forward
+				
+				rotOffsetQ = utilQ31Update.setFromAxisAngle( utilVec31Update.copy( caUp ), rotOffset.y * Math.PI / 180 );
+				
+				rotOffsetAxis = utilVec32Update.copy( caForward );
+				
+				rotOffsetQ.multiplyVector3( rotOffsetAxis );
+				
+				pcRotToRotOffsetDist = Math.max( -1, Math.min( 1, caForward.dot( rotOffsetAxis ) ) );
+				
+				// axis / angle
+				
+				pcRotToRotOffsetAngle = Math.acos( pcRotToRotOffsetDist );
+				pcRotToRotOffsetAxis = utilVec33Update.cross( caForward, rotOffsetAxis );
+				pcRotToRotOffsetAxis.normalize();
+				
+				// rotation change
+				
+				pcRotToRotOffsetQ = utilQ32Update.setFromAxisAngle( pcRotToRotOffsetAxis, pcRotToRotOffsetAngle );
 				
 				// update player rotation y
 				
-				pc.rotate_by_delta( 0, rotOffset.y / 180, 0, 1 );
+				pc.rotate_by_delta( pcRotToRotOffsetQ.x, pcRotToRotOffsetQ.y, pcRotToRotOffsetQ.z, pcRotToRotOffsetQ.w );
 				
-				// remove rot delta from offset
-				// as will be copied when camera follows player
+				// reset rot offset
 				
 				rotOffset.y = 0;
 				
 			}
-			*/
+			
+			firstPerson = true;
 			
 		}
 		else {
