@@ -61,6 +61,10 @@ var KAIOPUA = (function (main) {
 		get : function () { return system; }
 	});
 	
+	Object.defineProperty(physics, 'cardinalAxes', { 
+		get : function () { return cardinalAxes; }
+	});
+	
 	/*===================================================
     
     external init
