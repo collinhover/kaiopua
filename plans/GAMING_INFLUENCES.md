@@ -3,11 +3,12 @@ Gaming Influences
 ##Collin Hover, Graduate Thesis: Kaiopua
 
 ##List of Games that may have influenced the project
-- alphabetical game name (with genre)
-+ one sentence description
-+ why I played
-+ what we may learn from the game (intentional or not)
-
+1. alphabetical game name (with genre)
+2. one sentence description
+3. why I played
+4. what we may learn from the game (intentional or not)
+  
+  
 
 ####Aion (MMORPG)
 * One: Persistent world in which two factions battle each other for survival on a dying world
