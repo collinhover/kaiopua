@@ -1,8 +1,8 @@
 Gaming Influences
 ========
 ##Collin Hover, Graduate Thesis: Kaiopua
-
-##List of Games that may have influenced the project
+  
+List of Games that may have influenced the project
 1. alphabetical game name (with genre)
 2. one sentence description
 3. why I played
