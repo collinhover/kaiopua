@@ -41,7 +41,8 @@ Concern: Too simple a concept?
    
 What: A player plants seeds to change the environment's color, shape, and physical properties   
    
-#####How: The player has three seeds, a red, a green, and a blue, and each, when planted, grows into a plant that changes the environment in a small radius   
+#####How: 
+*   The player has three seeds, a red, a green, and a blue, and each, when planted, grows into a plant that changes the environment in a small radius   
 *   The seeds can be planted on any surface the player can see
 *   Each seed will affect the environment around it visually
 *   Seed areas of influence can overlap to create areas functionality
@@ -64,7 +65,8 @@ What: A player plants seeds to change the environment's color, shape, and physic
    
 What: A player connects a series of colored liquid pools to their destinations around the world   
 
-#####How: A series of colored liquids begin in pools around the world, and the player must dig rivers to connect them to each color's goal around the world   
+#####How: 
+*   A series of colored liquids begin in pools around the world, and the player must dig rivers to connect them to each color's goal around the world   
 *   Players can dig shallow rivers for the pools to flow into
 *   Rivers that cross or combine create a new pool of colored liquid
 *   Each color of liquid changes the laws of physics near it
@@ -81,7 +83,8 @@ What: A player connects a series of colored liquid pools to their destinations a
    
 What: A player's perspective on any set of two or more chosen objects controls the laws of physics for those objects.   
    
-#####How: Each principle of grouping is given a physical property and a value, and a set of objects gains the physical property of the principle they have satisfied (from the player's perspective) with the highest value
+#####How: 
+*   Each principle of grouping is given a physical property and a value, and a set of objects gains the physical property of the principle they have satisfied (from the player's perspective) with the highest value
 *   In 3D space, objects can satisfy different concepts of the principles of grouping when viewed at different angles.
 *   For example, two close objects from one angle satisfy proximity, but satisfy continuity by overlapping from another angle.
 *   Objects only affect each other when selected and activated by the player.
