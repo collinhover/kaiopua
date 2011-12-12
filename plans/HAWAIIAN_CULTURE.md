@@ -1,7 +1,7 @@
 
 Discussion with Kumu Manu
 ========
-##Collin Hover, Graduate Thesis: Kaiopua
+###Collin Hover, Graduate Thesis: Kaiopua
 
 ##Animals
 
