@@ -18,7 +18,7 @@ Major concept: We tend to order and understand our experiences in a way that is 
    
 Concern: No explanation for how our brain does this, only that it does... can this be taught?   
    
-Relevant sub-concepts:   
+####Relevant sub-concepts:   
 *   Proximity - stimuli close together are grouped into the same object.
 *   Similarity - stimuli of similar physical resemblance, such as shape, size, color, etc, are grouped into the same object.
 *   Closure - stimuli are seen as complete objects even in cases where only partial information is given, or individual stimuli that form a known shape are grouped into the same object.
