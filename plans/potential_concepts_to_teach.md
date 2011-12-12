@@ -88,19 +88,19 @@ How: Each principle of grouping is given a physical property and a value, and a 
 * Players are given the ability to move and modify objects to create relationships that satisfy the princples of grouping.
    
 Physical property assignments:   
-* Proximity = causes objects to pull each other closer, value 1
-* Similarity = causes objects to pull each other closer, value 2
-* Dissimilarity = causes object to repel each other, value 2
-* Continuation = causes objects to repel each other, value 3
-_(not all principles may be able to be evaluated or implemented)_
+* Proximity = causes objects to pull each other closer, value 1   
+* Similarity = causes objects to pull each other closer, value 2   
+* Dissimilarity = causes object to repel each other, value 2   
+* Continuation = causes objects to repel each other, value 3   
+_(not all principles may be able to be evaluated or implemented)_   
    
 Example Problem:   
-* A player becomes aware of a goal located atop a pillar
-* This pillar has rectangular stairs starting from the top, circling around, and ending half-way down
-* The lowest step is too high for the player to reach
-* Nearby are scattered more rectangular stair pieces
-* The player notices that directly below each stair around the pillar is a single stone disk on the ground
-* The player places a stair piece atop each disk around the pillar missing a step above it
-* Next, the player activates each set of disk and stair piece, and based on both their dissimilarity and overlap (continuity) causes them to repel each other
-* Because the disk is being repelled into the ground, it is stationary, but the stair piece moves upward into place
-* The player uses the gestalt laws of grouping to push the similar stair pieces together to form the known shape of a staircase and solve the problem of reaching his/her goal
+* A player becomes aware of a goal located atop a pillar   
+* This pillar has rectangular stairs starting from the top, circling around, and ending half-way down   
+* The lowest step is too high for the player to reach   
+* Nearby are scattered more rectangular stair pieces   
+* The player notices that directly below each stair around the pillar is a single stone disk on the ground   
+* The player places a stair piece atop each disk around the pillar missing a step above it   
+* Next, the player activates each set of disk and stair piece, and based on both their dissimilarity and overlap (continuity) causes them to repel each other   
+* Because the disk is being repelled into the ground, it is stationary, but the stair piece moves upward into place   
+* The player uses the gestalt laws of grouping to push the similar stair pieces together to form the known shape of a staircase and solve the problem of reaching his/her goal   
