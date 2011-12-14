@@ -2,13 +2,14 @@ Gaming Influences
 ========
 ###Collin Hover, Graduate Thesis: Kaiopua
   
-List of Games that may have influenced the project
-1. alphabetical game name (with genre)
-2. one sentence description
-3. why I played
-4. what we may learn from the game (intentional or not)
+List of Games that may have influenced the project  
+1. alphabetical game name (with genre)  
+2. one sentence description  
+3. why I played  
+4. what we may learn from the game (intentional or not)  
   
-  
+##Summary
+I tend to play games more for the aspect of interaction with others through gaming, with a preference for playing with friends as opposed to alone. Unique core mechanics, i.e. something I haven't experienced before, is the other major reason I seem to play games, as I am always seeking out new challenges. Exploration is another driving force for why I play any game, though it is not as common as the others and is most prominent in games with non-linear gameplay.
 
 ####Aion (MMORPG)
 * One: Persistent world in which two factions battle each other for survival on a dying world
