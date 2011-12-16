@@ -40,7 +40,15 @@ var KAIOPUA = (function (main) {
         
         parameters.elementType = parameters.elementType || 'section';
         
-        parameters.classes = parameters.classes || 'menu info_panel';
+        parameters.classes = parameters.classes || '';
+		
+		// default classes
+		
+		parameters.classes += ' menu info_panel clearfix';
+		
+		if ( parameters.transparent === true ) {
+			parameters.classes += ' info_panel_nobg';
+		}
         
         // ui element ify
         
@@ -127,7 +135,7 @@ var KAIOPUA = (function (main) {
     }
     
     function make_button ( parameters ) {
-        var button;
+        var button, text;
         
         // handle parameters
         
@@ -138,14 +146,30 @@ var KAIOPUA = (function (main) {
         parameters.classes = parameters.classes || '';
         
         parameters.classes = 'item ' + parameters.classes;
-        
-        parameters.text = parameters.id;
+		
+		if ( parameters.circleButton === true ) {
+			
+			parameters.classes += ' item_circle';
+			
+		}
+		else {
+			
+			parameters.classes += ' item_box';
+			
+		}
         
 		if ( parameters.hasOwnProperty('disabled') !== true ) {
 			
 			parameters.disabled = false;
 			
 		}
+		
+		// add text sub element
+		
+		parameters.subElements = [ {
+			classes: 'item_text_container',
+			text: parameters.id
+		} ];
         
         button = uihelper.make_ui_element( parameters );
         
