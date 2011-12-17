@@ -31,6 +31,8 @@ Instead the goal is to fill the entire space of a field, and eventually all the 
 ####Gameplay
 The gameplay of Kaiopua consists of a third-person journey of healing a creature called Kai 'Opua. The player can explore by pressing and holding the WASD or arrow keys to move, while using the mouse to select and interact with objects. Players begin their journey lost at sea, and are found (or find) the whale after a very short period of exploring the ocean. Players will learn immediately about the core mechanic of the game, and find out about movement, turning, looking, interacting with objects, and solving problems shortly after.
 
+![gameplay_mapping](https://github.com/collinhover/kaiopua/raw/master/plans/gameplay_mapping.png "Gameplay Mapping")
+
 ####Setting and Structure
 The game takes place on a moon sized whale-like creature named Kai 'Opua. The name Kai’Opua comes from Hawaiian culture, known as the opua or pink cumulus cloud formations that hang low over ‘kai’, the ocean. These clouds are regarded as omens of good fortune and good weather.  
 *   The whale is a roughly spherical creature around which the player can walk, much like a small planet
