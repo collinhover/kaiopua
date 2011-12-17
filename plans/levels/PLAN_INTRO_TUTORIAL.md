@@ -6,7 +6,7 @@ Plan: Intro and Tutorial Section
 1.0.09.17.2011
 
 ####Section Description
-Intro section of website will be composed of both the game's introduction and the game's tutorial, presented in an interactive way that introduces the player to the character, world, and story while also teaching them how to play the game. Setting will be the main character's farming shack.
+Intro section of website will be composed of both the game's introduction and the game's tutorial, presented in an interactive way that introduces the player to the character, world, and story while also teaching them how to play the game.
 
 ##Basics
 ####Summary
@@ -18,34 +18,27 @@ Intro section of website will be composed of both the game's introduction and th
 
 ####Introduction
 * Setting: 
-    * Face of world
-    * Player character's farming shack
-    * Small rectangular shack slightly raised off ground
+    * Middle of ocean
+    * Player on canoe
+    * Whale
     * Sitting on a small hill
     * Various plants (trees, taro, grass, etc)
-* NPCs:
-    * Face of world
-    * A feral pig
 * Semi-Linear path:
-    * Begins inside character's shack
-        * Character sitting on bed and waking up
-        * Single room
-        * Simple bed
-        * Wall with large painting textured by Launcher section scene for seamless transition
-        * Character's pack basket on floor
-        * Bottle of sunshine hanging on door
-        * Door of shack closed
-    * Moves outside character's shack
-        * Character walks out and down steps
-        * Character makes a plant grow (shows player growing ability)
-        * Character makes big pig shrink (shows player shrinking ability)
-    * Kaiopua greets character
-        * Character learns about disturbances
-        * Character sets out for first ring
+    * Begins in the middle of an ocean
+        * Character in canoe
+        * Rowing around, exploring
+        * Character surprised by huge whale surfacing
+        * Whale seems sick and neglected
+        * Whale talks to character and offers deal
+        * Character can live on whale happily
+        * And in return character cultivates surface of whale to help the whale grow strong and healthy
+        * Whale offers character its fin as a place to land
 
 ####Tutorial
 * Teaches player basics of game mechanics
 * Doubles as first level of game
-* Basic movement and jumping >> player must run from house to Kaiopua's mouth
-* Interacting with objects >> player must start speaking to Kaiopua
-* Basic ability of scaling >> player solves first puzzle
+* Basic movement >> player must row to the whale's fin
+* Interacting with objects >> player activate the canoe to land
+* Basic jumping >> player must jump out of the canoe
+* Checking seeds >> player opens seed inventory
+* Core mechanics >> player chooses first (and only seed) and plants it on the tip of the whale's fin

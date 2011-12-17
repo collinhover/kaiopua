@@ -14,8 +14,6 @@ Kaiopua
 ####Summary
 A young boy, lost at sea in his canoe, is found by a dying whale and offered a deal: the boy may live happily on the whale, but in return must cultivate plantlife on the whale's surface to return the whale to health.
 
-![visual_style_001](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_visual_style_001.jpg "Game Visual Style")
-
 ##Game Overview
 Players live through a series of days, where each day they are given a supply of plants which can be used to heal a neglected area, or field, on the whale's surface
 
@@ -34,22 +32,18 @@ The gameplay of Kaiopua consists of a third-person journey of healing a creature
 ![gameplay_mapping](https://github.com/collinhover/kaiopua/raw/master/plans/gameplay_mapping.png "Gameplay Mapping")
 
 ####Setting and Structure
-The game takes place on a moon sized whale-like creature named Kai 'Opua. The name Kai’Opua comes from Hawaiian culture, known as the opua or pink cumulus cloud formations that hang low over ‘kai’, the ocean. These clouds are regarded as omens of good fortune and good weather.  
+The game takes place on a moon sized whale-like creature named Kai 'Opua. The name Kai 'Opua comes from Hawaiian culture, known as the 'Opua or pink cumulus cloud formations that hang low over 'Kai', the ocean. These clouds are regarded as omens of good fortune and good weather.  
+    
 *   The whale is a roughly spherical creature around which the player can walk, much like a small planet
 *   The whale has two eyes, a mouth, fins, and a tail
 *   The whale has a thermometer in its mouth to show how healthy it is
 *   The whale also has other environment objects to make it appear more like an island, such as a volcano, palm trees, hills, etc
 *   The surface of the whale is divided into a series of connected(touching) modular fields
 
-![world_002](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_world_002.jpg "World")
-![walls_rocks_001](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_walls_rocks_001.jpg "Walls and Rocks")
+![visual_style_001](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_visual_style_001.jpg "Game Visual Style")
 
 ####Level Plans
-[Launcher & Loader](https://github.com/collinhover/kaiopua/blob/master/plans/levels/PLAN_LAUNCHER_LOADER.md)  
-[Intro & Tutorial](https://github.com/collinhover/kaiopua/blob/master/plans/levels/PLAN_INTRO_TUTORIAL.md)  
-[Level 1](https://github.com/collinhover/kaiopua/blob/master/plans/levels/PLAN_LEVEL_001.md)  
-
-![world_001](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_world_001.jpg "Game World")
+[Launcher & Loader](https://github.com/collinhover/kaiopua/blob/master/plans/levels/PLAN_LAUNCHER_LOADER.md)
 
 ####Player
 *   Simple boy with a lantern
@@ -85,6 +79,8 @@ The game takes place on a moon sized whale-like creature named Kai 'Opua. The na
 *   An advanced field may occupy space along 3 dimensions, i.e. it lies along the surface as well as occupying space away from the surface
 *   Fields may include grid units that cannot be planted on or only allow certain plants
 
+![walls_rocks_001](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_walls_rocks_001.jpg "Walls and Rocks")
+
 ####Success and Failure
 *   Succeeding at completing a field, activates a power source within that field
 *   The power source gives rewards, one of which is a new plant, and feeding it to the whale causes the whale's health to improve
@@ -100,7 +96,7 @@ The game takes place on a moon sized whale-like creature named Kai 'Opua. The na
 *   A player may go to sleep at their house (or what is built of it) to fast forward to the beginning of the next day
 *   Any seeds remaining at the end of the day are placed into a seed bank
 
-![character_006](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_bottle_of_sunshine_001.jpg "Sunshine")
+![sun_001](https://github.com/collinhover/kaiopua/raw/master/plans/concepts/kaiopua_sketch_sun_001.jpg "Sunshine")
 
 ####Seed Bank
 *   The seed bank serves to reward players that solve fields efficiently
