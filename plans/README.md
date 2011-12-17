@@ -44,8 +44,8 @@ The game takes place on a moon sized whale-like creature named Kai 'Opua. The na
 
 ####Section Plans
 See the following for specifics about sections of the game:
-[Launcher & Loader](https://github.com/collinhover/kaiopua/blob/master/plans/levels/PLAN_LAUNCHER_LOADER.md) - 
-[Intro & Tutorial](https://github.com/collinhover/kaiopua/blob/master/plans/levels/PLAN_INTRO_TUTORIAL.md)
+[Launcher & Loader](https://github.com/collinhover/kaiopua/blob/master/plans/sections/PLAN_LAUNCHER_LOADER.md) - 
+[Intro & Tutorial](https://github.com/collinhover/kaiopua/blob/master/plans/sections/PLAN_INTRO_TUTORIAL.md)
 
 ####Player
 *   Simple boy with a lantern
