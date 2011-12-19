@@ -19,12 +19,15 @@ var KAIOPUA = (function (main) {
     =====================================================*/
     
     function make_ui_element ( parameters, el ) {
-        var elementType,
+        var i, l,
+			elementType,
             id,
             classes,
             autoPosition,
             text,
             cssmap,
+			subElementParameters,
+			subElement,
             domElement;
             
         el = el || {};
@@ -39,23 +42,15 @@ var KAIOPUA = (function (main) {
         
         classes = parameters.classes || '';
         
-        staticPosition = parameters.staticPosition || false;
-        
         text = parameters.text || '';
         
         cssmap = parameters.cssmap || {};
-        
-        cssmap.position = cssmap.position || (staticPosition === true) ? 'static' : 'absolute';
         
         // init dom element
         
         el.domElement = document.createElement( elementType );
         
         $(el.domElement).html( text );
-        
-        el.staticPosition = staticPosition;
-        
-        el.keepCentered = parameters.keepCentered || false;
         
         // id
         
@@ -80,13 +75,29 @@ var KAIOPUA = (function (main) {
         if ( parameters.hasOwnProperty('height') ) {
             $(el.domElement).height( parameters.height );
         }
+		
+		// children ui elements
+		
+		if ( parameters.hasOwnProperty('subElements') && parameters.subElements.length > 0 ) {
+			
+			for ( i = 0, l = parameters.subElements.length; i < l; i++ ) {
+				
+				subElementParameters = parameters.subElements[ i ];
+				
+				subElement = make_ui_element( subElementParameters );
+				
+				$(el.domElement).append( subElement.domElement );
+				
+			}
+			
+		}
         
         // functions
         
         el.ui_reposition = function ( x, y ) {
             var tempadded = false;
-            
-            if ( el.staticPosition === false ) {
+			
+            if ( $(el.domElement).css('position') === 'absolute' ) {
             
                 if ( $(el.domElement).innerHeight() === 0 ) {
                     tempadded = true;
@@ -108,12 +119,11 @@ var KAIOPUA = (function (main) {
         };
         
         el.ui_keep_centered = function () {
-            
+			
             el.keepCentered = true;
             
-            if ( el.staticPosition === true ) {
-                el.staticPosition = false;
-                $(el.domElement).css({'position' : 'absolute'});
+            if ( $(el.domElement).css('position') !== 'absolute' ) {
+                $(el.domElement).css('position', 'absolute');
             }
             
             shared.signals.windowresized.add( el.ui_centerme );
@@ -129,7 +139,11 @@ var KAIOPUA = (function (main) {
         };
         
         el.ui_centerme = function ( W, H ) {
-            el.ui_reposition( W * 0.5, H * 0.5 );
+			var p = $(el.domElement).parent(),	
+				pW = ( p ) ? p.outerWidth() : W,
+				pH = ( p ) ? p.outerHeight() : H;
+			
+            el.ui_reposition( pW * 0.5, pH * 0.5 );
         };
         
         el.ui_show = function ( container, time, callback ) {
@@ -193,6 +207,14 @@ var KAIOPUA = (function (main) {
             }
 			
         };
+		
+		// check if should keep centered
+		
+		if ( parameters.keepCentered === true ) {
+			
+			el.ui_keep_centered();
+			
+		}
         
         return el;
     }

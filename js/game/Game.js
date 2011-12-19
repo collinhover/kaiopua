@@ -569,7 +569,8 @@ var KAIOPUA = (function (main) {
         
         menu = menus.start = menumaker.make_menu( {
             id: 'start_menu',
-            width: 260
+			transparent: true,
+            width: 570
         } );
         
         menu.add_item( menumaker.make_button( {
@@ -577,20 +578,20 @@ var KAIOPUA = (function (main) {
             callback: function () {
                 start_game();
             },
-            staticPosition: true,
-            classes: 'item_big'
+            classes: 'item_big',
+			circleButton: true
         } ) );
         menu.add_item( menumaker.make_button( {
             id: 'Continue', 
             callback: function () {},
-            staticPosition: true,
-            disabled: true
+            disabled: true,
+			circleButton: true
         } ) );
         menu.add_item( menumaker.make_button( {
             id: 'Options', 
             callback: function () {},
-            staticPosition: true,
-            disabled: true
+            disabled: true,
+			circleButton: true
         } ) );
         
         menu.ui_keep_centered();
@@ -606,7 +607,8 @@ var KAIOPUA = (function (main) {
         
         menu = menus.pause = menumaker.make_menu( {
             id: 'pause_menu',
-            width: 260
+            width: 760,
+			transparent: true
         } );
         
         menu.add_item( menumaker.make_button( {
@@ -614,27 +616,27 @@ var KAIOPUA = (function (main) {
             callback: function () {
                 resume();
             },
-            staticPosition: true,
-            classes: 'item_big'
+            classes: 'item_big',
+			circleButton: true
         } ) );
 		menu.add_item( menumaker.make_button( {
             id: 'Options', 
             callback: function () {},
-            staticPosition: true,
-            disabled: true
+            disabled: true,
+			circleButton: true
         } ) );
         menu.add_item( menumaker.make_button( {
             id: 'Save', 
             callback: function () {},
-            staticPosition: true,
-            disabled: true
+            disabled: true,
+			circleButton: true
         } ) );
 		menu.add_item( menumaker.make_button( {
             id: 'End Game', 
             callback: function () {
 				stop_game();
 			},
-            staticPosition: true
+			circleButton: true
         } ) );
         
         menu.ui_keep_centered();
