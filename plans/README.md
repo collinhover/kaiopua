@@ -18,7 +18,7 @@ This is a video game that has the player adopt the identity of a pacific islande
 The player, a young boy lost at sea in his canoe, is found by a dying whale and offered a deal: they may live happily on the whale, but in return must cultivate plant life on the whale's surface to return the whale to health. Players live through a series of days, where each day they are given a supply of plants which can be used to heal a neglected area, or field, on the whale's surface.
 
 ####Its like Tetris, but...
-Instead the goal is to fill the entire space of a field, and eventually all the fields on the whale's surface, using as few pieces(plants) as possible.
+Instead the goal is to use the modular pieces (plants) to fill the entire grid-based space of a field, and eventually all the fields on the whale's surface, using as few pieces as possible.
 
 ####Goals
 *   Make the whale strong and healthy by creating a living environment on its surface
