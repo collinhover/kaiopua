@@ -6,7 +6,7 @@ Game Plan
 6.0.12.16.2011
 
 ####Project
-MFA Graduate Thesis in epistemic gaming based visual communication and learning
+MFA Graduate Thesis in gaming-based visual communication and learning
 
 ####Working Name
 Kaiopua
