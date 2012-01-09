@@ -12,7 +12,7 @@ MFA Graduate Thesis in epistemic gaming based visual communication and learning
 Kaiopua
   
 ####Summary
-A young boy, lost at sea in his canoe, is found by a dying whale and offered a deal: the whale will save the boy, but the boy must save the whale. To this end, the boy may live happily on the whale, but in return must cultivate plantlife on the whale's surface to return the whale to health.
+A young boy, lost at sea in his canoe, is found by a dying whale and offered a deal: the boy may live happily on the whale, but in return must cultivate plantlife on the whale's surface to return the whale to health.
 
 ##Game Overview
 Players live through a series of days, where each day they are given a supply of plants which can be used to heal a neglected area, or field, on the whale's surface
