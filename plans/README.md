@@ -6,19 +6,19 @@ Game Plan
 6.0.12.16.2011
 
 ####Project
-MFA Graduate Thesis in epistemic gaming based visual communication and learning
+MFA Graduate Thesis in gaming-based visual communication and learning
 
 ####Working Name
 Kaiopua
   
 ####Summary
-A young boy, lost at sea in his canoe, is found by a dying whale and offered a deal: the boy may live happily on the whale, but in return must cultivate plantlife on the whale's surface to return the whale to health.
+This is a video game that has the player adopt the identity of a pacific islander, lost at sea, who finds a home aboard the most unexpected of creatures by learning the ways of taro farming.
 
 ##Game Overview
-Players live through a series of days, where each day they are given a supply of plants which can be used to heal a neglected area, or field, on the whale's surface
+The player, a young boy lost at sea in his canoe, is found by a dying whale and offered a deal: they may live happily on the whale, but in return must cultivate plant life on the whale's surface to return the whale to health. Players live through a series of days, where each day they are given a supply of plants which can be used to heal a neglected area, or field, on the whale's surface.
 
 ####Its like Tetris, but...
-Instead the goal is to fill the entire space of a field, and eventually all the fields on the whale's surface, using as few pieces(plants) as possible
+Instead the goal is to use the modular pieces (plants) to fill the entire grid-based space of a field, and eventually all the fields on the whale's surface, using as few pieces as possible.
 
 ####Goals
 *   Make the whale strong and healthy by creating a living environment on its surface
@@ -187,7 +187,7 @@ Players can use any module, or plant, at any time in an asynchronous manner, whi
     * Visuals will be playful and vibrant, and should attempt to stay away from the brown/dead feel of games attempting realism. 
     * Visuals should draw from influences such as ROME (ro.me), Legend of Zelda: The Wind Waker, Super Paper Mario, and Okami.
     * As performance allows and aesthetic direction suggests, may additionally include: cel-shading, depth of field (dof), ambient occlusion (ao, if not handled by textures), vertex colors / shading, displacement mapping.
-*   Difficulty: Mid range, allow for reasonable failure and don’t punish player by adding time wasters such as long runs, grind based goals (i.e. repetitive and dull tasks), and overpriced progression.
+*   Difficulty: Mid range, allow for reasonable failure and donï¿½t punish player by adding time wasters such as long runs, grind based goals (i.e. repetitive and dull tasks), and overpriced progression.
 *   Pace: Do not artificially extend the time players spend in game. The game pace should be constant and exciting, but not pushy (i.e. no count-down timers) or irritating (i.e. player should not fail because of a random number generator).
 *   Resolution: Dynamic based on frames per second (fps) achieved by player computer. If player can meet or exceed 20 fps, the game will be rendered at the full size of the browser window. If player drops below this, game will be rendered at a reduced size and scaled up to match browser window, resulting in pixellated visuals.
 *   Frames per second: Default and maximum is 60, with minimum at 20. Below min, warn player and reduce quality.
@@ -199,7 +199,7 @@ Players can use any module, or plant, at any time in an asynchronous manner, whi
 *   Task / Quest Log: Not planned for implementation.
 *   Inventory: Not planned for implementation.
 *   Equipment: Not planned for implementation.
-*   Character Customization: (Min priority) Player will find objects that may modify his/her character’s appearance in game.
+*   Character Customization: (Min priority) Player will find objects that may modify his/her characterï¿½s appearance in game.
 *   Leveling Up / Stats: Not planned for implementation.
 *   Achievements: (Min priority) If time permits, limited social media based achievements may be implemented.
 *   HUD  (High priority): Heads up display (HUD) will be minimal by default, with most information derived from visual based queues instead, but exceptions will be made:
@@ -207,7 +207,7 @@ Players can use any module, or plant, at any time in an asynchronous manner, whi
     * Energy bar will be shown
     * Abilities as list (scrollable / selectable)
     * Options / Menu buttons (pause on use)
-*   Life and Death: (High priority) The player will be able to die in game but will never get a game over. Instead, upon dieing the player will be spit out of the world’s mouth.
+*   Life and Death: (High priority) The player will be able to die in game but will never get a game over. Instead, upon dieing the player will be spit out of the worldï¿½s mouth.
 *   Saving: May be added if time permits.
 *   Loading: May be added if time permits.
 
