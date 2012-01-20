@@ -51,7 +51,7 @@ var KAIOPUA = (function (main) {
 		get : function () { return tail; }
 	});
 	
-	world = main.asset_register( assetPath, world );
+	world = main.asset_register( assetPath, world, true );
 	
 	/*===================================================
     
@@ -62,7 +62,7 @@ var KAIOPUA = (function (main) {
 	main.assets_require( [
 		"assets/modules/core/Game",
 		"assets/modules/core/Model",
-		"assets/modules/workers/ObjectMaker",
+		"assets/modules/utils/ObjectMaker",
 		"assets/modules/env/Water"
 	], init_internal, true );
 	
@@ -79,7 +79,7 @@ var KAIOPUA = (function (main) {
 			
 			init_world_base();
 			
-			init_environment();
+			//init_environment();
 			
 			ready = true;
 			
@@ -135,7 +135,13 @@ var KAIOPUA = (function (main) {
 		head.mesh.quaternion.setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), -Math.PI * 0.4 );
 		tail.mesh.quaternion.copy( head.mesh.quaternion ); 
 		
-		parts.push( head, tail );
+		// water
+		
+		waterPlane = water.instantiate();
+		
+		// all parts
+		
+		parts.push( head, tail, waterPlane.container );
 		
 	}
 	
@@ -279,12 +285,6 @@ var KAIOPUA = (function (main) {
 		taroPlant2.mesh.position.set( -190, 1835, 105 );
 		
 		parts.push( taroPlant2 );
-		
-		// water
-		
-		waterPlane = water.instantiate();
-		
-		parts.push( waterPlane.container );
 		
 	}
 	

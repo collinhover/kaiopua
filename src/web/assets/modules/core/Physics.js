@@ -57,7 +57,7 @@ var KAIOPUA = (function (main) {
 		get : function () { return system; }
 	});
 	
-	physics = main.asset_register( assetPath, physics );
+	physics = main.asset_register( assetPath, physics, true );
 	
 	/*===================================================
     
@@ -66,7 +66,7 @@ var KAIOPUA = (function (main) {
     =====================================================*/
 	
 	main.assets_require( [
-		"assets/modules/workers/MathHelper"
+		"assets/modules/utils/MathHelper"
 	], init_internal, true );
 	
 	function init_internal ( mh ) {
@@ -899,7 +899,7 @@ var KAIOPUA = (function (main) {
 		
 		// if needs calculation
 		
-		if ( typeof geometry.boundingBox === 'undefined' || geometry.boundingBox === null ) {
+		if ( !geometry.boundingBox ) {
 			geometry.computeBoundingBox();
 		}
 		
@@ -907,7 +907,7 @@ var KAIOPUA = (function (main) {
 		
 		// get original dimensions and scale to mesh's scale
 		
-		dimensions = new THREE.Vector3( bbox.x[1] - bbox.x[0], bbox.y[1] - bbox.y[0], bbox.z[1] - bbox.z[0] ).multiplySelf( scale );
+		dimensions = new THREE.Vector3( bbox.max.x - bbox.min.x, bbox.max.y - bbox.min.y, bbox.max.z - bbox.min.z ).multiplySelf( scale );
 		
 		return dimensions;
 	}
@@ -966,7 +966,7 @@ var KAIOPUA = (function (main) {
 		
 		// if needs calculation
 		
-		if ( typeof geometry.boundingBox === 'undefined' || geometry.boundingBox === null ) {
+		if ( !geometry.boundingBox ) {
 			geometry.computeBoundingBox();
 		}
 		
@@ -974,7 +974,8 @@ var KAIOPUA = (function (main) {
 		
 		// get mesh's center offset
 		
-		centerOffset = new THREE.Vector3( bbox.x[0] + (bbox.x[1] - bbox.x[0]) * 0.5, bbox.y[0] + (bbox.y[1] - bbox.y[0]) * 0.5, bbox.z[0] + (bbox.z[1] - bbox.z[0]) * 0.5 );
+		//centerOffset = new THREE.Vector3( bbox.x[0] + (bbox.x[1] - bbox.x[0]) * 0.5, bbox.y[0] + (bbox.y[1] - bbox.y[0]) * 0.5, bbox.z[0] + (bbox.z[1] - bbox.z[0]) * 0.5 );
+		centerOffset = new THREE.Vector3( bbox.max.x - bbox.min.x, bbox.max.y - bbox.min.y, bbox.max.z - bbox.min.z ).multiplyScalar( 0.5 ).addSelf( bbox.min );
 		
 		return centerOffset;
 		
@@ -1244,6 +1245,13 @@ var KAIOPUA = (function (main) {
 					upToUpNewAxis = uv32.cross( axisUp, axisUpNew );
 					upToUpNewAxis.normalize();
 					
+					// if new up axis is exactly opposite of current up
+					// replace upToUpNew axis with the player's current forward axis
+					
+					if ( upToUpNewAxis.length() === 0 ) {
+						upToUpNewAxis = axisForward;
+					}
+					
 					// rotation change
 					
 					upToUpNewQ = uq3.setFromAxisAngle( upToUpNewAxis, upToUpNewAngle );
@@ -1470,6 +1478,7 @@ var KAIOPUA = (function (main) {
 		ray.origin = rayPosition;
 		ray.direction = rayDirection;
 		
+		/*
 		// ray cast individually using collision system r45
 		for ( i = 0, l = system.colliders.length; i < l; i ++ ) {
 			
@@ -1481,17 +1490,6 @@ var KAIOPUA = (function (main) {
 			}
 			
 			var cmeshPos = cmesh.position.clone();
-			
-			/*
-			// if parent is not scene, add parent position to position
-			
-			if ( cmesh.parent !== game.scene ) {
-				
-				cmeshPos.addSelf( cmesh.parent.position );
-				console.log(cmesh.parent);
-				
-			}
-			*/
 			
 			var d1l = cmeshPos.distanceTo( rayPosition );
 			var d2l = cmesh.geometry.boundingSphere.radius * Math.max( cmesh.scale.x, cmesh.scale.y, cmesh.scale.z );
@@ -1565,9 +1563,10 @@ var KAIOPUA = (function (main) {
 			}
 			
 		}
+		*/
 		
 		// ray casting individually using ray intersect object r46
-		/*for ( i = 0, l = system.colliders.length; i < l; i ++ ) {
+		for ( i = 0, l = system.colliders.length; i < l; i ++ ) {
 			
 			var collider = system.colliders[ i ];
 			var cmesh = collider.mesh;
@@ -1593,64 +1592,8 @@ var KAIOPUA = (function (main) {
 				
 			}
 			
-		}*/
-		
-		//collision = system.rayCastNearest( ray );
-		//intersects = ray.intersectScene( game.scene );
-		//console.log('intersects.length: ' + intersects.length);
-		/*
-		if ( typeof intersects !== 'undefined' ) {
-			
-			// loop through intersects for first object that is not self
-			
-			for ( i = 0, l = intersects.length; i < l; i ++ ) {
-				
-				intersect = intersects[ i ];
-				
-				if ( intersect.object !== mesh ) {
-					
-					// store as collision
-					
-					collision = intersect;
-					
-					break;
-					
-				}
-				else {
-					continue;
-				}
-				
-			}
-			
 		}
-		*/
 		
-		// test
-		
-		if ( showLine === true ) {
-			
-			if ( collision ) {
-				
-				console.log( 'collision with object at distance ' + collision.distance );
-				
-				var ls4 = rayDirection.clone().addSelf( rayPosition );
-				var le4 = rayDirection.clone().multiplyScalar( collision.distance ).addSelf( rayPosition );
-				
-			}
-			else {
-				console.log('no collisions');
-				
-				var ls4 = rayDirection.clone().addSelf( rayPosition );
-				var le4 = rayDirection.clone().multiplyScalar( 100 ).addSelf( rayPosition );
-				
-			}
-			
-			line4.geometry.vertices[0].position = ls4;
-			line4.geometry.vertices[1].position = le4;
-			line4.geometry.__dirtyVertices = true;
-			line4.geometry.__dirtyElements = true;
-		
-		}
 		
 		return collision;
 		

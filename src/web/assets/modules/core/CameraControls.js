@@ -44,7 +44,7 @@ var KAIOPUA = (function (main) {
 		set : set_player
 	});
 	
-	cameracontrols = main.asset_register( assetPath, cameracontrols );
+	cameracontrols = main.asset_register( assetPath, cameracontrols, true );
 	
 	/*===================================================
     
@@ -53,8 +53,8 @@ var KAIOPUA = (function (main) {
     =====================================================*/
 	
 	main.assets_require( [
-		"assets/modules/workers/ObjectHelper",
-		"assets/modules/workers/MathHelper"
+		"assets/modules/utils/ObjectHelper",
+		"assets/modules/utils/MathHelper"
 	], init_internal, true );
 	
 	function init_internal ( oh, mh ) {

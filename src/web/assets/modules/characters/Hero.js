@@ -32,7 +32,7 @@ var KAIOPUA = (function (main) {
 		get : get_rigid_body_info
 	});
 	
-	hero = main.asset_register( "assets/modules/characters/Hero", hero, true );
+	hero = main.asset_register( "assets/modules/characters/Hero", hero );
 	
 	/*===================================================
     
@@ -105,7 +105,7 @@ var KAIOPUA = (function (main) {
 		
 		parameters.targetsNumMax = targetsNumMax;
 		
-		targetsNum = assets.modules.core.Player.select_from_mouse_position( parameters );
+		targetsNum = main.assets.modules.core.Player.select_from_mouse_position( parameters );
 		
 		// start scale updating, if not already
 		
@@ -182,7 +182,7 @@ var KAIOPUA = (function (main) {
 		
 			// trigger deselect
 			
-			assets.modules.core.Player.deselect( parameters );
+			main.assets.modules.core.Player.deselect( parameters );
 			
 		}
 		

@@ -20,7 +20,7 @@ var KAIOPUA = (function (main) {
     
     water.instantiate = instantiate;
 	
-	water = main.asset_register( assetPath, water );
+	water = main.asset_register( assetPath, water, true );
 	
 	/*===================================================
     

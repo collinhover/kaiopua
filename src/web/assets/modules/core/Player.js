@@ -68,7 +68,7 @@ var KAIOPUA = (function (main) {
 		get : function () { return playerCharacter.movement.state.moving; }
 	});
 	
-	player = main.asset_register( assetPath, player );
+	player = main.asset_register( assetPath, player, true );
 	
 	/*===================================================
     
@@ -83,8 +83,8 @@ var KAIOPUA = (function (main) {
 		"assets/modules/characters/Hero",
 		"assets/modules/core/Physics",
 		"assets/modules/core/World",
-		"assets/modules/workers/ObjectHelper",
-		"assets/modules/workers/MathHelper"
+		"assets/modules/utils/ObjectHelper",
+		"assets/modules/utils/MathHelper"
 	], init_internal, true );
 	
 	function init_internal ( g, cc, c, h, physx, w, oh, mh ) {

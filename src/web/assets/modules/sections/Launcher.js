@@ -57,7 +57,7 @@ var KAIOPUA = (function (main) {
     launcher.update = update;
 	launcher.resize = resize;
 	
-	launcher = main.asset_register( assetPath, launcher );
+	launcher = main.asset_register( assetPath, launcher, true );
     
     /*===================================================
     

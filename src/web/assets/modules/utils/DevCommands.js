@@ -23,7 +23,7 @@ var KAIOPUA = (function (main) {
     devCommands.get_history = function () {return history.slice(0);};
     devCommands.clear_history = function () {history = [];};
 	
-	devCommands = main.asset_register( assetPath, devCommands, true );
+	devCommands = main.asset_register( assetPath, devCommands );
     
     // add list of commands
     // cmds can be an object with any number of name + callback pairs

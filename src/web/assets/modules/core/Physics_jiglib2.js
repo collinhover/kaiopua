@@ -55,7 +55,7 @@ var KAIOPUA = (function (main) {
 	
 	main.assets_require( [
 		"assets/modules/core/Game",
-		"assets/modules/workers/MathHelper"
+		"assets/modules/utils/MathHelper"
 	], init );
 	
 	function init ( g, mh ) {

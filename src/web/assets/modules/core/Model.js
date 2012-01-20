@@ -21,7 +21,7 @@ var KAIOPUA = (function (main) {
     
     model.instantiate = instantiate;
 	
-	model = main.asset_register( assetPath, model );
+	model = main.asset_register( assetPath, model, true );
 	
 	/*===================================================
     
@@ -31,7 +31,7 @@ var KAIOPUA = (function (main) {
 	
 	main.assets_require( [
 		"assets/modules/core/Physics",
-		"assets/modules/workers/MathHelper"
+		"assets/modules/utils/MathHelper"
 	], init_internal, true );
 	
 	function init_internal ( physx, mh ) {
@@ -73,7 +73,7 @@ var KAIOPUA = (function (main) {
         parameters = parameters || {};
 		
 		instance = instance || {};
-            
+        
         // geometry
         
 		if ( parameters.hasOwnProperty( 'geometry' ) ) {

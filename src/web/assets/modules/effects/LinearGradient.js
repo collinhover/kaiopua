@@ -16,7 +16,7 @@ var KAIOPUA = (function (main) {
     
     lg.generate = generate;
 	
-	lg = main.asset_register( assetPath, lg, true );
+	lg = main.asset_register( assetPath, lg );
     
     /*===================================================
     

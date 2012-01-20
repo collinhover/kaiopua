@@ -6,7 +6,7 @@ Object generator module, handles generation of misc things.
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/workers/ObjectHelper",
+		assetPath = "assets/modules/utils/ObjectHelper",
 		objecthelper = {},
 		model,
 		utilVec31Follow,

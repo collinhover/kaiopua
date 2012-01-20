@@ -41,7 +41,7 @@ var KAIOPUA = (function (main) {
     dev.isOpen = function () {return isOpen;};
     dev.domElement = function () { return domElement; };
 	
-	dev = main.asset_register( assetPath, dev );
+	dev = main.asset_register( assetPath, dev, true );
     
     /*===================================================
     
@@ -96,7 +96,7 @@ var KAIOPUA = (function (main) {
         gui.add(logger, 'clear').name('Clear Log');
     
         // force the gui to calculate the correct height
-        // - sure there must be a better way :-/
+        // there must be a better way
         gui.toggle();
         gui.toggle();
     
@@ -146,6 +146,8 @@ var KAIOPUA = (function (main) {
                 }
             }
         });
+		
+		main.asset_ready( assetPath );
 		
     }
     

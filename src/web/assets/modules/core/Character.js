@@ -19,7 +19,7 @@ var KAIOPUA = (function (main) {
 	
 	character.instantiate = instantiate;
 	
-	character = main.asset_register( assetPath, character );
+	character = main.asset_register( assetPath, character, true );
 	
 	/*===================================================
     

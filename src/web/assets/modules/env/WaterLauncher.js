@@ -57,7 +57,7 @@ var KAIOPUA = (function (main) {
 		get : function () { return environment; }
 	});
 	
-	water = main.asset_register( assetPath, water, true );
+	water = main.asset_register( assetPath, water );
     
     /*===================================================
     

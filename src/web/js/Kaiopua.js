@@ -7,8 +7,7 @@ var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
         assets = main.assets = main.assets || {},
-		loader,
-		error,
+		assetloader,
 		game,
 		requiredAssets = [],
         lastGamma, lastBeta,
@@ -18,13 +17,10 @@ var KAIOPUA = (function (main) {
             "js/lib/requestInterval.js",
             "js/lib/requestTimeout.js",
             "js/lib/signals.min.js",
-			"assets/modules/utils/Loader.js"
+			"assets/modules/utils/AssetLoader.js"
         ],
         setupList = [
-            "assets/modules/utils/Error.js",
-            "assets/modules/core/Game.js",
-			"assets/modules/workers/UIHelper.js",
-			"assets/modules/utils/Dev.js"
+			"assets/modules/core/Game.js"
         ];
 	
 	/*===================================================
@@ -34,10 +30,14 @@ var KAIOPUA = (function (main) {
     =====================================================*/
 	
 	main.extend = extend;
-	main.get_path = get_path;
+	main.ensure_array = ensure_array;
+	
+	main.get_asset_path = get_asset_path;
 	main.get_ext = get_ext;
+	
 	main.add_default_ext = add_default_ext;
 	main.remove_ext = remove_ext;
+	main.is_image_ext = is_image_ext;
 	
 	main.asset_register = asset_register;
 	main.assets_require = assets_require;
@@ -121,432 +121,25 @@ var KAIOPUA = (function (main) {
     
         $(window).bind( 'resize', on_window_resize );
 		
-        window.onerror = on_error;
-        shared.signals.error.add( on_error );
+		// asset loader and setup
 		
-		// loader and setup
+		assetloader = assets.modules.utils.AssetLoader;
 		
-		loader = assets.modules.utils.Loader;
+		assetloader.add_loaded_locations( libList );
 		
-		loader.add_loaded_locations( libList );
-		
-		assets_require( setupList, init_setup );
+		assets_require( setupList, init_setup, true );
 		
     }
     
-    function init_setup ( e, g ) {
+    function init_setup ( g ) {
 		
         // assets
         
-        error = e;
         game = g;
-        
-        // check for errors
-        
-        if (error.check()) {
-            error.process();
-        }
-        // safe to start game
-        else {
-            game.init();
-        }
         
         // resize once
         on_window_resize();
     }
-	
-	/*===================================================
-    
-    asset handling
-    
-    =====================================================*/
-	
-	function asset_path_cascade( path ) {
-		
-		var cascade,
-			part,
-			dotIndex;
-		
-		// split path based on \ or /
-		// each split is a parent module
-		// last is actual module
-		
-		cascade = path.split(/[\\\/]/);
-		
-		for ( i = 0, l = cascade.length; i < l; i++ ) {
-			
-			part = cascade[ i ];
-			
-			// remove all non-alphanumeric
-			
-			part = part.replace(/[^\w\.-]+/g, "");
-			
-			// cannot be empty
-			
-			if ( part === '' ) {
-				
-				on_error ( 'Invalid asset cascade', 'Main', 'N/A' );
-				
-				return;
-				
-			}
-			
-			cascade[ i ] = part;
-			
-		}
-		
-		return cascade;
-		
-	}
-	
-	function asset_data( location, secondAttempt ) {
-		
-		var path,
-			cascade,
-			parent,
-			assetName,
-			asset,
-			ext,
-			i, l;
-		
-		// init parent and asset
-		
-		asset = parent = main;
-		
-		// cascade path
-		
-		path = get_path( location );
-		
-		cascade = asset_path_cascade( path );
-		
-		// get data
-		
-		for ( i = 0, l = cascade.length; i < l; i++ ) {
-			
-			// set as parent for next
-			
-			parent = asset;
-			
-			assetName = cascade[ i ];
-			
-			asset = parent[ assetName ];
-			
-			// if asset not found
-			
-			if ( typeof asset === 'undefined' ) {
-				
-				// if is parent of asset
-				
-				if ( i < l - 1 ) {
-					
-					break;
-					
-				}
-				// else if this is first attempt at finding
-				else if ( secondAttempt !== true ) {
-					
-					// get extension
-					
-					ext = get_ext( assetName );
-					
-					// if has no extension, try with default
-					
-					if ( ext === '' ) {
-						
-						return asset_data( add_default_ext( path ), true );
-						
-					}
-					// if has extension, try without
-					else {
-						
-						return asset_data( remove_ext( path ), true );
-						
-					}
-					
-				}
-				
-			}
-			
-		}
-		
-		return asset;
-		
-	}
-	
-	function asset_register( path, data, isReady ) {
-		
-		var cascade,
-			parent,
-			assetName,
-			asset,
-			i, l;
-		
-		// if data was passed
-		
-		if ( typeof data !== 'undefined' && data !== null ) {
-			
-			// init parent and asset
-			
-			asset = parent = main;
-			
-			// cascade path
-			
-			cascade = asset_path_cascade( path );
-			
-			// register
-			
-			for ( i = 0, l = cascade.length; i < l; i++ ) {
-				
-				// set as parent for next
-				
-				parent = asset;
-				
-				assetName = cascade[ i ];
-				
-				// register
-				
-				asset = parent[ assetName ] = parent[ assetName ] || {};
-				
-			}
-			
-			// copy properties into asset object
-			// overwrite if image
-			
-			if ( data.hasOwnProperty('nodeName') && data.nodeName.toLowerCase() === 'img' ) {
-				
-				asset = data;
-				
-			}
-			// copy properties of existing asset into data and assign to asset
-			// order is important to ensure data remains an instance of whatever it was before
-			else {
-				
-				asset = main.extend( asset, data );
-				
-			}
-			
-			// tag and store asset
-			
-			parent[ assetName ] = asset_tag( asset );
-			
-			// if is ready now
-			
-			if ( isReady === true ) {
-				
-				asset_ready( path, asset );
-				
-			}
-			
-		}
-		
-		// return asset
-		
-		return asset;
-		
-	}
-	
-	function asset_tag ( asset ) {
-		
-		var ap;
-		
-		// add asset properties object
-		
-		ap = asset._kaiopua = asset._kaiopua || {};
-		
-		// set properties
-		
-		ap.ready = false;
-		
-		return asset;
-		
-	}
-	
-	function asset_ready( path, data ) {
-		
-		var asset = data || asset_data( path );
-		
-		if ( typeof asset !== 'undefined' && asset._kaiopua.ready === false ) {
-			
-			asset._kaiopua.ready = true;
-			
-			if ( typeof shared.signals !== 'undefined' && typeof shared.signals.assetReady !== 'undefined' ) {
-				
-				shared.signals.assetReady.dispatch( path );
-				
-			}
-			
-		}
-		
-	}
-	
-	function assets_require( requirements, callbackList, waitForAssetsReady, loaderUIContainer ) {
-		
-		var callback_outer,
-			on_asset_ready,
-			on_all_assets_ready,
-			assetsRequired = [],
-			assetsWaitingFor = [],
-			assetsReady = [],
-			listeningForReadySignal = false;
-		
-		// get if arguments are not array
-		
-		requirements = ensure_array( requirements );
-		
-		callbackList = ensure_array( callbackList );
-		
-		// modify original callback to wrap in new function
-		// that parses requirements and applies each asset as argument to callback
-		// also handle if each asset required needs to be ready before triggering callback
-		
-		on_asset_ready = function ( path ) {
-			
-			var indexWaiting;
-			
-			// if needed ready
-			
-			indexWaiting = assetsWaitingFor.indexOf( path );
-			
-			if ( indexWaiting !== -1 ) {
-				
-				assetsWaitingFor.splice( indexWaiting, 1 );
-				
-				assetsReady.push( path );
-				console.log( '> an asset is ready! (' + assetsReady.length + ' / ' + requirements.length + ' - ' + path + ' )' );
-				// check if no more to wait for
-				
-				if ( assetsWaitingFor.length === 0 && assetsReady.length === requirements.length ) {
-					console.log( '> > ' + assetsReady.length + ' assets are ready!' );
-					listeningForReadySignal = false;
-					
-					on_all_assets_ready();
-					
-				}
-				
-			}
-			
-		};
-		
-		on_all_assets_ready = function () {
-			
-			var i, l,
-				callback;
-			
-			// apply all required assets to original callbacks
-			
-			for ( i = 0, l = callbackList.length; i < l; i++ ) {
-				console.log('///// calling asset required callback #' + (i + 1) + ' of ' + callbackList.length );
-				callback = callbackList[ i ];
-				
-				callback.apply( this, assetsRequired );
-				
-			}
-			
-		};
-		
-		callback_outer = function () {
-			
-			var i, l,
-				location,
-				path,
-				asset;
-			
-			// hide loader ui
-			
-			if ( typeof loaderUIContainer !== 'undefined' ) {
-				
-				loader.ui_hide( true );
-				
-			}
-			
-			if ( waitForAssetsReady === true ) {
-				console.log( 'waiting for '+ requirements.length + ' assets to be ready!' );
-				console.log(requirements);
-			}
-			
-			// find all assets
-			
-			for ( i = 0, l = requirements.length; i < l; i++ ) {
-				
-				location = requirements[ i ];
-				
-				path = get_path( location );
-				
-				// get asset data
-				
-				asset = asset_data( location );
-				
-				if ( typeof asset !== 'undefined' ) {
-					
-					// add to required list
-					
-					assetsRequired.push( asset );
-					
-				}
-				
-				// if needed ready
-				
-				if ( waitForAssetsReady === true ) {
-					
-					assetsWaitingFor.push( path );
-					
-					// check ready status
-					
-					if ( typeof asset === 'undefined' || asset._kaiopua.ready === true ) {
-						
-						on_asset_ready( path );
-						
-					}
-					// asset not ready, listen for ready signal if not already
-					else if ( listeningForReadySignal === false ) {
-						
-						listeningForReadySignal = true;
-						
-						shared.signals.assetReady.add( on_asset_ready );
-						
-					}
-					
-					if ( typeof asset !== 'undefined' && asset._kaiopua.ready !== true ) {
-						
-						console.log( '< an asset is not ready, listening for asset ready signal ( ' + path + ' )' );
-						
-					}
-					
-				}
-				
-			}
-			
-			// if not waiting for assets to be ready
-			
-			if ( waitForAssetsReady !== true || requirements.length === 0 ) {
-				
-				on_all_assets_ready();
-				
-			}
-			
-		};
-		
-		// set loader manually if needed
-		
-		if ( typeof loader === 'undefined' ) {
-			
-			loader = assets.modules.utils.Loader;
-			
-		}
-		
-		// show loader ui
-		
-		if ( typeof loaderUIContainer !== 'undefined' ) {
-			
-			loader.ui_show( loaderUIContainer );
-			
-		}
-		
-		// pass all requirements to loader
-		
-		loader.load( requirements, callback_outer );
-		
-	}
 	
 	/*===================================================
     
@@ -598,7 +191,7 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function get_path ( location ) {
+	function get_asset_path ( location ) {
 		
 		return location.path || location;
 		
@@ -607,7 +200,7 @@ var KAIOPUA = (function (main) {
 	function get_ext ( location ) {
         var path, dotIndex, ext = '';
 		
-		path = get_path( location );
+		path = get_asset_path( location );
         
         dotIndex = path.lastIndexOf('.');
         
@@ -632,7 +225,7 @@ var KAIOPUA = (function (main) {
 		
 		var path, dotIndex;
 		
-        path = get_path( location );
+        path = get_asset_path( location );
         
         dotIndex = path.lastIndexOf('.');
         
@@ -643,7 +236,450 @@ var KAIOPUA = (function (main) {
 		return path;
 		
 	}
+	
+	function get_alt_path ( location ) {
+		
+		var path, ext;
+		
+		path = get_asset_path( location );
+		ext = get_ext( path );
+		
+		// if has no extension, add default
+		
+		if ( ext === '' ) {
+			
+			return add_default_ext( path );
+			
+		}
+		// if has extension, remove
+		else {
+			
+			return remove_ext( path );
+			
+		}
+		
+	}
+	
+	function is_image_ext ( ext ) {
+		
+		if ( ext === 'jpg' || ext === 'jpeg' || ext === 'png' || ext === 'gif' || ext === 'bmp' ) {
+			return true;
+		}
+		else {
+			return false;
+		}
+		
+    }
+	
+	/*===================================================
     
+    asset handling
+    
+    =====================================================*/
+	
+	function asset_path_cascade( path ) {
+		
+		var cascade,
+			part,
+			dotIndex;
+		
+		// split path based on \ or /
+		// each split is a parent module
+		// last is actual module
+		
+		cascade = path.split(/[\\\/]/);
+		
+		for ( i = 0, l = cascade.length; i < l; i++ ) {
+			
+			part = cascade[ i ];
+			
+			// remove all non-alphanumeric
+			
+			part = part.replace(/[^\w\.-]+/g, "");
+			
+			// cannot be empty
+			
+			if ( part === '' ) {
+				
+				on_error ( 'Invalid asset cascade', 'Main', 'N/A' );
+				
+				return;
+				
+			}
+			
+			cascade[ i ] = part;
+			
+		}
+		
+		return cascade;
+		
+	}
+	
+	function asset_data( location, data, initializeWhenNotFound, allowInitialization, attempts, originalPath ) {
+		
+		var path,
+			cascade,
+			parent,
+			assetName,
+			asset,
+			ext,
+			i, l;
+		
+		// init parent and asset
+		
+		asset = parent = main;
+		
+		// cascade path
+		
+		path = get_asset_path( location );
+		
+		cascade = asset_path_cascade( path );
+		
+		// get data
+		
+		for ( i = 0, l = cascade.length; i < l; i++ ) {
+			
+			// set as parent for next
+			
+			parent = asset;
+			
+			assetName = cascade[ i ];
+			
+			asset = parent[ assetName ];
+			
+			// if not a valid cascade point
+			
+			if ( typeof asset === 'undefined' ) {
+				
+				// if allowed to initialize a cascade point
+				
+				if ( allowInitialization === true ) {
+					
+					parent[ assetName ] = asset = {};
+					
+				}
+				else {
+					
+					break;
+				
+				}
+				
+			}
+			
+		}
+		
+		// check attempts
+		
+		attempts = attempts || 1;
+		
+		// if no asset and this is first attempt at finding
+		if ( typeof asset === 'undefined' ) {
+			
+			// try again with alternate path
+			
+			if ( attempts === 1 ) {
+				
+				return asset_data( get_alt_path( path ), data, initializeWhenNotFound, false, attempts + 1, path );
+				
+			}
+			else if ( attempts === 2 && initializeWhenNotFound === true ) {
+				
+				return asset_data( originalPath, data, initializeWhenNotFound, true, attempts + 1, originalPath );
+				
+			}
+			
+		}
+		
+		// if data passed and asset found
+		
+		if ( typeof data !== 'undefined' && typeof asset !== 'undefined' ) {
+			
+			// copy data into asset object
+			// overwrite if image
+			
+			if ( data.hasOwnProperty('nodeName') && data.nodeName.toLowerCase() === 'img' ) {
+				
+				asset = data;
+				
+			}
+			// copy properties of existing asset into data and assign to asset
+			// order is important to ensure data remains an instance of whatever it was before
+			else {
+				
+				asset = main.extend( asset, data );
+				
+			}
+			
+			// store updated asset
+			
+			parent[ assetName ] = asset;
+			
+		}
+		
+		return asset;
+		
+	}
+	
+	function asset_register( path, data, notReady ) {
+		
+		var cascade,
+			parent,
+			assetName,
+			asset,
+			i, l;
+		
+		// initialize asset data
+		
+		asset = asset_data( path, data, true );
+		
+		// if asset was already tagged and ready state is false
+		// set as not ready
+		
+		if ( typeof asset._kaiopua !== 'undefined' && asset._kaiopua.ready === false ) {
+			
+			notReady = true;
+			
+		}
+		
+		// tag asset
+			
+		asset_tag( asset );
+		
+		// if is ready now
+		
+		if ( notReady !== true ) {
+			
+			asset_ready( path, asset );
+			
+		}
+		
+		return asset;
+		
+	}
+	
+	function asset_tag ( asset ) {
+		
+		var ap;
+			
+		// add asset properties object
+		
+		ap = asset._kaiopua = asset._kaiopua || {};
+		
+		// set properties
+		
+		if ( ap.hasOwnProperty( 'ready' ) === false ) {
+			
+			ap.ready = false;
+			
+		}
+		
+		return asset;
+		
+	}
+	
+	function asset_ready( path, data ) {
+		
+		var asset = data || asset_data( path );
+		
+		if ( typeof asset !== 'undefined' && asset._kaiopua.ready === false ) {
+			
+			asset._kaiopua.ready = true;
+			
+			if ( typeof shared.signals !== 'undefined' && typeof shared.signals.assetReady !== 'undefined' ) {
+				
+				shared.signals.assetReady.dispatch( path );
+				
+			}
+			
+		}
+		
+	}
+	
+	function assets_require( requirements, callbackList, waitForAssetsReady, loaderUIContainer ) {
+		
+		var callback_outer,
+			on_asset_ready,
+			on_all_assets_ready,
+			assetsRequired = [],
+			assetsWaitingFor = [],
+			assetsReady = [],
+			listeningForReadySignal = false;
+		
+		// get if arguments are not array
+		
+		requirements = ensure_array( requirements );
+		
+		callbackList = ensure_array( callbackList );
+		
+		// modify original callback to wrap in new function
+		// that parses requirements and applies each asset as argument to callback
+		// also handle if each asset required needs to be ready before triggering callback
+		
+		on_asset_ready = function ( path, secondAttempt ) {
+			
+			var indexWaiting;
+			
+			indexWaiting = assetsWaitingFor.indexOf( path );
+			
+			// if waiting for asset to be ready
+			
+			if ( indexWaiting !== -1 ) {
+				
+				assetsWaitingFor.splice( indexWaiting, 1 );
+				
+				assetsReady.push( path );
+				console.log( '> an asset is ready! (' + assetsReady.length + ' / ' + requirements.length + ' - ' + path + ' )' );
+				// check if no more to wait for
+				
+				if ( assetsWaitingFor.length === 0 && assetsReady.length === requirements.length ) {
+					console.log( '> > ' + assetsReady.length + ' assets are ready!' );
+					
+					// remove signal
+					
+					if ( listeningForReadySignal === true ) {
+						
+						shared.signals.assetReady.remove( on_asset_ready );
+						
+						listeningForReadySignal = false;
+						
+					}
+					
+					on_all_assets_ready();
+					
+				}
+				
+			}
+			// make one extra attempt with alternative path to check if waiting for asset to be ready
+			else if ( secondAttempt !== true ) {
+				
+				on_asset_ready( get_alt_path( path ), true );
+				
+			}
+			
+		};
+		
+		on_all_assets_ready = function () {
+			
+			var i, l,
+				callback;
+			
+			// apply all required assets to original callbacks
+			
+			for ( i = 0, l = callbackList.length; i < l; i++ ) {
+				console.log('///// calling asset required callback #' + (i + 1) + ' of ' + callbackList.length );
+				
+				callback = callbackList[ i ];
+				
+				callback.apply( this, assetsRequired );
+				
+			}
+			
+		};
+		
+		callback_outer = function () {
+			
+			var i, l,
+				location,
+				path,
+				asset;
+			
+			// hide loader ui
+			
+			if ( typeof loaderUIContainer !== 'undefined' ) {
+				
+				assetloader.ui_hide( true );
+				
+			}
+			
+			if ( waitForAssetsReady === true ) {
+				console.log( 'waiting for '+ requirements.length + ' assets to be ready!' );
+				console.log(requirements);
+			}
+			
+			// find all assets
+			
+			for ( i = 0, l = requirements.length; i < l; i++ ) {
+				
+				location = requirements[ i ];
+				
+				path = get_asset_path( location );
+				
+				// get asset data
+				
+				asset = asset_data( location );
+				
+				if ( typeof asset !== 'undefined' ) {
+					
+					// add to required list
+					
+					assetsRequired.push( asset );
+					
+				}
+				
+				// if needed ready
+				
+				if ( waitForAssetsReady === true ) {
+					
+					assetsWaitingFor.push( path );
+					
+					// check ready status
+					
+					if ( typeof asset === 'undefined' || ( typeof asset._kaiopua !== 'undefined' && asset._kaiopua.ready === true ) ) {
+						
+						on_asset_ready( path );
+						
+					}
+					// asset not ready, listen for ready signal if not already
+					else if ( listeningForReadySignal === false ) {
+						
+						listeningForReadySignal = true;
+						
+						shared.signals.assetReady.add( on_asset_ready );
+						
+					}
+					
+					if ( typeof asset !== 'undefined' && asset._kaiopua.ready !== true ) {
+						
+						console.log( '< an asset is not ready, listening for asset ready signal ( ' + path + ' )' );
+						
+					}
+					
+				}
+				
+			}
+			
+			// if not waiting for assets to be ready
+			
+			if ( waitForAssetsReady !== true || requirements.length === 0 ) {
+				
+				on_all_assets_ready();
+				
+			}
+			
+		};
+		
+		// set loader manually if needed
+		
+		if ( typeof assetloader === 'undefined' ) {
+			
+			assetloader = assets.modules.utils.AssetLoader;
+			
+		}
+		
+		// show loader ui
+		
+		if ( typeof loaderUIContainer !== 'undefined' ) {
+			
+			assetloader.ui_show( loaderUIContainer );
+			
+		}
+		
+		// pass all requirements to loader
+		
+		assetloader.load( requirements, callback_outer );
+		
+	}
+	
     /*===================================================
     
     event functions
@@ -939,21 +975,6 @@ var KAIOPUA = (function (main) {
             e.stopPropagation();
         }
         return false;
-    }
-    
-    function on_error ( error, url, lineNumber ) {
-        
-        if (typeof main.game !== 'undefined') {
-            main.game.pause();
-        }
-        
-        if (typeof main.assets.modules.utils.dev !== 'undefined') {
-            main.assets.modules.utils.dev.log_error(error, url, lineNumber);
-        }
-		else {
-			throw error + " at " + lineNumber + " in " + url;
-		}
-        
     }
     
     return main; 

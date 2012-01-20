@@ -107,7 +107,7 @@ var KAIOPUA = (function (main) {
 
 	};
 	
-	fv = main.asset_register( assetPath, fv, true );
+	fv = main.asset_register( assetPath, fv );
     
     return main; 
     

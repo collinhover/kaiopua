@@ -4,14 +4,12 @@
 
 THREE.MaskPass = function ( scene, camera ) {
 
-	this.scene = scene;
+    this.scene = scene;
 	this.camera = camera;
 
 	this.enabled = true;
 	this.clear = true;
 	this.needsSwap = false;
-
-	this.inverse = false;
 
 };
 
@@ -28,24 +26,9 @@ THREE.MaskPass.prototype = {
 
 		// set up stencil
 
-		var writeValue, clearValue;
-
-		if ( this.inverse ) {
-
-			writeValue = 0;
-			clearValue = 1;
-
-		} else {
-
-			writeValue = 1;
-			clearValue = 0;
-
-		}
-
 		context.enable( context.STENCIL_TEST );
 		context.stencilOp( context.REPLACE, context.REPLACE, context.REPLACE );
-		context.stencilFunc( context.ALWAYS, writeValue, 0xffffffff );
-		context.clearStencil( clearValue );
+		context.stencilFunc( context.ALWAYS, 1, 0xffffffff );
 
 		// draw into the stencil buffer
 

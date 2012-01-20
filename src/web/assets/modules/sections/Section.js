@@ -32,7 +32,7 @@ var KAIOPUA = (function (main) {
     sectionName.resize = resize;
     sectionName.domElement = function () {};
 	
-	sectionName = main.asset_register( sectionName, sectionName );
+	sectionName = main.asset_register( sectionName, sectionName, true );
     
     /*===================================================
     

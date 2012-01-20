@@ -8,7 +8,8 @@ var KAIOPUA = (function (main) {
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/core/Game",
 		game = {},
-        loader,
+        assetloader,
+		errorhandler,
 		uihelper,
 		launcher,
 		intro,
@@ -41,8 +42,10 @@ var KAIOPUA = (function (main) {
         transitionIn = 400,
         loadAssetsDelay = 500,
 		dependencies = [
-			"assets/modules/utils/Loader",
-			"assets/modules/workers/UIHelper"
+			"assets/modules/utils/AssetLoader",
+            "assets/modules/utils/ErrorHandler.js",
+			"assets/modules/utils/UIHelper.js",
+			"assets/modules/utils/Dev.js"
 		],
         assetsBasic = [
             "js/lib/three/Three.js",
@@ -143,9 +146,11 @@ var KAIOPUA = (function (main) {
 			"assets/modules/core/Model.js",
 			"assets/modules/core/CameraControls.js",
 			"assets/modules/core/Character.js",
-			"assets/modules/workers/ObjectMaker.js",
-			"assets/modules/workers/MathHelper.js",
-			"assets/modules/workers/MenuMaker.js",
+			"assets/modules/utils/ObjectMaker.js",
+			"assets/modules/utils/ObjectHelper.js",
+			"assets/modules/utils/MathHelper.js",
+			"assets/modules/utils/MenuMaker.js",
+			"assets/modules/characters/EmptyCharacter.js",
 			"assets/modules/characters/Hero.js",
 			"assets/modules/env/Water.js",
 			"assets/modules/sections/Intro.js",
@@ -196,7 +201,6 @@ var KAIOPUA = (function (main) {
     
 	// functions
 	
-    game.init = init;
     game.resume = resume;
     game.pause = pause;
 	game.get_mouse = get_mouse;
@@ -237,21 +241,7 @@ var KAIOPUA = (function (main) {
 		set : set_camera_bg
 	});
 	
-	game = main.asset_register( assetPath, game );
-    
-    /*===================================================
-    
-    external init
-    
-    =====================================================*/
-    
-    function init() {
-		
-		// dependencies
-		
-		main.assets_require( dependencies, init_internal, true );
-        
-    }
+	game = main.asset_register( assetPath, game, true );
 	
 	/*===================================================
     
@@ -259,19 +249,39 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	function init_internal ( l, u ) {
-		
-		loader = l;
+	main.assets_require( dependencies, init_internal, true );
+	
+	function init_internal ( al, err, u ) {
+		console.log('internal game');
+		assetloader = al;
+		errorhandler = err;
 		uihelper = u;
 		
-		// set loading messages
+		// register error listeners
 		
-		loader.loadingHeader = loadingHeader;
-		loader.loadingTips = loadingTips;
+		window.onerror = on_error;
+		shared.signals.error.add( on_error );
 		
-		// start loading
-		
-		load_basics();
+		// check for errors
+        
+        if (errorhandler.check()) {
+			
+            errorhandler.process();
+			
+        }
+        // safe to start game
+        else {
+			
+			// set loading messages
+			
+			assetloader.loadingHeader = loadingHeader;
+			assetloader.loadingTips = loadingTips;
+			
+			// start loading
+			
+			load_basics();
+			
+        }
 		
 	}
 	
@@ -295,7 +305,7 @@ var KAIOPUA = (function (main) {
 			
 			// load game assets and init game
 			
-			main.assets_require( assetsGame, init_game, false, domElement );
+			main.assets_require( assetsGame, init_game, true, domElement );
 			
 		}, loadAssetsDelay);
 		
@@ -495,7 +505,7 @@ var KAIOPUA = (function (main) {
 		
 		// assets
 		
-		menumaker = main.asset_data( 'assets/modules/workers/MenuMaker' );
+		menumaker = main.asset_data( 'assets/modules/utils/MenuMaker' );
 		
 		// init menus
 		
@@ -909,87 +919,6 @@ var KAIOPUA = (function (main) {
 	
 	/*===================================================
     
-    start / stop game
-    
-    =====================================================*/
-    
-    function start_game () {
-        var ms = menus.start;
-		
-		// assets
-		
-		physics = main.asset_data( 'assets/modules/core/Physics' );
-		world = main.asset_data( 'assets/modules/core/World' );
-		player = main.asset_data( 'assets/modules/core/Player' );
-		intro = main.asset_data( 'assets/modules/sections/Intro' );
-		
-		/*
-		physics.init();
-		world.init();
-		player.init();
-		*/
-		
-		// hide static menu
-		
-		$(shared.html.staticMenu).stop(true).fadeTo( transitionIn, 0 );
-		
-        // disable start menu
-		
-        ms.disable();
-        
-        // hide start menu
-		
-        ms.ui_hide( true );
-        
-        // set intro section
-		
-        set_section( intro );
-		
-		// set started
-		
-		started = true;
-		
-    }
-	
-	function stop_game () {
-		
-		var ms = menus.start,
-			mp = menus.pause;
-		
-		// set started
-		
-		started = false;
-		
-		// hide and disable pause menu
-		
-		if ( typeof mp !== 'undefined' ) {
-			
-			mp.disable();
-		
-			mp.ui_hide( true );
-			
-		}
-		
-		// show static menu
-		
-		$(shared.html.staticMenu).stop(true).fadeTo( transitionOut, 1 );
-		
-		// set launcher section
-		
-        set_section( launcher, function () {
-			
-			// show / enable start menu
-			
-			ms.ui_show( domElement );
-			
-			ms.enable();
-			
-		});
-		
-	}
-	
-    /*===================================================
-    
     section functions
     
     =====================================================*/
@@ -1102,6 +1031,87 @@ var KAIOPUA = (function (main) {
         }
 		
     }
+	
+	/*===================================================
+    
+    start / stop game
+    
+    =====================================================*/
+    
+    function start_game () {
+        var ms = menus.start;
+		
+		// assets
+		
+		physics = main.asset_data( 'assets/modules/core/Physics' );
+		world = main.asset_data( 'assets/modules/core/World' );
+		player = main.asset_data( 'assets/modules/core/Player' );
+		intro = main.asset_data( 'assets/modules/sections/Intro' );
+		
+		/*
+		physics.init();
+		world.init();
+		player.init();
+		*/
+		
+		// hide static menu
+		
+		$(shared.html.staticMenu).stop(true).fadeTo( transitionIn, 0 );
+		
+        // disable start menu
+		
+        ms.disable();
+        
+        // hide start menu
+		
+        ms.ui_hide( true );
+        
+        // set intro section
+		
+        set_section( intro );
+		
+		// set started
+		
+		started = true;
+		
+    }
+	
+	function stop_game () {
+		
+		var ms = menus.start,
+			mp = menus.pause;
+		
+		// set started
+		
+		started = false;
+		
+		// hide and disable pause menu
+		
+		if ( typeof mp !== 'undefined' ) {
+			
+			mp.disable();
+		
+			mp.ui_hide( true );
+			
+		}
+		
+		// show static menu
+		
+		$(shared.html.staticMenu).stop(true).fadeTo( transitionOut, 1 );
+		
+		// set launcher section
+		
+        set_section( launcher, function () {
+			
+			// show / enable start menu
+			
+			ms.ui_show( domElement );
+			
+			ms.enable();
+			
+		});
+		
+	}
     
     function pause () {
         if (paused === false) {
@@ -1233,6 +1243,26 @@ var KAIOPUA = (function (main) {
 		// composer
 		
         renderComposer.reset();
+        
+    }
+	
+	function on_error ( error, url, lineNumber ) {
+        
+		// pause game
+		
+        pause();
+		
+		// save game
+		// TODO
+		
+		// debug
+        
+        if (typeof main.assets.modules.utils.dev !== 'undefined') {
+            main.assets.modules.utils.dev.log_error(error, url, lineNumber);
+        }
+		else {
+			throw error + " at " + lineNumber + " in " + url;
+		}
         
     }
         

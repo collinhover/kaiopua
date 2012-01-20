@@ -11,8 +11,8 @@ THREE.CollisionUtils.MeshOBB = function( m ) {
 
 	m.geometry.computeBoundingBox();
 	var b = m.geometry.boundingBox;
-	var min = new THREE.Vector3( b.x[0], b.y[0], b.z[0] );
-	var max = new THREE.Vector3( b.x[1], b.y[1], b.z[1] );
+	var min = b.min.clone();
+	var max = b.max.clone();
 	var box = new THREE.BoxCollider( min, max );
 	box.mesh = m;
 	return box;

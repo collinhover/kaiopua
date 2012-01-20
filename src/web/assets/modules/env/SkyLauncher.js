@@ -50,7 +50,7 @@ var KAIOPUA = (function (main) {
 		get : function () { return environment; }
 	});
 	
-	sky = main.asset_register( assetPath, sky, true );
+	sky = main.asset_register( assetPath, sky );
     
     /*===================================================
     

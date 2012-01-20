@@ -1,13 +1,13 @@
 /*
-Error.js
+ErrorHandler.js
 Handles compatibility checks and user viewable errors.
 */
 
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/utils/Error",
-        error = {},
+		assetPath = "assets/modules/utils/ErrorHandler",
+        errorhandler = {},
         errorState = false,
         errorCurrent = {},
         errorHash = 'error=',
@@ -43,12 +43,12 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
     
-    error.check = check;
-    error.generate = generate;
-    error.process = process;
-    error.clear = clear;
+    errorhandler.check = check;
+    errorhandler.generate = generate;
+    errorhandler.process = process;
+    errorhandler.clear = clear;
 	
-	error = main.asset_register( assetPath, error, true );
+	errorhandler = main.asset_register( assetPath, errorhandler );
     
     /*===================================================
     

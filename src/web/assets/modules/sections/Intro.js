@@ -36,7 +36,7 @@ var KAIOPUA = (function (main) {
     intro.resize = resize;
     intro.domElement = function () {};
 	
-	intro = main.asset_register( assetPath, intro );
+	intro = main.asset_register( assetPath, intro, true );
 	
 	/*===================================================
     
@@ -53,7 +53,7 @@ var KAIOPUA = (function (main) {
 	], init_internal, true );
 	
 	function init_internal ( g, physx, w, p, m ) {
-		
+		console.log('internal intro');
 		if ( _ready !== true ) {
 			
 			// assets
@@ -168,6 +168,7 @@ var KAIOPUA = (function (main) {
 		addOnShow.push( make_box( -100, 2000, 1, true ) );
 		addOnShow.push( make_box( -100, 2400, 1, true ) );
 		*/
+		
     }
     
     /*===================================================
@@ -210,7 +211,7 @@ var KAIOPUA = (function (main) {
 			
 			player.enable();
 			
-			player.character.model.mesh.position.set( 1, 3000, 1 );
+			player.character.model.mesh.position.set( 0, 3000, 0 );
 			
 			//player.cameraMode = 'freelook';
 			

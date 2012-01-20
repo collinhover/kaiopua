@@ -25,7 +25,7 @@ var KAIOPUA = (function (main) {
 		get : function () { return; }
 	});
 	
-	emptycharacter = main.asset_register( "assets/modules/characters/EmptyCharacter", emptycharacter, true );
+	emptycharacter = main.asset_register( "assets/modules/characters/EmptyCharacter", emptycharacter );
 	
 	/*===================================================
     
