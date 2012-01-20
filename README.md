@@ -23,8 +23,8 @@ The core goal of the project is to create a universal design education tool, pri
 ####Thesis Committee
 
 Seiji Ikeda (Major Professor) - Assistant Professor, Art + Art History  
-Tuan Ho - Assistant Professor, Art + Art History   
 Robert Hower - Professor & Chair, Art + Art History   
+Tuan Ho - Assistant Professor, Art + Art History   
 Vassilis Athitsos - Assistant Professor, Computer Science and Engineering  
 
 ####Modelling / Animation Technical Assistance
@@ -32,7 +32,7 @@ Vassilis Athitsos - Assistant Professor, Computer Science and Engineering
 Ian Wilson  
 Kevin Ly  
 Houston Hardaway  
-Joshua Wilson
+Joshua Wilson   
 Amanda Nicole East  
 
 ####Music
