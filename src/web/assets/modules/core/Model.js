@@ -65,8 +65,7 @@ var KAIOPUA = (function (main) {
             scale,
 			rotation,
 			position,
-            morphs,
-			rigidBody;
+            morphs;
         
         // handle parameters
         
@@ -277,14 +276,14 @@ var KAIOPUA = (function (main) {
 		
 		// physics
 		
-		if ( parameters.hasOwnProperty( 'rigidBody' ) ) {
+		if ( parameters.hasOwnProperty( 'physics' ) ) {
 			
-			instance.rigidBody = parameters.rigidBody;
+			instance.physics = parameters.physics;
 			
 		}
-		else if ( parameters.hasOwnProperty( 'rigidBodyInfo' ) ) {
-				
-			instance.rigidBody = physics.translate( instance.mesh, parameters.rigidBodyInfo );
+		else if ( parameters.hasOwnProperty( 'physicsParameters' ) ) {
+			
+			instance.physics = physics.translate( instance.mesh, parameters.physicsParameters );
 			
 		}
 		

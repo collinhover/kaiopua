@@ -50,8 +50,8 @@ var KAIOPUA = (function (main) {
         assetsBasic = [
             "js/lib/three/Three.js",
             "js/lib/three/ThreeExtras.js",
-			"js/lib/three/physics/Collisions.js",
-			"js/lib/three/physics/CollisionUtils.js",
+			/*"js/lib/three/physics/Collisions.js",
+			"js/lib/three/physics/CollisionUtils.js",*/
             "js/lib/three/postprocessing/ShaderExtras.js",
             "js/lib/three/postprocessing/EffectComposer.js",
             "js/lib/three/postprocessing/RenderPass.js",
@@ -70,76 +70,7 @@ var KAIOPUA = (function (main) {
             "assets/textures/skybox_launcher_negy.jpg"
         ],
         assetsGame = [
-			/* JigLib Physics Library (2)
-			 * TODO: Minify and Concat
-			"js/lib/jiglibjs2/jiglib.js",
-			"js/lib/jiglibjs2/geom/glMatrix.js",
-			"js/lib/jiglibjs2/geom/Vector3D.js",
-			"js/lib/jiglibjs2/geom/Matrix3D.js",
-			"js/lib/jiglibjs2/math/JMatrix3D.js",
-			"js/lib/jiglibjs2/math/JMath3D.js",
-			"js/lib/jiglibjs2/math/JNumber3D.js",
-			"js/lib/jiglibjs2/cof/JConfig.js",
-			"js/lib/jiglibjs2/data/CollOutData.js",
-			"js/lib/jiglibjs2/data/ContactData.js",
-			"js/lib/jiglibjs2/data/PlaneData.js",
-			"js/lib/jiglibjs2/data/EdgeData.js",
-			"js/lib/jiglibjs2/data/TerrainData.js",
-			"js/lib/jiglibjs2/geometry/JAABox.js",
-			"js/lib/jiglibjs2/data/OctreeCell.js",
-			"js/lib/jiglibjs2/data/CollOutBodyData.js",
-			"js/lib/jiglibjs2/data/TriangleVertexIndices.js",
-			"js/lib/jiglibjs2/data/SpanData.js",
-			"js/lib/jiglibjs2/physics/constraint/JConstraint.js",
-			"js/lib/jiglibjs2/physics/constraint/JConstraintMaxDistance.js",
-			"js/lib/jiglibjs2/physics/constraint/JConstraintWorldPoint.js",
-			"js/lib/jiglibjs2/physics/constraint/JConstraintPoint.js",
-			"js/lib/jiglibjs2/physics/MaterialProperties.js",
-			"js/lib/jiglibjs2/geometry/JTriangle.js",
-			"js/lib/jiglibjs2/geometry/JSegment.js",
-			"js/lib/jiglibjs2/collision/CollPointInfo.js",
-			"js/lib/jiglibjs2/collision/CollisionInfo.js",
-			"js/lib/jiglibjs2/collision/CollDetectInfo.js",
-			"js/lib/jiglibjs2/collision/CollDetectFunctor.js",
-			"js/lib/jiglibjs2/collision/CollDetectBoxTerrain.js",
-			"js/lib/jiglibjs2/collision/CollDetectSphereMesh.js",
-			"js/lib/jiglibjs2/collision/CollDetectCapsuleBox.js",
-			"js/lib/jiglibjs2/collision/CollDetectSphereCapsule.js",
-			"js/lib/jiglibjs2/collision/CollDetectCapsuleTerrain.js",
-			"js/lib/jiglibjs2/collision/CollDetectSphereBox.js",
-			"js/lib/jiglibjs2/collision/CollDetectSphereTerrain.js",
-			"js/lib/jiglibjs2/collision/CollDetectBoxBox.js",
-			"js/lib/jiglibjs2/collision/CollDetectBoxMesh.js",
-			"js/lib/jiglibjs2/collision/CollDetectBoxPlane.js",
-			"js/lib/jiglibjs2/collision/CollDetectCapsuleCapsule.js",
-			"js/lib/jiglibjs2/collision/CollDetectSphereSphere.js",
-			"js/lib/jiglibjs2/collision/CollDetectSpherePlane.js",
-			"js/lib/jiglibjs2/collision/CollDetectCapsulePlane.js",
-			"js/lib/jiglibjs2/collision/CollisionSystemAbstract.js",
-			"js/lib/jiglibjs2/collision/CollisionSystemGridEntry.js",
-			"js/lib/jiglibjs2/collision/CollisionSystemGrid.js",
-			"js/lib/jiglibjs2/collision/CollisionSystemBrute.js",
-			"js/lib/jiglibjs2/geometry/JIndexedTriangle.js",
-			"js/lib/jiglibjs2/geometry/JOctree.js",
-			"js/lib/jiglibjs2/geometry/JRay.js",
-			"js/lib/jiglibjs2/events/JCollisionEvent.js",
-			"js/lib/jiglibjs2/physics/PhysicsController.js",
-			"js/lib/jiglibjs2/physics/CachedImpulse.js",
-			"js/lib/jiglibjs2/physics/HingeJoint.js",
-			"js/lib/jiglibjs2/physics/BodyPair.js",
-			"js/lib/jiglibjs2/physics/PhysicsState.js",
-			"js/lib/jiglibjs2/physics/PhysicsSystem.js",
-			"js/lib/jiglibjs2/physics/RigidBody.js",
-			"js/lib/jiglibjs2/geometry/JSphere.js",
-			"js/lib/jiglibjs2/geometry/JTriangleMesh.js",
-			"js/lib/jiglibjs2/geometry/JPlane.js",
-			"js/lib/jiglibjs2/geometry/JTerrain.js",
-			"js/lib/jiglibjs2/geometry/JBox.js",
-			"js/lib/jiglibjs2/geometry/JCapsule.js",
-			"js/lib/jiglibjs2/vehicles/JChassis.js",
-			"js/lib/jiglibjs2/vehicles/JWheel.js",
-			"js/lib/jiglibjs2/vehicles/JCar.js",
-			end JigLib 2 library */
+			"js/lib/ammo.js",
 			"assets/modules/core/Physics.js",
 			"assets/modules/core/World.js",
 			"assets/modules/core/Player.js",
@@ -500,7 +431,7 @@ var KAIOPUA = (function (main) {
     init game
     
     =====================================================*/
-    
+	
     function init_game () {
 		
 		// assets
@@ -782,14 +713,14 @@ var KAIOPUA = (function (main) {
 			
 				sceneTarget.add( object.mesh );
 				
-				if ( typeof object.rigidBody !== 'undefined' ) {
+				if ( typeof object.physics !== 'undefined' ) {
 					
-					physics.add( object.mesh, { rigidBody: object.rigidBody } );
+					physics.add( object.mesh, object.physics );
 					
 				}
 				
 			}
-			else {
+			else if ( object instanceof THREE.Object3D ) {
 				
 				sceneTarget.add( object );
 				
@@ -825,14 +756,14 @@ var KAIOPUA = (function (main) {
 			
 				sceneTarget.remove( object.mesh );
 			
-				if ( typeof object.rigidBody !== 'undefined' ) {
+				if ( typeof object.physics !== 'undefined' ) {
 					
 					physics.remove( object.mesh );
 					
 				}
 				
 			}
-			else {
+			else if ( object instanceof THREE.Object3D ) {
 				
 				sceneTarget.remove( object );
 				

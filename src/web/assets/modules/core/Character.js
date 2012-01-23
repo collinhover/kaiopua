@@ -74,12 +74,12 @@ var KAIOPUA = (function (main) {
 			
 			// physics
 			
-			parameters.modelInfo.rigidBodyInfo = parameters.modelInfo.rigidBodyInfo || instance.type.rigidBodyInfo;
+			parameters.modelInfo.physicsParameters = parameters.modelInfo.physicsParameters || instance.type.physicsParameters;
 			
-			if ( typeof parameters.modelInfo.rigidBodyInfo !== 'undefined' ) {
+			if ( typeof parameters.modelInfo.physicsParameters !== 'undefined' ) {
 				
-				parameters.modelInfo.rigidBodyInfo.movable = true;
-				parameters.modelInfo.rigidBodyInfo.movementDamping = parameters.modelInfo.rigidBodyInfo.movementDamping || 0.5;
+				parameters.modelInfo.physicsParameters.dynamic = true;
+				parameters.modelInfo.physicsParameters.movementDamping = parameters.modelInfo.physicsParameters.movementDamping || 0.5;
 				
 			}
 			
@@ -171,10 +171,11 @@ var KAIOPUA = (function (main) {
 		};
 		
 		instance.update = function ( timeDelta ) {
-			
+			console.log('char update returning early');return;
 			var model = instance.model,
 				mesh = model.mesh,
-				rigidBody = model.rigidBody,
+				physics = model.physics,
+				rigidBody = physics.rigidBody,
 				meshQ = mesh.quaternion,
 				movement = instance.movement,
 				state,
@@ -220,9 +221,9 @@ var KAIOPUA = (function (main) {
 				jumpTimeMax = jump.timeMax;
 				jumpTimeAfterNotGroundedMax = jump.timeAfterNotGroundedMax;
 				
-				velocityMovement = rigidBody.velocityMovement;
+				velocityMovement = physics.velocityMovement;
 				velocityMovementForce = velocityMovement.force;
-				velocityGravity = rigidBody.velocityGravity;
+				velocityGravity = physics.velocityGravity;
 				velocityGravityForce = velocityGravity.force;
 				
 				// handle time

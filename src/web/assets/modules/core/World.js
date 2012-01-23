@@ -112,9 +112,9 @@ var KAIOPUA = (function (main) {
 		
         head = model.instantiate({
             geometry: main.asset_data("assets/models/World_Head.js"),
-			rigidBodyInfo: {
+			/*physicsParameters: {
 				bodyType: 'trimesh'
-			},
+			},*/
 			materials: new THREE.MeshLambertMaterial( { ambient: 0x333333, color: 0xffdd99, shading: THREE.SmoothShading }  ),
 			shading: THREE.SmoothShading,//THREE.FlatShading, //
 			targetable: false,
@@ -123,17 +123,17 @@ var KAIOPUA = (function (main) {
 		
 		tail = model.instantiate({
             geometry: main.asset_data("assets/models/World_Tail.js"),
-			rigidBodyInfo: {
+			/*physicsParameters: {
 				bodyType: 'trimesh'
-			},
+			},*/
 			materials: new THREE.MeshLambertMaterial( { ambient: 0x333333, color: 0xffdd99, shading: THREE.SmoothShading }  ),//new THREE.MeshNormalMaterial(),
 			shading: THREE.SmoothShading,//THREE.FlatShading, //
 			targetable: false,
 			interactive: false
         });
 		
-		head.mesh.quaternion.setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), -Math.PI * 0.4 );
-		tail.mesh.quaternion.copy( head.mesh.quaternion ); 
+		//head.mesh.quaternion.setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), -Math.PI * 0.4 );
+		//tail.mesh.quaternion.copy( head.mesh.quaternion ); 
 		
 		// water
 		
@@ -153,7 +153,7 @@ var KAIOPUA = (function (main) {
 		
 		var hutHill = model.instantiate({
             geometry: main.asset_data("assets/models/Hut_Hill.js"),
-			rigidBodyInfo: {
+			physicsParameters: {
 				bodyType: 'trimesh'
 			},
 			materials: new THREE.MeshNormalMaterial(),//shadowTestMat,//
@@ -172,7 +172,7 @@ var KAIOPUA = (function (main) {
 		
 		var steps = model.instantiate({
             geometry: main.asset_data("assets/models/Hut_Steps.js"),
-			rigidBodyInfo: {
+			physicsParameters: {
 				bodyType: 'trimesh'
 			},
 			materials: new THREE.MeshNormalMaterial(),
@@ -189,7 +189,7 @@ var KAIOPUA = (function (main) {
 		
 		var hut = model.instantiate({
             geometry: main.asset_data("assets/models/Hut.js"),
-			rigidBodyInfo: {
+			physicsParameters: {
 				bodyType: 'trimesh'
 			},
 			materials: new THREE.MeshNormalMaterial(),//shadowTestMat,//
@@ -206,7 +206,7 @@ var KAIOPUA = (function (main) {
 		
 		var bed = model.instantiate({
             geometry: main.asset_data("assets/models/Bed.js"),
-			rigidBodyInfo: {
+			physicsParameters: {
 				bodyType: 'box'
 			},
 			materials: new THREE.MeshNormalMaterial(),
@@ -239,7 +239,7 @@ var KAIOPUA = (function (main) {
             geometry: main.asset_data("assets/models/Surfboard.js"),
 			materials: new THREE.MeshNormalMaterial(),
 			shading: THREE.SmoothShading,
-			rigidBodyInfo: {
+			physicsParameters: {
 				bodyType: 'box'
 			}
         });
@@ -254,7 +254,7 @@ var KAIOPUA = (function (main) {
             geometry: main.asset_data("assets/models/Palm_Tree.js"),
 			materials: new THREE.MeshNormalMaterial(),
 			shading: THREE.SmoothShading,
-			rigidBodyInfo: {
+			physicsParameters: {
 				bodyType: 'trimesh'
 			}
         });

@@ -100,26 +100,58 @@ var KAIOPUA = (function (main) {
 			color: 0x000000,
 			wireframe: true
 		});
-		
-		var make_box = function ( x, y, z, movable ) {
-			var geom = new THREE.CubeGeometry( 50, 50, 50, 1, 1 );
+	
+		var make_shape = function ( bodyType, x, y, z, dynamic, w, h, d ) {
 			
-			// box
+			var geom,
+				bodyType = bodyType || 'box',
+				shape;
 			
-			var box = model.instantiate({
+			if ( bodyType === 'sphere' ) {
+				
+				geom = new THREE.SphereGeometry( Math.max( w || 25, h || 25, d || 25 ) );
+				
+			}
+			else {
+				
+				geom = new THREE.CubeGeometry( w || 50, h || 50, d || 50, 1, 1 );
+				
+			}
+			
+			// shape
+			
+			var shape = model.instantiate({
 				geometry: geom,
 				materials: normalMat
 			});
 			
-			box.mesh.position.set( x, y, z );
+			shape.mesh.position.set( x, y, z );
 			
-			box.rigidBody = physics.translate( box.mesh, {
-				bodyType: 'box',
-				movable: typeof movable === 'undefined' ? false : movable
+			shape.physics = physics.translate( shape.mesh, {
+				bodyType: bodyType,
+				dynamic: typeof dynamic === 'undefined' ? false : dynamic
 			});
 			
-			return box;
+			return shape;
 		}
+		
+		// plane
+		
+		var plane = model.instantiate({
+			geometry: new THREE.PlaneGeometry( 6000, 6000 ),
+			materials: normalMat
+		});
+		
+		plane.mesh.quaternion.setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), -Math.PI * 0.5 );
+		
+		plane.physics = physics.translate( plane.mesh, {
+			
+			bodyType: 'plane',
+			dynamic: false,
+			
+		} );
+		
+		addOnShow.push( plane );
 		
 		var numRings = 6;
 		var radius = 2000;
@@ -131,7 +163,11 @@ var KAIOPUA = (function (main) {
 		var deltaRotB = (Math.PI * 2) / (numBoxPerRing);
 		var rotB = 0;
 		
-		for ( var i = 0, l = numRings; i < l; i ++ ) {
+		var nx, ny, nz;
+		
+		var i, l;
+		
+		for ( i = 0, l = numRings; i < l; i ++ ) {
 			
 			rotB = 0;
 			
@@ -143,14 +179,14 @@ var KAIOPUA = (function (main) {
 				
 			}
 			
-			var ny = radius * Math.cos( rotA );
+			ny = radius * Math.cos( rotA );
 			
 			for ( var bi = 0, bl = numBoxPerRing; bi < bl; bi ++ ) {
 				
-				var nx = radius * Math.sin( rotA ) * Math.cos( rotB );
-				var nz = radius * Math.sin( rotA ) * Math.sin( rotB );
+				nx = radius * Math.sin( rotA ) * Math.cos( rotB );
+				nz = radius * Math.sin( rotA ) * Math.sin( rotB );
 				
-				var box = make_box( nx, ny, nz );
+				var box = make_shape( 'box', nx, ny, nz );
 				
 				addOnShow.push( box );
 				
@@ -160,14 +196,16 @@ var KAIOPUA = (function (main) {
 			
 		}
 		
-		/*
 		// movable boxes
-		addOnShow.push( make_box( 1, 2000, 100, true ) );
-		addOnShow.push( make_box( 1, 2000, -100, true ) );
-		addOnShow.push( make_box( 100, 2000, 1, true ) );
-		addOnShow.push( make_box( -100, 2000, 1, true ) );
-		addOnShow.push( make_box( -100, 2400, 1, true ) );
-		*/
+		
+		addOnShow.push( make_shape( 'box', 100, 2500, 100, true ) );
+		addOnShow.push( make_shape( 'sphere', -100, 2500, 100, true ) );
+		addOnShow.push( make_shape( 'sphere', 100, 2500, -100, true ) );
+		addOnShow.push( make_shape( 'box', -100, 2500, -100, true ) );
+		addOnShow.push( make_shape( 'sphere', 75, 2600, 75, true ) );
+		addOnShow.push( make_shape( 'box', -75, 2600, 75, true ) );
+		addOnShow.push( make_shape( 'box', 75, 2600, -75, true ) );
+		addOnShow.push( make_shape( 'sphere', -75, 2600, -75, true ) );
 		
     }
     
@@ -207,11 +245,15 @@ var KAIOPUA = (function (main) {
 			
 			// start player
 			
+			physics.body_pos( player.character.model.physics.rigidBody, 0, 2700, 0 );
+			
+			physics.body_rot( player.character.model.physics.rigidBody, 0.7, 0, 0, 0.7 );
+			
 			player.show();
 			
 			player.enable();
 			
-			player.character.model.mesh.position.set( 0, 3000, 0 );
+			//player.character.model.mesh.position.set( 0, 2700, 0 );
 			
 			//player.cameraMode = 'freelook';
 			

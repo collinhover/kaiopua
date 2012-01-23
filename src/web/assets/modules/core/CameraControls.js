@@ -182,7 +182,7 @@ var KAIOPUA = (function (main) {
 	
 	function rotate ( e, end ) {
 		
-		var mouse = shared.mice[ e.identifier ];
+		var mouse;
 		
 		// end rotation
 		if ( end === true ) {
@@ -197,7 +197,7 @@ var KAIOPUA = (function (main) {
 			
 			// store mouse
 			
-			csRot.mouse = mouse;
+			csRot.mouse = shared.mice[ ( typeof e !== 'undefined' ? e.identifier : 0 ) ];
 			
 			shared.signals.mousemoved.add( rotate_update );
 			

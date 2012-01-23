@@ -28,8 +28,8 @@ var KAIOPUA = (function (main) {
 		get : get_movement_info
 	});
 	
-	Object.defineProperty( hero, 'rigidBodyInfo', { 
-		get : get_rigid_body_info
+	Object.defineProperty( hero, 'physicsParameters', { 
+		get : get_physics_parameters
 	});
 	
 	hero = main.asset_register( "assets/modules/characters/Hero", hero );
@@ -62,7 +62,7 @@ var KAIOPUA = (function (main) {
 		
 		return {
 			
-			moveSpeed: 6,
+			moveSpeed: 1000,//6,
 			rotateSpeed: 0.019,
 			jumpSpeedStart: 6,
 			jumpSpeedEnd: 0,
@@ -72,11 +72,11 @@ var KAIOPUA = (function (main) {
 		
 	}
 		
-	function get_rigid_body_info () {
+	function get_physics_parameters () {
 		
 		return {
 			
-			bodyType: 'box',
+			bodyType: 'capsule',
 			movementDamping: 0.5
 			
 		};

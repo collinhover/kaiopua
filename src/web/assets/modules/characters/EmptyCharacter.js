@@ -21,7 +21,7 @@ var KAIOPUA = (function (main) {
 		get : function () { return; }
 	});
 	
-	Object.defineProperty( emptycharacter, 'rigidBodyInfo', { 
+	Object.defineProperty( emptycharacter, 'physicsParameters', { 
 		get : function () { return; }
 	});
 	
