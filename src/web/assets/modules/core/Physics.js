@@ -64,6 +64,7 @@ var KAIOPUA = (function (main) {
 		utilBTQTranslate,
 		utilBTVec3Translate,
 		utilBTTransformRot,
+		utilBTTransformPos,
 		utilBTVec3Rot,
 		utilBTTransformIntegrate,
 		utilQ1RotMat,
@@ -88,9 +89,6 @@ var KAIOPUA = (function (main) {
 	physics.update = update;
 	
 	physics.body_pos = body_pos;
-	physics.body_pos_x = body_pos_x;
-	physics.body_pos_y = body_pos_y;
-	physics.body_pos_z = body_pos_z;
 	
 	physics.body_rot = body_rot;
 	physics.body_rot_q = body_rot_q;
@@ -150,6 +148,8 @@ var KAIOPUA = (function (main) {
 		utilBTTransformTranslate = new Ammo.btTransform();
 		utilBTQTranslate = new Ammo.btQuaternion( 0, 0, 0, 0 );
 		utilBTVec3Translate = new Ammo.btVector3( 0, 0, 0 );
+		
+		utilBTTransformPos = new Ammo.btTransform();
 		
 		utilBTTransformRot = new Ammo.btTransform();
 		utilBTVec3Rot = new Ammo.btVector3( 0, 0, 0 );
@@ -541,89 +541,139 @@ var KAIOPUA = (function (main) {
 	
 	function body_pos ( rigidBody, x, y, z ) {
 		
-		rigidBody.getCenterOfMassPosition().setValue( x, y, z );
+		var transform,
+			position;
 		
-	}
-	
-	function body_pos_x ( rigidBody, val ) {
+		// get physics transform
 		
-		rigidBody.getCenterOfMassPosition().setX( val );
+		transform = rigidBody.getWorldTransform();
 		
-	}
-	
-	function body_pos_y ( rigidBody, val ) {
+		// get physics position, returns vector3
 		
-		rigidBody.getCenterOfMassPosition().setY( val );
+		position = transform.getOrigin();
 		
-	}
-	
-	function body_pos_z ( rigidBody, val ) {
+		// set position value
 		
-		rigidBody.getCenterOfMassPosition().setZ( val );
+		position.setValue( x, y, z );
 		
 	}
 	
 	function body_rot ( rigidBody, x, y, z, w ) {
 		
-		var motionState = rigidBody.getMotionState(),
-			transform = utilBTTransformRot,
+		var transform,
 			rotation;
 		
 		// get physics transform
 		
-		motionState.getWorldTransform( transform );
-
+		transform = rigidBody.getWorldTransform();
+		
 		// get physics rotation, returns quaternion
 		
 		rotation = transform.getRotation();
-		console.log('rot: ', rigidBody.getOrientation().x(), rigidBody.getOrientation().y(), rigidBody.getOrientation().z(), rigidBody.getOrientation().w());
+		
+		// set rotation value
+		
 		rotation.setValue( x, y, z, w );
 		
-		
+		// store rotation
+		// this is needed because rotation is not stored as quaternion
 		
 		transform.setRotation( rotation );
 		
-		motionState.setWorldTransform( transform );
-		
-		rigidBody.setMotionState( motionState );
-		console.log('rot: ', rigidBody.getOrientation().x(), rigidBody.getOrientation().y(), rigidBody.getOrientation().z(), rigidBody.getOrientation().w());
 	}
 	
 	function body_rot_q ( rigidBody, q ) {
 		
+		var transform,
+			rotation;
+		
+		// get physics transform
+		
+		transform = rigidBody.getWorldTransform();
+		
+		// get physics rotation, returns quaternion
+		
+		rotation = transform.getRotation();
+		
+		// set rotation value
+		
 		if ( q instanceof Ammo.btQuaternion ) {
 			
-			rigidBody.getOrientation().setValue( q.x(), q.y(), q.z(), q.w() );
+			rotation.setValue( q.x(), q.y(), q.z(), q.w() );
 			
 		}
 		else {
 		
-			rigidBody.getOrientation().setValue( q.x, q.y, q.z, q.w );
+			rotation.setValue( q.x, q.y, q.z, q.w );
 		
 		}
+		
+		// store rotation
+		// this is needed because rotation is not stored as quaternion
+		
+		transform.setRotation( rotation );
+		
 	}
 	
 	function body_rot_mat ( rigidBody, mat ) {
-
+		
+		var transform,
+			rotation;
+		
+		// get physics transform
+		
+		transform = rigidBody.getWorldTransform();
+		
+		// get physics rotation, returns quaternion
+		
+		rotation = transform.getRotation();
+		
+		// set rotation value
+		
 		if ( mat instanceof THREE.Matrix4 ) {
 			
 			utilQ1RotMat.setFromRotationMatrix( mat );
 			
-			rigidBody.getOrientation().setValue( utilQ1RotMat.x, utilQ1RotMat.y, utilQ1RotMat.z, utilQ1RotMat.w );
+			rotation.setValue( utilQ1RotMat.x, utilQ1RotMat.y, utilQ1RotMat.z, utilQ1RotMat.w );
 			
 		}
+		
+		// store rotation
+		// this is needed because rotation is not stored as quaternion
+		
+		transform.setRotation( rotation );
 		
 	}
 	
 	function body_rot_axis_angle ( rigidBody, axis, angle ) {
 		
-		if ( axis instanceof THREE.Vector3 ) {
+		var transform,
+			rotation;
+		
+		// get physics transform
+		
+		transform = rigidBody.getWorldTransform();
+		
+		// get physics rotation, returns quaternion
+		
+		rotation = transform.getRotation();
+		
+		// if axis is not in correct format
+		
+		if ( !( axis instanceof Ammo.btVector3 ) ) {
 			
 			axis = utilBTVec3Rot.setValue( axis.x, axis.y, axis.z );
 			
 		}
 		
-		rigidBody.getOrientation().setRotation( axis, angle );
+		// set rotation value
+		
+		rotation.setRotation( axis, angle );
+		
+		// store rotation
+		// this is needed because rotation is not stored as quaternion
+		
+		transform.setRotation( rotation );
 		
 	}
 	
