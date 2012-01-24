@@ -9,71 +9,23 @@ var KAIOPUA = (function (main) {
 		physics = {},
 		mathhelper,
 		ready = false,
-		collisionConfiguration,
-		dispatcher,
-		overlappingPairCache,
-		solver,
-		dynamicsWorld,
+		system,
 		gravitySource,
 		gravityMagnitude,
 		linkBaseName = 'visual_physical_link_',
 		linkCount = 0,
 		links = [],
 		scaleSpeedExp = Math.log( 1.5 ),
-		defaultContactProcessingThreshold = 1000000.0,
-		shapesMap = {
-			BOX_SHAPE_PROXYTYPE : 0,
-			TRIANGLE_SHAPE_PROXYTYPE : 1,
-			TETRAHEDRAL_SHAPE_PROXYTYPE : 2,
-			CONVEX_TRIANGLEMESH_SHAPE_PROXYTYPE : 3,
-			CONVEX_HULL_SHAPE_PROXYTYPE : 4,
-			CONVEX_POINT_CLOUD_SHAPE_PROXYTYPE : 5,
-			CUSTOM_POLYHEDRAL_SHAPE_TYPE : 6,
-			IMPLICIT_CONVEX_SHAPES_START_HERE : 7,
-			SPHERE_SHAPE_PROXYTYPE : 8,
-			MULTI_SPHERE_SHAPE_PROXYTYPE : 9,
-			CAPSULE_SHAPE_PROXYTYPE : 10,
-			CONE_SHAPE_PROXYTYPE : 11,
-			CONVEX_SHAPE_PROXYTYPE : 12,
-			CYLINDER_SHAPE_PROXYTYPE : 13,
-			UNIFORM_SCALING_SHAPE_PROXYTYPE : 14,
-			MINKOWSKI_SUM_SHAPE_PROXYTYPE : 15,
-			MINKOWSKI_DIFFERENCE_SHAPE_PROXYTYPE : 16,
-			BOX_2D_SHAPE_PROXYTYPE : 17,
-			CONVEX_2D_SHAPE_PROXYTYPE : 18,
-			CUSTOM_CONVEX_SHAPE_TYPE : 19,
-			CONCAVE_SHAPES_START_HERE : 20,
-			TRIANGLE_MESH_SHAPE_PROXYTYPE : 21,
-			SCALED_TRIANGLE_MESH_SHAPE_PROXYTYPE : 22,
-			FAST_CONCAVE_MESH_PROXYTYPE : 23,
-			TERRAIN_SHAPE_PROXYTYPE : 24,
-			GIMPACT_SHAPE_PROXYTYPE : 25,
-			MULTIMATERIAL_TRIANGLE_MESH_PROXYTYPE : 26,
-			EMPTY_SHAPE_PROXYTYPE : 27,
-			STATIC_PLANE_PROXYTYPE : 28,
-			CUSTOM_CONCAVE_SHAPE_TYPE : 29,
-			CONCAVE_SHAPES_END_HERE : 30,
-			COMPOUND_SHAPE_PROXYTYPE : 31,
-			SOFTBODY_SHAPE_PROXYTYPE : 32,
-			HFFLUID_SHAPE_PROXYTYPE : 33,
-			HFFLUID_BUOYANT_CONVEX_SHAPE_PROXYTYPE : 34,
-			INVALID_SHAPE_PROXYTYPE : 35,
-			MAX_BROADPHASE_COLLISION_TYPES : 36
-		},
-		utilBTTransformTranslate,
-		utilBTQTranslate,
-		utilBTVec3Translate,
-		utilBTTransformRot,
-		utilBTTransformPos,
-		utilBTVec3Rot,
-		utilBTTransformIntegrate,
-		utilQ1RotMat,
 		utilVec31Integrate,
 		utilVec32Integrate,
+		utilVec31Offset,
+		utilVec31Raycast,
 		utilVec31Velocity,
 		utilQ1Integrate,
 		utilQ2Integrate,
-		utilQ3Integrate;
+		utilQ3Integrate,
+		utilQ4Offset,
+		utilRay1Casting;
 	
 	/*===================================================
     
@@ -88,13 +40,6 @@ var KAIOPUA = (function (main) {
 	physics.stop = stop;
 	physics.update = update;
 	
-	physics.body_pos = body_pos;
-	
-	physics.body_rot = body_rot;
-	physics.body_rot_q = body_rot_q;
-	physics.body_rot_mat = body_rot_mat;
-	physics.body_rot_axis_angle = body_rot_axis_angle;
-	
 	// getters and setters
 	
 	Object.defineProperty(physics, 'gravitySource', { 
@@ -107,8 +52,8 @@ var KAIOPUA = (function (main) {
 		set : set_gravity_magnitude
 	});
 	
-	Object.defineProperty(physics, 'dynamicsWorld', { 
-		get : function () { return dynamicsWorld; }
+	Object.defineProperty(physics, 'system', { 
+		get : function () { return system; }
 	});
 	
 	physics = main.asset_register( assetPath, physics, true );
@@ -120,8 +65,7 @@ var KAIOPUA = (function (main) {
     =====================================================*/
 	
 	main.assets_require( [
-		"assets/modules/utils/MathHelper",
-		"js/lib/ammo.js"
+		"assets/modules/utils/MathHelper"
 	], init_internal, true );
 	
 	function init_internal ( mh ) {
@@ -143,47 +87,285 @@ var KAIOPUA = (function (main) {
 	
 	function init_system() {
 		
+		// system
+		
+		system = THREE.Collisions;
+		set_gravity_source( new THREE.Vector3( 0, 0, 0 ) );
+		set_gravity_magnitude( new THREE.Vector3( 0, -1, 0 ) );
+		
 		// utility / conversion objects
-		
-		utilBTTransformTranslate = new Ammo.btTransform();
-		utilBTQTranslate = new Ammo.btQuaternion( 0, 0, 0, 0 );
-		utilBTVec3Translate = new Ammo.btVector3( 0, 0, 0 );
-		
-		utilBTTransformPos = new Ammo.btTransform();
-		
-		utilBTTransformRot = new Ammo.btTransform();
-		utilBTVec3Rot = new Ammo.btVector3( 0, 0, 0 );
-		
-		utilBTTransformIntegrate = new Ammo.btTransform();
-		
-		utilQ1RotMat = new THREE.Quaternion();
 		
 		utilVec31Integrate = new THREE.Vector3();
 		utilVec32Integrate = new THREE.Vector3();
+		utilVec31Offset = new THREE.Vector3();
+		utilVec31Raycast = new THREE.Vector3();
+		utilVec31Velocity = new THREE.Vector3();
 		utilQ1Integrate = new THREE.Quaternion();
 		utilQ2Integrate = new THREE.Quaternion();
 		utilQ3Integrate = new THREE.Quaternion();
+		utilQ4Offset = new THREE.Quaternion();
+		utilRay1Casting = new THREE.Ray();
 		
-		utilVec31Velocity = new THREE.Vector3();
+		// three collision fixes
 		
-		// setup collision detection
-		collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
-		dispatcher = new Ammo.btCollisionDispatcher( collisionConfiguration );
-		overlappingPairCache = new Ammo.btDbvtBroadphase();
+		add_three_collision_fixes();
 		
-		// setup solver and world
-		solver = new Ammo.btSequentialImpulseConstraintSolver();
-		dynamicsWorld = new Ammo.btDiscreteDynamicsWorld( dispatcher, overlappingPairCache, solver, collisionConfiguration );
+	}
+	
+	/*===================================================
+    
+    collision fixes
+    
+    =====================================================*/
+	
+	function add_three_collision_fixes () {
 		
-		// default gravity
+		var utilMat1RayLocal = new THREE.Matrix4(),
+			utilVec31RayLocal = new THREE.Vector3(),
+			utilVec31RayBox = new THREE.Vector3(),
+			utilVec32RayBox = new THREE.Vector3();
 		
-		utilBTVec3Translate.setValue( 0, -100, 0 );
-		dynamicsWorld.setGravity( utilBTVec3Translate );
+		// localize ray to collider
 		
-		// spherical gravity properties
+		THREE.CollisionSystem.prototype.makeRayLocal = function( ray, m ) {
+			
+			var scale,
+				mMat,
+				mCopy;
+
+			var rt = THREE.CollisionSystem.__r;
+			rt.origin.copy( ray.origin );
+			rt.direction.copy( ray.direction );
+			
+			if ( m instanceof THREE.Mesh ) {
+				
+				scale = m.scale,
+				mMat = m.matrixWorld,
+				mCopy = utilMat1RayLocal;
+				
+				// get copy of m world matrix without scale applied
+				// matrix with scale does not seem to invert correctly
+				
+				mCopy.extractPosition( mMat );
+				mCopy.extractRotation( mMat, scale );
+				
+				// invert copy
+				
+				var mt = THREE.CollisionSystem.__m;
+				mt.getInverse( mCopy );
+				
+				mt.multiplyVector3( rt.origin );
+				mt.rotateAxis( rt.direction );
+				rt.direction.normalize();
+				
+			}
+
+			return rt;
+
+		};
 		
-		set_gravity_source( new THREE.Vector3( 0, 0, 0 ) );
-		set_gravity_magnitude( new THREE.Vector3( 0, -1, 0 ) );
+		// ray mesh
+		
+		THREE.CollisionSystem.prototype.rayMesh = function( r, me ) {
+			
+			var i, l,
+				p0 = new THREE.Vector3(),
+				p1 = new THREE.Vector3(),
+				p2 = new THREE.Vector3(),
+				p3 = new THREE.Vector3(),
+				mesh = me.mesh,
+				scale = mesh.scale,
+				geometry = mesh.geometry,
+				vertices = geometry.vertices,
+				rt = this.makeRayLocal( r, mesh );
+			
+			var d = Number.MAX_VALUE;
+			var nearestface;
+			
+			for( i = 0, l = me.numFaces; i < l; i ++ ) {
+				
+				var face = geometry.faces[ i ];
+				
+				p0.copy( vertices[ face.a ].position ).multiplySelf( scale );
+				p1.copy( vertices[ face.b ].position ).multiplySelf( scale );
+				p2.copy( vertices[ face.c ].position ).multiplySelf( scale );
+				
+				if ( face instanceof THREE.Face4 ) {
+					
+					p3.copy( vertices[ face.d ].position ).multiplySelf( scale );
+					
+					var nd = this.rayTriangle( rt, p0, p1, p3, d, this.collisionNormal, mesh );
+					
+					if( nd < d ) {
+						
+						d = nd;
+						nearestface = i;
+						me.normal.copy( this.collisionNormal );
+						me.normal.normalize();
+						
+					}
+					
+					nd = this.rayTriangle( rt, p1, p2, p3, d, this.collisionNormal, mesh );
+					
+					if( nd < d ) {
+						
+						d = nd;
+						nearestface = i;
+						me.normal.copy( this.collisionNormal );
+						me.normal.normalize();
+						
+					}
+					
+				}
+				else {
+					
+					var nd = this.rayTriangle( rt, p0, p1, p2, d, this.collisionNormal, mesh );
+					
+					if( nd < d ) {
+						
+						d = nd;
+						nearestface = i;
+						me.normal.copy( this.collisionNormal );
+						me.normal.normalize();
+						
+					}
+					
+				}
+				
+			}
+			
+			return {dist: d, faceIndex: nearestface};
+			
+		};
+		
+		// ray box
+		
+		THREE.CollisionSystem.prototype.rayBox = function( ray, ab ) {
+			
+			var rt = this.makeRayLocal( ray, ab.mesh ),
+				abMin = utilVec31RayBox.copy( ab.min ),
+				abMax = utilVec32RayBox.copy( ab.max ),
+				origin = rt.origin,
+				direction = rt.direction,
+				scale;
+			
+			//rt.origin.copy( ray.origin );
+			//rt.direction.copy( ray.direction );
+			
+			if ( ab.dynamic && ab.mesh && ab.mesh.scale ) {
+				
+				scale = ab.mesh.scale;
+				
+				abMin.multiplySelf( scale );
+				abMax.multiplySelf( scale );
+				
+			}
+			
+			var xt = 0, yt = 0, zt = 0;
+			var xn = 0, yn = 0, zn = 0;
+			var ins = true;
+			
+			if( origin.x < abMin.x ) {
+				
+				xt = abMin.x - origin.x;
+				xt /= direction.x;
+				ins = false;
+				xn = -1;
+				
+			} else if( origin.x > abMax.x ) {
+				
+				xt = abMax.x - origin.x;
+				xt /= direction.x;
+				ins = false;
+				xn = 1;
+				
+			}
+			
+			if( origin.y < abMin.y ) {
+				
+				yt = abMin.y - origin.y;
+				yt /= direction.y;
+				ins = false;
+				yn = -1;
+				
+			} else if( origin.y > abMax.y ) {
+				
+				yt = abMax.y - origin.y;
+				yt /= direction.y;
+				ins = false;
+				yn = 1;
+				
+			}
+			
+			if( origin.z < abMin.z ) {
+				
+				zt = abMin.z - origin.z;
+				zt /= direction.z;
+				ins = false;
+				zn = -1;
+				
+			} else if( origin.z > abMax.z ) {
+				
+				zt = abMax.z - origin.z;
+				zt /= direction.z;
+				ins = false;
+				zn = 1;
+				
+			}
+			
+			if( ins ) return -1;
+			
+			var which = 0;
+			var t = xt;
+			
+			if( yt > t ) {
+				
+				which = 1;
+				t = yt;
+				
+			}
+			
+			if ( zt > t ) {
+				
+				which = 2;
+				t = zt;
+				
+			}
+			
+			switch( which ) {
+				
+				case 0:
+					
+					var y = origin.y + direction.y * t;
+					if ( y < abMin.y || y > abMax.y ) return Number.MAX_VALUE;
+					var z = origin.z + direction.z * t;
+					if ( z < abMin.z || z > abMax.z ) return Number.MAX_VALUE;
+					ab.normal.set( xn, 0, 0 );
+					break;
+					
+				case 1:
+					
+					var x = origin.x + direction.x * t;
+					if ( x < abMin.x || x > abMax.x ) return Number.MAX_VALUE;
+					var z = origin.z + direction.z * t;
+					if ( z < abMin.z || z > abMax.z ) return Number.MAX_VALUE;
+					ab.normal.set( 0, yn, 0) ;
+					break;
+					
+				case 2:
+					
+					var x = origin.x + direction.x * t;
+					if ( x < abMin.x || x > abMax.x ) return Number.MAX_VALUE;
+					var y = origin.y + direction.y * t;
+					if ( y < abMin.y || y > abMax.y ) return Number.MAX_VALUE;
+					ab.normal.set( 0, 0, zn );
+					break;
+					
+			}
+			
+			return t;
+			
+		};
 		
 	}
 	
@@ -198,36 +380,28 @@ var KAIOPUA = (function (main) {
 	function translate ( mesh, parameters ) {
 		
 		var i, l,
-			link,
-			ubttform = utilBTTransformTranslate,
-			ubtv3 = utilBTVec3Translate,
-			ubtq = utilBTQTranslate,
 			geometry,
+			bbox,
 			bboxDimensions,
 			bodyType,
-			shape,
-			meshInterface,
-			vertices,
-			faces,
-			face,
-			va,
-			vb,
-			vc,
-			rigidBody,
+			link,
+			collider,
+			dynamic = false,
 			width,
 			height,
 			depth,
-			dimMax,
 			needWidth,
 			needHeight,
 			needDepth,
+			radius,
+			boxMax,
+			boxMin,
+			centerOffset,
 			mass,
-			dynamic = false,
-			localInertia,
-			motionState,
-			constructionInfo,
 			position,
-			rotation;
+			rotation,
+			velocityMovement,
+			velocityGravity;
 		
 		// handle parameters
 		
@@ -236,18 +410,26 @@ var KAIOPUA = (function (main) {
 		bodyType = parameters.bodyType;
 		
 		// validity check
-		console.log('PHYSX TRANSLATING...');
+		
 		if ( typeof mesh === 'undefined' || typeof bodyType !== 'string' ) {
-			console.log(' > PHYSX stopped, invalid');
+			
 			return;
 			
 		}
 		
 		// handle mesh
 		
-		mesh = mesh || new THREE.Object3D();
-		
 		geometry = parameters.geometry || mesh.geometry;
+		
+		if ( parameters.hasOwnProperty('dynamic') === true ) {
+			
+			dynamic = parameters.dynamic;
+			
+		}
+		
+		position = parameters.position || mesh.position;
+		
+		rotation = parameters.rotation || ( mesh.useQuaternion === true ? mesh.quaternion : mesh.rotation );
 		
 		// physics width/height/depth
 		
@@ -301,79 +483,37 @@ var KAIOPUA = (function (main) {
 			
 		}
 		
-		// mass
-		
 		mass = parameters.mass || width * height * depth;
-		console.log(' > PHYSX mass: ' + mass);
-		// create shape
 		
-		switch ( bodyType ) {
+		// create collider
+		
+		if ( bodyType === 'trimesh' ) {
 			
-			case 'capsule':
-				
-				dimMax = Math.max( width, depth );
-				
-				shape = new Ammo.btCapsuleShape( parameters.radius || dimMax * 0.5, height - dimMax );
-				
-				break;
-			
-			case 'sphere':
-				
-				dimMax = Math.max( width, height, depth );
-				
-				shape = new Ammo.btSphereShape( parameters.radius || dimMax * 0.5 );
-				
-				break;
-			
-			case 'plane':
-				
-				ubtv3.setValue( 0, 0, 1 );
-				
-				shape = new Ammo.btStaticPlaneShape( ubtv3, 0);
-				
-				break;
-			
-			case 'trimesh':
-				
-				meshInterface = new Ammo.btTriangleMesh( true, false );
-				
-				// get all triangles
-				
-				vertices = geometry.vertices;
-				
-				faces = geometry.faces;
-				
-				for( i = 0, l = faces.length; i < l; i++ ) {
-					
-					face = faces[ i ];
-					
-					va = vertices[ face.a ];
-					vb = vertices[ face.b ];
-					vc = vertices[ face.c ];
-					
-					meshInterface.addTriangle( 
-						new Ammo.btVector3( va.x, va.y, va.z ),
-						new Ammo.btVector3( vb.x, vb.y, vb.z ),
-						new Ammo.btVector3( vc.x, vc.y, vc.z )
-					);
-					
-				}
-				
-				shape = new Ammo.btBvhTriangleMeshShape( meshInterface, true );
-				
-				break;
-			
-			case 'box':
-				
-				ubtv3.setValue( width * 0.5, height * 0.5, depth * 0.5 );
-
-				shape = new Ammo.btBoxShape( ubtv3 );
-				
-				break;
+			collider = THREE.CollisionUtils.MeshColliderWBox( mesh );
 			
 		}
-		console.log(' > PHYSX shape type: ' + shape.getShapeType() );
-		console.log(shape);
+		else if ( bodyType === 'sphere' ) {
+			
+			radius = Math.max( width, height, depth ) * 0.5;
+			
+			collider = new THREE.SphereCollider( position, radius );
+			
+		}
+		else if ( bodyType === 'plane' ) {
+			
+			collider = new THREE.PlaneCollider( position, parameters.up || new THREE.Vector3( 0, 0, 1 ) );
+			
+		}
+		// default box
+		else {
+			
+			boxMax = new THREE.Vector3( width, height, depth ).multiplyScalar( 0.5 );
+			boxMin = boxMax.clone().multiplyScalar( -1 );
+			
+			collider = new THREE.BoxCollider( boxMin, boxMax );
+			
+		}
+		
 		// dynamic or static
 		
 		if ( mass <= 0 ) {
@@ -387,103 +527,44 @@ var KAIOPUA = (function (main) {
 			
 		}
 		
-		console.log(' > PHYSX dynamic? ' + dynamic );
-		// local inertia
+		// if not dynamic set mass to 0 for a static object
 		
-		localInertia = new Ammo.btVector3( 0, 0, 0 );
-		
-		// if dynamic find local inertia based on mass
-		
-		if ( dynamic === true ) {
-			
-			shape.calculateLocalInertia( mass, localInertia );
-			
-		}
-		// else set mass to 0 for a static object
-		else {
+		if ( dynamic !== true ) {
 			
 			mass = 0;
 			
 		}
-		console.log(' > PHYSX local intertia: ', localInertia.x(), localInertia.y(), localInertia.z() );
-		// reset utility transform
 		
-		ubttform.setIdentity();
+		// store mesh directly in collider
+		// fixes some collision bugs?
 		
-		// set transform position
+		collider.mesh = mesh;
 		
-		position = mesh.position;
-		
-		ubtv3.setValue( position.x, position.y, position.z );
-		
-		ubttform.setOrigin( ubtv3 );
-		
-		// set transform rotation
-		
-		if ( mesh.useQuaternion === true ) {
-			
-			rotation = mesh.quaternion;
-			
-			ubtq.setValue( rotation.x, rotation.y, rotation.z, rotation.w );
-		}
-		else {
-			
-			rotation = mesh.rotation;
-			
-			ubtq.setEulerZYX( rotation.z, rotation.y, rotation.x );
-		}
-		
-		ubttform.setRotation( ubtq );
-		
-		console.log( ' > PHYSX init position: ', ubtv3.x(), ubtv3.y(), ubtv3.z() );
-		console.log( ' > PHYSX init rotation: ', ubtq.x(), ubtq.y(), ubtq.z(), ubtq.w() );
-		
-		// motion state
-		
-		motionState = new Ammo.btDefaultMotionState( ubttform );
-		console.log(' > PHYSX motion state');
-		console.log(motionState);
-		// construction info
-		
-		constructionInfo = new Ammo.btRigidBodyConstructionInfo( mass, motionState, shape, localInertia );
-		console.log(' > PHYSX construction info');
-		console.log(constructionInfo);
-		// rigid body
-		
-		rigidBody = new Ammo.btRigidBody( constructionInfo );
-		console.log(' > PHYSX rigid body');
-		console.log(rigidBody);
-		// rigid body properties
-		
-		rigidBody.setLinearVelocity( new Ammo.btVector3( 0, 0, 0 ) );
-		
-		rigidBody.setAngularVelocity( new Ammo.btVector3( 0, 0, 0 ) );
-		
-		rigidBody.setContactProcessingThreshold( parameters.defaultContactProcessingThreshold || defaultContactProcessingThreshold );
-		
-		// store link
+		// create link
 		
 		linkCount++;
 		
 		link = {
 			name: parameters.name || linkBaseName + linkCount,
 			mesh: mesh,
-			rigidBody: rigidBody,
-			centerOffset: center_offset_from_bounding_box( mesh ),
-			
-			rotationGravity: new THREE.Quaternion(),
-			velocityMovement: generate_velocity_tracker( { 
-				damping: parameters.movementDamping,
-				offset: parameters.movementOffset
-			} ),
-			velocityGravity: generate_velocity_tracker( { 
-				damping: parameters.gravityDamping,
-				offset: parameters.gravityOffset
-			} ),
-			axes: {
-				up: shared.cardinalAxes.up.clone(),
-				forward: shared.cardinalAxes.forward.clone(),
-				right: shared.cardinalAxes.right.clone()
+			rigidBody: {
+				collider: collider,
+				dynamic: dynamic,
+				mass: mass,
+				rotationGravity: new THREE.Quaternion(),
+				velocityMovement: generate_velocity_tracker( { 
+					damping: parameters.movementDamping,
+					offset: parameters.movementOffset
+				} ),
+				velocityGravity: generate_velocity_tracker( { 
+					damping: parameters.gravityDamping,
+					offset: parameters.gravityOffset
+				} ),
+				axes: {
+					up: shared.cardinalAxes.up.clone(),
+					forward: shared.cardinalAxes.forward.clone(),
+					right: shared.cardinalAxes.right.clone()
+				}
 			}
 		};
 		
@@ -491,15 +572,25 @@ var KAIOPUA = (function (main) {
 	}
 	
 	// adds mesh's rigid body to physics world
-	// creates new mesh to rigid body link if one is not passed
+	// creates new rigid body if one is not passed
 	
 	function add ( mesh, link, parameters ) {
 		
+		var rigidBody;
+		
 		link = link || translate( mesh, parameters );
+		
+		rigidBody = link.rigidBody;
 		
 		// add to system
 		
-		dynamicsWorld.addRigidBody( link.rigidBody );
+		system.colliders.push( rigidBody.collider );
+		
+		// zero out velocities
+		
+		rigidBody.velocityMovement.force.set( 0, 0, 0 );
+		
+		rigidBody.velocityGravity.force.set( 0, 0, 0 );
 		
 		// add to links list
 		
@@ -517,163 +608,25 @@ var KAIOPUA = (function (main) {
 			
 		for ( i = 0, l = links.length; i < l; i ++ ) {
 			
-			links = links[ i ];
+			link = links[ i ];
 			
 			if ( link === linkorMeshOrBodyOrName || link.mesh === linkorMeshOrBodyOrName || link.rigidBody === linkorMeshOrBodyOrName || link.name === linkorMeshOrBodyOrName ) {
 				
 				links.splice( i, 1 );
 				
-				dynamicsWorld.removeRigidBody( link.rigidBody );
+				index = system.colliders.indexOf( link.rigidBody.collider );
+				
+				if ( index !== -1 ) {
+				
+					system.colliders.splice( index, 1 );
+					
+				}
 				
 				break;
 				
 			}
 			
 		}
-		
-	}
-	
-	/*===================================================
-    
-    helper functions
-    
-    =====================================================*/
-	
-	function body_pos ( rigidBody, x, y, z ) {
-		
-		var transform,
-			position;
-		
-		// get physics transform
-		
-		transform = rigidBody.getWorldTransform();
-		
-		// get physics position, returns vector3
-		
-		position = transform.getOrigin();
-		
-		// set position value
-		
-		position.setValue( x, y, z );
-		
-	}
-	
-	function body_rot ( rigidBody, x, y, z, w ) {
-		
-		var transform,
-			rotation;
-		
-		// get physics transform
-		
-		transform = rigidBody.getWorldTransform();
-		
-		// get physics rotation, returns quaternion
-		
-		rotation = transform.getRotation();
-		
-		// set rotation value
-		
-		rotation.setValue( x, y, z, w );
-		
-		// store rotation
-		// this is needed because rotation is not stored as quaternion
-		
-		transform.setRotation( rotation );
-		
-	}
-	
-	function body_rot_q ( rigidBody, q ) {
-		
-		var transform,
-			rotation;
-		
-		// get physics transform
-		
-		transform = rigidBody.getWorldTransform();
-		
-		// get physics rotation, returns quaternion
-		
-		rotation = transform.getRotation();
-		
-		// set rotation value
-		
-		if ( q instanceof Ammo.btQuaternion ) {
-			
-			rotation.setValue( q.x(), q.y(), q.z(), q.w() );
-			
-		}
-		else {
-		
-			rotation.setValue( q.x, q.y, q.z, q.w );
-		
-		}
-		
-		// store rotation
-		// this is needed because rotation is not stored as quaternion
-		
-		transform.setRotation( rotation );
-		
-	}
-	
-	function body_rot_mat ( rigidBody, mat ) {
-		
-		var transform,
-			rotation;
-		
-		// get physics transform
-		
-		transform = rigidBody.getWorldTransform();
-		
-		// get physics rotation, returns quaternion
-		
-		rotation = transform.getRotation();
-		
-		// set rotation value
-		
-		if ( mat instanceof THREE.Matrix4 ) {
-			
-			utilQ1RotMat.setFromRotationMatrix( mat );
-			
-			rotation.setValue( utilQ1RotMat.x, utilQ1RotMat.y, utilQ1RotMat.z, utilQ1RotMat.w );
-			
-		}
-		
-		// store rotation
-		// this is needed because rotation is not stored as quaternion
-		
-		transform.setRotation( rotation );
-		
-	}
-	
-	function body_rot_axis_angle ( rigidBody, axis, angle ) {
-		
-		var transform,
-			rotation;
-		
-		// get physics transform
-		
-		transform = rigidBody.getWorldTransform();
-		
-		// get physics rotation, returns quaternion
-		
-		rotation = transform.getRotation();
-		
-		// if axis is not in correct format
-		
-		if ( !( axis instanceof Ammo.btVector3 ) ) {
-			
-			axis = utilBTVec3Rot.setValue( axis.x, axis.y, axis.z );
-			
-		}
-		
-		// set rotation value
-		
-		rotation.setRotation( axis, angle );
-		
-		// store rotation
-		// this is needed because rotation is not stored as quaternion
-		
-		transform.setRotation( rotation );
 		
 	}
 	
@@ -732,6 +685,48 @@ var KAIOPUA = (function (main) {
 		return dimensions;
 	}
 	
+	function dimensions_from_collider ( rigidBody ) {
+		var collider = rigidBody.collider,
+			colliderMin,
+			colliderMax,
+			dimensions = new THREE.Vector3();
+		
+		// get collider type by collider properties
+		
+		if ( typeof collider.min !== 'undefined' ) {
+			
+			colliderMin = collider.min;
+			colliderMax = collider.max;
+			
+		}
+		else if ( typeof collider.box !== 'undefined' ) {
+			
+			colliderMin = collider.box.min;
+			colliderMax = collider.box.max;
+			
+		}
+		else if ( typeof collider.radiusSq !== 'undefined' ) {
+			
+			colliderMin = new THREE.Vector3();
+			colliderMax = new THREE.Vector3().addScalar( collider.radiusSq );
+			
+		}
+		// collider type not supported
+		else {
+			return dimensions;
+		}
+		
+		dimensions.sub( colliderMax, colliderMin );
+		
+		return dimensions;
+	}
+	
+	function dimensions_from_collider_scaled ( rigidBody, mesh ) {
+		
+		return dimensions_from_collider( rigidBody ).multiplySelf( mesh.scale );
+		
+	}
+	
 	function center_offset_from_bounding_box ( mesh ) {
 		
 		var geometry = mesh.geometry,
@@ -753,6 +748,70 @@ var KAIOPUA = (function (main) {
 		
 		return centerOffset;
 		
+	}
+	
+	function offset_by_length_in_local_direction ( mesh, localDirection, length ) {
+		
+		var offset = new THREE.Vector3( length, length, length ),
+			maxDim,
+			localDirection,
+			uV33 = utilVec31Offset,
+			uQ4 = utilQ4Offset;
+		
+		// set in direction
+		
+		offset.multiplySelf( localDirection );
+		
+		// rotate to match mesh
+		
+		offset = rotate_vector3_to_mesh_rotation( mesh, offset );
+		
+		return offset;
+		
+	}
+	
+	function offset_from_dimensions_in_direction ( mesh, direction, dimensions ) {
+		
+		var offset,
+			maxDim,
+			localDirection,
+			uV33 = utilVec31Offset,
+			uQ4 = utilQ4Offset;
+		
+		// set all dimensions to max dimension
+		
+		//maxDim = Math.max( dimensions.x, dimensions.y, dimensions.z );
+		
+		//dimensions.set( maxDim, maxDim, maxDim );
+		
+		// copy half of dimensions and add 1 to avoid ray casting to self
+		
+		offset = dimensions.clone().multiplyScalar( 0.5 ).addScalar( 1 );
+		
+		// add center offset
+		
+		offset.addSelf( center_offset_from_bounding_box( mesh ) );
+		
+		// get local direction
+		// seems like extra unnecessary work
+		// not sure if there is better way
+		
+		uQ4.copy( mesh.quaternion ).inverse();
+		
+		localDirection = uV33.copy( direction );
+		localDirection.normalize();
+		
+		uQ4.multiplyVector3( localDirection );
+		
+		// set in direction
+		
+		offset.multiplySelf( localDirection );
+		
+		// rotate to match mesh
+		
+		offset = rotate_vector3_to_mesh_rotation( mesh, offset );
+		
+		return offset;
 	}
 	
 	function rotate_vector3_to_mesh_rotation ( mesh, vec3, rotatedVec3 ) {
@@ -835,23 +894,17 @@ var KAIOPUA = (function (main) {
 	function integrate ( timeStep ) {
 		
 		var i, l,
-			uv31 = utilVec31Integrate,
-			uv32 = utilVec32Integrate,
-			uq1 = utilQ1Integrate,
-			uq2 = utilQ2Integrate,
-			uq3 = utilQ3Integrate,
+			uv31 = utilVec31Integrate, uv32 = utilVec32Integrate,
+			uq1 = utilQ1Integrate, uq2 = utilQ2Integrate, uq3 = utilQ3Integrate,
 			ca = shared.cardinalAxes,
 			lerpDelta = 0.1,
 			link,
 			rigidBody,
 			mesh,
-			centerOffset,
-			rbMotionState,
-			rbTransform = utilBTTransformIntegrate,
-			rbPosition,
-			rbRotation,
-			mPosition,
-			mRotation,
+			scale,
+			collider,
+			position,
+			rotation,
 			axes,
 			axisUp,
 			axisUpNew,
@@ -866,11 +919,8 @@ var KAIOPUA = (function (main) {
 			gravDown,
 			upToUpNewAngle,
 			upToUpNewAxis,
-			upToUpNewQ;
-		
-		// step world
-		
-		dynamicsWorld.stepSimulation( timeStep );
+			upToUpNewQ,
+			collisionGravity;
 		
 		// handle rotation and check velocity
 		
@@ -878,65 +928,15 @@ var KAIOPUA = (function (main) {
 			
 			link = links[ i ];
 			
-			rigidBody = link.rigidBody;
-			
 			mesh = link.mesh;
 			
-			centerOffset = link.centerOffset;
+			rigidBody = link.rigidBody;
 			
-			//rigidBody.isStaticObject()
+			// is dynamic
 			
-			// get physics motion state
-			
-			rbMotionState = rigidBody.getMotionState();
-			
-			// get physics transform
-			
-			rbMotionState.getWorldTransform( rbTransform );
-			
-			// get physics position
-			
-			rbPosition = rbTransform.getOrigin();
-			
-			// set mesh position
-			
-			mPosition = mesh.position;
-			
-			mPosition.set( centerOffset.x + rbPosition.x(), centerOffset.y + rbPosition.y(), centerOffset.z + rbPosition.z() );
-
-			// get physics rotation, returns quaternion
-			
-			rbRotation = rbTransform.getRotation();
-			
-			// set mesh rotation
-			
-			if ( mesh.useQuaternion === true ) {
+			if ( rigidBody.dynamic === true ) {
 				
-				mRotation = mesh.quaternion;
-				
-				mRotation.set( rbRotation.x(), rbRotation.y(), rbRotation.z(), rbRotation.w() );
-				
-			}
-			else {
-				
-				mRotation = mesh.matrix;
-				
-				uq1.set( rbRotation.x(), rbRotation.y(), rbRotation.z(), rbRotation.w() );
-				
-				mRotation.setRotationFromQuaternion( uq1 );
-				
-			}
-			
-			/*
-			// is movable
-			
-			if ( rigidBody.movable === true ) {
-				
-				// localize movable basics
-				
-				collider = rigidBody.collider;
-				
-				mesh = rigidBody.mesh;
+				// localize dynamic basics
 				
 				position = mesh.position;
 				
@@ -970,11 +970,11 @@ var KAIOPUA = (function (main) {
 				
 				// movement velocity
 				
-				handle_velocity( rigidBody, velocityMovement );
+				handle_velocity( link, velocityMovement );
 				
 				// ray cast in the direction of gravity
 				
-				//collisionGravity = raycast_in_direction( rigidBody, gravDown, undefined, true );
+				//collisionGravity = raycast_in_direction( link, gravDown, undefined, true );
 				
 				// handle collision to find new up orientation
 				
@@ -1069,10 +1069,10 @@ var KAIOPUA = (function (main) {
 				
 				// check gravity velocity
 				
-				handle_velocity( rigidBody, velocityGravity );
+				handle_velocity( link, velocityGravity );
 				
 			}
-			*/
+			
 		}
 		
 	}
@@ -1083,9 +1083,10 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	function handle_velocity ( rigidBody, velocity, offset ) {
+	function handle_velocity ( link, velocity, offset ) {
 		
-		var mesh = rigidBody.mesh,
+		var rigidBody = link.rigidBody,
+			mesh = link.mesh,
 			position = mesh.position,
 			scale = mesh.scale,
 			scaleExp = scaleSpeedExp,
@@ -1101,7 +1102,7 @@ var KAIOPUA = (function (main) {
 			collision,
 			collisionDist;
 		
-		if ( rigidBody.movable !== true || velocityForce.isZero() === true ) {
+		if ( rigidBody.dynamic !== true || velocityForce.isZero() === true ) {
 			
 			velocity.moving = false;
 			
@@ -1132,7 +1133,7 @@ var KAIOPUA = (function (main) {
 		
 		// get bounding box offset
 		
-		boundingOffset = offset_from_dimensions_in_direction( mesh, velocityForceRotated, dimensions_from_collider_scaled( rigidBody ) );//dimensions_from_bounding_box_scaled( mesh ) );
+		boundingOffset = offset_from_dimensions_in_direction( mesh, velocityForceRotated, dimensions_from_collider_scaled( rigidBody, mesh ) );//dimensions_from_bounding_box_scaled( mesh ) );
 		
 		boundingOffsetLength = boundingOffset.length();
 		
@@ -1156,7 +1157,7 @@ var KAIOPUA = (function (main) {
 		
 		// get collision
 		//for ( var i = 0; i < 2; i++ ) {
-			collision = raycast_in_direction( rigidBody, velocityForceRotated, castDistance, velocityOffset );
+			collision = raycast_in_direction( link, velocityForceRotated, castDistance, velocityOffset );
 		//}
 		// modify velocity based on collision distances to avoid passing through or into objects
 		
@@ -1193,6 +1194,144 @@ var KAIOPUA = (function (main) {
 		// return velocity
 		
 		return collision;
+	}
+	
+	/*===================================================
+    
+    raycast functions
+    
+    =====================================================*/
+	
+	function raycast_in_direction ( link, direction, castDistance, offset, showLine ) {
+		
+		var i, l,
+			rigidBody = link.rigidBody,
+			mesh = link.mesh,
+			position = mesh.position,
+			ray = utilRay1Casting,
+			rayPosition,
+			rayDirection,
+			collisions = [],
+			collisionPotential,
+			collisionMeshRecast,
+			collisionDistance = Number.MAX_VALUE,
+			collision,
+			intersects,
+			intersect;
+		
+		// if velocity is empty or rigidBody is not dynamic
+		// no need to raycast
+		
+		if ( rigidBody.dynamic !== true || direction.isZero() === true ) {
+			
+			return;
+			
+		}
+		
+		// copy direction and normalize
+		
+		rayDirection = direction.clone();
+		rayDirection.normalize();
+		
+		// set ray position
+		
+		rayPosition = position.clone();
+		
+		if ( typeof offset !== 'undefined' ) {
+			
+			rayPosition.addSelf( offset );
+			
+		}
+		
+		// set ray
+		
+		ray.origin = rayPosition;
+		ray.direction = rayDirection;
+		
+		/*
+		
+		// ray cast all
+		
+		collisions = system.rayCastAll( ray );
+		console.log(collisions.length);
+		// find nearest collision
+		if ( typeof collisions !== 'undefined' ) {
+			
+			for ( i = 0, l = collisions.length; i < l; i ++ ) {
+				
+				collisionPotential = collisions[ i ];
+				
+				// if is collider for this object, skip
+				
+				if ( collisionPotential.mesh === mesh ) {
+					
+					continue;
+				}
+				
+				// cast ray again if collider is mesh
+				// initial ray cast was to mesh collider's dynamic box
+				
+				if ( collisionPotential instanceof THREE.MeshCollider ) {
+					
+					collisionMeshRecast = system.rayMesh( ray, collisionPotential );
+					
+					if ( collisionMeshRecast.dist < Number.MAX_VALUE ) {
+						collisionPotential.distance = collisionMeshRecast.dist;
+						collisionPotential.faceIndex = collisionMeshRecast.faceIndex;
+					}
+					else {
+						collisionPotential.distance = Number.MAX_VALUE;
+					}
+					
+				}
+				
+				// if distance is less than last ( last starts at number max value )
+				// store as collision
+				console.log(' > dist', collisionPotential.distance, ' vs ', collisionDistance);
+				if ( collisionPotential.distance < collisionDistance ) {
+					
+					collisionDistance = collisionPotential.distance;
+					collision = collisionPotential;
+					
+				}
+				
+			}
+			
+		}
+		*/
+		
+		// ray casting individual objects
+		
+		for ( i = 0, l = system.colliders.length; i < l; i ++ ) {
+			
+			var collider = system.colliders[ i ];
+			var cmesh = collider.mesh;
+			
+			if ( cmesh === mesh ) {
+				continue;
+			}
+			
+			intersects = ray.intersectObject( cmesh );
+			console.log(intersects.length);
+			var j, k;
+			
+			for ( j = 0, k = intersects.length; j < k; j ++ ) {
+				
+				intersect = intersects[ j ];
+				console.log(' > dist', intersect.distance, ' vs ', collisionDistance);
+				if ( intersect.distance < collisionDistance ) {
+					
+					collisionDistance = intersect.distance;
+					collision = intersect;
+					
+				}
+				
+			}
+			
+		}
+		
+		return collision;
+		
 	}
 	
 	return main;

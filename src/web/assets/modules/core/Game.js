@@ -50,8 +50,6 @@ var KAIOPUA = (function (main) {
         assetsBasic = [
             "js/lib/three/Three.js",
             "js/lib/three/ThreeExtras.js",
-			/*"js/lib/three/physics/Collisions.js",
-			"js/lib/three/physics/CollisionUtils.js",*/
             "js/lib/three/postprocessing/ShaderExtras.js",
             "js/lib/three/postprocessing/EffectComposer.js",
             "js/lib/three/postprocessing/RenderPass.js",
@@ -70,7 +68,9 @@ var KAIOPUA = (function (main) {
             "assets/textures/skybox_launcher_negy.jpg"
         ],
         assetsGame = [
-			"js/lib/ammo.js",
+			/*"js/lib/ammo.js",*/
+			"js/lib/three/physics/Collisions.js",
+			"js/lib/three/physics/CollisionUtils.js",
 			"assets/modules/core/Physics.js",
 			"assets/modules/core/World.js",
 			"assets/modules/core/Player.js",
@@ -758,7 +758,7 @@ var KAIOPUA = (function (main) {
 			
 				if ( typeof object.physics !== 'undefined' ) {
 					
-					physics.remove( object.mesh );
+					physics.remove( object.physics );
 					
 				}
 				

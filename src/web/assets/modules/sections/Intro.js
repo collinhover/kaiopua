@@ -135,24 +135,6 @@ var KAIOPUA = (function (main) {
 			return shape;
 		}
 		
-		// plane
-		
-		var plane = model.instantiate({
-			geometry: new THREE.PlaneGeometry( 6000, 6000 ),
-			materials: normalMat
-		});
-		
-		plane.mesh.quaternion.setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), -Math.PI * 0.5 );
-		
-		plane.physics = physics.translate( plane.mesh, {
-			
-			bodyType: 'plane',
-			dynamic: false,
-			
-		} );
-		
-		addOnShow.push( plane );
-		
 		var numRings = 6;
 		var radius = 2000;
 		
@@ -195,7 +177,7 @@ var KAIOPUA = (function (main) {
 			}
 			
 		}
-		
+		/*
 		// movable boxes
 		
 		addOnShow.push( make_shape( 'box', 100, 2500, 100, true ) );
@@ -206,7 +188,7 @@ var KAIOPUA = (function (main) {
 		addOnShow.push( make_shape( 'box', -75, 2600, 75, true ) );
 		addOnShow.push( make_shape( 'box', 75, 2600, -75, true ) );
 		addOnShow.push( make_shape( 'sphere', -75, 2600, -75, true ) );
-		
+		*/
     }
     
     /*===================================================
@@ -245,15 +227,11 @@ var KAIOPUA = (function (main) {
 			
 			// start player
 			
-			physics.body_pos( player.character.model.physics.rigidBody, 0, 2700, 0 );
-			
-			physics.body_rot( player.character.model.physics.rigidBody, 0.7, 0, 0, 0.7 );
-			
 			player.show();
 			
 			player.enable();
 			
-			//player.character.model.mesh.position.set( 0, 2700, 0 );
+			player.character.model.mesh.position.set( 1, 2700, 1 );
 			
 			//player.cameraMode = 'freelook';
 			

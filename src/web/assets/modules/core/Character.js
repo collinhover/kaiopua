@@ -171,7 +171,7 @@ var KAIOPUA = (function (main) {
 		};
 		
 		instance.update = function ( timeDelta ) {
-			console.log('char update returning early');return;
+			
 			var model = instance.model,
 				mesh = model.mesh,
 				physics = model.physics,
@@ -221,9 +221,9 @@ var KAIOPUA = (function (main) {
 				jumpTimeMax = jump.timeMax;
 				jumpTimeAfterNotGroundedMax = jump.timeAfterNotGroundedMax;
 				
-				velocityMovement = physics.velocityMovement;
+				velocityMovement = rigidBody.velocityMovement;
 				velocityMovementForce = velocityMovement.force;
-				velocityGravity = physics.velocityGravity;
+				velocityGravity = rigidBody.velocityGravity;
 				velocityGravityForce = velocityGravity.force;
 				
 				// handle time

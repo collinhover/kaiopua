@@ -62,7 +62,7 @@ var KAIOPUA = (function (main) {
 		
 		return {
 			
-			moveSpeed: 1000,//6,
+			moveSpeed: 6,
 			rotateSpeed: 0.019,
 			jumpSpeedStart: 6,
 			jumpSpeedEnd: 0,
