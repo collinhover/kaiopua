@@ -16,15 +16,17 @@ var KAIOPUA = (function (main) {
 		linkCount = 0,
 		links = [],
 		scaleSpeedExp = Math.log( 1.5 ),
+		utilVec31FaceSrc,
+		utilVec31StandSrc,
+		utilVec32StandSrc,
+		utilQ1StandSrc,
+		utilQ2StandSrc,
+		utilQ3StandSrc,
 		utilVec31Integrate,
-		utilVec32Integrate,
-		utilVec31Offset,
-		utilVec31Raycast,
 		utilVec31Velocity,
-		utilQ1Integrate,
-		utilQ2Integrate,
-		utilQ3Integrate,
+		utilVec31Offset,
 		utilQ4Offset,
+		utilVec31Raycast,
 		utilRay1Casting;
 	
 	/*===================================================
@@ -39,6 +41,8 @@ var KAIOPUA = (function (main) {
 	physics.start = start;
 	physics.stop = stop;
 	physics.update = update;
+	
+	physics.rotate_relative_to_source = rotate_relative_to_source;
 	
 	// getters and setters
 	
@@ -95,15 +99,22 @@ var KAIOPUA = (function (main) {
 		
 		// utility / conversion objects
 		
+		utilVec31StandSrc = new THREE.Vector3();
+		
+		utilVec31StandSrc = new THREE.Vector3();
+		utilVec32StandSrc = new THREE.Vector3();
+		utilQ1StandSrc = new THREE.Quaternion();
+		utilQ2StandSrc = new THREE.Quaternion();
+		utilQ3StandSrc = new THREE.Quaternion();
+		
 		utilVec31Integrate = new THREE.Vector3();
-		utilVec32Integrate = new THREE.Vector3();
+		
 		utilVec31Offset = new THREE.Vector3();
-		utilVec31Raycast = new THREE.Vector3();
-		utilVec31Velocity = new THREE.Vector3();
-		utilQ1Integrate = new THREE.Quaternion();
-		utilQ2Integrate = new THREE.Quaternion();
-		utilQ3Integrate = new THREE.Quaternion();
 		utilQ4Offset = new THREE.Quaternion();
+		
+		utilVec31Velocity = new THREE.Vector3();
+		
+		utilVec31Raycast = new THREE.Vector3();
 		utilRay1Casting = new THREE.Ray();
 		
 		// three collision fixes
@@ -554,7 +565,8 @@ var KAIOPUA = (function (main) {
 				rotationGravity: new THREE.Quaternion(),
 				velocityMovement: generate_velocity_tracker( { 
 					damping: parameters.movementDamping,
-					offset: parameters.movementOffset
+					offset: parameters.movementOffset,
+					relativeRotation: mesh
 				} ),
 				velocityGravity: generate_velocity_tracker( { 
 					damping: parameters.gravityDamping,
@@ -659,6 +671,7 @@ var KAIOPUA = (function (main) {
 		velocity.forceRotated = new THREE.Vector3();
 		velocity.damping = new THREE.Vector3().addScalar( parameters.damping );
 		velocity.offset = parameters.offset && parameters.offset instanceof THREE.Vector3 ? parameters.offset : new THREE.Vector3();
+		velocity.relativeRotation = parameters.relativeRotation;
 		velocity.moving = false;
 		
 		return velocity;
@@ -816,6 +829,25 @@ var KAIOPUA = (function (main) {
 	
 	function rotate_vector3_to_mesh_rotation ( mesh, vec3, rotatedVec3 ) {
 		
+		var rotation;
+		
+		if ( mesh.useQuaternion === true ) {
+			
+			rotation = mesh.quaternion;
+			
+		}
+		else {
+			
+			rotation = mesh.matrix;
+			
+		}
+		
+		return rotate_vector3_relative_to( rotation, vec3, rotatedVec3 );
+		
+	}
+	
+	function rotate_vector3_relative_to ( rotation, vec3, rotatedVec3 ) {
+		
 		if ( rotatedVec3 instanceof THREE.Vector3 ) {
 			rotatedVec3.copy( vec3 );
 		}
@@ -823,18 +855,155 @@ var KAIOPUA = (function (main) {
 			rotatedVec3 = vec3.clone();
 		}
 		
-		if ( mesh.useQuaternion === true ) {
+		if ( rotation instanceof THREE.Quaternion || rotation instanceof THREE.Matrix4 ) {
 			
-			mesh.quaternion.multiplyVector3( rotatedVec3 );
+			rotation.multiplyVector3( rotatedVec3 );
 			
 		}
-		else {
+		else if ( rotation instanceof THREE.Vector3 ) {
 			
-			mesh.matrix.multiplyVector3( rotatedVec3 );
+			rotatedVec3.x = rotation.x * vec3.x + rotation.x * vec3.y + rotation.x * vec3.z;
+			rotatedVec3.y = rotation.y * vec3.x + rotation.y * vec3.y + rotation.y * vec3.z;
+			rotatedVec3.z = rotation.z * vec3.x + rotation.z * vec3.y + rotation.z * vec3.z;
+			
+		}
+		else if ( rotation instanceof THREE.Object3D ) {
+			
+			rotatedVec3 = rotate_vector3_to_mesh_rotation( rotation, vec3, rotatedVec3 );
 			
 		}
 		
 		return rotatedVec3;
+		
+	}
+	
+	function rotate_relative_to_source ( mesh, source, axisAway, axisForward, lerpDelta, rigidBody ) {
+		
+		var uv31 = utilVec31StandSrc,
+			uv32 = utilVec32StandSrc,
+			uq1 = utilQ1StandSrc,
+			uq2 = utilQ2StandSrc,
+			uq3 = utilQ3StandSrc,
+			position,
+			rotation,
+			ca = shared.cardinalAxes,
+			axes,
+			axisAwayNew,
+			axisAwayToAwayNewDist,
+			gravUp,
+			gravDown,
+			angleToNew,
+			axisToNew,
+			qToNew;
+			
+		// localize basics
+		
+		position = mesh.position;
+		
+		rotation = ( mesh.useQuaternion === true ? mesh.quaternion : mesh.matrix );
+		
+		// if object passed as source, get source position
+		if ( source instanceof THREE.Object3D ) {
+			
+			source = source.position;
+		
+		}
+		// default is gravity source
+		else if ( typeof source === 'undefined' ) {
+		
+			source = gravitySource;
+			
+		}
+		
+		axisAway = axisAway || ca.up;
+		
+		axisForward = axisForward || ca.forward;
+		
+		lerpDelta = lerpDelta || 1;
+		
+		// get normalized vector pointing from source to mesh
+		
+		axisAwayNew = uv31.sub( position, source ).normalize();
+		
+		// get new rotation based on vector
+		
+		// find dist between current axis away and new axis away
+		
+		axisAwayToAwayNewDist = Math.max( -1, Math.min( 1, axisAway.dot( axisAwayNew ) ) );
+		
+		// if up axes are not same
+		
+		if ( axisAwayToAwayNewDist !== 1 ) {
+			
+			// axis / angle
+			
+			angleToNew = Math.acos( axisAwayToAwayNewDist );
+			axisToNew = uv32.cross( axisAway, axisAwayNew );
+			axisToNew.normalize();
+			
+			// if new axis is exactly opposite of current
+			// replace new axis with the forward axis
+			
+			if ( axisToNew.length() === 0 ) {
+				
+				axisToNew = axisForward;
+				
+			}
+			
+			// rotation change
+			
+			qToNew = uq3.setFromAxisAngle( axisToNew, angleToNew );
+			
+			// add to rotation
+			
+			if ( mesh.useQuaternion === true ) {
+				
+				// quaternion rotations
+				
+				uq1.multiply( qToNew, rotation );
+				
+				// normalized lerp to new rotation
+				
+				THREE.Quaternion.nlerp( rotation, uq1, rotation, lerpDelta );
+			
+			}
+			else {
+				
+				// matrix rotations
+				
+				uq1.setFromRotationMatrix( rotation );
+				
+				uq2.multiply( qToNew, uq1 );
+				
+				rotation.setRotationFromQuaternion( uq2 );
+				
+			}
+			
+			// if physics rigid body passed
+			
+			if ( typeof rigidBody !== 'undefined' ) {
+				
+				// add to rotation gravity
+				
+				rotationGravity = rigidBody.rotationGravity;
+				
+				uq1.multiply( qToNew, rotationGravity );
+				
+				THREE.Quaternion.nlerp( rotationGravity, uq1, rotationGravity, lerpDelta );
+				
+				// find new axes based on new rotation
+				
+				axes = rigidBody.axes;
+				
+				rotation.multiplyVector3( axes.up.copy( ca.up ) );
+				
+				rotation.multiplyVector3( axes.forward.copy( ca.forward ) );
+				
+				rotation.multiplyVector3( axes.right.copy( ca.right ) );
+				
+			}
+			
+		}
 		
 	}
 	
@@ -894,33 +1063,16 @@ var KAIOPUA = (function (main) {
 	function integrate ( timeStep ) {
 		
 		var i, l,
-			uv31 = utilVec31Integrate, uv32 = utilVec32Integrate,
-			uq1 = utilQ1Integrate, uq2 = utilQ2Integrate, uq3 = utilQ3Integrate,
-			ca = shared.cardinalAxes,
+			uv31 = utilVec31Integrate,
 			lerpDelta = 0.1,
 			link,
 			rigidBody,
 			mesh,
-			scale,
-			collider,
-			position,
-			rotation,
-			axes,
-			axisUp,
-			axisUpNew,
-			axisUpToUpNewDist,
-			axisForward,
-			axisRight,
-			velocityGravity,
-			velocityMovement,
 			gravSrc,
 			gravMag,
 			gravUp,
-			gravDown,
-			upToUpNewAngle,
-			upToUpNewAxis,
-			upToUpNewQ,
-			collisionGravity;
+			velocityGravity,
+			velocityMovement;
 		
 		// handle rotation and check velocity
 		
@@ -938,136 +1090,33 @@ var KAIOPUA = (function (main) {
 				
 				// localize dynamic basics
 				
-				position = mesh.position;
-				
-				rotation = ( mesh.useQuaternion === true ? mesh.quaternion : mesh.matrix );
-				
-				rotationGravity = rigidBody.rotationGravity;
-				
 				velocityGravity = rigidBody.velocityGravity;
 				
 				velocityMovement = rigidBody.velocityMovement;
 				
-				axes = rigidBody.axes;
+				gravSrc = rigidBody.gravSrc || gravitySource;
 				
-				axisUp = axes.up;
+				gravMag = rigidBody.gravMag || gravityMagnitude;
 				
-				axisForward = axes.forward;
+				// rotate to stand on source
 				
-				axisRight = axes.right;
-				
-				gravSrc = rigidBody.gravitySource || gravitySource;
-				
-				gravMag = rigidBody.gravityMagnitude || gravityMagnitude;
-				
-				// get normalized up vector between character and gravity source
-				
-				gravUp = uv31.sub( position, gravSrc ).normalize();
-				
-				// negate gravity up
-				
-				gravDown = gravUp.clone().negate();//axisUp.clone().negate();//
+				rotate_relative_to_source( mesh, gravSrc, rigidBody.axes.up, rigidBody.axes.forward, lerpDelta, rigidBody );
 				
 				// movement velocity
 				
 				handle_velocity( link, velocityMovement );
 				
-				// ray cast in the direction of gravity
+				// find up direction
 				
-				//collisionGravity = raycast_in_direction( link, gravDown, undefined, true );
-				
-				// handle collision to find new up orientation
-				
-				if( collisionGravity ) {
-					
-					// get normal of colliding face as new up axis
-					// this causes severe jitter 
-					// when crossing faces that are not close in angle
-					// tried many things to fix...
-					
-					axisUpNew = gravUp;//collisionGravity.normal;
-					
-				} else {
-					
-					// TODO
-					// assume object has fallen through world
-					// reset to ground plane
-					
-					axisUpNew = gravUp;
-					
-				}
-				
-				// get new rotation based on gravity
-				
-				// find dist between axis up and new axis up
-				
-				axisUpToUpNewDist = Math.max( -1, Math.min( 1, axisUp.dot( axisUpNew ) ) );
-				
-				// if up axes are not same
-				
-				if ( axisUpToUpNewDist !== 1 ) {
-					
-					// axis / angle
-					
-					upToUpNewAngle = Math.acos( axisUpToUpNewDist );
-					upToUpNewAxis = uv32.cross( axisUp, axisUpNew );
-					upToUpNewAxis.normalize();
-					
-					// if new up axis is exactly opposite of current up
-					// replace upToUpNew axis with the player's current forward axis
-					
-					if ( upToUpNewAxis.length() === 0 ) {
-						upToUpNewAxis = axisForward;
-					}
-					
-					// rotation change
-					
-					upToUpNewQ = uq3.setFromAxisAngle( upToUpNewAxis, upToUpNewAngle );
-					
-					// add to rotation
-					
-					uq1.multiply( upToUpNewQ, rotationGravity );
-					
-					THREE.Quaternion.nlerp( rotationGravity, uq1, rotationGravity, lerpDelta );
-					
-					if ( mesh.useQuaternion === true ) {
-						
-						// quaternion rotations
-						
-						uq1.multiply( upToUpNewQ, rotation );
-						
-						// normalized lerp to new rotation
-						
-						THREE.Quaternion.nlerp( rotation, uq1, rotation, lerpDelta );
-					
-					}
-					else {
-						
-						// matrix rotations
-						
-						uq1.setFromRotationMatrix( rotation );
-						
-						uq2.multiply( upToUpNewQ, uq1 );
-						
-						rotation.setRotationFromQuaternion( uq2 );
-						
-					}
-					
-					// find new axes based on new rotation
-					
-					rotation.multiplyVector3( axisUp.copy( ca.up ) );
-					
-					rotation.multiplyVector3( axisForward.copy( ca.forward ) );
-					
-					rotation.multiplyVector3( axisRight.copy( ca.right ) );
-					
-				}
+				gravUp = uv31.sub( mesh.position, gravSrc ).normalize();
 				
 				// add non rotated gravity to gravity velocity
 				
 				velocityGravity.force.addSelf( gravMag );
 				
-				// check gravity velocity
+				velocityGravity.relativeRotation = gravUp;
+				
+				// gravity velocity
 				
 				handle_velocity( link, velocityGravity );
 				
@@ -1097,6 +1146,7 @@ var KAIOPUA = (function (main) {
 			velocityForceScalar,
 			velocityOffset = velocity.offset,
 			velocityDamping = velocity.damping,
+			relativeRotation = velocity.relativeRotation,
 			boundingOffset,
 			boundingOffsetLength,
 			collision,
@@ -1115,9 +1165,11 @@ var KAIOPUA = (function (main) {
 			
 		}
 		
-		// rotate velocity to mesh's rotation
+		// if velocity is relative to rotation, else will just copy force into rotated
 		
-		velocityForceRotated = rotate_vector3_to_mesh_rotation( mesh, velocityForce, velocityForceRotated );
+		velocityForceRotated = rotate_vector3_relative_to( relativeRotation, velocityForce, velocityForceRotated );
+		
+		//velocityForceRotated = rotate_vector3_to_mesh_rotation( mesh, velocityForce, velocityForceRotated );
 		
 		// scale velocity
 		
@@ -1156,9 +1208,9 @@ var KAIOPUA = (function (main) {
 		var castDistance = boundingOffsetLength + velocityForceRotatedLength;
 		
 		// get collision
-		//for ( var i = 0; i < 2; i++ ) {
-			collision = raycast_in_direction( link, velocityForceRotated, castDistance, velocityOffset );
-		//}
+		
+		collision = raycast_in_direction( link, velocityForceRotated, castDistance, velocityOffset );
+		
 		// modify velocity based on collision distances to avoid passing through or into objects
 		
 		if ( collision ) {
@@ -1312,13 +1364,13 @@ var KAIOPUA = (function (main) {
 			}
 			
 			intersects = ray.intersectObject( cmesh );
-			console.log(intersects.length);
+			//console.log(intersects.length);
 			var j, k;
 			
 			for ( j = 0, k = intersects.length; j < k; j ++ ) {
 				
 				intersect = intersects[ j ];
-				console.log(' > dist', intersect.distance, ' vs ', collisionDistance);
+				//console.log(' > dist', intersect.distance, ' vs ', collisionDistance);
 				if ( intersect.distance < collisionDistance ) {
 					
 					collisionDistance = intersect.distance;

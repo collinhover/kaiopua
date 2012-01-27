@@ -11,7 +11,8 @@ var KAIOPUA = (function (main) {
 		physics,
 		mathhelper,
         durationBase = 1000,
-		objectCount = 0;
+		objectCount = 0,
+		morphsNumMin = 5;
     
     /*===================================================
     
@@ -248,7 +249,7 @@ var KAIOPUA = (function (main) {
         instance.mesh = mesh;
         instance.morphs = morphs;
 		
-		// targetable, default to true
+		// targetable, default to false
 		
 		if ( parameters.hasOwnProperty( 'targetable' ) ) {
 			
@@ -257,11 +258,11 @@ var KAIOPUA = (function (main) {
 		}
 		else {
 			
-			instance.targetable = true;
+			instance.targetable = false;
 			
 		}
 		
-		// interactive, default to true
+		// interactive, default to false
 		
 		if ( parameters.hasOwnProperty( 'interactive' ) ) {
 			
@@ -270,7 +271,7 @@ var KAIOPUA = (function (main) {
 		}
 		else {
 			
-			instance.interactive = true;
+			instance.interactive = false;
 			
 		}
 		
@@ -303,16 +304,14 @@ var KAIOPUA = (function (main) {
     
     function make_morphs_handler ( mesh ) {
         var i, l,
-            geometry = mesh.geometry,
-            morphTargets = geometry.morphTargets || [],
-            morphColors = geometry.morphColors || [],
+            morphColors,
             morphs = {},
             shapes,
             colors;
         
         // morph types
         
-        morphs.shapes = shapes = parse_morph_list( morphTargets );
+        morphs.shapes = shapes = parse_morph_list( mesh );
         
         morphs.colors = colors = {};// not supported yet // parse_morph_list( morphColors );
         
@@ -409,7 +408,7 @@ var KAIOPUA = (function (main) {
                 
                 uName = uNames[ i ];
                 
-                if ( typeof name === 'undefined' || uName === name ) {
+                if ( typeof name === 'undefined' || name === '*' || uName === name ) {
                 	
                 	uList[ uNames[i] ].stop();
                 	
@@ -422,8 +421,11 @@ var KAIOPUA = (function (main) {
         return morphs;
     }
     
-    function parse_morph_list ( morphs ) {
+    function parse_morph_list ( mesh ) {
+		
         var i, l,
+			geometry = mesh.geometry,
+            morphs = geometry.morphTargets || [],
             data = {},
             list = {},
             names = [],
@@ -434,11 +436,9 @@ var KAIOPUA = (function (main) {
             morphData,
             map;
         
-		// parses all morphs except for last
-		// assumes last is identical to base geometry
-		// as required to make model + morphtargets work
+		// parses all morphs
 		
-        for ( i = 0, l = morphs.length - 1; i < l; i ++ ) {
+        for ( i = 0, l = morphs.length; i < l; i ++ ) {
             
             morph = morphs[i];
             
@@ -488,7 +488,28 @@ var KAIOPUA = (function (main) {
             // sort map by number
                 
             map.sort( sort_morph_map );
+			
         }
+		
+		// if geometry has morphs
+		// check stability
+		
+		if ( morphs.length > 0 ) {
+			
+			// adds stability morph to end of morphs list, identical to base geometry
+			// as required to make model + morphtargets work
+			
+			add_stability_morph( mesh );
+			
+			// ensure minimum number of morphs
+			
+			for ( i = morphs.length, l = morphsNumMin; i < l; i++ ) {
+				
+				add_stability_morph( mesh );
+				
+			}
+			
+		}
         
         // init updates
         
@@ -538,6 +559,35 @@ var KAIOPUA = (function (main) {
         
         return nameParsed;
     }
+	
+	function add_stability_morph ( mesh ) {
+		
+		var i, l,
+			geometry = mesh.geometry,
+			vertices = geometry.vertices,
+			vertex,
+			morphNumber = mesh.morphTargetInfluences.length,
+			morphInfo = { name: 'stability_morph_' + morphNumber, vertices: [] },
+			morphVertices = morphInfo.vertices;
+		
+		for ( i = 0, l = vertices.length; i < l; i++ ) {
+			
+			vertex = vertices[ i ];
+			
+			morphVertices.push( vertex );
+			
+		}
+		
+		// add morph target to list
+		
+		geometry.morphTargets.push( morphInfo );
+		
+		// update morph target info in mesh
+		
+		mesh.morphTargetInfluences.push( 0 );
+		mesh.morphTargetDictionary[ morphInfo.name ] = morphNumber;
+		
+	}
     
     function morph_colors_to_face_colors( geometry ) {
 
@@ -582,7 +632,7 @@ var KAIOPUA = (function (main) {
                 
                 info.morphsMap = morphsMap;
                 
-                info.duration = parameters.duration || durationBase;
+                info.durationOriginal = info.duration = parameters.duration || durationBase;
                 
 				if ( parameters.hasOwnProperty('loop') === true ) {
 					
@@ -594,6 +644,19 @@ var KAIOPUA = (function (main) {
 					info.loop = false;
 					
 				}
+				
+				if ( parameters.hasOwnProperty('reverseOnComplete') === true ) {
+					
+					info.reverseOnComplete = parameters.reverseOnComplete;
+					
+				}
+				else {
+					
+					info.reverseOnComplete = false;
+					
+				}
+				
+				info.durationShift = parameters.durationShift || 0;
                 
                 info.callback = parameters.callback;
                 
@@ -634,6 +697,21 @@ var KAIOPUA = (function (main) {
             info.timeStart = new Date().getTime();
             
             info.numFramesUpdated = 0;
+			
+			info.duration = info.durationOriginal + ( Math.random() * info.durationShift );
+			
+			if ( info.reverseOnComplete === true ) {
+				
+				info.direction = -info.direction;
+				
+				if ( info.direction === -1 ) {
+					info.frame = info.morphsMap.length - 1;
+				}
+				else {
+					info.frame = 0;
+				}
+				
+			}
             
             if ( isLooping !== true ) {
                 

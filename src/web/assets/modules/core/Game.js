@@ -88,6 +88,7 @@ var KAIOPUA = (function (main) {
             { path: "assets/models/World_Head.js", type: 'model' },
 			{ path: "assets/models/World_Tail.js", type: 'model' },
 			{ path: "assets/models/Hero.js", type: 'model' },
+			{ path: "assets/models/Sun_Moon.js", type: 'model' },
 			{ path: "assets/models/Hut.js", type: 'model' },
 			{ path: "assets/models/Hut_Hill.js", type: 'model' },
 			{ path: "assets/models/Hut_Steps.js", type: 'model' },
@@ -343,7 +344,7 @@ var KAIOPUA = (function (main) {
         renderPasses.focusVignette.uniforms[ "screenHeight" ].value = shared.screenHeight;
         renderPasses.focusVignette.uniforms[ "vingenettingOffset" ].value = 0.6;
         renderPasses.focusVignette.uniforms[ "vingenettingDarkening" ].value = 0.5;
-        renderPasses.focusVignette.uniforms[ "sampleDistance" ].value = 0.2;
+        renderPasses.focusVignette.uniforms[ "sampleDistance" ].value = 0.1;
         renderPasses.focusVignette.uniforms[ "waveFactor" ].value = 0.3;
 		
 		// set default scene and camera
@@ -545,21 +546,15 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	function set_render_processing ( parameters ) {
+	function set_render_processing ( passesNames ) {
 		
 		var i, l,
-			requiredPasses = ['bg', 'env', 'screen'],
-			passesNames,
+			requiredPre = ['bg', 'env' ],
+			requiredPost = ['screen'],
 			passName,
 			bgPass = renderPasses.bg,
 			envPass = renderPasses.env,
 			defaultPassIndex;
-		
-		// handle parameters
-		
-		parameters = parameters || {};
-		
-		passesNames = parameters.passesNames;
 		
 		// init composer
 		
@@ -595,40 +590,40 @@ var KAIOPUA = (function (main) {
 			
 		}
 		
-		// if names includes bg, remove
+		// add required
 		
-		defaultPassIndex = passesNames.indexOf( 'bg' );
+		// required pre
 		
-		if ( defaultPassIndex !== -1 ) {
+		for ( i = requiredPre.length - 1; i >= 0; i-- ) {
 			
-			passesNames.splice( defaultPassIndex, 1 );
+			passName = requiredPre[ i ];
 			
-		}
-		
-		// if names includes env, remove
-		
-		defaultPassIndex = passesNames.indexOf( 'env' );
-		
-		if ( defaultPassIndex !== -1 ) {
+			defaultPassIndex = passesNames.indexOf( passName );
 			
-			passesNames.splice( defaultPassIndex, 1 );
+			if ( defaultPassIndex === -1 ) {
+				
+				passesNames.unshift( passName );
+				
+			}
 			
 		}
 		
-		// if names includes screen, remove
+		// required post
 		
-		defaultPassIndex = passesNames.indexOf( 'screen' );
-		
-		if ( defaultPassIndex !== -1 ) {
+		for ( i = requiredPost.length - 1; i >= 0; i-- ) {
 			
-			passesNames.splice( defaultPassIndex, 1 );
+			passName = requiredPost[ i ];
+			
+			defaultPassIndex = passesNames.indexOf( passName );
+			
+			if ( defaultPassIndex === -1 ) {
+				
+				passesNames.push( passName );
+				
+			}
 			
 		}
 		
-		// add required passes to beginning
-		
-		passesNames = requiredPasses.concat(passesNames);
-        
 		// add each pass in passes names
 		
 		for ( i = 0, l = passesNames.length; i < l; i ++ ) {

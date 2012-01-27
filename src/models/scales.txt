@@ -1,17 +1,48 @@
+----------CHARACTERS
+
 character (ON EXPORT)
 4.5
+
+lantern
+0.03
+
+chicken (ON EXPORT)
+0.1
+
+pig (ON EXPORT)
+34
+
+power source (ON EXPORT)
+34
+
+----------HUT
 
 hut hill 
 49.3
 
+----------HILLS
+
+hill basic
+195
+
+hill wave
+314
+
+hill curl
+326
+
+----------SKY
+
 sun 
-210.8
+354
+
+clouds
+64
+
+----------PLANTS
 
 kukui 
 38.7
-
-fence 
-50
 
 taro 
 33.3
@@ -22,8 +53,31 @@ palm
 banana leaf
 55.1
 
-lantern
-0.03
-
 grass
 55.1
+
+
+----------VOLCANO
+
+volcano
+984
+
+lava lake
+594
+
+crater tall
+100
+
+crater small
+40
+
+rock plates
+80
+
+rock
+9
+
+----------WALLS
+
+fence 
+50

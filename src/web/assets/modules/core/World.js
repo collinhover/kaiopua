@@ -9,6 +9,7 @@ var KAIOPUA = (function (main) {
 		world = {},
         game,
 		model,
+		physics,
 		objectmaker,
 		water,
 		ready = false,
@@ -20,6 +21,7 @@ var KAIOPUA = (function (main) {
 		body,
 		head,
 		tail,
+		sunmoon,
 		waterPlane,
 		parts = [],
 		gravityMagnitude = 9.8;
@@ -62,11 +64,12 @@ var KAIOPUA = (function (main) {
 	main.assets_require( [
 		"assets/modules/core/Game",
 		"assets/modules/core/Model",
+		"assets/modules/core/Physics",
 		"assets/modules/utils/ObjectMaker",
 		"assets/modules/env/Water"
 	], init_internal, true );
 	
-	function init_internal ( g, m, om, w ) {
+	function init_internal ( g, m, p, om, w ) {
 		console.log('internal world');
 		if ( ready !== true ) {
 			
@@ -74,6 +77,7 @@ var KAIOPUA = (function (main) {
 			
 			game = g;
 			model = m;
+			physics = p;
 			objectmaker = om;
 			water = w;
 			
@@ -116,9 +120,7 @@ var KAIOPUA = (function (main) {
 				bodyType: 'trimesh'
 			},
 			materials: new THREE.MeshLambertMaterial( { ambient: 0x333333, color: 0xffdd99, shading: THREE.SmoothShading }  ),
-			shading: THREE.SmoothShading,//THREE.FlatShading, //
-			targetable: false,
-			interactive: false
+			shading: THREE.SmoothShading//THREE.FlatShading
         });
 		
 		tail = model.instantiate({
@@ -127,9 +129,7 @@ var KAIOPUA = (function (main) {
 				bodyType: 'trimesh'
 			},
 			materials: new THREE.MeshLambertMaterial( { ambient: 0x333333, color: 0xffdd99, shading: THREE.SmoothShading }  ),//new THREE.MeshNormalMaterial(),
-			shading: THREE.SmoothShading,//THREE.FlatShading, //
-			targetable: false,
-			interactive: false
+			shading: THREE.SmoothShading//THREE.FlatShading
         });
 		
 		head.mesh.quaternion.setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), -Math.PI * 0.4 );
@@ -139,9 +139,20 @@ var KAIOPUA = (function (main) {
 		
 		waterPlane = water.instantiate();
 		
+		// sun/moon
+		
+		sunmoon = model.instantiate({
+            geometry: main.asset_data("assets/models/Sun_Moon.js"),
+			materials: new THREE.MeshBasicMaterial( { color: 0xffffff, shading: THREE.NoShading, vertexColors: THREE.VertexColors } )
+        });
+		
+		sunmoon.mesh.position.set( 0, 3000, 4000 );
+		
+		physics.rotate_relative_to_source( sunmoon.mesh, head.mesh, shared.cardinalAxes.forward.clone().negate(), shared.cardinalAxes.up );
+		
 		// all parts
 		
-		parts.push( head, tail, waterPlane.container );
+		parts.push( head, tail, sunmoon, waterPlane.container );
 		
 	}
 	
@@ -310,13 +321,13 @@ var KAIOPUA = (function (main) {
 		
 		game.add_to_scene( skybox, game.sceneBG );
 		
-		// start water
-		
-		waterPlane.waves.model.morphs.play( 'waves', { duration: 5000, loop: true } );
-		
-		// start swim
+		// morph animations
 		
 		tail.morphs.play( 'swim', { duration: 5000, loop: true } );
+		
+		sunmoon.morphs.play( 'shine', { duration: 500, loop: true, reverseOnComplete: true, durationShift: 4000 } );
+		
+		waterPlane.waves.model.morphs.play( 'waves', { duration: 5000, loop: true } );
 		
 	}
 	
@@ -326,9 +337,11 @@ var KAIOPUA = (function (main) {
 		
 		game.remove_from_scene( skybox, game.sceneBG );
 		
-		waterPlane.waves.model.morphs.stop('waves');
+		tail.morphs.stop();
 		
-		tail.morphs.stop( 'swim' );
+		sunmoon.morphs.stop();
+		
+		waterPlane.waves.model.morphs.stop();
 		
 	}
 	

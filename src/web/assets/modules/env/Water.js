@@ -242,25 +242,6 @@ var KAIOPUA = (function (main) {
 			
 		}
 		
-		// add morph at end identical to base
-		// required to avoid webgl bugs
-		
-		morphTarget = wavesGeometry.morphTargets[ numWavesMorphs ] = {};
-		morphTarget.name = 'source_' + zeroPad( numWavesMorphs, 4 );
-		morphTarget.vertices = [];
-		
-		morphTargetVertices = morphTarget.vertices;
-		
-		for ( v = 0; v < wavesVertsW * wavesVertsH; v ++ ) {
-				
-			morphTargetVertexIndex = v;
-			
-			morphTargetVertex = wavesGeometry.vertices[ morphTargetVertexIndex ];
-			
-			morphTargetVertices.push( new THREE.Vertex( new THREE.Vector3( morphTargetVertex.position.x, morphTargetVertex.position.y, morphTargetVertex.position.z ) ) );
-			
-		}
-		
         // water mesh
         wavesInfo.model = model.instantiate({
 			geometry: wavesGeometry,
