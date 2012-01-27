@@ -147,6 +147,7 @@ var KAIOPUA = (function (main) {
         });
 		
 		sunmoon.mesh.position.set( 0, 3000, 4000 );
+		sunmoon.mesh.quaternion.setFromAxisAngle( new THREE.Vector3( 0, 0, 1 ), Math.PI );
 		
 		physics.rotate_relative_to_source( sunmoon.mesh, head.mesh, shared.cardinalAxes.forward.clone().negate(), shared.cardinalAxes.up );
 		
@@ -326,6 +327,8 @@ var KAIOPUA = (function (main) {
 		tail.morphs.play( 'swim', { duration: 5000, loop: true } );
 		
 		sunmoon.morphs.play( 'shine', { duration: 500, loop: true, reverseOnComplete: true, durationShift: 4000 } );
+
+		sunmoon.morphs.play( 'bounce', { duration: 3000, loop: true, loopDelay: 4000, loopChance: 0.1 } );
 		
 		waterPlane.waves.model.morphs.play( 'waves', { duration: 5000, loop: true } );
 		

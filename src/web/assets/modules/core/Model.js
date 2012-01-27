@@ -645,6 +645,12 @@ var KAIOPUA = (function (main) {
 					
 				}
 				
+				info.loopDelay = parameters.loopDelay || 0;
+				
+				info.loopChance = parameters.loopChance || 1;
+				
+				info.loopChance = mathhelper.clamp( info.loopChance, 0, 1 );
+				
 				if ( parameters.hasOwnProperty('reverseOnComplete') === true ) {
 					
 					info.reverseOnComplete = parameters.reverseOnComplete;
@@ -657,7 +663,7 @@ var KAIOPUA = (function (main) {
 				}
 				
 				info.durationShift = parameters.durationShift || 0;
-                
+				
                 info.callback = parameters.callback;
                 
                 info.direction = parameters.direction || 1;
@@ -684,15 +690,34 @@ var KAIOPUA = (function (main) {
                     updater.reset();
                 }
             
-                info.updating = true;
-                    
-                shared.signals.update.add( updater.update );
+                updater.resume();
             
             }
             
         };
+		
+		updater.resume = function () {
+			
+			if ( info.updating !== true ) {
+				
+				// stop waiting on loop delay
+				if ( typeof info.loopDelayID !== 'undefined' ) {
+					clearRequestTimeout( info.loopDelayID );
+				}
+				
+				// start updating
+				
+				info.updating = true;
+					
+				shared.signals.update.add( updater.update );
+				
+			}
+			
+		};
         
         updater.reset = function ( isLooping ) {
+			
+			var loopDelay;
 			
             info.timeStart = new Date().getTime();
             
@@ -713,6 +738,8 @@ var KAIOPUA = (function (main) {
 				
 			}
             
+			// if first reset, or not looping
+			
             if ( isLooping !== true ) {
                 
                 info.time = info.timeLast = info.timeStart;
@@ -729,8 +756,51 @@ var KAIOPUA = (function (main) {
 				info.frameLast = info.frameLast || -1;
 				
             }
+			// handle looping
+			else {
+				
+				updater.handleLooping( info.loopDelay );
+				
+			}
             
         };
+		
+		updater.handleLooping = function ( delay ) {
+			
+			// delay
+			
+			delay = delay || 0;
+			
+			if ( Math.random() > info.loopChance ) {
+				
+				delay += info.durationOriginal;
+				
+			}
+			
+			// if should resume after loop delay
+			
+			if ( delay > 0 ) {
+				
+				// stop waiting on loop delay
+				if ( typeof info.loopDelayID !== 'undefined' ) {
+					clearRequestTimeout( info.loopDelayID );
+				}
+				
+				// pause updater
+				
+				updater.stop();
+				
+				info.loopDelayID = requestTimeout( updater.handleLooping, delay );
+				
+			}
+			// else resume
+			else {
+				
+				updater.resume();
+				
+			}
+			
+		};
 		
 		updater.clearMorph = function () {
 			var i, l,
@@ -897,8 +967,16 @@ var KAIOPUA = (function (main) {
         };
         
         updater.stop = function () {
-            
-            updater.info.updating = false;
+			
+			// stop waiting on loop delay
+			
+            if ( typeof info.loopDelayID !== 'undefined' ) {
+				clearRequestTimeout( info.loopDelayID );
+			}
+			
+			// stop updating
+			
+            info.updating = false;
                 
             shared.signals.update.remove( updater.update );
             
