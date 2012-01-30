@@ -204,7 +204,7 @@ var KAIOPUA = (function (main) {
 			physicsParameters: {
 				bodyType: 'trimesh'
 			},
-			materials: new THREE.MeshNormalMaterial(),//shadowTestMat,//
+			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),//new THREE.MeshNormalMaterial(),//shadowTestMat,//
 			shading: THREE.FlatShading
         });
 		
@@ -264,7 +264,7 @@ var KAIOPUA = (function (main) {
 		
 		var palmTree = model.instantiate({
             geometry: main.asset_data("assets/models/Palm_Tree.js"),
-			materials: new THREE.MeshNormalMaterial(),
+			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),//new THREE.MeshNormalMaterial(),
 			shading: THREE.SmoothShading,
 			physicsParameters: {
 				bodyType: 'trimesh'
