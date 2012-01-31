@@ -278,7 +278,7 @@ var KAIOPUA = (function (main) {
 		// taro plants
 		
 		var taroPlant1 = model.instantiate({
-            geometry: main.asset_data("assets/models/Taro_Plant.js"),
+            geometry: main.asset_data("assets/models/Taro_Plant_001.js"),
 			materials: new THREE.MeshNormalMaterial(),
 			shading: THREE.SmoothShading
         });
