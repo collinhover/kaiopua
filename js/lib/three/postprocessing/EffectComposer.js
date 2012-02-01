@@ -4,7 +4,7 @@
 
 THREE.EffectComposer = function( renderer, renderTarget ) {
 
-    this.renderer = renderer;
+	this.renderer = renderer;
 
 	this.renderTarget1 = renderTarget;
 
@@ -119,6 +119,10 @@ THREE.EffectComposer.prototype = {
 
 };
 
+// shared ortho camera
+
+THREE.EffectComposer.camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, -10000, 10000 );
+
 // shared fullscreen quad scene
 
 THREE.EffectComposer.geometry = new THREE.PlaneGeometry( 1, 1 );
@@ -129,9 +133,4 @@ THREE.EffectComposer.quad.scale.set( window.innerWidth, window.innerHeight, 1 );
 
 THREE.EffectComposer.scene = new THREE.Scene();
 THREE.EffectComposer.scene.add( THREE.EffectComposer.quad );
-
-// shared ortho camera
-
-THREE.EffectComposer.camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, -10000, 10000 );
-
 THREE.EffectComposer.scene.add( THREE.EffectComposer.camera );
