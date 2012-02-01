@@ -176,8 +176,8 @@ var KAIOPUA = (function (main) {
 		// mouse buttons
 		
 		kbMap[ 'mouseleft' ] = {
-			keydown: function ( e ) { character_action( 'ability_001_start', { mouseIndex: e ? e.identifier : 0 } ); },
-			keyup: function ( e ) { character_action( 'ability_001_end', { mouseIndex: e ? e.identifier : 0 } ); }
+			keydown: function ( e ) { cameracontrols.rotate( e ); },//character_action( 'ability_001_start', { mouseIndex: e ? e.identifier : 0 } ); },
+			keyup: function ( e ) { cameracontrols.rotate( e, true ); }//character_action( 'ability_001_end', { mouseIndex: e ? e.identifier : 0 } ); }
 		};
 		kbMap[ 'mousemiddle' ] = {
 			keydown: function ( e ) { console.log('key down: mousemiddle'); },

@@ -85,7 +85,7 @@ var KAIOPUA = (function (main) {
 	}
     
     function init_environment () {
-		
+		/*
 		//
 		//
 		//
@@ -177,7 +177,7 @@ var KAIOPUA = (function (main) {
 			}
 			
 		}
-		/*
+		
 		// movable boxes
 		
 		addOnShow.push( make_shape( 'box', 100, 2500, 100, true ) );

@@ -168,10 +168,8 @@ var KAIOPUA = (function (main) {
 			physicsParameters: {
 				bodyType: 'trimesh'
 			},
-			materials: new THREE.MeshNormalMaterial(),//shadowTestMat,//
-			shading: THREE.SmoothShading,//THREE.FlatShading, //
-			targetable: false,
-			interactive: false
+			materials:  new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
+			shading: THREE.SmoothShading,
         });
 		
 		var hhPos = new THREE.Vector3( 0, 1590, 0 );
@@ -187,11 +185,11 @@ var KAIOPUA = (function (main) {
 			physicsParameters: {
 				bodyType: 'trimesh'
 			},
-			materials: new THREE.MeshNormalMaterial(),
+			materials:  new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
         });
 		
-		steps.mesh.position.set( hhPos.x - 10, hhPos.y + 270, hhPos.z + 130 );
+		steps.mesh.position.set( hhPos.x, hhPos.y + 270, hhPos.z + 145 );
 		//steps.mesh.position.set( -10, 270, 130 );
 		
 		parts.push( steps );
@@ -204,8 +202,8 @@ var KAIOPUA = (function (main) {
 			physicsParameters: {
 				bodyType: 'trimesh'
 			},
-			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),//new THREE.MeshNormalMaterial(),//shadowTestMat,//
-			shading: THREE.FlatShading
+			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
+			shading: THREE.SmoothShading
         });
 		
 		hut.mesh.position.set( hhPos.x, hhPos.y + 335, hhPos.z );
@@ -233,7 +231,7 @@ var KAIOPUA = (function (main) {
 		
 		var bananaLeafDoor = model.instantiate({
             geometry: main.asset_data("assets/models/Banana_Leaf_Door.js"),
-			materials: new THREE.MeshNormalMaterial(),
+			materials:  new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
 			doubleSided: true,
 			rotation: new THREE.Vector3( 0, 0, 5 )
@@ -249,14 +247,14 @@ var KAIOPUA = (function (main) {
 		
 		var surfboard = model.instantiate({
             geometry: main.asset_data("assets/models/Surfboard.js"),
-			materials: new THREE.MeshNormalMaterial(),
+			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
 			physicsParameters: {
 				bodyType: 'box'
 			}
         });
 		
-		surfboard.mesh.position.set( 110, 1860, 110 );
+		surfboard.mesh.position.set( 110, 1910, 110 );
 		
 		parts.push( surfboard );
 		
@@ -264,7 +262,7 @@ var KAIOPUA = (function (main) {
 		
 		var palmTree = model.instantiate({
             geometry: main.asset_data("assets/models/Palm_Tree.js"),
-			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),//new THREE.MeshNormalMaterial(),
+			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
 			physicsParameters: {
 				bodyType: 'trimesh'
@@ -279,7 +277,7 @@ var KAIOPUA = (function (main) {
 		
 		var taroPlant1 = model.instantiate({
             geometry: main.asset_data("assets/models/Taro_Plant_001.js"),
-			materials: new THREE.MeshNormalMaterial(),
+			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading
         });
 		
@@ -288,8 +286,8 @@ var KAIOPUA = (function (main) {
 		parts.push( taroPlant1 );
 		
 		var taroPlant2 = model.instantiate({
-            geometry: main.asset_data("assets/models/Taro_Plant.js"),
-			materials: new THREE.MeshNormalMaterial(),
+            geometry: main.asset_data("assets/models/Taro_Plant_001.js"),
+			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
 			rotation: new THREE.Vector3(0, -45, 0)
         });
