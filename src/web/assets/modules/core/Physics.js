@@ -138,7 +138,7 @@ var KAIOPUA = (function (main) {
 		
 		// localize ray to collider
 		
-		THREE.CollisionSystem.prototype.makeRayLocal = function( ray, m ) {
+		THREE.CollisionSystem.prototype.makeRayLocal = function( ray, m, i ) {
 			
 			var scale,
 				mMat,
@@ -167,6 +167,7 @@ var KAIOPUA = (function (main) {
 				
 				mt.multiplyVector3( rt.origin );
 				mt.rotateAxis( rt.direction );
+				
 				rt.direction.normalize();
 				
 			}
@@ -253,7 +254,8 @@ var KAIOPUA = (function (main) {
 		
 		THREE.CollisionSystem.prototype.rayBox = function( ray, ab ) {
 			
-			var rt = this.makeRayLocal( ray, ab.mesh ),
+			var mesh = ab.mesh,
+				rt = this.makeRayLocal( ray, mesh ),
 				abMin = utilVec31RayBox.copy( ab.min ),
 				abMax = utilVec32RayBox.copy( ab.max ),
 				origin = rt.origin,
@@ -263,9 +265,11 @@ var KAIOPUA = (function (main) {
 			//rt.origin.copy( ray.origin );
 			//rt.direction.copy( ray.direction );
 			
-			if ( ab.dynamic && ab.mesh && ab.mesh.scale ) {
+			if ( ab.dynamic && typeof mesh !== 'undefined' ) {
 				
-				scale = ab.mesh.scale;
+				// scale
+				
+				scale = mesh.scale;
 				
 				abMin.multiplySelf( scale );
 				abMax.multiplySelf( scale );
@@ -498,7 +502,7 @@ var KAIOPUA = (function (main) {
 		
 		// create collider
 		
-		if ( bodyType === 'trimesh' ) {
+		if ( bodyType === 'mesh' ) {
 			
 			collider = THREE.CollisionUtils.MeshColliderWBox( mesh );
 			
@@ -1300,12 +1304,10 @@ var KAIOPUA = (function (main) {
 		ray.origin = rayPosition;
 		ray.direction = rayDirection;
 		
-		/*
-		
 		// ray cast all
 		
 		collisions = system.rayCastAll( ray );
-		console.log(collisions.length);
+		//console.log(collisions.length);
 		// find nearest collision
 		if ( typeof collisions !== 'undefined' ) {
 			
@@ -1339,7 +1341,7 @@ var KAIOPUA = (function (main) {
 				
 				// if distance is less than last ( last starts at number max value )
 				// store as collision
-				console.log(' > dist', collisionPotential.distance, ' vs ', collisionDistance);
+				//console.log(' > dist', collisionPotential.distance, ' vs ', collisionDistance);
 				if ( collisionPotential.distance < collisionDistance ) {
 					
 					collisionDistance = collisionPotential.distance;
@@ -1350,8 +1352,8 @@ var KAIOPUA = (function (main) {
 			}
 			
 		}
-		*/
 		
+		/*
 		// ray casting individual objects
 		
 		for ( i = 0, l = system.colliders.length; i < l; i ++ ) {
@@ -1381,6 +1383,7 @@ var KAIOPUA = (function (main) {
 			}
 			
 		}
+		*/
 		
 		return collision;
 		

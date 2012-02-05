@@ -689,19 +689,29 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function add_to_scene ( objects, sceneTarget ) {
+	function add_to_scene ( objects, sceneDefault ) {
 		
-		var i, l, object;
+		var i, l, object, sceneTarget;
+		
+		// for each object
 		
 		if ( objects.hasOwnProperty('length') === false ) {
 			objects = [ objects ];
 		}
 		
-		sceneTarget = sceneTarget || scene;
-		
 		for ( i = 0, l = objects.length; i < l; i ++ ) {
 			
 			object = objects[ i ];
+			
+			sceneTarget = extract_scene( object.sceneTarget || sceneDefault );
+			
+			// if object is add / scene pair
+			
+			if ( typeof object.addTarget !== 'undefined' ) {
+				
+				object = object.addTarget;
+				
+			}
 			
 			// if is character
 			
@@ -712,7 +722,7 @@ var KAIOPUA = (function (main) {
 			}
 			
 			if ( typeof object.mesh !== 'undefined' ) {
-			
+				
 				sceneTarget.add( object.mesh );
 				
 				if ( typeof object.physics !== 'undefined' ) {
@@ -740,7 +750,7 @@ var KAIOPUA = (function (main) {
 			objects = [ objects ];
 		}
 		
-		sceneTarget = sceneTarget || scene;
+		sceneTarget = extract_scene( sceneTarget );
 		
 		for ( i = 0, l = objects.length; i < l; i ++ ) {
 		
@@ -772,6 +782,30 @@ var KAIOPUA = (function (main) {
 			}
 			
         }
+		
+	}
+	
+	function extract_scene ( sceneTarget ) {
+		
+		sceneTarget = sceneTarget || scene;
+		
+		// if scene is character
+		
+		if ( typeof sceneTarget.model !== 'undefined' ) {
+			
+			sceneTarget = sceneTarget.model;
+			
+		}
+		
+		// if scene is model
+		
+		if ( typeof sceneTarget.mesh !== 'undefined' ) {
+			
+			sceneTarget = sceneTarget.mesh;
+			
+		}
+		
+		return sceneTarget;
 		
 	}
 	
@@ -980,12 +1014,6 @@ var KAIOPUA = (function (main) {
 		world = main.asset_data( 'assets/modules/core/World' );
 		player = main.asset_data( 'assets/modules/core/Player' );
 		intro = main.asset_data( 'assets/modules/sections/Intro' );
-		
-		/*
-		physics.init();
-		world.init();
-		player.init();
-		*/
 		
 		// hide static menu
 		

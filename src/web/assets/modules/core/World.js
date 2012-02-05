@@ -23,7 +23,8 @@ var KAIOPUA = (function (main) {
 		tail,
 		sunmoon,
 		waterPlane,
-		parts = [],
+		parts = {},
+		addOnShow = [],
 		gravityMagnitude = 9.8;
 	
 	/*===================================================
@@ -43,14 +44,6 @@ var KAIOPUA = (function (main) {
 	
 	Object.defineProperty(world, 'parts', { 
 		get : function () { return parts; }
-	});
-	
-	Object.defineProperty(world, 'head', { 
-		get : function () { return head; }
-	});
-	
-	Object.defineProperty(world, 'tail', { 
-		get : function () { return tail; }
 	});
 	
 	world = main.asset_register( assetPath, world, true );
@@ -103,10 +96,10 @@ var KAIOPUA = (function (main) {
 		
 		ambientLight = new THREE.AmbientLight( 0x999999 );
 		
-		sunLight = new THREE.PointLight( 0xffffcc, 1.5, 10000 );
-		sunLight.position.set( 0, 6000, 0 );
+		sunLight = new THREE.PointLight( 0xffffff, 1, 10000 );
+		sunLight.position.set( 0, 6000, 1000 );
 		
-		parts.push( ambientLight, sunLight );
+		addOnShow.push( ambientLight, sunLight );
 		
 		// fog
 		
@@ -117,18 +110,18 @@ var KAIOPUA = (function (main) {
         head = model.instantiate({
             geometry: main.asset_data("assets/models/World_Head.js"),
 			physicsParameters: {
-				bodyType: 'trimesh'
+				bodyType: 'mesh'
 			},
-			materials: new THREE.MeshLambertMaterial( { ambient: 0x333333, color: 0xffdd99, shading: THREE.SmoothShading }  ),
+			materials: new THREE.MeshLambertMaterial( { ambient: 0xffffff, color: 0xffdd99, shading: THREE.SmoothShading }  ),
 			shading: THREE.SmoothShading//THREE.FlatShading
         });
 		
 		tail = model.instantiate({
             geometry: main.asset_data("assets/models/World_Tail.js"),
 			physicsParameters: {
-				bodyType: 'trimesh'
+				bodyType: 'mesh'
 			},
-			materials: new THREE.MeshLambertMaterial( { ambient: 0x333333, color: 0xffdd99, shading: THREE.SmoothShading }  ),//new THREE.MeshNormalMaterial(),
+			materials: new THREE.MeshLambertMaterial( { ambient: 0xffffff, color: 0xffdd99, shading: THREE.SmoothShading }  ),//new THREE.MeshNormalMaterial(),
 			shading: THREE.SmoothShading//THREE.FlatShading
         });
 		
@@ -138,6 +131,30 @@ var KAIOPUA = (function (main) {
 		// water
 		
 		waterPlane = water.instantiate();
+		
+		// all parts
+		
+		addOnShow.push( head, tail, waterPlane.container );
+		
+	}
+	
+	function init_environment () {
+		
+		// environment objects
+		
+		init_sky();
+		
+		init_land();
+		
+	}
+	
+	/*===================================================
+    
+    sky
+    
+    =====================================================*/
+	
+	function init_sky () {
 		
 		// sun/moon
 		
@@ -151,66 +168,84 @@ var KAIOPUA = (function (main) {
 		
 		physics.rotate_relative_to_source( sunmoon.mesh, head.mesh, shared.cardinalAxes.forward.clone().negate(), shared.cardinalAxes.up );
 		
-		// all parts
-		
-		parts.push( head, tail, sunmoon, waterPlane.container );
+		addOnShow.push( sunmoon );
 		
 	}
 	
-	function init_environment () {
+	/*===================================================
+    
+    land
+    
+    =====================================================*/
+	
+	function init_land () {
 		
-		// environment objects
+		init_home();
 		
-		// hill for hut
+		init_lava();
 		
-		var hutHill = model.instantiate({
+	}
+	
+	/*===================================================
+    
+    hut
+    
+    =====================================================*/
+	
+	function init_home () {
+		
+		var home = new THREE.Object3D();
+		
+		home.position.set( 500, 1590, 0 );
+		
+		home.useQuaternion = true;
+		
+		physics.rotate_relative_to_source( home, head.mesh, shared.cardinalAxes.up, shared.cardinalAxes.forward );
+		
+		addOnShow.push( home );
+		
+		// hill for home
+		
+		var hill = model.instantiate({
             geometry: main.asset_data("assets/models/Hut_Hill.js"),
 			physicsParameters: {
-				bodyType: 'trimesh'
+				bodyType: 'mesh'
 			},
 			materials:  new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
         });
 		
-		var hhPos = new THREE.Vector3( 0, 1590, 0 );
-		
-		hutHill.mesh.position = hhPos;
-		
-		parts.push( hutHill );
+		addOnShow.push( { addTarget: hill, sceneTarget: home } );
 		
 		// steps
 		
 		var steps = model.instantiate({
             geometry: main.asset_data("assets/models/Hut_Steps.js"),
 			physicsParameters: {
-				bodyType: 'trimesh'
+				bodyType: 'mesh'
 			},
 			materials:  new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
         });
 		
-		steps.mesh.position.set( hhPos.x, hhPos.y + 270, hhPos.z + 145 );
-		//steps.mesh.position.set( -10, 270, 130 );
+		steps.mesh.position.set( -10, 270, 130 );
 		
-		parts.push( steps );
-		//hutHill.mesh.add( steps.mesh );
+		addOnShow.push( { addTarget: steps, sceneTarget: home } );	
 		
 		// hut
 		
 		var hut = model.instantiate({
             geometry: main.asset_data("assets/models/Hut.js"),
 			physicsParameters: {
-				bodyType: 'trimesh'
+				bodyType: 'mesh'
 			},
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading
         });
 		
-		hut.mesh.position.set( hhPos.x, hhPos.y + 335, hhPos.z );
-		//hut.mesh.position.set( 0, 335, 0 );
+		hut.mesh.position.set( 0, 335, 0 );
 		
-		parts.push( hut );
-		//hutHill.mesh.add( hut.mesh );
+		addOnShow.push( { addTarget: hut, sceneTarget: home } );		
 		
 		// bed
 		
@@ -223,9 +258,9 @@ var KAIOPUA = (function (main) {
 			shading: THREE.FlatShading
         });
 		
-		bed.mesh.position.set( 0, 1930, 0 );
+		bed.mesh.position.set( 0, 340, 0 );
 		
-		parts.push( bed );
+		addOnShow.push( { addTarget: bed, sceneTarget: home } );	
 		
 		// banana leaf door
 		
@@ -237,11 +272,9 @@ var KAIOPUA = (function (main) {
 			rotation: new THREE.Vector3( 0, 0, 5 )
         });
 		
-		//bananaLeafDoor.mesh.position.set( -10, 2070, 100 );
 		bananaLeafDoor.mesh.position.set( -10, 145, 100 );
 		
-		//parts.push( bananaLeafDoor );
-		hut.mesh.add( bananaLeafDoor.mesh );
+		addOnShow.push( { addTarget: bananaLeafDoor, sceneTarget: home } );	
 		
 		// surfboard
 		
@@ -254,9 +287,9 @@ var KAIOPUA = (function (main) {
 			}
         });
 		
-		surfboard.mesh.position.set( 110, 1910, 110 );
+		surfboard.mesh.position.set( 110, 320, 110 );
 		
-		parts.push( surfboard );
+		addOnShow.push( { addTarget: surfboard, sceneTarget: home } );	
 		
 		// palm tree
 		
@@ -265,13 +298,13 @@ var KAIOPUA = (function (main) {
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
 			physicsParameters: {
-				bodyType: 'trimesh'
+				bodyType: 'mesh'
 			}
         });
 		
-		palmTree.mesh.position.set( 180, 1850, 25 );
+		palmTree.mesh.position.set( 180, 260, 25 );
 		
-		parts.push( palmTree );
+		addOnShow.push( { addTarget: palmTree, sceneTarget: home } );	
 		
 		// taro plants
 		
@@ -281,9 +314,9 @@ var KAIOPUA = (function (main) {
 			shading: THREE.SmoothShading
         });
 		
-		taroPlant1.mesh.position.set( -170, 1850, 130 );
+		taroPlant1.mesh.position.set( -170, 260, 130 );
 		
-		parts.push( taroPlant1 );
+		addOnShow.push( { addTarget: taroPlant1, sceneTarget: home } );
 		
 		var taroPlant2 = model.instantiate({
             geometry: main.asset_data("assets/models/Taro_Plant_001.js"),
@@ -292,15 +325,51 @@ var KAIOPUA = (function (main) {
 			rotation: new THREE.Vector3(0, -45, 0)
         });
 		
-		taroPlant2.mesh.position.set( -190, 1835, 105 );
+		taroPlant2.mesh.position.set( -190, 245, 105 );
 		
-		parts.push( taroPlant2 );
+		addOnShow.push( { addTarget: taroPlant2, sceneTarget: home } );
 		
 	}
 	
 	/*===================================================
     
-    custom functions
+    lava
+    
+    =====================================================*/
+	
+	function init_lava () {
+		
+		// volcano
+		
+		var volcano = model.instantiate({
+            geometry: main.asset_data("assets/models/Volcano.js"),
+			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
+			shading: THREE.SmoothShading,
+			physicsParameters: {
+				bodyType: 'mesh'
+			}
+        });
+		
+		volcano.mesh.position.set( -810, 1182, 12 );
+		
+		var volcanoPos = volcano.mesh.position;
+		
+		physics.rotate_relative_to_source( volcano.mesh, head.mesh, shared.cardinalAxes.up, shared.cardinalAxes.forward );
+		
+		addOnShow.push( volcano );
+		
+		// volcano light, add directly to volcano
+		
+		var volcanoLight = new THREE.PointLight( 0xffd639, 1, 300 );
+		volcanoLight.position.set( 0, 735, 0 );
+		
+		addOnShow.push( { addTarget: volcanoLight, sceneTarget: volcano } );
+		
+	}
+	
+	/*===================================================
+    
+    interactive functions
     
     =====================================================*/
 	
@@ -314,7 +383,7 @@ var KAIOPUA = (function (main) {
 		
 		// add parts
 		
-		game.add_to_scene( parts, scene );
+		game.add_to_scene( addOnShow, scene );
 		
 		// add skybox
 		
@@ -334,7 +403,7 @@ var KAIOPUA = (function (main) {
 	
 	function hide () {
 		
-		game.remove_from_scene( parts, scene );
+		game.remove_from_scene( addOnShow, scene );
 		
 		game.remove_from_scene( skybox, game.sceneBG );
 		
