@@ -105,6 +105,7 @@ var KAIOPUA = (function (main) {
 			{ path: "assets/models/Kukui_Tree.js", type: 'model' },
 			{ path: "assets/models/Taro_Plant_001.js", type: 'model' },
 			{ path: "assets/models/Volcano.js", type: 'model' },
+			{ path: "assets/models/Lava_Lake.js", type: 'model' },
 			"assets/textures/skybox_world_posx.jpg",
             "assets/textures/skybox_world_negx.jpg",
 			"assets/textures/skybox_world_posy.jpg",
@@ -689,19 +690,34 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function add_to_scene ( objects, sceneTarget ) {
+	function add_to_scene ( objects, sceneDefault ) {
 		
-		var i, l, object;
+		var i, l,
+			object,
+			sceneTarget,
+			callback;
+		
+		// for each object
 		
 		if ( objects.hasOwnProperty('length') === false ) {
 			objects = [ objects ];
 		}
 		
-		sceneTarget = sceneTarget || scene;
-		
 		for ( i = 0, l = objects.length; i < l; i ++ ) {
 			
 			object = objects[ i ];
+			
+			sceneTarget = extract_scene( object.sceneTarget || sceneDefault );
+			
+			callback = object.callbackAdd;
+			
+			// if object is add / scene pair
+			
+			if ( typeof object.addTarget !== 'undefined' ) {
+				
+				object = object.addTarget;
+				
+			}
 			
 			// if is character
 			
@@ -711,8 +727,10 @@ var KAIOPUA = (function (main) {
 				
 			}
 			
-			if ( typeof object.mesh !== 'undefined' ) {
+			// add
 			
+			if ( typeof object.mesh !== 'undefined' ) {
+				
 				sceneTarget.add( object.mesh );
 				
 				if ( typeof object.physics !== 'undefined' ) {
@@ -728,23 +746,44 @@ var KAIOPUA = (function (main) {
 				
 			}
 			
+			// if callback passed
+			
+			if ( typeof callback === 'function' ) {
+				
+				callback.call( this );
+				
+			}
+			
         }
 		
 	}
 	
-	function remove_from_scene ( objects, sceneTarget ) {
+	function remove_from_scene ( objects, sceneDefault ) {
 		
-		var i, l, object;
+		var i, l,
+			object,
+			sceneTarget,
+			callback;
 		
 		if ( objects.hasOwnProperty('length') === false ) {
 			objects = [ objects ];
 		}
 		
-		sceneTarget = sceneTarget || scene;
-		
 		for ( i = 0, l = objects.length; i < l; i ++ ) {
 		
 			object = objects[ i ];
+			
+			sceneTarget = extract_scene( object.sceneTarget || sceneDefault );
+			
+			callback = object.callbackRemove;
+			
+			// if object is add / scene pair
+			
+			if ( typeof object.addTarget !== 'undefined' ) {
+				
+				object = object.addTarget;
+				
+			}
 			
 			// if is character
 			
@@ -753,6 +792,8 @@ var KAIOPUA = (function (main) {
 				object = object.model;
 				
 			}
+			
+			// remove
 			
 			if ( typeof object.mesh !== 'undefined' ) {
 			
@@ -771,7 +812,39 @@ var KAIOPUA = (function (main) {
 				
 			}
 			
+			// if callback passed
+			
+			if ( typeof callback === 'function' ) {
+				
+				callback.call( this );
+				
+			}
+			
         }
+		
+	}
+	
+	function extract_scene ( sceneTarget ) {
+		
+		sceneTarget = sceneTarget || scene;
+		
+		// if scene is character
+		
+		if ( typeof sceneTarget.model !== 'undefined' ) {
+			
+			sceneTarget = sceneTarget.model;
+			
+		}
+		
+		// if scene is model
+		
+		if ( typeof sceneTarget.mesh !== 'undefined' ) {
+			
+			sceneTarget = sceneTarget.mesh;
+			
+		}
+		
+		return sceneTarget;
 		
 	}
 	
@@ -980,12 +1053,6 @@ var KAIOPUA = (function (main) {
 		world = main.asset_data( 'assets/modules/core/World' );
 		player = main.asset_data( 'assets/modules/core/Player' );
 		intro = main.asset_data( 'assets/modules/sections/Intro' );
-		
-		/*
-		physics.init();
-		world.init();
-		player.init();
-		*/
 		
 		// hide static menu
 		

@@ -44,8 +44,6 @@ THREE.CollisionSystem = function() {
 	this.colliders = [];
 	this.hits = [];
 
-	// console.log("Collision system init / 004");
-
 };
 
 THREE.Collisions = new THREE.CollisionSystem();
@@ -325,7 +323,6 @@ THREE.CollisionSystem.prototype.makeRayLocal = function( ray, m ) {
 	mt.multiplyVector3( rt.origin );
 	mt.rotateAxis( rt.direction );
 	rt.direction.normalize();
-	//m.localRay = rt;
 
 	return rt;
 

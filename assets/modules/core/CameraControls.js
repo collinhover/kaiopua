@@ -100,7 +100,7 @@ var KAIOPUA = (function (main) {
 		csRot.base.setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), Math.PI );
 		csRot.offsetBase.set( 25, 0, 0 );
 		csRot.offset.copy( csRot.offsetBase );
-		csRot.offsetMin.set( -75, -360, 0 );
+		csRot.offsetMin.set( -15, -360, 0 );
 		csRot.offsetMax.set( 75, 360, 0 );
 		csRot.deltaMin.set( -40, -40, -40 );
 		csRot.deltaMax.set( 40, 40, 40 );
