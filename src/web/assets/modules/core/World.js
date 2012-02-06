@@ -196,13 +196,20 @@ var KAIOPUA = (function (main) {
 		
 		var home = new THREE.Object3D();
 		
-		home.position.set( 500, 1590, 0 );
+		home.position.set( 600, 1600, 0 );
 		
 		home.useQuaternion = true;
 		
-		physics.rotate_relative_to_source( home, head.mesh, shared.cardinalAxes.up, shared.cardinalAxes.forward );
-		
-		addOnShow.push( home );
+		addOnShow.push( { 
+			addTarget: home, 
+			callbackAdd: function () {
+				
+				physics.rotate_relative_to_source( home, head.mesh, shared.cardinalAxes.up, shared.cardinalAxes.forward );
+				
+				physics.pull_to_source( home, head );
+				
+			}
+		} );
 		
 		// hill for home
 		
@@ -272,7 +279,7 @@ var KAIOPUA = (function (main) {
 			rotation: new THREE.Vector3( 0, 0, 5 )
         });
 		
-		bananaLeafDoor.mesh.position.set( -10, 145, 100 );
+		bananaLeafDoor.mesh.position.set( -10, 470, 100 );
 		
 		addOnShow.push( { addTarget: bananaLeafDoor, sceneTarget: home } );	
 		
@@ -350,9 +357,7 @@ var KAIOPUA = (function (main) {
 			}
         });
 		
-		volcano.mesh.position.set( -810, 1182, 12 );
-		
-		var volcanoPos = volcano.mesh.position;
+		volcano.mesh.position.set( -335, 1350, 0 );
 		
 		physics.rotate_relative_to_source( volcano.mesh, head.mesh, shared.cardinalAxes.up, shared.cardinalAxes.forward );
 		
@@ -361,9 +366,34 @@ var KAIOPUA = (function (main) {
 		// volcano light, add directly to volcano
 		
 		var volcanoLight = new THREE.PointLight( 0xffd639, 1, 300 );
-		volcanoLight.position.set( 0, 735, 0 );
+		volcanoLight.position.set( 0, 750, 0 );
 		
 		addOnShow.push( { addTarget: volcanoLight, sceneTarget: volcano } );
+		
+		// lava lake
+		
+		var lavaLake = model.instantiate({
+            geometry: main.asset_data("assets/models/Lava_Lake.js"),
+			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
+			shading: THREE.SmoothShading,
+			physicsParameters: {
+				bodyType: 'mesh'
+			}
+        });
+		
+		lavaLake.mesh.position.set( 250, 1600, -625 );
+		
+		addOnShow.push( //lavaLake );
+		{ 
+			addTarget: lavaLake, 
+			callbackAdd: function () {
+				console.log('!!! lake callbackadd');
+				physics.rotate_relative_to_source( lavaLake.mesh, head.mesh, shared.cardinalAxes.up, shared.cardinalAxes.forward );
+				
+				physics.pull_to_source( lavaLake, head );
+				
+			}
+		} );
 		
 	}
 	

@@ -105,6 +105,7 @@ var KAIOPUA = (function (main) {
 			{ path: "assets/models/Kukui_Tree.js", type: 'model' },
 			{ path: "assets/models/Taro_Plant_001.js", type: 'model' },
 			{ path: "assets/models/Volcano.js", type: 'model' },
+			{ path: "assets/models/Lava_Lake.js", type: 'model' },
 			"assets/textures/skybox_world_posx.jpg",
             "assets/textures/skybox_world_negx.jpg",
 			"assets/textures/skybox_world_posy.jpg",
@@ -691,7 +692,10 @@ var KAIOPUA = (function (main) {
 	
 	function add_to_scene ( objects, sceneDefault ) {
 		
-		var i, l, object, sceneTarget;
+		var i, l,
+			object,
+			sceneTarget,
+			callback;
 		
 		// for each object
 		
@@ -704,6 +708,8 @@ var KAIOPUA = (function (main) {
 			object = objects[ i ];
 			
 			sceneTarget = extract_scene( object.sceneTarget || sceneDefault );
+			
+			callback = object.callbackAdd;
 			
 			// if object is add / scene pair
 			
@@ -720,6 +726,8 @@ var KAIOPUA = (function (main) {
 				object = object.model;
 				
 			}
+			
+			// add
 			
 			if ( typeof object.mesh !== 'undefined' ) {
 				
@@ -738,23 +746,44 @@ var KAIOPUA = (function (main) {
 				
 			}
 			
+			// if callback passed
+			
+			if ( typeof callback === 'function' ) {
+				
+				callback.call( this );
+				
+			}
+			
         }
 		
 	}
 	
-	function remove_from_scene ( objects, sceneTarget ) {
+	function remove_from_scene ( objects, sceneDefault ) {
 		
-		var i, l, object;
+		var i, l,
+			object,
+			sceneTarget,
+			callback;
 		
 		if ( objects.hasOwnProperty('length') === false ) {
 			objects = [ objects ];
 		}
 		
-		sceneTarget = extract_scene( sceneTarget );
-		
 		for ( i = 0, l = objects.length; i < l; i ++ ) {
 		
 			object = objects[ i ];
+			
+			sceneTarget = extract_scene( object.sceneTarget || sceneDefault );
+			
+			callback = object.callbackRemove;
+			
+			// if object is add / scene pair
+			
+			if ( typeof object.addTarget !== 'undefined' ) {
+				
+				object = object.addTarget;
+				
+			}
 			
 			// if is character
 			
@@ -763,6 +792,8 @@ var KAIOPUA = (function (main) {
 				object = object.model;
 				
 			}
+			
+			// remove
 			
 			if ( typeof object.mesh !== 'undefined' ) {
 			
@@ -778,6 +809,14 @@ var KAIOPUA = (function (main) {
 			else if ( object instanceof THREE.Object3D ) {
 				
 				sceneTarget.remove( object );
+				
+			}
+			
+			// if callback passed
+			
+			if ( typeof callback === 'function' ) {
+				
+				callback.call( this );
 				
 			}
 			

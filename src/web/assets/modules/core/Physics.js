@@ -10,24 +10,27 @@ var KAIOPUA = (function (main) {
 		mathhelper,
 		ready = false,
 		system,
-		gravitySource,
-		gravityMagnitude,
+		worldGravitySource,
+		worldGravityMagnitude,
 		linkBaseName = 'visual_physical_link_',
 		linkCount = 0,
 		links = [],
 		scaleSpeedExp = Math.log( 1.5 ),
 		utilVec31FaceSrc,
-		utilVec31StandSrc,
-		utilVec32StandSrc,
-		utilQ1StandSrc,
-		utilQ2StandSrc,
-		utilQ3StandSrc,
+		utilVec31RotateToSrc,
+		utilVec32RotateToSrc,
+		utilQ1RotateToSrc,
+		utilQ2RotateToSrc,
+		utilQ3RotateToSrc,
 		utilVec31Integrate,
 		utilVec31Velocity,
 		utilVec31Offset,
 		utilQ4Offset,
 		utilVec31Raycast,
-		utilRay1Casting;
+		utilRay1Casting,
+		utilVec31Pull,
+		utilVec32Pull,
+		utilVec33Pull;
 	
 	/*===================================================
     
@@ -43,17 +46,18 @@ var KAIOPUA = (function (main) {
 	physics.update = update;
 	
 	physics.rotate_relative_to_source = rotate_relative_to_source;
+	physics.pull_to_source = pull_to_source;
 	
 	// getters and setters
 	
-	Object.defineProperty(physics, 'gravitySource', { 
-		get : function () { return gravitySource; },
-		set : set_gravity_source
+	Object.defineProperty(physics, 'worldGravitySource', { 
+		get : function () { return worldGravitySource; },
+		set : set_world_gravity_source
 	});
 	
-	Object.defineProperty(physics, 'gravityMagnitude', { 
-		get : function () { return gravityMagnitude; },
-		set : set_gravity_magnitude
+	Object.defineProperty(physics, 'worldGravityMagnitude', { 
+		get : function () { return worldGravityMagnitude; },
+		set : set_world_gravity_magnitude
 	});
 	
 	Object.defineProperty(physics, 'system', { 
@@ -94,18 +98,18 @@ var KAIOPUA = (function (main) {
 		// system
 		
 		system = THREE.Collisions;
-		set_gravity_source( new THREE.Vector3( 0, 0, 0 ) );
-		set_gravity_magnitude( new THREE.Vector3( 0, -1, 0 ) );
+		set_world_gravity_source( new THREE.Vector3( 0, 0, 0 ) );
+		set_world_gravity_magnitude( new THREE.Vector3( 0, -1, 0 ) );
 		
 		// utility / conversion objects
 		
-		utilVec31StandSrc = new THREE.Vector3();
+		utilVec31RotateToSrc = new THREE.Vector3();
 		
-		utilVec31StandSrc = new THREE.Vector3();
-		utilVec32StandSrc = new THREE.Vector3();
-		utilQ1StandSrc = new THREE.Quaternion();
-		utilQ2StandSrc = new THREE.Quaternion();
-		utilQ3StandSrc = new THREE.Quaternion();
+		utilVec31RotateToSrc = new THREE.Vector3();
+		utilVec32RotateToSrc = new THREE.Vector3();
+		utilQ1RotateToSrc = new THREE.Quaternion();
+		utilQ2RotateToSrc = new THREE.Quaternion();
+		utilQ3RotateToSrc = new THREE.Quaternion();
 		
 		utilVec31Integrate = new THREE.Vector3();
 		
@@ -116,6 +120,10 @@ var KAIOPUA = (function (main) {
 		
 		utilVec31Raycast = new THREE.Vector3();
 		utilRay1Casting = new THREE.Ray();
+		
+		utilVec31Pull = new THREE.Vector3();
+		utilVec32Pull = new THREE.Vector3();
+		utilVec33Pull = new THREE.Vector3();
 		
 		// three collision fixes
 		
@@ -652,13 +660,19 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	function set_gravity_source ( source ) {
-		gravitySource = new THREE.Vector3( source.x, source.y, source.z );
+	function set_world_gravity_source ( source ) {
+		worldGravitySource = new THREE.Vector3( source.x, source.y, source.z );
 	}
 	
-	function set_gravity_magnitude ( magnitude ) {
-		gravityMagnitude = new THREE.Vector3( magnitude.x, magnitude.y, magnitude.z );
+	function set_world_gravity_magnitude ( magnitude ) {
+		worldGravityMagnitude = new THREE.Vector3( magnitude.x, magnitude.y, magnitude.z );
 	}
+	
+	/*===================================================
+    
+    velocity
+    
+    =====================================================*/
 	
 	function generate_velocity_tracker ( parameters ) {
 		var velocity = {};
@@ -680,6 +694,12 @@ var KAIOPUA = (function (main) {
 		
 		return velocity;
 	}
+	
+	/*===================================================
+    
+    dimensions and bounds
+    
+    =====================================================*/
 	
 	function dimensions_from_bounding_box_scaled ( mesh ) {
 		var geometry = mesh.geometry,
@@ -831,6 +851,12 @@ var KAIOPUA = (function (main) {
 		return offset;
 	}
 	
+	/*===================================================
+    
+	rotation
+    
+    =====================================================*/
+	
 	function rotate_vector3_to_mesh_rotation ( mesh, vec3, rotatedVec3 ) {
 		
 		var rotation;
@@ -883,11 +909,11 @@ var KAIOPUA = (function (main) {
 	
 	function rotate_relative_to_source ( mesh, source, axisAway, axisForward, lerpDelta, rigidBody ) {
 		
-		var uv31 = utilVec31StandSrc,
-			uv32 = utilVec32StandSrc,
-			uq1 = utilQ1StandSrc,
-			uq2 = utilQ2StandSrc,
-			uq3 = utilQ3StandSrc,
+		var uv31 = utilVec31RotateToSrc,
+			uv32 = utilVec32RotateToSrc,
+			uq1 = utilQ1RotateToSrc,
+			uq2 = utilQ2RotateToSrc,
+			uq3 = utilQ3RotateToSrc,
 			position,
 			rotation,
 			ca = shared.cardinalAxes,
@@ -906,16 +932,33 @@ var KAIOPUA = (function (main) {
 		
 		rotation = ( mesh.useQuaternion === true ? mesh.quaternion : mesh.matrix );
 		
-		// if object passed as source, get source position
+		// if source is character, cascade
+		/*
+		if ( typeof source.model !== 'undefined' ) {
+			
+			source = source.model;
+			
+		}
+		
+		// if source is model, cascade
+		
+		if ( typeof source.mesh !== 'undefined' ) {
+			
+			source = source.mesh;
+			
+		}
+		*/
+		// if source is 3D object, cascade
 		if ( source instanceof THREE.Object3D ) {
 			
 			source = source.position;
 		
 		}
-		// default is gravity source
-		else if ( typeof source === 'undefined' ) {
 		
-			source = gravitySource;
+		// default is world gravity source
+		if ( typeof source === 'undefined' ) {
+			
+			source = worldGravitySource;
 			
 		}
 		
@@ -1013,130 +1056,106 @@ var KAIOPUA = (function (main) {
 	
 	/*===================================================
     
-    start/stop/update functions
+    pull
     
     =====================================================*/
 	
-	function start () {
+	function pull_to_source ( mesh, source, velocity, offset, rigidBody ) {
 		
-		shared.signals.update.add( update );
+		var position,
+			difference = utilVec31Pull,
+			direction = utilVec32Pull,
+			shift = utilVec33Pull,
+			collision,
+			collisionDistance;
 		
-	}
-	
-	function stop () {
+		// handle parameters
 		
-		shared.signals.update.remove( update );
+		// if mesh is character, cascade
 		
-	}
-	
-	function update ( timeDelta ) {
-		
-		var i, l = 1,
-			refreshInterval = shared.refreshInterval,
-			currentInterval = timeDelta,
-			timeStep;
-		
-		// handle time
-		
-		if ( currentInterval > refreshInterval ) {
+		if ( typeof mesh.model !== 'undefined' ) {
 			
-			l = Math.ceil( currentInterval / refreshInterval );
+			mesh = mesh.model;
 			
 		}
 		
-		// integrate
+		// if mesh is model, cascade
 		
-		//for ( i = 0; i < l; i ++ ) {
+		if ( typeof mesh.mesh !== 'undefined' ) {
 			
-			currentInterval = refreshInterval;
-			
-			timeStep = currentInterval / 1000;
-		
-			integrate( timeStep );
-			
-		//}
-		
-	}
-	
-	/*===================================================
-    
-    integrate functions
-    
-    =====================================================*/
-	
-	function integrate ( timeStep ) {
-		
-		var i, l,
-			uv31 = utilVec31Integrate,
-			lerpDelta = 0.1,
-			link,
-			rigidBody,
-			mesh,
-			gravSrc,
-			gravMag,
-			gravUp,
-			velocityGravity,
-			velocityMovement;
-		
-		// handle rotation and check velocity
-		
-		for ( i = 0, l = links.length; i < l; i ++ ) {
-			
-			link = links[ i ];
-			
-			mesh = link.mesh;
-			
-			rigidBody = link.rigidBody;
-			
-			// is dynamic
-			
-			if ( rigidBody.dynamic === true ) {
-				
-				// localize dynamic basics
-				
-				velocityGravity = rigidBody.velocityGravity;
-				
-				velocityMovement = rigidBody.velocityMovement;
-				
-				gravSrc = rigidBody.gravSrc || gravitySource;
-				
-				gravMag = rigidBody.gravMag || gravityMagnitude;
-				
-				// rotate to stand on source
-				
-				rotate_relative_to_source( mesh, gravSrc, rigidBody.axes.up, rigidBody.axes.forward, lerpDelta, rigidBody );
-				
-				// movement velocity
-				
-				handle_velocity( link, velocityMovement );
-				
-				// find up direction
-				
-				gravUp = uv31.sub( mesh.position, gravSrc ).normalize();
-				
-				// add non rotated gravity to gravity velocity
-				
-				velocityGravity.force.addSelf( gravMag );
-				
-				velocityGravity.relativeRotation = gravUp;
-				
-				// gravity velocity
-				
-				handle_velocity( link, velocityGravity );
-				
-			}
+			mesh = mesh.mesh;
 			
 		}
 		
-	}
-	
-	/*===================================================
-    
-    velocity functions
-    
-    =====================================================*/
-	
-	function handle_velocity ( link, velocity, offset ) {
+		position = mesh.position;
+		
+		// if source is character, cascade
+		
+		if ( typeof source.model !== 'undefined' ) {
+			
+			source = source.model;
+			
+		}
+		
+		// if source is model, cascade
+		
+		if ( typeof source.mesh !== 'undefined' ) {
+			
+			source = source.mesh;
+			
+		}
+		
+		// if source is 3D object, cascade
+		if ( source instanceof THREE.Object3D ) {
+			
+			source = source.position;
+		
+		}
+		
+		// default is world gravity source
+		if ( typeof source === 'undefined' ) {
+			
+			source = worldGravitySource;
+			
+		}
+		
+		// get normalized vector from position to source
+		
+		difference.sub( source, position );
+		
+		direction.copy( difference ).normalize();
+		
+		// cast ray from mesh to source
+		
+		collision = raycast_in_direction( position, direction /*, offset, mesh */ );
+		console.log('!!! pulling to source');
+		console.log('position: ', position.x, position.y, position.z);
+		console.log('direction: ', direction.x, direction.y, direction.z);
+		console.log(collision);
+		// if collision found
+		
+		if ( typeof collision !== 'undefined' ) {
+			
+			// get distance
+			
+			collisionDistance = collision.distance;
+			console.log('>>>> collision found at distance ' + collisionDistance );
+		}
+		else {
+			
+			collisionDistance = difference.length();
+			
+		}
+		
+		// multiply direction by distance
+			
+		shift.copy( direction ).multiplyScalar( collisionDistance );
+		console.log('shift: ', shift.x, shift.y, shift.z);
+		// add shift to position
+		
+		position.addSelf( shift );
+		
+		/*
 		
 		var rigidBody = link.rigidBody,
 			mesh = link.mesh,
@@ -1247,7 +1266,246 @@ var KAIOPUA = (function (main) {
 		
 		velocityForce.multiplySelf( velocityDamping );
 		
-		// return velocity
+		// return collision
+		
+		return collision;
+		*/
+		
+	}
+	
+	/*===================================================
+    
+    start/stop/update functions
+    
+    =====================================================*/
+	
+	function start () {
+		
+		shared.signals.update.add( update );
+		
+	}
+	
+	function stop () {
+		
+		shared.signals.update.remove( update );
+		
+	}
+	
+	function update ( timeDelta ) {
+		
+		var i, l = 1,
+			refreshInterval = shared.refreshInterval,
+			currentInterval = timeDelta,
+			timeStep;
+		
+		// handle time
+		
+		if ( currentInterval > refreshInterval ) {
+			
+			l = Math.ceil( currentInterval / refreshInterval );
+			
+		}
+		
+		// integrate
+		
+		//for ( i = 0; i < l; i ++ ) {
+			
+			currentInterval = refreshInterval;
+			
+			timeStep = currentInterval / 1000;
+		
+			integrate( timeStep );
+			
+		//}
+		
+	}
+	
+	/*===================================================
+    
+    integrate functions
+    
+    =====================================================*/
+	
+	function integrate ( timeStep ) {
+		
+		var i, l,
+			uv31 = utilVec31Integrate,
+			lerpDelta = 0.1,
+			link,
+			rigidBody,
+			mesh,
+			gravSrc,
+			gravMag,
+			gravUp,
+			velocityGravity,
+			velocityMovement;
+		
+		// handle rotation and check velocity
+		
+		for ( i = 0, l = links.length; i < l; i ++ ) {
+			
+			link = links[ i ];
+			
+			mesh = link.mesh;
+			
+			rigidBody = link.rigidBody;
+			
+			// is dynamic
+			
+			if ( rigidBody.dynamic === true ) {
+				
+				// localize dynamic basics
+				
+				velocityGravity = rigidBody.velocityGravity;
+				
+				velocityMovement = rigidBody.velocityMovement;
+				
+				gravSrc = rigidBody.gravSrc || worldGravitySource;
+				
+				gravMag = rigidBody.gravMag || worldGravityMagnitude;
+				
+				// rotate to stand on source
+				
+				rotate_relative_to_source( mesh, gravSrc, rigidBody.axes.up, rigidBody.axes.forward, lerpDelta, rigidBody );
+				
+				// movement velocity
+				
+				handle_velocity( link, velocityMovement );
+				
+				// find up direction
+				
+				gravUp = uv31.sub( mesh.position, gravSrc ).normalize();
+				
+				// add non rotated gravity to gravity velocity
+				
+				velocityGravity.force.addSelf( gravMag );
+				
+				velocityGravity.relativeRotation = gravUp;
+				
+				// gravity velocity
+				
+				handle_velocity( link, velocityGravity );
+				
+			}
+			
+		}
+		
+	}
+	
+	/*===================================================
+    
+    velocity functions
+    
+    =====================================================*/
+	
+	function handle_velocity ( link, velocity, offset ) {
+		
+		var rigidBody = link.rigidBody,
+			mesh = link.mesh,
+			position = mesh.position,
+			scale = mesh.scale,
+			scaleExp = scaleSpeedExp,
+			scaleModded = utilVec31Velocity.copy( scale ),
+			velocityForce = velocity.force,
+			velocityForceRotated = velocity.forceRotated,
+			velocityForceRotatedLength,
+			velocityForceScalar,
+			velocityOffset = velocity.offset,
+			velocityDamping = velocity.damping,
+			relativeRotation = velocity.relativeRotation,
+			boundingOffset,
+			boundingOffsetLength,
+			collision,
+			collisionDist;
+		
+		if ( rigidBody.dynamic !== true || velocityForce.isZero() === true ) {
+			
+			velocity.moving = false;
+			
+			return;
+			
+		} 
+		else {
+			
+			velocity.moving = true;
+			
+		}
+		
+		// if velocity is relative to rotation, else will just copy force into rotated
+		
+		velocityForceRotated = rotate_vector3_relative_to( relativeRotation, velocityForce, velocityForceRotated );
+		
+		// scale velocity
+		
+		scaleModded.x = Math.pow( scaleModded.x, scaleExp );
+		scaleModded.y = Math.pow( scaleModded.y, scaleExp );
+		scaleModded.z = Math.pow( scaleModded.z, scaleExp );
+		
+		velocityForceRotated.multiplySelf( scaleModded );
+		
+		// get rotated length
+		
+		velocityForceRotatedLength = velocityForceRotated.length();
+		
+		// get bounding box offset
+		
+		boundingOffset = offset_from_dimensions_in_direction( mesh, velocityForceRotated, dimensions_from_collider_scaled( rigidBody, mesh ) );//dimensions_from_bounding_box_scaled( mesh ) );
+		
+		boundingOffsetLength = boundingOffset.length();
+		
+		// override offset
+		
+		if ( typeof offset !== 'undefined' ) {
+		
+			velocityOffset = offset;
+			
+		}
+		
+		// rotate offset if needed
+		
+		if ( velocityOffset.length() > 0 ) {
+			
+			velocityOffset = rotate_vector3_to_mesh_rotation( mesh, velocityOffset );
+			
+		}
+		
+		// get collision
+		
+		collision = raycast_in_direction( position, velocityForceRotated, velocityOffset, mesh );
+		
+		// modify velocity based on collision distances to avoid passing through or into objects
+		
+		if ( collision ) {
+			
+			collisionDist = collision.distance;
+			
+			// set the rotated velocity to be no more than collision distance
+			
+			if ( collisionDist - velocityForceRotatedLength <= boundingOffsetLength ) {
+				
+				velocityForceScalar = ( collisionDist - boundingOffsetLength ) / velocityForceRotatedLength;
+				
+				velocityForceRotated.multiplyScalar( velocityForceScalar );
+				
+				// set the base velocity to 0
+				
+				velocityForce.set( 0, 0, 0 );
+				
+				velocity.moving = false;
+				
+			}
+			
+		}
+		
+		// add velocity to position
+		
+		position.addSelf( velocityForceRotated );
+		
+		// damp velocity
+		
+		velocityForce.multiplySelf( velocityDamping );
+		
+		// return collision
 		
 		return collision;
 	}
@@ -1258,57 +1516,35 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	function raycast_in_direction ( link, direction, castDistance, offset, showLine ) {
+	function raycast_in_direction ( origin, direction, offset, mesh ) {
 		
 		var i, l,
-			rigidBody = link.rigidBody,
-			mesh = link.mesh,
-			position = mesh.position,
 			ray = utilRay1Casting,
-			rayPosition,
-			rayDirection,
 			collisions = [],
 			collisionPotential,
 			collisionMeshRecast,
 			collisionDistance = Number.MAX_VALUE,
-			collision,
-			intersects,
-			intersect;
-		
-		// if velocity is empty or rigidBody is not dynamic
-		// no need to raycast
-		
-		if ( rigidBody.dynamic !== true || direction.isZero() === true ) {
-			
-			return;
-			
-		}
-		
-		// copy direction and normalize
-		
-		rayDirection = direction.clone();
-		rayDirection.normalize();
-		
-		// set ray position
-		
-		rayPosition = position.clone();
-		
-		if ( typeof offset !== 'undefined' ) {
-			
-			rayPosition.addSelf( offset );
-			
-		}
+			collision;
 		
 		// set ray
 		
-		ray.origin = rayPosition;
-		ray.direction = rayDirection;
+		ray.origin.copy( origin );
+		ray.direction.copy( direction ).normalize();
+		
+		// add offset if passed
+		
+		if ( typeof offset !== 'undefined' ) {
+			
+			ray.origin.addSelf( offset );
+			
+		}
 		
 		// ray cast all
 		
 		collisions = system.rayCastAll( ray );
-		//console.log(collisions.length);
+		
 		// find nearest collision
+		
 		if ( typeof collisions !== 'undefined' ) {
 			
 			for ( i = 0, l = collisions.length; i < l; i ++ ) {
@@ -1320,6 +1556,7 @@ var KAIOPUA = (function (main) {
 				if ( collisionPotential.mesh === mesh ) {
 					
 					continue;
+					
 				}
 				
 				// cast ray again if collider is mesh
@@ -1341,7 +1578,7 @@ var KAIOPUA = (function (main) {
 				
 				// if distance is less than last ( last starts at number max value )
 				// store as collision
-				//console.log(' > dist', collisionPotential.distance, ' vs ', collisionDistance);
+				
 				if ( collisionPotential.distance < collisionDistance ) {
 					
 					collisionDistance = collisionPotential.distance;
@@ -1365,13 +1602,13 @@ var KAIOPUA = (function (main) {
 				continue;
 			}
 			
-			intersects = ray.intersectObject( cmesh );
+			var intersects = ray.intersectObject( cmesh );
 			//console.log(intersects.length);
 			var j, k;
 			
 			for ( j = 0, k = intersects.length; j < k; j ++ ) {
 				
-				intersect = intersects[ j ];
+				var intersect = intersects[ j ];
 				//console.log(' > dist', intersect.distance, ' vs ', collisionDistance);
 				if ( intersect.distance < collisionDistance ) {
 					
