@@ -109,7 +109,7 @@ var KAIOPUA = (function (main) {
         
         cloudPlaneTexture = new THREE.Texture();
         
-		main.assets_require( cloudPlaneTexturePath, function ( img ) {
+		main.asset_require( cloudPlaneTexturePath, function ( img ) {
 			
 			cloudPlaneTexture.image = img;
 			cloudPlaneTexture.needsUpdate = true;
@@ -267,4 +267,4 @@ var KAIOPUA = (function (main) {
         
     return main; 
     
-}(KAIOPUA || {}));
+} ( KAIOPUA ) );

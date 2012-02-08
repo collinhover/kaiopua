@@ -2,53 +2,52 @@
 AssetLoader.js
 Asset module, handles loading of assets.
 */
-var KAIOPUA = (function ( main ) {
-    
+(function ( main ) {
+	
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/utils/AssetLoader",
-        assetloader = {},
-        threeLoaderJSON,
-        threeLoaderBIN,
-        threeLoaderErrorMessage = 'Attempted to load model before THREE',
-        listIDBase = 'loadList',
-        loadingHeaderBase = 'Loading...',
-        loadingTips = [
-            'Please wait.'
-        ],
-        listNumber = 0,
-        loading = false,
-        listsToLoad = [],
-        loadingMessages = {},
-        locations = {},
-        callbacks = {},
-        loaded = {},
+		assetloader = {},
+		threeLoaderJSON,
+		threeLoaderBIN,
+		threeLoaderErrorMessage = 'Attempted to load model before THREE',
+		listIDBase = 'loadList',
+		loadingHeaderBase = 'Loading...',
+		loadingTips = [
+			'Please wait.'
+		],
+		listNumber = 0,
+		loading = false,
+		listsToLoad = [],
+		loadingMessages = {},
+		locations = {},
+		callbacks = {},
+		loaded = {},
 		allLoading = [],
 		allLoadingListIDs = [],
 		allStarted = [],
 		allLoaded = [],
 		allLoadingOrLoaded = [],
-        listCurrent,
+		listCurrent,
 		loadTypeDefault = 'script',
-        barWidth = 260,
-        barHeight = 12,
-        barFillSpace = 2,
-        barColor = '#FFFFFF',
-        fillColor = '#FFFFFF',
-        bar,
-        fill,
-        header,
-        message,
-        domElement;
-    
-    /*===================================================
-    
-    public properties
-    
-    =====================================================*/
+		barWidth = 260,
+		barHeight = 12,
+		barFillSpace = 2,
+		barColor = '#FFFFFF',
+		fillColor = '#FFFFFF',
+		bar,
+		fill,
+		header,
+		message,
+		domElement;
+	
+	/*===================================================
+	
+	public properties
+	
+	=====================================================*/
 	
 	assetloader.init_ui = init_ui;
-    assetloader.clear_ui_progress = clear_ui_progress;
-    assetloader.load = load_list;
+	assetloader.clear_ui_progress = clear_ui_progress;
+	assetloader.load = load_list;
 	
 	assetloader.add_loaded_locations = add_loaded_locations;
 	assetloader.get_is_loaded = get_is_loaded;
@@ -69,13 +68,17 @@ var KAIOPUA = (function ( main ) {
 		}
 	});
 	
-	assetloader = main.asset_register( assetPath, assetloader );
+	main.asset_register( "assets/modules/utils/AssetLoader", { 
+		data: assetloader,
+		requirements: "assets/modules/utils/UIHelper",
+		callbacksOnReqs: init_ui
+	} );
 	
 	/*===================================================
-    
-    helper functions
-    
-    =====================================================*/
+	
+	helper functions
+	
+	=====================================================*/
 	
 	function add_loaded_locations ( locationsList ) {
 		
@@ -220,96 +223,94 @@ var KAIOPUA = (function ( main ) {
 		
 	}
 	
-    /*===================================================
-    
-    ui functions
-    
-    =====================================================*/
+	/*===================================================
 	
-	main.assets_require( "assets/modules/utils/UIHelper", init_ui, true );
-    
-    function init_ui ( u ) {
+	ui functions
+	
+	=====================================================*/
+	
+	function init_ui ( u ) {
 		
 		uihelper = u;
-        
-        assetloader = uihelper.make_ui_element({
-            elementType: 'section',
-            classes: 'info_panel',
-            cssmap: {
-                'padding' : '20px'
-            }
-        }, assetloader);
-        
-        domElement = assetloader.domElement;
-        
-        // bar
 		
-        bar = uihelper.make_ui_element({
-            classes: 'load_bar',
-            cssmap: {
-                'border-style' : 'solid',
-                'border-color' : barColor,
-                'border-width' : '1px',
-                'border-radius' : '5px'
-            },
-            staticPosition: true,
-            width: barWidth,
-            height: barHeight
-        });
-        
-        // fill
+		assetloader = uihelper.make_ui_element({
+			elementType: 'section',
+			classes: 'info_panel',
+			cssmap: {
+				'padding' : '20px'
+			}
+		}, assetloader);
 		
-        fill = uihelper.make_ui_element({
-            cssmap: {
-                'margin-left' : barFillSpace + 'px',
-                'margin-top' : barFillSpace + 'px',
-                'background' : fillColor,
-                'border-radius' : '5px'
-            },
-            staticPosition: true,
-            width: 0,
-            height: barHeight - barFillSpace * 2
-        });
-        
-        // header
-        header = uihelper.make_ui_element({
-            elementType: 'header',
-            staticPosition: true,
-            width: barWidth,
-            text: loadingHeaderBase
-        });
-        
-        // message
-        message = uihelper.make_ui_element({
-            elementType: 'p',
-            staticPosition: true,
-            width: barWidth,
-            text: loadingTips[0]
-        });
+		domElement = assetloader.domElement;
 		
-        // display
-        
-        $(bar.domElement).append( fill.domElement );
-        
-        $(domElement).append( header.domElement );
-        $(domElement).append( bar.domElement );
-        $(domElement).append( message.domElement );
-        
-        // center
-        
-        assetloader.ui_keep_centered();
+		// bar
+		
+		bar = uihelper.make_ui_element({
+			classes: 'load_bar',
+			cssmap: {
+				'border-style' : 'solid',
+				'border-color' : barColor,
+				'border-width' : '1px',
+				'border-radius' : '5px'
+			},
+			staticPosition: true,
+			width: barWidth,
+			height: barHeight
+		});
+		
+		// fill
+		
+		fill = uihelper.make_ui_element({
+			cssmap: {
+				'margin-left' : barFillSpace + 'px',
+				'margin-top' : barFillSpace + 'px',
+				'background' : fillColor,
+				'border-radius' : '5px'
+			},
+			staticPosition: true,
+			width: 0,
+			height: barHeight - barFillSpace * 2
+		});
+		
+		// header
+		header = uihelper.make_ui_element({
+			elementType: 'header',
+			staticPosition: true,
+			width: barWidth,
+			text: loadingHeaderBase
+		});
+		
+		// message
+		message = uihelper.make_ui_element({
+			elementType: 'p',
+			staticPosition: true,
+			width: barWidth,
+			text: loadingTips[0]
+		});
+		
+		// display
+		
+		$(bar.domElement).append( fill.domElement );
+		
+		$(domElement).append( header.domElement );
+		$(domElement).append( bar.domElement );
+		$(domElement).append( message.domElement );
+		
+		// center
+		
+		assetloader.ui_keep_centered();
 		
 		// hide
 		
 		assetloader.ui_hide( false, 0);
-        
-    }
-    
-    function update_ui_progress ( message ) {
-        var locationsList, 
-            loadedList,
-            total,
-            pct = 1;
+		
+	}
+	
+	function update_ui_progress ( message ) {
+		var locationsList, 
+			loadedList,
+			total,
+			pct = 1;
 		
 		if ( typeof domElement !== 'undefined' ) {
 			
@@ -320,7 +321,7 @@ var KAIOPUA = (function ( main ) {
 				$(message.domElement).html( message );
 				
 			}
-        
+		
 			if ( typeof listCurrent !== 'undefined' ) {
 				
 				locationsList = locations[listCurrent];
@@ -340,23 +341,23 @@ var KAIOPUA = (function ( main ) {
 			
 		}
 		
-    }
-    
-    function clear_ui_progress () {
+	}
+	
+	function clear_ui_progress () {
 		if ( typeof domElement !== 'undefined' ) {
 			
 			$(fill.domElement).width(0);
 			
 		}
-    }
-    
-    /*===================================================
-    
-    loading functions
-    
-    =====================================================*/
-    
-    function load_list ( locationsList, callbackList, listID, loadingMessage ) {
+	}
+	
+	/*===================================================
+	
+	loading functions
+	
+	=====================================================*/
+	
+	function load_list ( locationsList, callbackList, listID, loadingMessage ) {
 		
 		var i, l,
 			location,
@@ -366,13 +367,13 @@ var KAIOPUA = (function ( main ) {
 			allLocationsLoaded = true,
 			assetData;
 		
-        if ( typeof locationsList !== 'undefined' ) {
-            
-            // get if list is not array
-            
-            if ( typeof locationsList === 'string' || locationsList.hasOwnProperty( 'length' ) === false ) {
-                locationsList = [locationsList];
-            }
+		if ( typeof locationsList !== 'undefined' ) {
+			
+			// get if list is not array
+			
+			if ( typeof locationsList === 'string' || locationsList.hasOwnProperty( 'length' ) === false ) {
+				locationsList = [locationsList];
+			}
 			
 			// make a copy of locations list
 			
@@ -471,40 +472,40 @@ var KAIOPUA = (function ( main ) {
 				load_next_list();
 				
 			}
-            
-        }
+			
+		}
 		
-    }
-    
-    function load_next_list () {
-        var i, l,
+	}
+	
+	function load_next_list () {
+		var i, l,
 			locationsList,
 			location,
 			path;
-        
-        // if any lists to load
 		
-        if ( loading === false && listsToLoad.length > 0 ) {
-            
-            loading = true;
-            
-            // get next list 
-            
-            listCurrent = listsToLoad[ 0 ];
+		// if any lists to load
+		
+		if ( loading === false && listsToLoad.length > 0 ) {
+			
+			loading = true;
+			
+			// get next list 
+			
+			listCurrent = listsToLoad[ 0 ];
 			
 			// update ui to reset fill
-            
-            update_ui_progress( loadingMessages[listCurrent] );
-            
-            // get locations, make copy because already loaded items will be removed from list immediately
-            
-            locationsList = locations[listCurrent].slice( 0 );
-            
-            // for each item location
-            
-            for (i = 0, l = locationsList.length; i < l; i += 1) {
-                
-                location = locationsList[ i ];
+			
+			update_ui_progress( loadingMessages[listCurrent] );
+			
+			// get locations, make copy because already loaded items will be removed from list immediately
+			
+			locationsList = locations[listCurrent].slice( 0 );
+			
+			// for each item location
+			
+			for (i = 0, l = locationsList.length; i < l; i += 1) {
+				
+				location = locationsList[ i ];
 				
 				path = main.get_asset_path( location );
 				
@@ -527,51 +528,51 @@ var KAIOPUA = (function ( main ) {
 					load_single( location );
 					
 				}
-            }
+			}
 			
-        }
-        else {
-            
+		}
+		else {
+			
 			// no longer loading
 			
 			listCurrent = undefined;
 			
-            shared.signals.loadAllCompleted.dispatch();
-            
-        }
+			shared.signals.loadAllCompleted.dispatch();
+			
+		}
 		
-    }
-    
-    function load_single ( location ) {
-        var path, 
-            ext, 
-            loadType, 
-            data,
-            defaultCallback = function ( ) {
-                load_single_completed( location, data );
-            },
-            modelCallback = function ( geometry ) {
-                load_single_completed( location, geometry );
-            };
-        
-        if ( typeof location !== 'undefined' ) {
-            
-            // load based on type of location and file extension
-            
-            // LAB handles scripts (js)
-            // THREE handles models (ascii/bin js) and images (jpg/png/gif/bmp)
-            
-            // get type
-            
-            loadType = location.type || loadTypeDefault;
-            
-            // get location path
-            
-            path = main.get_asset_path( location );
-            
-            // get extension
-            
-            ext = main.get_ext( path );
+	}
+	
+	function load_single ( location ) {
+		var path, 
+			ext, 
+			loadType, 
+			data,
+			defaultCallback = function ( ) {
+				load_single_completed( location, data );
+			},
+			modelCallback = function ( geometry ) {
+				load_single_completed( location, geometry );
+			};
+		
+		if ( typeof location !== 'undefined' ) {
+			
+			// load based on type of location and file extension
+			
+			// LAB handles scripts (js)
+			// THREE handles models (ascii/bin js) and images (jpg/png/gif/bmp)
+			
+			// get type
+			
+			loadType = location.type || loadTypeDefault;
+			
+			// get location path
+			
+			path = main.get_asset_path( location );
+			
+			// get extension
+			
+			ext = main.get_ext( path );
 			
 			// ensure path has extension
 			
@@ -580,52 +581,52 @@ var KAIOPUA = (function ( main ) {
 				path = main.add_default_ext( path );
 				
 			}
-            
-            // type and/or extension check
-            
-            if ( loadType === 'image' || main.is_image_ext( ext ) ) {
+			
+			// type and/or extension check
+			
+			if ( loadType === 'image' || main.is_image_ext( ext ) ) {
 				
 				// load
-                
-                data = new Image();
-                data.onload = defaultCallback;
-                data.crossOrigin = '';
-                data.src = path;
+				
+				data = new Image();
+				data.onload = defaultCallback;
+				data.crossOrigin = '';
+				data.src = path;
 				
 				// store empty image data in assets immediately
 				
 				main.asset_register( path, data );
-                
-            }
-            else if ( loadType === 'model' || loadType === 'model_ascii' ) {
-                
-                if ( typeof THREE === 'undefined' ) {
-                    main.utils.error.generate( threeLoaderErrorMessage, 'Loader' );
-                }
-                else {
-                    
-                    // init loader if needed
-                    
-                    if ( typeof threeLoaderJSON === 'undefined' ) {
-                        threeLoaderJSON = new THREE.JSONLoader( true );
-                    }
-                    
-                    threeLoaderJSON.load( path, modelCallback );
-                }
-            }
-            // default to script loading
-            else {
 				
-                $LAB.script( path ).wait( defaultCallback );
+			}
+			else if ( loadType === 'model' || loadType === 'model_ascii' ) {
 				
-            }
+				if ( typeof THREE === 'undefined' ) {
+					main.utils.error.generate( threeLoaderErrorMessage, 'Loader' );
+				}
+				else {
+					
+					// init loader if needed
+					
+					if ( typeof threeLoaderJSON === 'undefined' ) {
+						threeLoaderJSON = new THREE.JSONLoader( true );
+					}
+					
+					threeLoaderJSON.load( path, modelCallback );
+				}
+			}
+			// default to script loading
+			else {
+				
+				$LAB.script( path ).wait( defaultCallback );
+				
+			}
 			
-        }
-        
-    }
-    
-    function load_single_completed ( location, data ) {
-        var i, l,
+		}
+		
+	}
+	
+	function load_single_completed ( location, data ) {
+		var i, l,
 			listID,
 			locationsList,
 			locationInCurrentList = false,
@@ -633,10 +634,10 @@ var KAIOPUA = (function ( main ) {
 			path,
 			loadType,
 			listsCompleted;
-        
-        // get location path and type
-        
-        path = main.get_asset_path( location );
+		
+		// get location path and type
+		
+		path = main.get_asset_path( location );
 		
 		loadType = get_load_type( location );
 		
@@ -649,14 +650,14 @@ var KAIOPUA = (function ( main ) {
 		add_loaded_locations( path );
 		
 		// shared signal
-        
-        if (typeof shared !== 'undefined') {
-            
-            shared.signals.loadItemCompleted.dispatch( path );
-            
-        }
-        
-        // for each list loading
+		
+		if (typeof shared !== 'undefined') {
+			
+			shared.signals.loadItemCompleted.dispatch( path );
+			
+		}
+		
+		// for each list loading
 		
 		for ( i = 0, l = listsToLoad.length; i < l; i++ ) {
 			
@@ -677,7 +678,7 @@ var KAIOPUA = (function ( main ) {
 				if ( listID === listCurrent ) {
 					
 					// update ui
-        
+		
 					update_ui_progress();
 					
 				}
@@ -715,10 +716,10 @@ var KAIOPUA = (function ( main ) {
 			
 		}
 		
-    }
-    
-    function list_completed( listID ) {
-        var i, l, 
+	}
+	
+	function list_completed( listID ) {
+		var i, l, 
 			callbackList, 
 			callback,
 			listIndex;
@@ -733,7 +734,7 @@ var KAIOPUA = (function ( main ) {
 			
 		}
 		
-        // do callbacks before clear
+		// do callbacks before clear
 		
 		callbackList = callbacks[ listID ];
 		
@@ -747,34 +748,32 @@ var KAIOPUA = (function ( main ) {
 				
 			}
 			
-        }
+		}
 		
-        // shared signal
-        
-        if (typeof shared !== 'undefined') {
-            
-            shared.signals.loadListCompleted.dispatch( listID );
-            
-        }
-        
+		// shared signal
+		
+		if (typeof shared !== 'undefined') {
+			
+			shared.signals.loadListCompleted.dispatch( listID );
+			
+		}
+		
 		// clear
 		
-        delete locations[ listID ];
-        
-        delete callbacks[ listID ];
-        
-        delete loadingMessages[ listID ];
-        
-        delete loaded[ listID ];
+		delete locations[ listID ];
+		
+		delete callbacks[ listID ];
+		
+		delete loadingMessages[ listID ];
+		
+		delete loaded[ listID ];
 		
 		loading = false;
-        
-        // start next list
 		
-        load_next_list();
+		// start next list
 		
-    }
+		load_next_list();
+		
+	}
     
-    return main; 
-    
-}(KAIOPUA || {}));
+} ( KAIOPUA ) );

@@ -122,7 +122,7 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	main.assets_require( [
+	main.asset_require( [
 		"assets/modules/utils/MathHelper",
 		"js/lib/ammo.js"
 	], init_internal, true );
@@ -1232,4 +1232,4 @@ var KAIOPUA = (function (main) {
 	
 	return main;
 	
-}(KAIOPUA || {}));
+} ( KAIOPUA ) );

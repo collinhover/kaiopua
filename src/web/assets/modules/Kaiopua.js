@@ -1,12 +1,11 @@
 /*
 Kaiopua.js
-Main module, handles browser events.
+Main module.
 */
 
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
-        assets = main.assets = main.assets || {},
 		assetloader,
 		game,
 		requiredAssets = [],
@@ -25,124 +24,6 @@ var KAIOPUA = (function (main) {
 	
 	/*===================================================
     
-    public properties
-    
-    =====================================================*/
-	
-	main.extend = extend;
-	main.ensure_array = ensure_array;
-	
-	main.get_asset_path = get_asset_path;
-	main.get_ext = get_ext;
-	
-	main.add_default_ext = add_default_ext;
-	main.remove_ext = remove_ext;
-	main.is_image_ext = is_image_ext;
-	
-	main.asset_register = asset_register;
-	main.assets_require = assets_require;
-	main.asset_data = asset_data;
-	main.asset_ready = asset_ready;
-	
-    /*===================================================
-    
-    internal init
-    
-    =====================================================*/
-    
-	// force cache-busting
-	$LAB.setGlobalDefaults({ CacheBust: true });
-	
-    // load scripts
-    $LAB.script( libList ).wait( init_basics );
-    
-    function init_basics () {
-        
-        // shared
-        shared.mice = [];
-        shared.screenWidth = $(window).width();
-        shared.screenHeight = $(window).height();
-        shared.originLink = window.location.pathname.toString();
-        
-        shared.frameRateMax = 60;
-        shared.frameRateMin = 20;
-        shared.time = new Date().getTime();
-        shared.timeLast = shared.time;
-        shared.refreshInterval = 1000 / 60;
-        
-        shared.html = {
-            staticMenu: $('#static_menu'),
-            gameContainer: $('#game'),
-            errorContainer: $('#error_container')
-        };
-        
-        shared.signals = {
-			
-			focuslose: new signals.Signal(),
-			focusgain: new signals.Signal(),
-    
-            mousedown : new signals.Signal(),
-            mouseup : new signals.Signal(),
-            mousemoved : new signals.Signal(),
-            mousewheel : new signals.Signal(),
-    
-            keydown : new signals.Signal(),
-            keyup : new signals.Signal(),
-    
-            windowresized : new signals.Signal(),
-            
-            loadItemCompleted : new signals.Signal(),
-            loadListCompleted : new signals.Signal(),
-            loadAllCompleted : new signals.Signal(),
-			
-			assetReady : new signals.Signal(),
-            
-            error : new signals.Signal()
-            
-        };
-        
-        // add listeners for events
-        // each listener dispatches shared signal
-		$(window).bind( 'blur', on_focus_lose );
-		$(window).bind( 'focus', on_focus_gain );
-		
-        $(document).bind( 'mousedown touchstart', on_mouse_down );
-        $(document).bind( 'mouseup touchend', on_mouse_up );
-        $(document).bind( 'mousemove touchmove', on_mouse_move );
-		$(document).bind( 'mouseleave touchleave', on_mouse_leave );
-        $(document).bind( 'mousewheel', on_mouse_wheel );
-		$(shared.html.gameContainer).bind( 'contextmenu', on_game_context_menu );
-        
-        $(document).bind( 'keydown', on_key_down );
-        $(document).bind( 'keyup', on_key_up );
-    
-        $(window).bind( 'deviceorientation', on_window_device_orientation );
-        $(window).bind( 'MozOrientation', on_window_device_orientation);
-    
-        $(window).bind( 'resize', on_window_resize );
-		
-		// asset loader and setup
-		
-		assetloader = assets.modules.utils.AssetLoader;
-		
-		assetloader.add_loaded_locations( libList );
-		
-		assets_require( setupList, init_setup, true );
-		
-    }
-    
-    function init_setup ( g ) {
-		
-        // assets
-        
-        game = g;
-        
-        // resize once
-        on_window_resize();
-    }
-	
-	/*===================================================
-    
     helper functions
     
     =====================================================*/
@@ -152,7 +33,7 @@ var KAIOPUA = (function (main) {
 	// and correct copying of getters and setters
 	// does not do deep copies
 	
-	function extend ( source, destination ) {
+	main.extend = function ( source, destination ) {
 		
 		var i, l,
 			propertyNames,
@@ -179,7 +60,7 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function ensure_array ( target ) {
+	main.ensure_array = function ( target ) {
 		
 		target = target || [];
 		
@@ -191,16 +72,16 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function get_asset_path ( location ) {
+	main.get_asset_path = function ( location ) {
 		
 		return location.path || location;
 		
 	}
 	
-	function get_ext ( location ) {
+	main.get_ext = function ( location ) {
         var path, dotIndex, ext = '';
 		
-		path = get_asset_path( location );
+		path = main.get_asset_path( location );
         
         dotIndex = path.lastIndexOf('.');
         
@@ -211,9 +92,9 @@ var KAIOPUA = (function (main) {
         return ext;
     }
 	
-	function add_default_ext ( location ) {
+	main.add_default_ext = function ( location ) {
 		
-		var path = remove_ext( location );
+		var path = main.remove_ext( location );
 		
 		path = path.replace(/\./g, "") + ".js";
 		
@@ -221,11 +102,11 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function remove_ext ( location ) {
+	main.remove_ext = function ( location ) {
 		
 		var path, dotIndex;
 		
-        path = get_asset_path( location );
+        path = main.get_asset_path( location );
         
         dotIndex = path.lastIndexOf('.');
         
@@ -237,30 +118,30 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function get_alt_path ( location ) {
+	main.get_alt_path = function ( location ) {
 		
 		var path, ext;
 		
-		path = get_asset_path( location );
-		ext = get_ext( path );
+		path = main.get_asset_path( location );
+		ext = main.get_ext( path );
 		
 		// if has no extension, add default
 		
 		if ( ext === '' ) {
 			
-			return add_default_ext( path );
+			return main.add_default_ext( path );
 			
 		}
 		// if has extension, remove
 		else {
 			
-			return remove_ext( path );
+			return main.remove_ext( path );
 			
 		}
 		
 	}
 	
-	function is_image_ext ( ext ) {
+	main.is_image_ext = function ( ext ) {
 		
 		if ( ext === 'jpg' || ext === 'jpeg' || ext === 'png' || ext === 'gif' || ext === 'bmp' ) {
 			return true;
@@ -315,14 +196,13 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function asset_data( location, data, initializeWhenNotFound, allowInitialization, attempts, originalPath ) {
+	main.get_asset = function ( location, attempts ) {
 		
 		var path,
 			cascade,
 			parent,
 			assetName,
 			asset,
-			ext,
 			i, l;
 		
 		// init parent and asset
@@ -331,11 +211,11 @@ var KAIOPUA = (function (main) {
 		
 		// cascade path
 		
-		path = get_asset_path( location );
+		path = main.get_asset_path( location );
 		
 		cascade = asset_path_cascade( path );
 		
-		// get data
+		// get asset
 		
 		for ( i = 0, l = cascade.length; i < l; i++ ) {
 			
@@ -351,18 +231,7 @@ var KAIOPUA = (function (main) {
 			
 			if ( typeof asset === 'undefined' ) {
 				
-				// if allowed to initialize a cascade point
-				
-				if ( allowInitialization === true ) {
-					
-					parent[ assetName ] = asset = {};
-					
-				}
-				else {
-					
-					break;
-				
-				}
+				break;
 				
 			}
 			
@@ -379,40 +248,9 @@ var KAIOPUA = (function (main) {
 			
 			if ( attempts === 1 ) {
 				
-				return asset_data( get_alt_path( path ), data, initializeWhenNotFound, false, attempts + 1, path );
+				return main.get_asset( main.get_alt_path( path ), attempts + 1 );
 				
 			}
-			else if ( attempts === 2 && initializeWhenNotFound === true ) {
-				
-				return asset_data( originalPath, data, initializeWhenNotFound, true, attempts + 1, originalPath );
-				
-			}
-			
-		}
-		
-		// if data passed and asset found
-		
-		if ( typeof data !== 'undefined' && typeof asset !== 'undefined' ) {
-			
-			// copy data into asset object
-			// overwrite if image
-			
-			if ( data.hasOwnProperty('nodeName') && data.nodeName.toLowerCase() === 'img' ) {
-				
-				asset = data;
-				
-			}
-			// copy properties of existing asset into data and assign to asset
-			// order is important to ensure data remains an instance of whatever it was before
-			else {
-				
-				asset = main.extend( asset, data );
-				
-			}
-			
-			// store updated asset
-			
-			parent[ assetName ] = asset;
 			
 		}
 		
@@ -420,17 +258,121 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function asset_register( path, data, notReady ) {
+	main.set_asset = function ( location, assetNew ) {
 		
-		var cascade,
+		var path,
+			cascade,
 			parent,
 			assetName,
 			asset,
+			data,
+			dataNew,
 			i, l;
 		
-		// initialize asset data
+		// if new asset passed
 		
-		asset = asset_data( path, data, true );
+		if ( assetNew instanceof main.Asset ) {
+			
+			// init parent and asset
+			
+			asset = parent = main;
+			
+			// cascade path
+			
+			path = main.get_asset_path( location );
+			
+			cascade = asset_path_cascade( path );
+			
+			// setup asset path
+			
+			for ( i = 0, l = cascade.length; i < l; i++ ) {
+				
+				// set as parent for next
+				
+				parent = asset;
+				
+				// get name of current point in cascade
+				
+				assetName = cascade[ i ];
+				
+				// get or build asset
+				
+				asset = parent[ assetName ] = parent[ assetName ] || {};
+				
+			}
+			
+			// asset data, assume asset is data if not instance of asset
+					
+			data = ( asset instanceof main.Asset ) ? asset.data : asset;
+			
+			// get new data
+				
+			dataNew = assetNew.data;
+			
+			// if current data exists
+			
+			if ( typeof data !== 'undefined' ) {
+				
+				// if new asset has no data, keep current data
+				
+				if ( typeof dataNew === 'undefined' ) {
+					
+					assetNew.data = data;
+					
+				}
+				// else if new data is not image
+				if ( !( dataNew.hasOwnProperty('nodeName') && dataNew.nodeName.toLowerCase() === 'img' ) ) {
+					
+					// copy properties of existing asset data into new data
+					// order is important to ensure new data remains an instance of whatever it is
+					
+					main.extend( data, dataNew );
+					
+				}
+				
+			}
+			
+			// set new asset as asset
+			
+			parent[ assetName ] = asset = assetNew;
+			
+		}
+		
+		return asset;
+		
+	}
+	
+	main.get_asset_data = function ( location ) {
+		
+		var asset,
+			data;
+		
+		// get asset at location
+		
+		asset = main.get_asset( location );
+		
+		// asset data, assume asset is data if not instance of asset
+				
+		data = ( asset instanceof main.Asset ) ? asset.data : asset;
+		
+		return data;
+		
+	}
+	
+	main.asset_register = function ( path, parameters ) {//data, notReady ) {
+		
+		var asset;
+		
+		// handle parameters
+		
+		parameters = parameters || {};
+		
+		// initialize asset
+		
+		asset = new main.Asset( path, parameters );
+		
+		/*
+		asset = main.get_asset_data( path, data, true );
 		
 		// if asset was already tagged and ready state is false
 		// set as not ready
@@ -443,47 +385,52 @@ var KAIOPUA = (function (main) {
 		
 		// tag asset
 			
-		asset_tag( asset );
+		asset_tag( path, asset );
 		
 		// if is ready now
 		
 		if ( notReady !== true ) {
 			
-			asset_ready( path, asset );
+			main.asset_ready( path, asset );
 			
 		}
+		*/
 		
-		return asset;
+		// asset is usually only useful internally
+		// so return asset data
+		
+		return asset.data;
 		
 	}
 	
-	function asset_tag ( asset ) {
+	main.asset_ready = function ( path, asset ) {
 		
-		var ap;
+		var i, l,
+			callbackList,
+			callback;
+		
+		asset = asset || main.get_asset( path );
+		
+		if ( asset instanceof main.Asset && asset.ready !== true ) {
+			console.log(' asset is ready, ', asset.path, asset );
+			asset.ready = true;
 			
-		// add asset properties object
-		
-		ap = asset._kaiopua = asset._kaiopua || {};
-		
-		// set properties
-		
-		if ( ap.hasOwnProperty( 'ready' ) === false ) {
+			// do all callbacks on ready
 			
-			ap.ready = false;
+			callbackList = asset.callbacksOnReady;
 			
-		}
-		
-		return asset;
-		
-	}
-	
-	function asset_ready( path, data ) {
-		
-		var asset = data || asset_data( path );
-		
-		if ( typeof asset !== 'undefined' && asset._kaiopua.ready === false ) {
+			if ( typeof callbackList !== 'undefined' ) {
+				
+				for ( i = 0, l = callbackList.length; i < l; i++ ) {
+					console.log('////> calling asset on ready callback #' + (i + 1) + ' of ' + callbackList.length );
+					
+					callback = callbackList[ i ];
+					
+					callback.apply( this );
+					
+				}
 			
-			asset._kaiopua.ready = true;
+			}
 			
 			if ( typeof shared.signals !== 'undefined' && typeof shared.signals.assetReady !== 'undefined' ) {
 				
@@ -495,7 +442,7 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function assets_require( requirements, callbackList, waitForAssetsReady, loaderUIContainer ) {
+	main.asset_require = function ( requirements, callbackList, waitForAssetsReady, loaderUIContainer ) {
 		
 		var callback_outer,
 			on_asset_ready,
@@ -507,9 +454,9 @@ var KAIOPUA = (function (main) {
 		
 		// get if arguments are not array
 		
-		requirements = ensure_array( requirements );
+		requirements = main.ensure_array( requirements );
 		
-		callbackList = ensure_array( callbackList );
+		callbackList = main.ensure_array( callbackList );
 		
 		// modify original callback to wrap in new function
 		// that parses requirements and applies each asset as argument to callback
@@ -552,7 +499,7 @@ var KAIOPUA = (function (main) {
 			// make one extra attempt with alternative path to check if waiting for asset to be ready
 			else if ( secondAttempt !== true ) {
 				
-				on_asset_ready( get_alt_path( path ), true );
+				on_asset_ready( main.get_alt_path( path ), true );
 				
 			}
 			
@@ -581,7 +528,8 @@ var KAIOPUA = (function (main) {
 			var i, l,
 				location,
 				path,
-				asset;
+				asset,
+				data;
 			
 			// hide loader ui
 			
@@ -602,13 +550,17 @@ var KAIOPUA = (function (main) {
 				
 				location = requirements[ i ];
 				
-				path = get_asset_path( location );
+				path = main.get_asset_path( location );
 				
-				// get asset data
+				// get asset
 				
-				asset = asset_data( location );
+				asset = main.get_asset( location );
 				
-				if ( typeof asset !== 'undefined' ) {
+				// get data
+				
+				data = asset.data;
+				
+				if ( asset instanceof main.Asset ) {
 					
 					// add to required list
 					
@@ -624,7 +576,7 @@ var KAIOPUA = (function (main) {
 					
 					// check ready status
 					
-					if ( typeof asset === 'undefined' || ( typeof asset._kaiopua !== 'undefined' && asset._kaiopua.ready === true ) ) {
+					if ( asset instanceof main.Asset && asset.ready === true ) {
 						
 						on_asset_ready( path );
 						
@@ -638,7 +590,7 @@ var KAIOPUA = (function (main) {
 						
 					}
 					
-					if ( typeof asset !== 'undefined' && asset._kaiopua.ready !== true ) {
+					if ( asset instanceof main.Asset && asset.ready !== true ) {
 						
 						console.log( '< an asset is not ready, listening for asset ready signal ( ' + path + ' )' );
 						
@@ -662,7 +614,7 @@ var KAIOPUA = (function (main) {
 		
 		if ( typeof assetloader === 'undefined' ) {
 			
-			assetloader = assets.modules.utils.AssetLoader;
+			assetloader = main.assets.modules.utils.AssetLoader.data;
 			
 		}
 		
@@ -675,8 +627,81 @@ var KAIOPUA = (function (main) {
 		}
 		
 		// pass all requirements to loader
-		
+		console.log('assetloader from req', assetloader);
 		assetloader.load( requirements, callback_outer );
+		
+	}
+	
+	/*===================================================
+    
+    asset instance
+    
+    =====================================================*/
+	
+	main.Asset = function KaiopuaAsset ( path, parameters ) {
+		
+		// handle parameters
+		
+		parameters = parameters || {};
+		
+		this.path = path;
+		
+		this.data = parameters.data || {};
+		
+		// set asset basics
+		
+		main.set_asset( this.path, this );
+		
+		// parameters
+		
+		this.requirements = main.ensure_array( parameters.requirements );
+		
+		this.callbacksOnReady = main.ensure_array( parameters.callbacksOnReady );
+		
+		this.wait = ( typeof parameters.wait === 'boolean' ) ? parameters.wait : false;
+		
+		// readiness
+		
+		if ( this.requirements.length === 0 || this.wait !== true ) {
+			
+			this.on_ready();
+			
+		}
+		else {
+			
+			this.ready = false;
+			
+		}
+		
+		// if has requirements, handle
+		
+		if ( this.requirements.length > 0 ) {
+			
+			this.callbacksOnReqs = main.ensure_array( parameters.callbacksOnReqs );
+			
+			this.loaderUIContainer = parameters.loaderUIContainer;
+			
+			// add call back for ready auto update
+			
+			if ( parameters.readyAutoUpdate !== false ) {
+				
+				this.callbacksOnReqs.push( this.on_ready )
+				
+			}
+			
+			main.asset_require( this.requirements, this.callbacksOnReqs, this.wait, this.loaderUIContainer );
+		
+		}
+		
+		console.log('new asset!', this);
+	}
+	
+	main.Asset.prototype = new Object();
+	main.Asset.prototype.constructor = main.Asset;
+	
+	main.Asset.prototype.on_ready = function () {
+		
+		main.asset_ready( this.path, this );
 		
 	}
 	
@@ -976,7 +1001,105 @@ var KAIOPUA = (function (main) {
         }
         return false;
     }
+	
+	/*===================================================
+    
+    internal init
+    
+    =====================================================*/
+    
+	// force cache-busting
+	$LAB.setGlobalDefaults({ CacheBust: true });
+	
+    // load scripts
+    $LAB.script( libList ).wait( init_basics );
+    
+    function init_basics () {
+        
+        // shared
+        shared.mice = [];
+        shared.screenWidth = $(window).width();
+        shared.screenHeight = $(window).height();
+        shared.originLink = window.location.pathname.toString();
+        
+        shared.frameRateMax = 60;
+        shared.frameRateMin = 20;
+        shared.time = new Date().getTime();
+        shared.timeLast = shared.time;
+        shared.refreshInterval = 1000 / 60;
+        
+        shared.html = {
+            staticMenu: $('#static_menu'),
+            gameContainer: $('#game'),
+            errorContainer: $('#error_container')
+        };
+        
+        shared.signals = {
+			
+			focuslose: new signals.Signal(),
+			focusgain: new signals.Signal(),
+    
+            mousedown : new signals.Signal(),
+            mouseup : new signals.Signal(),
+            mousemoved : new signals.Signal(),
+            mousewheel : new signals.Signal(),
+    
+            keydown : new signals.Signal(),
+            keyup : new signals.Signal(),
+    
+            windowresized : new signals.Signal(),
+            
+            loadItemCompleted : new signals.Signal(),
+            loadListCompleted : new signals.Signal(),
+            loadAllCompleted : new signals.Signal(),
+			
+			assetReady : new signals.Signal(),
+            
+            error : new signals.Signal()
+            
+        };
+        
+        // add listeners for events
+        // each listener dispatches shared signal
+		$(window).bind( 'blur', on_focus_lose );
+		$(window).bind( 'focus', on_focus_gain );
+		
+        $(document).bind( 'mousedown touchstart', on_mouse_down );
+        $(document).bind( 'mouseup touchend', on_mouse_up );
+        $(document).bind( 'mousemove touchmove', on_mouse_move );
+		$(document).bind( 'mouseleave touchleave', on_mouse_leave );
+        $(document).bind( 'mousewheel', on_mouse_wheel );
+		$(shared.html.gameContainer).bind( 'contextmenu', on_game_context_menu );
+        
+        $(document).bind( 'keydown', on_key_down );
+        $(document).bind( 'keyup', on_key_up );
+    
+        $(window).bind( 'deviceorientation', on_window_device_orientation );
+        $(window).bind( 'MozOrientation', on_window_device_orientation);
+    
+        $(window).bind( 'resize', on_window_resize );
+		
+		// asset loader and setup
+		
+		assetloader = main.get_asset_data( 'assets/modules/utils/AssetLoader' );
+		console.log('assetLoader?', assetloader);
+		assetloader.add_loaded_locations( libList );
+		
+		main.asset_require( setupList, init_setup, true );
+		
+    }
+    
+    function init_setup ( g ) {
+		
+        // assets
+        
+        game = g;
+        
+        // resize once
+        on_window_resize();
+		
+    }
     
     return main; 
     
-}(KAIOPUA || {}));
+} ( KAIOPUA || {} ) );

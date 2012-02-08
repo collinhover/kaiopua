@@ -29,7 +29,7 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	main.assets_require( [
+	main.asset_require( [
 		"assets/modules/utils/UIHelper"
 	], init_internal, true );
 	
@@ -235,4 +235,4 @@ var KAIOPUA = (function (main) {
     
     return main; 
     
-}(KAIOPUA || {}));
+} ( KAIOPUA ) );

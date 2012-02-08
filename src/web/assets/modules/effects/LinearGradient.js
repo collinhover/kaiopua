@@ -165,4 +165,4 @@ var KAIOPUA = (function (main) {
     
     return main; 
     
-}(KAIOPUA || {}));
+} ( KAIOPUA ) );

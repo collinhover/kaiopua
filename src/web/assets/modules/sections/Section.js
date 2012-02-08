@@ -40,7 +40,7 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	main.assets_require( [
+	main.asset_require( [
 	], init_internal, true );
 	
 	function init_internal () {
@@ -154,4 +154,4 @@ var KAIOPUA = (function (main) {
     
     return main; 
     
-}(KAIOPUA || {}));
+} ( KAIOPUA ) );

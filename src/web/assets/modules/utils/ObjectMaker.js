@@ -26,7 +26,7 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	main.assets_require( [
+	main.asset_require( [
 		"assets/modules/core/Model"
 	], init_internal, true );
 	
@@ -62,7 +62,7 @@ var KAIOPUA = (function (main) {
 		
 		textureCube = new THREE.Texture( null, mapping );
 		
-		main.assets_require( [ 
+		main.asset_require( [ 
 			ap + "_posx.jpg",
 			ap + "_negx.jpg",
 			ap + "_posy.jpg",
@@ -94,7 +94,7 @@ var KAIOPUA = (function (main) {
 		
 		// instance
 		
-		instance = model.instantiate( {
+		instance = new model.Instance( {
             geometry: new THREE.CubeGeometry( 100, 100, 100 ),
 			materials: material,
 			shading: THREE.SmoothShading,
@@ -107,4 +107,4 @@ var KAIOPUA = (function (main) {
         
     return main; 
     
-}(KAIOPUA || {}));
+} ( KAIOPUA ) );

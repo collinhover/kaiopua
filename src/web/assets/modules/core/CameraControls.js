@@ -52,7 +52,7 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	main.assets_require( [
+	main.asset_require( [
 		"assets/modules/utils/ObjectHelper",
 		"assets/modules/utils/MathHelper"
 	], init_internal, true );
@@ -390,7 +390,7 @@ var KAIOPUA = (function (main) {
 		
 		// follow player
 		
-		objecthelper.object_follow_object( player.character.model.mesh, camera, rotBase, rotOffset, posOffset );
+		objecthelper.object_follow_object( player.character, camera, rotBase, rotOffset, posOffset );
 		
 		// decay deltas
 		
@@ -402,4 +402,4 @@ var KAIOPUA = (function (main) {
 	
 	return main;
 	
-}(KAIOPUA || {}));
+} ( KAIOPUA ) );

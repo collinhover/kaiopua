@@ -28,7 +28,7 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	main.assets_require( [], init_internal, true );
+	main.asset_require( [], init_internal, true );
 	
 	function init_internal () {
 		console.log('internal object helper');
@@ -85,4 +85,4 @@ var KAIOPUA = (function (main) {
 	
     return main; 
     
-}(KAIOPUA || {}));
+} ( KAIOPUA ) );

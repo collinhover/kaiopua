@@ -148,7 +148,7 @@ var KAIOPUA = (function (main) {
 		
         rayTexture = new THREE.Texture(); 
 		
-		main.assets_require( rayTexturePath, function ( img ) {
+		main.asset_require( rayTexturePath, function ( img ) {
 			
 			rayTexture.image = img;
 			rayTexture.needsUpdate = true;
@@ -284,4 +284,4 @@ var KAIOPUA = (function (main) {
     
     return main; 
     
-}(KAIOPUA || {}));
+} ( KAIOPUA ) );

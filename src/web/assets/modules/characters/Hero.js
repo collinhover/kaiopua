@@ -145,7 +145,7 @@ var KAIOPUA = (function (main) {
 				
 				if ( target.interactive === true ) {
 				
-					adObj.scaleRecords[ target.id ] = target.mesh.scale.clone();
+					adObj.scaleRecords[ target.id ] = target.scale.clone();
 					
 				}
 				
@@ -296,10 +296,10 @@ var KAIOPUA = (function (main) {
 		
 		// set new scale
 		
-		target.mesh.scale.set( scaleX, scaleY, scaleZ );
+		target.scale.set( scaleX, scaleY, scaleZ );
 		
 	}
 	
 	return main;
 	
-}(KAIOPUA || {}));
+} ( KAIOPUA ) );

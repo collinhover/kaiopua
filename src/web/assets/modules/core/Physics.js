@@ -72,7 +72,7 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	main.assets_require( [
+	main.asset_require( [
 		"assets/modules/utils/MathHelper"
 	], init_internal, true );
 	
@@ -598,33 +598,51 @@ var KAIOPUA = (function (main) {
 	// adds mesh's rigid body to physics world
 	// creates new rigid body if one is not passed
 	
-	function add ( mesh, link, parameters ) {
+	function add ( linkOrMesh, parameters ) {
 		
-		var rigidBody;
+		var rigidBody,
+			link;
 		
-		link = link || translate( mesh, parameters );
+		if ( typeof linkOrMesh !== 'undefined' ) {
+			
+			// if link is object3D or rigidBody does not exist, translate
+			
+			if ( linkOrMesh instanceof THREE.Object3D || typeof linkOrMesh.rigidBody === 'undefined' ) {
+				
+				link = translate( linkOrMesh, parameters );
+				
+			}
+			else {
+				
+				link = linkOrMesh;
+				
+			}
+			
+			rigidBody = link.rigidBody;
+			
+			// add to system
+			
+			system.colliders.push( rigidBody.collider );
+			
+			// zero out velocities
+			
+			rigidBody.velocityMovement.force.set( 0, 0, 0 );
+			
+			rigidBody.velocityGravity.force.set( 0, 0, 0 );
+			
+			// add to links list
+			
+			links.push( link );
+			
+		}
 		
-		rigidBody = link.rigidBody;
-		
-		// add to system
-		
-		system.colliders.push( rigidBody.collider );
-		
-		// zero out velocities
-		
-		rigidBody.velocityMovement.force.set( 0, 0, 0 );
-		
-		rigidBody.velocityGravity.force.set( 0, 0, 0 );
-		
-		// add to links list
-		
-		links.push( link );
+		return link;
 		
 	}
 	
 	// removes mesh's rigid body from physics world
 	
-	function remove ( linkorMeshOrBodyOrName ) {
+	function remove ( linkOrMeshOrBodyOrName ) {
 		
 		var i, l,
 			link,
@@ -634,7 +652,7 @@ var KAIOPUA = (function (main) {
 			
 			link = links[ i ];
 			
-			if ( link === linkorMeshOrBodyOrName || link.mesh === linkorMeshOrBodyOrName || link.rigidBody === linkorMeshOrBodyOrName || link.name === linkorMeshOrBodyOrName ) {
+			if ( link === linkOrMeshOrBodyOrName || link.mesh === linkOrMeshOrBodyOrName || link.rigidBody === linkOrMeshOrBodyOrName || link.name === linkOrMeshOrBodyOrName ) {
 				
 				links.splice( i, 1 );
 				
@@ -932,22 +950,6 @@ var KAIOPUA = (function (main) {
 		
 		rotation = ( mesh.useQuaternion === true ? mesh.quaternion : mesh.matrix );
 		
-		// if source is character, cascade
-		/*
-		if ( typeof source.model !== 'undefined' ) {
-			
-			source = source.model;
-			
-		}
-		
-		// if source is model, cascade
-		
-		if ( typeof source.mesh !== 'undefined' ) {
-			
-			source = source.mesh;
-			
-		}
-		*/
 		// if source is 3D object, cascade
 		if ( source instanceof THREE.Object3D ) {
 			
@@ -1071,39 +1073,7 @@ var KAIOPUA = (function (main) {
 		
 		// handle parameters
 		
-		// if mesh is character, cascade
-		
-		if ( typeof mesh.model !== 'undefined' ) {
-			
-			mesh = mesh.model;
-			
-		}
-		
-		// if mesh is model, cascade
-		
-		if ( typeof mesh.mesh !== 'undefined' ) {
-			
-			mesh = mesh.mesh;
-			
-		}
-		
 		position = mesh.position;
-		
-		// if source is character, cascade
-		
-		if ( typeof source.model !== 'undefined' ) {
-			
-			source = source.model;
-			
-		}
-		
-		// if source is model, cascade
-		
-		if ( typeof source.mesh !== 'undefined' ) {
-			
-			source = source.mesh;
-			
-		}
 		
 		// if source is 3D object, cascade
 		if ( source instanceof THREE.Object3D ) {
@@ -1628,4 +1598,4 @@ var KAIOPUA = (function (main) {
 	
 	return main;
 	
-}(KAIOPUA || {}));
+} ( KAIOPUA ) );

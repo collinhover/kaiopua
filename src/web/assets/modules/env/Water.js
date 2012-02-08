@@ -28,7 +28,7 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	main.assets_require( [
+	main.asset_require( [
 		"assets/modules/core/Model"
 	], init_internal, true );
 	
@@ -177,7 +177,7 @@ var KAIOPUA = (function (main) {
 		
 		var wavesTexture = new THREE.Texture();
 		
-		main.assets_require( wavesTexturePath, function ( img ) {
+		main.asset_require( wavesTexturePath, function ( img ) {
 			
 			wavesTexture.image = img;
 			wavesTexture.needsUpdate = true;
@@ -243,7 +243,7 @@ var KAIOPUA = (function (main) {
 		}
 		
         // water mesh
-        wavesInfo.model = model.instantiate({
+        wavesInfo.model = new model.Instance({
 			geometry: wavesGeometry,
 			materials: wavesMaterial,
 			doubleSided: true,
@@ -252,7 +252,7 @@ var KAIOPUA = (function (main) {
 			rotation: new THREE.Vector3( -90, 0, 0 )
 		});
 		
-		wavesMesh = wavesInfo.model.mesh;
+		wavesMesh = wavesInfo.model;//.mesh;
         
         container.add( wavesMesh );
         
@@ -275,7 +275,7 @@ var KAIOPUA = (function (main) {
         
         rayTexture = new THREE.Texture(); 
         
-		main.assets_require( rayTexturePath, function ( img ) {
+		main.asset_require( rayTexturePath, function ( img ) {
 			
 			rayTexture.image = img;
 			rayTexture.needsUpdate = true;
@@ -450,4 +450,4 @@ var KAIOPUA = (function (main) {
     
     return main; 
     
-}(KAIOPUA || {}));
+} ( KAIOPUA ) );

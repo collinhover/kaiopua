@@ -76,7 +76,7 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	main.assets_require( [
+	main.asset_require( [
 		"assets/modules/core/Game",
 		"assets/modules/core/CameraControls",
 		"assets/modules/core/Character",
@@ -446,7 +446,7 @@ var KAIOPUA = (function (main) {
 		
 		// create character
 		
-		playerCharacter = character.instantiate( {
+		playerCharacter = new character.Instance( {
 			
 			type: hero
 			
@@ -669,7 +669,7 @@ var KAIOPUA = (function (main) {
 			
 			targetModel = targetsToRemove[ i ];
 			
-			targetMesh = targetModel.mesh;
+			targetMesh = targetModel;//.mesh;
 			
 			// find in targets and remove
 			
@@ -814,14 +814,13 @@ var KAIOPUA = (function (main) {
 	function update_following () {
 		
 		var i, l,
-			pcMesh = playerCharacter.model.mesh,
 			followSettings;
 		
 		for ( i = 0, l = following.length; i < l; i ++ ) {
 			
 			followSettings = following[ i ];
 			
-			objecthelper.object_follow_object( pcMesh, followSettings.obj, followSettings.rotationBase, followSettings.rotationOffset, followSettings.positionOffset );
+			objecthelper.object_follow_object( playerCharacter, followSettings.obj, followSettings.rotationBase, followSettings.rotationOffset, followSettings.positionOffset );
 				
 		}
 		
@@ -921,4 +920,4 @@ var KAIOPUA = (function (main) {
 	
 	return main;
 	
-}(KAIOPUA || {}));
+} ( KAIOPUA ) );

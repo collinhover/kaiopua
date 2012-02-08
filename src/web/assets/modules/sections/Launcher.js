@@ -65,7 +65,7 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	main.assets_require( [
+	main.asset_require( [
 		"assets/modules/core/Game",
 		"assets/modules/env/SkyLauncher",
 		"assets/modules/env/WaterLauncher"
@@ -163,7 +163,7 @@ var KAIOPUA = (function (main) {
 		
 		textureCube = new THREE.Texture();
 		
-		main.assets_require( [ ap + "_xz.jpg", ap + "_posy.jpg", ap + "_negy.jpg" ], function ( xz, posy, negy ) {
+		main.asset_require( [ ap + "_xz.jpg", ap + "_posy.jpg", ap + "_negy.jpg" ], function ( xz, posy, negy ) {
 			
 			textureCube.image = [ xz, xz, posy, negy, xz, xz ];
 			textureCube.needsUpdate = true;
@@ -327,4 +327,4 @@ var KAIOPUA = (function (main) {
         
     return main; 
     
-}(KAIOPUA || {}));
+} ( KAIOPUA ) );

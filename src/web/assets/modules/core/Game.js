@@ -106,6 +106,7 @@ var KAIOPUA = (function (main) {
 			{ path: "assets/models/Taro_Plant_001.js", type: 'model' },
 			{ path: "assets/models/Volcano.js", type: 'model' },
 			{ path: "assets/models/Lava_Lake.js", type: 'model' },
+			{ path: "assets/models/kukui_offset_test.js", type: 'model' },
 			"assets/textures/skybox_world_posx.jpg",
             "assets/textures/skybox_world_negx.jpg",
 			"assets/textures/skybox_world_posy.jpg",
@@ -189,7 +190,7 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	main.assets_require( dependencies, init_internal, true );
+	main.asset_require( dependencies, init_internal, true );
 	
 	function init_internal ( al, err, u ) {
 		console.log('internal game');
@@ -227,13 +228,13 @@ var KAIOPUA = (function (main) {
 	
 	function load_basics () {
 		
-		main.assets_require( assetsBasic, [init_basics, load_launcher] );
+		main.asset_require( assetsBasic, [init_basics, load_launcher] );
 		
 	}
 	
 	function load_launcher () {
 		
-		main.assets_require( assetsLauncher, [init_launcher, load_game] );
+		main.asset_require( assetsLauncher, [init_launcher, load_game] );
 		
 	}
 	
@@ -245,7 +246,7 @@ var KAIOPUA = (function (main) {
 			
 			// load game assets and init game
 			
-			main.assets_require( assetsGame, init_game, true, domElement );
+			main.asset_require( assetsGame, init_game, true, domElement );
 			
 		}, loadAssetsDelay);
 		
@@ -260,7 +261,7 @@ var KAIOPUA = (function (main) {
     function init_basics () {
 		
 		var shaderScreen = THREE.ShaderExtras[ "screen" ],
-            shaderFocusVignette = main.asset_data("assets/modules/effects/FocusVignette");
+            shaderFocusVignette = main.get_asset_data("assets/modules/effects/FocusVignette");
 			/*bg = effects.LinearGradient.generate( {
 				colors: [0x0F042E, 0x1D508F, 0x529AD1, 0x529AD1, 0x455AE0],
 				stops: [0, 0.4, 0.6, 0.8, 1.0],
@@ -445,7 +446,7 @@ var KAIOPUA = (function (main) {
 		
 		// assets
 		
-		menumaker = main.asset_data( 'assets/modules/utils/MenuMaker' );
+		menumaker = main.get_asset_data( 'assets/modules/utils/MenuMaker' );
 		
 		// init menus
 		
@@ -694,55 +695,43 @@ var KAIOPUA = (function (main) {
 		
 		var i, l,
 			object,
+			object3D,
 			sceneTarget,
 			callback;
+		
+		// handle parameters
+		
+		sceneDefault = sceneDefault || scene;
 		
 		// for each object
 		
 		if ( objects.hasOwnProperty('length') === false ) {
 			objects = [ objects ];
 		}
-		
+		console.log('adding to scene ', objects.length);
 		for ( i = 0, l = objects.length; i < l; i ++ ) {
-			
+		
 			object = objects[ i ];
-			
-			sceneTarget = extract_scene( object.sceneTarget || sceneDefault );
 			
 			callback = object.callbackAdd;
 			
-			// if object is add / scene pair
+			sceneTarget = object.sceneTarget || sceneDefault;
 			
-			if ( typeof object.addTarget !== 'undefined' ) {
-				
-				object = object.addTarget;
-				
-			}
-			
-			// if is character
-			
-			if ( typeof object.model !== 'undefined' ) {
-				
-				object = object.model;
-				
-			}
+			object3D = object.addTarget || object;
 			
 			// add
 			
-			if ( typeof object.mesh !== 'undefined' ) {
+			if ( typeof object3D !== 'undefined' ) {
 				
-				sceneTarget.add( object.mesh );
+				sceneTarget.add( object3D );
 				
-				if ( typeof object.physics !== 'undefined' ) {
+				// physics
+				
+				if ( typeof object3D.physics !== 'undefined' ) {
 					
-					physics.add( object.mesh, object.physics );
+					physics.add( object3D.physics );
 					
 				}
-				
-			}
-			else if ( object instanceof THREE.Object3D ) {
-				
-				sceneTarget.add( object );
 				
 			}
 			
@@ -762,8 +751,15 @@ var KAIOPUA = (function (main) {
 		
 		var i, l,
 			object,
+			object3D,
 			sceneTarget,
 			callback;
+		
+		// handle parameters
+		
+		sceneDefault = sceneDefault || scene;
+		
+		// for each object
 		
 		if ( objects.hasOwnProperty('length') === false ) {
 			objects = [ objects ];
@@ -773,42 +769,25 @@ var KAIOPUA = (function (main) {
 		
 			object = objects[ i ];
 			
-			sceneTarget = extract_scene( object.sceneTarget || sceneDefault );
-			
 			callback = object.callbackRemove;
 			
-			// if object is add / scene pair
+			sceneTarget = object.sceneTarget || sceneDefault;
 			
-			if ( typeof object.addTarget !== 'undefined' ) {
-				
-				object = object.addTarget;
-				
-			}
-			
-			// if is character
-			
-			if ( typeof object.model !== 'undefined' ) {
-				
-				object = object.model;
-				
-			}
+			object3D = object.addTarget || object;
 			
 			// remove
 			
-			if ( typeof object.mesh !== 'undefined' ) {
-			
-				sceneTarget.remove( object.mesh );
-			
-				if ( typeof object.physics !== 'undefined' ) {
+			if ( typeof object3D !== 'undefined' ) {
+				
+				sceneTarget.remove( object3D );
+				
+				// physics
+				
+				if ( typeof object3D.physics !== 'undefined' ) {
 					
-					physics.remove( object.physics );
+					physics.remove( object3D.physics );
 					
 				}
-				
-			}
-			else if ( object instanceof THREE.Object3D ) {
-				
-				sceneTarget.remove( object );
 				
 			}
 			
@@ -821,30 +800,6 @@ var KAIOPUA = (function (main) {
 			}
 			
         }
-		
-	}
-	
-	function extract_scene ( sceneTarget ) {
-		
-		sceneTarget = sceneTarget || scene;
-		
-		// if scene is character
-		
-		if ( typeof sceneTarget.model !== 'undefined' ) {
-			
-			sceneTarget = sceneTarget.model;
-			
-		}
-		
-		// if scene is model
-		
-		if ( typeof sceneTarget.mesh !== 'undefined' ) {
-			
-			sceneTarget = sceneTarget.mesh;
-			
-		}
-		
-		return sceneTarget;
 		
 	}
 	
@@ -1049,10 +1004,10 @@ var KAIOPUA = (function (main) {
 		
 		// assets
 		
-		physics = main.asset_data( 'assets/modules/core/Physics' );
-		world = main.asset_data( 'assets/modules/core/World' );
-		player = main.asset_data( 'assets/modules/core/Player' );
-		intro = main.asset_data( 'assets/modules/sections/Intro' );
+		physics = main.get_asset_data( 'assets/modules/core/Physics' );
+		world = main.get_asset_data( 'assets/modules/core/World' );
+		player = main.get_asset_data( 'assets/modules/core/Player' );
+		intro = main.get_asset_data( 'assets/modules/sections/Intro' );
 		
 		// hide static menu
 		
@@ -1268,4 +1223,4 @@ var KAIOPUA = (function (main) {
         
     return main; 
     
-}(KAIOPUA || {}));
+} ( KAIOPUA ) );

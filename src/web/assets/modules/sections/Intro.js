@@ -44,7 +44,7 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	main.assets_require( [ 
+	main.asset_require( [ 
 		"assets/modules/core/Game",
 		"assets/modules/core/Physics",
 		"assets/modules/core/World",
@@ -231,7 +231,7 @@ var KAIOPUA = (function (main) {
 			
 			player.enable();
 			
-			player.character.model.mesh.position.set( 1, 2700, 1 );
+			player.character.position.set( 1, 2700, 1 );
 			
 			//player.cameraMode = 'freelook';
 			
@@ -299,4 +299,4 @@ var KAIOPUA = (function (main) {
     
     return main; 
     
-}(KAIOPUA || {}));
+} ( KAIOPUA ) );
