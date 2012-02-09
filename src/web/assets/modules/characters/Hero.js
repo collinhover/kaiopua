@@ -5,6 +5,7 @@ Hero character module, for use with character module.
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
+		assetPath = "assets/modules/characters/Hero.js",
 		hero = {};
 	
 	/*===================================================
@@ -32,7 +33,9 @@ var KAIOPUA = (function (main) {
 		get : get_physics_parameters
 	});
 	
-	hero = main.asset_register( "assets/modules/characters/Hero", hero );
+	main.asset_register( assetPath, { 
+		data: hero
+	});
 	
 	/*===================================================
     

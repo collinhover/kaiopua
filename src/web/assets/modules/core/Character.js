@@ -5,7 +5,7 @@ Character module, handles generating characters in game.
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/core/Character",
+		assetPath = "assets/modules/core/Character.js",
 		character = {},
 		model,
 		emptyCharacter, 
@@ -18,18 +18,21 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	character = main.asset_register( assetPath, character, true );
+	main.asset_register( assetPath, { 
+		data: character,
+		requirements: [
+			"assets/modules/core/Model.js",
+			"assets/modules/characters/EmptyCharacter.js"
+		],
+		callbacksOnReqs: init_internal,
+		wait: true
+	});
 	
 	/*===================================================
     
     internal init
     
     =====================================================*/
-	
-	main.asset_require( [
-		"assets/modules/core/Model",
-		"assets/modules/characters/EmptyCharacter"
-	], init_internal, true );
 	
 	function init_internal ( m, ec ) {
 		console.log('internal character');
@@ -43,17 +46,14 @@ var KAIOPUA = (function (main) {
 		utilQ1Rotate = new THREE.Quaternion();
 		
 		// character instance
-		
+		console.log(character);
+		console.log(model);
 		character.Instance = KaiopuaCharacter;
 		character.Instance.prototype = new model.Instance();
 		character.Instance.prototype.constructor = character.Instance;
 		character.Instance.prototype.action = action;
 		character.Instance.prototype.update = update;
 		character.Instance.prototype.rotate_by_delta = rotate_by_delta;
-		
-		// ready
-		
-		main.asset_ready( assetPath );
 		
 	}
 	

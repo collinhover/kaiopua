@@ -5,6 +5,7 @@ Empty character module, for use with character module.
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
+		assetPath = "assets/modules/characters/EmptyCharacter.js",
 		emptycharacter = {};
 	
 	/*===================================================
@@ -25,7 +26,7 @@ var KAIOPUA = (function (main) {
 		get : function () { return; }
 	});
 	
-	emptycharacter = main.asset_register( "assets/modules/characters/EmptyCharacter", emptycharacter );
+	main.asset_register( assetPath, { data: emptycharacter } );
 	
 	/*===================================================
     

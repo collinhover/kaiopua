@@ -7,7 +7,7 @@ Based on ro.me's original PaintEffect implementation
 
 var KAIOPUA = (function (main) {
     
-    var assetPath = "assets/modules/effects/FocusVignette",
+    var assetPath = "assets/modules/effects/FocusVignette.js",
 		fv = {
 
         uniforms: {
@@ -107,7 +107,7 @@ var KAIOPUA = (function (main) {
 
 	};
 	
-	fv = main.asset_register( assetPath, fv );
+	main.asset_register( assetPath, { data: fv } );
     
     return main; 
     

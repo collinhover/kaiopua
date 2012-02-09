@@ -6,7 +6,7 @@ Model generator module.
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/core/Model",
+		assetPath = "assets/modules/core/Model.js",
         model = {},
 		physics,
 		mathhelper,
@@ -25,7 +25,15 @@ var KAIOPUA = (function (main) {
 	model.dimensions_from_bounding_box_scaled = dimensions_from_bounding_box_scaled;
 	model.center_offset_from_bounding_box = center_offset_from_bounding_box;
 	
-	model = main.asset_register( assetPath, model, true );
+	main.asset_register( assetPath, { 
+		data: model,
+		requirements: [
+			"assets/modules/core/Physics.js",
+			"assets/modules/utils/MathHelper.js"
+		],
+		callbacksOnReqs: init_internal,
+		wait: true
+	});
 	
 	/*===================================================
     
@@ -33,17 +41,10 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	main.asset_require( [
-		"assets/modules/core/Physics",
-		"assets/modules/utils/MathHelper"
-	], init_internal, true );
-	
 	function init_internal ( physx, mh ) {
 		console.log('internal model');
 		physics = physx;
 		mathhelper = mh;
-		
-		main.asset_ready( assetPath );
 		
 	}
     

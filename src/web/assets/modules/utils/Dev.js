@@ -5,17 +5,11 @@ Initializes Logger, Stats, and DAT-GUI for development purposes
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/utils/Dev",
+		assetPath = "assets/modules/utils/Dev.js",
         dev = {},
         devCommands,
         domElement, isOpen = true, stats, logger, 
-        gui, guiContainer, guiHeight, statsPaused = true,
-        dependencies = [
-			"assets/modules/utils/DevCommands.js",
-            "js/lib/Logger.js", 
-            "js/lib/Stats.js", 
-            "js/lib/DAT.GUI.js"
-        ];
+        gui, guiContainer, guiHeight, statsPaused = true;
     
     /*===================================================
     
@@ -41,15 +35,23 @@ var KAIOPUA = (function (main) {
     dev.isOpen = function () {return isOpen;};
     dev.domElement = function () { return domElement; };
 	
-	dev = main.asset_register( assetPath, dev, true );
+	main.asset_register( assetPath, { 
+		data: dev,
+		requirements: [
+			"assets/modules/utils/DevCommands.js",
+            "js/lib/Logger.js", 
+            "js/lib/Stats.js", 
+            "js/lib/DAT.GUI.js"
+        ],
+		callbacksOnReqs: init,
+		wait: true
+	});
     
     /*===================================================
     
     internal init
     
     =====================================================*/
-	
-	main.asset_require( dependencies, init, true );
     
     function init( d ) {
 		
@@ -146,8 +148,6 @@ var KAIOPUA = (function (main) {
                 }
             }
         });
-		
-		main.asset_ready( assetPath );
 		
     }
     

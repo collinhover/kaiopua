@@ -5,6 +5,7 @@ Asset module, handles loading of assets.
 (function ( main ) {
 	
     var shared = main.shared = main.shared || {},
+		assetPath = "assets/modules/utils/AssetLoader.js",
 		assetloader = {},
 		threeLoaderJSON,
 		threeLoaderBIN,
@@ -68,9 +69,9 @@ Asset module, handles loading of assets.
 		}
 	});
 	
-	main.asset_register( "assets/modules/utils/AssetLoader", { 
+	main.asset_register( assetPath, { 
 		data: assetloader,
-		requirements: "assets/modules/utils/UIHelper",
+		requirements: "assets/modules/utils/UIHelper.js",
 		callbacksOnReqs: init_ui
 	} );
 	
@@ -83,11 +84,8 @@ Asset module, handles loading of assets.
 	function add_loaded_locations ( locationsList ) {
 		
 		var i, l,
-			locationsListCopy = [],
 			location,
 			path,
-			pathCopy,
-			ext,
 			indexLoaded,
 			indexLoading,
 			locationAdded = false;
@@ -100,45 +98,11 @@ Asset module, handles loading of assets.
 				locationsList = [locationsList];
 			}
 			
-			// copy list
+			// for each location
 			
 			for ( i = 0, l = locationsList.length; i < l; i++ ) {
 				
 				location = locationsList[ i ];
-				
-				path = main.get_asset_path( location );
-				
-				// get extension
-				
-				ext = main.get_ext( path );
-				
-				// if none
-				
-				if ( ext === '' ) {
-					
-					pathCopy = main.add_default_ext( path );
-					
-				}
-				// has extension
-				else {
-					
-					pathCopy = main.remove_ext( path );
-					
-				}
-				
-				locationsListCopy.push( pathCopy );
-				
-			}
-			
-			// merge lists
-			
-			locationsListCopy = locationsList.concat( locationsListCopy );
-			
-			// for each location
-			
-			for ( i = 0, l = locationsListCopy.length; i < l; i++ ) {
-				
-				location = locationsListCopy[ i ];
 				
 				path = main.get_asset_path( location );
 				
@@ -595,7 +559,7 @@ Asset module, handles loading of assets.
 				
 				// store empty image data in assets immediately
 				
-				main.asset_register( path, data );
+				main.asset_register( path, { data: data } );
 				
 			}
 			else if ( loadType === 'model' || loadType === 'model_ascii' ) {
@@ -643,7 +607,7 @@ Asset module, handles loading of assets.
 		
 		// register asset
 		console.log('register ' + path);
-		main.asset_register( path, data );
+		main.asset_register( path, { data: data } );
 		
 		// add as loaded
 		

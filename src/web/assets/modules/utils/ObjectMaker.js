@@ -6,7 +6,7 @@ Object generator module, handles generation of misc things.
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/utils/ObjectMaker",
+		assetPath = "assets/modules/utils/ObjectMaker.js",
 		objectmaker = {},
 		model;
     
@@ -18,7 +18,14 @@ var KAIOPUA = (function (main) {
 	
     objectmaker.make_skybox = make_skybox;
 	
-	objectmaker = main.asset_register( assetPath, objectmaker, true );
+	main.asset_register( assetPath, { 
+		data: objectmaker,
+		requirements: [
+			"assets/modules/core/Model.js"
+		],
+		callbacksOnReqs: init_internal,
+		wait: true
+	});
 	
 	/*===================================================
     
@@ -26,15 +33,9 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	main.asset_require( [
-		"assets/modules/core/Model"
-	], init_internal, true );
-	
 	function init_internal ( m ) {
 		console.log('internal objectmaker');
 		model = m;
-		
-		main.asset_ready( assetPath );
 		
 	}
 

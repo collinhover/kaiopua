@@ -6,7 +6,7 @@ Object generator module, handles generation of misc things.
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/utils/ObjectHelper",
+		assetPath = "assets/modules/utils/ObjectHelper.js",
 		objecthelper = {},
 		model,
 		utilVec31Follow,
@@ -20,7 +20,7 @@ var KAIOPUA = (function (main) {
 	
     objecthelper.object_follow_object = object_follow_object;
 	
-	objecthelper = main.asset_register( assetPath, objecthelper );
+	main.asset_register( assetPath, { data: objecthelper } );
 	
 	/*===================================================
     
@@ -28,7 +28,7 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	main.asset_require( [], init_internal, true );
+	init_internal();
 	
 	function init_internal () {
 		console.log('internal object helper');
@@ -36,8 +36,6 @@ var KAIOPUA = (function (main) {
 		
 		utilVec31Follow = new THREE.Vector3();
 		utilQ1Follow = new THREE.Quaternion();
-		
-		main.asset_ready( assetPath );
 		
 	}
 	

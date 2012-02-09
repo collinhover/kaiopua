@@ -6,7 +6,7 @@ Math utility helper module.
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/utils/MathHelper",
+		assetPath = "assets/modules/utils/MathHelper.js",
 		mathhelper = {};
 	
 	/*===================================================
@@ -27,7 +27,7 @@ var KAIOPUA = (function (main) {
 		
 	};
 	
-	mathhelper = main.asset_register( assetPath, mathhelper );
+	main.asset_register( assetPath, { data: mathhelper } );
 	
 	return main; 
     

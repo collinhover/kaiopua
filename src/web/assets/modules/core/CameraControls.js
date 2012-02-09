@@ -5,7 +5,7 @@ Camera controller module, handles controlling cameras in game.
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/core/CameraControls",
+		assetPath = "assets/modules/core/CameraControls.js",
 		cameracontrols = {},
 		objecthelper,
 		mathhelper,
@@ -44,7 +44,15 @@ var KAIOPUA = (function (main) {
 		set : set_player
 	});
 	
-	cameracontrols = main.asset_register( assetPath, cameracontrols, true );
+	main.asset_register( assetPath, { 
+		data: cameracontrols,
+		requirements: [
+			"assets/modules/utils/ObjectHelper.js",
+			"assets/modules/utils/MathHelper.js"
+		],
+		callbacksOnReqs: init_internal,
+		wait: true
+	});
 	
 	/*===================================================
     
@@ -52,19 +60,12 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	main.asset_require( [
-		"assets/modules/utils/ObjectHelper",
-		"assets/modules/utils/MathHelper"
-	], init_internal, true );
-	
 	function init_internal ( oh, mh ) {
 		console.log('internal cameracontrols');
 		// assets
 		
 		objecthelper = oh;
 		mathhelper = mh;
-		
-		main.asset_ready( assetPath );
 		
 	}
 	

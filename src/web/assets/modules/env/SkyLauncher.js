@@ -8,7 +8,7 @@ cloud texture (c) ro.me
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/env/SkyLauncher",
+		assetPath = "assets/modules/env/SkyLauncher.js",
 		sky = {},
         skyWidth = 30000,
         skyHeight = 2000, 
@@ -50,7 +50,7 @@ var KAIOPUA = (function (main) {
 		get : function () { return environment; }
 	});
 	
-	sky = main.asset_register( assetPath, sky );
+	main.asset_register( assetPath, { data: sky } );
     
     /*===================================================
     

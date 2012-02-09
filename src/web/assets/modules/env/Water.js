@@ -6,7 +6,7 @@ Launcher section water handler.
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/env/Water",
+		assetPath = "assets/modules/env/Water.js",
 		water = {},
 		model,
 		rayTexturePath = "assets/textures/light_ray.png",
@@ -20,7 +20,14 @@ var KAIOPUA = (function (main) {
     
     water.instantiate = instantiate;
 	
-	water = main.asset_register( assetPath, water, true );
+	main.asset_register( assetPath, { 
+		data: water,
+		requirements: [
+			"assets/modules/core/Model.js"
+		],
+		callbacksOnReqs: init_internal,
+		wait: true
+	});
 	
 	/*===================================================
     
@@ -28,17 +35,11 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	main.asset_require( [
-		"assets/modules/core/Model"
-	], init_internal, true );
-	
 	function init_internal ( m ) {
 		console.log('internal water');
 		// assets
 		
 		model = m;
-		
-		main.asset_ready( assetPath );
 		
 	}
         

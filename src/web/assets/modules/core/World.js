@@ -5,7 +5,7 @@ World module, handles world in game.
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/core/World",
+		assetPath = "assets/modules/core/World.js",
 		world = {},
         game,
 		model,
@@ -46,21 +46,24 @@ var KAIOPUA = (function (main) {
 		get : function () { return parts; }
 	});
 	
-	world = main.asset_register( assetPath, world, true );
+	main.asset_register( assetPath, { 
+		data: world,
+		requirements: [
+			"assets/modules/core/Game.js",
+			"assets/modules/core/Model.js",
+			"assets/modules/core/Physics.js",
+			"assets/modules/utils/ObjectMaker.js",
+			"assets/modules/env/Water.js"
+		],
+		callbacksOnReqs: init_internal,
+		wait: true
+	});
 	
 	/*===================================================
     
     internal init
     
     =====================================================*/
-	
-	main.asset_require( [
-		"assets/modules/core/Game",
-		"assets/modules/core/Model",
-		"assets/modules/core/Physics",
-		"assets/modules/utils/ObjectMaker",
-		"assets/modules/env/Water"
-	], init_internal, true );
 	
 	function init_internal ( g, m, p, om, w ) {
 		console.log('internal world');
@@ -79,8 +82,6 @@ var KAIOPUA = (function (main) {
 			init_environment();
 			
 			ready = true;
-			
-			main.asset_ready( assetPath );
 			
 		}
 		

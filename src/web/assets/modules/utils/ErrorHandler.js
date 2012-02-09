@@ -6,7 +6,7 @@ Handles compatibility checks and user viewable errors.
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/utils/ErrorHandler",
+		assetPath = "assets/modules/utils/ErrorHandler.js",
         errorhandler = {},
         errorState = false,
         errorCurrent = {},
@@ -48,7 +48,7 @@ var KAIOPUA = (function (main) {
     errorhandler.process = process;
     errorhandler.clear = clear;
 	
-	errorhandler = main.asset_register( assetPath, errorhandler );
+	main.asset_register( assetPath, { data: errorhandler } );
     
     /*===================================================
     

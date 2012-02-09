@@ -6,7 +6,7 @@ Game module, handles sections of game.
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/core/Game",
+		assetPath = "assets/modules/core/Game.js",
 		game = {},
         assetloader,
 		errorhandler,
@@ -42,7 +42,7 @@ var KAIOPUA = (function (main) {
         transitionIn = 400,
         loadAssetsDelay = 500,
 		dependencies = [
-			"assets/modules/utils/AssetLoader",
+			"assets/modules/utils/AssetLoader.js",
             "assets/modules/utils/ErrorHandler.js",
 			"assets/modules/utils/UIHelper.js",
 			"assets/modules/utils/Dev.js"
@@ -181,16 +181,20 @@ var KAIOPUA = (function (main) {
 		get : function () { return cameraBG; },  
 		set : set_camera_bg
 	});
-	
-	game = main.asset_register( assetPath, game, true );
+
+	main.asset_register( assetPath, { 
+		data: game,
+		readyAutoUpdate: false,
+		requirements: dependencies,
+		callbacksOnReqs: init_internal,
+		wait: true
+	});
 	
 	/*===================================================
     
     internal init and loading
     
     =====================================================*/
-	
-	main.asset_require( dependencies, init_internal, true );
 	
 	function init_internal ( al, err, u ) {
 		console.log('internal game');
@@ -377,7 +381,10 @@ var KAIOPUA = (function (main) {
 		
 		// set ready
 		
-		main.asset_ready( assetPath, game );
+		main.asset_ready( assetPath );
+		/*main.asset_register( assetPath, { 
+			data: game
+		});*/
         
 		// start drawing
         
@@ -431,7 +438,7 @@ var KAIOPUA = (function (main) {
 	function init_launcher ( l ) {
 		
 		launcher = l;
-		
+		console.log('init launcher', launcher);
 		set_section( launcher );
 		
 	}

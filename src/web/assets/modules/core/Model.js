@@ -6,24 +6,34 @@ Model generator module.
 (function (main) {
     
     var shared = main.shared = main.shared || {},
-		model = new main.Asset( "assets/modules/core/Model", {
-			requirements: [
-				"assets/modules/core/Physics",
-				"assets/modules/utils/MathHelper"
-			], 
-			callbacksOnReqs: init,
-			wait: true
-		} );
+		assetPath = "assets/modules/core/Model.js",
+		model = {},
+		physics,
+		mathhelper,
+		durationBase = 1000,
+		objectCount = 0,
+		morphsNumMin = 5;
+	
+	main.asset_register( assetPath, {
+		data: model,
+		requirements: [
+			"assets/modules/core/Physics.js",
+			"assets/modules/utils/MathHelper.js"
+		], 
+		callbacksOnReqs: init,
+		wait: true
+	} );
 	
 	function init ( p, mh ) {
-		
-		var physics = p,
-			mathhelper = mh,
-			durationBase = 1000,
-			objectCount = 0,
-			morphsNumMin = 5;
-		
 		console.log('internal model', model);
+		physics = p;
+		mathhelper = mh;
+		
+		init_internal();
+		
+	}
+	
+	function init_internal () {
 		
 		/*===================================================
 		

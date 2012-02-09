@@ -6,7 +6,7 @@ Launcher section water handler.
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/env/WaterLauncher",
+		assetPath = "assets/modules/env/WaterLauncher.js",
 		water = {},
         wavesGeometry, 
         wavesMaterial,
@@ -57,7 +57,7 @@ var KAIOPUA = (function (main) {
 		get : function () { return environment; }
 	});
 	
-	water = main.asset_register( assetPath, water );
+	main.asset_register( assetPath, { data: water } );
     
     /*===================================================
     
