@@ -53,9 +53,9 @@ var KAIOPUA = (function (main) {
 		
 		return {
 			
-			//geometryAssetPath: "assets/models/Hero.js",
-			//materials: new THREE.MeshLambertMaterial( { ambient: 0x333333, color: 0xffeeee, shading: THREE.SmoothShading }  ),//new THREE.MeshNormalMaterial(),
-			//shading: THREE.SmoothShading
+			geometryAssetPath: "assets/models/Hero.js",
+			materials: new THREE.MeshLambertMaterial( { ambient: 0x333333, color: 0xffeeee, shading: THREE.SmoothShading }  ),//new THREE.MeshNormalMaterial(),
+			shading: THREE.SmoothShading
 			
 		};
 		
@@ -80,10 +80,7 @@ var KAIOPUA = (function (main) {
 		return {
 			
 			bodyType: 'capsule',
-			movementDamping: 0.5,
-			width: 50,
-			height: 100,
-			depth: 50
+			movementDamping: 0.5
 			
 		};
 		
