@@ -45,7 +45,7 @@ var KAIOPUA = (function (main) {
 			"assets/modules/utils/AssetLoader.js",
             "assets/modules/utils/ErrorHandler.js",
 			"assets/modules/utils/UIHelper.js",
-			"assets/modules/utils/Dev.js"
+			//"assets/modules/utils/Dev.js"
 		],
         assetsBasic = [
             "js/lib/three/Three.js",
@@ -85,8 +85,8 @@ var KAIOPUA = (function (main) {
 			"assets/modules/characters/Hero.js",
 			"assets/modules/env/Water.js",
 			"assets/modules/sections/Intro.js",
-            { path: "assets/models/World_Head.js", type: 'model' },
-			{ path: "assets/models/World_Tail.js", type: 'model' },
+            { path: "assets/models/Whale_Head.js", type: 'model' },
+			{ path: "assets/models/Whale_Tail.js", type: 'model' },
 			{ path: "assets/models/Hero.js", type: 'model' },
 			{ path: "assets/models/Sun_Moon.js", type: 'model' },
 			{ path: "assets/models/Cloud_001.js", type: 'model' },
@@ -102,11 +102,17 @@ var KAIOPUA = (function (main) {
 			{ path: "assets/models/Grass_Line_001.js", type: 'model' },
 			{ path: "assets/models/Grass_Line_002.js", type: 'model' },
 			{ path: "assets/models/Palm_Tree.js", type: 'model' },
+			{ path: "assets/models/Palm_Trees.js", type: 'model' },
 			{ path: "assets/models/Kukui_Tree.js", type: 'model' },
+			{ path: "assets/models/Kukui_Trees.js", type: 'model' },
 			{ path: "assets/models/Taro_Plant_001.js", type: 'model' },
-			{ path: "assets/models/Volcano.js", type: 'model' },
-			{ path: "assets/models/Lava_Lake.js", type: 'model' },
-			{ path: "assets/models/kukui_offset_test.js", type: 'model' },
+			{ path: "assets/models/Volcano_Large.js", type: 'model' },
+			{ path: "assets/models/Volcano_Small.js", type: 'model' },
+			{ path: "assets/models/Volcano_Rocks_001.js", type: 'model' },
+			{ path: "assets/models/Volcano_Rocks_002.js", type: 'model' },
+			{ path: "assets/models/Volcano_Rocks_003.js", type: 'model' },
+			{ path: "assets/models/Volcano_Rocks_004.js", type: 'model' },
+			{ path: "assets/models/Volcano_Rocks_005.js", type: 'model' },
 			"assets/textures/skybox_world_posx.jpg",
             "assets/textures/skybox_world_negx.jpg",
 			"assets/textures/skybox_world_posy.jpg",
@@ -295,7 +301,7 @@ var KAIOPUA = (function (main) {
         shared.signals.update = new signals.Signal();
 		
 		// renderer
-        renderer = new THREE.WebGLRenderer( { antialias: false, clearColor: 0x000000, clearAlpha: 0/*, maxLights: 10 */} );
+        renderer = new THREE.WebGLRenderer( { antialias: true, clearColor: 0x000000, clearAlpha: 0/*, maxLights: 10 */} );
         renderer.setSize( shared.screenWidth, shared.screenHeight );
         renderer.autoClear = false;
 		
@@ -366,7 +372,7 @@ var KAIOPUA = (function (main) {
 		
         // composer
         
-        set_render_processing();
+        set_render_processing( ['focusVignette'] );
 		
 		// add renderer to game dom element
 		

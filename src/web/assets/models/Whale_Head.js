@@ -3,7 +3,7 @@
     "metadata" :
     {
         "formatVersion" : 3,
-        "sourceFile"    : "World_Head.obj",
+        "sourceFile"    : "Whale_Head.obj",
         "generatedBy"   : "OBJConverter",
         "vertices"      : 1828,
         "faces"         : 3448,

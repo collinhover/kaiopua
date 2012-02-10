@@ -3,7 +3,7 @@
     "metadata" :
     {
         "formatVersion" : 3,
-        "sourceFile"    : "World_Tail.obj",
+        "sourceFile"    : "Whale_Tail.obj",
         "generatedBy"   : "OBJConverter",
         "vertices"      : 1820,
         "faces"         : 3464,

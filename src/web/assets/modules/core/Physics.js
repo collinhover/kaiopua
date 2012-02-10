@@ -787,7 +787,7 @@ var KAIOPUA = (function (main) {
 		
 		var geometry = mesh.geometry,
 			bbox,
-			centerOffset;
+			centerOffset = new THREE.Vector3();
 		
 		// if needs calculation
 		
@@ -797,10 +797,14 @@ var KAIOPUA = (function (main) {
 		
 		bbox = geometry.boundingBox;
 		
-		// get mesh's center offset
-		
-		//centerOffset = new THREE.Vector3( bbox.x[0] + (bbox.x[1] - bbox.x[0]) * 0.5, bbox.y[0] + (bbox.y[1] - bbox.y[0]) * 0.5, bbox.z[0] + (bbox.z[1] - bbox.z[0]) * 0.5 );
-		centerOffset = new THREE.Vector3( bbox.max.x - bbox.min.x, bbox.max.y - bbox.min.y, bbox.max.z - bbox.min.z ).multiplyScalar( 0.5 ).addSelf( bbox.min );
+		if ( bbox ) {
+			
+			// get mesh's center offset
+			
+			//centerOffset = new THREE.Vector3( bbox.x[0] + (bbox.x[1] - bbox.x[0]) * 0.5, bbox.y[0] + (bbox.y[1] - bbox.y[0]) * 0.5, bbox.z[0] + (bbox.z[1] - bbox.z[0]) * 0.5 );
+			centerOffset.set( bbox.max.x - bbox.min.x, bbox.max.y - bbox.min.y, bbox.max.z - bbox.min.z ).multiplyScalar( 0.5 ).addSelf( bbox.min );
+			
+		}
 		
 		return centerOffset;
 		
