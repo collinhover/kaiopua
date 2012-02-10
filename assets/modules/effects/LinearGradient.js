@@ -5,7 +5,7 @@ Draws a linear gradient into background.
 
 var KAIOPUA = (function (main) {
     
-    var assetPath = "assets/modules/effects/LinearGradient",
+    var assetPath = "assets/modules/effects/LinearGradient.js",
 		lg = {};
     
     /*===================================================
@@ -16,7 +16,7 @@ var KAIOPUA = (function (main) {
     
     lg.generate = generate;
 	
-	lg = main.asset_register( assetPath, lg );
+	main.asset_register( assetPath, { data: lg } );
     
     /*===================================================
     
@@ -165,4 +165,4 @@ var KAIOPUA = (function (main) {
     
     return main; 
     
-}(KAIOPUA || {}));
+} ( KAIOPUA ) );

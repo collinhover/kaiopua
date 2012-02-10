@@ -6,7 +6,7 @@ Menu maker module, handles menu creation and interaction.
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/utils/MenuMaker",
+		assetPath = "assets/modules/utils/MenuMaker.js",
 		menumaker = {},
         uihelper,
         menuIDBase = 'game_menu',
@@ -21,7 +21,14 @@ var KAIOPUA = (function (main) {
     menumaker.make_menu = make_menu;
     menumaker.make_button = make_button;
 	
-	menumaker = main.asset_register( assetPath, menumaker, true );
+	main.asset_register( assetPath, { 
+		data: menumaker,
+		requirements: [
+			"assets/modules/utils/UIHelper.js"
+		],
+		callbacksOnReqs: init_internal,
+		wait: true
+	});
 	
 	/*===================================================
     
@@ -29,17 +36,11 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	main.assets_require( [
-		"assets/modules/utils/UIHelper"
-	], init_internal, true );
-	
 	function init_internal ( uh ) {
 		
 		// assets
 		
 		uihelper = uh;
-		
-		main.asset_ready( assetPath );
 		
 	}
     
@@ -235,4 +236,4 @@ var KAIOPUA = (function (main) {
     
     return main; 
     
-}(KAIOPUA || {}));
+} ( KAIOPUA ) );

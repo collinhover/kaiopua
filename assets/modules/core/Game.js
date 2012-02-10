@@ -6,7 +6,7 @@ Game module, handles sections of game.
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/core/Game",
+		assetPath = "assets/modules/core/Game.js",
 		game = {},
         assetloader,
 		errorhandler,
@@ -42,10 +42,10 @@ var KAIOPUA = (function (main) {
         transitionIn = 400,
         loadAssetsDelay = 500,
 		dependencies = [
-			"assets/modules/utils/AssetLoader",
+			"assets/modules/utils/AssetLoader.js",
             "assets/modules/utils/ErrorHandler.js",
 			"assets/modules/utils/UIHelper.js",
-			"assets/modules/utils/Dev.js"
+			//"assets/modules/utils/Dev.js"
 		],
         assetsBasic = [
             "js/lib/three/Three.js",
@@ -85,8 +85,8 @@ var KAIOPUA = (function (main) {
 			"assets/modules/characters/Hero.js",
 			"assets/modules/env/Water.js",
 			"assets/modules/sections/Intro.js",
-            { path: "assets/models/World_Head.js", type: 'model' },
-			{ path: "assets/models/World_Tail.js", type: 'model' },
+            { path: "assets/models/Whale_Head.js", type: 'model' },
+			{ path: "assets/models/Whale_Tail.js", type: 'model' },
 			{ path: "assets/models/Hero.js", type: 'model' },
 			{ path: "assets/models/Sun_Moon.js", type: 'model' },
 			{ path: "assets/models/Cloud_001.js", type: 'model' },
@@ -102,10 +102,17 @@ var KAIOPUA = (function (main) {
 			{ path: "assets/models/Grass_Line_001.js", type: 'model' },
 			{ path: "assets/models/Grass_Line_002.js", type: 'model' },
 			{ path: "assets/models/Palm_Tree.js", type: 'model' },
+			{ path: "assets/models/Palm_Trees.js", type: 'model' },
 			{ path: "assets/models/Kukui_Tree.js", type: 'model' },
+			{ path: "assets/models/Kukui_Trees.js", type: 'model' },
 			{ path: "assets/models/Taro_Plant_001.js", type: 'model' },
-			{ path: "assets/models/Volcano.js", type: 'model' },
-			{ path: "assets/models/Lava_Lake.js", type: 'model' },
+			{ path: "assets/models/Volcano_Large.js", type: 'model' },
+			{ path: "assets/models/Volcano_Small.js", type: 'model' },
+			{ path: "assets/models/Volcano_Rocks_001.js", type: 'model' },
+			{ path: "assets/models/Volcano_Rocks_002.js", type: 'model' },
+			{ path: "assets/models/Volcano_Rocks_003.js", type: 'model' },
+			{ path: "assets/models/Volcano_Rocks_004.js", type: 'model' },
+			{ path: "assets/models/Volcano_Rocks_005.js", type: 'model' },
 			"assets/textures/skybox_world_posx.jpg",
             "assets/textures/skybox_world_negx.jpg",
 			"assets/textures/skybox_world_posy.jpg",
@@ -180,16 +187,20 @@ var KAIOPUA = (function (main) {
 		get : function () { return cameraBG; },  
 		set : set_camera_bg
 	});
-	
-	game = main.asset_register( assetPath, game, true );
+
+	main.asset_register( assetPath, { 
+		data: game,
+		readyAutoUpdate: false,
+		requirements: dependencies,
+		callbacksOnReqs: init_internal,
+		wait: true
+	});
 	
 	/*===================================================
     
     internal init and loading
     
     =====================================================*/
-	
-	main.assets_require( dependencies, init_internal, true );
 	
 	function init_internal ( al, err, u ) {
 		console.log('internal game');
@@ -227,13 +238,13 @@ var KAIOPUA = (function (main) {
 	
 	function load_basics () {
 		
-		main.assets_require( assetsBasic, [init_basics, load_launcher] );
+		main.asset_require( assetsBasic, [init_basics, load_launcher] );
 		
 	}
 	
 	function load_launcher () {
 		
-		main.assets_require( assetsLauncher, [init_launcher, load_game] );
+		main.asset_require( assetsLauncher, [init_launcher, load_game] );
 		
 	}
 	
@@ -245,7 +256,7 @@ var KAIOPUA = (function (main) {
 			
 			// load game assets and init game
 			
-			main.assets_require( assetsGame, init_game, true, domElement );
+			main.asset_require( assetsGame, init_game, true, domElement );
 			
 		}, loadAssetsDelay);
 		
@@ -260,7 +271,7 @@ var KAIOPUA = (function (main) {
     function init_basics () {
 		
 		var shaderScreen = THREE.ShaderExtras[ "screen" ],
-            shaderFocusVignette = main.asset_data("assets/modules/effects/FocusVignette");
+            shaderFocusVignette = main.get_asset_data("assets/modules/effects/FocusVignette");
 			/*bg = effects.LinearGradient.generate( {
 				colors: [0x0F042E, 0x1D508F, 0x529AD1, 0x529AD1, 0x455AE0],
 				stops: [0, 0.4, 0.6, 0.8, 1.0],
@@ -290,7 +301,7 @@ var KAIOPUA = (function (main) {
         shared.signals.update = new signals.Signal();
 		
 		// renderer
-        renderer = new THREE.WebGLRenderer( { antialias: false, clearColor: 0x000000, clearAlpha: 0/*, maxLights: 10 */} );
+        renderer = new THREE.WebGLRenderer( { antialias: true, clearColor: 0x000000, clearAlpha: 0/*, maxLights: 10 */} );
         renderer.setSize( shared.screenWidth, shared.screenHeight );
         renderer.autoClear = false;
 		
@@ -361,7 +372,7 @@ var KAIOPUA = (function (main) {
 		
         // composer
         
-        set_render_processing();
+        set_render_processing( ['focusVignette'] );
 		
 		// add renderer to game dom element
 		
@@ -376,7 +387,10 @@ var KAIOPUA = (function (main) {
 		
 		// set ready
 		
-		main.asset_ready( assetPath, game );
+		main.asset_ready( assetPath );
+		/*main.asset_register( assetPath, { 
+			data: game
+		});*/
         
 		// start drawing
         
@@ -430,7 +444,7 @@ var KAIOPUA = (function (main) {
 	function init_launcher ( l ) {
 		
 		launcher = l;
-		
+		console.log('init launcher', launcher);
 		set_section( launcher );
 		
 	}
@@ -445,7 +459,7 @@ var KAIOPUA = (function (main) {
 		
 		// assets
 		
-		menumaker = main.asset_data( 'assets/modules/utils/MenuMaker' );
+		menumaker = main.get_asset_data( 'assets/modules/utils/MenuMaker' );
 		
 		// init menus
 		
@@ -694,55 +708,43 @@ var KAIOPUA = (function (main) {
 		
 		var i, l,
 			object,
+			object3D,
 			sceneTarget,
 			callback;
+		
+		// handle parameters
+		
+		sceneDefault = sceneDefault || scene;
 		
 		// for each object
 		
 		if ( objects.hasOwnProperty('length') === false ) {
 			objects = [ objects ];
 		}
-		
+		console.log('adding to scene ', objects.length);
 		for ( i = 0, l = objects.length; i < l; i ++ ) {
-			
+		
 			object = objects[ i ];
-			
-			sceneTarget = extract_scene( object.sceneTarget || sceneDefault );
 			
 			callback = object.callbackAdd;
 			
-			// if object is add / scene pair
+			sceneTarget = object.sceneTarget || sceneDefault;
 			
-			if ( typeof object.addTarget !== 'undefined' ) {
-				
-				object = object.addTarget;
-				
-			}
-			
-			// if is character
-			
-			if ( typeof object.model !== 'undefined' ) {
-				
-				object = object.model;
-				
-			}
+			object3D = object.addTarget || object;
 			
 			// add
 			
-			if ( typeof object.mesh !== 'undefined' ) {
+			if ( typeof object3D !== 'undefined' ) {
 				
-				sceneTarget.add( object.mesh );
+				sceneTarget.add( object3D );
 				
-				if ( typeof object.physics !== 'undefined' ) {
+				// physics
+				
+				if ( typeof object3D.physics !== 'undefined' ) {
 					
-					physics.add( object.mesh, object.physics );
+					physics.add( object3D.physics );
 					
 				}
-				
-			}
-			else if ( object instanceof THREE.Object3D ) {
-				
-				sceneTarget.add( object );
 				
 			}
 			
@@ -762,8 +764,15 @@ var KAIOPUA = (function (main) {
 		
 		var i, l,
 			object,
+			object3D,
 			sceneTarget,
 			callback;
+		
+		// handle parameters
+		
+		sceneDefault = sceneDefault || scene;
+		
+		// for each object
 		
 		if ( objects.hasOwnProperty('length') === false ) {
 			objects = [ objects ];
@@ -773,42 +782,25 @@ var KAIOPUA = (function (main) {
 		
 			object = objects[ i ];
 			
-			sceneTarget = extract_scene( object.sceneTarget || sceneDefault );
-			
 			callback = object.callbackRemove;
 			
-			// if object is add / scene pair
+			sceneTarget = object.sceneTarget || sceneDefault;
 			
-			if ( typeof object.addTarget !== 'undefined' ) {
-				
-				object = object.addTarget;
-				
-			}
-			
-			// if is character
-			
-			if ( typeof object.model !== 'undefined' ) {
-				
-				object = object.model;
-				
-			}
+			object3D = object.addTarget || object;
 			
 			// remove
 			
-			if ( typeof object.mesh !== 'undefined' ) {
-			
-				sceneTarget.remove( object.mesh );
-			
-				if ( typeof object.physics !== 'undefined' ) {
+			if ( typeof object3D !== 'undefined' ) {
+				
+				sceneTarget.remove( object3D );
+				
+				// physics
+				
+				if ( typeof object3D.physics !== 'undefined' ) {
 					
-					physics.remove( object.physics );
+					physics.remove( object3D.physics );
 					
 				}
-				
-			}
-			else if ( object instanceof THREE.Object3D ) {
-				
-				sceneTarget.remove( object );
 				
 			}
 			
@@ -821,30 +813,6 @@ var KAIOPUA = (function (main) {
 			}
 			
         }
-		
-	}
-	
-	function extract_scene ( sceneTarget ) {
-		
-		sceneTarget = sceneTarget || scene;
-		
-		// if scene is character
-		
-		if ( typeof sceneTarget.model !== 'undefined' ) {
-			
-			sceneTarget = sceneTarget.model;
-			
-		}
-		
-		// if scene is model
-		
-		if ( typeof sceneTarget.mesh !== 'undefined' ) {
-			
-			sceneTarget = sceneTarget.mesh;
-			
-		}
-		
-		return sceneTarget;
 		
 	}
 	
@@ -1049,10 +1017,10 @@ var KAIOPUA = (function (main) {
 		
 		// assets
 		
-		physics = main.asset_data( 'assets/modules/core/Physics' );
-		world = main.asset_data( 'assets/modules/core/World' );
-		player = main.asset_data( 'assets/modules/core/Player' );
-		intro = main.asset_data( 'assets/modules/sections/Intro' );
+		physics = main.get_asset_data( 'assets/modules/core/Physics' );
+		world = main.get_asset_data( 'assets/modules/core/World' );
+		player = main.get_asset_data( 'assets/modules/core/Player' );
+		intro = main.get_asset_data( 'assets/modules/sections/Intro' );
 		
 		// hide static menu
 		
@@ -1268,4 +1236,4 @@ var KAIOPUA = (function (main) {
         
     return main; 
     
-}(KAIOPUA || {}));
+} ( KAIOPUA ) );

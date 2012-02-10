@@ -5,7 +5,7 @@ Physics module, handles physics in game using JigLibJS.
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/core/Physics",
+		assetPath = "assets/modules/core/Physics.js",
 		physics = {},
 		mathhelper,
 		ready = false,
@@ -64,17 +64,20 @@ var KAIOPUA = (function (main) {
 		get : function () { return system; }
 	});
 	
-	physics = main.asset_register( assetPath, physics, true );
+	main.asset_register( assetPath, { 
+		data: physics,
+		requirements: [
+			"assets/modules/utils/MathHelper.js"
+		],
+		callbacksOnReqs: init_internal,
+		wait: true
+	});
 	
 	/*===================================================
     
     internal init
     
     =====================================================*/
-	
-	main.assets_require( [
-		"assets/modules/utils/MathHelper"
-	], init_internal, true );
 	
 	function init_internal ( mh ) {
 		console.log('internal physics');
@@ -86,8 +89,6 @@ var KAIOPUA = (function (main) {
 			init_system();
 			
 			ready = true;
-			
-			main.asset_ready( assetPath );
 			
 		}
 		
@@ -598,33 +599,51 @@ var KAIOPUA = (function (main) {
 	// adds mesh's rigid body to physics world
 	// creates new rigid body if one is not passed
 	
-	function add ( mesh, link, parameters ) {
+	function add ( linkOrMesh, parameters ) {
 		
-		var rigidBody;
+		var rigidBody,
+			link;
 		
-		link = link || translate( mesh, parameters );
+		if ( typeof linkOrMesh !== 'undefined' ) {
+			
+			// if link is object3D or rigidBody does not exist, translate
+			
+			if ( linkOrMesh instanceof THREE.Object3D || typeof linkOrMesh.rigidBody === 'undefined' ) {
+				
+				link = translate( linkOrMesh, parameters );
+				
+			}
+			else {
+				
+				link = linkOrMesh;
+				
+			}
+			
+			rigidBody = link.rigidBody;
+			
+			// add to system
+			
+			system.colliders.push( rigidBody.collider );
+			
+			// zero out velocities
+			
+			rigidBody.velocityMovement.force.set( 0, 0, 0 );
+			
+			rigidBody.velocityGravity.force.set( 0, 0, 0 );
+			
+			// add to links list
+			
+			links.push( link );
+			
+		}
 		
-		rigidBody = link.rigidBody;
-		
-		// add to system
-		
-		system.colliders.push( rigidBody.collider );
-		
-		// zero out velocities
-		
-		rigidBody.velocityMovement.force.set( 0, 0, 0 );
-		
-		rigidBody.velocityGravity.force.set( 0, 0, 0 );
-		
-		// add to links list
-		
-		links.push( link );
+		return link;
 		
 	}
 	
 	// removes mesh's rigid body from physics world
 	
-	function remove ( linkorMeshOrBodyOrName ) {
+	function remove ( linkOrMeshOrBodyOrName ) {
 		
 		var i, l,
 			link,
@@ -634,7 +653,7 @@ var KAIOPUA = (function (main) {
 			
 			link = links[ i ];
 			
-			if ( link === linkorMeshOrBodyOrName || link.mesh === linkorMeshOrBodyOrName || link.rigidBody === linkorMeshOrBodyOrName || link.name === linkorMeshOrBodyOrName ) {
+			if ( link === linkOrMeshOrBodyOrName || link.mesh === linkOrMeshOrBodyOrName || link.rigidBody === linkOrMeshOrBodyOrName || link.name === linkOrMeshOrBodyOrName ) {
 				
 				links.splice( i, 1 );
 				
@@ -768,7 +787,7 @@ var KAIOPUA = (function (main) {
 		
 		var geometry = mesh.geometry,
 			bbox,
-			centerOffset;
+			centerOffset = new THREE.Vector3();
 		
 		// if needs calculation
 		
@@ -778,10 +797,14 @@ var KAIOPUA = (function (main) {
 		
 		bbox = geometry.boundingBox;
 		
-		// get mesh's center offset
-		
-		//centerOffset = new THREE.Vector3( bbox.x[0] + (bbox.x[1] - bbox.x[0]) * 0.5, bbox.y[0] + (bbox.y[1] - bbox.y[0]) * 0.5, bbox.z[0] + (bbox.z[1] - bbox.z[0]) * 0.5 );
-		centerOffset = new THREE.Vector3( bbox.max.x - bbox.min.x, bbox.max.y - bbox.min.y, bbox.max.z - bbox.min.z ).multiplyScalar( 0.5 ).addSelf( bbox.min );
+		if ( bbox ) {
+			
+			// get mesh's center offset
+			
+			//centerOffset = new THREE.Vector3( bbox.x[0] + (bbox.x[1] - bbox.x[0]) * 0.5, bbox.y[0] + (bbox.y[1] - bbox.y[0]) * 0.5, bbox.z[0] + (bbox.z[1] - bbox.z[0]) * 0.5 );
+			centerOffset.set( bbox.max.x - bbox.min.x, bbox.max.y - bbox.min.y, bbox.max.z - bbox.min.z ).multiplyScalar( 0.5 ).addSelf( bbox.min );
+			
+		}
 		
 		return centerOffset;
 		
@@ -932,22 +955,6 @@ var KAIOPUA = (function (main) {
 		
 		rotation = ( mesh.useQuaternion === true ? mesh.quaternion : mesh.matrix );
 		
-		// if source is character, cascade
-		/*
-		if ( typeof source.model !== 'undefined' ) {
-			
-			source = source.model;
-			
-		}
-		
-		// if source is model, cascade
-		
-		if ( typeof source.mesh !== 'undefined' ) {
-			
-			source = source.mesh;
-			
-		}
-		*/
 		// if source is 3D object, cascade
 		if ( source instanceof THREE.Object3D ) {
 			
@@ -1071,39 +1078,7 @@ var KAIOPUA = (function (main) {
 		
 		// handle parameters
 		
-		// if mesh is character, cascade
-		
-		if ( typeof mesh.model !== 'undefined' ) {
-			
-			mesh = mesh.model;
-			
-		}
-		
-		// if mesh is model, cascade
-		
-		if ( typeof mesh.mesh !== 'undefined' ) {
-			
-			mesh = mesh.mesh;
-			
-		}
-		
 		position = mesh.position;
-		
-		// if source is character, cascade
-		
-		if ( typeof source.model !== 'undefined' ) {
-			
-			source = source.model;
-			
-		}
-		
-		// if source is model, cascade
-		
-		if ( typeof source.mesh !== 'undefined' ) {
-			
-			source = source.mesh;
-			
-		}
 		
 		// if source is 3D object, cascade
 		if ( source instanceof THREE.Object3D ) {
@@ -1628,4 +1603,4 @@ var KAIOPUA = (function (main) {
 	
 	return main;
 	
-}(KAIOPUA || {}));
+} ( KAIOPUA ) );

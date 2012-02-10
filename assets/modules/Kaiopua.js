@@ -1,12 +1,11 @@
 /*
 Kaiopua.js
-Main module, handles browser events.
+Main module.
 */
 
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
-        assets = main.assets = main.assets || {},
 		assetloader,
 		game,
 		requiredAssets = [],
@@ -24,27 +23,6 @@ var KAIOPUA = (function (main) {
         ];
 	
 	/*===================================================
-    
-    public properties
-    
-    =====================================================*/
-	
-	main.extend = extend;
-	main.ensure_array = ensure_array;
-	
-	main.get_asset_path = get_asset_path;
-	main.get_ext = get_ext;
-	
-	main.add_default_ext = add_default_ext;
-	main.remove_ext = remove_ext;
-	main.is_image_ext = is_image_ext;
-	
-	main.asset_register = asset_register;
-	main.assets_require = assets_require;
-	main.asset_data = asset_data;
-	main.asset_ready = asset_ready;
-	
-    /*===================================================
     
     internal init
     
@@ -123,11 +101,11 @@ var KAIOPUA = (function (main) {
 		
 		// asset loader and setup
 		
-		assetloader = assets.modules.utils.AssetLoader;
+		assetloader = main.get_asset_data( 'assets/modules/utils/AssetLoader.js' );
 		
 		assetloader.add_loaded_locations( libList );
 		
-		assets_require( setupList, init_setup, true );
+		main.asset_require( setupList, init_setup, true );
 		
     }
     
@@ -139,6 +117,7 @@ var KAIOPUA = (function (main) {
         
         // resize once
         on_window_resize();
+		
     }
 	
 	/*===================================================
@@ -152,7 +131,7 @@ var KAIOPUA = (function (main) {
 	// and correct copying of getters and setters
 	// does not do deep copies
 	
-	function extend ( source, destination ) {
+	main.extend = function ( source, destination ) {
 		
 		var i, l,
 			propertyNames,
@@ -179,7 +158,7 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function ensure_array ( target ) {
+	main.ensure_array = function ( target ) {
 		
 		target = target || [];
 		
@@ -191,16 +170,16 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function get_asset_path ( location ) {
+	main.get_asset_path = function ( location ) {
 		
-		return location.path || location;
+		return location.path || location
 		
 	}
 	
-	function get_ext ( location ) {
+	main.get_ext = function ( location ) {
         var path, dotIndex, ext = '';
 		
-		path = get_asset_path( location );
+		path = main.get_asset_path( location );
         
         dotIndex = path.lastIndexOf('.');
         
@@ -211,9 +190,9 @@ var KAIOPUA = (function (main) {
         return ext;
     }
 	
-	function add_default_ext ( location ) {
+	main.add_default_ext = function ( location ) {
 		
-		var path = remove_ext( location );
+		var path = main.remove_ext( location );
 		
 		path = path.replace(/\./g, "") + ".js";
 		
@@ -221,11 +200,11 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function remove_ext ( location ) {
+	main.remove_ext = function ( location ) {
 		
 		var path, dotIndex;
 		
-        path = get_asset_path( location );
+        path = main.get_asset_path( location );
         
         dotIndex = path.lastIndexOf('.');
         
@@ -237,30 +216,30 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function get_alt_path ( location ) {
+	main.get_alt_path = function ( location ) {
 		
 		var path, ext;
 		
-		path = get_asset_path( location );
-		ext = get_ext( path );
+		path = main.get_asset_path( location );
+		ext = main.get_ext( path );
 		
 		// if has no extension, add default
 		
 		if ( ext === '' ) {
 			
-			return add_default_ext( path );
+			return main.add_default_ext( path );
 			
 		}
 		// if has extension, remove
 		else {
 			
-			return remove_ext( path );
+			return main.remove_ext( path );
 			
 		}
 		
 	}
 	
-	function is_image_ext ( ext ) {
+	main.is_image_ext = function ( ext ) {
 		
 		if ( ext === 'jpg' || ext === 'jpeg' || ext === 'png' || ext === 'gif' || ext === 'bmp' ) {
 			return true;
@@ -315,14 +294,13 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function asset_data( location, data, initializeWhenNotFound, allowInitialization, attempts, originalPath ) {
+	main.get_asset = function ( location, attempts ) {
 		
 		var path,
 			cascade,
 			parent,
 			assetName,
 			asset,
-			ext,
 			i, l;
 		
 		// init parent and asset
@@ -331,11 +309,11 @@ var KAIOPUA = (function (main) {
 		
 		// cascade path
 		
-		path = get_asset_path( location );
+		path = main.get_asset_path( location );
 		
 		cascade = asset_path_cascade( path );
 		
-		// get data
+		// get asset
 		
 		for ( i = 0, l = cascade.length; i < l; i++ ) {
 			
@@ -351,18 +329,7 @@ var KAIOPUA = (function (main) {
 			
 			if ( typeof asset === 'undefined' ) {
 				
-				// if allowed to initialize a cascade point
-				
-				if ( allowInitialization === true ) {
-					
-					parent[ assetName ] = asset = {};
-					
-				}
-				else {
-					
-					break;
-				
-				}
+				break;
 				
 			}
 			
@@ -379,40 +346,9 @@ var KAIOPUA = (function (main) {
 			
 			if ( attempts === 1 ) {
 				
-				return asset_data( get_alt_path( path ), data, initializeWhenNotFound, false, attempts + 1, path );
+				return main.get_asset( main.get_alt_path( path ), attempts + 1 );
 				
 			}
-			else if ( attempts === 2 && initializeWhenNotFound === true ) {
-				
-				return asset_data( originalPath, data, initializeWhenNotFound, true, attempts + 1, originalPath );
-				
-			}
-			
-		}
-		
-		// if data passed and asset found
-		
-		if ( typeof data !== 'undefined' && typeof asset !== 'undefined' ) {
-			
-			// copy data into asset object
-			// overwrite if image
-			
-			if ( data.hasOwnProperty('nodeName') && data.nodeName.toLowerCase() === 'img' ) {
-				
-				asset = data;
-				
-			}
-			// copy properties of existing asset into data and assign to asset
-			// order is important to ensure data remains an instance of whatever it was before
-			else {
-				
-				asset = main.extend( asset, data );
-				
-			}
-			
-			// store updated asset
-			
-			parent[ assetName ] = asset;
 			
 		}
 		
@@ -420,36 +356,71 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function asset_register( path, data, notReady ) {
+	main.set_asset = function ( location, assetNew ) {
 		
-		var cascade,
+		var path,
+			cascade,
 			parent,
 			assetName,
 			asset,
+			data,
+			dataNew,
 			i, l;
 		
-		// initialize asset data
+		// if new asset passed
 		
-		asset = asset_data( path, data, true );
-		
-		// if asset was already tagged and ready state is false
-		// set as not ready
-		
-		if ( typeof asset._kaiopua !== 'undefined' && asset._kaiopua.ready === false ) {
+		if ( assetNew instanceof KaiopuaAsset ) {
 			
-			notReady = true;
+			// init parent and asset
 			
-		}
-		
-		// tag asset
+			asset = parent = main;
 			
-		asset_tag( asset );
-		
-		// if is ready now
-		
-		if ( notReady !== true ) {
+			// cascade path
 			
-			asset_ready( path, asset );
+			path = main.get_asset_path( location );
+			
+			cascade = asset_path_cascade( path );
+			
+			// setup asset path
+			
+			for ( i = 0, l = cascade.length; i < l; i++ ) {
+				
+				// set as parent for next
+				
+				parent = asset;
+				
+				// get name of current point in cascade
+				
+				assetName = cascade[ i ];
+				
+				// get or build asset
+				
+				asset = parent[ assetName ] = parent[ assetName ] || {};
+				
+			}
+			
+			// if asset at path and is not empty
+			console.log('     >>> current asset at path?', asset );
+			if ( asset instanceof KaiopuaAsset && asset.is_empty() === false ) {
+				console.log('     >>> current asset is not empty' );
+				// if new asset is not empty
+				
+				if ( assetNew.is_empty() === false ) {
+					console.log('     >>> asset new is not empty!' );
+					// merge new asset into current
+					
+					asset.merge_asset_self( assetNew );
+					
+				}
+				
+			}
+			// else replace current empty asset with new asset
+			else {
+				console.log('asset current is empty, replacing with new!' );
+				
+				parent[ assetName ] = asset = assetNew;
+				
+			}
 			
 		}
 		
@@ -457,33 +428,57 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function asset_tag ( asset ) {
+	main.get_asset_data = function ( location ) {
 		
-		var ap;
-			
-		// add asset properties object
+		var asset,
+			data;
 		
-		ap = asset._kaiopua = asset._kaiopua || {};
+		// get asset at location
 		
-		// set properties
+		asset = main.get_asset( location );
 		
-		if ( ap.hasOwnProperty( 'ready' ) === false ) {
-			
-			ap.ready = false;
-			
-		}
+		// asset data, assume asset is data if not instance of asset
+				
+		data = ( asset instanceof KaiopuaAsset ) ? asset.data : asset;
 		
-		return asset;
+		return data;
 		
 	}
 	
-	function asset_ready( path, data ) {
+	main.asset_register = function ( path, parameters ) {
 		
-		var asset = data || asset_data( path );
+		var assetNew,
+			assetCurrent,
+			assetCurrentWaiting;
 		
-		if ( typeof asset !== 'undefined' && asset._kaiopua.ready === false ) {
+		// initialize new asset
+		
+		assetNew = new KaiopuaAsset( path, parameters );
+		console.log('registration of new asset!', assetNew );
+		
+		// asset is usually only useful internally
+		// so return asset data
+		
+		return assetNew.data;
+		
+	}
+	
+	main.asset_ready = function ( path, asset ) {
+		
+		var i, l;
+		console.log(' asset wants to be ready...', path, asset );
+		asset = asset || main.get_asset( path );
+		console.log(' ... readyAutoUpdate? ', asset.readyAutoUpdate);
+		
+		if ( asset instanceof KaiopuaAsset ) {
+			console.log('  ... asset is ready, ', asset.path, asset );
+			// ready and not waiting
 			
-			asset._kaiopua.ready = true;
+			asset.ready = true;
+			
+			asset.wait = false;
+			
+			// dispatch signal
 			
 			if ( typeof shared.signals !== 'undefined' && typeof shared.signals.assetReady !== 'undefined' ) {
 				
@@ -495,7 +490,7 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function assets_require( requirements, callbackList, waitForAssetsReady, loaderUIContainer ) {
+	main.asset_require = function ( requirements, callbackList, waitForAssetsReady, loaderUIContainer, assetSource ) {
 		
 		var callback_outer,
 			on_asset_ready,
@@ -507,9 +502,9 @@ var KAIOPUA = (function (main) {
 		
 		// get if arguments are not array
 		
-		requirements = ensure_array( requirements );
+		requirements = main.ensure_array( requirements );
 		
-		callbackList = ensure_array( callbackList );
+		callbackList = main.ensure_array( callbackList );
 		
 		// modify original callback to wrap in new function
 		// that parses requirements and applies each asset as argument to callback
@@ -529,6 +524,7 @@ var KAIOPUA = (function (main) {
 				
 				assetsReady.push( path );
 				console.log( '> an asset is ready! (' + assetsReady.length + ' / ' + requirements.length + ' - ' + path + ' )' );
+				
 				// check if no more to wait for
 				
 				if ( assetsWaitingFor.length === 0 && assetsReady.length === requirements.length ) {
@@ -552,7 +548,7 @@ var KAIOPUA = (function (main) {
 			// make one extra attempt with alternative path to check if waiting for asset to be ready
 			else if ( secondAttempt !== true ) {
 				
-				on_asset_ready( get_alt_path( path ), true );
+				on_asset_ready( main.get_alt_path( path ), true );
 				
 			}
 			
@@ -571,6 +567,14 @@ var KAIOPUA = (function (main) {
 				callback = callbackList[ i ];
 				
 				callback.apply( this, assetsRequired );
+				
+			}
+			
+			// if source asset passed and needs auto ready update
+			
+			if ( assetSource instanceof KaiopuaAsset && assetSource.readyAutoUpdate === true ) {
+				
+				assetSource.on_ready();
 				
 			}
 			
@@ -602,17 +606,17 @@ var KAIOPUA = (function (main) {
 				
 				location = requirements[ i ];
 				
-				path = get_asset_path( location );
+				path = main.get_asset_path( location );
 				
-				// get asset data
+				// get asset
 				
-				asset = asset_data( location );
+				asset = main.get_asset( location );
 				
-				if ( typeof asset !== 'undefined' ) {
+				// add data to required list
+				
+				if ( asset instanceof KaiopuaAsset ) {
 					
-					// add to required list
-					
-					assetsRequired.push( asset );
+					assetsRequired.push( asset.data );
 					
 				}
 				
@@ -624,7 +628,7 @@ var KAIOPUA = (function (main) {
 					
 					// check ready status
 					
-					if ( typeof asset === 'undefined' || ( typeof asset._kaiopua !== 'undefined' && asset._kaiopua.ready === true ) ) {
+					if ( asset instanceof KaiopuaAsset && asset.ready === true ) {
 						
 						on_asset_ready( path );
 						
@@ -638,7 +642,7 @@ var KAIOPUA = (function (main) {
 						
 					}
 					
-					if ( typeof asset !== 'undefined' && asset._kaiopua.ready !== true ) {
+					if ( asset instanceof KaiopuaAsset && asset.ready !== true ) {
 						
 						console.log( '< an asset is not ready, listening for asset ready signal ( ' + path + ' )' );
 						
@@ -662,7 +666,7 @@ var KAIOPUA = (function (main) {
 		
 		if ( typeof assetloader === 'undefined' ) {
 			
-			assetloader = assets.modules.utils.AssetLoader;
+			assetloader = main.get_asset_data( 'assets/modules/utils/AssetLoader.js' );
 			
 		}
 		
@@ -677,6 +681,192 @@ var KAIOPUA = (function (main) {
 		// pass all requirements to loader
 		
 		assetloader.load( requirements, callback_outer );
+		
+	}
+	
+	/*===================================================
+    
+    asset instance
+    
+    =====================================================*/
+	
+	function KaiopuaAsset ( path, parameters ) {
+		
+		var assetNew = this;
+		
+		// handle parameters
+		
+		parameters = parameters || {};
+		
+		parameters.path = path;
+		console.log('<<<<< new asset >>>>');
+		console.log(path, parameters.data);
+		assetNew.merge_asset_self( parameters, true );
+		console.log(assetNew);
+		
+		// if asset has path
+		
+		if ( typeof assetNew.path !== 'undefined' ) {
+			
+			// store this new asset
+			// returned asset from store is new asset merged into current asset if exists
+			// or this new asset if no assets at path yet
+			
+			assetNew = main.set_asset( assetNew.path, assetNew );
+			console.log('<<<<< is new the same? ', assetNew === this, ' is this empty?', this.is_empty(), ' is assetNew ready?', assetNew.ready );
+			
+			// regardless of storage results
+			// handle this new asset's readiness and requirements
+			
+			if ( assetNew === this && this.readyAutoUpdate === true && ( this.requirements.length === 0 || this.wait !== true ) ) {
+				console.log('<<<<< new asset ready right away!');
+				this.on_ready();
+				
+			}
+			
+			if ( this.requirements.length > 0 ) {
+				console.log('<<<<< new asset has requirements', this);
+				main.asset_require( this.requirements, this.callbacksOnReqs, this.wait, this.loaderUIContainer, this );
+			
+			}
+			
+		}
+		
+		return assetNew;
+		
+	}
+	
+	KaiopuaAsset.prototype = new Object();
+	KaiopuaAsset.prototype.constructor = KaiopuaAsset;
+	
+	KaiopuaAsset.prototype.handle_requirements = function () {
+		
+		
+		
+	}
+	
+	KaiopuaAsset.prototype.merge_asset_self = function ( asset, includeRequirements ) {
+		
+		var readyCallbackIndex;
+		
+		// TODO:
+		// make sure merging accounts for new requirements and loading
+		
+		if ( typeof asset !== 'undefined' ) {
+			
+			this.path = asset.path;
+			
+			// merge asset data into this data
+			
+			this.merge_asset_data_self( asset );
+			
+			// if either asset is waiting
+			
+			if ( typeof this.wait !== 'boolean' || this.wait === false ) {
+			
+				if ( asset.wait === true ) {
+					
+					this.wait = asset.wait;
+					
+				}
+				else {
+					
+					this.wait = false;
+					
+				}
+				
+			}
+			
+			// if asset is not ready
+			
+			if ( this.ready !== true ) {
+				
+				this.ready = false;
+				
+			}
+			
+			// requirements basics
+			
+			if ( typeof this.readyAutoUpdate !== 'boolean' ) {
+			
+				if ( asset.hasOwnProperty( 'readyAutoUpdate' ) ) {
+					
+					this.readyAutoUpdate = asset.readyAutoUpdate;
+					
+				}
+				else {
+					
+					this.readyAutoUpdate = true;
+					
+				}
+				
+			}
+			
+			this.requirements = main.ensure_array( this.requirements );
+			
+			this.callbacksOnReqs = main.ensure_array( this.callbacksOnReqs );
+			
+			// if should also copy requirements
+			
+			if ( includeRequirements === true ) {
+			
+				this.requirements = this.requirements.concat( main.ensure_array( asset.requirements ) );
+				
+				this.callbacksOnReqs = this.callbacksOnReqs.concat( main.ensure_array( asset.callbacksOnReqs ) );
+				
+				this.loaderUIContainer = this.loaderUIContainer || asset.loaderUIContainer;
+				
+			}
+			
+		}
+		
+	}
+	
+	KaiopuaAsset.prototype.merge_asset_data_self = function ( source ) {
+		
+		var dataSrc = source.data;
+		
+		// if source data exists
+		
+		if ( typeof dataSrc !== 'undefined' ) {
+			
+			// if this data does not exist or source data is image, set as data instead of merging, as merging causes issues
+			
+			if ( typeof this.data === 'undefined' || ( dataSrc.hasOwnProperty('nodeName') && dataSrc.nodeName.toLowerCase() === 'img' ) ) {
+				
+				this.data = dataSrc;
+				
+			}
+			else {
+				
+				// copy properties of source asset data into this data
+				// order is important to ensure this data remains an instance of whatever it is
+				
+				main.extend( dataSrc, this.data );
+				
+			}
+			
+		}
+		
+	}
+	
+	KaiopuaAsset.prototype.is_empty = function () {
+		
+		var isEmpty = true;
+		
+		if ( typeof this.data !== 'undefined' || ( this.ready === false && this.requirements.length > 0 ) ) {
+			
+			isEmpty = false;
+			
+		}
+		
+		return isEmpty;
+		
+	}
+	
+	KaiopuaAsset.prototype.on_ready = function () {
+		
+		main.asset_ready( this.path, this );
 		
 	}
 	
@@ -979,4 +1169,4 @@ var KAIOPUA = (function (main) {
     
     return main; 
     
-}(KAIOPUA || {}));
+} ( KAIOPUA || {} ) );

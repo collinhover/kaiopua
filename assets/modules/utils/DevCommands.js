@@ -4,7 +4,7 @@ Call using require('utils/DevCommands').functionName()
 */
 var KAIOPUA = (function (main) {
     
-    var assetPath = "assets/modules/utils/DevCommands",
+    var assetPath = "assets/modules/utils/DevCommands.js",
 		devCommands = {},
         commands = [],
 		callbacks = {},
@@ -23,7 +23,7 @@ var KAIOPUA = (function (main) {
     devCommands.get_history = function () {return history.slice(0);};
     devCommands.clear_history = function () {history = [];};
 	
-	devCommands = main.asset_register( assetPath, devCommands );
+	main.asset_register( assetPath, { data: devCommands } );
     
     // add list of commands
     // cmds can be an object with any number of name + callback pairs
@@ -99,4 +99,4 @@ var KAIOPUA = (function (main) {
     
     return main; 
     
-}(KAIOPUA || {}));
+} ( KAIOPUA ) );

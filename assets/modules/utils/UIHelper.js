@@ -6,7 +6,7 @@ UI helper module, handles property setup of ui elements.
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/utils/UIHelper",
+		assetPath = "assets/modules/utils/UIHelper.js",
         uihelper = {},
         uiElementIDBase = 'ui_element',
         uiElementShowTime = 500,
@@ -20,7 +20,7 @@ var KAIOPUA = (function (main) {
     
     uihelper.make_ui_element = make_ui_element;
 	
-	uihelper = main.asset_register( assetPath, uihelper );
+	main.asset_register( assetPath, { data: uihelper } );
         
     /*===================================================
     
@@ -231,4 +231,4 @@ var KAIOPUA = (function (main) {
     
     return main; 
     
-}(KAIOPUA || {}));
+} ( KAIOPUA ) );

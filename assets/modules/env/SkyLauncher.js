@@ -8,7 +8,7 @@ cloud texture (c) ro.me
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/env/SkyLauncher",
+		assetPath = "assets/modules/env/SkyLauncher.js",
 		sky = {},
         skyWidth = 30000,
         skyHeight = 2000, 
@@ -50,7 +50,7 @@ var KAIOPUA = (function (main) {
 		get : function () { return environment; }
 	});
 	
-	sky = main.asset_register( assetPath, sky );
+	main.asset_register( assetPath, { data: sky } );
     
     /*===================================================
     
@@ -109,7 +109,7 @@ var KAIOPUA = (function (main) {
         
         cloudPlaneTexture = new THREE.Texture();
         
-		main.assets_require( cloudPlaneTexturePath, function ( img ) {
+		main.asset_require( cloudPlaneTexturePath, function ( img ) {
 			
 			cloudPlaneTexture.image = img;
 			cloudPlaneTexture.needsUpdate = true;
@@ -267,4 +267,4 @@ var KAIOPUA = (function (main) {
         
     return main; 
     
-}(KAIOPUA || {}));
+} ( KAIOPUA ) );

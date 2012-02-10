@@ -5,7 +5,7 @@ Section module, generic template.
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/sections/SectionName",
+		assetPath = "assets/modules/sections/SectionName.js",
         sectionName = {},
 		game,
         ready = false,
@@ -32,7 +32,13 @@ var KAIOPUA = (function (main) {
     sectionName.resize = resize;
     sectionName.domElement = function () {};
 	
-	sectionName = main.asset_register( sectionName, sectionName, true );
+	main.asset_register( assetPath, { 
+		data: sectionName,
+		requirements: [
+		],
+		callbacksOnReqs: init_internal,
+		wait: true
+	});
     
     /*===================================================
     
@@ -40,16 +46,11 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	main.assets_require( [
-	], init_internal, true );
-	
 	function init_internal () {
 		
 		if ( ready !== true ) {
 			
 			init_basics();
-			
-			main.asset_ready( assetPath );
 			
 			ready = true;
 			
@@ -154,4 +155,4 @@ var KAIOPUA = (function (main) {
     
     return main; 
     
-}(KAIOPUA || {}));
+} ( KAIOPUA ) );

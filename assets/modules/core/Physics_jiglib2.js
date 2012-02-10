@@ -5,7 +5,7 @@ Physics module, handles physics in game using JigLibJS.
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
-        assetPath = "assets/modules/core/Physics",
+        assetPath = "assets/modules/core/Physics.js",
 		physics = {},
 		mathhelper,
 		ready = false,
@@ -134,7 +134,7 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	main.assets_require( [
+	main.asset_require( [
 		"assets/modules/utils/MathHelper"
 	], init_internal );
 	
@@ -147,8 +147,6 @@ var KAIOPUA = (function (main) {
 			init_system();
 			
 			ready = true;
-			
-			main.asset_ready( assetPath );
 		
 		}
 		
@@ -996,4 +994,4 @@ var KAIOPUA = (function (main) {
 	
 	return main;
 	
-}(KAIOPUA || {}));
+} ( KAIOPUA ) );

@@ -5,7 +5,7 @@ Launcher section module, handles start environment.
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/sections/Launcher",
+		assetPath = "assets/modules/sections/Launcher.js",
 		launcher = {},
         ready = false,
 		waitingToShow = false,
@@ -57,31 +57,32 @@ var KAIOPUA = (function (main) {
     launcher.update = update;
 	launcher.resize = resize;
 	
-	launcher = main.asset_register( assetPath, launcher, true );
+	main.asset_register( assetPath, { 
+		data: launcher,
+		requirements: [
+			"assets/modules/core/Game.js",
+			"assets/modules/env/SkyLauncher.js",
+			"assets/modules/env/WaterLauncher.js"
+		],
+		callbacksOnReqs: init_internal,
+		wait: true
+	} );
     
     /*===================================================
     
     internal init
     
     =====================================================*/
-	
-	main.assets_require( [
-		"assets/modules/core/Game",
-		"assets/modules/env/SkyLauncher",
-		"assets/modules/env/WaterLauncher"
-	], init_internal, true );
     
     function init_internal ( g, s, w ) {
 		
 		if ( ready !== true ) {
-			
+			console.log('internal launcher');
 			game = g;
 			sky = s;
 			water = w;
 			
 			init_environment();
-			
-			main.asset_ready( assetPath );
 			
 			ready = true;
 			
@@ -163,7 +164,7 @@ var KAIOPUA = (function (main) {
 		
 		textureCube = new THREE.Texture();
 		
-		main.assets_require( [ ap + "_xz.jpg", ap + "_posy.jpg", ap + "_negy.jpg" ], function ( xz, posy, negy ) {
+		main.asset_require( [ ap + "_xz.jpg", ap + "_posy.jpg", ap + "_negy.jpg" ], function ( xz, posy, negy ) {
 			
 			textureCube.image = [ xz, xz, posy, negy, xz, xz ];
 			textureCube.needsUpdate = true;
@@ -327,4 +328,4 @@ var KAIOPUA = (function (main) {
         
     return main; 
     
-}(KAIOPUA || {}));
+} ( KAIOPUA ) );

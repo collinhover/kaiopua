@@ -6,7 +6,7 @@ Launcher section water handler.
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/env/WaterLauncher",
+		assetPath = "assets/modules/env/WaterLauncher.js",
 		water = {},
         wavesGeometry, 
         wavesMaterial,
@@ -57,7 +57,7 @@ var KAIOPUA = (function (main) {
 		get : function () { return environment; }
 	});
 	
-	water = main.asset_register( assetPath, water );
+	main.asset_register( assetPath, { data: water } );
     
     /*===================================================
     
@@ -148,7 +148,7 @@ var KAIOPUA = (function (main) {
 		
         rayTexture = new THREE.Texture(); 
 		
-		main.assets_require( rayTexturePath, function ( img ) {
+		main.asset_require( rayTexturePath, function ( img ) {
 			
 			rayTexture.image = img;
 			rayTexture.needsUpdate = true;
@@ -284,4 +284,4 @@ var KAIOPUA = (function (main) {
     
     return main; 
     
-}(KAIOPUA || {}));
+} ( KAIOPUA ) );

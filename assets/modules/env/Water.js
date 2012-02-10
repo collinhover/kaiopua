@@ -6,7 +6,7 @@ Launcher section water handler.
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/env/Water",
+		assetPath = "assets/modules/env/Water.js",
 		water = {},
 		model,
 		rayTexturePath = "assets/textures/light_ray.png",
@@ -20,7 +20,14 @@ var KAIOPUA = (function (main) {
     
     water.instantiate = instantiate;
 	
-	water = main.asset_register( assetPath, water, true );
+	main.asset_register( assetPath, { 
+		data: water,
+		requirements: [
+			"assets/modules/core/Model.js"
+		],
+		callbacksOnReqs: init_internal,
+		wait: true
+	});
 	
 	/*===================================================
     
@@ -28,17 +35,11 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	main.assets_require( [
-		"assets/modules/core/Model"
-	], init_internal, true );
-	
 	function init_internal ( m ) {
 		console.log('internal water');
 		// assets
 		
 		model = m;
-		
-		main.asset_ready( assetPath );
 		
 	}
         
@@ -177,7 +178,7 @@ var KAIOPUA = (function (main) {
 		
 		var wavesTexture = new THREE.Texture();
 		
-		main.assets_require( wavesTexturePath, function ( img ) {
+		main.asset_require( wavesTexturePath, function ( img ) {
 			
 			wavesTexture.image = img;
 			wavesTexture.needsUpdate = true;
@@ -243,7 +244,7 @@ var KAIOPUA = (function (main) {
 		}
 		
         // water mesh
-        wavesInfo.model = model.instantiate({
+        wavesInfo.model = new model.Instance({
 			geometry: wavesGeometry,
 			materials: wavesMaterial,
 			doubleSided: true,
@@ -252,7 +253,7 @@ var KAIOPUA = (function (main) {
 			rotation: new THREE.Vector3( -90, 0, 0 )
 		});
 		
-		wavesMesh = wavesInfo.model.mesh;
+		wavesMesh = wavesInfo.model;//.mesh;
         
         container.add( wavesMesh );
         
@@ -275,7 +276,7 @@ var KAIOPUA = (function (main) {
         
         rayTexture = new THREE.Texture(); 
         
-		main.assets_require( rayTexturePath, function ( img ) {
+		main.asset_require( rayTexturePath, function ( img ) {
 			
 			rayTexture.image = img;
 			rayTexture.needsUpdate = true;
@@ -450,4 +451,4 @@ var KAIOPUA = (function (main) {
     
     return main; 
     
-}(KAIOPUA || {}));
+} ( KAIOPUA ) );

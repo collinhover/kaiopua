@@ -5,7 +5,7 @@ Intro module, handles introduction to story and teaching user basic game mechani
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/sections/Intro",
+		assetPath = "assets/modules/sections/Intro.js",
 		intro = {},
 		game,
 		model,
@@ -36,21 +36,24 @@ var KAIOPUA = (function (main) {
     intro.resize = resize;
     intro.domElement = function () {};
 	
-	intro = main.asset_register( assetPath, intro, true );
+	main.asset_register( assetPath, { 
+		data: intro,
+		requirements: [
+			"assets/modules/core/Game.js",
+			"assets/modules/core/Physics.js",
+			"assets/modules/core/World.js",
+			"assets/modules/core/Player.js",
+			"assets/modules/core/Model.js"
+		],
+		callbacksOnReqs: init_internal,
+		wait: true
+	} );
 	
 	/*===================================================
     
     internal init
     
     =====================================================*/
-	
-	main.assets_require( [ 
-		"assets/modules/core/Game",
-		"assets/modules/core/Physics",
-		"assets/modules/core/World",
-		"assets/modules/core/Player",
-		"assets/modules/core/Model"
-	], init_internal, true );
 	
 	function init_internal ( g, physx, w, p, m ) {
 		console.log('internal intro');
@@ -69,8 +72,6 @@ var KAIOPUA = (function (main) {
 			init_environment();
 			
 			_ready = true;
-			
-			main.asset_ready( assetPath, intro );
 			
 			if ( waitingToShow === true ) {
 				
@@ -231,7 +232,7 @@ var KAIOPUA = (function (main) {
 			
 			player.enable();
 			
-			player.character.model.mesh.position.set( 1, 2700, 1 );
+			player.character.position.set( 1, 2700, 1 );
 			
 			//player.cameraMode = 'freelook';
 			
@@ -299,4 +300,4 @@ var KAIOPUA = (function (main) {
     
     return main; 
     
-}(KAIOPUA || {}));
+} ( KAIOPUA ) );

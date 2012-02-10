@@ -5,7 +5,7 @@ Player module, handles player in game.
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/core/Player",
+		assetPath = "assets/modules/core/Player.js",
         player = {},
 		game,
 		cameracontrols,
@@ -68,24 +68,27 @@ var KAIOPUA = (function (main) {
 		get : function () { return playerCharacter.movement.state.moving; }
 	});
 	
-	player = main.asset_register( assetPath, player, true );
+	main.asset_register( assetPath, { 
+		data: player,
+		requirements: [
+			"assets/modules/core/Game.js",
+			"assets/modules/core/CameraControls.js",
+			"assets/modules/core/Character.js",
+			"assets/modules/characters/Hero.js",
+			"assets/modules/core/Physics.js",
+			"assets/modules/core/World.js",
+			"assets/modules/utils/ObjectHelper.js",
+			"assets/modules/utils/MathHelper.js"
+		],
+		callbacksOnReqs: init_internal,
+		wait: true
+	});
 	
 	/*===================================================
     
     external init
     
     =====================================================*/
-	
-	main.assets_require( [
-		"assets/modules/core/Game",
-		"assets/modules/core/CameraControls",
-		"assets/modules/core/Character",
-		"assets/modules/characters/Hero",
-		"assets/modules/core/Physics",
-		"assets/modules/core/World",
-		"assets/modules/utils/ObjectHelper",
-		"assets/modules/utils/MathHelper"
-	], init_internal, true );
 	
 	function init_internal ( g, cc, c, h, physx, w, oh, mh ) {
 		console.log('internal player');
@@ -138,8 +141,6 @@ var KAIOPUA = (function (main) {
 			shared.signals.paused.add( pause );
 			
 			ready = true;
-			
-			main.asset_ready( assetPath );
 			
 		}
 		
@@ -446,7 +447,7 @@ var KAIOPUA = (function (main) {
 		
 		// create character
 		
-		playerCharacter = character.instantiate( {
+		playerCharacter = new character.Instance( {
 			
 			type: hero
 			
@@ -669,7 +670,7 @@ var KAIOPUA = (function (main) {
 			
 			targetModel = targetsToRemove[ i ];
 			
-			targetMesh = targetModel.mesh;
+			targetMesh = targetModel;//.mesh;
 			
 			// find in targets and remove
 			
@@ -814,14 +815,13 @@ var KAIOPUA = (function (main) {
 	function update_following () {
 		
 		var i, l,
-			pcMesh = playerCharacter.model.mesh,
 			followSettings;
 		
 		for ( i = 0, l = following.length; i < l; i ++ ) {
 			
 			followSettings = following[ i ];
 			
-			objecthelper.object_follow_object( pcMesh, followSettings.obj, followSettings.rotationBase, followSettings.rotationOffset, followSettings.positionOffset );
+			objecthelper.object_follow_object( playerCharacter, followSettings.obj, followSettings.rotationBase, followSettings.rotationOffset, followSettings.positionOffset );
 				
 		}
 		
@@ -921,4 +921,4 @@ var KAIOPUA = (function (main) {
 	
 	return main;
 	
-}(KAIOPUA || {}));
+} ( KAIOPUA ) );

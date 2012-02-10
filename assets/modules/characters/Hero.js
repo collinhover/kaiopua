@@ -5,6 +5,7 @@ Hero character module, for use with character module.
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
+		assetPath = "assets/modules/characters/Hero.js",
 		hero = {};
 	
 	/*===================================================
@@ -32,7 +33,9 @@ var KAIOPUA = (function (main) {
 		get : get_physics_parameters
 	});
 	
-	hero = main.asset_register( "assets/modules/characters/Hero", hero );
+	main.asset_register( assetPath, { 
+		data: hero
+	});
 	
 	/*===================================================
     
@@ -145,7 +148,7 @@ var KAIOPUA = (function (main) {
 				
 				if ( target.interactive === true ) {
 				
-					adObj.scaleRecords[ target.id ] = target.mesh.scale.clone();
+					adObj.scaleRecords[ target.id ] = target.scale.clone();
 					
 				}
 				
@@ -296,10 +299,10 @@ var KAIOPUA = (function (main) {
 		
 		// set new scale
 		
-		target.mesh.scale.set( scaleX, scaleY, scaleZ );
+		target.scale.set( scaleX, scaleY, scaleZ );
 		
 	}
 	
 	return main;
 	
-}(KAIOPUA || {}));
+} ( KAIOPUA ) );
