@@ -119,8 +119,8 @@ var KAIOPUA = (function (main) {
 			physicsParameters: {
 				bodyType: 'mesh'
 			},
-			materials: new THREE.MeshLambertMaterial( { ambient: 0xffffff, color: 0xffdd99, shading: THREE.SmoothShading }  ),
-			shading: THREE.SmoothShading//THREE.FlatShading
+			materials: new THREE.MeshLambertMaterial( { color: 0xFFF7E0, ambient: 0xFFF7E0, vertexColors: THREE.VertexColors } ),
+			shading: THREE.SmoothShading
         });
 		
 		addOnShow.push( { addTarget: head, sceneTarget: body } );
@@ -130,8 +130,8 @@ var KAIOPUA = (function (main) {
 			physicsParameters: {
 				bodyType: 'mesh'
 			},
-			materials: new THREE.MeshLambertMaterial( { ambient: 0xffffff, color: 0xffdd99, shading: THREE.SmoothShading }  ),//new THREE.MeshNormalMaterial(),
-			shading: THREE.SmoothShading//THREE.FlatShading
+			materials: new THREE.MeshLambertMaterial( { color: 0xFFF7E0, ambient: 0xFFF7E0, vertexColors: THREE.VertexColors } ),
+			shading: THREE.SmoothShading
         });
 	
 		addOnShow.push( { addTarget: tail, sceneTarget: body } );
@@ -536,11 +536,11 @@ var KAIOPUA = (function (main) {
 		
 		game.remove_from_scene( skybox, game.sceneBG );
 		
-		tail.morphs.stop();
+		tail.morphs.stopAll();
 		
-		sunmoon.morphs.stop();
+		sunmoon.morphs.stopAll();
 		
-		waterPlane.waves.model.morphs.stop();
+		waterPlane.waves.model.morphs.stopAll();
 		
 	}
 	

@@ -1480,6 +1480,12 @@ var KAIOPUA = (function (main) {
 		
 		velocityForce.multiplySelf( velocityDamping );
 		
+		// if velocity low enough, set zero
+		
+		if ( velocityForce.length() < 0.01 ) {
+			velocityForce.multiplyScalar( 0 );
+		}
+		
 		// return collision
 		
 		return collision;

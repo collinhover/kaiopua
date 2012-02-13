@@ -504,38 +504,29 @@ Model generator module.
 					
 				}
 				
-			};
-			
-			morphs.clear = function ( name ) {
-				
-				var shapesList = shapes.list,
-					updates = shapes.updates,
-					uNames = updates.names,
-					uList = updates.list,
-					updaterIndex,
-					updater;
-					
-				// if morph name exists
-				
-				if ( typeof shapesList[ name ] !== 'undefined' && shapesList[ name ].map.length !== 0 ) {
-					
-					// get if updater for animation exists
-					
-					updaterIndex = uNames.indexOf( name );
-					
-					if ( updaterIndex !== -1 ) {
-						
-						updater = uList[ name ];
-						
-						updater.clearMorph();
-						
-					}
-					
-				}
+				return this;
 				
 			};
 			
 			morphs.stop = function ( name ) {
+				
+				var updates = shapes.updates,
+					uList = updates.list,
+					updater;
+				
+				updater = uList[ name ];
+				
+				if ( typeof updater !== 'undefined' ) {
+					
+					updater.stop();
+					
+				}
+				
+				return this;
+				
+			};
+			
+			morphs.stopAll = function () {
 				
 				var i, l,
 					updates = shapes.updates,
@@ -543,17 +534,59 @@ Model generator module.
 					uName,
 					uList = updates.list;
 				
+				// search through all morphs for name
+				// if name not passed or is wildcard, stop all
+				
 				for ( i = 0, l = uNames.length; i < l; i ++ ) {
 					
 					uName = uNames[ i ];
 					
-					if ( typeof name === 'undefined' || name === '*' || uName === name ) {
-						
-						uList[ uNames[i] ].stop();
-						
-					}
+					this.stop( uName );
 					
 				}
+				
+				return this;
+				
+			};
+			
+			morphs.clear = function ( name, duration ) {
+				
+				var updates = shapes.updates,
+					uList = updates.list,
+					updater;
+				
+				updater = uList[ name ];
+				
+				if ( typeof updater !== 'undefined' ) {
+					
+					updater.clear( duration );
+					
+				}
+				
+				return this;
+				
+			};
+			
+			morphs.clearAll = function ( duration ) {
+				
+				var i, l,
+					updates = shapes.updates,
+					uNames = updates.names,
+					uName,
+					uList = updates.list;
+				
+				// search through all morphs for name
+				// if name not passed or is wildcard, clear all
+				
+				for ( i = 0, l = uNames.length; i < l; i ++ ) {
+					
+					uName = uNames[ i ];
+					
+					this.clear( uName, duration );
+					
+				}
+				
+				return this;
 				
 			};
 			
@@ -764,7 +797,17 @@ Model generator module.
 				updating: false
 			};
 			
-			updater.start = function ( mesh, morphsMap, parameters ) {
+			updater.start = function ( mesh, morphsMap, parameters, updatingParameters ) {
+				
+				var durationNew,
+					durationPrev,
+					durationFramePrev,
+					durationFrameNew,
+					timeFromStart,
+					framePct,
+					cyclePct;
+				
+				// if not already updating
 				
 				if ( info.updating !== true ) {
 					
@@ -774,7 +817,7 @@ Model generator module.
 					
 					info.morphsMap = morphsMap;
 					
-					info.durationOriginal = info.duration = parameters.duration || durationBase;
+					info.duration = info.durationOriginal = parameters.duration || durationBase;
 					
 					if ( parameters.hasOwnProperty('loop') === true ) {
 						
@@ -804,21 +847,93 @@ Model generator module.
 						
 					}
 					
+					info.reverse = false;
+					
+					info.direction = 1;
+					
+					info.interpolationDirection = 1;
+					
 					info.durationShift = parameters.durationShift || 0;
 					
 					info.callback = parameters.callback;
 					
-					info.direction = parameters.direction || 1;
+					// reset
 					
-					info.interpolationDirection = 1;
+					if ( parameters.reset !== false ) {
+						updater.reset();
+					}
+					
+					// change remaining parameters
+					
+					this.changeParameters( parameters );
+					
+					// resume
+					
+					updater.resume();
+				
+				}
+				// if new parameters passed
+				else {
+					
+					this.changeParameters( parameters );
+					
+				}
+				
+				return this;
+				
+			};
+
+			updater.changeParameters = function ( parameters ) {
+				
+				parameters = parameters || {};
+				
+				// duration
+				
+				if ( mathhelper.is_number( parameters.duration ) && info.durationOriginal !== parameters.duration ) {
+					
+					durationNew = parameters.duration;
+					
+					durationPrev = info.duration;
+					console.log('morph updater for', info.name, 'updating duration', durationPrev, durationNew);
+					timeFromStart = info.time - info.timeStart;
+					
+					cyclePct = timeFromStart / durationPrev;
+					
+					// fix time start to account for difference in durations
+					
+					info.timeStart += ( durationPrev * cyclePct ) - ( durationNew * cyclePct );
+					
+					// fix frame time delta to account for new duration per frame
+					
+					durationFramePrev = durationPrev / info.morphsMap.length;
+					
+					durationFrameNew = durationNew / info.morphsMap.length;
+					
+					framePct = info.frameTimeDelta / durationFramePrev;
+					
+					info.frameTimeDelta = durationFrameNew * framePct;
+					
+					// store new duration
+					
+					info.duration = info.durationOriginal = durationNew;
+					
+				}
+				
+				// direction
+				
+				if ( typeof parameters.reverse === 'boolean' && info.reverse !== parameters.reverse ) {
+					console.log('morph updater for', info.name, 'updating reverse', info.reverse, parameters.reverse);
+					info.reverse = parameters.reverse;
+					
+					info.direction = ( info.reverse === true ) ? -1 : 1;
 					
 					// special case for single morph
 					
-					if ( morphsMap.length === 1 ) {
+					if ( info.morphsMap.length === 1 ) {
 						
 						// if morph is not already in zero state
 						
-						if ( info.direction === -1 && mesh.morphTargetInfluences[ morphsMap[0] ] > 0 ) {
+						if ( info.direction === -1 && mesh.morphTargetInfluences[ info.morphsMap[0] ] > 0 ) {
 							info.interpolationDirection = -1;
 						}
 						
@@ -828,32 +943,9 @@ Model generator module.
 						
 					}
 					
-					if ( parameters.reset !== false ) {
-						updater.reset();
-					}
-				
-					updater.resume();
-				
 				}
 				
-			};
-			
-			updater.resume = function () {
-				
-				if ( info.updating !== true ) {
-					
-					// stop waiting on loop delay
-					if ( typeof info.loopDelayID !== 'undefined' ) {
-						clearRequestTimeout( info.loopDelayID );
-					}
-					
-					// start updating
-					
-					info.updating = true;
-						
-					shared.signals.update.add( updater.update );
-					
-				}
+				return this;
 				
 			};
 			
@@ -905,6 +997,8 @@ Model generator module.
 					
 				}
 				
+				return this;
+				
 			};
 			
 			updater.handleLooping = function ( delay ) {
@@ -944,20 +1038,6 @@ Model generator module.
 				
 			};
 			
-			updater.clearMorph = function () {
-				var i, l,
-					influences = info.mesh.morphTargetInfluences,
-					morphsMap = info.morphsMap;
-				
-				// reset influences
-					
-				for ( i = 0, l = morphsMap.length; i < l; i ++ ) {
-					
-					influences[ morphsMap[ i ].index ] = 0;
-					
-				}
-			}
-			
 			updater.reverseDirection = function () {
 				
 				info.direction = -info.direction;
@@ -972,104 +1052,138 @@ Model generator module.
 			
 			updater.update = function ( timeDelta ) {
 				
-				var mesh = info.mesh,
+				var i, l,
 					loop = info.loop,
 					callback,
 					morphsMap = info.morphsMap,
+					influences = info.mesh.morphTargetInfluences,
 					numFrames = morphsMap.length,
 					time = info.time,
 					timeStart = info.timeStart,
 					timeLast = info.timeLast,
-					//timeDelta = (time - timeLast),
 					timeFromStart = time - timeStart,
-					frameTimeDelta = info.frameTimeDelta,
-					frame = info.frame,
-					frameLast = info.frameLast,
-					morphIndex = morphsMap[ frame ].index,
-					morphIndexLast,
-					direction = info.direction,
 					duration = info.duration,
-					durationFrame = duration / numFrames,
 					cyclePct = timeFromStart / duration,
-					interpolationDirection = info.interpolationDirection,
-					interpolationDelta = (timeDelta / durationFrame) * interpolationDirection;
+					frameTimeDelta,
+					frame,
+					frameLast,
+					morphIndex,
+					morphIndexLast,
+					direction,
+					durationFrame,
+					interpolationDirection,
+					interpolationDelta;
 				
-				// update frameTimeDelta
+				// if clearing
 				
-				info.frameTimeDelta = frameTimeDelta += timeDelta;
-				
-				// if frame should swap
-				
-				if ( frameTimeDelta >= durationFrame ) {
+				if ( info.clearing === true ) {
 					
-					// reset frame time delta
-					// account for large time delta
-					info.frameTimeDelta = Math.max( 0, frameTimeDelta - durationFrame );
+					// properties
 					
-					// record new frames for next cycle
+					interpolationDelta = (timeDelta / duration);
 					
-					info.frameLast = info.frame;
+					// decrease all morphs by the same amount at the same time
 					
-					info.frame = frame + 1 * direction;
-					
-					info.numFramesUpdated ++;
-					
-					// reset frame to start?
-					
-					if ( direction === -1 && info.frame < 0  ) {
+					for ( i = 0, l = numFrames; i < l; i ++ ) {
 						
-						info.frame = numFrames - 1;
+						morphIndex = morphsMap[ i ].index;
 						
-					}
-					else if ( direction === 1 && info.frame > numFrames - 1 ) {
-						
-						info.frame = 0;
-						
-					}
-
-					// push influences to max / min
-						
-					if ( frameLast > -1 ) {
-						
-						morphIndexLast = morphsMap[ frameLast ].index;
-						
-						mesh.morphTargetInfluences[ morphIndexLast ] = 0;
-						
-					}
-					
-					mesh.morphTargetInfluences[ morphIndex ] = 1;
-					
-					// special case for looping single morphs
-						
-					if ( morphsMap.length === 1 ) {
-						
-						if ( interpolationDirection === -1 ) {
-							
-							mesh.morphTargetInfluences[ morphIndex ] = 0;
-							
-						}
-						
-						info.frameLast = -1;
-						
-						updater.reverseInterpolationDirection();
+						influences[ morphIndex ] = Math.min( 1, Math.max( 0, influences[ morphIndex ] - interpolationDelta ) );
 						
 					}
 					
 				}
-				// change influences by interpolation delta
+				// else default frame to frame interpolation
 				else {
 					
-					// current frame
+					// properties
 					
-					mesh.morphTargetInfluences[ morphIndex ] = Math.max( 0, Math.min ( 1, mesh.morphTargetInfluences[ morphIndex ] + interpolationDelta ) );
+					frame = info.frame;
+					frameLast = info.frameLast;
+					morphIndex = morphsMap[ frame ].index;
+					direction = info.direction;
+					durationFrame = duration / numFrames;
+					interpolationDirection = info.interpolationDirection;
+					interpolationDelta = (timeDelta / durationFrame) * interpolationDirection;
 					
-					// last frame
+					// update frameTimeDelta
+				
+					frameTimeDelta = info.frameTimeDelta += timeDelta;
 					
-					if ( frameLast > -1 ) {
+					// if frame should swap
+					
+					if ( frameTimeDelta >= durationFrame ) {
 						
-						morphIndexLast = morphsMap[ frameLast ].index;
+						// reset frame time delta
+						// account for large time delta
+						info.frameTimeDelta = Math.max( 0, frameTimeDelta - durationFrame );
 						
-						mesh.morphTargetInfluences[ morphIndexLast ] = Math.min( 1, Math.max( 0, mesh.morphTargetInfluences[ morphIndexLast ] - interpolationDelta ) );
+						// record new frames for next cycle
+						
+						info.frameLast = info.frame;
+						
+						info.frame = frame + 1 * direction;
+						
+						info.numFramesUpdated ++;
+						
+						// reset frame to start?
+						
+						if ( direction === -1 && info.frame < 0  ) {
+							
+							info.frame = numFrames - 1;
+							
+						}
+						else if ( direction === 1 && info.frame > numFrames - 1 ) {
+							
+							info.frame = 0;
+							
+						}
+
+						// push influences to max / min
+							
+						if ( frameLast > -1 ) {
+							
+							morphIndexLast = morphsMap[ frameLast ].index;
+							
+							influences[ morphIndexLast ] = 0;
+							
+						}
+						
+						influences[ morphIndex ] = 1;
+						
+						// special case for looping single morphs
+							
+						if ( morphsMap.length === 1 ) {
+							
+							if ( interpolationDirection === -1 ) {
+								
+								influences[ morphIndex ] = 0;
+								
+							}
+							
+							info.frameLast = -1;
+							
+							updater.reverseInterpolationDirection();
+							
+						}
+						
+					}
+					// change influences by interpolation delta
+					else {
+						
+						// current frame
+						
+						influences[ morphIndex ] = Math.max( 0, Math.min ( 1, influences[ morphIndex ] + interpolationDelta ) );
+						
+						// last frame
+						
+						if ( frameLast > -1 ) {
+							
+							morphIndexLast = morphsMap[ frameLast ].index;
+							
+							influences[ morphIndexLast ] = Math.min( 1, Math.max( 0, influences[ morphIndexLast ] - interpolationDelta ) );
+							
+						}
 						
 					}
 					
@@ -1082,17 +1196,24 @@ Model generator module.
 				
 				// reset, looping and callback
 				
-				if ( info.numFramesUpdated >= numFrames ) {
+				if ( cyclePct >= 1 || info.numFramesUpdated >= numFrames ) {
 					
-					if ( loop !== true ) {
+					// if clearing, finish
+					if ( info.clearing === true ) {
 						
-						updater.stop();
+						updater.clear();
 						
 					}
-					// do looping cycle reset
-					else {
+					// if looping, do looping cycle reset
+					else if ( loop === true ) {
 						
 						updater.reset( loop );
+						
+					}
+					// else stop
+					else {
+						
+						updater.stop();
 						
 					}
 					
@@ -1108,21 +1229,92 @@ Model generator module.
 				
 			};
 			
-			updater.stop = function () {
+			updater.resume = function () {
 				
-				// stop waiting on loop delay
-				
-				if ( typeof info.loopDelayID !== 'undefined' ) {
-					clearRequestTimeout( info.loopDelayID );
+				if ( info.updating !== true ) {
+					
+					// stop waiting on loop delay
+					if ( typeof info.loopDelayID !== 'undefined' ) {
+						clearRequestTimeout( info.loopDelayID );
+					}
+					
+					// start updating
+					
+					info.updating = true;
+					
+					info.cleared = false;
+						
+					shared.signals.update.add( updater.update );
+					
 				}
 				
-				// stop updating
-				
-				info.updating = false;
-					
-				shared.signals.update.remove( updater.update );
+				return this;
 				
 			};
+			
+			updater.stop = function (  ) {
+				
+				if ( info.updating === true ) {
+					
+					info.updating = false;
+						
+					shared.signals.update.remove( updater.update );
+					
+				}
+				
+				return this;
+				
+			};
+			
+			updater.clear = function ( duration ) {
+				var i, l,
+					influences = info.mesh.morphTargetInfluences,
+					morphsMap = info.morphsMap;
+				
+				if ( info.cleared !== true ) {
+					
+					// clear over duration
+					
+					if ( duration > 0 ) {
+						
+						// if not already clearing over duration
+						
+						if ( info.clearing !== true || info.duration !== duration ) {
+							
+							this.reset( false );
+							
+							info.duration = duration;
+							
+							info.clearing = true;
+							
+						}
+						
+					}
+					else {
+						
+						this.stop();
+						
+						this.reset( false );
+						
+						// reset influences
+							
+						for ( i = 0, l = morphsMap.length; i < l; i ++ ) {
+							
+							influences[ morphsMap[ i ].index ] = 0;
+							
+						}
+						
+						info.clearing = false;
+						
+						info.cleared = true;
+						
+					}
+					
+				}
+				
+				return this;
+				
+			}
 			
 			return updater;
 		}
