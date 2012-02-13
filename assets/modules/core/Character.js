@@ -68,7 +68,11 @@ var KAIOPUA = (function (main) {
 	function KaiopuaCharacter ( parameters ) {
 		
 		var modelInfo,
-			movementInfo;
+			movementInfo,
+			move,
+			rotate,
+			jump,
+			state;
 		
 		// handle parameters
 		
@@ -101,41 +105,54 @@ var KAIOPUA = (function (main) {
 		
 		movementInfo = parameters.movementInfo || this.type.movementInfo || {};
 		
-		this.movement = {
-			move: {
-				speed: movementInfo.moveSpeed || 6,
-				direction: new THREE.Vector3(),
-				vector: new THREE.Vector3()
-			},
-			rotate: {
-				speed: movementInfo.rotateSpeed || 0.015,
-				direction: new THREE.Vector3(),
-				delta: new THREE.Quaternion(),
-				vector: new THREE.Quaternion()
-			},
-			jump: {
-				speedStart: movementInfo.jumpSpeedStart || 6,
-				speedEnd: movementInfo.jumpSpeedEnd || 0,
-				timeTotal: 0,
-				timeMax: movementInfo.jumpTimeMax || 50,
-				timeAfterNotGrounded: 0,
-				timeAfterNotGroundedMax: 125,
-				ready: false,
-				stopped: false
-			},
-			state: {
-				up: 0,				
-				down: 0, 
-				left: 0, 
-				right: 0, 
-				forward: 0, 
-				back: 0, 
-				turnLeft: 0, 
-				turnRight: 0,
-				grounded: false,
-				moving: false
-			}
-		};
+		this.movement = {};
+		
+		// move
+		
+		move = this.movement.move = {};
+		move.speed = movementInfo.moveSpeed || 6;
+		move.speedBack = movementInfo.moveSpeedBack || move.speed;
+		move.runThreshold = movementInfo.moveRunThreshold || 0;
+		move.walkCycleTime = movementInfo.moveWalkCycleTime || 750;
+		move.runCycleTime = movementInfo.moveRunCycleTime || 500;
+		move.morphClearTime = movementInfo.moveCycleClearTime || 125;
+		move.walkRunChangeTimeThreshold = movementInfo.moveWalkRunChangeTimeThreshold || 0;
+		move.walkRunChangeTimeTotal = move.walkRunChangeTimeThreshold;
+		move.direction = new THREE.Vector3();
+		move.vector = new THREE.Vector3();
+		
+		// rotate
+		rotate = this.movement.rotate = {};
+		rotate.speed = movementInfo.rotateSpeed || 0.015;
+		rotate.direction = new THREE.Vector3();
+		rotate.delta = new THREE.Quaternion();
+		rotate.vector = new THREE.Quaternion();
+		
+		// jump
+		jump = this.movement.jump = {};
+		jump.speedStart = movementInfo.jumpSpeedStart || 6;
+		jump.speedEnd = movementInfo.jumpSpeedEnd || 0;
+		jump.timeTotal = 0;
+		jump.timeMax = movementInfo.jumpTimeMax || 50;
+		jump.timeAfterNotGrounded = 0;
+		jump.timeAfterNotGroundedMax = 125;
+		jump.ready = false;
+		jump.stopped = false;
+		
+		// state
+		state = this.movement.state = {};
+		state.up = 0;
+		state.down = 0;
+		state.left = 0;
+		state.right = 0;
+		state.forward = 0;
+		state.back = 0;
+		state.turnLeft = 0;
+		state.turnRight = 0;
+		state.grounded = false;
+		state.moving = false;
+		state.movingBack = false;
+		state.moveType = '';
 		
 		// properties
 		
@@ -177,6 +194,7 @@ var KAIOPUA = (function (main) {
 		
 		var physics = this.physics,
 			rigidBody = physics.rigidBody,
+			morphs = this.morphs,
 			movement = this.movement,
 			state,
 			rotate = movement.rotate,
@@ -187,6 +205,8 @@ var KAIOPUA = (function (main) {
 			moveDir,
 			moveVec,
 			moveSpeed,
+			moveSpeedBack,
+			moveRunThreshold,
 			jump,
 			jumpSpeedStart,
 			jumpSpeedEnd,
@@ -194,10 +214,15 @@ var KAIOPUA = (function (main) {
 			jumpTimeMax,
 			jumpTimeRatio,
 			jumpTimeAfterNotGroundedMax,
+			velocityGravity,
+			velocityGravityForce,
 			velocityMovement,
 			velocityMovementForce,
-			velocityGravity,
-			velocityGravityForce;
+			velocityMovementForceLength,
+			velocityMovementDamping,
+			dragCoefficient,
+			terminalVelocity,
+			playSpeedModifier;
 		
 		// rotate self
 		
@@ -213,6 +238,8 @@ var KAIOPUA = (function (main) {
 			moveDir = move.direction;
 			moveVec = move.vector;
 			moveSpeed = move.speed;
+			moveSpeedBack = move.speedBack;
+			moveRunThreshold = move.runThreshold;
 			
 			state = movement.state;
 			
@@ -280,13 +307,103 @@ var KAIOPUA = (function (main) {
 			
 			// add move vec to rigidBody movement
 			
-			moveVec.copy( moveDir ).multiplyScalar( moveSpeed );
+			moveVec.copy( moveDir );
+			moveVec.x *= moveSpeed;
+			moveVec.y *= moveSpeed;
+			if ( moveDir.z < 0 ) {
+				
+				moveVec.z *= moveSpeedBack;
+				
+			}
+			else {
+				
+				moveVec.z *= moveSpeed;
+				
+			}
 			
 			velocityMovementForce.addSelf( moveVec );
+			
+			// moving backwards?
+			
+			if ( velocityMovementForce.z < 0 ) {
+				
+				state.movingBack = true;
+				
+			}
+			else if ( velocityMovementForce.z > 0 ) {
+				
+				state.movingBack = false;
+				
+			}
+			
+			// get movement force
+			
+			velocityMovementForceLength = velocityMovementForce.length();
+			
+			// walk/run based on speed and jump status
+			
+			if ( jump.ready === true && velocityMovementForceLength > 0 ) {
+				
+				// get approximate terminal velocity based on acceleration (moveVec) and damping
+				// helps morphs play faster if character is moving faster, or slower if moving slower
+				// TODO: move equation into physics module
+				
+				velocityMovementDamping = velocityMovement.damping.z;
+				dragCoefficient = ( 0.33758 * Math.pow( velocityMovementDamping, 2 ) ) + ( -0.67116 * velocityMovementDamping ) + 0.33419;
+				terminalVelocity = Math.round( Math.sqrt( ( 2 * Math.abs( moveVec.z * 0.5 ) ) / dragCoefficient ) );
+				playSpeedModifier = terminalVelocity / Math.round( velocityMovementForceLength );
+				
+				if ( velocityMovementForceLength > moveRunThreshold ) {
+					
+					morphCycle ( timeDelta, morphs, move, state, 'run', move.runCycleTime * playSpeedModifier, state.movingBack );
+					
+				}
+				else {
+					
+					morphCycle ( timeDelta, morphs, move, state, 'walk', move.walkCycleTime * playSpeedModifier, state.movingBack );
+					
+				}
+				
+			}
+			// clear walk/run
+			else {
+				
+				move.walkRunChangeTimeTotal = move.walkRunChangeTimeThreshold;
+				
+				morphs.clear( state.moveType, move.morphClearTime );
+				
+				state.moveType = '';
+				
+			}
 			
 		}
 		
 	};
+	
+	function morphCycle ( timeDelta, morphs, moveInfo, stateInfo, cycleType, duration, reverse ) {
+			
+		if ( stateInfo.moveType !== cycleType ) {
+			
+			if ( moveInfo.walkRunChangeTimeTotal < moveInfo.walkRunChangeTimeThreshold ) {
+				
+				moveInfo.walkRunChangeTimeTotal += timeDelta;
+				
+			}
+			else {
+				
+				moveInfo.walkRunChangeTimeTotal = 0;
+				
+				morphs.clear( stateInfo.moveType, moveInfo.morphClearTime );
+				
+				stateInfo.moveType = cycleType;
+				
+			}
+			
+		}
+		
+		morphs.play( stateInfo.moveType, { duration: duration, loop: true, reverse: reverse } );
+		
+	}
 	
 	function rotate_by_delta ( dx, dy, dz, dw ) {
 		

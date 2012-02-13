@@ -54,7 +54,7 @@ var KAIOPUA = (function (main) {
 		return {
 			
 			geometryAssetPath: "assets/models/Hero.js",
-			materials: new THREE.MeshLambertMaterial( { ambient: 0x333333, color: 0xffeeee, shading: THREE.SmoothShading }  ),//new THREE.MeshNormalMaterial(),
+			materials:  new THREE.MeshLambertMaterial( { color: 0xFFF7E0, ambient: 0xFFF7E0, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading
 			
 		};
@@ -63,15 +63,17 @@ var KAIOPUA = (function (main) {
 	
 	function get_movement_info () {
 		
-		return {
-			
-			moveSpeed: 6,
-			rotateSpeed: 0.019,
-			jumpSpeedStart: 6,
-			jumpSpeedEnd: 0,
-			jumpTimeMax: 100
-			
-		};
+		var mi = {};
+		
+		mi.moveSpeed = 6,
+		mi.moveSpeedBack = 2,
+		mi.moveRunThreshold = mi.moveSpeedBack * 2,
+		mi.rotateSpeed = 0.019,
+		mi.jumpSpeedStart = 6,
+		mi.jumpSpeedEnd = 0,
+		mi.jumpTimeMax = 100
+		
+		return mi;
 		
 	}
 		

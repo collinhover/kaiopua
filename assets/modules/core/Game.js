@@ -372,7 +372,7 @@ var KAIOPUA = (function (main) {
 		
         // composer
         
-        set_render_processing( ['focusVignette'] );
+        set_render_processing();
 		
 		// add renderer to game dom element
 		

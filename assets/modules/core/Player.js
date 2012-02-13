@@ -461,7 +461,7 @@ var KAIOPUA = (function (main) {
 			obj: playerLight,
 			rotationBase: new THREE.Quaternion(),
 			rotationOffset: new THREE.Vector3( 0, 0, 0 ),
-			positionOffset: new THREE.Vector3( 0, 40, 0 )
+			positionOffset: new THREE.Vector3( 0, 40, -20 )
 		};
 		
 		following.push( playerLightFollowSettings );
@@ -496,6 +496,7 @@ var KAIOPUA = (function (main) {
 		
 		// special cases
 		
+		// jumping
 		if ( movementTypeName === 'up' && stop === true ) {
 			
 			movement.jump.stopped = true;
