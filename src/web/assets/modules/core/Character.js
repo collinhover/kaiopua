@@ -151,6 +151,7 @@ var KAIOPUA = (function (main) {
 		state.turnRight = 0;
 		state.grounded = false;
 		state.moving = false;
+		state.movingBack = false;
 		state.moveType = '';
 		
 		// properties
@@ -206,7 +207,6 @@ var KAIOPUA = (function (main) {
 			moveSpeed,
 			moveSpeedBack,
 			moveRunThreshold,
-			movingBack = false,
 			jump,
 			jumpSpeedStart,
 			jumpSpeedEnd,
@@ -310,9 +310,7 @@ var KAIOPUA = (function (main) {
 			moveVec.copy( moveDir );
 			moveVec.x *= moveSpeed;
 			moveVec.y *= moveSpeed;
-			if ( moveVec.z < 0 || state.back !== 0 ) {
-				
-				movingBack = true;
+			if ( moveDir.z < 0 ) {
 				
 				moveVec.z *= moveSpeedBack;
 				
@@ -325,9 +323,24 @@ var KAIOPUA = (function (main) {
 			
 			velocityMovementForce.addSelf( moveVec );
 			
-			// walk/run based on speed and jump status
+			// moving backwards?
+			
+			if ( velocityMovementForce.z < 0 ) {
+				
+				state.movingBack = true;
+				
+			}
+			else if ( velocityMovementForce.z > 0 ) {
+				
+				state.movingBack = false;
+				
+			}
+			
+			// get movement force
 			
 			velocityMovementForceLength = velocityMovementForce.length();
+			
+			// walk/run based on speed and jump status
 			
 			if ( jump.ready === true && velocityMovementForceLength > 0 ) {
 				
@@ -342,12 +355,12 @@ var KAIOPUA = (function (main) {
 				
 				if ( velocityMovementForceLength > moveRunThreshold ) {
 					
-					morphCycle ( timeDelta, morphs, move, state, 'run', move.runCycleTime * playSpeedModifier, movingBack );
+					morphCycle ( timeDelta, morphs, move, state, 'run', move.runCycleTime * playSpeedModifier, state.movingBack );
 					
 				}
 				else {
 					
-					morphCycle ( timeDelta, morphs, move, state, 'walk', move.walkCycleTime * playSpeedModifier, movingBack );
+					morphCycle ( timeDelta, morphs, move, state, 'walk', move.walkCycleTime * playSpeedModifier, state.movingBack );
 					
 				}
 				

@@ -11,6 +11,7 @@ Model generator module.
 		physics,
 		mathhelper,
 		durationBase = 1000,
+		durationPerFrameMinimum = shared.refreshInterval || 1000 / 60;
 		objectCount = 0,
 		morphsNumMin = 5;
 	
@@ -889,7 +890,7 @@ Model generator module.
 				
 				// duration
 				
-				if ( mathhelper.is_number( parameters.duration ) && info.durationOriginal !== parameters.duration ) {
+				if ( mathhelper.is_number( parameters.duration ) && ( parameters.duration / info.morphsMap.length ) > durationPerFrameMinimum && info.durationOriginal !== parameters.duration ) {
 					
 					durationNew = parameters.duration;
 					
