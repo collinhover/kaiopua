@@ -888,6 +888,14 @@ Model generator module.
 				
 				parameters = parameters || {};
 				
+				// stop clearing
+				
+				if ( info.clearing === true ) {
+					
+					info.clearing = false;
+					
+				}
+				
 				// duration
 				
 				if ( mathhelper.is_number( parameters.duration ) && ( parameters.duration / info.morphsMap.length ) > durationPerFrameMinimum && info.durationOriginal !== parameters.duration ) {
@@ -895,7 +903,7 @@ Model generator module.
 					durationNew = parameters.duration;
 					
 					durationPrev = info.duration;
-					console.log('morph updater for', info.name, 'updating duration', durationPrev, durationNew);
+					
 					timeFromStart = info.time - info.timeStart;
 					
 					cyclePct = timeFromStart / durationPrev;
@@ -923,7 +931,7 @@ Model generator module.
 				// direction
 				
 				if ( typeof parameters.reverse === 'boolean' && info.reverse !== parameters.reverse ) {
-					console.log('morph updater for', info.name, 'updating reverse', info.reverse, parameters.reverse);
+					
 					info.reverse = parameters.reverse;
 					
 					info.direction = ( info.reverse === true ) ? -1 : 1;
@@ -1287,6 +1295,8 @@ Model generator module.
 							info.duration = duration;
 							
 							info.clearing = true;
+							
+							this.resume();
 							
 						}
 						

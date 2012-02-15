@@ -400,13 +400,13 @@ var KAIOPUA = (function (main) {
 			}
 			
 			// if asset at path and is not empty
-			console.log('     >>> current asset at path?', asset );
+			
 			if ( asset instanceof KaiopuaAsset && asset.is_empty() === false ) {
-				console.log('     >>> current asset is not empty' );
+				
 				// if new asset is not empty
 				
 				if ( assetNew.is_empty() === false ) {
-					console.log('     >>> asset new is not empty!' );
+					console.log('     >>> merging new asset into current asset' );
 					// merge new asset into current
 					
 					asset.merge_asset_self( assetNew );
@@ -466,12 +466,11 @@ var KAIOPUA = (function (main) {
 	main.asset_ready = function ( path, asset ) {
 		
 		var i, l;
-		console.log(' asset wants to be ready...', path, asset );
+		
 		asset = asset || main.get_asset( path );
-		console.log(' ... readyAutoUpdate? ', asset.readyAutoUpdate);
 		
 		if ( asset instanceof KaiopuaAsset ) {
-			console.log('  ... asset is ready, ', asset.path, asset );
+			console.log('  >>> asset is ready, ', asset.path, asset );
 			// ready and not waiting
 			
 			asset.ready = true;
@@ -528,7 +527,6 @@ var KAIOPUA = (function (main) {
 				// check if no more to wait for
 				
 				if ( assetsWaitingFor.length === 0 && assetsReady.length === requirements.length ) {
-					console.log( '> > ' + assetsReady.length + ' assets are ready!' );
 					
 					// remove signal
 					
@@ -562,7 +560,6 @@ var KAIOPUA = (function (main) {
 			// apply all required assets to original callbacks
 			
 			for ( i = 0, l = callbackList.length; i < l; i++ ) {
-				console.log('///// calling asset required callback #' + (i + 1) + ' of ' + callbackList.length );
 				
 				callback = callbackList[ i ];
 				
@@ -699,10 +696,9 @@ var KAIOPUA = (function (main) {
 		parameters = parameters || {};
 		
 		parameters.path = path;
-		console.log('<<<<< new asset >>>>');
-		console.log(path, parameters.data);
+		console.log('<<<<< new asset: ', path, ' >>>>');
+		
 		assetNew.merge_asset_self( parameters, true );
-		console.log(assetNew);
 		
 		// if asset has path
 		
@@ -713,19 +709,18 @@ var KAIOPUA = (function (main) {
 			// or this new asset if no assets at path yet
 			
 			assetNew = main.set_asset( assetNew.path, assetNew );
-			console.log('<<<<< is new the same? ', assetNew === this, ' is this empty?', this.is_empty(), ' is assetNew ready?', assetNew.ready );
 			
 			// regardless of storage results
 			// handle this new asset's readiness and requirements
 			
 			if ( assetNew === this && this.readyAutoUpdate === true && ( this.requirements.length === 0 || this.wait !== true ) ) {
-				console.log('<<<<< new asset ready right away!');
+				
 				this.on_ready();
 				
 			}
 			
 			if ( this.requirements.length > 0 ) {
-				console.log('<<<<< new asset has requirements', this);
+				
 				main.asset_require( this.requirements, this.callbacksOnReqs, this.wait, this.loaderUIContainer, this );
 			
 			}
