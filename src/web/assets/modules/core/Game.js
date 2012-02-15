@@ -721,7 +721,7 @@ var KAIOPUA = (function (main) {
 		if ( objects.hasOwnProperty('length') === false ) {
 			objects = [ objects ];
 		}
-		console.log('adding to scene ', objects.length);
+		
 		for ( i = 0, l = objects.length; i < l; i ++ ) {
 		
 			object = objects[ i ];

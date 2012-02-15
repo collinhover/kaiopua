@@ -113,11 +113,11 @@ var KAIOPUA = (function (main) {
 		move.speed = movementInfo.moveSpeed || 6;
 		move.speedBack = movementInfo.moveSpeedBack || move.speed;
 		move.runThreshold = movementInfo.moveRunThreshold || 0;
-		move.walkCycleTime = movementInfo.moveWalkCycleTime || 750;
-		move.runCycleTime = movementInfo.moveRunCycleTime || 500;
+		move.walkAnimationTime = movementInfo.moveWalkAnimationTime || 750;
+		move.runAnimationTime = movementInfo.moveRunAnimationTime || 500;
 		move.morphClearTime = movementInfo.moveCycleClearTime || 125;
-		move.walkRunChangeTimeThreshold = movementInfo.moveWalkRunChangeTimeThreshold || 0;
-		move.walkRunChangeTimeTotal = move.walkRunChangeTimeThreshold;
+		move.animationChangeTimeThreshold = movementInfo.animationChangeTimeThreshold || 0;
+		move.animationChangeTimeTotal = move.animationChangeTimeThreshold;
 		move.direction = new THREE.Vector3();
 		move.vector = new THREE.Vector3();
 		
@@ -136,8 +136,11 @@ var KAIOPUA = (function (main) {
 		jump.timeMax = movementInfo.jumpTimeMax || 50;
 		jump.timeAfterNotGrounded = 0;
 		jump.timeAfterNotGroundedMax = 125;
-		jump.ready = false;
-		jump.stopped = false;
+		jump.startDelay = movementInfo.jumpStartDelay || 125;
+		jump.startDelayTime = 0;
+		jump.animationTime = movementInfo.jumpAnimationTime || 700;
+		jump.ready = true;
+		jump.active = false;
 		
 		// state
 		state = this.movement.state = {};
@@ -150,6 +153,7 @@ var KAIOPUA = (function (main) {
 		state.turnLeft = 0;
 		state.turnRight = 0;
 		state.grounded = false;
+		state.groundedLast = false;
 		state.moving = false;
 		state.movingBack = false;
 		state.moveType = '';
@@ -214,6 +218,8 @@ var KAIOPUA = (function (main) {
 			jumpTimeMax,
 			jumpTimeRatio,
 			jumpTimeAfterNotGroundedMax,
+			jumpStartDelay,
+			jumpAnimationTime,
 			velocityGravity,
 			velocityGravityForce,
 			velocityMovement,
@@ -247,6 +253,8 @@ var KAIOPUA = (function (main) {
 			jumpTimeTotal = jump.timeTotal;
 			jumpTimeMax = jump.timeMax;
 			jumpTimeAfterNotGroundedMax = jump.timeAfterNotGroundedMax;
+			jumpStartDelay = jump.startDelay;
+			jumpAnimationTime = jump.animationTime;
 			
 			velocityMovement = rigidBody.velocityMovement;
 			velocityMovementForce = velocityMovement.force;
@@ -259,20 +267,38 @@ var KAIOPUA = (function (main) {
 			
 			// handle jumping
 			
+			state.groundedLast = state.grounded;
+			
 			state.grounded = !velocityGravity.moving;
 			
 			jump.timeAfterNotGrounded += timeDelta;
 			
-			if ( state.up !== 0 && jump.stopped === false ) {
+			// do jump
 				
-				if ( ( state.grounded === true || jump.timeAfterNotGrounded < jumpTimeAfterNotGroundedMax ) && jump.ready === true ) {
-					
-					jump.timeTotal = 0;
-					
-					jump.ready = false;
-					
-				}
-				else if ( jump.ready === false && jump.timeTotal < jumpTimeMax ) {
+			if ( state.up !== 0 && ( state.grounded === true || jump.timeAfterNotGrounded < jumpTimeAfterNotGroundedMax ) && jump.ready === true ) {
+				
+				jump.timeTotal = 0;
+				
+				jump.startDelayTime = 0;
+				
+				jump.ready = false;
+				
+			}
+			else if ( jump.ready === false && jump.timeTotal < jumpTimeMax ) {
+				
+				jump.active = true;
+				
+				// play jump
+				
+				morphCycle ( timeDelta, morphs, move, state, 'jump', jumpAnimationTime, false );
+				
+				// count delay
+				
+				jump.startDelayTime += timeDelta;
+				
+				// do jump after delay
+				
+				if ( jump.startDelayTime >= jump.startDelay ) {
 					
 					// properties
 					
@@ -280,24 +306,30 @@ var KAIOPUA = (function (main) {
 					jumpSpeedStart = jump.speedStart;
 					jumpSpeedEnd = jump.speedEnd;
 					
-					// add speed to gravity velocity
-					
-					velocityGravityForce.y += jumpSpeedStart * ( 1 - jumpTimeRatio) + jumpSpeedEnd * jumpTimeRatio;
-					
 					// update time total
 					
 					jump.timeTotal += timeDelta;
 					
-				}
-			
-			}
-			else if ( state.grounded === true ) {
-				
-				jump.timeAfterNotGrounded = 0;
-				
-				if ( state.up === 0 ) {
+					// add speed to gravity velocity
 					
-					jump.stopped = false;
+					velocityGravityForce.y += jumpSpeedStart * ( 1 - jumpTimeRatio) + jumpSpeedEnd * jumpTimeRatio;
+					
+				}
+				
+			}
+			else {
+				
+				if ( state.grounded === true && state.groundedLast !== state.grounded ) {
+					
+					jump.active = false;
+					
+					morphs.clear( 'jump', move.morphClearTime );
+					
+				}
+				
+				if ( state.grounded === true && state.up === 0 ) {
+					
+					jump.timeAfterNotGrounded = 0;
 					
 					jump.ready = true;
 					
@@ -340,39 +372,41 @@ var KAIOPUA = (function (main) {
 			
 			velocityMovementForceLength = velocityMovementForce.length();
 			
-			// walk/run based on speed and jump status
+			// walk/run/idle
 			
-			if ( jump.ready === true && velocityMovementForceLength > 0 ) {
+			if ( jump.ready === true || ( state.grounded === true && jump.active === false ) ) {
 				
-				// get approximate terminal velocity based on acceleration (moveVec) and damping
-				// helps morphs play faster if character is moving faster, or slower if moving slower
-				// TODO: move equation into physics module
+				// walk / run cycles
 				
-				velocityMovementDamping = velocityMovement.damping.z;
-				dragCoefficient = ( 0.33758 * Math.pow( velocityMovementDamping, 2 ) ) + ( -0.67116 * velocityMovementDamping ) + 0.33419;
-				terminalVelocity = Math.round( Math.sqrt( ( 2 * Math.abs( moveVec.z * 0.5 ) ) / dragCoefficient ) );
-				playSpeedModifier = terminalVelocity / Math.round( velocityMovementForceLength );
-				
-				if ( velocityMovementForceLength > moveRunThreshold ) {
+				if ( velocityMovementForceLength > 0 ) {
 					
-					morphCycle ( timeDelta, morphs, move, state, 'run', move.runCycleTime * playSpeedModifier, state.movingBack );
+					// get approximate terminal velocity based on acceleration (moveVec) and damping
+					// helps morphs play faster if character is moving faster, or slower if moving slower
+					// TODO: move equation into physics module
+					
+					velocityMovementDamping = velocityMovement.damping.z;
+					dragCoefficient = ( 0.33758 * Math.pow( velocityMovementDamping, 2 ) ) + ( -0.67116 * velocityMovementDamping ) + 0.33419;
+					terminalVelocity = Math.round( Math.sqrt( ( 2 * Math.abs( moveVec.z * 0.5 ) ) / dragCoefficient ) );
+					playSpeedModifier = terminalVelocity / Math.round( velocityMovementForceLength );
+					
+					if ( velocityMovementForceLength > moveRunThreshold ) {
+						
+						morphCycle ( timeDelta, morphs, move, state, 'run', move.runAnimationTime * playSpeedModifier, true, state.movingBack );
+						
+					}
+					else {
+						
+						morphCycle ( timeDelta, morphs, move, state, 'walk', move.walkAnimationTime * playSpeedModifier, true, state.movingBack );
+						
+					}
 					
 				}
+				// idle cycle
 				else {
 					
-					morphCycle ( timeDelta, morphs, move, state, 'walk', move.walkCycleTime * playSpeedModifier, state.movingBack );
+					morphCycle ( timeDelta, morphs, move, state, 'idle', 3000, true, false );
 					
 				}
-				
-			}
-			// clear walk/run
-			else {
-				
-				move.walkRunChangeTimeTotal = move.walkRunChangeTimeThreshold;
-				
-				morphs.clear( state.moveType, move.morphClearTime );
-				
-				state.moveType = '';
 				
 			}
 			
@@ -380,18 +414,18 @@ var KAIOPUA = (function (main) {
 		
 	};
 	
-	function morphCycle ( timeDelta, morphs, moveInfo, stateInfo, cycleType, duration, reverse ) {
+	function morphCycle ( timeDelta, morphs, moveInfo, stateInfo, cycleType, duration, loop, reverse ) {
 			
 		if ( stateInfo.moveType !== cycleType ) {
 			
-			if ( moveInfo.walkRunChangeTimeTotal < moveInfo.walkRunChangeTimeThreshold ) {
+			if ( moveInfo.animationChangeTimeTotal < moveInfo.animationChangeTimeThreshold ) {
 				
-				moveInfo.walkRunChangeTimeTotal += timeDelta;
+				moveInfo.animationChangeTimeTotal += timeDelta;
 				
 			}
 			else {
 				
-				moveInfo.walkRunChangeTimeTotal = 0;
+				moveInfo.animationChangeTimeTotal = 0;
 				
 				morphs.clear( stateInfo.moveType, moveInfo.morphClearTime );
 				
@@ -401,7 +435,7 @@ var KAIOPUA = (function (main) {
 			
 		}
 		
-		morphs.play( stateInfo.moveType, { duration: duration, loop: true, reverse: reverse } );
+		morphs.play( stateInfo.moveType, { duration: duration, loop: loop, reverse: reverse } );
 		
 	}
 	

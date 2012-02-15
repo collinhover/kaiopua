@@ -496,13 +496,6 @@ var KAIOPUA = (function (main) {
 		
 		// special cases
 		
-		// jumping
-		if ( movementTypeName === 'up' && stop === true ) {
-			
-			movement.jump.stopped = true;
-			
-		}
-		
 		// set moving
 				
 		if ( state.forward === 1 || state.back === 1 || state.turnLeft === 1 || state.turnRight === 1 || state.up === 1 || state.down === 1 || state.left === 1 || state.right === 1 ) {
