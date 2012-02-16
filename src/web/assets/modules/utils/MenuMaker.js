@@ -1,14 +1,17 @@
 /*
-MenuMaker.js
-Menu maker module, handles menu creation and interaction.
-*/
-
-var KAIOPUA = (function (main) {
+ *
+ * MathHelper.js
+ * Handles menu creation and interaction.
+ *
+ * @author Collin Hover / http://collinhover.com/
+ *
+ */
+(function (main) {
     
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/utils/MenuMaker.js",
-		menumaker = {},
-        uihelper,
+		_MenuMaker = {},
+        _UIHelper,
         menuIDBase = 'game_menu',
         buttonIDBase = 'a button';
     
@@ -18,11 +21,11 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-    menumaker.make_menu = make_menu;
-    menumaker.make_button = make_button;
+    _MenuMaker.make_menu = make_menu;
+    _MenuMaker.make_button = make_button;
 	
 	main.asset_register( assetPath, { 
-		data: menumaker,
+		data: _MenuMaker,
 		requirements: [
 			"assets/modules/utils/UIHelper.js"
 		],
@@ -40,7 +43,7 @@ var KAIOPUA = (function (main) {
 		
 		// assets
 		
-		uihelper = uh;
+		_UIHelper = uh;
 		
 	}
     
@@ -73,7 +76,7 @@ var KAIOPUA = (function (main) {
 		
         // ui element ify
         
-        menu = uihelper.make_ui_element( parameters );
+        menu = _UIHelper.make_ui_element( parameters );
         
         // public properties
         
@@ -192,7 +195,7 @@ var KAIOPUA = (function (main) {
 			text: parameters.id
 		} ];
         
-        button = uihelper.make_ui_element( parameters );
+        button = _UIHelper.make_ui_element( parameters );
         
         button.callback = parameters.callback;
         button.menu = undefined;
@@ -233,7 +236,5 @@ var KAIOPUA = (function (main) {
         
         return button;
     }
-    
-    return main; 
     
 } ( KAIOPUA ) );

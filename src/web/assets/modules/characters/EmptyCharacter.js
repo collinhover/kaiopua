@@ -1,12 +1,16 @@
 /*
-EmptyCharacter.js
-Empty character module, for use with character module.
-*/
-var KAIOPUA = (function (main) {
+ *
+ * EmptyCharacter.js
+ * Used as default (fallback) character.
+ *
+ * @author Collin Hover / http://collinhover.com/
+ *
+ */
+(function (main) {
     
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/characters/EmptyCharacter.js",
-		emptycharacter = {};
+		_EmptyCharacter = {};
 	
 	/*===================================================
     
@@ -14,26 +18,18 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	Object.defineProperty( emptycharacter, 'id', { 
+	Object.defineProperty( _EmptyCharacter, 'id', { 
 		get : function () { return; }
 	});
 	
-	Object.defineProperty( emptycharacter, 'modelInfo', { 
+	Object.defineProperty( _EmptyCharacter, 'modelInfo', { 
 		get : function () { return; }
 	});
 	
-	Object.defineProperty( emptycharacter, 'physicsParameters', { 
+	Object.defineProperty( _EmptyCharacter, 'physicsParameters', { 
 		get : function () { return; }
 	});
 	
-	main.asset_register( assetPath, { data: emptycharacter } );
-	
-	/*===================================================
-    
-    standard
-    
-    =====================================================*/
-	
-	return main;
+	main.asset_register( assetPath, { data: _EmptyCharacter } );
 	
 } ( KAIOPUA ) );

@@ -1,13 +1,16 @@
 /*
-Water.js
-Launcher section water handler.
-*/
-
-var KAIOPUA = (function (main) {
+ *
+ * WaterLauncher.js
+ * Handles water environment for launcher.
+ *
+ * @author Collin Hover / http://collinhover.com/
+ *
+ */
+(function (main) {
     
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/env/WaterLauncher.js",
-		water = {},
+		_Water = {},
         wavesGeometry, 
         wavesMaterial,
         wavesMesh,
@@ -50,14 +53,14 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
     
-    water.init = init;
-    water.waves = waves;
+    _Water.init = init;
+    _Water.waves = waves;
 	
-	Object.defineProperty(water, 'environment', { 
+	Object.defineProperty(_Water, 'environment', { 
 		get : function () { return environment; }
 	});
 	
-	main.asset_register( assetPath, { data: water } );
+	main.asset_register( assetPath, { data: _Water } );
     
     /*===================================================
     
@@ -281,7 +284,5 @@ var KAIOPUA = (function (main) {
 		wavesGeometry.__dirtyVertices = true;
 		wavesGeometry.__dirtyNormals = true;
 	}
-    
-    return main; 
     
 } ( KAIOPUA ) );

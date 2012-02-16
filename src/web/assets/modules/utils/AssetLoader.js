@@ -1,12 +1,16 @@
 /*
-AssetLoader.js
-Asset module, handles loading of assets.
-*/
+ *
+ * AssetLoader.js
+ * Handles loading all assets, including images, scripts, and models.
+ *
+ * @author Collin Hover / http://collinhover.com/
+ *
+ */
 (function ( main ) {
 	
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/utils/AssetLoader.js",
-		assetloader = {},
+		_AssetLoader = {},
 		threeLoaderJSON,
 		threeLoaderBIN,
 		threeLoaderErrorMessage = 'Attempted to load model before THREE',
@@ -46,23 +50,23 @@ Asset module, handles loading of assets.
 	
 	=====================================================*/
 	
-	assetloader.init_ui = init_ui;
-	assetloader.clear_ui_progress = clear_ui_progress;
-	assetloader.load = load_list;
+	_AssetLoader.init_ui = init_ui;
+	_AssetLoader.clear_ui_progress = clear_ui_progress;
+	_AssetLoader.load = load_list;
 	
-	assetloader.add_loaded_locations = add_loaded_locations;
-	assetloader.get_is_loaded = get_is_loaded;
-	assetloader.get_is_loading = get_is_loading;
-	assetloader.get_is_loading_or_loaded = get_is_loading_or_loaded;
+	_AssetLoader.add_loaded_locations = add_loaded_locations;
+	_AssetLoader.get_is_loaded = get_is_loaded;
+	_AssetLoader.get_is_loading = get_is_loading;
+	_AssetLoader.get_is_loading_or_loaded = get_is_loading_or_loaded;
 	
-	Object.defineProperty(assetloader, 'loadingHeader', { 
+	Object.defineProperty(_AssetLoader, 'loadingHeader', { 
 		get : function () { return loadingHeaderBase; },
 		set: function ( newHeader ) {
 			loadingHeaderBase = newHeader;
 		}
 	});
 	
-	Object.defineProperty(assetloader, 'loadingTips', { 
+	Object.defineProperty(_AssetLoader, 'loadingTips', { 
 		get : function () { return loadingTips; },
 		set: function ( newTips ) {
 			loadingTips = newTips.slice( 1 );
@@ -70,7 +74,7 @@ Asset module, handles loading of assets.
 	});
 	
 	main.asset_register( assetPath, { 
-		data: assetloader,
+		data: _AssetLoader,
 		requirements: "assets/modules/utils/UIHelper.js",
 		callbacksOnReqs: init_ui
 	} );
@@ -197,15 +201,15 @@ Asset module, handles loading of assets.
 		
 		uihelper = u;
 		
-		assetloader = uihelper.make_ui_element({
+		_AssetLoader = uihelper.make_ui_element({
 			elementType: 'section',
 			classes: 'info_panel',
 			cssmap: {
 				'padding' : '20px'
 			}
-		}, assetloader);
+		}, _AssetLoader);
 		
-		domElement = assetloader.domElement;
+		domElement = _AssetLoader.domElement;
 		
 		// bar
 		
@@ -262,11 +266,11 @@ Asset module, handles loading of assets.
 		
 		// center
 		
-		assetloader.ui_keep_centered();
+		_AssetLoader.ui_keep_centered();
 		
 		// hide
 		
-		assetloader.ui_hide( false, 0);
+		_AssetLoader.ui_hide( false, 0);
 		
 	}
 	

@@ -1,12 +1,16 @@
 /*
-Section.js
-Section module, generic template.
-*/
-var KAIOPUA = (function (main) {
+ *
+ * Section.js
+ * Generic section of game.
+ *
+ * @author Collin Hover / http://collinhover.com/
+ *
+ */
+(function (main) {
     
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/sections/SectionName.js",
-        sectionName = {},
+        _Section = {},
 		game,
         ready = false,
 		waitingToShow = false,
@@ -24,16 +28,16 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
     
-	sectionName.init = init;
-    sectionName.show = show;
-    sectionName.hide = hide;
-    sectionName.remove = remove;
-    sectionName.update = update;
-    sectionName.resize = resize;
-    sectionName.domElement = function () {};
+	_Section.init = init;
+    _Section.show = show;
+    _Section.hide = hide;
+    _Section.remove = remove;
+    _Section.update = update;
+    _Section.resize = resize;
+    _Section.domElement = function () {};
 	
 	main.asset_register( assetPath, { 
-		data: sectionName,
+		data: _Section,
 		requirements: [
 		],
 		callbacksOnReqs: init_internal,
@@ -152,7 +156,5 @@ var KAIOPUA = (function (main) {
     function resize ( W, H ) {
         
     }
-    
-    return main; 
     
 } ( KAIOPUA ) );

@@ -1,13 +1,16 @@
 /*
-UIHelper.js
-UI helper module, handles property setup of ui elements.
-*/
-
-var KAIOPUA = (function (main) {
+ *
+ * Puzzles.js
+ * Adds UI functionality to objects.
+ *
+ * @author Collin Hover / http://collinhover.com/
+ *
+ */
+(function (main) {
     
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/utils/UIHelper.js",
-        uihelper = {},
+        _UIHelper = {},
         uiElementIDBase = 'ui_element',
         uiElementShowTime = 500,
         uiElementHideTime = 250;
@@ -18,9 +21,9 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
     
-    uihelper.make_ui_element = make_ui_element;
+    _UIHelper.make_ui_element = make_ui_element;
 	
-	main.asset_register( assetPath, { data: uihelper } );
+	main.asset_register( assetPath, { data: _UIHelper } );
         
     /*===================================================
     
@@ -228,7 +231,5 @@ var KAIOPUA = (function (main) {
         
         return el;
     }
-    
-    return main; 
     
 } ( KAIOPUA ) );

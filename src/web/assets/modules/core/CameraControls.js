@@ -1,15 +1,19 @@
 /*
-CameraControls.js
-Camera controller module, handles controlling cameras in game.
-*/
-var KAIOPUA = (function (main) {
+ *
+ * CameraControls.js
+ * Adds additional functionality to basic camera.
+ *
+ * @author Collin Hover / http://collinhover.com/
+ *
+ */
+(function (main) {
     
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/core/CameraControls.js",
-		cameracontrols = {},
-		objecthelper,
-		mathhelper,
-		player,
+		_CameraControls = {},
+		_ObjectHelper,
+		_MathHelper,
+		_Player,
 		camera,
 		csRot,
 		csPos,
@@ -27,25 +31,25 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	cameracontrols.init = init;
-	cameracontrols.update = update;
-	cameracontrols.rotate = rotate;
-	cameracontrols.zoom = zoom;
+	_CameraControls.init = init;
+	_CameraControls.update = update;
+	_CameraControls.rotate = rotate;
+	_CameraControls.zoom = zoom;
 	
 	// getters and setters
 	
-	Object.defineProperty( cameracontrols, 'camera', { 
+	Object.defineProperty( _CameraControls, 'camera', { 
 		get : function () { return camera; },
 		set : set_camera
 	});
 	
-	Object.defineProperty( cameracontrols, 'player', { 
-		get : function () { return player; },
+	Object.defineProperty( _CameraControls, 'player', { 
+		get : function () { return _Player; },
 		set : set_player
 	});
 	
 	main.asset_register( assetPath, { 
-		data: cameracontrols,
+		data: _CameraControls,
 		requirements: [
 			"assets/modules/utils/ObjectHelper.js",
 			"assets/modules/utils/MathHelper.js"
@@ -64,8 +68,8 @@ var KAIOPUA = (function (main) {
 		console.log('internal cameracontrols');
 		// assets
 		
-		objecthelper = oh;
-		mathhelper = mh;
+		_ObjectHelper = oh;
+		_MathHelper = mh;
 		
 	}
 	
@@ -139,7 +143,7 @@ var KAIOPUA = (function (main) {
 		
 		if ( typeof newPlayer !== 'undefined' ) {
 			
-			player = newPlayer;
+			_Player = newPlayer;
 			
 		}
 		
@@ -216,11 +220,11 @@ var KAIOPUA = (function (main) {
 		
 		// pitch
 		
-		rotDelta.x = mathhelper.clamp( rotDelta.x + mouse.dy * rotDeltaSpeed, rotDeltaMin.x, rotDeltaMax.x );
+		rotDelta.x = _MathHelper.clamp( rotDelta.x + mouse.dy * rotDeltaSpeed, rotDeltaMin.x, rotDeltaMax.x );
 		
 		// yaw
 		
-		rotDelta.y = mathhelper.clamp( rotDelta.y - mouse.dx * rotDeltaSpeed, rotDeltaMin.y, rotDeltaMax.y );
+		rotDelta.y = _MathHelper.clamp( rotDelta.y - mouse.dx * rotDeltaSpeed, rotDeltaMin.y, rotDeltaMax.y );
 		
 	}
 	
@@ -246,7 +250,7 @@ var KAIOPUA = (function (main) {
 		
 		posDeltaSpeed = csPos.deltaSpeedMin * ( 1 - posOffsetPctToMin ) + csPos.deltaSpeedMax * posOffsetPctToMin;
 		
-		posDelta.z = mathhelper.clamp( posDelta.z - wheelDelta * posDeltaSpeed, posDeltaMin.z, posDeltaMax.z );
+		posDelta.z = _MathHelper.clamp( posDelta.z - wheelDelta * posDeltaSpeed, posDeltaMin.z, posDeltaMax.z );
 		
 	}
 	
@@ -273,8 +277,8 @@ var KAIOPUA = (function (main) {
 			rotOffsetMax = csRot.offsetMax,
 			rotDelta = csRot.delta,
 			rotDeltaDecay = csRot.deltaDecay,
-			playerMoving = player.moving,
-			pc = player.character,
+			playerMoving = _Player.moving,
+			pc = _Player.character,
 			cardinalAxes = shared.cardinalAxes,
 			caForward = cardinalAxes.forward,
 			caUp = cardinalAxes.up,
@@ -294,7 +298,7 @@ var KAIOPUA = (function (main) {
 			
 		}
 		
-		posOffset.z = posOffsetSnap.z = mathhelper.clamp( posOffsetSnap.z + posDelta.z, posOffsetMin.z, posOffsetMax.z );
+		posOffset.z = posOffsetSnap.z = _MathHelper.clamp( posOffsetSnap.z + posDelta.z, posOffsetMin.z, posOffsetMax.z );
 		
 		if ( posOffsetSnap.z - posOffsetSnapToMinDist.z <= posOffsetMin.z ) {
 			
@@ -302,8 +306,8 @@ var KAIOPUA = (function (main) {
 			
 		}
 		
-		rotOffset.x = mathhelper.clamp( rotOffset.x + rotDelta.x, rotOffsetMin.x, rotOffsetMax.x );
-		rotOffset.y = mathhelper.clamp( rotOffset.y + rotDelta.y, rotOffsetMin.y, rotOffsetMax.y );
+		rotOffset.x = _MathHelper.clamp( rotOffset.x + rotDelta.x, rotOffsetMin.x, rotOffsetMax.x );
+		rotOffset.y = _MathHelper.clamp( rotOffset.y + rotDelta.y, rotOffsetMin.y, rotOffsetMax.y );
 		
 		// normalize rotation (between 180 and -180)
 		
@@ -391,7 +395,7 @@ var KAIOPUA = (function (main) {
 		
 		// follow player
 		
-		objecthelper.object_follow_object( player.character, camera, rotBase, rotOffset, posOffset );
+		_ObjectHelper.object_follow_object( _Player.character, camera, rotBase, rotOffset, posOffset );
 		
 		// decay deltas
 		
@@ -400,7 +404,5 @@ var KAIOPUA = (function (main) {
 		rotDelta.multiplyScalar( rotDeltaDecay );
 		
 	}
-	
-	return main;
 	
 } ( KAIOPUA ) );

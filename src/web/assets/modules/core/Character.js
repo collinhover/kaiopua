@@ -1,14 +1,18 @@
 /*
-Character.js
-Character module, handles generating characters in game.
-*/
-var KAIOPUA = (function (main) {
+ *
+ * Character.js
+ * Adds additional functionality to basic model.
+ *
+ * @author Collin Hover / http://collinhover.com/
+ *
+ */
+(function (main) {
     
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/core/Character.js",
-		character = {},
-		model,
-		emptyCharacter, 
+		_Character = {},
+		_Model,
+		_EmptyCharacter, 
 		characterIDBase = 'kaiopua_character',
 		utilQ1Rotate;
 	
@@ -19,7 +23,7 @@ var KAIOPUA = (function (main) {
     =====================================================*/
 	
 	main.asset_register( assetPath, { 
-		data: character,
+		data: _Character,
 		requirements: [
 			"assets/modules/core/Model.js",
 			"assets/modules/characters/EmptyCharacter.js"
@@ -38,22 +42,21 @@ var KAIOPUA = (function (main) {
 		console.log('internal character');
 		// modules
 		
-		model = m;
-		emptyCharacter = ec;
+		_Model = m;
+		_EmptyCharacter = ec;
 		
 		// utils
 		
 		utilQ1Rotate = new THREE.Quaternion();
 		
 		// character instance
-		console.log(character);
-		console.log(model);
-		character.Instance = KaiopuaCharacter;
-		character.Instance.prototype = new model.Instance();
-		character.Instance.prototype.constructor = character.Instance;
-		character.Instance.prototype.action = action;
-		character.Instance.prototype.update = update;
-		character.Instance.prototype.rotate_by_delta = rotate_by_delta;
+		
+		_Character.Instance = KaiopuaCharacter;
+		_Character.Instance.prototype = new _Model.Instance();
+		_Character.Instance.prototype.constructor = _Character.Instance;
+		_Character.Instance.prototype.action = action;
+		_Character.Instance.prototype.update = update;
+		_Character.Instance.prototype.rotate_by_delta = rotate_by_delta;
 		
 	}
 	
@@ -80,7 +83,7 @@ var KAIOPUA = (function (main) {
 		
 		// type
 		
-		this.type = parameters.type || emptyCharacter;
+		this.type = parameters.type || _EmptyCharacter;
 		
 		// model
 		
@@ -99,7 +102,7 @@ var KAIOPUA = (function (main) {
 		
 		// prototype constructor
 		
-		model.Instance.call( this, modelInfo );
+		_Model.Instance.call( this, modelInfo );
 		
 		// movement
 		
@@ -457,7 +460,5 @@ var KAIOPUA = (function (main) {
 		q.copy( rotateUtilQ1 );
 		
 	};
-	
-	return main;
 	
 } ( KAIOPUA ) );

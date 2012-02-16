@@ -1,13 +1,16 @@
 /*
-MathHelper.js
-Math utility helper module.
-*/
-
-var KAIOPUA = (function (main) {
+ *
+ * MathHelper.js
+ * Math utility helper module.
+ *
+ * @author Collin Hover / http://collinhover.com/
+ *
+ */
+(function (main) {
     
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/utils/MathHelper.js",
-		mathhelper = {};
+		_MathHelper = {};
 	
 	/*===================================================
     
@@ -15,20 +18,18 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	mathhelper.is_number = function ( n ) {
+	_MathHelper.is_number = function ( n ) {
 		
 		return isNaN( n ) === false && isFinite( n );
 		
 	};
 	
-	mathhelper.clamp = function ( n, min, max ) {
+	_MathHelper.clamp = function ( n, min, max ) {
 		
 		return Math.max( min, Math.min( max, n ) );
 		
 	};
 	
-	main.asset_register( assetPath, { data: mathhelper } );
-	
-	return main; 
+	main.asset_register( assetPath, { data: _MathHelper } );
     
 } ( KAIOPUA ) );

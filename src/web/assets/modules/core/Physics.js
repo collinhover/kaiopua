@@ -1,13 +1,17 @@
 /*
-Physics.js
-Physics module, handles physics in game using JigLibJS.
-*/
-var KAIOPUA = (function (main) {
+ *
+ * Physics.js
+ * Simple raycasting based physics that works directly with rendering engine.
+ *
+ * @author Collin Hover / http://collinhover.com/
+ *
+ */
+(function (main) {
     
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/core/Physics.js",
-		physics = {},
-		mathhelper,
+		_Physics = {},
+		_MathHelper,
 		ready = false,
 		system,
 		worldGravitySource,
@@ -38,34 +42,34 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	physics.translate = translate;
-	physics.add = add;
-	physics.remove = remove;
-	physics.start = start;
-	physics.stop = stop;
-	physics.update = update;
+	_Physics.translate = translate;
+	_Physics.add = add;
+	_Physics.remove = remove;
+	_Physics.start = start;
+	_Physics.stop = stop;
+	_Physics.update = update;
 	
-	physics.rotate_relative_to_source = rotate_relative_to_source;
-	physics.pull_to_source = pull_to_source;
+	_Physics.rotate_relative_to_source = rotate_relative_to_source;
+	_Physics.pull_to_source = pull_to_source;
 	
 	// getters and setters
 	
-	Object.defineProperty(physics, 'worldGravitySource', { 
+	Object.defineProperty(_Physics, 'worldGravitySource', { 
 		get : function () { return worldGravitySource; },
 		set : set_world_gravity_source
 	});
 	
-	Object.defineProperty(physics, 'worldGravityMagnitude', { 
+	Object.defineProperty(_Physics, 'worldGravityMagnitude', { 
 		get : function () { return worldGravityMagnitude; },
 		set : set_world_gravity_magnitude
 	});
 	
-	Object.defineProperty(physics, 'system', { 
+	Object.defineProperty(_Physics, 'system', { 
 		get : function () { return system; }
 	});
 	
 	main.asset_register( assetPath, { 
-		data: physics,
+		data: _Physics,
 		requirements: [
 			"assets/modules/utils/MathHelper.js"
 		],
@@ -84,7 +88,7 @@ var KAIOPUA = (function (main) {
 		
 		if ( ready !== true ) {
 			
-			mathhelper = mh;
+			_MathHelper = mh;
 			
 			init_system();
 			
@@ -463,19 +467,19 @@ var KAIOPUA = (function (main) {
 		
 		depth = parameters.depth;
 		
-		if ( mathhelper.is_number( width ) === false ) {
+		if ( _MathHelper.is_number( width ) === false ) {
 			
 			needWidth = true;
 			
 		}
 		
-		if ( mathhelper.is_number( height ) === false ) {
+		if ( _MathHelper.is_number( height ) === false ) {
 			
 			needHeight = true;
 			
 		}
 		
-		if ( mathhelper.is_number( depth ) === false ) {
+		if ( _MathHelper.is_number( depth ) === false ) {
 			
 			needDepth = true;
 			
@@ -1606,7 +1610,5 @@ var KAIOPUA = (function (main) {
 		return collision;
 		
 	}
-	
-	return main;
 	
 } ( KAIOPUA ) );

@@ -2,7 +2,7 @@
 Physics.js
 Physics module, handles physics in game using JigLibJS.
 */
-var KAIOPUA = (function (main) {
+(function (main) {
     
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/core/Physics.js",
@@ -1230,7 +1230,5 @@ var KAIOPUA = (function (main) {
 		
 		return collision;
 	}
-	
-	return main;
 	
 } ( KAIOPUA ) );

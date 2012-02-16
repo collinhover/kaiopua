@@ -3,7 +3,7 @@ EffectLinearGradient.js
 Draws a linear gradient into background.
 */
 
-var KAIOPUA = (function (main) {
+(function (main) {
     
     var assetPath = "assets/modules/effects/LinearGradient.js",
 		lg = {};
@@ -162,7 +162,5 @@ var KAIOPUA = (function (main) {
             }
         };
     }
-    
-    return main; 
     
 } ( KAIOPUA ) );

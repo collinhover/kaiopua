@@ -1,14 +1,16 @@
 /*
-ObjectMaker.js
-Object generator module, handles generation of misc things.
-*/
-
-var KAIOPUA = (function (main) {
+ *
+ * ObjectHelper.js
+ * Contains utility functionality for basic models.
+ *
+ * @author Collin Hover / http://collinhover.com/
+ *
+ */
+(function (main) {
     
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/utils/ObjectHelper.js",
-		objecthelper = {},
-		model,
+		_ObjectHelper = {},
 		utilVec31Follow,
 		utilQ1Follow;
     
@@ -18,9 +20,9 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-    objecthelper.object_follow_object = object_follow_object;
+    _ObjectHelper.object_follow_object = object_follow_object;
 	
-	main.asset_register( assetPath, { data: objecthelper } );
+	main.asset_register( assetPath, { data: _ObjectHelper } );
 	
 	/*===================================================
     
@@ -80,7 +82,5 @@ var KAIOPUA = (function (main) {
 		followerQ.copy( leaderQ ).multiplySelf( followerOffsetRot ).multiplySelf( rotationBase );
 		
 	}
-	
-    return main; 
     
 } ( KAIOPUA ) );
