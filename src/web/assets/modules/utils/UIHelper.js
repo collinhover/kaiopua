@@ -61,32 +61,32 @@
         
         // init dom element
         
-        el.domElement = document.createElement( elementType );
+        el.domElement = $( document.createElement( elementType ) );
         
-        $(el.domElement).html( text );
+        el.domElement.html( text );
         
         // id
         
         el.id = id;
         
-        $(el.domElement).attr( 'id', id );
+        el.domElement.attr( 'id', id );
         
         // classes
         
-        $(el.domElement).addClass( classes );
+        el.domElement.addClass( classes );
         
         // css
 		
-        $(el.domElement).css( cssmap );
+        el.domElement.css( cssmap );
         
         // dimensions
         
         if ( parameters.hasOwnProperty('width') ) {
-            $(el.domElement).width( parameters.width );
+            el.domElement.width( parameters.width );
         }
         
         if ( parameters.hasOwnProperty('height') ) {
-            $(el.domElement).height( parameters.height );
+            el.domElement.height( parameters.height );
         }
 		
 		// children ui elements
@@ -99,7 +99,7 @@
 				
 				subElement = make_ui_element( subElementParameters );
 				
-				$(el.domElement).append( subElement.domElement );
+				el.domElement.append( subElement.domElement );
 				
 			}
 			
@@ -110,22 +110,22 @@
         el.ui_reposition = function ( x, y ) {
             var tempadded = false;
 			
-            if ( $(el.domElement).css('position') === 'absolute' ) {
+            if ( el.domElement.css('position') === 'absolute' ) {
             
-                if ( $(el.domElement).innerHeight() === 0 ) {
+                if ( el.domElement.innerHeight() === 0 ) {
                     tempadded = true;
-                    $(document.body).append( el.domElement );
+                    $( document.body ).append( el.domElement );
                 }
                 
-                $(el.domElement).css({
+                el.domElement.css({
                     'left' : x + 'px',
                     'top' : y + 'px',
-                    'margin-top' : (-$(el.domElement).outerHeight() * 0.5) + 'px',
-                    'margin-left' : (-$(el.domElement).outerWidth() * 0.5) + 'px'
+                    'margin-top' : (-el.domElement.outerHeight() * 0.5) + 'px',
+                    'margin-left' : (-el.domElement.outerWidth() * 0.5) + 'px'
                 });
                 
                 if ( tempadded ) {
-                    $(el.domElement).detach();
+                    el.domElement.detach();
                 }
                 
             }
@@ -135,8 +135,8 @@
 			
             el.keepCentered = true;
             
-            if ( $(el.domElement).css('position') !== 'absolute' ) {
-                $(el.domElement).css('position', 'absolute');
+            if ( el.domElement.css('position') !== 'absolute' ) {
+                el.domElement.css('position', 'absolute');
             }
             
             shared.signals.windowresized.add( el.ui_centerme );
@@ -152,14 +152,14 @@
         };
         
         el.ui_centerme = function ( W, H ) {
-			var p = $(el.domElement).parent(),	
+			var p = el.domElement.parent(),	
 				pW = ( p ) ? p.outerWidth() : W,
 				pH = ( p ) ? p.outerHeight() : H;
 			
             el.ui_reposition( pW * 0.5, pH * 0.5 );
         };
         
-        el.ui_show = function ( container, time, callback ) {
+        el.ui_show = function ( container, time, opacity, callback ) {
 			
 			var on_show_callback = function () {
                 
@@ -170,7 +170,11 @@
             };
 			
             if ( typeof container !== 'undefined' ) {
-                $( container ).append( el.domElement );
+				
+				container = $( container );
+				
+                container.append( el.domElement );
+				
             }
             
             if ( el.keepCentered === true ) {
@@ -179,20 +183,26 @@
             
             if ( time === 0 || uiElementShowTime === 0 ) {
 				
-                $( el.domElement ).stop( true ).show();
+                el.domElement.stop( true ).show();
 				
 				on_show_callback();
 				
             } 
             else {
 				
-                $( el.domElement ).stop( true ).fadeTo( time || uiElementShowTime, 1, on_show_callback );
+				if ( typeof opacity === 'undefined' ) {
+					
+					opacity = 1;
+					
+				}
+				
+                el.domElement.stop( true ).fadeTo( time || uiElementShowTime, opacity, on_show_callback );
 				
             }
 			
         };
         
-        el.ui_hide = function ( remove, time, callback ) {
+        el.ui_hide = function ( remove, time, opacity, callback ) {
 			
 			var on_hide_callback = function () {
                 
@@ -201,25 +211,86 @@
                 }
                 
                 if ( remove === true ) {
-                    $( el.domElement ).detach();
+					
+                    el.domElement.detach();
+					
                 }
                 
             };
 			
             if ( time === 0 || uiElementHideTime === 0 ) {
 				
-                $( el.domElement ).stop( true ).hide();
+                el.domElement.stop( true ).hide();
 				
 				on_hide_callback();
 				
             } 
             else {
 				
-                $( el.domElement ).stop( true ).fadeTo(time || uiElementHideTime, 0, on_hide_callback);
+				if ( typeof opacity === 'undefined' ) {
+					
+					opacity = 0;
+					
+				}
+				
+                el.domElement.stop( true ).fadeTo(time || uiElementHideTime, opacity, on_hide_callback);
 				
             }
 			
         };
+		
+		// pointer events ignore setting
+		
+		el.pointer_events_ignore = function ( e ) {
+			
+			if ( el.pointerEventsOnlyWithChildren !== true || el.domElement.children().length === 0 ) {
+				
+				el.domElement.hide();
+				
+				$( document.elementFromPoint( e.clientX, e.clientY ) ).trigger( e );
+				
+				el.domElement.show();
+				
+			}
+			
+		};
+		
+		Object.defineProperty( el, 'pointerEvents', { 
+			get : function () { return el._pointerEvents; },
+			set : function ( allowPointerEvents ) {
+				
+				if ( allowPointerEvents === false ) {
+					
+					el._pointerEvents = false;
+					
+					// use pointer-events when available, easier and works better
+					
+					el.domElement.css( 'pointer-events', 'none' );
+					
+					// fallback in-case browser does not support pointer-events property
+					// TODO: add actual support for mouse enter and leave, currently won't work
+					
+					el.domElement.bind( 'mousedown touchstart mouseup touchend mousemove touchmove mouseenter touchenter mouseleave touchleave mousewheel click', el.pointer_events_ignore );
+					
+				}
+				else {
+					
+					el._pointerEvents = true;
+					
+					el.domElement.unbind( 'mousedown touchstart mouseup touchend mousemove touchmove mouseenter touchenter mouseleave touchleave mousewheel click', el.pointer_events_ignore );
+					
+					el.domElement.css( 'pointer-events', 'auto' );
+					
+				}
+				
+			}
+		});
+		
+		// initialize pointer events property
+		
+		el.pointerEventsOnlyWithChildren = parameters.pointerEventsOnlyWithChildren;
+		
+		el.pointerEvents = ( el.pointerEventsOnlyWithChildren === true ) ? false : parameters.pointerEvents;
 		
 		// check if should keep centered
 		

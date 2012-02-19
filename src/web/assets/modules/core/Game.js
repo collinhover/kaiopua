@@ -20,6 +20,10 @@
 		_Intro,
         transitioner,
         domElement,
+		containerOverlayAll,
+		containerOverlayDisplay,
+		containerUI,
+		containerDisplay,
         renderer, 
         renderTarget,
 		renderComposer,
@@ -41,6 +45,7 @@
 		started = false,
         transitionOut = 1000, 
         transitionIn = 400,
+		transitionerAlpha = 0.75,
         loadAssetsDelay = 500,
 		dependencies = [
 			"assets/modules/utils/AssetLoader.js",
@@ -259,7 +264,7 @@
 			
 			// load game assets and init game
 			
-			main.asset_require( assetsGame, init_game, true, domElement );
+			main.asset_require( assetsGame, init_game, true, containerOverlayAll.domElement );
 			
 		}, loadAssetsDelay);
 		
@@ -285,15 +290,6 @@
 		
 		_MathHelper = main.get_asset_data( "assets/modules/utils/MathHelper.js" );
 		
-		// modify THREE classes
-		
-		add_three_modifications();
-		
-        // transitioner
-        transitioner = _UIHelper.make_ui_element({
-            classes: 'transitioner'
-        });
-		
 		// cardinal axes
 		shared.cardinalAxes = {
 			up: new THREE.Vector3( 0, 1, 0 ),
@@ -306,6 +302,44 @@
         shared.signals.paused = new signals.Signal();
         shared.signals.resumed = new signals.Signal();
         shared.signals.update = new signals.Signal();
+		
+		// set up game dom elements
+		
+		domElement = shared.html.gameContainer;
+		
+		containerOverlayAll = _UIHelper.make_ui_element( {
+			id: 'game_overlay_all',
+			classes: 'container_fullscreen',
+			pointerEventsOnlyWithChildren: true
+        });
+		containerOverlayDisplay = _UIHelper.make_ui_element( {
+			id: 'game_overlay_display',
+			classes: 'container_fullscreen',
+			pointerEventsOnlyWithChildren: true
+        });
+		containerUI = _UIHelper.make_ui_element( {
+			id: 'game_ui',
+			classes: 'container_fullscreen'
+        });
+		containerDisplay = _UIHelper.make_ui_element( {
+			id: 'game_visuals',
+			classes: 'container_fullscreen'
+        });
+		
+		domElement.append( containerDisplay.domElement );
+		domElement.append( containerOverlayDisplay.domElement );
+		domElement.append( containerUI.domElement );
+		domElement.append( containerOverlayAll.domElement );
+		
+        // transitioner
+		
+        transitioner = _UIHelper.make_ui_element({
+            classes: 'transitioner container_fullscreen'
+        });
+		
+		// modify THREE classes
+		
+		add_three_modifications();
 		
 		// renderer
         renderer = new THREE.WebGLRenderer( { antialias: true, clearColor: 0x000000, clearAlpha: 0/*, maxLights: 10 */} );
@@ -381,11 +415,9 @@
         
         set_render_processing();
 		
-		// add renderer to game dom element
+		// add to display
 		
-		domElement = shared.html.gameContainer;
-		
-        domElement.append( renderer.domElement );
+        containerDisplay.domElement.append( renderer.domElement );
 		
 		// resize
 		
@@ -473,7 +505,7 @@
 		
 		// show start menu
 		
-		menus.start.ui_show( domElement );
+		menus.start.ui_show( containerUI.domElement );
 		
     }
 	
@@ -922,7 +954,7 @@
 					
 				}
 				
-				$(domElement).append(transitioner.domElement);
+				transitioner.ui_hide( true, transitionOut );
 				
 				section.resize(shared.screenWidth, shared.screenHeight);
 				
@@ -931,12 +963,6 @@
                 currentSection = section;
 				
 				resume();
-                
-                $(transitioner.domElement).stop(true).fadeTo(transitionOut, 0, function () {
-					
-                    $(transitioner.domElement).detach();
-					
-				});
 				
 				// callback after transition out time
 				
@@ -963,9 +989,7 @@
             
             previousSection.hide();
             
-            $(domElement).append(transitioner.domElement);
-            
-            $(transitioner.domElement).stop(true).fadeTo(transitionIn, 1 );
+			transitioner.ui_show( containerOverlayAll.domElement, transitionIn );
             
         }
 		
@@ -1075,7 +1099,7 @@
 			
 			// show / enable start menu
 			
-			ms.ui_show( domElement );
+			ms.ui_show( containerUI.domElement );
 			
 			ms.enable();
 			
@@ -1084,27 +1108,32 @@
 	}
     
     function pause () {
+		
         if (paused === false) {
             
             paused = true;
 			
-			$(domElement).append(transitioner.domElement);
-            
-			$(transitioner.domElement).stop(true).fadeTo(transitionIn, 0.75);
-			
 			if ( started === true ) {
 				
-				menus.pause.ui_show( domElement );
+				transitioner.ui_show( containerOverlayDisplay.domElement, transitionIn, transitionerAlpha );
+				
+				menus.pause.ui_show( containerUI.domElement );
 				
 				menus.pause.enable();
 				
 				$(shared.html.staticMenu).stop(true).fadeTo( transitionOut, 1 );
 				
 			}
+			else {
+				
+				transitioner.ui_show( containerOverlayAll.domElement, transitionIn, transitionerAlpha );
+				
+			}
             
             shared.signals.paused.dispatch();
             
         }
+		
     }
     
     function resume () {
@@ -1119,19 +1148,13 @@
 		
         if (paused === true) {
 			
-			$(domElement).append(transitioner.domElement);
-			
-			$(transitioner.domElement).stop(true).fadeTo(transitionOut, 0, function () {
-				
-				$(transitioner.domElement).detach();
-				
-			});
+			transitioner.ui_hide( true, transitionOut );
 			
 			if ( started === true ) {
 				
 				menus.pause.disable();
 				
-				menus.pause.ui_hide( true, undefined, on_menu_hidden );
+				menus.pause.ui_hide( true, undefined, 0, on_menu_hidden );
 				
 				$(shared.html.staticMenu).stop(true).fadeTo( transitionIn, 0 );
 				

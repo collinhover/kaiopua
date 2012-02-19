@@ -89,6 +89,7 @@ var KAIOPUA = (function (main) {
         $(document).bind( 'mousedown touchstart', on_mouse_down );
         $(document).bind( 'mouseup touchend', on_mouse_up );
         $(document).bind( 'mousemove touchmove', on_mouse_move );
+		$(document).bind( 'mouseenter touchenter', on_mouse_enter );
 		$(document).bind( 'mouseleave touchleave', on_mouse_leave );
         $(document).bind( 'mousewheel', on_mouse_wheel );
 		$(shared.html.gameContainer).bind( 'contextmenu', on_game_context_menu );
@@ -1012,6 +1013,29 @@ var KAIOPUA = (function (main) {
 			mouse.dy = mouse.y - mouse.ly;
 			
 			shared.signals.mousemoved.dispatch( e );
+			
+		}
+        
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }
+	
+	function on_mouse_enter ( e ) {
+		
+		var eOriginal = e.originalEvent, mouse;
+		
+		// is touch event
+		
+		if (typeof eOriginal !== "undefined" && typeof eOriginal.touches !== "undefined" && typeof eOriginal.changedTouches !== "undefined"){
+			
+			handle_touch_event( eOriginal, on_mouse_enter );
+		}
+		else {
+			
+			handle_mouse_identifier( e );
+			
+			mouse = shared.mice[ e.identifier ];
 			
 		}
         
