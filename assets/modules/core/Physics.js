@@ -1,13 +1,17 @@
 /*
-Physics.js
-Physics module, handles physics in game using JigLibJS.
-*/
-var KAIOPUA = (function (main) {
+ *
+ * Physics.js
+ * Simple raycasting based physics that works directly with rendering engine.
+ *
+ * @author Collin Hover / http://collinhover.com/
+ *
+ */
+(function (main) {
     
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/core/Physics.js",
-		physics = {},
-		mathhelper,
+		_Physics = {},
+		_MathHelper,
 		ready = false,
 		system,
 		worldGravitySource,
@@ -22,7 +26,9 @@ var KAIOPUA = (function (main) {
 		utilQ1RotateToSrc,
 		utilQ2RotateToSrc,
 		utilQ3RotateToSrc,
-		utilVec31Integrate,
+		utilVec31Update,
+		utilVec32Update,
+		utilVec33Update,
 		utilVec31Velocity,
 		utilVec31Offset,
 		utilQ4Offset,
@@ -38,34 +44,34 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	physics.translate = translate;
-	physics.add = add;
-	physics.remove = remove;
-	physics.start = start;
-	physics.stop = stop;
-	physics.update = update;
+	_Physics.translate = translate;
+	_Physics.add = add;
+	_Physics.remove = remove;
+	_Physics.start = start;
+	_Physics.stop = stop;
+	_Physics.update = update;
 	
-	physics.rotate_relative_to_source = rotate_relative_to_source;
-	physics.pull_to_source = pull_to_source;
+	_Physics.rotate_relative_to_source = rotate_relative_to_source;
+	_Physics.pull_to_source = pull_to_source;
 	
 	// getters and setters
 	
-	Object.defineProperty(physics, 'worldGravitySource', { 
+	Object.defineProperty(_Physics, 'worldGravitySource', { 
 		get : function () { return worldGravitySource; },
 		set : set_world_gravity_source
 	});
 	
-	Object.defineProperty(physics, 'worldGravityMagnitude', { 
+	Object.defineProperty(_Physics, 'worldGravityMagnitude', { 
 		get : function () { return worldGravityMagnitude; },
 		set : set_world_gravity_magnitude
 	});
 	
-	Object.defineProperty(physics, 'system', { 
+	Object.defineProperty(_Physics, 'system', { 
 		get : function () { return system; }
 	});
 	
 	main.asset_register( assetPath, { 
-		data: physics,
+		data: _Physics,
 		requirements: [
 			"assets/modules/utils/MathHelper.js"
 		],
@@ -84,7 +90,7 @@ var KAIOPUA = (function (main) {
 		
 		if ( ready !== true ) {
 			
-			mathhelper = mh;
+			_MathHelper = mh;
 			
 			init_system();
 			
@@ -112,7 +118,9 @@ var KAIOPUA = (function (main) {
 		utilQ2RotateToSrc = new THREE.Quaternion();
 		utilQ3RotateToSrc = new THREE.Quaternion();
 		
-		utilVec31Integrate = new THREE.Vector3();
+		utilVec31Update = new THREE.Vector3();
+		utilVec32Update = new THREE.Vector3();
+		utilVec33Update = new THREE.Vector3();
 		
 		utilVec31Offset = new THREE.Vector3();
 		utilQ4Offset = new THREE.Quaternion();
@@ -463,19 +471,19 @@ var KAIOPUA = (function (main) {
 		
 		depth = parameters.depth;
 		
-		if ( mathhelper.is_number( width ) === false ) {
+		if ( _MathHelper.is_number( width ) === false ) {
 			
 			needWidth = true;
 			
 		}
 		
-		if ( mathhelper.is_number( height ) === false ) {
+		if ( _MathHelper.is_number( height ) === false ) {
 			
 			needHeight = true;
 			
 		}
 		
-		if ( mathhelper.is_number( depth ) === false ) {
+		if ( _MathHelper.is_number( depth ) === false ) {
 			
 			needDepth = true;
 			
@@ -1266,52 +1274,16 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function update ( timeDelta ) {
-		
-		var i, l = 1,
-			refreshInterval = shared.refreshInterval,
-			currentInterval = timeDelta,
-			timeStep;
-		
-		// handle time
-		
-		if ( currentInterval > refreshInterval ) {
-			
-			l = Math.ceil( currentInterval / refreshInterval );
-			
-		}
-		
-		// integrate
-		
-		//for ( i = 0; i < l; i ++ ) {
-			
-			currentInterval = refreshInterval;
-			
-			timeStep = currentInterval / 1000;
-		
-			integrate( timeStep );
-			
-		//}
-		
-	}
-	
-	/*===================================================
-    
-    integrate functions
-    
-    =====================================================*/
-	
-	function integrate ( timeStep ) {
+	function update ( timeDelta, timeDeltaMod ) {
 		
 		var i, l,
-			uv31 = utilVec31Integrate,
 			lerpDelta = 0.1,
 			link,
 			rigidBody,
 			mesh,
-			gravSrc,
-			gravMag,
-			gravUp,
+			gravSrc = utilVec31Update,
+			gravMag = utilVec32Update,
+			gravUp = utilVec33Update,
 			velocityGravity,
 			velocityMovement;
 		
@@ -1335,9 +1307,9 @@ var KAIOPUA = (function (main) {
 				
 				velocityMovement = rigidBody.velocityMovement;
 				
-				gravSrc = rigidBody.gravSrc || worldGravitySource;
+				gravSrc.copy( rigidBody.gravSrc || worldGravitySource );
 				
-				gravMag = rigidBody.gravMag || worldGravityMagnitude;
+				gravMag.copy( rigidBody.gravMag || worldGravityMagnitude ).multiplyScalar( timeDeltaMod );
 				
 				// rotate to stand on source
 				
@@ -1349,7 +1321,7 @@ var KAIOPUA = (function (main) {
 				
 				// find up direction
 				
-				gravUp = uv31.sub( mesh.position, gravSrc ).normalize();
+				gravUp.sub( mesh.position, gravSrc ).normalize();
 				
 				// add non rotated gravity to gravity velocity
 				
@@ -1606,7 +1578,5 @@ var KAIOPUA = (function (main) {
 		return collision;
 		
 	}
-	
-	return main;
 	
 } ( KAIOPUA ) );

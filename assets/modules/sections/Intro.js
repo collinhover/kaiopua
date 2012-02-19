@@ -1,8 +1,12 @@
 /*
-IntroSection.js
-Intro module, handles introduction to story and teaching user basic game mechanics.
-*/
-var KAIOPUA = (function (main) {
+ *
+ * Intro.js
+ * Handles introduction to story and teaching user basic game mechanics.
+ *
+ * @author Collin Hover / http://collinhover.com/
+ *
+ */
+(function (main) {
     
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/sections/Intro.js",
@@ -297,7 +301,5 @@ var KAIOPUA = (function (main) {
     function resize ( W, H ) {
         
     }
-    
-    return main; 
     
 } ( KAIOPUA ) );

@@ -1,8 +1,12 @@
 /*
-LauncherSection.js
-Launcher section module, handles start environment.
-*/
-var KAIOPUA = (function (main) {
+ *
+ * Launcher.js
+ * Interactive environment for loading and launching game.
+ *
+ * @author Collin Hover / http://collinhover.com/
+ *
+ */
+(function (main) {
     
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/sections/Launcher.js",
@@ -325,7 +329,5 @@ var KAIOPUA = (function (main) {
 	function resize () {
 		
 	}
-        
-    return main; 
     
 } ( KAIOPUA ) );

@@ -1,15 +1,17 @@
 /*
-Water.js
-Launcher section water handler.
-*/
-
-var KAIOPUA = (function (main) {
+ *
+ * Puzzles.js
+ * Generates water plane for world
+ *
+ * @author Collin Hover / http://collinhover.com/
+ *
+ */
+(function (main) {
     
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/env/Water.js",
-		water = {},
-		model,
-		rayTexturePath = "assets/textures/light_ray.png",
+		_Water = {},
+		_Model,
 		wavesTexturePath = "assets/textures/waves_512.png";
     
     /*===================================================
@@ -17,11 +19,9 @@ var KAIOPUA = (function (main) {
     public properties
     
     =====================================================*/
-    
-    water.instantiate = instantiate;
 	
 	main.asset_register( assetPath, { 
-		data: water,
+		data: _Water,
 		requirements: [
 			"assets/modules/core/Model.js"
 		],
@@ -39,7 +39,11 @@ var KAIOPUA = (function (main) {
 		console.log('internal water');
 		// assets
 		
-		model = m;
+		_Model = m;
+		
+		_Water.Instance = Water;
+		_Water.Instance.prototype = new _Model.Instance();
+		_Water.Instance.prototype.constructor = _Water.Instance;
 		
 	}
         
@@ -49,19 +53,15 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
     
-    function instantiate ( parameters ) {
+    function Water ( parameters ) {
 		
 		parameters = parameters || {};
 		
         var i, l,
-			environment,
 			wavesInfo,
 			vvInfo,
-			raysInfo,
-			container,
 			wavesGeometry,
 			wavesMaterial,
-			wavesMesh,
 			wavesVertsW,
 			wavesVertsH,
 			wavesNumHorizontal,
@@ -95,26 +95,11 @@ var KAIOPUA = (function (main) {
 			vvFreqMin,
 			vvFreqDelta,
 			vvFreqLast,
-			vvDirSwitchDelta,
-			ray,
-			rayGeometry,
-			rayMaterial,
-			raysInactive,
-			raysActive,
-			rayHeight,
-			rayOpacityOn,
-			rayOpacityDelta,
-			rayShowChance,
-			rayTexture,
-			numRays;
-        
-        // environment
-        
-        environment = {};
+			vvDirSwitchDelta;
 		
 		// waves info
 		
-		wavesInfo = environment.waves = {};
+		wavesInfo = this.waves = {};
 		wavesInfo.time = 0;
 		wavesColor = parameters.wavesColor || 0x0bdafa;
 		wavesSize = parameters.wavesSize || 10000;
@@ -144,16 +129,12 @@ var KAIOPUA = (function (main) {
 		vvInfo.freqDelta = vvFreqDelta = (vvFreqMax - vvFreqMin) * 0.001;
 		vvInfo.dirSwitchPause = wavesInfo.timePerCycle * 0.5;
 		vvInfo.dirSwitchDelta = vvDirSwitchDelta = vvInfo.dirSwitchPause / 60;
-		
-		// container
-		
-		environment.container = container = new THREE.Object3D();
         
         // create water geometry
 		
         wavesGeometry = new THREE.PlaneGeometry( wavesSize, wavesSize, wavesVertsW - 1, wavesVertsH - 1 );
         wavesGeometry.dynamic = true;
-        
+		
         // per vert variation
 		
         wavesVertsNum = wavesGeometry.vertices.length;
@@ -243,70 +224,10 @@ var KAIOPUA = (function (main) {
 			
 		}
 		
-        // water mesh
-        wavesInfo.model = new model.Instance({
-			geometry: wavesGeometry,
-			materials: wavesMaterial,
-			doubleSided: true,
-			targetable: false,
-			interactive: false,
-			rotation: new THREE.Vector3( -90, 0, 0 )
-		});
-		
-		wavesMesh = wavesInfo.model;//.mesh;
-        
-        container.add( wavesMesh );
-        
-        // water rays
-        
-		raysInfo = environment.rays = {};
-		
-		numRays = numRays = parameters.numRays || 20;
-		raysInfo.active = raysActive = [];
-		raysInfo.inactive = raysInactive = [];
-		raysInfo.width = parameters.rayWidth || 700;
-		raysInfo.height = rayHeight = parameters.rayHeight || 2000;
-		raysInfo.heightVariation = parameters.rayHeightVariation || raysInfo.height * 0.5;
-		raysInfo.lightAngle = parameters.lightAngle || (-Math.PI * 0.1);
-		raysInfo.showChance = rayShowChance = parameters.rayShowChance || 0.001;
-		raysInfo.opacityDelta = rayOpacityDelta = parameters.rayOpacityDelta || 0.02;
-		raysInfo.opacityOn = rayOpacityOn = parameters.rayOpacityOn || 0.6;
-		
-        rayGeometry = new THREE.PlaneGeometry ( raysInfo.width, raysInfo.height + (Math.random() * (raysInfo.heightVariation) - (raysInfo.heightVariation * 0.5)) );
-        
-        rayTexture = new THREE.Texture(); 
-        
-		main.asset_require( rayTexturePath, function ( img ) {
-			
-			rayTexture.image = img;
-			rayTexture.needsUpdate = true;
-			
-		});
-        
-        for ( i = 0; i < numRays; i ++ ) {
-        
-            rayMaterial = new THREE.MeshBasicMaterial( { color: wavesColor, map: rayTexture, opacity: 0, depthTest: false } );
-            
-			ray = new THREE.Mesh( rayGeometry, rayMaterial );
-            
-            ray.rotation.set( Math.PI * 0.5 - raysInfo.lightAngle, -Math.PI * 0.5, 0);
-            
-            // add to inactive water rays list
-            raysInactive[ raysInactive.length ] = {
-                ray: ray,
-                material: rayMaterial,
-                targetOpacity: raysInfo.opacityOn,
-                targetOpacityDir: 1
-            };
-            
-            // add to container
-            container.add( ray );
-        }
-		
 		// functions
-		
+
 		function make_waves ( time ) {
-			
+
 			var wavesVerts = wavesGeometry.vertices,
 				wavesTime,
 				wavesVertsNew = new Array( wavesVertsW * wavesVertsH * 3 ),
@@ -320,43 +241,42 @@ var KAIOPUA = (function (main) {
 				vvh = wavesVertsH - 1,
 				vvpv,
 				vvph,
-				rayInfo,
 				i, l;
-			
+
 			// update wave time
 			wavesTime = wavesInfo.time += time * wavesSpeed;
-			
+
 			for ( i = 0; i < wavesVertsW; i ++ ) {
 				for ( l = 0; l < wavesVertsH; l ++ ) {
-					
+
 					vertIndex = i + l * wavesVertsH;
-					
+
 					vert = wavesVerts[ vertIndex ];
-					
+
 					vvpw = wavesNumHorizontal * ( i / wavesVertsW );
 					vvph = wavesNumVertical * ( l / wavesVertsH );
-					
+
 					// reset variation amp
-					
+
 					vvAmp = 0;
-					
+
 					// set water vert variation
 					if( i !== 0 && i !== vvw && l !== 0 && l !== vvh) {
 						variation = vertVariations[ i + l * wavesVertsH ];
-						
+
 						// update variation wavesAmplitude
 						variation.amplitude = Math.min(vvAmpMax, Math.max(vvAmpMin, variation.amplitude + vvAmpDelta * variation.dir ));
-						
+
 						// update variation wavesFrequency
 						vvFreq = wavesFrequency + Math.min( vvFreqMax, Math.max(vvFreqMin, variation.frequency + vvFreqDelta * variation.dir) );
-						
+
 						// check for switch direction of variation
 						if ( variation.dirSwitch > variation.dirSwitchCount ) {
 							variation.dir = -variation.dir;
 							variation.dirSwitch = 0;
 						}
 						variation.dirSwitch += vvInfo.dirSwitchDelta * variation.dir;
-						
+
 						// set variation amp
 						vvAmp = variation.amplitude;
 					}
@@ -364,39 +284,17 @@ var KAIOPUA = (function (main) {
 						vvAmp = 0;
 						vvFreq = wavesFrequency;
 					}
-					
+
 					// set water vert, x/y/z
-					
+
 					vertIndex = i + l * wavesVertsH;
-					
+
 					//wavesVertsNew[ vertIndex ] = vert.position.x;
 					//wavesVertsNew[ vertIndex + 1 ] = vert.position.y;
 					wavesVertsNew[ vertIndex ] = vvAmp + wavesAmplitude * ( Math.cos( vvpw * vvFreq + wavesTime ) + Math.sin( vvph * vvFreq + wavesTime ) );
-					
+
 					//vert.position.z = vvAmp + wavesAmplitude * ( Math.cos( vvpw / vvFreq + wavesTime ) + Math.sin( vvph / vvFreq + wavesTime ) );
 					
-					/*
-					// check vert z, if low enough 
-					// and there are inactive water rays, show water ray
-					if (vert.position.z < -wavesAmplitude && raysInactive.length > 0 && Math.random() <= rayShowChance) {
-					
-						// get next ray by removing last from inactive
-						rayInfo = raysInactive.pop();
-						ray = rayInfo.ray;
-						
-						// set ray position to position of triggering water vertex
-						ray.position.set(vert.position.x, vert.position.y, -(vert.position.z + rayHeight * 0.5 + wavesAmplitude));
-						
-						// record active index for later so we dont have to search
-						rayInfo.activeIndex = raysActive.length;
-						
-						// add to list of active rays
-						raysActive[raysActive.length] = rayInfo;
-						
-						// show ray
-						environment.show_ray(rayInfo);
-					}
-					*/
 				}
 			}
 			/*
@@ -409,46 +307,25 @@ var KAIOPUA = (function (main) {
 			wavesGeometry.__dirtyVertices = true;
 			wavesGeometry.__dirtyNormals = true;
 			*/
-			
+
 			return wavesVertsNew;
-			
+
 		}
 		
-		function show_ray( tri ) {
-			
-			var rayMat = tri.material,
-				halfDelta = rayOpacityDelta * 0.5,
-				targetOpacity = tri.targetOpacity;
-			
-			// increase material opacity towards target
-			rayMat.opacity += (halfDelta + Math.random() * halfDelta) * tri.targetOpacityDir;
-			
-			// if at or below 0, stop showing
-			if (targetOpacity === 0 && rayMat.opacity <= targetOpacity) {
-				tri.targetOpacityDir = 1;
-				tri.targetOpacity = rayOpacityOn;
-				
-				raysActive.splice( tri.activeIndex, 1 );
-				
-				raysInactive[ raysInactive.length ] = tri;
-			}
-			// else keep ray showing
-			else {
-				if (targetOpacity === rayOpacityOn && rayMat.opacity >= targetOpacity){
-					tri.targetOpacityDir = -1;
-					tri.targetOpacity = 0;
-				}
-				
-				// recursive call until done
-				window.requestAnimationFrame(function () { environment.show_ray(tri); });   
-			}
-			
-		}
+        // water mesh
+        //wavesInfo.model = new _Model.Instance();
+	
+		// prototype constructor
 		
-		return environment;
-        
+		_Model.Instance.call( this, {
+			geometry: wavesGeometry,
+			materials: wavesMaterial,
+			doubleSided: true,
+			targetable: false,
+			interactive: false,
+			rotation: new THREE.Vector3( -90, 0, 0 )
+		} );
+		
     }
-    
-    return main; 
     
 } ( KAIOPUA ) );

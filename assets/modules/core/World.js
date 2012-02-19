@@ -1,17 +1,22 @@
 /*
-World.js
-World module, handles world in game.
-*/
-var KAIOPUA = (function (main) {
+ *
+ * World.js
+ * Generates worlds.
+ *
+ * @author Collin Hover / http://collinhover.com/
+ *
+ */
+(function (main) {
     
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/core/World.js",
-		world = {},
-        game,
-		model,
-		physics,
-		objectmaker,
-		water,
+		_World = {},
+        _Game,
+		_Model,
+		_Physics,
+		_Puzzles,
+		_ObjectMaker,
+		_Water,
 		ready = false,
 		scene,
 		skybox,
@@ -22,7 +27,7 @@ var KAIOPUA = (function (main) {
 		head,
 		tail,
 		sunmoon,
-		waterPlane,
+		waterRing,
 		parts = {},
 		addOnShow = [],
 		gravityMagnitude = 9.8;
@@ -33,25 +38,26 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	world.show = show;
-	world.hide = hide;
+	_World.show = show;
+	_World.hide = hide;
 	
 	// getters and setters
 	
-	Object.defineProperty(world, 'gravityMagnitude', { 
+	Object.defineProperty(_World, 'gravityMagnitude', { 
 		get : function () { return gravityMagnitude; }
 	});
 	
-	Object.defineProperty(world, 'parts', { 
+	Object.defineProperty(_World, 'parts', { 
 		get : function () { return parts; }
 	});
 	
 	main.asset_register( assetPath, { 
-		data: world,
+		data: _World,
 		requirements: [
 			"assets/modules/core/Game.js",
 			"assets/modules/core/Model.js",
 			"assets/modules/core/Physics.js",
+			"assets/modules/core/Puzzles.js",
 			"assets/modules/utils/ObjectMaker.js",
 			"assets/modules/env/Water.js"
 		],
@@ -65,21 +71,24 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	function init_internal ( g, m, p, om, w ) {
+	function init_internal ( g, m, physics, puzzles, om, w ) {
 		console.log('internal world');
 		if ( ready !== true ) {
 			
 			// assets
 			
-			game = g;
-			model = m;
-			physics = p;
-			objectmaker = om;
-			water = w;
+			_Game = g;
+			_Model = m;
+			_Physics = physics;
+			_Puzzles = puzzles;
+			_ObjectMaker = om;
+			_Water = w;
 			
 			init_world_base();
 			
 			init_environment();
+			
+			init_puzzles();
 			
 			ready = true;
 			
@@ -87,11 +96,17 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
+	/*===================================================
+    
+    world base
+    
+    =====================================================*/
+	
 	function init_world_base () {
 		
 		// skybox
 		
-		skybox = objectmaker.make_skybox( "assets/textures/skybox_world" );
+		skybox = _ObjectMaker.make_skybox( "assets/textures/skybox_world" );
 		
 		// lights
 		
@@ -108,13 +123,13 @@ var KAIOPUA = (function (main) {
 		
 		// body
 		
-		body = new model.Instance({});
+		body = new _Model.Instance({});
 		
 		body.quaternion.setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), -Math.PI * 0.4 );
 		
 		// body parts
 		
-        head = new model.Instance({
+        head = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Whale_Head.js"),
 			physicsParameters: {
 				bodyType: 'mesh'
@@ -125,7 +140,7 @@ var KAIOPUA = (function (main) {
 		
 		addOnShow.push( { addTarget: head, sceneTarget: body } );
 		
-		tail = new model.Instance({
+		tail = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Whale_Tail.js"),
 			physicsParameters: {
 				bodyType: 'mesh'
@@ -138,11 +153,17 @@ var KAIOPUA = (function (main) {
 		
 		// water
 		
-		waterPlane = water.instantiate();
+		waterRing = new _Water.Instance();
 		
-		addOnShow.push( body, waterPlane.container );
+		addOnShow.push( body, waterRing );
 		
 	}
+	
+	/*===================================================
+    
+    environment
+    
+    =====================================================*/
 	
 	function init_environment () {
 		
@@ -164,7 +185,7 @@ var KAIOPUA = (function (main) {
 		
 		// sun/moon
 		
-		sunmoon = new model.Instance({
+		sunmoon = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Sun_Moon.js"),
 			materials: new THREE.MeshBasicMaterial( { color: 0xffffff, shading: THREE.NoShading, vertexColors: THREE.VertexColors } )
         });
@@ -172,7 +193,7 @@ var KAIOPUA = (function (main) {
 		sunmoon.position.set( -500, 1700, -4000 );
 		sunmoon.quaternion.setFromAxisAngle( new THREE.Vector3( 0, 0, 1 ), Math.PI );
 		
-		physics.rotate_relative_to_source( sunmoon, body, shared.cardinalAxes.forward.clone().negate(), shared.cardinalAxes.up );
+		_Physics.rotate_relative_to_source( sunmoon, body, shared.cardinalAxes.forward.clone().negate(), shared.cardinalAxes.up );
 		
 		addOnShow.push( sunmoon );
 		
@@ -202,7 +223,7 @@ var KAIOPUA = (function (main) {
 	
 	function init_home () {
 		
-		var home = new model.Instance({});
+		var home = new _Model.Instance({});
 		
 		addOnShow.push( { addTarget: home, sceneTarget: body } );
 		
@@ -213,9 +234,9 @@ var KAIOPUA = (function (main) {
 			addTarget: home, 
 			callbackAdd: function () {
 				
-				physics.rotate_relative_to_source( home, head, shared.cardinalAxes.up, shared.cardinalAxes.forward );
+				_Physics.rotate_relative_to_source( home, head, shared.cardinalAxes.up, shared.cardinalAxes.forward );
 				
-				physics.pull_to_source( home, head );
+				_Physics.pull_to_source( home, head );
 				
 			}
 		} );
@@ -223,7 +244,7 @@ var KAIOPUA = (function (main) {
 		
 		// hill for home
 		
-		var hill = new model.Instance({
+		var hill = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Hut_Hill.js"),
 			physicsParameters: {
 				bodyType: 'mesh'
@@ -236,7 +257,7 @@ var KAIOPUA = (function (main) {
 		
 		// steps
 		
-		var steps = new model.Instance({
+		var steps = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Hut_Steps.js"),
 			physicsParameters: {
 				bodyType: 'mesh'
@@ -251,7 +272,7 @@ var KAIOPUA = (function (main) {
 		
 		// hut
 		
-		var hut = new model.Instance({
+		var hut = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Hut.js"),
 			physicsParameters: {
 				bodyType: 'mesh'
@@ -266,7 +287,7 @@ var KAIOPUA = (function (main) {
 		
 		// banana leaf door
 		
-		var bananaLeafDoor = new model.Instance({
+		var bananaLeafDoor = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Banana_Leaf_Door.js"),
 			materials:  new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
@@ -280,7 +301,7 @@ var KAIOPUA = (function (main) {
 		
 		// surfboard
 		
-		var surfboard = new model.Instance({
+		var surfboard = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Surfboard.js"),
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
@@ -296,7 +317,7 @@ var KAIOPUA = (function (main) {
 		/*
 		// bed
 		
-		var bed = new model.Instance({
+		var bed = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Bed.js"),
 			physicsParameters: {
 				bodyType: 'box'
@@ -311,7 +332,7 @@ var KAIOPUA = (function (main) {
 		
 		// palm tree
 		
-		var palmTree = new model.Instance({
+		var palmTree = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Palm_Tree.js"),
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading
@@ -323,7 +344,7 @@ var KAIOPUA = (function (main) {
 		
 		// taro plants
 		
-		var taroPlant1 = new model.Instance({
+		var taroPlant1 = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Taro_Plant_001.js"),
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading
@@ -333,7 +354,7 @@ var KAIOPUA = (function (main) {
 		
 		addOnShow.push( { addTarget: taroPlant1, sceneTarget: home } );
 		
-		var taroPlant2 = new model.Instance({
+		var taroPlant2 = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Taro_Plant_001.js"),
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
@@ -358,13 +379,13 @@ var KAIOPUA = (function (main) {
 		
 		// volcano
 		
-		var volcano = new model.Instance({});
+		var volcano = new _Model.Instance({});
 		
 		addOnShow.push( { addTarget: volcano, sceneTarget: body } );
 		
 		// volcano large
 		
-		var volcanoLarge = new model.Instance({
+		var volcanoLarge = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Volcano_Large.js"),
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
@@ -375,13 +396,13 @@ var KAIOPUA = (function (main) {
 		
 		//volcanoLarge.position.set( -335, 1350, 0 );
 		
-		//physics.rotate_relative_to_source( volcano, head, shared.cardinalAxes.up, shared.cardinalAxes.forward );
+		//_Physics.rotate_relative_to_source( volcano, head, shared.cardinalAxes.up, shared.cardinalAxes.forward );
 		
 		addOnShow.push( { addTarget: volcanoLarge, sceneTarget: volcano } );
 		
 		// volcano small
 		
-		var volcanoSmall = new model.Instance({
+		var volcanoSmall = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Volcano_Small.js"),
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
@@ -394,7 +415,7 @@ var KAIOPUA = (function (main) {
 		
 		// volcano rocks
 		
-		var volcanoRocks001 = new model.Instance({
+		var volcanoRocks001 = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Volcano_Rocks_001.js"),
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
@@ -405,7 +426,7 @@ var KAIOPUA = (function (main) {
 		
 		addOnShow.push( { addTarget: volcanoRocks001, sceneTarget: volcano } );
 		
-		var volcanoRocks002 = new model.Instance({
+		var volcanoRocks002 = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Volcano_Rocks_002.js"),
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
@@ -416,7 +437,7 @@ var KAIOPUA = (function (main) {
 		
 		addOnShow.push( { addTarget: volcanoRocks002, sceneTarget: volcano } );
 		
-		var volcanoRocks003 = new model.Instance({
+		var volcanoRocks003 = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Volcano_Rocks_003.js"),
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
@@ -427,7 +448,7 @@ var KAIOPUA = (function (main) {
 		
 		addOnShow.push( { addTarget: volcanoRocks003, sceneTarget: volcano } );
 		
-		var volcanoRocks004 = new model.Instance({
+		var volcanoRocks004 = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Volcano_Rocks_004.js"),
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
@@ -438,7 +459,7 @@ var KAIOPUA = (function (main) {
 		
 		addOnShow.push( { addTarget: volcanoRocks004, sceneTarget: volcano } );
 		
-		var volcanoRocks005 = new model.Instance({
+		var volcanoRocks005 = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Volcano_Rocks_005.js"),
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
@@ -470,13 +491,13 @@ var KAIOPUA = (function (main) {
 		
 		// trees
 		
-		var trees = new model.Instance({});
+		var trees = new _Model.Instance({});
 		
 		addOnShow.push( { addTarget: trees, sceneTarget: body } );
 		
 		// kukui trees
 		
-		var kukuiTrees = new model.Instance({
+		var kukuiTrees = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Kukui_Trees.js"),
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading
@@ -486,7 +507,7 @@ var KAIOPUA = (function (main) {
 		
 		// palm trees
 		
-		var palmTrees = new model.Instance({
+		var palmTrees = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Palm_Trees.js"),
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading
@@ -498,13 +519,29 @@ var KAIOPUA = (function (main) {
 	
 	/*===================================================
     
+    puzzles
+    
+    =====================================================*/
+	
+	function init_puzzles () {
+		
+		var puzzleTutorial = new _Puzzles.Instance( {
+			geometry: main.get_asset_data("assets/models/Field_Tutorial.js")
+		});
+		
+		addOnShow.push( { addTarget: puzzleTutorial, sceneTarget: body } );
+		
+	}
+	
+	/*===================================================
+    
     interactive functions
     
     =====================================================*/
 	
 	function show () {
 		
-		scene = game.scene;
+		scene = _Game.scene;
 		
         // fog
         
@@ -512,11 +549,11 @@ var KAIOPUA = (function (main) {
 		
 		// add parts
 		
-		game.add_to_scene( addOnShow, scene );
+		_Game.add_to_scene( addOnShow, scene );
 		
 		// add skybox
 		
-		game.add_to_scene( skybox, game.sceneBG );
+		_Game.add_to_scene( skybox, _Game.sceneBG );
 		
 		// morph animations
 		
@@ -526,21 +563,21 @@ var KAIOPUA = (function (main) {
 
 		sunmoon.morphs.play( 'bounce', { duration: 3000, loop: true, loopDelay: 4000, loopChance: 0.1 } );
 		
-		waterPlane.waves.model.morphs.play( 'waves', { duration: 5000, loop: true } );
+		waterRing.morphs.play( 'waves', { duration: 5000, loop: true } );
 		
 	}
 	
 	function hide () {
 		
-		game.remove_from_scene( addOnShow, scene );
+		_Game.remove_from_scene( addOnShow, scene );
 		
-		game.remove_from_scene( skybox, game.sceneBG );
+		_Game.remove_from_scene( skybox, _Game.sceneBG );
 		
 		tail.morphs.stopAll();
 		
 		sunmoon.morphs.stopAll();
 		
-		waterPlane.waves.model.morphs.stopAll();
+		waterRing.morphs.stopAll();
 		
 	}
 	
@@ -549,7 +586,5 @@ var KAIOPUA = (function (main) {
 		
 		
 	}
-	
-	return main;
 	
 } ( KAIOPUA ) );

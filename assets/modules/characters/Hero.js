@@ -1,12 +1,16 @@
 /*
-Hero.js
-Hero character module, for use with character module.
-*/
-var KAIOPUA = (function (main) {
+ *
+ * Hero.js
+ * Adds additional functionality to basic character.
+ *
+ * @author Collin Hover / http://collinhover.com/
+ *
+ */
+(function (main) {
     
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/characters/Hero.js",
-		hero = {};
+		_Hero = {};
 	
 	/*===================================================
     
@@ -14,27 +18,27 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	hero.ability_001_start = select_and_scale_start;
-	hero.ability_001_end = select_and_scale_end;
+	_Hero.ability_001_start = select_and_scale_start;
+	_Hero.ability_001_end = select_and_scale_end;
 	
-	Object.defineProperty( hero, 'id', { 
+	Object.defineProperty( _Hero, 'id', { 
 		get : get_id
 	});
 	
-	Object.defineProperty( hero, 'modelInfo', { 
+	Object.defineProperty( _Hero, 'modelInfo', { 
 		get : get_model_info
 	});
 	
-	Object.defineProperty( hero, 'movementInfo', { 
+	Object.defineProperty( _Hero, 'movementInfo', { 
 		get : get_movement_info
 	});
 	
-	Object.defineProperty( hero, 'physicsParameters', { 
+	Object.defineProperty( _Hero, 'physicsParameters', { 
 		get : get_physics_parameters
 	});
 	
 	main.asset_register( assetPath, { 
-		data: hero
+		data: _Hero
 	});
 	
 	/*===================================================
@@ -65,13 +69,13 @@ var KAIOPUA = (function (main) {
 		
 		var mi = {};
 		
-		mi.moveSpeed = 6,
-		mi.moveSpeedBack = 2,
-		mi.moveRunThreshold = mi.moveSpeedBack * 2,
-		mi.rotateSpeed = 0.019,
-		mi.jumpSpeedStart = 6,
-		mi.jumpSpeedEnd = 0,
-		mi.jumpTimeMax = 100
+		mi.moveSpeed = 6;
+		mi.moveSpeedBack = 2;
+		mi.moveRunThreshold = mi.moveSpeed;
+		mi.rotateSpeed = 0.019;
+		mi.jumpSpeedStart = 6;
+		mi.jumpSpeedEnd = 0;
+		mi.jumpTimeMax = 100;
 		
 		return mi;
 		
@@ -304,7 +308,5 @@ var KAIOPUA = (function (main) {
 		target.scale.set( scaleX, scaleY, scaleZ );
 		
 	}
-	
-	return main;
 	
 } ( KAIOPUA ) );

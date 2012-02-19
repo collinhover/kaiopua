@@ -5,7 +5,7 @@ Blurs render increasingly as moves away from center.
 Based on ro.me's original PaintEffect implementation
 */
 
-var KAIOPUA = (function (main) {
+(function (main) {
     
     var assetPath = "assets/modules/effects/FocusVignette.js",
 		fv = {
@@ -108,7 +108,5 @@ var KAIOPUA = (function (main) {
 	};
 	
 	main.asset_register( assetPath, { data: fv } );
-    
-    return main; 
     
 } ( KAIOPUA ) );

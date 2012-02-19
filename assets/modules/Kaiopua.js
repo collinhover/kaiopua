@@ -1,14 +1,16 @@
 /*
-Kaiopua.js
-Main module.
-*/
-
+ *
+ * Kaiopua.js
+ * Main module.
+ *
+ * @author Collin Hover / http://collinhover.com/
+ *
+ */
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetloader,
-		game,
-		requiredAssets = [],
+		_AssetLoader,
+		_Game,
         lastGamma, lastBeta,
         libList = [
             "js/lib/jquery-1.7.1.min.js",
@@ -46,7 +48,7 @@ var KAIOPUA = (function (main) {
         shared.frameRateMin = 20;
         shared.time = new Date().getTime();
         shared.timeLast = shared.time;
-        shared.refreshInterval = 1000 / 60;
+        shared.timeDeltaExpected = 1000 / 60;
         
         shared.html = {
             staticMenu: $('#static_menu'),
@@ -101,9 +103,9 @@ var KAIOPUA = (function (main) {
 		
 		// asset loader and setup
 		
-		assetloader = main.get_asset_data( 'assets/modules/utils/AssetLoader.js' );
+		_AssetLoader = main.get_asset_data( 'assets/modules/utils/AssetLoader.js' );
 		
-		assetloader.add_loaded_locations( libList );
+		_AssetLoader.add_loaded_locations( libList );
 		
 		main.asset_require( setupList, init_setup, true );
 		
@@ -113,7 +115,7 @@ var KAIOPUA = (function (main) {
 		
         // assets
         
-        game = g;
+        _Game = g;
         
         // resize once
         on_window_resize();
@@ -588,7 +590,7 @@ var KAIOPUA = (function (main) {
 			
 			if ( typeof loaderUIContainer !== 'undefined' ) {
 				
-				assetloader.ui_hide( true );
+				_AssetLoader.ui_hide( true );
 				
 			}
 			
@@ -661,9 +663,9 @@ var KAIOPUA = (function (main) {
 		
 		// set loader manually if needed
 		
-		if ( typeof assetloader === 'undefined' ) {
+		if ( typeof _AssetLoader === 'undefined' ) {
 			
-			assetloader = main.get_asset_data( 'assets/modules/utils/AssetLoader.js' );
+			_AssetLoader = main.get_asset_data( 'assets/modules/utils/AssetLoader.js' );
 			
 		}
 		
@@ -671,13 +673,13 @@ var KAIOPUA = (function (main) {
 		
 		if ( typeof loaderUIContainer !== 'undefined' ) {
 			
-			assetloader.ui_show( loaderUIContainer );
+			_AssetLoader.ui_show( loaderUIContainer );
 			
 		}
 		
 		// pass all requirements to loader
 		
-		assetloader.load( requirements, callback_outer );
+		_AssetLoader.load( requirements, callback_outer );
 		
 	}
 	
@@ -875,9 +877,9 @@ var KAIOPUA = (function (main) {
 		
 		shared.signals.focuslose.dispatch( e );
 		
-		if ( typeof game !== 'undefined' ) {
+		if ( typeof _Game !== 'undefined' ) {
 			
-			game.pause();
+			_Game.pause();
 			
 		}
 		
@@ -887,9 +889,9 @@ var KAIOPUA = (function (main) {
 		
 		shared.signals.focusgain.dispatch( e );
 		
-		if ( typeof game !== 'undefined' && game.started !== true ) {
+		if ( typeof _Game !== 'undefined' && _Game.started !== true ) {
 			
-			game.resume();
+			_Game.resume();
 			
 		}
 		

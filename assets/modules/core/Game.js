@@ -1,21 +1,25 @@
 /*
-Game.js
-Game module, handles sections of game.
-*/
-
-var KAIOPUA = (function (main) {
+ *
+ * Game.js
+ * Game specific methods and functionality.
+ *
+ * @author Collin Hover / http://collinhover.com/
+ *
+ */
+(function (main) {
     
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/core/Game.js",
-		game = {},
-        assetloader,
-		errorhandler,
-		uihelper,
-		launcher,
-		intro,
+		_Game = {},
+        _AssetLoader,
+		_ErrorHandler,
+		_Physics,
+		_UIHelper,
+		_MenuMaker,
+		_Launcher,
+		_Intro,
         transitioner,
         domElement,
-        menumaker,
         renderer, 
         renderTarget,
 		renderComposer,
@@ -29,10 +33,7 @@ var KAIOPUA = (function (main) {
 		cameraBG,
 		cameraDefault,
 		cameraBGDefault,
-		physics,
 		bg,
-		world,
-		player,
 		menus = {},
         currentSection, 
         previousSection,
@@ -45,7 +46,8 @@ var KAIOPUA = (function (main) {
 			"assets/modules/utils/AssetLoader.js",
             "assets/modules/utils/ErrorHandler.js",
 			"assets/modules/utils/UIHelper.js",
-			//"assets/modules/utils/Dev.js"
+			"assets/modules/utils/MathHelper.js",
+			"assets/modules/utils/Dev.js"
 		],
         assetsBasic = [
             "js/lib/three/Three.js",
@@ -77,9 +79,9 @@ var KAIOPUA = (function (main) {
 			"assets/modules/core/Model.js",
 			"assets/modules/core/CameraControls.js",
 			"assets/modules/core/Character.js",
+			"assets/modules/core/Puzzles.js",
 			"assets/modules/utils/ObjectMaker.js",
 			"assets/modules/utils/ObjectHelper.js",
-			"assets/modules/utils/MathHelper.js",
 			"assets/modules/utils/MenuMaker.js",
 			"assets/modules/characters/EmptyCharacter.js",
 			"assets/modules/characters/Hero.js",
@@ -113,6 +115,7 @@ var KAIOPUA = (function (main) {
 			{ path: "assets/models/Volcano_Rocks_003.js", type: 'model' },
 			{ path: "assets/models/Volcano_Rocks_004.js", type: 'model' },
 			{ path: "assets/models/Volcano_Rocks_005.js", type: 'model' },
+			{ path: "assets/models/Field_Tutorial.js", type: 'model' },
 			"assets/textures/skybox_world_posx.jpg",
             "assets/textures/skybox_world_negx.jpg",
 			"assets/textures/skybox_world_posy.jpg",
@@ -134,8 +137,8 @@ var KAIOPUA = (function (main) {
             "Ali'i wahine means queen or chiefess.",
             "He mea ho'opa'ani means to play a game.",
             "Kai means sea or ocean.",
-            "'opua means puffy clouds.",
-			"Kai 'opua means clouds over the ocean.",
+            "'Opua means puffy clouds.",
+			"Kai 'Opua means clouds over the ocean.",
             "Iki means small or little.",
             "Nui means large or huge."
         ];
@@ -148,48 +151,48 @@ var KAIOPUA = (function (main) {
     
 	// functions
 	
-    game.resume = resume;
-    game.pause = pause;
-	game.get_mouse = get_mouse;
-	game.add_to_scene = add_to_scene;
-	game.remove_from_scene = remove_from_scene;
+    _Game.resume = resume;
+    _Game.pause = pause;
+	_Game.get_mouse = get_mouse;
+	_Game.add_to_scene = add_to_scene;
+	_Game.remove_from_scene = remove_from_scene;
 	
 	// getters and setters
 	
-	Object.defineProperty(game, 'domElement', { 
+	Object.defineProperty(_Game, 'domElement', { 
 		get : function () { return domElement; }
 	});
 	
-	Object.defineProperty(game, 'paused', { 
+	Object.defineProperty(_Game, 'paused', { 
 		get : function () { return paused; }
 	});
 	
-	Object.defineProperty(game, 'started', { 
+	Object.defineProperty(_Game, 'started', { 
 		get : function () { return started; }
 	});
 	
-	Object.defineProperty(game, 'scene', { 
+	Object.defineProperty(_Game, 'scene', { 
 		get : function () { return scene; },  
 		set : set_scene
 	});
 	
-	Object.defineProperty(game, 'sceneBG', { 
+	Object.defineProperty(_Game, 'sceneBG', { 
 		get : function () { return sceneBG; },  
 		set : set_scene_bg
 	});
 	
-	Object.defineProperty(game, 'camera', { 
+	Object.defineProperty(_Game, 'camera', { 
 		get : function () { return camera; },  
 		set : set_camera
 	});
 	
-	Object.defineProperty(game, 'cameraBG', { 
+	Object.defineProperty(_Game, 'cameraBG', { 
 		get : function () { return cameraBG; },  
 		set : set_camera_bg
 	});
 
 	main.asset_register( assetPath, { 
-		data: game,
+		data: _Game,
 		readyAutoUpdate: false,
 		requirements: dependencies,
 		callbacksOnReqs: init_internal,
@@ -204,9 +207,9 @@ var KAIOPUA = (function (main) {
 	
 	function init_internal ( al, err, u ) {
 		console.log('internal game');
-		assetloader = al;
-		errorhandler = err;
-		uihelper = u;
+		_AssetLoader = al;
+		_ErrorHandler = err;
+		_UIHelper = u;
 		
 		// register error listeners
 		
@@ -215,9 +218,9 @@ var KAIOPUA = (function (main) {
 		
 		// check for errors
         
-        if (errorhandler.check()) {
+        if (_ErrorHandler.check()) {
 			
-            errorhandler.process();
+            _ErrorHandler.process();
 			
         }
         // safe to start game
@@ -225,8 +228,8 @@ var KAIOPUA = (function (main) {
 			
 			// set loading messages
 			
-			assetloader.loadingHeader = loadingHeader;
-			assetloader.loadingTips = loadingTips;
+			_AssetLoader.loadingHeader = loadingHeader;
+			_AssetLoader.loadingTips = loadingTips;
 			
 			// start loading
 			
@@ -278,12 +281,16 @@ var KAIOPUA = (function (main) {
 				startBottom: true
 			} )*/
 		
+		// utility
+		
+		_MathHelper = main.get_asset_data( "assets/modules/utils/MathHelper.js" );
+		
 		// modify THREE classes
 		
 		add_three_modifications();
 		
         // transitioner
-        transitioner = uihelper.make_ui_element({
+        transitioner = _UIHelper.make_ui_element({
             classes: 'transitioner'
         });
 		
@@ -388,9 +395,6 @@ var KAIOPUA = (function (main) {
 		// set ready
 		
 		main.asset_ready( assetPath );
-		/*main.asset_register( assetPath, { 
-			data: game
-		});*/
         
 		// start drawing
         
@@ -443,9 +447,9 @@ var KAIOPUA = (function (main) {
 	
 	function init_launcher ( l ) {
 		
-		launcher = l;
-		console.log('init launcher', launcher);
-		set_section( launcher );
+		_Launcher = l;
+		console.log('init launcher', _Launcher);
+		set_section( _Launcher );
 		
 	}
 	
@@ -459,7 +463,7 @@ var KAIOPUA = (function (main) {
 		
 		// assets
 		
-		menumaker = main.get_asset_data( 'assets/modules/utils/MenuMaker' );
+		_MenuMaker = main.get_asset_data( 'assets/modules/utils/MenuMaker.js' );
 		
 		// init menus
 		
@@ -484,13 +488,13 @@ var KAIOPUA = (function (main) {
         
         // init start menu
 		
-        menu = menus.start = menumaker.make_menu( {
+        menu = menus.start = _MenuMaker.make_menu( {
             id: 'start_menu',
 			transparent: true,
             width: 570
         } );
         
-        menu.add_item( menumaker.make_button( {
+        menu.add_item( _MenuMaker.make_button( {
             id: 'Start', 
             callback: function () {
                 start_game();
@@ -498,13 +502,13 @@ var KAIOPUA = (function (main) {
             classes: 'item_big',
 			circleButton: true
         } ) );
-        menu.add_item( menumaker.make_button( {
+        menu.add_item( _MenuMaker.make_button( {
             id: 'Continue', 
             callback: function () {},
             disabled: true,
 			circleButton: true
         } ) );
-        menu.add_item( menumaker.make_button( {
+        menu.add_item( _MenuMaker.make_button( {
             id: 'Options', 
             callback: function () {},
             disabled: true,
@@ -522,13 +526,13 @@ var KAIOPUA = (function (main) {
         
         // init menu
         
-        menu = menus.pause = menumaker.make_menu( {
+        menu = menus.pause = _MenuMaker.make_menu( {
             id: 'pause_menu',
             width: 760,
 			transparent: true
         } );
         
-        menu.add_item( menumaker.make_button( {
+        menu.add_item( _MenuMaker.make_button( {
             id: 'Resume', 
             callback: function () {
                 resume();
@@ -536,19 +540,19 @@ var KAIOPUA = (function (main) {
             classes: 'item_big',
 			circleButton: true
         } ) );
-		menu.add_item( menumaker.make_button( {
+		menu.add_item( _MenuMaker.make_button( {
             id: 'Options', 
             callback: function () {},
             disabled: true,
 			circleButton: true
         } ) );
-        menu.add_item( menumaker.make_button( {
+        menu.add_item( _MenuMaker.make_button( {
             id: 'Save', 
             callback: function () {},
             disabled: true,
 			circleButton: true
         } ) );
-		menu.add_item( menumaker.make_button( {
+		menu.add_item( _MenuMaker.make_button( {
             id: 'End Game', 
             callback: function () {
 				stop_game();
@@ -742,7 +746,7 @@ var KAIOPUA = (function (main) {
 				
 				if ( typeof object3D.physics !== 'undefined' ) {
 					
-					physics.add( object3D.physics );
+					_Physics.add( object3D.physics );
 					
 				}
 				
@@ -798,7 +802,7 @@ var KAIOPUA = (function (main) {
 				
 				if ( typeof object3D.physics !== 'undefined' ) {
 					
-					physics.remove( object3D.physics );
+					_Physics.remove( object3D.physics );
 					
 				}
 				
@@ -1017,10 +1021,8 @@ var KAIOPUA = (function (main) {
 		
 		// assets
 		
-		physics = main.get_asset_data( 'assets/modules/core/Physics' );
-		world = main.get_asset_data( 'assets/modules/core/World' );
-		player = main.get_asset_data( 'assets/modules/core/Player' );
-		intro = main.get_asset_data( 'assets/modules/sections/Intro' );
+		_Physics = main.get_asset_data( 'assets/modules/core/Physics.js' );
+		_Intro = main.get_asset_data( 'assets/modules/sections/Intro.js' );
 		
 		// hide static menu
 		
@@ -1036,7 +1038,7 @@ var KAIOPUA = (function (main) {
         
         // set intro section
 		
-        set_section( intro );
+        set_section( _Intro );
 		
 		// set started
 		
@@ -1069,7 +1071,7 @@ var KAIOPUA = (function (main) {
 		
 		// set launcher section
 		
-        set_section( launcher, function () {
+        set_section( _Launcher, function () {
 			
 			// show / enable start menu
 			
@@ -1145,7 +1147,8 @@ var KAIOPUA = (function (main) {
     
     function animate () {
     
-    	var timeDelta;
+    	var timeDelta,
+			timeDeltaMod;
         
         requestAnimationFrame( animate );
 		
@@ -1157,19 +1160,29 @@ var KAIOPUA = (function (main) {
 		
 		timeDelta = shared.time - shared.timeLast;
 		
+		// get time delta modifier from timeDelta vs expected refresh interval
+		
+		timeDeltaMod = _MathHelper.round( timeDelta / shared.timeDeltaExpected, 2 );
+		
+		if ( _MathHelper.is_number( timeDeltaMod ) !== true ) {
+			
+			timeDeltaMod = 1;
+			
+		}
+		
 		// update
 		
 		if ( paused !== true ) {
 			
 			// update physics
 			
-			if ( typeof physics !== 'undefined' ) {
-				physics.update( timeDelta );
+			if ( typeof _Physics !== 'undefined' ) {
+				_Physics.update( timeDelta, timeDeltaMod );
 			}
 			
 			// update all others
 			
-			shared.signals.update.dispatch( timeDelta );
+			shared.signals.update.dispatch( timeDelta, timeDeltaMod );
 			
 		}
 		
@@ -1233,7 +1246,5 @@ var KAIOPUA = (function (main) {
 		}
         
     }
-        
-    return main; 
     
 } ( KAIOPUA ) );

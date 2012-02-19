@@ -1,13 +1,17 @@
-/*  
-Dev.js
-Initializes Logger, Stats, and DAT-GUI for development purposes
-*/
-var KAIOPUA = (function (main) {
+/*
+ *
+ * Dev.js
+ * Initializes Logger, Stats, and DAT-GUI for development purposes.
+ *
+ * @author Collin Hover / http://collinhover.com/
+ *
+ */
+(function (main) {
     
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/utils/Dev.js",
-        dev = {},
-        devCommands,
+        _Dev = {},
+        _DevCommands,
         domElement, isOpen = true, stats, logger, 
         gui, guiContainer, guiHeight, statsPaused = true;
     
@@ -17,26 +21,26 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
     
-    dev.toggle = togglePanel;
-    dev.log = function (msg, expand) { 
+    _Dev.toggle = togglePanel;
+    _Dev.log = function (msg, expand) { 
         if (typeof logger !== 'undefined') {
             logger.log(msg, expand); 
         }
     };
-    dev.log_error = function (error, url, lineNumber) {
+    _Dev.log_error = function (error, url, lineNumber) {
         if (typeof logger !== 'undefined') {
             logger.log('[ERROR] ' + error);
             logger.log('[ERROR] in file: ' + url);
             logger.log('[ERROR] line # ' + lineNumber);
         }
     };
-    dev.gui = function () { return gui; };
-    dev.resize = resize;
-    dev.isOpen = function () {return isOpen;};
-    dev.domElement = function () { return domElement; };
+    _Dev.gui = function () { return gui; };
+    _Dev.resize = resize;
+    _Dev.isOpen = function () {return isOpen;};
+    _Dev.domElement = function () { return domElement; };
 	
 	main.asset_register( assetPath, { 
-		data: dev,
+		data: _Dev,
 		requirements: [
 			"assets/modules/utils/DevCommands.js",
             "js/lib/Logger.js", 
@@ -55,7 +59,7 @@ var KAIOPUA = (function (main) {
     
     function init( d ) {
 		
-        devCommands = d;
+        _DevCommands = d;
         
         // stats
         stats = new Stats();
@@ -91,9 +95,9 @@ var KAIOPUA = (function (main) {
         gui.domElement.style.margin = '0';
         
         // gui elements
-        gui.add(devCommands, 'current').name('CMD?').onFinishChange(function(newCmd) {
+        gui.add(_DevCommands, 'current').name('CMD?').onFinishChange(function(newCmd) {
             logger.log('[DEV CMD] ' + newCmd);
-            devCommands.execute(newCmd);
+            _DevCommands.execute(newCmd);
         });
         gui.add(logger, 'clear').name('Clear Log');
     
@@ -136,15 +140,15 @@ var KAIOPUA = (function (main) {
         shared.signals.windowresized.add(resize);
     
         // add dev commands
-        devCommands.add({
+        _DevCommands.add({
             cmd_hist: function(modifier) {
                 if (modifier === 'clear') {
                     logger.log('Cleared dev cmd history!');
-                    devCommands.clear_history();
+                    _DevCommands.clear_history();
                 }
                 else {
                     logger.log('Showing dev cmd history:');
-                    logger.log(devCommands.get_history(), true);
+                    logger.log(_DevCommands.get_history(), true);
                 }
             }
         });
@@ -232,7 +236,5 @@ var KAIOPUA = (function (main) {
         });
         $(logDE).width(W - (spaceW * 3) - $(guiDE).width());
     }
-    
-    return main; 
     
 } ( KAIOPUA ) );

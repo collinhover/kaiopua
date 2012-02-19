@@ -1,14 +1,17 @@
 /*
-ObjectMaker.js
-Object generator module, handles generation of misc things.
-*/
-
-var KAIOPUA = (function (main) {
+ *
+ * ObjectMaker.js
+ * Handles generation of misc objects.
+ *
+ * @author Collin Hover / http://collinhover.com/
+ *
+ */
+(function (main) {
     
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/utils/ObjectMaker.js",
-		objectmaker = {},
-		model;
+		_ObjectMaker = {},
+		_Model;
     
     /*===================================================
     
@@ -16,10 +19,10 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-    objectmaker.make_skybox = make_skybox;
+    _ObjectMaker.make_skybox = make_skybox;
 	
 	main.asset_register( assetPath, { 
-		data: objectmaker,
+		data: _ObjectMaker,
 		requirements: [
 			"assets/modules/core/Model.js"
 		],
@@ -35,7 +38,7 @@ var KAIOPUA = (function (main) {
 	
 	function init_internal ( m ) {
 		console.log('internal objectmaker');
-		model = m;
+		_Model = m;
 		
 	}
 
@@ -95,7 +98,7 @@ var KAIOPUA = (function (main) {
 		
 		// instance
 		
-		instance = new model.Instance( {
+		instance = new _Model.Instance( {
             geometry: new THREE.CubeGeometry( 100, 100, 100 ),
 			materials: material,
 			shading: THREE.SmoothShading,
@@ -105,7 +108,5 @@ var KAIOPUA = (function (main) {
         return instance;
         
     }
-        
-    return main; 
     
 } ( KAIOPUA ) );

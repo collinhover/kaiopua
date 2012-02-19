@@ -1,11 +1,15 @@
-/* 
-Dev Commands
-Call using require('utils/DevCommands').functionName()
-*/
-var KAIOPUA = (function (main) {
+/*
+ *
+ * DevCommands.js
+ * Adds dynamic commands to dev panel.
+ *
+ * @author Collin Hover / http://collinhover.com/
+ *
+ */
+(function (main) {
     
     var assetPath = "assets/modules/utils/DevCommands.js",
-		devCommands = {},
+		_DevCommands = {},
         commands = [],
 		callbacks = {},
 		current = "",
@@ -17,13 +21,13 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-    devCommands.current = current;
-    devCommands.add = add;
-    devCommands.execute = execute;
-    devCommands.get_history = function () {return history.slice(0);};
-    devCommands.clear_history = function () {history = [];};
+    _DevCommands.current = current;
+    _DevCommands.add = add;
+    _DevCommands.execute = execute;
+    _DevCommands.get_history = function () {return history.slice(0);};
+    _DevCommands.clear_history = function () {history = [];};
 	
-	main.asset_register( assetPath, { data: devCommands } );
+	main.asset_register( assetPath, { data: _DevCommands } );
     
     // add list of commands
     // cmds can be an object with any number of name + callback pairs
@@ -96,7 +100,5 @@ var KAIOPUA = (function (main) {
             }
         }
     }
-    
-    return main; 
     
 } ( KAIOPUA ) );

@@ -1,20 +1,24 @@
 /*
-Player.js
-Player module, handles player in game.
-*/
-var KAIOPUA = (function (main) {
+ *
+ * Player.js
+ * Centralizes all player related functionality.
+ *
+ * @author Collin Hover / http://collinhover.com/
+ *
+ */
+(function (main) {
     
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/core/Player.js",
-        player = {},
-		game,
-		cameracontrols,
-		character,
-		hero,
-		physics,
-		world,
-		objecthelper,
-		mathhelper,
+        _Player = {},
+		_Game,
+		_CameraControls,
+		_Character,
+		_Hero,
+		_Physics,
+		_World,
+		_ObjectHelper,
+		_MathHelper,
 		ready = false,
 		enabled = false,
 		showing = false,
@@ -22,9 +26,9 @@ var KAIOPUA = (function (main) {
 		addOnShow = [],
 		keybindings = {},
 		keybindingsDefault = {},
-		playerCharacter,
-		playerLight,
-		playerLightFollowSettings,
+		character,
+		characterLight,
+		characterLightFollowSettings,
 		following = [],
 		projector,
 		utilRay1Selection,
@@ -37,18 +41,18 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	player.enable = enable;
-	player.disable = disable;
-	player.show = show;
-	player.hide = hide;
-	player.allow_control = allow_control;
-	player.remove_control = remove_control;
-	player.select_from_mouse_position = select_from_mouse_position;
-	player.deselect = deselect;
+	_Player.enable = enable;
+	_Player.disable = disable;
+	_Player.show = show;
+	_Player.hide = hide;
+	_Player.allow_control = allow_control;
+	_Player.remove_control = remove_control;
+	_Player.select_from_mouse_position = select_from_mouse_position;
+	_Player.deselect = deselect;
 	
 	// getters and setters
 	
-	Object.defineProperty(player, 'enabled', { 
+	Object.defineProperty(_Player, 'enabled', { 
 		get : function () { return enabled; },
 		set : function ( val ) { 
 			if ( val === true ) {
@@ -60,16 +64,16 @@ var KAIOPUA = (function (main) {
 		}
 	});
 	
-	Object.defineProperty(player, 'character', { 
-		get : function () { return playerCharacter; }
+	Object.defineProperty(_Player, 'character', { 
+		get : function () { return character; }
 	});
 	
-	Object.defineProperty(player, 'moving', { 
-		get : function () { return playerCharacter.movement.state.moving; }
+	Object.defineProperty(_Player, 'moving', { 
+		get : function () { return character.movement.state.moving; }
 	});
 	
 	main.asset_register( assetPath, { 
-		data: player,
+		data: _Player,
 		requirements: [
 			"assets/modules/core/Game.js",
 			"assets/modules/core/CameraControls.js",
@@ -97,14 +101,14 @@ var KAIOPUA = (function (main) {
 			
 			// assets
 			
-			game = g;
-			cameracontrols = cc;
-			character = c;
-			hero = h;
-			physics = physx;
-			world = w;
-			objecthelper = oh;
-			mathhelper = mh;
+			_Game = g;
+			_CameraControls = cc;
+			_Character = c;
+			_Hero = h;
+			_Physics = physx;
+			_World = w;
+			_ObjectHelper = oh;
+			_MathHelper = mh;
 			
 			// utility objects
 			
@@ -154,7 +158,7 @@ var KAIOPUA = (function (main) {
 	
 	function init_cameracontrols () {
 		
-		cameracontrols.init( player, game.camera );
+		_CameraControls.init( _Player, _Game.camera );
 		
 	}
 	
@@ -177,19 +181,19 @@ var KAIOPUA = (function (main) {
 		// mouse buttons
 		
 		kbMap[ 'mouseleft' ] = {
-			keydown: function ( e ) { cameracontrols.rotate( e ); },//character_action( 'ability_001_start', { mouseIndex: e ? e.identifier : 0 } ); },
-			keyup: function ( e ) { cameracontrols.rotate( e, true ); }//character_action( 'ability_001_end', { mouseIndex: e ? e.identifier : 0 } ); }
+			keydown: function ( e ) { _CameraControls.rotate( e ); },//character_action( 'ability_001_start', { mouseIndex: e ? e.identifier : 0 } ); },
+			keyup: function ( e ) { _CameraControls.rotate( e, true ); }//character_action( 'ability_001_end', { mouseIndex: e ? e.identifier : 0 } ); }
 		};
 		kbMap[ 'mousemiddle' ] = {
 			keydown: function ( e ) { console.log('key down: mousemiddle'); },
 			keyup: function ( e ) { console.log('key up: mousemiddle'); }
 		};
 		kbMap[ 'mouseright' ] = {
-			keydown: function ( e ) { cameracontrols.rotate( e ); },
-			keyup: function ( e ) { cameracontrols.rotate( e, true ); }
+			keydown: function ( e ) { _CameraControls.rotate( e ); },
+			keyup: function ( e ) { _CameraControls.rotate( e, true ); }
 		};
 		kbMap[ 'mousewheel' ] = {
-			keyup: function ( e ) { cameracontrols.zoom( e ); }
+			keyup: function ( e ) { _CameraControls.zoom( e ); }
 		};
 			
 		
@@ -251,11 +255,11 @@ var KAIOPUA = (function (main) {
 		kbMap[ '27' /*escape*/ ] = {
 			keyup: function () { 
 				
-				if ( game.paused === true ) {
-					game.resume();
+				if ( _Game.paused === true ) {
+					_Game.resume();
 				}
 				else {
-					game.pause();
+					_Game.pause();
 				}
 			
 			}
@@ -447,35 +451,34 @@ var KAIOPUA = (function (main) {
 		
 		// create character
 		
-		playerCharacter = new character.Instance( {
+		character = new _Character.Instance( {
 			
-			type: hero
+			type: _Hero
 			
 		} );
 		
 		// init light to follow character
 		
-		playerLight = new THREE.PointLight( 0xfeb41c, 0.35, 400 );
+		characterLight = new THREE.PointLight( 0xfeb41c, 0.35, 400 );
 		
-		playerLightFollowSettings = {
-			obj: playerLight,
+		characterLightFollowSettings = {
+			obj: characterLight,
 			rotationBase: new THREE.Quaternion(),
 			rotationOffset: new THREE.Vector3( 0, 0, 0 ),
 			positionOffset: new THREE.Vector3( 0, 40, -20 )
 		};
 		
-		following.push( playerLightFollowSettings );
+		following.push( characterLightFollowSettings );
 		
 		// add on show
 		
-		addOnShow.push( playerCharacter, playerLight );
+		addOnShow.push( character, characterLight );
 		
 	}
 	
 	function character_move ( movementTypeName, stop ) {
 			
-		var pc = playerCharacter,
-			movement = pc.movement,
+		var movement = character.movement,
 			move = movement.move,
 			rotate = movement.rotate,
 			state = movement.state,
@@ -520,11 +523,9 @@ var KAIOPUA = (function (main) {
 	
 	function character_action ( actionName, parameters ) {
 		
-		var pc = playerCharacter;
-		
 		// handle action
 		
-		pc.action( actionName, parameters );
+		character.action( actionName, parameters );
 		
 	}
 	
@@ -550,9 +551,9 @@ var KAIOPUA = (function (main) {
 		
 		parameters = parameters || {};
 		
-		mouse = parameters.mouse = parameters.mouse || game.get_mouse( parameters );
+		mouse = parameters.mouse = parameters.mouse || _Game.get_mouse( parameters );
 		
-		character = parameters.character || playerCharacter;
+		character = parameters.character || character;
 		
 		targetsNumMax = parameters.targetsNumMax || 1;
 		
@@ -650,7 +651,7 @@ var KAIOPUA = (function (main) {
 		
 		parameters = parameters || {};
 		
-		character = parameters.character || playerCharacter;
+		character = parameters.character || character;
 		
 		targeting = character.targeting;
 		
@@ -700,7 +701,7 @@ var KAIOPUA = (function (main) {
 		
 		var ray = utilRay1Selection,
 			mousePosition = utilVec31Selection,
-			camera = cameracontrols.camera,
+			camera = _CameraControls.camera,
 			intersections,
 			intersectedMesh,
 			intersectedModel;
@@ -815,7 +816,7 @@ var KAIOPUA = (function (main) {
 			
 			followSettings = following[ i ];
 			
-			objecthelper.object_follow_object( playerCharacter, followSettings.obj, followSettings.rotationBase, followSettings.rotationOffset, followSettings.positionOffset );
+			_ObjectHelper.object_follow_object( character, followSettings.obj, followSettings.rotationBase, followSettings.rotationOffset, followSettings.positionOffset );
 				
 		}
 		
@@ -845,7 +846,7 @@ var KAIOPUA = (function (main) {
 	
 	function enable () {
 		
-		if ( game.started === true && enabled !== true ) {
+		if ( _Game.started === true && enabled !== true ) {
 			
 			enabled = true;
 			
@@ -871,9 +872,9 @@ var KAIOPUA = (function (main) {
 		
 		if ( showing === false ) {
 			
-			scene = game.scene;
+			scene = _Game.scene;
 			
-			game.add_to_scene( addOnShow, scene );
+			_Game.add_to_scene( addOnShow, scene );
 			
 			showing = true;
 			
@@ -885,7 +886,7 @@ var KAIOPUA = (function (main) {
 		
 		if ( showing === true ) {
 		
-			game.remove_from_scene( addOnShow, scene );
+			_Game.remove_from_scene( addOnShow, scene );
 			
 			showing = false;
 			
@@ -893,15 +894,15 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function update ( timeDelta ) {
+	function update ( timeDelta, timeDeltaMod ) {
 		
 		// character
 		
-		playerCharacter.update( timeDelta );
+		character.update( timeDelta, timeDeltaMod );
 		
 		// update camera
 		
-		cameracontrols.update( timeDelta );
+		_CameraControls.update( timeDelta );
 		
 		// items that follow character
 		
@@ -912,7 +913,5 @@ var KAIOPUA = (function (main) {
 		update_selections( timeDelta );
 		
 	}
-	
-	return main;
 	
 } ( KAIOPUA ) );

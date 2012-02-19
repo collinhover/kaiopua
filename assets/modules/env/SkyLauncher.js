@@ -1,15 +1,17 @@
 /*
-Sky.js
-Launcher section sky handler.
-
-cloud texture (c) ro.me
-*/
-
-var KAIOPUA = (function (main) {
+ *
+ * SkyLauncher.js
+ * Handles sky environment for launcher.
+ *
+ * @author Collin Hover / http://collinhover.com/
+ * cloud texture (c) ro.me
+ *
+ */
+(function (main) {
     
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/env/SkyLauncher.js",
-		sky = {},
+		_Sky = {},
         skyWidth = 30000,
         skyHeight = 2000, 
         skyDepth = 10000,
@@ -43,14 +45,14 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
     
-    sky.init = init;
-    sky.wind_blow = wind_blow;
+    _Sky.init = init;
+    _Sky.wind_blow = wind_blow;
 	
-	Object.defineProperty(sky, 'environment', { 
+	Object.defineProperty(_Sky, 'environment', { 
 		get : function () { return environment; }
 	});
 	
-	main.asset_register( assetPath, { data: sky } );
+	main.asset_register( assetPath, { data: _Sky } );
     
     /*===================================================
     
@@ -264,7 +266,5 @@ var KAIOPUA = (function (main) {
 			
         }
     }
-        
-    return main; 
     
 } ( KAIOPUA ) );

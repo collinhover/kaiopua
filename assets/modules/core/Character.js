@@ -1,14 +1,18 @@
 /*
-Character.js
-Character module, handles generating characters in game.
-*/
-var KAIOPUA = (function (main) {
+ *
+ * Character.js
+ * Adds additional functionality to basic model.
+ *
+ * @author Collin Hover / http://collinhover.com/
+ *
+ */
+(function (main) {
     
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/core/Character.js",
-		character = {},
-		model,
-		emptyCharacter, 
+		_Character = {},
+		_Model,
+		_EmptyCharacter, 
 		characterIDBase = 'kaiopua_character',
 		utilQ1Rotate;
 	
@@ -19,10 +23,11 @@ var KAIOPUA = (function (main) {
     =====================================================*/
 	
 	main.asset_register( assetPath, { 
-		data: character,
+		data: _Character,
 		requirements: [
 			"assets/modules/core/Model.js",
-			"assets/modules/characters/EmptyCharacter.js"
+			"assets/modules/characters/EmptyCharacter.js",
+			"assets/modules/utils/MathHelper.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -34,26 +39,26 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	function init_internal ( m, ec ) {
+	function init_internal ( m, ec, mh ) {
 		console.log('internal character');
 		// modules
 		
-		model = m;
-		emptyCharacter = ec;
+		_Model = m;
+		_EmptyCharacter = ec;
+		_MathHelper = mh;
 		
 		// utils
 		
 		utilQ1Rotate = new THREE.Quaternion();
 		
 		// character instance
-		console.log(character);
-		console.log(model);
-		character.Instance = KaiopuaCharacter;
-		character.Instance.prototype = new model.Instance();
-		character.Instance.prototype.constructor = character.Instance;
-		character.Instance.prototype.action = action;
-		character.Instance.prototype.update = update;
-		character.Instance.prototype.rotate_by_delta = rotate_by_delta;
+		
+		_Character.Instance = KaiopuaCharacter;
+		_Character.Instance.prototype = new _Model.Instance();
+		_Character.Instance.prototype.constructor = _Character.Instance;
+		_Character.Instance.prototype.action = action;
+		_Character.Instance.prototype.update = update;
+		_Character.Instance.prototype.rotate_by_delta = rotate_by_delta;
 		
 	}
 	
@@ -80,7 +85,7 @@ var KAIOPUA = (function (main) {
 		
 		// type
 		
-		this.type = parameters.type || emptyCharacter;
+		this.type = parameters.type || _EmptyCharacter;
 		
 		// model
 		
@@ -99,7 +104,7 @@ var KAIOPUA = (function (main) {
 		
 		// prototype constructor
 		
-		model.Instance.call( this, modelInfo );
+		_Model.Instance.call( this, modelInfo );
 		
 		// movement
 		
@@ -115,6 +120,7 @@ var KAIOPUA = (function (main) {
 		move.runThreshold = movementInfo.moveRunThreshold || 0;
 		move.walkAnimationTime = movementInfo.moveWalkAnimationTime || 750;
 		move.runAnimationTime = movementInfo.moveRunAnimationTime || 500;
+		move.idleAnimationTime = movementInfo.moveIdleAnimationTime || 3000;
 		move.morphClearTime = movementInfo.moveCycleClearTime || 125;
 		move.animationChangeTimeThreshold = movementInfo.animationChangeTimeThreshold || 0;
 		move.animationChangeTimeTotal = move.animationChangeTimeThreshold;
@@ -194,7 +200,7 @@ var KAIOPUA = (function (main) {
 		
 	};
 	
-	function update ( timeDelta ) {
+	function update ( timeDelta, timeDeltaMod ) {
 		
 		var physics = this.physics,
 			rigidBody = physics.rigidBody,
@@ -204,13 +210,12 @@ var KAIOPUA = (function (main) {
 			rotate = movement.rotate,
 			rotateDir = rotate.direction,
 			rotateDelta = rotate.delta,
-			rotateSpeed = rotate.speed,
+			rotateSpeed = rotate.speed * timeDeltaMod,
 			move,
 			moveDir,
 			moveVec,
 			moveSpeed,
 			moveSpeedBack,
-			moveRunThreshold,
 			jump,
 			jumpSpeedStart,
 			jumpSpeedEnd,
@@ -243,9 +248,8 @@ var KAIOPUA = (function (main) {
 			move = movement.move;
 			moveDir = move.direction;
 			moveVec = move.vector;
-			moveSpeed = move.speed;
-			moveSpeedBack = move.speedBack;
-			moveRunThreshold = move.runThreshold;
+			moveSpeed = move.speed * timeDeltaMod;
+			moveSpeedBack = move.speedBack * timeDeltaMod;
 			
 			state = movement.state;
 			
@@ -260,10 +264,6 @@ var KAIOPUA = (function (main) {
 			velocityMovementForce = velocityMovement.force;
 			velocityGravity = rigidBody.velocityGravity;
 			velocityGravityForce = velocityGravity.force;
-			
-			// handle time
-			
-			timeDelta = timeDelta || shared.refreshInterval;
 			
 			// handle jumping
 			
@@ -303,8 +303,8 @@ var KAIOPUA = (function (main) {
 					// properties
 					
 					jumpTimeRatio = jumpTimeTotal / jumpTimeMax;
-					jumpSpeedStart = jump.speedStart;
-					jumpSpeedEnd = jump.speedEnd;
+					jumpSpeedStart = jump.speedStart * timeDeltaMod;
+					jumpSpeedEnd = jump.speedEnd * timeDeltaMod;
 					
 					// update time total
 					
@@ -370,7 +370,7 @@ var KAIOPUA = (function (main) {
 			
 			// get movement force
 			
-			velocityMovementForceLength = velocityMovementForce.length();
+			velocityMovementForceLength = velocityMovementForce.length() / timeDeltaMod;
 			
 			// walk/run/idle
 			
@@ -389,7 +389,7 @@ var KAIOPUA = (function (main) {
 					terminalVelocity = Math.round( Math.sqrt( ( 2 * Math.abs( moveVec.z * 0.5 ) ) / dragCoefficient ) );
 					playSpeedModifier = terminalVelocity / Math.round( velocityMovementForceLength );
 					
-					if ( velocityMovementForceLength > moveRunThreshold ) {
+					if ( velocityMovementForceLength > move.runThreshold ) {
 						
 						morphCycle ( timeDelta, morphs, move, state, 'run', move.runAnimationTime * playSpeedModifier, true, state.movingBack );
 						
@@ -404,7 +404,7 @@ var KAIOPUA = (function (main) {
 				// idle cycle
 				else {
 					
-					morphCycle ( timeDelta, morphs, move, state, 'idle', 3000, true, false );
+					morphCycle ( timeDelta, morphs, move, state, 'idle', move.idleAnimationTime, true, false );
 					
 				}
 				
@@ -457,7 +457,5 @@ var KAIOPUA = (function (main) {
 		q.copy( rotateUtilQ1 );
 		
 	};
-	
-	return main;
 	
 } ( KAIOPUA ) );

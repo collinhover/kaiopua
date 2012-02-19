@@ -1,13 +1,16 @@
 /*
-ErrorHandler.js
-Handles compatibility checks and user viewable errors.
-*/
-
-var KAIOPUA = (function (main) {
+ *
+ * ErrorHandler.js
+ * Handles compatibility checks and user viewable errors.
+ *
+ * @author Collin Hover / http://collinhover.com/
+ *
+ */
+(function (main) {
     
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/utils/ErrorHandler.js",
-        errorhandler = {},
+        _ErrorHandler = {},
         errorState = false,
         errorCurrent = {},
         errorHash = 'error=',
@@ -43,12 +46,12 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
     
-    errorhandler.check = check;
-    errorhandler.generate = generate;
-    errorhandler.process = process;
-    errorhandler.clear = clear;
+    _ErrorHandler.check = check;
+    _ErrorHandler.generate = generate;
+    _ErrorHandler.process = process;
+    _ErrorHandler.clear = clear;
 	
-	main.asset_register( assetPath, { data: errorhandler } );
+	main.asset_register( assetPath, { data: _ErrorHandler } );
     
     /*===================================================
     
@@ -237,7 +240,5 @@ var KAIOPUA = (function (main) {
             extra: extra
         };
     }
-    
-    return main; 
     
 } ( KAIOPUA ) );
