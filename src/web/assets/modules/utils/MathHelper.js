@@ -30,6 +30,14 @@
 		
 	};
 	
+	_MathHelper.round = function ( n, places ) {
+		
+		var dec = ( _MathHelper.is_number( places ) && places > 0 ) ? Math.pow( 10, places ) : 1;
+		
+		return Math.round( n * dec ) / dec;
+		
+	};
+	
 	main.asset_register( assetPath, { data: _MathHelper } );
     
 } ( KAIOPUA ) );

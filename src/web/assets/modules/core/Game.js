@@ -13,11 +13,11 @@
 		_Game = {},
         _AssetLoader,
 		_ErrorHandler,
+		_Physics,
 		_UIHelper,
+		_MenuMaker,
 		_Launcher,
 		_Intro,
-		_MenuMaker,
-		_Physics,
         transitioner,
         domElement,
         renderer, 
@@ -46,6 +46,7 @@
 			"assets/modules/utils/AssetLoader.js",
             "assets/modules/utils/ErrorHandler.js",
 			"assets/modules/utils/UIHelper.js",
+			"assets/modules/utils/MathHelper.js",
 			"assets/modules/utils/Dev.js"
 		],
         assetsBasic = [
@@ -81,7 +82,6 @@
 			"assets/modules/core/Puzzles.js",
 			"assets/modules/utils/ObjectMaker.js",
 			"assets/modules/utils/ObjectHelper.js",
-			"assets/modules/utils/MathHelper.js",
 			"assets/modules/utils/MenuMaker.js",
 			"assets/modules/characters/EmptyCharacter.js",
 			"assets/modules/characters/Hero.js",
@@ -280,6 +280,10 @@
 				stops: [0, 0.4, 0.6, 0.8, 1.0],
 				startBottom: true
 			} )*/
+		
+		// utility
+		
+		_MathHelper = main.get_asset_data( "assets/modules/utils/MathHelper.js" );
 		
 		// modify THREE classes
 		
@@ -1143,7 +1147,8 @@
     
     function animate () {
     
-    	var timeDelta;
+    	var timeDelta,
+			timeDeltaMod;
         
         requestAnimationFrame( animate );
 		
@@ -1155,6 +1160,16 @@
 		
 		timeDelta = shared.time - shared.timeLast;
 		
+		// get time delta modifier from timeDelta vs expected refresh interval
+		
+		timeDeltaMod = _MathHelper.round( timeDelta / shared.timeDeltaExpected, 2 );
+		
+		if ( _MathHelper.is_number( timeDeltaMod ) !== true ) {
+			
+			timeDeltaMod = 1;
+			
+		}
+		
 		// update
 		
 		if ( paused !== true ) {
@@ -1162,12 +1177,12 @@
 			// update physics
 			
 			if ( typeof _Physics !== 'undefined' ) {
-				_Physics.update( timeDelta );
+				_Physics.update( timeDelta, timeDeltaMod );
 			}
 			
 			// update all others
 			
-			shared.signals.update.dispatch( timeDelta );
+			shared.signals.update.dispatch( timeDelta, timeDeltaMod );
 			
 		}
 		

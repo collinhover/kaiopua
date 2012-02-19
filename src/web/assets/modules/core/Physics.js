@@ -26,7 +26,9 @@
 		utilQ1RotateToSrc,
 		utilQ2RotateToSrc,
 		utilQ3RotateToSrc,
-		utilVec31Integrate,
+		utilVec31Update,
+		utilVec32Update,
+		utilVec33Update,
 		utilVec31Velocity,
 		utilVec31Offset,
 		utilQ4Offset,
@@ -116,7 +118,9 @@
 		utilQ2RotateToSrc = new THREE.Quaternion();
 		utilQ3RotateToSrc = new THREE.Quaternion();
 		
-		utilVec31Integrate = new THREE.Vector3();
+		utilVec31Update = new THREE.Vector3();
+		utilVec32Update = new THREE.Vector3();
+		utilVec33Update = new THREE.Vector3();
 		
 		utilVec31Offset = new THREE.Vector3();
 		utilQ4Offset = new THREE.Quaternion();
@@ -1270,52 +1274,16 @@
 		
 	}
 	
-	function update ( timeDelta ) {
-		
-		var i, l = 1,
-			refreshInterval = shared.refreshInterval,
-			currentInterval = timeDelta,
-			timeStep;
-		
-		// handle time
-		
-		if ( currentInterval > refreshInterval ) {
-			
-			l = Math.ceil( currentInterval / refreshInterval );
-			
-		}
-		
-		// integrate
-		
-		//for ( i = 0; i < l; i ++ ) {
-			
-			currentInterval = refreshInterval;
-			
-			timeStep = currentInterval / 1000;
-		
-			integrate( timeStep );
-			
-		//}
-		
-	}
-	
-	/*===================================================
-    
-    integrate functions
-    
-    =====================================================*/
-	
-	function integrate ( timeStep ) {
+	function update ( timeDelta, timeDeltaMod ) {
 		
 		var i, l,
-			uv31 = utilVec31Integrate,
 			lerpDelta = 0.1,
 			link,
 			rigidBody,
 			mesh,
-			gravSrc,
-			gravMag,
-			gravUp,
+			gravSrc = utilVec31Update,
+			gravMag = utilVec32Update,
+			gravUp = utilVec33Update,
 			velocityGravity,
 			velocityMovement;
 		
@@ -1339,9 +1307,9 @@
 				
 				velocityMovement = rigidBody.velocityMovement;
 				
-				gravSrc = rigidBody.gravSrc || worldGravitySource;
+				gravSrc.copy( rigidBody.gravSrc || worldGravitySource );
 				
-				gravMag = rigidBody.gravMag || worldGravityMagnitude;
+				gravMag.copy( rigidBody.gravMag || worldGravityMagnitude ).multiplyScalar( timeDeltaMod );
 				
 				// rotate to stand on source
 				
@@ -1353,7 +1321,7 @@
 				
 				// find up direction
 				
-				gravUp = uv31.sub( mesh.position, gravSrc ).normalize();
+				gravUp.sub( mesh.position, gravSrc ).normalize();
 				
 				// add non rotated gravity to gravity velocity
 				

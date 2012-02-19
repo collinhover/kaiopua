@@ -894,11 +894,11 @@
 		
 	}
 	
-	function update ( timeDelta ) {
+	function update ( timeDelta, timeDeltaMod ) {
 		
 		// character
 		
-		character.update( timeDelta );
+		character.update( timeDelta, timeDeltaMod );
 		
 		// update camera
 		

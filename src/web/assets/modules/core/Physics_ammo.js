@@ -835,29 +835,15 @@ Physics module, handles physics in game using JigLibJS.
 	function update ( timeDelta ) {
 		
 		var i, l = 1,
-			refreshInterval = shared.refreshInterval,
+			refreshInterval = shared.timeDeltaExpected,
 			currentInterval = timeDelta,
 			timeStep;
 		
-		// handle time
+		currentInterval = refreshInterval;
 		
-		if ( currentInterval > refreshInterval ) {
-			
-			l = Math.ceil( currentInterval / refreshInterval );
-			
-		}
-		
-		// integrate
-		
-		//for ( i = 0; i < l; i ++ ) {
-			
-			currentInterval = refreshInterval;
-			
-			timeStep = currentInterval / 1000;
-		
-			integrate( timeStep );
-			
-		//}
+		timeStep = currentInterval / 1000;
+	
+		integrate( timeStep );
 		
 	}
 	

@@ -71,7 +71,7 @@
 		
 		mi.moveSpeed = 6;
 		mi.moveSpeedBack = 2;
-		mi.moveRunThreshold = mi.moveSpeedBack * 2;
+		mi.moveRunThreshold = mi.moveSpeed;
 		mi.rotateSpeed = 0.019;
 		mi.jumpSpeedStart = 6;
 		mi.jumpSpeedEnd = 0;

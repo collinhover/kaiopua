@@ -26,7 +26,8 @@
 		data: _Character,
 		requirements: [
 			"assets/modules/core/Model.js",
-			"assets/modules/characters/EmptyCharacter.js"
+			"assets/modules/characters/EmptyCharacter.js",
+			"assets/modules/utils/MathHelper.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -38,12 +39,13 @@
     
     =====================================================*/
 	
-	function init_internal ( m, ec ) {
+	function init_internal ( m, ec, mh ) {
 		console.log('internal character');
 		// modules
 		
 		_Model = m;
 		_EmptyCharacter = ec;
+		_MathHelper = mh;
 		
 		// utils
 		
@@ -118,6 +120,7 @@
 		move.runThreshold = movementInfo.moveRunThreshold || 0;
 		move.walkAnimationTime = movementInfo.moveWalkAnimationTime || 750;
 		move.runAnimationTime = movementInfo.moveRunAnimationTime || 500;
+		move.idleAnimationTime = movementInfo.moveIdleAnimationTime || 3000;
 		move.morphClearTime = movementInfo.moveCycleClearTime || 125;
 		move.animationChangeTimeThreshold = movementInfo.animationChangeTimeThreshold || 0;
 		move.animationChangeTimeTotal = move.animationChangeTimeThreshold;
@@ -197,7 +200,7 @@
 		
 	};
 	
-	function update ( timeDelta ) {
+	function update ( timeDelta, timeDeltaMod ) {
 		
 		var physics = this.physics,
 			rigidBody = physics.rigidBody,
@@ -207,13 +210,12 @@
 			rotate = movement.rotate,
 			rotateDir = rotate.direction,
 			rotateDelta = rotate.delta,
-			rotateSpeed = rotate.speed,
+			rotateSpeed = rotate.speed * timeDeltaMod,
 			move,
 			moveDir,
 			moveVec,
 			moveSpeed,
 			moveSpeedBack,
-			moveRunThreshold,
 			jump,
 			jumpSpeedStart,
 			jumpSpeedEnd,
@@ -246,9 +248,8 @@
 			move = movement.move;
 			moveDir = move.direction;
 			moveVec = move.vector;
-			moveSpeed = move.speed;
-			moveSpeedBack = move.speedBack;
-			moveRunThreshold = move.runThreshold;
+			moveSpeed = move.speed * timeDeltaMod;
+			moveSpeedBack = move.speedBack * timeDeltaMod;
 			
 			state = movement.state;
 			
@@ -263,10 +264,6 @@
 			velocityMovementForce = velocityMovement.force;
 			velocityGravity = rigidBody.velocityGravity;
 			velocityGravityForce = velocityGravity.force;
-			
-			// handle time
-			
-			timeDelta = timeDelta || shared.refreshInterval;
 			
 			// handle jumping
 			
@@ -306,8 +303,8 @@
 					// properties
 					
 					jumpTimeRatio = jumpTimeTotal / jumpTimeMax;
-					jumpSpeedStart = jump.speedStart;
-					jumpSpeedEnd = jump.speedEnd;
+					jumpSpeedStart = jump.speedStart * timeDeltaMod;
+					jumpSpeedEnd = jump.speedEnd * timeDeltaMod;
 					
 					// update time total
 					
@@ -373,7 +370,7 @@
 			
 			// get movement force
 			
-			velocityMovementForceLength = velocityMovementForce.length();
+			velocityMovementForceLength = velocityMovementForce.length() / timeDeltaMod;
 			
 			// walk/run/idle
 			
@@ -392,7 +389,7 @@
 					terminalVelocity = Math.round( Math.sqrt( ( 2 * Math.abs( moveVec.z * 0.5 ) ) / dragCoefficient ) );
 					playSpeedModifier = terminalVelocity / Math.round( velocityMovementForceLength );
 					
-					if ( velocityMovementForceLength > moveRunThreshold ) {
+					if ( velocityMovementForceLength > move.runThreshold ) {
 						
 						morphCycle ( timeDelta, morphs, move, state, 'run', move.runAnimationTime * playSpeedModifier, true, state.movingBack );
 						
@@ -407,7 +404,7 @@
 				// idle cycle
 				else {
 					
-					morphCycle ( timeDelta, morphs, move, state, 'idle', 3000, true, false );
+					morphCycle ( timeDelta, morphs, move, state, 'idle', move.idleAnimationTime, true, false );
 					
 				}
 				

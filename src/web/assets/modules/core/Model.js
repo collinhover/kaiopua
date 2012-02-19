@@ -15,7 +15,7 @@
 		_Physics,
 		_MathHelper,
 		durationBase = 1000,
-		durationPerFrameMinimum = shared.refreshInterval || 1000 / 60;
+		durationPerFrameMinimum = shared.timeDeltaExpected || 1000 / 60;
 		objectCount = 0,
 		morphsNumMin = 5;
 	
