@@ -77,10 +77,10 @@
 		requirements: [
 			"assets/modules/core/Game.js",
 			"assets/modules/core/CameraControls.js",
-			"assets/modules/core/Character.js",
+			"assets/modules/characters/Character.js",
 			"assets/modules/characters/Hero.js",
 			"assets/modules/core/Physics.js",
-			"assets/modules/core/World.js",
+			"assets/modules/env/World.js",
 			"assets/modules/utils/ObjectHelper.js",
 			"assets/modules/utils/MathHelper.js"
 		],

@@ -45,7 +45,7 @@
 		requirements: [
 			"assets/modules/core/Game.js",
 			"assets/modules/core/Physics.js",
-			"assets/modules/core/World.js",
+			"assets/modules/env/World.js",
 			"assets/modules/core/Player.js",
 			"assets/modules/core/Model.js"
 		],

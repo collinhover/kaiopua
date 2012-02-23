@@ -9,7 +9,7 @@
 (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/core/Character.js",
+		assetPath = "assets/modules/characters/Character.js",
 		_Character = {},
 		_Model,
 		_EmptyCharacter, 

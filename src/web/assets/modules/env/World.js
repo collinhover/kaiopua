@@ -9,7 +9,7 @@
 (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/core/World.js",
+		assetPath = "assets/modules/env/World.js",
 		_World = {},
         _Game,
 		_Model,
@@ -57,7 +57,7 @@
 			"assets/modules/core/Game.js",
 			"assets/modules/core/Model.js",
 			"assets/modules/core/Physics.js",
-			"assets/modules/core/Puzzles.js",
+			"assets/modules/puzzles/Puzzles.js",
 			"assets/modules/utils/ObjectMaker.js",
 			"assets/modules/env/Water.js"
 		],

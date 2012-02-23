@@ -9,7 +9,7 @@
 (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/core/Puzzles.js",
+		assetPath = "assets/modules/puzzles/Puzzles.js",
 		_Puzzles = {},
 		_Model;
 	
