@@ -13,7 +13,6 @@
         _Player = {},
 		_Game,
 		_CameraControls,
-		_Character,
 		_Hero,
 		_Physics,
 		_World,
@@ -77,7 +76,6 @@
 		requirements: [
 			"assets/modules/core/Game.js",
 			"assets/modules/core/CameraControls.js",
-			"assets/modules/characters/Character.js",
 			"assets/modules/characters/Hero.js",
 			"assets/modules/core/Physics.js",
 			"assets/modules/env/World.js",
@@ -94,7 +92,7 @@
     
     =====================================================*/
 	
-	function init_internal ( g, cc, c, h, physx, w, oh, mh ) {
+	function init_internal ( g, cc, h, physx, w, oh, mh ) {
 		console.log('internal player');
 		
 		if ( ready !== true ) {
@@ -103,7 +101,6 @@
 			
 			_Game = g;
 			_CameraControls = cc;
-			_Character = c;
 			_Hero = h;
 			_Physics = physx;
 			_World = w;
@@ -181,8 +178,8 @@
 		// mouse buttons
 		
 		kbMap[ 'mouseleft' ] = {
-			keydown: function ( e ) { _CameraControls.rotate( e ); },//character_action( 'ability_001_start', { mouseIndex: e ? e.identifier : 0 } ); },
-			keyup: function ( e ) { _CameraControls.rotate( e, true ); }//character_action( 'ability_001_end', { mouseIndex: e ? e.identifier : 0 } ); }
+			keydown: function ( e ) { _CameraControls.rotate( e ); },
+			keyup: function ( e ) { _CameraControls.rotate( e, true ); }
 		};
 		kbMap[ 'mousemiddle' ] = {
 			keydown: function ( e ) { console.log('key down: mousemiddle'); },
@@ -451,11 +448,7 @@
 		
 		// create character
 		
-		character = new _Character.Instance( {
-			
-			type: _Hero
-			
-		} );
+		character = new _Hero.Instance();
 		
 		// init light to follow character
 		
@@ -565,7 +558,7 @@
 		
 		// select
 			
-		selectedModel = find_selection( mouse );
+		selectedModel = model_under_mouse( mouse );
 		
 		// if a selection was made
 		
@@ -697,7 +690,7 @@
 		
 	}
 	
-	function find_selection ( mouse ) {
+	function model_under_mouse ( mouse ) {
 		
 		var ray = utilRay1Selection,
 			mousePosition = utilVec31Selection,

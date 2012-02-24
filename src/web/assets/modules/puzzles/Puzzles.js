@@ -11,20 +11,23 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/puzzles/Puzzles.js",
 		_Puzzles = {},
-		_Model;
+		_Model,
+		_Grid;
 	
 	main.asset_register( assetPath, {
 		data: _Puzzles,
 		requirements: [
-			"assets/modules/core/Model.js"
+			"assets/modules/core/Model.js",
+			"assets/modules/puzzles/Grid.js"
 		], 
 		callbacksOnReqs: init_internal,
 		wait: true
 	} );
 	
-	function init_internal ( m ) {
+	function init_internal ( m, g ) {
 		console.log('internal puzzles', _Puzzles);
 		_Model = m;
+		_Grid = g;
 		
 		_Puzzles.Instance = Puzzle;
 		_Puzzles.Instance.prototype = new _Model.Instance();
@@ -40,10 +43,6 @@
 	
 	function Puzzle ( parameters ) {
 		
-		var i, l,
-			faces,
-			face;
-		
 		// handle parameters
 		
 		parameters = parameters || {};
@@ -52,8 +51,11 @@
 		
 		_Model.Instance.call( this, parameters );
 		
-		// add materials to be used in geometry to signify various states
+		// init grid
 		
+		this.grid = new _Grid.Instance( this );
+		
+		/*
 		this.geometry.materials = [
 			new THREE.MeshLambertMaterial( { color: 0xA9844C, ambient: 0xA9844C, transparent: true, opacity: 0.85 } ), // brown
 			new THREE.MeshLambertMaterial( { color: 0x7FB662, ambient: 0x7FB662, transparent: true, opacity: 0.85 } ), // green
@@ -61,18 +63,6 @@
 			new THREE.MeshLambertMaterial( { color: 0xDA2128, ambient: 0xDA2128, transparent: true, opacity: 0.85 } ), // red
 			new THREE.MeshLambertMaterial( { color: 0xEEC835, ambient: 0xEEC835, transparent: true, opacity: 0.85 } ), // yellow
 		];
-		
-		// default state material
-		
-		faces = this.geometry.faces;
-		
-		for ( i = 0, l = faces.length; i < l; i++ ) {
-			
-			face = faces[ i ];
-			
-			face.materialIndex = 0;
-			
-		}
 		
 		// state material testing
 		
@@ -93,6 +83,7 @@
 		faces[ 21 ].materialIndex = 2;
 		faces[ 20 ].materialIndex = 2;
 		faces[ 19 ].materialIndex = 2;
+		*/
 		
 	}
 	

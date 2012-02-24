@@ -159,7 +159,7 @@ var KAIOPUA = (function (main) {
 		
 		return destination;
 		
-	}
+	};
 	
 	main.ensure_array = function ( target ) {
 		
@@ -171,15 +171,59 @@ var KAIOPUA = (function (main) {
 		
 		return target;
 		
-	}
+	};
+	
+	main.modify_array = function ( target, elements, remove ) {
+		
+		var i, l,
+			element,
+			index;
+		
+		if ( typeof target !== 'undefined' && typeof elements !== 'undefined' && typeof forEach === 'function' ) {
+			
+			elements = main.ensure_array( elements );
+			
+			// for each element
+			
+			for ( i = 0, l = elements.length; i < l; i++ ) {
+				
+				element = elements[ i ];
+				
+				index = target.indexof( element );
+				
+				if ( remove === true ) {
+					
+					if ( index !== -1 ) {
+						
+						target.splice( index, 1 );
+						
+					}
+					
+				}
+				else {
+					
+					if ( index === -1 ) {
+						
+						target.push( element );
+						
+					}
+					
+				}
+				
+			}
+			
+		}
+		
+	};
 	
 	main.get_asset_path = function ( location ) {
 		
 		return location.path || location
 		
-	}
+	};
 	
 	main.get_ext = function ( location ) {
+		
         var path, dotIndex, ext = '';
 		
 		path = main.get_asset_path( location );
@@ -191,7 +235,8 @@ var KAIOPUA = (function (main) {
         }
         
         return ext;
-    }
+        
+    };
 	
 	main.add_default_ext = function ( location ) {
 		
@@ -201,7 +246,7 @@ var KAIOPUA = (function (main) {
 		
 		return path;
 		
-	}
+	};
 	
 	main.remove_ext = function ( location ) {
 		
@@ -217,7 +262,7 @@ var KAIOPUA = (function (main) {
 		
 		return path;
 		
-	}
+	};
 	
 	main.get_alt_path = function ( location ) {
 		
@@ -240,7 +285,7 @@ var KAIOPUA = (function (main) {
 			
 		}
 		
-	}
+	};
 	
 	main.is_image_ext = function ( ext ) {
 		
@@ -251,7 +296,7 @@ var KAIOPUA = (function (main) {
 			return false;
 		}
 		
-    }
+    };
 	
 	/*===================================================
     

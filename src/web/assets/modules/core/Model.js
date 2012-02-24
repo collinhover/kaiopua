@@ -318,12 +318,7 @@
 		
 		if ( parameters.hasOwnProperty( 'physics' ) ) {
 			
-			this.physics = parameters.physics;
-			
-		}
-		else if ( parameters.hasOwnProperty( 'physicsParameters' ) ) {
-			
-			this.physics = _Physics.translate( this, parameters.physicsParameters );
+			this.physics = _Physics.translate( this, parameters.physics );
 			
 		}
 		

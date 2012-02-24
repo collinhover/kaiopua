@@ -10,7 +10,8 @@
     
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/characters/Hero.js",
-		_Hero = {};
+		_Hero = {},
+		_Character;
 	
 	/*===================================================
     
@@ -18,77 +19,66 @@
     
     =====================================================*/
 	
-	_Hero.ability_001_start = select_and_scale_start;
-	_Hero.ability_001_end = select_and_scale_end;
-	
-	Object.defineProperty( _Hero, 'id', { 
-		get : get_id
-	});
-	
-	Object.defineProperty( _Hero, 'modelInfo', { 
-		get : get_model_info
-	});
-	
-	Object.defineProperty( _Hero, 'movementInfo', { 
-		get : get_movement_info
-	});
-	
-	Object.defineProperty( _Hero, 'physicsParameters', { 
-		get : get_physics_parameters
-	});
-	
 	main.asset_register( assetPath, { 
-		data: _Hero
+		data: _Hero,
+		requirements: [
+			"assets/modules/characters/Character.js"
+		],
+		callbacksOnReqs: init_internal,
+		wait: true
 	});
 	
 	/*===================================================
     
-    properties
+    internal init
     
     =====================================================*/
 	
-	function get_id () {
+	function init_internal( c ) {
+		console.log('internal hero', _Hero);
+		_Character = c;
 		
-		return 'kaiopua_hero';
-		
-	}
-	
-	function get_model_info () {
-		
-		return {
-			
-			geometryAssetPath: "assets/models/Hero.js",
-			materials:  new THREE.MeshLambertMaterial( { color: 0xFFF7E0, ambient: 0xFFF7E0, vertexColors: THREE.VertexColors } ),
-			shading: THREE.SmoothShading
-			
-		};
+		_Hero.Instance = Hero;
+		_Hero.Instance.prototype = new _Character.Instance();
+		_Hero.Instance.constructor = _Hero.Instance;
 		
 	}
 	
-	function get_movement_info () {
+	/*===================================================
+    
+    hero
+    
+    =====================================================*/
+	
+	function Hero ( parameters ) {
 		
-		var mi = {};
+		// handle parameters
 		
-		mi.moveSpeed = 6;
-		mi.moveSpeedBack = 2;
-		mi.moveRunThreshold = mi.moveSpeed;
-		mi.rotateSpeed = 0.019;
-		mi.jumpSpeedStart = 6;
-		mi.jumpSpeedEnd = 0;
-		mi.jumpTimeMax = 100;
+		parameters = parameters || {};
 		
-		return mi;
+		parameters.id = 'kaiopua_hero';
 		
-	}
+		parameters.model = parameters.modelInfo || {};
+		parameters.model.geometryAssetPath = "assets/models/Hero.js";
+		parameters.model.materials = new THREE.MeshLambertMaterial( { color: 0xFFF7E0, ambient: 0xFFF7E0, vertexColors: THREE.VertexColors } );
+		parameters.model.shading = THREE.SmoothShading;
 		
-	function get_physics_parameters () {
+		parameters.model.physics = parameters.model.physics || {};
+		parameters.model.physics.bodyType = 'capsule';
+		parameters.model.physics.movementDamping = 0.5;
 		
-		return {
-			
-			bodyType: 'capsule',
-			movementDamping: 0.5
-			
-		};
+		parameters.movement = parameters.movement || {};
+		parameters.movement.moveSpeed = 6;
+		parameters.movement.moveSpeedBack = 2;
+		parameters.movement.moveRunThreshold = parameters.movement.moveSpeed;
+		parameters.movement.rotateSpeed = 0.019;
+		parameters.movement.jumpSpeedStart = 6;
+		parameters.movement.jumpSpeedEnd = 0;
+		parameters.movement.jumpTimeMax = 100;
+		
+		// prototype constructor
+		
+		_Character.Instance.call( this, parameters );
 		
 	}
 	
@@ -97,6 +87,10 @@
     abilities
     
     =====================================================*/
+	
+	/*
+	// OLD SCALE ABILITY
+	// NOT IN USE, SAVE ANYWAY
 	
 	function select_and_scale_start ( parameters ) {
 		
@@ -308,5 +302,6 @@
 		target.scale.set( scaleX, scaleY, scaleZ );
 		
 	}
+	*/
 	
 } ( KAIOPUA ) );

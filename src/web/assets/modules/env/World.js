@@ -131,7 +131,7 @@
 		
         head = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Whale_Head.js"),
-			physicsParameters: {
+			physics: {
 				bodyType: 'mesh'
 			},
 			materials: new THREE.MeshLambertMaterial( { color: 0xFFF7E0, ambient: 0xFFF7E0, vertexColors: THREE.VertexColors } ),
@@ -142,7 +142,7 @@
 		
 		tail = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Whale_Tail.js"),
-			physicsParameters: {
+			physics: {
 				bodyType: 'mesh'
 			},
 			materials: new THREE.MeshLambertMaterial( { color: 0xFFF7E0, ambient: 0xFFF7E0, vertexColors: THREE.VertexColors } ),
@@ -246,7 +246,7 @@
 		
 		var hill = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Hut_Hill.js"),
-			physicsParameters: {
+			physics: {
 				bodyType: 'mesh'
 			},
 			materials:  new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
@@ -259,7 +259,7 @@
 		
 		var steps = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Hut_Steps.js"),
-			physicsParameters: {
+			physics: {
 				bodyType: 'mesh'
 			},
 			materials:  new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
@@ -274,7 +274,7 @@
 		
 		var hut = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Hut.js"),
-			physicsParameters: {
+			physics: {
 				bodyType: 'mesh'
 			},
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
@@ -305,7 +305,7 @@
             geometry: main.get_asset_data("assets/models/Surfboard.js"),
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
-			physicsParameters: {
+			physics: {
 				bodyType: 'box'
 			}
         });
@@ -319,7 +319,7 @@
 		
 		var bed = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Bed.js"),
-			physicsParameters: {
+			physics: {
 				bodyType: 'box'
 			},
 			materials: new THREE.MeshNormalMaterial(),
@@ -389,7 +389,7 @@
             geometry: main.get_asset_data("assets/models/Volcano_Large.js"),
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
-			physicsParameters: {
+			physics: {
 				bodyType: 'mesh'
 			}
         });
@@ -406,7 +406,7 @@
             geometry: main.get_asset_data("assets/models/Volcano_Small.js"),
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
-			physicsParameters: {
+			physics: {
 				bodyType: 'mesh'
 			}
         });
@@ -419,7 +419,7 @@
             geometry: main.get_asset_data("assets/models/Volcano_Rocks_001.js"),
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
-			physicsParameters: {
+			physics: {
 				bodyType: 'mesh'
 			}
         });
@@ -430,7 +430,7 @@
             geometry: main.get_asset_data("assets/models/Volcano_Rocks_002.js"),
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
-			physicsParameters: {
+			physics: {
 				bodyType: 'mesh'
 			}
         });
@@ -441,7 +441,7 @@
             geometry: main.get_asset_data("assets/models/Volcano_Rocks_003.js"),
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
-			physicsParameters: {
+			physics: {
 				bodyType: 'mesh'
 			}
         });
@@ -452,7 +452,7 @@
             geometry: main.get_asset_data("assets/models/Volcano_Rocks_004.js"),
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
-			physicsParameters: {
+			physics: {
 				bodyType: 'mesh'
 			}
         });
@@ -463,7 +463,7 @@
             geometry: main.get_asset_data("assets/models/Volcano_Rocks_005.js"),
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
-			physicsParameters: {
+			physics: {
 				bodyType: 'mesh'
 			}
         });

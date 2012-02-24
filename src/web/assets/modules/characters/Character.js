@@ -12,7 +12,7 @@
 		assetPath = "assets/modules/characters/Character.js",
 		_Character = {},
 		_Model,
-		_EmptyCharacter, 
+		_MathHelper,
 		characterIDBase = 'kaiopua_character',
 		utilQ1Rotate;
 	
@@ -26,7 +26,6 @@
 		data: _Character,
 		requirements: [
 			"assets/modules/core/Model.js",
-			"assets/modules/characters/EmptyCharacter.js",
 			"assets/modules/utils/MathHelper.js"
 		],
 		callbacksOnReqs: init_internal,
@@ -39,12 +38,11 @@
     
     =====================================================*/
 	
-	function init_internal ( m, ec, mh ) {
-		console.log('internal character');
+	function init_internal ( m, mh ) {
+		console.log('internal character', _Character);
 		// modules
 		
 		_Model = m;
-		_EmptyCharacter = ec;
 		_MathHelper = mh;
 		
 		// utils
@@ -56,7 +54,6 @@
 		_Character.Instance = KaiopuaCharacter;
 		_Character.Instance.prototype = new _Model.Instance();
 		_Character.Instance.prototype.constructor = _Character.Instance;
-		_Character.Instance.prototype.action = action;
 		_Character.Instance.prototype.update = update;
 		_Character.Instance.prototype.rotate_by_delta = rotate_by_delta;
 		
@@ -72,8 +69,8 @@
 	
 	function KaiopuaCharacter ( parameters ) {
 		
-		var modelInfo,
-			movementInfo,
+		var parametersModel,
+			parametersMovement,
 			move,
 			rotate,
 			jump,
@@ -83,68 +80,62 @@
 		
 		parameters = parameters || {};
 		
-		// type
-		
-		this.type = parameters.type || _EmptyCharacter;
-		
 		// model
 		
-		modelInfo = parameters.modelInfo || this.type.modelInfo || {};
+		parametersModel = parameters.model || {};
 		
 		// physics
 		
-		modelInfo.physicsParameters = modelInfo.physicsParameters || this.type.physicsParameters;
-		
-		if ( typeof modelInfo.physicsParameters !== 'undefined' ) {
+		if ( typeof parametersModel.physics !== 'undefined' ) {
 			
-			modelInfo.physicsParameters.dynamic = true;
-			modelInfo.physicsParameters.movementDamping = modelInfo.physicsParameters.movementDamping || 0.5;
+			parametersModel.physics.dynamic = true;
+			parametersModel.physics.movementDamping = parametersModel.physics.movementDamping || 0.5;
 			
 		}
 		
 		// prototype constructor
 		
-		_Model.Instance.call( this, modelInfo );
+		_Model.Instance.call( this, parametersModel );
 		
 		// movement
 		
-		movementInfo = parameters.movementInfo || this.type.movementInfo || {};
+		parametersMovement = parameters.movement || {};
 		
 		this.movement = {};
 		
 		// move
 		
 		move = this.movement.move = {};
-		move.speed = movementInfo.moveSpeed || 6;
-		move.speedBack = movementInfo.moveSpeedBack || move.speed;
-		move.runThreshold = movementInfo.moveRunThreshold || 0;
-		move.walkAnimationTime = movementInfo.moveWalkAnimationTime || 750;
-		move.runAnimationTime = movementInfo.moveRunAnimationTime || 500;
-		move.idleAnimationTime = movementInfo.moveIdleAnimationTime || 3000;
-		move.morphClearTime = movementInfo.moveCycleClearTime || 125;
-		move.animationChangeTimeThreshold = movementInfo.animationChangeTimeThreshold || 0;
+		move.speed = parametersMovement.moveSpeed || 6;
+		move.speedBack = parametersMovement.moveSpeedBack || move.speed;
+		move.runThreshold = parametersMovement.moveRunThreshold || 0;
+		move.walkAnimationTime = parametersMovement.moveWalkAnimationTime || 750;
+		move.runAnimationTime = parametersMovement.moveRunAnimationTime || 500;
+		move.idleAnimationTime = parametersMovement.moveIdleAnimationTime || 3000;
+		move.morphClearTime = parametersMovement.moveCycleClearTime || 125;
+		move.animationChangeTimeThreshold = parametersMovement.animationChangeTimeThreshold || 0;
 		move.animationChangeTimeTotal = move.animationChangeTimeThreshold;
 		move.direction = new THREE.Vector3();
 		move.vector = new THREE.Vector3();
 		
 		// rotate
 		rotate = this.movement.rotate = {};
-		rotate.speed = movementInfo.rotateSpeed || 0.015;
+		rotate.speed = parametersMovement.rotateSpeed || 0.015;
 		rotate.direction = new THREE.Vector3();
 		rotate.delta = new THREE.Quaternion();
 		rotate.vector = new THREE.Quaternion();
 		
 		// jump
 		jump = this.movement.jump = {};
-		jump.speedStart = movementInfo.jumpSpeedStart || 6;
-		jump.speedEnd = movementInfo.jumpSpeedEnd || 0;
+		jump.speedStart = parametersMovement.jumpSpeedStart || 6;
+		jump.speedEnd = parametersMovement.jumpSpeedEnd || 0;
 		jump.timeTotal = 0;
-		jump.timeMax = movementInfo.jumpTimeMax || 50;
+		jump.timeMax = parametersMovement.jumpTimeMax || 50;
 		jump.timeAfterNotGrounded = 0;
 		jump.timeAfterNotGroundedMax = 125;
-		jump.startDelay = movementInfo.jumpStartDelay || 125;
+		jump.startDelay = parametersMovement.jumpStartDelay || 125;
 		jump.startDelayTime = 0;
-		jump.animationTime = movementInfo.jumpAnimationTime || 700;
+		jump.animationTime = parametersMovement.jumpAnimationTime || 700;
 		jump.ready = true;
 		jump.active = false;
 		
@@ -166,7 +157,7 @@
 		
 		// properties
 		
-		this.id = parameters.id || this.type.id || this.id || characterIDBase;
+		this.id = parameters.id || characterIDBase;
 		
 		this.targeting = {
 			
@@ -176,29 +167,7 @@
 			
 		};
 		
-		this.actionData = {};
-		
 	}
-	
-	function action ( actionName, parameters ) {
-		
-		// if character type has action
-		
-		if ( this.type.hasOwnProperty( actionName ) ) {
-			
-			// handle parameters
-			
-			parameters = parameters || {};
-			
-			parameters.character = this;
-			
-			// pass parameters to character type's action
-			
-			this.type[ actionName ]( parameters );
-			
-		}
-		
-	};
 	
 	function update ( timeDelta, timeDeltaMod ) {
 		
