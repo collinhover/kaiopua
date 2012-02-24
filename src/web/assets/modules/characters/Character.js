@@ -54,9 +54,10 @@
 		_Character.Instance = KaiopuaCharacter;
 		_Character.Instance.prototype = new _Model.Instance();
 		_Character.Instance.prototype.constructor = _Character.Instance;
+		_Character.Instance.prototype.move_state_change = move_state_change;
 		_Character.Instance.prototype.update = update;
 		_Character.Instance.prototype.rotate_by_delta = rotate_by_delta;
-		
+		_Character.Instance.prototype.action = action;
 	}
 	
 	/*===================================================
@@ -147,8 +148,8 @@
 		state.right = 0;
 		state.forward = 0;
 		state.back = 0;
-		state.turnLeft = 0;
-		state.turnRight = 0;
+		state.turnleft = 0;
+		state.turnright = 0;
 		state.grounded = false;
 		state.groundedLast = false;
 		state.moving = false;
@@ -158,6 +159,8 @@
 		// properties
 		
 		this.id = parameters.id || characterIDBase;
+		
+		this.acting = false;
 		
 		this.targeting = {
 			
@@ -169,22 +172,96 @@
 		
 	}
 	
+	/*===================================================
+    
+    action
+    
+    =====================================================*/
+	
+	function action () {
+		
+		return this.acting;
+		
+	}
+	
+	/*===================================================
+    
+    move
+    
+    =====================================================*/
+    
+    function move_state_change ( propertyName, stop ) {
+			
+		var movement = this.movement,
+			state = movement.state;
+		
+		if ( typeof stop === 'undefined' ) {
+			stop = false;
+		}
+		
+		// handle state property
+		
+		if ( state.hasOwnProperty( propertyName ) ) {
+			
+			state[ propertyName ] = stop === true ? 0 : 1;
+			
+		}
+		
+	}
+	
+	/*===================================================
+    
+    morph cycling
+    
+    =====================================================*/
+	
+	function morphCycle ( timeDelta, morphs, moveInfo, stateInfo, cycleType, duration, loop, reverse ) {
+			
+		if ( stateInfo.moveType !== cycleType ) {
+			
+			if ( moveInfo.animationChangeTimeTotal < moveInfo.animationChangeTimeThreshold ) {
+				
+				moveInfo.animationChangeTimeTotal += timeDelta;
+				
+			}
+			else {
+				
+				moveInfo.animationChangeTimeTotal = 0;
+				
+				morphs.clear( stateInfo.moveType, moveInfo.morphClearTime );
+				
+				stateInfo.moveType = cycleType;
+				
+			}
+			
+		}
+		
+		morphs.play( stateInfo.moveType, { duration: duration, loop: loop, reverse: reverse } );
+		
+	}
+	
+	/*===================================================
+    
+    update
+    
+    =====================================================*/
+	
 	function update ( timeDelta, timeDeltaMod ) {
 		
 		var physics = this.physics,
 			rigidBody = physics.rigidBody,
 			morphs = this.morphs,
 			movement = this.movement,
-			state,
+			state = movement.state,
 			rotate = movement.rotate,
 			rotateDir = rotate.direction,
 			rotateDelta = rotate.delta,
 			rotateSpeed = rotate.speed * timeDeltaMod,
-			move,
-			moveDir,
-			moveVec,
-			moveSpeed,
-			moveSpeedBack,
+			move = movement.move,
+			moveDir = move.direction,
+			moveVec = move.vector,
+			moveSpeed = move.speed * timeDeltaMod,
+			moveSpeedBack = move.speedBack * timeDeltaMod,
 			jump,
 			jumpSpeedStart,
 			jumpSpeedEnd,
@@ -204,6 +281,26 @@
 			terminalVelocity,
 			playSpeedModifier;
 		
+		// update vectors with state
+		
+		moveDir.x = ( state.left - state.right );
+		moveDir.z = ( state.forward - state.back );
+		
+		rotateDir.y = ( state.turnleft - state.turnright );
+		
+		// set moving
+				
+		if ( state.forward === 1 || state.back === 1 || state.turnleft === 1 || state.turnright === 1 || state.up === 1 || state.down === 1 || state.left === 1 || state.right === 1 ) {
+			
+			state.moving = true;
+			
+		}
+		else {
+			
+			state.moving = false;
+			
+		}
+		
 		// rotate self
 		
 		this.rotate_by_delta( rotateDir.x * rotateSpeed, rotateDir.y * rotateSpeed, rotateDir.z * rotateSpeed, 1 );
@@ -213,14 +310,6 @@
 		if ( typeof rigidBody !== 'undefined' ) {
 			
 			// properties
-			
-			move = movement.move;
-			moveDir = move.direction;
-			moveVec = move.vector;
-			moveSpeed = move.speed * timeDeltaMod;
-			moveSpeedBack = move.speedBack * timeDeltaMod;
-			
-			state = movement.state;
 			
 			jump = movement.jump;
 			jumpTimeTotal = jump.timeTotal;
@@ -381,31 +470,6 @@
 			
 		}
 		
-	};
-	
-	function morphCycle ( timeDelta, morphs, moveInfo, stateInfo, cycleType, duration, loop, reverse ) {
-			
-		if ( stateInfo.moveType !== cycleType ) {
-			
-			if ( moveInfo.animationChangeTimeTotal < moveInfo.animationChangeTimeThreshold ) {
-				
-				moveInfo.animationChangeTimeTotal += timeDelta;
-				
-			}
-			else {
-				
-				moveInfo.animationChangeTimeTotal = 0;
-				
-				morphs.clear( stateInfo.moveType, moveInfo.morphClearTime );
-				
-				stateInfo.moveType = cycleType;
-				
-			}
-			
-		}
-		
-		morphs.play( stateInfo.moveType, { duration: duration, loop: loop, reverse: reverse } );
-		
 	}
 	
 	function rotate_by_delta ( dx, dy, dz, dw ) {
@@ -425,6 +489,6 @@
 		
 		q.copy( rotateUtilQ1 );
 		
-	};
+	}
 	
 } ( KAIOPUA ) );

@@ -41,7 +41,7 @@
 		_Hero.Instance = Hero;
 		_Hero.Instance.prototype = new _Character.Instance();
 		_Hero.Instance.constructor = _Hero.Instance;
-		
+		_Hero.Instance.prototype.action = action;
 	}
 	
 	/*===================================================
@@ -84,12 +84,18 @@
 	
 	/*===================================================
     
-    abilities
+    actions
     
     =====================================================*/
+    
+    function action ( actionTypeName, parameters ) {
+    	
+    	//this.acting = true;
+    	
+    }
 	
 	/*
-	// OLD SCALE ABILITY
+	// OLD SCALE ACTION
 	// NOT IN USE, SAVE ANYWAY
 	
 	function select_and_scale_start ( parameters ) {

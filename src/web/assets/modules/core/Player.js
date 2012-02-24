@@ -47,6 +47,7 @@
 	_Player.allow_control = allow_control;
 	_Player.remove_control = remove_control;
 	_Player.select_from_mouse_position = select_from_mouse_position;
+	_Player.object_under_mouse = object_under_mouse;
 	_Player.deselect = deselect;
 	
 	// getters and setters
@@ -178,8 +179,8 @@
 		// mouse buttons
 		
 		kbMap[ 'mouseleft' ] = {
-			keydown: function ( e ) { _CameraControls.rotate( e ); },
-			keyup: function ( e ) { _CameraControls.rotate( e, true ); }
+			keydown: function ( e ) { character_action( 'action001', { event: e } ); },
+			keyup: function ( e ) { character_action( 'action001', { event: e, stop: true } ); }
 		};
 		kbMap[ 'mousemiddle' ] = {
 			keydown: function ( e ) { console.log('key down: mousemiddle'); },
@@ -192,7 +193,6 @@
 		kbMap[ 'mousewheel' ] = {
 			keyup: function ( e ) { _CameraControls.zoom( e ); }
 		};
-			
 		
 		// wasd / uldr
 		
@@ -207,13 +207,13 @@
 		};
 		
 		kbMap[ '37' /*left*/ ] = kbMap[ '65' /*a*/ ] = kbMap[ 'a' ] = {
-			keydown: function () { character_move( 'turnLeft' ); },
-			keyup: function () { character_move( 'turnLeft', true ); }
+			keydown: function () { character_move( 'turnleft' ); },
+			keyup: function () { character_move( 'turnleft', true ); }
 		};
 		
 		kbMap[ '39' /*right*/ ] = kbMap[ '68' /*d*/ ] = kbMap[ 'd' ] = {
-			keydown: function () { character_move( 'turnRight' ); },
-			keyup: function () { character_move( 'turnRight', true ); }
+			keydown: function () { character_move( 'turnright' ); },
+			keyup: function () { character_move( 'turnright', true ); }
 		};
 		
 		// qe
@@ -275,6 +275,10 @@
 			keyup: function () { console.log('key up: f'); }
 		};
 		
+		// set list of constants
+		
+		kbMap.alwaysAvailable = ['27'];
+		
 		// set default as current
 		
 		set_keybindings( kbMap );
@@ -313,18 +317,14 @@
 	
 	function allow_control () {
 		
-		if ( showing === true ) {
-			
-			// signals
-			
-			shared.signals.mousedown.add( on_mouse_pressed );
-			shared.signals.mouseup.add( on_mouse_pressed );
-			shared.signals.mousewheel.add( on_mouse_pressed );
-			
-			shared.signals.keydown.add( on_keyboard_used );
-			shared.signals.keyup.add( on_keyboard_used );
-			
-		}
+		// signals
+		
+		shared.signals.mousedown.add( on_mouse_pressed );
+		shared.signals.mouseup.add( on_mouse_pressed );
+		shared.signals.mousewheel.add( on_mouse_pressed );
+		
+		shared.signals.keydown.add( on_keyboard_used );
+		shared.signals.keyup.add( on_keyboard_used );
 		
 	}
 	
@@ -381,14 +381,14 @@
 		
 	}
 	
-	function trigger_key ( keyName, eventType, arguments ) {
+	function trigger_key ( keyName, eventType, parameters ) {
 		
 		var kbMap = keybindings,
 			kbInfo;
 		
 		// trigger by name
 		
-		if ( kbMap.hasOwnProperty( keyName ) === true ) {
+		if ( kbMap.hasOwnProperty( keyName ) === true && ( enabled === true || kbMap.alwaysAvailable.indexOf( keyName ) !== -1 ) ) {
 			
 			kbInfo = kbMap[ keyName ];
 			
@@ -407,11 +407,9 @@
 				
 				// check arguments
 				
-				if ( typeof arguments !== 'undefined' && arguments.hasOwnProperty('length') === false ) {
-					arguments = [ arguments ];
-				}
+				parameters = main.ensure_array( parameters );
 				
-				kbInfo[ eventType ].apply( this, arguments );
+				kbInfo[ eventType ].apply( this, parameters );
 				
 			}
 			
@@ -452,13 +450,13 @@
 		
 		// init light to follow character
 		
-		characterLight = new THREE.PointLight( 0xfeb41c, 0.35, 400 );
+		characterLight = new THREE.PointLight( 0xfeb41c, 1, 400 );
 		
 		characterLightFollowSettings = {
 			obj: characterLight,
 			rotationBase: new THREE.Quaternion(),
 			rotationOffset: new THREE.Vector3( 0, 0, 0 ),
-			positionOffset: new THREE.Vector3( 0, 40, -20 )
+			positionOffset: new THREE.Vector3( -30, -20, 5 )
 		};
 		
 		following.push( characterLightFollowSettings );
@@ -470,55 +468,38 @@
 	}
 	
 	function character_move ( movementTypeName, stop ) {
-			
-		var movement = character.movement,
-			move = movement.move,
-			rotate = movement.rotate,
-			state = movement.state,
-			moveDir = move.direction,
-			rotateDir = rotate.direction;
 		
-		if ( typeof stop === 'undefined' ) {
-			stop = false;
-		}
+		character.move_state_change( movementTypeName, stop );
 		
-		// handle movement by type name
-		
-		if ( state.hasOwnProperty( movementTypeName ) ) {
-			
-			state[ movementTypeName ] = stop === true ? 0 : 1;
-			
-		}
-		
-		// special cases
-		
-		// set moving
-				
-		if ( state.forward === 1 || state.back === 1 || state.turnLeft === 1 || state.turnRight === 1 || state.up === 1 || state.down === 1 || state.left === 1 || state.right === 1 ) {
-			
-			state.moving = true;
-			
-		}
-		else {
-			
-			state.moving = false;
-			
-		}
-		
-		// update vectors with state
-		
-		moveDir.x = ( state.left - state.right );
-		moveDir.z = ( state.forward - state.back );
-		
-		rotateDir.y = ( state.turnLeft - state.turnRight );
-			
 	}
 	
-	function character_action ( actionName, parameters ) {
+	function character_action ( actionTypeName, parameters ) {
 		
 		// handle action
 		
-		character.action( actionName, parameters );
+		character.action( actionTypeName, parameters );
+		
+		// if character did not act
+		
+		if ( character.acting !== true ) {
+			
+			// handle parameters
+			
+			parameters = parameters || {};
+			
+			// if action type exists for self, act upon
+			
+			switch ( actionTypeName ) {
+				
+				case 'action001':
+					
+					_CameraControls.rotate( parameters.event, parameters.stop );
+					
+					break;
+				
+			}
+		
+		}
 		
 	}
 	
@@ -527,6 +508,47 @@
     selection functions
     
     =====================================================*/
+    
+    function object_under_mouse ( mouse ) {
+		
+		var ray = utilRay1Selection,
+			mousePosition = utilVec31Selection,
+			camera = _CameraControls.camera,
+			intersections,
+			intersectedMesh;
+		
+		// handle mouse
+		
+		mouse = mouse || _Game.get_mouse();
+		
+		// get corrected mouse position
+		
+		mousePosition.x = ( mouse.x / shared.screenWidth ) * 2 - 1;
+		mousePosition.y = -( mouse.y / shared.screenHeight ) * 2 + 1;
+		mousePosition.z = 0.5;
+		
+		// unproject mouse position
+		
+		projector.unprojectVector( mousePosition, camera );
+		
+		// set ray
+
+		ray.origin = camera.position;
+		ray.direction = mousePosition.subSelf( camera.position ).normalize();
+		
+		// find ray intersections
+
+		intersections = ray.intersectScene( scene );
+		
+		if ( intersections.length > 0 ) {
+			
+			intersectedMesh = intersections[ 0 ].object;
+			
+			return intersectedMesh.kaiopuaModel || intersectedMesh;
+			
+		}
+		
+	}
 	
 	function select_from_mouse_position ( parameters ) {
 		
@@ -558,11 +580,11 @@
 		
 		// select
 			
-		selectedModel = model_under_mouse( mouse );
+		selectedModel = object_under_mouse( mouse );
 		
 		// if a selection was made
 		
-		if ( typeof selectedModel !== 'undefined' ) {
+		if ( typeof selectedModel !== 'undefined' && selectedModel.targetable === true ) {
 			
 			// todo
 			// special selection cases
@@ -690,54 +712,6 @@
 		
 	}
 	
-	function model_under_mouse ( mouse ) {
-		
-		var ray = utilRay1Selection,
-			mousePosition = utilVec31Selection,
-			camera = _CameraControls.camera,
-			intersections,
-			intersectedMesh,
-			intersectedModel;
-		
-		// handle mouse
-		
-		mouse = mouse || get_mouse();
-		
-		// get corrected mouse position
-		
-		mousePosition.x = ( mouse.x / shared.screenWidth ) * 2 - 1;
-		mousePosition.y = -( mouse.y / shared.screenHeight ) * 2 + 1;
-		mousePosition.z = 0.5;
-		
-		// unproject mouse position
-		
-		projector.unprojectVector( mousePosition, camera );
-		
-		// set ray
-
-		ray.origin = camera.position;
-		ray.direction = mousePosition.subSelf( camera.position ).normalize();
-		
-		// find ray intersections
-
-		intersections = ray.intersectScene( scene );
-		
-		if ( intersections.length > 0 ) {
-			
-			intersectedMesh = intersections[ 0 ].object;
-			
-			intersectedModel = intersectedMesh.kaiopuaModel;
-			
-			if ( typeof intersectedModel !== 'undefined' && intersectedModel.targetable === true ) {
-			
-				return intersectedModel;
-				
-			}
-			
-		}
-		
-	}
-	
 	function update_selections ( timeDelta ) {
 		
 		var material = selecting.material,
@@ -844,8 +818,6 @@
 			enabled = true;
 			
 			shared.signals.update.add( update );
-			
-			allow_control();
 		
 		}
 		
@@ -853,9 +825,9 @@
 	
 	function disable () {
 		
-		enabled = false;
+		clear_keys_active();
 		
-		remove_control();
+		enabled = false;
 		
 		shared.signals.update.remove( update );
 		
@@ -871,6 +843,8 @@
 			
 			showing = true;
 			
+			allow_control();
+			
 		}
 		
 	}
@@ -878,6 +852,10 @@
 	function hide () {
 		
 		if ( showing === true ) {
+			
+			remove_control();
+			
+			disable();
 		
 			_Game.remove_from_scene( addOnShow, scene );
 			
