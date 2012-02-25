@@ -81,21 +81,23 @@
     	
     	// environment
     	
-    	// world base
-    	
-    	// basic position / rotation
-		
-		this.quaternion.setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), -Math.PI * 0.4 );
-		
-		// skybox
+    	// skybox
 		
 		this.parts.skybox = _ObjectMaker.make_skybox( "assets/textures/skybox_world" );
+    	
+    	// world base
+    	
+    	this.parts.body = new _Model.Instance();
+		
+		this.parts.body.quaternion.setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), -Math.PI * 0.4 );
+		
+		this.addOnShow.push( { addTarget: this.parts.body, sceneTarget: this } );
 		
 		// ambient
 		
 		this.parts.ambientLight = new THREE.AmbientLight( 0x999999 );
 		
-		this.addOnShow.push( this.parts.ambientLight );
+		this.addOnShow.push( { addTarget: this.parts.ambientLight, sceneTarget: this } );
 		
 		// fog
 		
@@ -112,7 +114,7 @@
 			shading: THREE.SmoothShading
         });
 		
-		this.addOnShow.push( { addTarget: this.parts.head, sceneTarget: this } );
+		this.addOnShow.push( { addTarget: this.parts.head, sceneTarget: this.parts.body } );
 		
 		this.parts.tail = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Whale_Tail.js"),
@@ -123,13 +125,13 @@
 			shading: THREE.SmoothShading
         });
 	
-		this.addOnShow.push( { addTarget: this.parts.tail, sceneTarget: this } );
+		this.addOnShow.push( { addTarget: this.parts.tail, sceneTarget: this.parts.body } );
 		
 		// water
 		
 		this.parts.waterRing = new _Water.Instance();
 		
-		this.addOnShow.push( this.parts.waterRing );
+		this.addOnShow.push( { addTarget: this.parts.waterRing, sceneTarget: this } );
 		
 		// sky
 		
@@ -143,79 +145,25 @@
 		this.parts.sunmoon.position.set( 0, 4000, 0 );
 		this.parts.sunmoon.quaternion.setFromAxisAngle( new THREE.Vector3( 0, 0, 1 ), Math.PI );
 		
-		_Physics.rotate_relative_to_source( this.parts.sunmoon, this, shared.cardinalAxes.forward.clone().negate(), shared.cardinalAxes.up );
+		_Physics.rotate_relative_to_source( this.parts.sunmoon, this.parts.body, shared.cardinalAxes.forward.clone().negate(), shared.cardinalAxes.up );
 		
-		this.addOnShow.push( this.parts.sunmoon );
+		this.addOnShow.push( { addTarget: this.parts.sunmoon, sceneTarget: this } );
 		
 		// sun light
 		
 		this.parts.sunmoonLight = new THREE.PointLight( 0xffffff, 1, 10000 );
-		//this.parts.sunmoonLight.position.set( 0, 6000, 1000 );
 		
-		this.parts.sunmoon.add( this.parts.sunmoonLight );
+		this.addOnShow.push( { addTarget: this.parts.sunmoonLight, sceneTarget: this.parts.sunmoon } );
 		
-		//init_puzzles();
-    	
-    }
-	
-	/*===================================================
-    
-    environment
-    
-    =====================================================*/
-	
-	function init_environment () {
+		// home
 		
-		init_land();
+		this.parts.home = new _Model.Instance();
 		
-	}
-	
-	/*===================================================
-    
-    land
-    
-    =====================================================*/
-	
-	function init_land () {
-		
-		init_home();
-		
-		init_volcano();
-		
-		init_trees();
-		
-	}
-	
-	/*===================================================
-    
-    hut
-    
-    =====================================================*/
-	
-	function init_home () {
-		
-		var home = new _Model.Instance({});
-		
-		addOnShow.push( { addTarget: home, sceneTarget: body } );
-		
-		/*
-		home.position.set( 600, 1600, 0 );
-		
-		addOnShow.push( { 
-			addTarget: home, 
-			callbackAdd: function () {
-				
-				_Physics.rotate_relative_to_source( home, head, shared.cardinalAxes.up, shared.cardinalAxes.forward );
-				
-				_Physics.pull_to_source( home, head );
-				
-			}
-		} );
-		*/
+		this.addOnShow.push( { addTarget: this.parts.home, sceneTarget: this.parts.body } );
 		
 		// hill for home
 		
-		var hill = new _Model.Instance({
+		this.parts.hill = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Hut_Hill.js"),
 			physics: {
 				bodyType: 'mesh'
@@ -224,11 +172,11 @@
 			shading: THREE.SmoothShading,
         });
 		
-		addOnShow.push( { addTarget: hill, sceneTarget: home } );
+		this.addOnShow.push( { addTarget: this.parts.hill, sceneTarget: this.parts.home } );
 		
 		// steps
 		
-		var steps = new _Model.Instance({
+		this.parts.steps = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Hut_Steps.js"),
 			physics: {
 				bodyType: 'mesh'
@@ -237,13 +185,11 @@
 			shading: THREE.SmoothShading,
         });
 		
-		//steps.position.set( -10, 270, 130 );
-		
-		addOnShow.push( { addTarget: steps, sceneTarget: home } );	
+		this.addOnShow.push( { addTarget: this.parts.steps, sceneTarget: this.parts.home } );	
 		
 		// hut
 		
-		var hut = new _Model.Instance({
+		this.parts.hut = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Hut.js"),
 			physics: {
 				bodyType: 'mesh'
@@ -252,27 +198,22 @@
 			shading: THREE.SmoothShading
         });
 		
-		//hut.position.set( 0, 335, 0 );
-		
-		addOnShow.push( { addTarget: hut, sceneTarget: home } );
+		this.addOnShow.push( { addTarget: this.parts.hut, sceneTarget: this.parts.home } );
 		
 		// banana leaf door
 		
-		var bananaLeafDoor = new _Model.Instance({
+		this.parts.bananaLeafDoor = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Banana_Leaf_Door.js"),
 			materials:  new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
-			doubleSided: true,
-			//rotation: new THREE.Vector3( 0, 0, 5 )
+			doubleSided: true
         });
 		
-		//bananaLeafDoor.position.set( -10, 470, 100 );
-		
-		addOnShow.push( { addTarget: bananaLeafDoor, sceneTarget: home } );	
+		this.addOnShow.push( { addTarget: this.parts.bananaLeafDoor, sceneTarget: this.parts.home } );	
 		
 		// surfboard
 		
-		var surfboard = new _Model.Instance({
+		this.parts.surfboard = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Surfboard.js"),
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
@@ -281,82 +222,17 @@
 			}
         });
 		
-		//surfboard.position.set( 110, 320, 110 );
-		
-		addOnShow.push( { addTarget: surfboard, sceneTarget: home } );	
-		
-		/*
-		// bed
-		
-		var bed = new _Model.Instance({
-            geometry: main.get_asset_data("assets/models/Bed.js"),
-			physics: {
-				bodyType: 'box'
-			},
-			materials: new THREE.MeshNormalMaterial(),
-			shading: THREE.FlatShading
-        });
-		
-		bed.position.set( 0, 340, 0 );
-		
-		addOnShow.push( { addTarget: bed, sceneTarget: home } );
-		
-		// palm tree
-		
-		var palmTree = new _Model.Instance({
-            geometry: main.get_asset_data("assets/models/Palm_Tree.js"),
-			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
-			shading: THREE.SmoothShading
-        });
-		
-		palmTree.position.set( 180, 260, 25 );
-		
-		addOnShow.push( { addTarget: palmTree, sceneTarget: home } );	
-		
-		// taro plants
-		
-		var taroPlant1 = new _Model.Instance({
-            geometry: main.get_asset_data("assets/models/Taro_Plant_001.js"),
-			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
-			shading: THREE.SmoothShading
-        });
-		
-		taroPlant1.position.set( -170, 260, 130 );
-		
-		addOnShow.push( { addTarget: taroPlant1, sceneTarget: home } );
-		
-		var taroPlant2 = new _Model.Instance({
-            geometry: main.get_asset_data("assets/models/Taro_Plant_001.js"),
-			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
-			shading: THREE.SmoothShading,
-			rotation: new THREE.Vector3(0, -45, 0)
-        });
-		
-		taroPlant2.position.set( -190, 245, 105 );
-		
-		addOnShow.push( { addTarget: taroPlant2, sceneTarget: home } );
-		
-		*/
-		
-	}
-	
-	/*===================================================
-    
-    volcano
-    
-    =====================================================*/
-	
-	function init_volcano () {
+		this.addOnShow.push( { addTarget: this.parts.surfboard, sceneTarget: this.parts.home } );	
 		
 		// volcano
 		
-		var volcano = new _Model.Instance({});
+		this.parts.volcano = new _Model.Instance();
 		
-		addOnShow.push( { addTarget: volcano, sceneTarget: body } );
+		this.addOnShow.push( { addTarget: this.parts.volcano, sceneTarget: this.parts.body } );
 		
 		// volcano large
 		
-		var volcanoLarge = new _Model.Instance({
+		this.parts.volcanoLarge = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Volcano_Large.js"),
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
@@ -365,15 +241,11 @@
 			}
         });
 		
-		//volcanoLarge.position.set( -335, 1350, 0 );
-		
-		//_Physics.rotate_relative_to_source( volcano, head, shared.cardinalAxes.up, shared.cardinalAxes.forward );
-		
-		addOnShow.push( { addTarget: volcanoLarge, sceneTarget: volcano } );
+		this.addOnShow.push( { addTarget: this.parts.volcanoLarge, sceneTarget: this.parts.volcano } );
 		
 		// volcano small
 		
-		var volcanoSmall = new _Model.Instance({
+		this.parts.volcanoSmall = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Volcano_Small.js"),
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
@@ -382,11 +254,11 @@
 			}
         });
 		
-		addOnShow.push( { addTarget: volcanoSmall, sceneTarget: volcano } );
+		this.addOnShow.push( { addTarget: this.parts.volcanoSmall, sceneTarget: this.parts.volcano } );
 		
 		// volcano rocks
 		
-		var volcanoRocks001 = new _Model.Instance({
+		this.parts.volcanoRocks001 = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Volcano_Rocks_001.js"),
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
@@ -395,9 +267,9 @@
 			}
         });
 		
-		addOnShow.push( { addTarget: volcanoRocks001, sceneTarget: volcano } );
+		this.addOnShow.push( { addTarget: this.parts.volcanoRocks001, sceneTarget: this.parts.volcano } );
 		
-		var volcanoRocks002 = new _Model.Instance({
+		this.parts.volcanoRocks002 = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Volcano_Rocks_002.js"),
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
@@ -406,9 +278,9 @@
 			}
         });
 		
-		addOnShow.push( { addTarget: volcanoRocks002, sceneTarget: volcano } );
+		this.addOnShow.push( { addTarget: this.parts.volcanoRocks002, sceneTarget: this.parts.volcano } );
 		
-		var volcanoRocks003 = new _Model.Instance({
+		this.parts.volcanoRocks003 = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Volcano_Rocks_003.js"),
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
@@ -417,9 +289,9 @@
 			}
         });
 		
-		addOnShow.push( { addTarget: volcanoRocks003, sceneTarget: volcano } );
+		this.addOnShow.push( { addTarget: this.parts.volcanoRocks003, sceneTarget: this.parts.volcano } );
 		
-		var volcanoRocks004 = new _Model.Instance({
+		this.parts.volcanoRocks004 = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Volcano_Rocks_004.js"),
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
@@ -428,9 +300,9 @@
 			}
         });
 		
-		addOnShow.push( { addTarget: volcanoRocks004, sceneTarget: volcano } );
+		this.addOnShow.push( { addTarget: this.parts.volcanoRocks004, sceneTarget: this.parts.volcano } );
 		
-		var volcanoRocks005 = new _Model.Instance({
+		this.parts.volcanoRocks005 = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Volcano_Rocks_005.js"),
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
@@ -439,70 +311,52 @@
 			}
         });
 		
-		addOnShow.push( { addTarget: volcanoRocks005, sceneTarget: volcano } );
+		this.addOnShow.push( { addTarget: this.parts.volcanoRocks005, sceneTarget: this.parts.volcano } );
 		
 		/*
 		// volcano light, add directly to volcano
 		
-		var volcanoLight = new THREE.PointLight( 0xffd639, 1, 300 );
-		volcanoLight.position.set( 0, 750, 0 );
+		this.parts.volcanoLight = new THREE.PointLight( 0xffd639, 1, 300 );
+		this.parts.volcanoLight.position.set( 0, 750, 0 );
 		
-		addOnShow.push( { addTarget: volcanoLight, sceneTarget: volcano } );
+		this.addOnShow.push( { addTarget: this.parts.volcanoLight, sceneTarget: this.parts.volcano } );
 		*/
-		
-	}
-	
-	/*===================================================
-    
-    trees
-    
-    =====================================================*/
-	
-	function init_trees () {
 		
 		// trees
 		
-		var trees = new _Model.Instance({});
+		this.parts.trees = new _Model.Instance();
 		
-		addOnShow.push( { addTarget: trees, sceneTarget: body } );
+		this.addOnShow.push( { addTarget: this.parts.trees, sceneTarget: this.parts.body } );
 		
 		// kukui trees
 		
-		var kukuiTrees = new _Model.Instance({
+		this.parts.kukuiTrees = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Kukui_Trees.js"),
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading
         });
 		
-		addOnShow.push( { addTarget: kukuiTrees, sceneTarget: trees } );
+		this.addOnShow.push( { addTarget: this.parts.kukuiTrees, sceneTarget: this.parts.trees } );
 		
 		// palm trees
 		
-		var palmTrees = new _Model.Instance({
+		this.parts.palmTrees = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Palm_Trees.js"),
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading
         });
 		
-		addOnShow.push( { addTarget: palmTrees, sceneTarget: trees } );
+		this.addOnShow.push( { addTarget: this.parts.palmTrees, sceneTarget: this.parts.trees } );
 		
-	}
-	
-	/*===================================================
-    
-    puzzles
-    
-    =====================================================*/
-	
-	function init_puzzles () {
+		// puzzles
 		
-		var puzzleTutorial = new _Puzzles.Instance( {
+		this.parts.puzzleTutorial = new _Puzzles.Instance( {
 			geometry: main.get_asset_data("assets/models/Field_Tutorial.js")
 		});
 		
-		addOnShow.push( { addTarget: puzzleTutorial, sceneTarget: body } );
-		
-	}
+		this.addOnShow.push( { addTarget: this.parts.puzzleTutorial, sceneTarget: this.parts.body } );
+    	
+    }
 	
 	/*===================================================
     

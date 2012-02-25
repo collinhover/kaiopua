@@ -34,7 +34,7 @@
 		_Physics = p;
 		_MathHelper = mh;
 		
-		_Model.Instance = KaiopuaModel;
+		_Model.Instance = Model;
 		_Model.Instance.prototype = new THREE.Mesh();
 		_Model.Instance.prototype.constructor = _Model.Instance;
 		_Model.Instance.prototype.compute_dimensions_from_bounding_box = compute_dimensions_from_bounding_box;
@@ -50,7 +50,7 @@
 	
 	// adds functionality to and inherits from THREE.Mesh
 	
-	function KaiopuaModel ( parameters ) {
+	function Model ( parameters ) {
 		
 		var i, l,
 			geometry,

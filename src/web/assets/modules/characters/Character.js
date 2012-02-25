@@ -53,7 +53,7 @@
 		
 		// character instance
 		
-		_Character.Instance = KaiopuaCharacter;
+		_Character.Instance = Character;
 		_Character.Instance.prototype = new _Model.Instance();
 		_Character.Instance.prototype.constructor = _Character.Instance;
 		_Character.Instance.prototype.move_state_change = move_state_change;
@@ -93,7 +93,7 @@
 	
 	// adds functionality to and inherits from Model
 	
-	function KaiopuaCharacter ( parameters ) {
+	function Character ( parameters ) {
 		
 		var parametersModel,
 			parametersMovement,
