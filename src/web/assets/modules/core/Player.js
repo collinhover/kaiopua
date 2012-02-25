@@ -21,17 +21,13 @@
 		ready = false,
 		enabled = false,
 		showing = false,
-		scene,
-		addOnShow = [],
+		cameraControls,
 		keybindings = {},
 		keybindingsDefault = {},
 		character,
 		characterLight,
 		characterLightFollowSettings,
 		following = [],
-		projector,
-		utilRay1Selection,
-		utilVec31Selection,
 		selecting;
 	
 	/*===================================================
@@ -47,7 +43,6 @@
 	_Player.allow_control = allow_control;
 	_Player.remove_control = remove_control;
 	_Player.select_from_mouse_position = select_from_mouse_position;
-	_Player.object_under_mouse = object_under_mouse;
 	_Player.deselect = deselect;
 	
 	// getters and setters
@@ -64,8 +59,16 @@
 		}
 	});
 	
+	Object.defineProperty(_Player, 'camera', { 
+		get : function () { return cameraControls.camera; }
+	});
+	
 	Object.defineProperty(_Player, 'character', { 
 		get : function () { return character; }
+	});
+	
+	Object.defineProperty(_Player, 'scene', { 
+		get : function () { return character.scene; }
 	});
 	
 	Object.defineProperty(_Player, 'moving', { 
@@ -108,13 +111,6 @@
 			_ObjectHelper = oh;
 			_MathHelper = mh;
 			
-			// utility objects
-			
-			utilRay1Selection = new THREE.Ray();
-			utilVec31Selection = new THREE.Vector3();
-			
-			projector = new THREE.Projector();
-			
 			// selecting
 			
 			selecting = {};
@@ -156,7 +152,7 @@
 	
 	function init_cameracontrols () {
 		
-		_CameraControls.init( _Player, _Game.camera );
+		cameraControls = new _CameraControls.Instance( _Player, _Game.camera );
 		
 	}
 	
@@ -179,19 +175,19 @@
 		// mouse buttons
 		
 		kbMap[ 'mouseleft' ] = {
-			keydown: function ( e ) { character_action( 'action001', { event: e } ); },
-			keyup: function ( e ) { character_action( 'action001', { event: e, stop: true } ); }
+			keydown: function ( e ) { character_action( '001', { event: e } ); },
+			keyup: function ( e ) { character_action( '001', { event: e, stop: true } ); }
 		};
 		kbMap[ 'mousemiddle' ] = {
 			keydown: function ( e ) { console.log('key down: mousemiddle'); },
 			keyup: function ( e ) { console.log('key up: mousemiddle'); }
 		};
 		kbMap[ 'mouseright' ] = {
-			keydown: function ( e ) { _CameraControls.rotate( e ); },
-			keyup: function ( e ) { _CameraControls.rotate( e, true ); }
+			keydown: function ( e ) { cameraControls.rotate( e ); },
+			keyup: function ( e ) { cameraControls.rotate( e, true ); }
 		};
 		kbMap[ 'mousewheel' ] = {
-			keyup: function ( e ) { _CameraControls.zoom( e ); }
+			keyup: function ( e ) { cameraControls.zoom( e ); }
 		};
 		
 		// wasd / uldr
@@ -452,18 +448,9 @@
 		
 		characterLight = new THREE.PointLight( 0xfeb41c, 1, 400 );
 		
-		characterLightFollowSettings = {
-			obj: characterLight,
-			rotationBase: new THREE.Quaternion(),
-			rotationOffset: new THREE.Vector3( 0, 0, 0 ),
-			positionOffset: new THREE.Vector3( -30, -20, 5 )
-		};
+		characterLight.position.set( -30, -20, 5 );
 		
-		following.push( characterLightFollowSettings );
-		
-		// add on show
-		
-		addOnShow.push( character, characterLight );
+		character.add( characterLight );
 		
 	}
 	
@@ -491,9 +478,9 @@
 			
 			switch ( actionTypeName ) {
 				
-				case 'action001':
+				case '001':
 					
-					_CameraControls.rotate( parameters.event, parameters.stop );
+					cameraControls.rotate( parameters.event, parameters.stop );
 					
 					break;
 				
@@ -508,47 +495,6 @@
     selection functions
     
     =====================================================*/
-    
-    function object_under_mouse ( mouse ) {
-		
-		var ray = utilRay1Selection,
-			mousePosition = utilVec31Selection,
-			camera = _CameraControls.camera,
-			intersections,
-			intersectedMesh;
-		
-		// handle mouse
-		
-		mouse = mouse || _Game.get_mouse();
-		
-		// get corrected mouse position
-		
-		mousePosition.x = ( mouse.x / shared.screenWidth ) * 2 - 1;
-		mousePosition.y = -( mouse.y / shared.screenHeight ) * 2 + 1;
-		mousePosition.z = 0.5;
-		
-		// unproject mouse position
-		
-		projector.unprojectVector( mousePosition, camera );
-		
-		// set ray
-
-		ray.origin = camera.position;
-		ray.direction = mousePosition.subSelf( camera.position ).normalize();
-		
-		// find ray intersections
-
-		intersections = ray.intersectScene( scene );
-		
-		if ( intersections.length > 0 ) {
-			
-			intersectedMesh = intersections[ 0 ].object;
-			
-			return intersectedMesh.kaiopuaModel || intersectedMesh;
-			
-		}
-		
-	}
 	
 	function select_from_mouse_position ( parameters ) {
 		
@@ -770,27 +716,6 @@
 	
 	/*===================================================
     
-    following
-    
-    =====================================================*/
-	
-	function update_following () {
-		
-		var i, l,
-			followSettings;
-		
-		for ( i = 0, l = following.length; i < l; i ++ ) {
-			
-			followSettings = following[ i ];
-			
-			_ObjectHelper.object_follow_object( character, followSettings.obj, followSettings.rotationBase, followSettings.rotationOffset, followSettings.positionOffset );
-				
-		}
-		
-	}
-	
-	/*===================================================
-    
     custom functions
     
     =====================================================*/
@@ -837,9 +762,9 @@
 		
 		if ( showing === false ) {
 			
-			scene = _Game.scene;
+			character.show( _Game.scene );
 			
-			_Game.add_to_scene( addOnShow, scene );
+			cameraControls.camera = _Game.camera;
 			
 			showing = true;
 			
@@ -856,8 +781,8 @@
 			remove_control();
 			
 			disable();
-		
-			_Game.remove_from_scene( addOnShow, scene );
+			
+			character.hide();
 			
 			showing = false;
 			
@@ -873,11 +798,7 @@
 		
 		// update camera
 		
-		_CameraControls.update( timeDelta );
-		
-		// items that follow character
-		
-		update_following();
+		cameraControls.update( timeDelta );
 		
 		// selection material
 		

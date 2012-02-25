@@ -43,6 +43,9 @@
         previousSection,
         paused = false,
 		started = false,
+		utilProjector1Selection,
+		utilRay1Selection,
+		utilVec31Selection,
         transitionOut = 1000, 
         transitionIn = 400,
 		transitionerAlpha = 0.75,
@@ -88,6 +91,7 @@
 			"assets/modules/characters/Character.js",
 			"assets/modules/characters/Hero.js",
 			"assets/modules/env/World.js",
+			"assets/modules/env/WorldIsland.js",
 			"assets/modules/env/Water.js",
 			"assets/modules/puzzles/Puzzles.js",
 			"assets/modules/puzzles/Grid.js",
@@ -159,9 +163,12 @@
 	
     _Game.resume = resume;
     _Game.pause = pause;
-	_Game.get_mouse = get_mouse;
+	
 	_Game.add_to_scene = add_to_scene;
 	_Game.remove_from_scene = remove_from_scene;
+	
+	_Game.get_mouse = get_mouse;
+	_Game.get_object_under_mouse = get_object_under_mouse;
 	
 	// getters and setters
 	
@@ -290,6 +297,10 @@
 		// utility
 		
 		_MathHelper = main.get_asset_data( "assets/modules/utils/MathHelper.js" );
+		
+		utilProjector1Selection = new THREE.Projector();
+		utilRay1Selection = new THREE.Ray();
+		utilVec31Selection = new THREE.Vector3();
 		
 		// cardinal axes
 		shared.cardinalAxes = {
@@ -926,6 +937,51 @@
 		}
 		
 		return mouse;
+	}
+	
+	function get_object_under_mouse ( sceneTarget, mouse, cameraTarget ) {
+		
+		var projector = utilProjector1Selection,
+			ray = utilRay1Selection,
+			mousePosition = utilVec31Selection,
+			intersections,
+			intersectedMesh;
+		
+		// handle parameters
+		
+		mouse = mouse || get_mouse();
+		
+		cameraTarget = cameraTarget || camera;
+		
+		sceneTarget = sceneTarget || scene;
+		
+		// get corrected mouse position
+		
+		mousePosition.x = ( mouse.x / shared.screenWidth ) * 2 - 1;
+		mousePosition.y = -( mouse.y / shared.screenHeight ) * 2 + 1;
+		mousePosition.z = 0.5;
+		
+		// unproject mouse position
+		
+		projector.unprojectVector( mousePosition, cameraTarget );
+		
+		// set ray
+
+		ray.origin = cameraTarget.position;
+		ray.direction = mousePosition.subSelf( cameraTarget.position ).normalize();
+		
+		// find ray intersections
+		
+		intersections = ray.intersectScene( sceneTarget );
+		
+		if ( intersections.length > 0 ) {
+			
+			intersectedMesh = intersections[ 0 ].object;
+			
+			return intersectedMesh.kaiopuaModel || intersectedMesh;
+			
+		}
+		
 	}
 	
 	/*===================================================

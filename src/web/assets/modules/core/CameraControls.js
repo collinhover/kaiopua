@@ -13,40 +13,13 @@
 		_CameraControls = {},
 		_ObjectHelper,
 		_MathHelper,
-		_Player,
-		camera,
-		csRot,
-		csPos,
-		firstPersonDist = 50,
-		firstPerson = false,
-		utilVec31Update,
-		utilVec32Update,
-		utilVec33Update,
-		utilQ31Update,
-		utilQ32Update;
+		firstPersonDist = 50;
 	
 	/*===================================================
     
     public properties
     
     =====================================================*/
-	
-	_CameraControls.init = init;
-	_CameraControls.update = update;
-	_CameraControls.rotate = rotate;
-	_CameraControls.zoom = zoom;
-	
-	// getters and setters
-	
-	Object.defineProperty( _CameraControls, 'camera', { 
-		get : function () { return camera; },
-		set : set_camera
-	});
-	
-	Object.defineProperty( _CameraControls, 'player', { 
-		get : function () { return _Player; },
-		set : set_player
-	});
 	
 	main.asset_register( assetPath, { 
 		data: _CameraControls,
@@ -71,6 +44,40 @@
 		_ObjectHelper = oh;
 		_MathHelper = mh;
 		
+		_CameraControls.Instance = CameraControls;
+		_CameraControls.Instance.prototype.update = update;
+		_CameraControls.Instance.prototype.rotate = rotate;
+		_CameraControls.Instance.prototype.zoom = zoom;
+		
+		Object.defineProperty( _CameraControls.Instance.prototype, 'camera', { 
+			get : function () { return this._camera; },
+			set : function ( newCamera ) {
+				
+				if ( typeof newCamera !== 'undefined' ) {
+					
+					this._camera = newCamera;
+					
+					this._camera.useQuaternion = true;
+					this._camera.quaternion.setFromRotationMatrix( this._camera.matrix );
+					
+				}
+				
+			}
+		});
+		
+		Object.defineProperty( _CameraControls.Instance.prototype, 'player', { 
+			get : function () { return this._player; },
+			set : function ( newPlayer ) {
+				
+				if ( typeof newPlayer !== 'undefined' ) {
+					
+					this._player = newPlayer;
+					
+				}
+				
+			}
+		});
+		
 	}
 	
 	/*===================================================
@@ -79,28 +86,31 @@
     
     =====================================================*/
 	
-	function init ( player, camera ) {
+	function CameraControls ( player, camera ) {
+		
+		var csRot,
+			csPos;
 		
 		// utility
 		
-		utilVec31Update = new THREE.Vector3();
-		utilVec32Update = new THREE.Vector3();
-		utilVec33Update = new THREE.Vector3();
-		utilQ31Update = new THREE.Quaternion();
-		utilQ32Update = new THREE.Quaternion();
+		this.utilVec31Update = new THREE.Vector3();
+		this.utilVec32Update = new THREE.Vector3();
+		this.utilVec33Update = new THREE.Vector3();
+		this.utilQ31Update = new THREE.Quaternion();
+		this.utilQ32Update = new THREE.Quaternion();
 		
 		// camera
 		
-		set_camera( camera );
+		this.camera = camera;
 		
 		// player
 		
-		set_player( player );
+		this.player = player;
 		
 		// controller settings
 		
-		csRot = make_controller_settings();
-		csPos = make_controller_settings();
+		csRot = this.csRot = make_controller_settings();
+		csPos = this.csPos = make_controller_settings();
 		
 		csRot.base.setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), Math.PI );
 		csRot.offsetBase.set( 25, 0, 0 );
@@ -124,28 +134,9 @@
 		csPos.deltaSpeedMax = 0.25;
 		csPos.deltaDecay = 0.7;
 		
-	}
-	
-	function set_camera ( newCamera ) {
+		// misc
 		
-		if ( typeof newCamera !== 'undefined' ) {
-			
-			camera = newCamera;
-			
-			camera.useQuaternion = true;
-			camera.quaternion.setFromRotationMatrix( camera.matrix );
-			
-		}
-		
-	}
-	
-	function set_player ( newPlayer ) {
-		
-		if ( typeof newPlayer !== 'undefined' ) {
-			
-			_Player = newPlayer;
-			
-		}
+		this.firstPerson = false;
 		
 	}
 	
@@ -194,7 +185,7 @@
 			
 			shared.signals.mousemoved.remove( rotate_update );
 			
-			csRot.mouse = undefined;
+			this.csRot.mouse = undefined;
 			
 		}
 		// start rotation
@@ -202,7 +193,7 @@
 			
 			// store mouse
 			
-			csRot.mouse = shared.mice[ ( typeof e !== 'undefined' ? e.identifier : 0 ) ];
+			this.csRot.mouse = shared.mice[ ( typeof e !== 'undefined' ? e.identifier : 0 ) ];
 			
 			shared.signals.mousemoved.add( rotate_update );
 			
@@ -212,7 +203,8 @@
 	
 	function rotate_update ( e ) {
 		
-		var rotDelta = csRot.delta,
+		var csRot = this.csRot,
+			rotDelta = csRot.delta,
 			rotDeltaMin = csRot.deltaMin,
 			rotDeltaMax = csRot.deltaMax,
 			rotDeltaSpeed = csRot.deltaSpeedMin,
@@ -238,6 +230,7 @@
 		
 		var eo = e.originalEvent || e,
 			wheelDelta = eo.wheelDelta,
+			csPos = this.csPos,
 			posOffset = csPos.offset,
 			posOffsetMin = csPos.offsetMin,
 			posOffsetMax = csPos.offsetMax,
@@ -262,7 +255,9 @@
 	
 	function update ( timeDelta ) {
 		
-		var posOffset = csPos.offset,
+		var csPos = this.csPos,
+			csRot = this.csRot,
+			posOffset = csPos.offset,
 			posOffsetMin = csPos.offsetMin,
 			posOffsetMax = csPos.offsetMax,
 			posOffsetSnap = csPos.offsetSnap,
@@ -277,8 +272,8 @@
 			rotOffsetMax = csRot.offsetMax,
 			rotDelta = csRot.delta,
 			rotDeltaDecay = csRot.deltaDecay,
-			playerMoving = _Player.moving,
-			pc = _Player.character,
+			player = this.player,
+			pc = player.character,
 			cardinalAxes = shared.cardinalAxes,
 			caForward = cardinalAxes.forward,
 			caUp = cardinalAxes.up,
@@ -328,7 +323,7 @@
 		
 		if ( posOffset.z - firstPersonDist <= posOffsetMin.z ) {
 			
-			if ( firstPerson !== true && rotOffset.y !== 0 ) {
+			if ( this.firstPerson !== true && rotOffset.y !== 0 ) {
 				
 				// get axis and angle between rot offset y rotation and forward
 				
@@ -360,19 +355,19 @@
 				
 			}
 			
-			firstPerson = true;
+			this.firstPerson = true;
 			
 		}
 		else {
 			
-			firstPerson = false;
+			this.firstPerson = false;
 			
 		}
 		
 		// if in first person mode
 		// rotate character on y axis with camera
 		
-		if ( firstPerson === true ) {
+		if ( this.firstPerson === true ) {
 			
 			// update player rotation y
 			
@@ -386,7 +381,7 @@
 		}
 		// if player is not in first person and moving but not rotating camera
 		// move rotation offset back towards original
-		else if ( typeof csRot.mouse === 'undefined' && playerMoving === true ) {
+		else if ( typeof csRot.mouse === 'undefined' && player.moving === true ) {
 			
 			if ( rotOffset.x !== rotOffsetBase.x ) rotOffset.x += (rotOffsetBase.x - rotOffset.x) * rotBaseRevertSpeed;
 			if ( rotOffset.y !== rotOffsetBase.y ) rotOffset.y += (rotOffsetBase.y - rotOffset.y) * rotBaseRevertSpeed;
@@ -395,7 +390,7 @@
 		
 		// follow player
 		
-		_ObjectHelper.object_follow_object( _Player.character, camera, rotBase, rotOffset, posOffset );
+		_ObjectHelper.object_follow_object( pc, this.camera, rotBase, rotOffset, posOffset );
 		
 		// decay deltas
 		

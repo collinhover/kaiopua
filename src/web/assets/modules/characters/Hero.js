@@ -11,7 +11,9 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/characters/Hero.js",
 		_Hero = {},
-		_Character;
+		_Character,
+		_Game,
+		actionsMap;
 	
 	/*===================================================
     
@@ -22,7 +24,8 @@
 	main.asset_register( assetPath, { 
 		data: _Hero,
 		requirements: [
-			"assets/modules/characters/Character.js"
+			"assets/modules/characters/Character.js",
+			"assets/modules/core/Game.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -34,14 +37,20 @@
     
     =====================================================*/
 	
-	function init_internal( c ) {
+	function init_internal( c, g ) {
 		console.log('internal hero', _Hero);
 		_Character = c;
+		_Game = g;
 		
 		_Hero.Instance = Hero;
 		_Hero.Instance.prototype = new _Character.Instance();
 		_Hero.Instance.constructor = _Hero.Instance;
 		_Hero.Instance.prototype.action = action;
+		
+		// init actions map
+		
+		init_actions_map();
+		
 	}
 	
 	/*===================================================
@@ -88,12 +97,55 @@
     
     =====================================================*/
     
-    function action ( actionTypeName, parameters ) {
+    function init_actions_map () {
     	
-    	//this.acting = true;
+    	// map generic numbers to actions
+    	
+    	actionsMap = {
+    		
+    		'001': plant
+    	
+    	};
     	
     }
-	
+    
+    function action ( actionTypeName, parameters ) {
+    	
+    	// if action type is in actions map, do it
+    	
+    	if ( actionsMap.hasOwnProperty( actionTypeName ) ) {
+    		
+    		this.acting = true;
+    		
+    		actionsMap[ actionTypeName ].call( this, parameters );
+    		
+    	}
+    	else {
+    		
+    		this.acting = false;
+    		
+    	}
+    	
+    }
+    
+    /*===================================================
+    
+    planting
+    
+    =====================================================*/
+    
+    function plant () {
+    	
+    	var objectTarget;
+    	
+    	// find object under mouse
+    	
+    	objectTarget = _Game.get_object_under_mouse( this.scene );
+    	
+    	console.log( 'object under mouse?', objectTarget );
+    	
+    }
+    
 	/*
 	// OLD SCALE ACTION
 	// NOT IN USE, SAVE ANYWAY

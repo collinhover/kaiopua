@@ -17,6 +17,12 @@
 		transparentDefault = false,
 		opacityDefault = 1;
 	
+	/*===================================================
+	
+	public
+	
+	=====================================================*/
+	
 	main.asset_register( assetPath, {
 		data: _Grid,
 		requirements: [
@@ -25,6 +31,12 @@
 		callbacksOnReqs: init_internal,
 		wait: true
 	} );
+	
+	/*===================================================
+	
+	init
+	
+	=====================================================*/
 	
 	function init_internal ( gu ) {
 		console.log("internal grid", _Grid);

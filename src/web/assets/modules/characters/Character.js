@@ -25,6 +25,7 @@
 	main.asset_register( assetPath, { 
 		data: _Character,
 		requirements: [
+			"assets/modules/core/Game.js",
 			"assets/modules/core/Model.js",
 			"assets/modules/utils/MathHelper.js"
 		],
@@ -38,10 +39,11 @@
     
     =====================================================*/
 	
-	function init_internal ( m, mh ) {
+	function init_internal ( g, m, mh ) {
 		console.log('internal character', _Character);
 		// modules
 		
+		_Game = g;
 		_Model = m;
 		_MathHelper = mh;
 		
@@ -55,9 +57,32 @@
 		_Character.Instance.prototype = new _Model.Instance();
 		_Character.Instance.prototype.constructor = _Character.Instance;
 		_Character.Instance.prototype.move_state_change = move_state_change;
-		_Character.Instance.prototype.update = update;
-		_Character.Instance.prototype.rotate_by_delta = rotate_by_delta;
 		_Character.Instance.prototype.action = action;
+		_Character.Instance.prototype.show = show;
+		_Character.Instance.prototype.hide = hide;
+		_Character.Instance.prototype.update = update;
+		_Character.Instance.prototype.update_followers = update_followers;
+		_Character.Instance.prototype.rotate_by_delta = rotate_by_delta;
+		
+		Object.defineProperty( _Character.Instance.prototype, 'scene', { 
+			get : function () { return this._scene; },
+			set : function ( newScene ) {
+				
+				if ( typeof newScene !== 'undefined' ) {
+					
+					// remove from previous
+					
+					this.hide();
+					
+					// add to new
+					
+					this.show( newScene );
+					
+				}
+				
+			}
+		});
+		
 	}
 	
 	/*===================================================
@@ -162,6 +187,10 @@
 		
 		this.acting = false;
 		
+		this.showing = false;
+		
+		this.followers = [];
+		
 		this.targeting = {
 			
 			targets: [],
@@ -237,6 +266,69 @@
 		}
 		
 		morphs.play( stateInfo.moveType, { duration: duration, loop: loop, reverse: reverse } );
+		
+	}
+	
+	/*===================================================
+    
+    followers
+    
+    =====================================================*/
+	
+	function update_followers () {
+		
+		var i, l,
+			followSettings;
+		
+		/*
+		// example follow settings
+		followSettings = {
+			obj: model,
+			rotationBase: new THREE.Quaternion(),
+			rotationOffset: new THREE.Vector3( 0, 0, 0 ),
+			positionOffset: new THREE.Vector3( 0, 0, 0 )
+		};
+		*/
+		
+		for ( i = 0, l = this.followers.length; i < l; i ++ ) {
+			
+			followSettings = this.followers[ i ];
+			
+			_ObjectHelper.object_follow_object( this, followSettings.obj, followSettings.rotationBase, followSettings.rotationOffset, followSettings.positionOffset );
+				
+		}
+		
+	}
+	
+	/*===================================================
+    
+    show / hide
+    
+    =====================================================*/
+    
+    function show ( scene ) {
+		
+		if ( this.showing === false ) {
+			
+			this._scene = scene || _Game.scene;
+			
+			_Game.add_to_scene( this, this.scene );
+			
+			this.showing = true;
+			
+		}
+		
+	}
+	
+	function hide () {
+		
+		if ( this.showing === true ) {
+		
+			_Game.remove_from_scene( this, this.scene );
+			
+			this.showing = false;
+			
+		}
 		
 	}
 	
@@ -469,6 +561,10 @@
 			}
 			
 		}
+		
+		// update followers
+		
+		this.update_followers();
 		
 	}
 	

@@ -11,16 +11,17 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/sections/Intro.js",
 		intro = {},
-		game,
-		model,
-		world,
-		player,
-		physics,
+		_Game,
+		_Model,
+		_WorldIsland,
+		_Player,
+		_Physics,
         _ready = false,
 		waitingToShow = false,
 		camera,
         scene,
 		sceneBG,
+		world,
 		addOnShow = [],
 		addBGOnShow = [],
 		skybox,
@@ -45,7 +46,7 @@
 		requirements: [
 			"assets/modules/core/Game.js",
 			"assets/modules/core/Physics.js",
-			"assets/modules/env/World.js",
+			"assets/modules/env/WorldIsland.js",
 			"assets/modules/core/Player.js",
 			"assets/modules/core/Model.js"
 		],
@@ -65,11 +66,11 @@
 			
 			// assets
 			
-			game = g;
-			physics = physx;
-			world = w;
-			player = p;
-			model = m;
+			_Game = g;
+			_Physics = physx;
+			_WorldIsland = w;
+			_Player = p;
+			_Model = m;
 			
 			// environment
 			
@@ -90,110 +91,9 @@
 	}
     
     function init_environment () {
-		/*
-		//
-		//
-		//
-		// boxes test grid
-		//
-		//
-		//
 		
-		var normalMat = new THREE.MeshNormalMaterial();
+		world = new _WorldIsland.Instance();
 		
-		var normalMatWire = new THREE.MeshBasicMaterial({
-			color: 0x000000,
-			wireframe: true
-		});
-	
-		var make_shape = function ( bodyType, x, y, z, dynamic, w, h, d ) {
-			
-			var geom,
-				bodyType = bodyType || 'box',
-				shape;
-			
-			if ( bodyType === 'sphere' ) {
-				
-				geom = new THREE.SphereGeometry( Math.max( w || 25, h || 25, d || 25 ) );
-				
-			}
-			else {
-				
-				geom = new THREE.CubeGeometry( w || 50, h || 50, d || 50, 1, 1 );
-				
-			}
-			
-			// shape
-			
-			var shape = model.instantiate({
-				geometry: geom,
-				materials: normalMat
-			});
-			
-			shape.mesh.position.set( x, y, z );
-			
-			shape.physics = physics.translate( shape.mesh, {
-				bodyType: bodyType,
-				dynamic: typeof dynamic === 'undefined' ? false : dynamic
-			});
-			
-			return shape;
-		}
-		
-		var numRings = 6;
-		var radius = 2000;
-		
-		var deltaRotA = Math.PI / (numRings + 1);
-		var rotA = 0;
-		
-		var numBoxPerRing = 8;
-		var deltaRotB = (Math.PI * 2) / (numBoxPerRing);
-		var rotB = 0;
-		
-		var nx, ny, nz;
-		
-		var i, l;
-		
-		for ( i = 0, l = numRings; i < l; i ++ ) {
-			
-			rotB = 0;
-			
-			rotA += deltaRotA;
-			
-			if ( rotA > Math.PI ) {
-				
-				rotA = 0;
-				
-			}
-			
-			ny = radius * Math.cos( rotA );
-			
-			for ( var bi = 0, bl = numBoxPerRing; bi < bl; bi ++ ) {
-				
-				nx = radius * Math.sin( rotA ) * Math.cos( rotB );
-				nz = radius * Math.sin( rotA ) * Math.sin( rotB );
-				
-				var box = make_shape( 'box', nx, ny, nz );
-				
-				addOnShow.push( box );
-				
-				rotB += deltaRotB;
-			
-			}
-			
-		}
-		
-		// movable boxes
-		
-		addOnShow.push( make_shape( 'box', 100, 2500, 100, true ) );
-		addOnShow.push( make_shape( 'sphere', -100, 2500, 100, true ) );
-		addOnShow.push( make_shape( 'sphere', 100, 2500, -100, true ) );
-		addOnShow.push( make_shape( 'box', -100, 2500, -100, true ) );
-		addOnShow.push( make_shape( 'sphere', 75, 2600, 75, true ) );
-		addOnShow.push( make_shape( 'box', -75, 2600, 75, true ) );
-		addOnShow.push( make_shape( 'box', 75, 2600, -75, true ) );
-		addOnShow.push( make_shape( 'sphere', -75, 2600, -75, true ) );
-		*/
     }
     
     /*===================================================
@@ -208,7 +108,7 @@
 			
 			// camera
 			
-			camera = game.camera;
+			camera = _Game.camera;
 			
 			camera.position.set(0, 0, 4000);
 			
@@ -216,29 +116,29 @@
 			
 			// scene
 			
-			scene = game.scene;
+			scene = _Game.scene;
 			
-			sceneBG = game.sceneBG;
+			sceneBG = _Game.sceneBG;
 			
 			// add world
 			
-			world.show();
+			world.show( scene );
 			
 			// add items
 			
-			game.add_to_scene( addOnShow, scene );
+			_Game.add_to_scene( addOnShow, scene );
 			
-			game.add_to_scene( addBGOnShow, sceneBG );
+			_Game.add_to_scene( addBGOnShow, sceneBG );
 			
 			// start player
 			
-			player.show();
+			_Player.show();
 			
-			player.enable();
+			_Player.enable();
 			
-			player.character.position.set( 1, 2700, 1 );
+			_Player.character.position.set( 1, 2700, 1 );
 			
-			//player.cameraMode = 'freelook';
+			//_Player.cameraMode = 'freelook';
 			
 			// signals
 			
@@ -271,9 +171,9 @@
 			
 			// stop player
 			
-			player.disable();
+			_Player.disable();
 			
-			player.hide();
+			_Player.hide();
 			
 			// hide world
 			
@@ -281,9 +181,9 @@
 			
 			// remove added items
 			
-			game.remove_from_scene( addOnShow, scene );
+			_Game.remove_from_scene( addOnShow, scene );
 			
-			game.remove_from_scene( addBGOnShow, sceneBG );
+			_Game.remove_from_scene( addBGOnShow, sceneBG );
 			
 		}
 		else {

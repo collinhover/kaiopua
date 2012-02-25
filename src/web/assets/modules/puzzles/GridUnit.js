@@ -12,6 +12,12 @@
 		assetPath = "assets/modules/puzzles/GridUnit.js",
 		_GridUnit = {};
 	
+	/*===================================================
+	
+	public
+	
+	=====================================================*/
+	
 	main.asset_register( assetPath, { data: _GridUnit } );
 	
 	/*===================================================
