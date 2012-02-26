@@ -786,14 +786,6 @@
 				
 				sceneTarget.add( object3D );
 				
-				// physics
-				
-				if ( typeof object3D.physics !== 'undefined' ) {
-					
-					_Physics.add( object3D.physics );
-					
-				}
-				
 			}
 			
 			// if callback passed
@@ -841,14 +833,6 @@
 			if ( typeof object3D !== 'undefined' ) {
 				
 				sceneTarget.remove( object3D );
-				
-				// physics
-				
-				if ( typeof object3D.physics !== 'undefined' ) {
-					
-					_Physics.remove( object3D.physics );
-					
-				}
 				
 			}
 			

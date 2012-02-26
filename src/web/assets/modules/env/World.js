@@ -115,7 +115,7 @@
 		
 		// add self
 		
-		_Game.add_to_scene( this, this.scene );
+		this.scene.add( this );
 		
 		// TODO, remove following
 		
@@ -125,7 +125,7 @@
 	
 	function hide () {
 		
-		_Game.remove_from_scene( this, this.scene );
+		this.scene.remove( this );
 		
 		// TODO, remove following
 		

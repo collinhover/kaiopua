@@ -91,13 +91,13 @@
 		
 		this.parts.body.quaternion.setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), -Math.PI * 0.4 );
 		
-		this.addOnShow.push( { addTarget: this.parts.body, sceneTarget: this } );
+		this.add( this.parts.body );
 		
 		// ambient
 		
 		this.parts.ambientLight = new THREE.AmbientLight( 0x999999 );
 		
-		this.addOnShow.push( { addTarget: this.parts.ambientLight, sceneTarget: this } );
+		this.add( this.parts.ambientLight );
 		
 		// fog
 		
@@ -114,7 +114,7 @@
 			shading: THREE.SmoothShading
         });
 		
-		this.addOnShow.push( { addTarget: this.parts.head, sceneTarget: this.parts.body } );
+		this.parts.body.add( this.parts.head );
 		
 		this.parts.tail = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Whale_Tail.js"),
@@ -124,14 +124,14 @@
 			materials: new THREE.MeshLambertMaterial( { color: 0xFFF7E0, ambient: 0xFFF7E0, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading
         });
-	
-		this.addOnShow.push( { addTarget: this.parts.tail, sceneTarget: this.parts.body } );
+		
+		this.parts.body.add( this.parts.tail );
 		
 		// water
 		
 		this.parts.waterRing = new _Water.Instance();
 		
-		this.addOnShow.push( { addTarget: this.parts.waterRing, sceneTarget: this } );
+		this.add( this.parts.waterRing );
 		
 		// sky
 		
@@ -147,19 +147,19 @@
 		
 		_Physics.rotate_relative_to_source( this.parts.sunmoon, this.parts.body, shared.cardinalAxes.forward.clone().negate(), shared.cardinalAxes.up );
 		
-		this.addOnShow.push( { addTarget: this.parts.sunmoon, sceneTarget: this } );
+		this.add( this.parts.sunmoon );
 		
 		// sun light
 		
 		this.parts.sunmoonLight = new THREE.PointLight( 0xffffff, 1, 10000 );
 		
-		this.addOnShow.push( { addTarget: this.parts.sunmoonLight, sceneTarget: this.parts.sunmoon } );
+		this.parts.sunmoon.add( this.parts.sunmoonLight );
 		
 		// home
 		
 		this.parts.home = new _Model.Instance();
 		
-		this.addOnShow.push( { addTarget: this.parts.home, sceneTarget: this.parts.body } );
+		this.parts.body.add( this.parts.home );
 		
 		// hill for home
 		
@@ -172,7 +172,7 @@
 			shading: THREE.SmoothShading,
         });
 		
-		this.addOnShow.push( { addTarget: this.parts.hill, sceneTarget: this.parts.home } );
+		this.parts.home.add( this.parts.hill );
 		
 		// steps
 		
@@ -185,7 +185,7 @@
 			shading: THREE.SmoothShading,
         });
 		
-		this.addOnShow.push( { addTarget: this.parts.steps, sceneTarget: this.parts.home } );	
+		this.parts.home.add( this.parts.steps );	
 		
 		// hut
 		
@@ -198,7 +198,7 @@
 			shading: THREE.SmoothShading
         });
 		
-		this.addOnShow.push( { addTarget: this.parts.hut, sceneTarget: this.parts.home } );
+		this.parts.home.add( this.parts.hut );
 		
 		// banana leaf door
 		
@@ -209,7 +209,7 @@
 			doubleSided: true
         });
 		
-		this.addOnShow.push( { addTarget: this.parts.bananaLeafDoor, sceneTarget: this.parts.home } );	
+		this.parts.home.add( this.parts.bananaLeafDoor );
 		
 		// surfboard
 		
@@ -222,13 +222,13 @@
 			}
         });
 		
-		this.addOnShow.push( { addTarget: this.parts.surfboard, sceneTarget: this.parts.home } );	
+		this.parts.home.add( this.parts.surfboard );	
 		
 		// volcano
 		
 		this.parts.volcano = new _Model.Instance();
 		
-		this.addOnShow.push( { addTarget: this.parts.volcano, sceneTarget: this.parts.body } );
+		this.parts.body.add( this.parts.volcano );
 		
 		// volcano large
 		
@@ -241,7 +241,7 @@
 			}
         });
 		
-		this.addOnShow.push( { addTarget: this.parts.volcanoLarge, sceneTarget: this.parts.volcano } );
+		this.parts.volcano.add( this.parts.volcanoLarge );
 		
 		// volcano small
 		
@@ -254,7 +254,7 @@
 			}
         });
 		
-		this.addOnShow.push( { addTarget: this.parts.volcanoSmall, sceneTarget: this.parts.volcano } );
+		this.parts.volcano.add( this.parts.volcanoSmall );
 		
 		// volcano rocks
 		
@@ -267,7 +267,7 @@
 			}
         });
 		
-		this.addOnShow.push( { addTarget: this.parts.volcanoRocks001, sceneTarget: this.parts.volcano } );
+		this.parts.volcano.add( this.parts.volcanoRocks001 );
 		
 		this.parts.volcanoRocks002 = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Volcano_Rocks_002.js"),
@@ -278,7 +278,7 @@
 			}
         });
 		
-		this.addOnShow.push( { addTarget: this.parts.volcanoRocks002, sceneTarget: this.parts.volcano } );
+		this.parts.volcano.add( this.parts.volcanoRocks002 );
 		
 		this.parts.volcanoRocks003 = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Volcano_Rocks_003.js"),
@@ -289,7 +289,7 @@
 			}
         });
 		
-		this.addOnShow.push( { addTarget: this.parts.volcanoRocks003, sceneTarget: this.parts.volcano } );
+		this.parts.volcano.add( this.parts.volcanoRocks003 );
 		
 		this.parts.volcanoRocks004 = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Volcano_Rocks_004.js"),
@@ -300,7 +300,7 @@
 			}
         });
 		
-		this.addOnShow.push( { addTarget: this.parts.volcanoRocks004, sceneTarget: this.parts.volcano } );
+		this.parts.volcano.add( this.parts.volcanoRocks004 );
 		
 		this.parts.volcanoRocks005 = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Volcano_Rocks_005.js"),
@@ -311,7 +311,7 @@
 			}
         });
 		
-		this.addOnShow.push( { addTarget: this.parts.volcanoRocks005, sceneTarget: this.parts.volcano } );
+		this.parts.volcano.add( this.parts.volcanoRocks005 );
 		
 		/*
 		// volcano light, add directly to volcano
@@ -326,7 +326,7 @@
 		
 		this.parts.trees = new _Model.Instance();
 		
-		this.addOnShow.push( { addTarget: this.parts.trees, sceneTarget: this.parts.body } );
+		this.parts.body.add( this.parts.trees );
 		
 		// kukui trees
 		
@@ -336,7 +336,7 @@
 			shading: THREE.SmoothShading
         });
 		
-		this.addOnShow.push( { addTarget: this.parts.kukuiTrees, sceneTarget: this.parts.trees } );
+		this.parts.trees.add( this.parts.kukuiTrees );
 		
 		// palm trees
 		
@@ -346,7 +346,7 @@
 			shading: THREE.SmoothShading
         });
 		
-		this.addOnShow.push( { addTarget: this.parts.palmTrees, sceneTarget: this.parts.trees } );
+		this.parts.trees.add( this.parts.palmTrees );
 		
 		// puzzles
 		
@@ -354,7 +354,7 @@
 			geometry: main.get_asset_data("assets/models/Field_Tutorial.js")
 		});
 		
-		this.addOnShow.push( { addTarget: this.parts.puzzleTutorial, sceneTarget: this.parts.body } );
+		this.parts.body.add( this.parts.puzzleTutorial );
     	
     }
 	
@@ -370,9 +370,9 @@
 		
 		_World.Instance.prototype.show.call( this, scene );
 		
-		// add skybox
+		// skybox
 		
-		_Game.add_to_scene( this.parts.skybox, _Game.sceneBG );
+		_Game.sceneBG.add( this.parts.skybox );
 		
 		// morph animations
 		
@@ -394,7 +394,7 @@
 		
 		// skybox
 		
-		_Game.remove_from_scene( this.parts.skybox, _Game.sceneBG );
+		_Game.sceneBG.remove( this.parts.skybox );
 		
 		// morphs
 		

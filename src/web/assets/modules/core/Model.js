@@ -40,6 +40,46 @@
 		_Model.Instance.prototype.compute_dimensions_from_bounding_box = compute_dimensions_from_bounding_box;
 		_Model.Instance.prototype.compute_center_offset = compute_center_offset;
 		
+		// catch parent changes and add / remove physics automatically
+		
+		Object.defineProperty( _Model.Instance.prototype, 'parent', { 
+			get : function () { return this._parent; },
+			set : function ( newParent ) {
+				
+				var scene;
+				
+				// store new parent
+				
+				this._parent = newParent;
+				
+				// search for scene
+				
+				scene = this;
+				
+				while ( typeof scene.parent !== 'undefined' ) {
+					
+					scene = scene.parent;
+					
+				}
+				
+				// if parent is child of scene, add physics
+				
+				if ( scene instanceof THREE.Scene )  {
+					
+					_Physics.add( this );
+					
+				}
+				// else default to remove
+				else {
+					
+					_Physics.remove( this );
+					
+				}
+				
+			}
+			
+		});
+		
 	}
 	
 	/*===================================================
@@ -250,11 +290,7 @@
 		
 		this.compute_center_offset();
 		
-		//
-		//
-		//
-		//
-		// TESTING
+		// adjust for offset if needed
 		
 		if ( parameters.adjustForOffset === true ) {
 			
@@ -321,6 +357,10 @@
 			this.physics = _Physics.translate( this, parameters.physics );
 			
 		}
+		
+		// id
+		
+		this.id = parameters.id || this.id;
 		
 	}
 	
