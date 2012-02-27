@@ -12,8 +12,7 @@
 		assetPath = "assets/modules/characters/Hero.js",
 		_Hero = {},
 		_Character,
-		_Game,
-		actionsMap;
+		_Game;
 	
 	/*===================================================
     
@@ -45,11 +44,6 @@
 		_Hero.Instance = Hero;
 		_Hero.Instance.prototype = new _Character.Instance();
 		_Hero.Instance.constructor = _Hero.Instance;
-		_Hero.Instance.prototype.action = action;
-		
-		// init actions map
-		
-		init_actions_map();
 		
 	}
 	
@@ -60,6 +54,9 @@
     =====================================================*/
 	
 	function Hero ( parameters ) {
+		
+		var me = this,
+			actionsMap;
 		
 		// handle parameters
 		
@@ -87,19 +84,13 @@
 		
 		// prototype constructor
 		
-		_Character.Instance.call( this, parameters );
+		_Character.Instance.call( me, parameters );
 		
-	}
-	
-	/*===================================================
-    
-    actions
-    
-    =====================================================*/
-    
-    function init_actions_map () {
-    	
-    	// map generic numbers to actions
+		// public
+		
+		me.action = action;
+		
+		// map generic numbers to actions
     	
     	actionsMap = {
     		
@@ -107,44 +98,52 @@
     	
     	};
     	
-    }
-    
-    function action ( actionTypeName, parameters ) {
+    	// functions
     	
-    	// if action type is in actions map, do it
-    	
-    	if ( actionsMap.hasOwnProperty( actionTypeName ) ) {
-    		
-    		this.acting = true;
-    		
-    		actionsMap[ actionTypeName ].call( this, parameters );
-    		
-    	}
-    	else {
-    		
-    		this.acting = false;
-    		
-    	}
-    	
-    }
-    
-    /*===================================================
-    
-    planting
-    
-    =====================================================*/
-    
-    function plant () {
-    	
-    	var objectTarget;
-    	
-    	// find object under mouse
-    	
-    	objectTarget = _Game.get_object_under_mouse( this.scene );
-    	
-    	console.log( 'object under mouse?', objectTarget );
-    	
-    }
+    	/*===================================================
+		
+		actions
+		
+		=====================================================*/
+		
+		function action ( actionTypeName, parameters ) {
+			
+			// if action type is in actions map, do it
+			
+			if ( actionsMap.hasOwnProperty( actionTypeName ) ) {
+				
+				me.acting = true;
+				
+				actionsMap[ actionTypeName ].call( me, parameters );
+				
+			}
+			else {
+				
+				me.acting = false;
+				
+			}
+			
+		}
+		
+		/*===================================================
+		
+		planting
+		
+		=====================================================*/
+		
+		function plant () {
+			
+			var objectTarget;
+			
+			// find object under mouse
+			
+			objectTarget = _Game.get_object_under_mouse( me.scene );
+			
+			console.log( 'object under mouse?', objectTarget );
+			
+		}
+		
+	}
     
 	/*
 	// OLD SCALE ACTION

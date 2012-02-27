@@ -81,37 +81,39 @@
     
     function World ( parameters ) {
     	
+    	var me = this;
+    	
     	// handle parameters
 		
 		parameters = parameters || {};
     	
     	// prototype constructor
 		
-		_Model.Instance.call( this, parameters );
+		_Model.Instance.call( me, parameters );
 		
 		// properties
     	
-    	this.gravityMagnitude = parameters.gravityMagnitude || gravityMagnitude;
+    	me.gravityMagnitude = parameters.gravityMagnitude || gravityMagnitude;
     	
-    	this.parts = {};
+    	me.parts = {};
     	
-    	this.addOnShow = [];
+    	me.addOnShow = [];
     	
     }
+    
+    /*===================================================
 	
-	/*===================================================
-    
-    interactive functions
-    
-    =====================================================*/
+	show / hide / update
+	
+	=====================================================*/
 	
 	function show ( scene ) {
 		
 		this._scene = scene || _Game.scene;
 		
-        // fog
-        
-        this.scene.fog = this.fog;
+		// fog
+		
+		this.scene.fog = this.fog;
 		
 		// add self
 		

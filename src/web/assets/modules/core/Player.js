@@ -22,8 +22,9 @@
 		enabled = false,
 		showing = false,
 		cameraControls,
-		keybindings = {},
-		keybindingsDefault = {},
+		actionsMap,
+		keybindings,
+		keybindingsDefault,
 		character,
 		characterLight,
 		characterLightFollowSettings,
@@ -128,11 +129,13 @@
 			
 			init_cameracontrols();
 			
+			init_actions();
+			
+			init_character();
+			
 			init_keybindings();
 			
 			init_controls();
-			
-			init_character();
 			
 			// signals
 			
@@ -158,94 +161,190 @@
 	
 	/*===================================================
     
+    actions
+    
+    =====================================================*/
+    
+    function init_actions () {
+    	
+    	// map action strings to actions
+    	
+    	actionsMap = {
+    		
+    		'001': {
+    			
+    			before: function ( parameters ) {
+    				
+    				cameraControls.rotate( parameters.event, parameters.stop );
+    				
+    			}
+    			
+    		},
+    	
+    	};
+    	
+    }
+    
+    function action ( actionString, parameters ) {
+    	
+    	var actionInfo;
+    	
+    	// handle parameters
+    	
+    	parameters = parameters || {};
+    	
+    	// if action string is in actions map
+    	
+    	if ( actionsMap.hasOwnProperty( actionString ) ) {
+    		
+    		actionInfo = actionsMap[ actionString ];
+    		
+    	}
+    	
+    	// if action info has before character action
+    	
+    	if ( typeof actionInfo !== 'undefined' && typeof actionInfo.before === 'function' ) {
+    		
+    		actionInfo.before.call( this, parameters );
+    		
+    	}
+    	
+    	// do character action
+    	
+    	character_action( actionString, parameters );
+    	
+    	// if action info has after character action
+    	
+    	if ( typeof actionInfo !== 'undefined' && typeof actionInfo.after === 'function' ) {
+    		
+    		actionInfo.after.call( this, parameters );
+    		
+    	}
+    	
+    }
+    
+    /*===================================================
+    
+    character
+    
+    =====================================================*/
+	
+	function init_character () {
+		
+		// create character
+		
+		character = new _Hero.Instance();
+		
+		// init light to follow character
+		
+		characterLight = new THREE.PointLight( 0xfeb41c, 1, 400 );
+		
+		characterLight.position.set( -30, -20, 5 );
+		
+		character.add( characterLight );
+		
+	}
+	
+	function character_move ( movementTypeName, stop ) {
+		
+		character.move_state_change( movementTypeName, stop );
+		
+	}
+	
+	function character_action ( actionTypeName, parameters ) {
+		
+		// character action
+		
+		character.action( actionTypeName, parameters );
+		
+	}
+	
+	/*===================================================
+    
     keybindings
     
     =====================================================*/
 	
 	function init_keybindings () {
 		
-		var kbMap;
-		
-		// init keybindings
-		
-		kbMap = keybindingsDefault;
+		var map = keybindingsDefault = {};
 		
 		// default keybindings
 		
 		// mouse buttons
 		
-		kbMap[ 'mouseleft' ] = {
-			keydown: function ( e ) { character_action( '001', { event: e } ); },
-			keyup: function ( e ) { character_action( '001', { event: e, stop: true } ); }
+		map[ 'mouseleft' ] = {
+			keydown: function ( e ) { action( '001', { event: e } ); },
+			keyup: function ( e ) { action( '001', { event: e, stop: true } ); }
 		};
-		kbMap[ 'mousemiddle' ] = {
+		map[ 'mousemiddle' ] = {
 			keydown: function ( e ) { console.log('key down: mousemiddle'); },
 			keyup: function ( e ) { console.log('key up: mousemiddle'); }
 		};
-		kbMap[ 'mouseright' ] = {
+		map[ 'mouseright' ] = {
 			keydown: function ( e ) { cameraControls.rotate( e ); },
 			keyup: function ( e ) { cameraControls.rotate( e, true ); }
 		};
-		kbMap[ 'mousewheel' ] = {
+		map[ 'mousewheel' ] = {
 			keyup: function ( e ) { cameraControls.zoom( e ); }
 		};
 		
 		// wasd / uldr
 		
-		kbMap[ '38' /*up*/ ] = kbMap[ '87' /*w*/ ] = kbMap[ 'w' ] = {
+		map[ '38' /*up*/ ] = map[ '87' /*w*/ ] = map[ 'w' ] = {
 			keydown: function () { character_move( 'forward' ); },
 			keyup: function () { character_move( 'forward', true ); }
 		};
 		
-		kbMap[ '40' /*down*/ ] = kbMap[ '83' /*s*/ ] = kbMap[ 's' ] = {
+		map[ '40' /*down*/ ] = map[ '83' /*s*/ ] = map[ 's' ] = {
 			keydown: function () { character_move( 'back' ); },
 			keyup: function () { character_move( 'back', true ); }
 		};
 		
-		kbMap[ '37' /*left*/ ] = kbMap[ '65' /*a*/ ] = kbMap[ 'a' ] = {
+		map[ '37' /*left*/ ] = map[ '65' /*a*/ ] = map[ 'a' ] = {
 			keydown: function () { character_move( 'turnleft' ); },
 			keyup: function () { character_move( 'turnleft', true ); }
 		};
 		
-		kbMap[ '39' /*right*/ ] = kbMap[ '68' /*d*/ ] = kbMap[ 'd' ] = {
+		map[ '39' /*right*/ ] = map[ '68' /*d*/ ] = map[ 'd' ] = {
 			keydown: function () { character_move( 'turnright' ); },
 			keyup: function () { character_move( 'turnright', true ); }
 		};
 		
 		// qe
 		
-		kbMap[ '81' /*q*/ ] = kbMap[ 'q' ] = {
+		map[ '81' /*q*/ ] = map[ 'q' ] = {
 			keyup: function () { console.log('key up: q'); }
 		};
 		
-		kbMap[ '69' /*e*/ ] = kbMap[ 'e' ] = {
+		map[ '69' /*e*/ ] = map[ 'e' ] = {
 			keyup: function () { console.log('key up: e'); }
 		};
 		
 		// numbers
 		
-		kbMap[ '49' /*1*/ ] = kbMap[ '1' ] = {
+		map[ '49' /*1*/ ] = map[ '1' ] = {
 			keyup: function () { console.log('key up: 1'); }
 		};
-		kbMap[ '50' /*2*/ ] = kbMap[ '2' ] = {
+		map[ '50' /*2*/ ] = map[ '2' ] = {
 			keyup: function () { console.log('key up: 2'); }
 		};
-		kbMap[ '51' /*3*/ ] = kbMap[ '3' ] = {
+		map[ '51' /*3*/ ] = map[ '3' ] = {
 			keyup: function () { console.log('key up: 3'); }
 		};
-		kbMap[ '52' /*4*/ ] = kbMap[ '4' ] = {
+		map[ '52' /*4*/ ] = map[ '4' ] = {
 			keyup: function () { console.log('key up: 4'); }
 		};
-		kbMap[ '53' /*5*/ ] = kbMap[ '5' ] = {
+		map[ '53' /*5*/ ] = map[ '5' ] = {
 			keyup: function () { console.log('key up: 5'); }
 		};
-		kbMap[ '54' /*6*/ ] = kbMap[ '6' ] = {
+		map[ '54' /*6*/ ] = map[ '6' ] = {
 			keyup: function () { console.log('key up: 6'); }
 		};
 		
 		// misc
 		
-		kbMap[ '27' /*escape*/ ] = {
+		map[ '27' /*escape*/ ] = {
 			keyup: function () { 
 				
 				if ( _Game.paused === true ) {
@@ -258,32 +357,36 @@
 			}
 		};
 		
-		kbMap[ '32' /*space*/ ] = {
+		map[ '32' /*space*/ ] = {
 			keydown: function () { character_move( 'up' ); },
 			keyup: function () { character_move( 'up', true ); }
 		};
 		
-		kbMap[ '82' /*r*/ ] = kbMap[ 'r' ] = {
+		map[ '82' /*r*/ ] = map[ 'r' ] = {
 			keyup: function () { console.log('key up: r'); }
 		};
 		
-		kbMap[ '70' /*f*/ ] = kbMap[ 'f' ] = {
+		map[ '70' /*f*/ ] = map[ 'f' ] = {
 			keyup: function () { console.log('key up: f'); }
 		};
 		
-		// set list of constants
+		// set list of keys that are always available
 		
-		kbMap.alwaysAvailable = ['27'];
+		map.alwaysAvailable = ['27'];
 		
 		// set default as current
 		
-		set_keybindings( kbMap );
+		set_keybindings( map );
 		
 	}
 	
 	function set_keybindings ( map ) {
 		
 		var key;
+		
+		// reset keybindings
+		
+		keybindings = {};
 		
 		// set all new keybindings in map
 		
@@ -428,64 +531,6 @@
 				
 			}
 			
-		}
-		
-	}
-	
-	/*===================================================
-    
-    character
-    
-    =====================================================*/
-	
-	function init_character () {
-		
-		// create character
-		
-		character = new _Hero.Instance();
-		
-		// init light to follow character
-		
-		characterLight = new THREE.PointLight( 0xfeb41c, 1, 400 );
-		
-		characterLight.position.set( -30, -20, 5 );
-		
-		character.add( characterLight );
-		
-	}
-	
-	function character_move ( movementTypeName, stop ) {
-		
-		character.move_state_change( movementTypeName, stop );
-		
-	}
-	
-	function character_action ( actionTypeName, parameters ) {
-		
-		// handle action
-		
-		character.action( actionTypeName, parameters );
-		
-		// if character did not act
-		
-		if ( character.acting !== true ) {
-			
-			// handle parameters
-			
-			parameters = parameters || {};
-			
-			// if action type exists for self, act upon
-			
-			switch ( actionTypeName ) {
-				
-				case '001':
-					
-					cameraControls.rotate( parameters.event, parameters.stop );
-					
-					break;
-				
-			}
-		
 		}
 		
 	}

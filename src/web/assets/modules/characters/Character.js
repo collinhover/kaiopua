@@ -47,7 +47,7 @@
 		_Model = m;
 		_MathHelper = mh;
 		
-		// utils
+		// utility
 		
 		utilQ1Rotate = new THREE.Quaternion();
 		
@@ -57,12 +57,13 @@
 		_Character.Instance.prototype = new _Model.Instance();
 		_Character.Instance.prototype.constructor = _Character.Instance;
 		_Character.Instance.prototype.move_state_change = move_state_change;
+		_Character.Instance.prototype.rotate_by_delta = rotate_by_delta;
+		_Character.Instance.prototype.morph_cycle = morph_cycle;
 		_Character.Instance.prototype.action = action;
 		_Character.Instance.prototype.show = show;
 		_Character.Instance.prototype.hide = hide;
 		_Character.Instance.prototype.update = update;
 		_Character.Instance.prototype.update_followers = update_followers;
-		_Character.Instance.prototype.rotate_by_delta = rotate_by_delta;
 		
 		Object.defineProperty( _Character.Instance.prototype, 'scene', { 
 			get : function () { return this._scene; },
@@ -95,8 +96,10 @@
 	
 	function Character ( parameters ) {
 		
-		var parametersModel,
+		var me = this,
+			parametersModel,
 			parametersMovement,
+			movement,
 			move,
 			rotate,
 			jump,
@@ -121,17 +124,17 @@
 		
 		// prototype constructor
 		
-		_Model.Instance.call( this, parametersModel );
+		_Model.Instance.call( me, parametersModel );
 		
 		// movement
 		
 		parametersMovement = parameters.movement || {};
 		
-		this.movement = {};
+		movement = me.movement = {};
 		
 		// move
 		
-		move = this.movement.move = {};
+		move = movement.move = {};
 		move.speed = parametersMovement.moveSpeed || 6;
 		move.speedBack = parametersMovement.moveSpeedBack || move.speed;
 		move.runThreshold = parametersMovement.moveRunThreshold || 0;
@@ -145,14 +148,14 @@
 		move.vector = new THREE.Vector3();
 		
 		// rotate
-		rotate = this.movement.rotate = {};
+		rotate = me.movement.rotate = {};
 		rotate.speed = parametersMovement.rotateSpeed || 0.015;
 		rotate.direction = new THREE.Vector3();
 		rotate.delta = new THREE.Quaternion();
 		rotate.vector = new THREE.Quaternion();
 		
 		// jump
-		jump = this.movement.jump = {};
+		jump = me.movement.jump = {};
 		jump.speedStart = parametersMovement.jumpSpeedStart || 6;
 		jump.speedEnd = parametersMovement.jumpSpeedEnd || 0;
 		jump.timeTotal = 0;
@@ -166,7 +169,7 @@
 		jump.active = false;
 		
 		// state
-		state = this.movement.state = {};
+		state = me.movement.state = {};
 		state.up = 0;
 		state.down = 0;
 		state.left = 0;
@@ -183,15 +186,15 @@
 		
 		// properties
 		
-		this.id = parameters.id || characterIDBase;
+		me.id = parameters.id || characterIDBase;
 		
-		this.acting = false;
+		me.acting = false;
 		
-		this.showing = false;
+		me.showing = false;
 		
-		this.followers = [];
+		me.followers = [];
 		
-		this.targeting = {
+		me.targeting = {
 			
 			targets: [],
 			targetsToRemove: [],
@@ -202,10 +205,10 @@
 	}
 	
 	/*===================================================
-    
-    action
-    
-    =====================================================*/
+	
+	action
+	
+	=====================================================*/
 	
 	function action () {
 		
@@ -214,15 +217,14 @@
 	}
 	
 	/*===================================================
-    
-    move
-    
-    =====================================================*/
-    
-    function move_state_change ( propertyName, stop ) {
-			
-		var movement = this.movement,
-			state = movement.state;
+	
+	move
+	
+	=====================================================*/
+	
+	function move_state_change ( propertyName, stop ) {
+		
+		var state = this.movement.state;
 		
 		if ( typeof stop === 'undefined' ) {
 			stop = false;
@@ -239,41 +241,70 @@
 	}
 	
 	/*===================================================
-    
-    morph cycling
-    
-    =====================================================*/
 	
-	function morphCycle ( timeDelta, morphs, moveInfo, stateInfo, cycleType, duration, loop, reverse ) {
+	rotate
+	
+	=====================================================*/
+	
+	function rotate_by_delta ( dx, dy, dz, dw ) {
+		
+		var q = this.quaternion,
+			rotate = this.movement.rotate,
+			rotateDelta = rotate.delta,
+			rotateVec = rotate.vector,
+			rotateUtilQ1 = utilQ1Rotate;
+		
+		rotateDelta.set( dx || 0, dy || 0, dz || 0, dw || 1 ).normalize();
+		
+		rotateVec.multiplySelf( rotateDelta );
+		
+		rotateUtilQ1.multiply( q, rotateDelta );
+		
+		q.copy( rotateUtilQ1 );
+		
+	}
+	
+	/*===================================================
+	
+	morph cycling
+	
+	=====================================================*/
+	
+	function morph_cycle ( timeDelta, cycleType, duration, loop, reverse ) {
+		
+		var morphs = this.morphs,
+			movement = this.movement,
+			move = movement.move,
+			state = movement.state;
+		
+		if ( state.moveType !== cycleType ) {
 			
-		if ( stateInfo.moveType !== cycleType ) {
-			
-			if ( moveInfo.animationChangeTimeTotal < moveInfo.animationChangeTimeThreshold ) {
+			if ( move.animationChangeTimeTotal < move.animationChangeTimeThreshold ) {
 				
-				moveInfo.animationChangeTimeTotal += timeDelta;
+				move.animationChangeTimeTotal += timeDelta;
 				
 			}
 			else {
 				
-				moveInfo.animationChangeTimeTotal = 0;
+				move.animationChangeTimeTotal = 0;
 				
-				morphs.clear( stateInfo.moveType, moveInfo.morphClearTime );
+				morphs.clear( state.moveType, move.morphClearTime );
 				
-				stateInfo.moveType = cycleType;
+				state.moveType = cycleType;
 				
 			}
 			
 		}
 		
-		morphs.play( stateInfo.moveType, { duration: duration, loop: loop, reverse: reverse } );
+		morphs.play( state.moveType, { duration: duration, loop: loop, reverse: reverse } );
 		
 	}
 	
 	/*===================================================
-    
-    followers
-    
-    =====================================================*/
+	
+	followers
+	
+	=====================================================*/
 	
 	function update_followers () {
 		
@@ -301,42 +332,10 @@
 	}
 	
 	/*===================================================
-    
-    show / hide
-    
-    =====================================================*/
-    
-    function show ( scene ) {
-		
-		if ( this.showing === false ) {
-			
-			this._scene = scene || _Game.scene;
-			
-			this.scene.add( this );
-			
-			this.showing = true;
-			
-		}
-		
-	}
 	
-	function hide () {
-		
-		if ( this.showing === true ) {
-			
-			this.scene.remove( this );
-			
-			this.showing = false;
-			
-		}
-		
-	}
+	update
 	
-	/*===================================================
-    
-    update
-    
-    =====================================================*/
+	=====================================================*/
 	
 	function update ( timeDelta, timeDeltaMod ) {
 		
@@ -344,17 +343,17 @@
 			rigidBody = physics.rigidBody,
 			morphs = this.morphs,
 			movement = this.movement,
-			state = movement.state,
+			move = movement.move,
 			rotate = movement.rotate,
+			jump = movement.jump,
+			state = movement.state,
 			rotateDir = rotate.direction,
 			rotateDelta = rotate.delta,
 			rotateSpeed = rotate.speed * timeDeltaMod,
-			move = movement.move,
 			moveDir = move.direction,
 			moveVec = move.vector,
 			moveSpeed = move.speed * timeDeltaMod,
 			moveSpeedBack = move.speedBack * timeDeltaMod,
-			jump,
 			jumpSpeedStart,
 			jumpSpeedEnd,
 			jumpTimeTotal,
@@ -403,7 +402,6 @@
 			
 			// properties
 			
-			jump = movement.jump;
 			jumpTimeTotal = jump.timeTotal;
 			jumpTimeMax = jump.timeMax;
 			jumpTimeAfterNotGroundedMax = jump.timeAfterNotGroundedMax;
@@ -440,7 +438,7 @@
 				
 				// play jump
 				
-				morphCycle ( timeDelta, morphs, move, state, 'jump', jumpAnimationTime, false );
+				this.morph_cycle ( timeDelta, 'jump', jumpAnimationTime, false );
 				
 				// count delay
 				
@@ -541,12 +539,12 @@
 					
 					if ( velocityMovementForceLength > move.runThreshold ) {
 						
-						morphCycle ( timeDelta, morphs, move, state, 'run', move.runAnimationTime * playSpeedModifier, true, state.movingBack );
+						this.morph_cycle ( timeDelta, 'run', move.runAnimationTime * playSpeedModifier, true, state.movingBack );
 						
 					}
 					else {
 						
-						morphCycle ( timeDelta, morphs, move, state, 'walk', move.walkAnimationTime * playSpeedModifier, true, state.movingBack );
+						this.morph_cycle ( timeDelta, 'walk', move.walkAnimationTime * playSpeedModifier, true, state.movingBack );
 						
 					}
 					
@@ -554,7 +552,7 @@
 				// idle cycle
 				else {
 					
-					morphCycle ( timeDelta, morphs, move, state, 'idle', move.idleAnimationTime, true, false );
+					this.morph_cycle ( timeDelta, 'idle', move.idleAnimationTime, true, false );
 					
 				}
 				
@@ -568,22 +566,35 @@
 		
 	}
 	
-	function rotate_by_delta ( dx, dy, dz, dw ) {
+	/*===================================================
+	
+	show / hide
+	
+	=====================================================*/
+	
+	function show ( scene ) {
 		
-		var q = this.quaternion,
-			movement = this.movement,
-			rotate = movement.rotate,
-			rotateDelta = rotate.delta,
-			rotateVec = rotate.vector,
-			rotateUtilQ1 = utilQ1Rotate;
+		if ( this.showing === false ) {
+			
+			this._scene = scene || _Game.scene;
+			
+			this.scene.add( this );
+			
+			this.showing = true;
+			
+		}
 		
-		rotateDelta.set( dx || 0, dy || 0, dz || 0, dw || 1 ).normalize();
+	}
+	
+	function hide () {
 		
-		rotateVec.multiplySelf( rotateDelta );
-		
-		rotateUtilQ1.multiply( q, rotateDelta );
-		
-		q.copy( rotateUtilQ1 );
+		if ( this.showing === true ) {
+			
+			this.scene.remove( this );
+			
+			this.showing = false;
+			
+		}
 		
 	}
 	
