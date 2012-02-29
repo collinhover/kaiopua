@@ -95,7 +95,7 @@
 			"assets/modules/env/Water.js",
 			"assets/modules/puzzles/Puzzles.js",
 			"assets/modules/puzzles/Grid.js",
-			"assets/modules/puzzles/GridUnit.js",
+			"assets/modules/puzzles/GridModule.js",
 			"assets/modules/sections/Intro.js",
             { path: "assets/models/Whale_Head.js", type: 'model' },
 			{ path: "assets/models/Whale_Tail.js", type: 'model' },
@@ -168,6 +168,7 @@
 	_Game.remove_from_scene = remove_from_scene;
 	
 	_Game.get_mouse = get_mouse;
+	_Game.get_intersection_from_mouse = get_intersection_from_mouse;
 	_Game.get_object_under_mouse = get_object_under_mouse;
 	
 	// getters and setters
@@ -923,7 +924,7 @@
 		return mouse;
 	}
 	
-	function get_object_under_mouse ( sceneTarget, mouse, cameraTarget ) {
+	function get_intersection_from_mouse ( sceneTarget, mouse, cameraTarget ) {
 		
 		var projector = utilProjector1Selection,
 			ray = utilRay1Selection,
@@ -960,7 +961,22 @@
 		
 		if ( intersections.length > 0 ) {
 			
-			intersectedMesh = intersections[ 0 ].object;
+			return intersections[ 0 ];
+			
+		}
+		
+	}
+	
+	function get_object_under_mouse ( sceneTarget, mouse, cameraTarget ) {
+		
+		var intersection = get_intersection_from_mouse( sceneTarget, mouse, cameraTarget ),
+			intersectedMesh;
+		
+		// extract mesh and, if present, model
+		
+		if ( typeof intersection !== 'undefined' ) {
+			
+			intersectedMesh = intersection.object;
 			
 			return intersectedMesh.kaiopuaModel || intersectedMesh;
 			

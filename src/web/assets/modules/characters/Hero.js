@@ -12,7 +12,8 @@
 		assetPath = "assets/modules/characters/Hero.js",
 		_Hero = {},
 		_Character,
-		_Game;
+		_Game,
+		_Puzzles;
 	
 	/*===================================================
     
@@ -24,7 +25,8 @@
 		data: _Hero,
 		requirements: [
 			"assets/modules/characters/Character.js",
-			"assets/modules/core/Game.js"
+			"assets/modules/core/Game.js",
+			"assets/modules/puzzles/Puzzles.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -36,10 +38,12 @@
     
     =====================================================*/
 	
-	function init_internal( c, g ) {
+	function init_internal( c, g, p ) {
 		console.log('internal hero', _Hero);
+		
 		_Character = c;
 		_Game = g;
+		_Puzzles = p;
 		
 		_Hero.Instance = Hero;
 		_Hero.Instance.prototype = new _Character.Instance();
@@ -133,13 +137,47 @@
 		
 		function plant () {
 			
-			var objectTarget;
+			var intersection,
+				targetModel,
+				targetFace,
+				grid,
+				module;
 			
-			// find object under mouse
+			// find intersection from mouse
 			
-			objectTarget = _Game.get_object_under_mouse( me.scene );
+			intersection = _Game.get_intersection_from_mouse( me.scene );
 			
-			console.log( 'object under mouse?', objectTarget );
+			console.log( 'intersection from mouse?', intersection );
+			
+			// if is puzzle
+			
+			if ( typeof intersection !== 'undefined' ) {
+			
+				// store info
+				
+				targetModel = intersection.object;
+				
+				targetFace = intersection.face;
+				
+				// if is puzzle
+				
+				if ( targetModel instanceof _Puzzles.Instance ) {
+					
+					console.log(' > intersected model is puzzle!');
+					
+					// get puzzle grid
+					
+					grid = targetModel.grid;
+					
+					// find module based on face
+					
+					module = grid.get_modules( targetFace )[ 0 ];
+					
+					console.log(' >> intersected grid module is', module, ', with ', module.connected.length, ' connected modules: ', module.connected );
+					
+				}
+				
+			}
 			
 		}
 		
