@@ -130,7 +130,7 @@
 		pRot.base.setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), Math.PI );
 		pRot.offsetBase.set( 25, 0, 0 );
 		pRot.offset.copy( pRot.offsetBase );
-		pRot.offsetMin.set( -15, -360, 0 );
+		pRot.offsetMin.set( -75, -360, 0 );
 		pRot.offsetMax.set( 75, 360, 0 );
 		pRot.deltaMin.set( -40, -40, -40 );
 		pRot.deltaMax.set( 40, 40, 40 );

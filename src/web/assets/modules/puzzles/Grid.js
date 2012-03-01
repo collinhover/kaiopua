@@ -11,13 +11,10 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/puzzles/Grid.js",
 		_Grid = {},
+		_Model,
 		_GridModule,
 		_MathHelper,
-		idStateMaterialBase = 'base',
-		colorBase = 0xffffff,
-		ambientBase = 0xffffff,
-		transparentBase = false,
-		opacityBase = 1;
+		idStateMaterialBase = 'base';
 	
 	/*===================================================
 	
@@ -28,6 +25,7 @@
 	main.asset_register( assetPath, {
 		data: _Grid,
 		requirements: [
+			"assets/modules/core/Model.js",
 			"assets/modules/puzzles/GridModule.js",
 			"assets/modules/utils/MathHelper.js"
 		],
@@ -41,12 +39,33 @@
 	
 	=====================================================*/
 	
-	function init_internal ( gu, mh ) {
+	function init_internal ( m, gu, mh ) {
 		console.log("internal grid", _Grid);
+		
+		_Model = m;
 		_GridModule = gu;
 		_MathHelper = mh;
 		
 		_Grid.Instance = Grid;
+		_Grid.Instance.prototype = new _Model.Instance();
+		_Grid.Instance.prototype.constructor = _Grid.Instance;
+		_Grid.Instance.prototype.modify_modules = modify_modules;
+		_Grid.Instance.prototype.add_modules = add_modules;
+		_Grid.Instance.prototype.add_module = add_module;
+		_Grid.Instance.prototype.remove_modules = remove_modules;
+		_Grid.Instance.prototype.remove_module = remove_module;
+		_Grid.Instance.prototype.get_modules = get_modules;
+		
+		// get / set
+		
+		Object.defineProperty( _Grid.Instance.prototype, 'puzzle', { 
+			get : function () { return this._puzzle; },
+			set: function ( puzzle ) {
+				
+				this._puzzle = puzzle;
+				
+			}
+		});
 		
 	}
 	
@@ -56,492 +75,330 @@
 	
 	=====================================================*/
 	
-	function Grid ( puzzle, parameters ) {
+	function Grid ( parameters ) {
 		
-		// init via reset
+		var i, l,
+			psm,
+			faces,
+			face,
+			vertices,
+			verticesFromFace,
+			moduleGeometry,
+			module;
 		
-		this.reset( puzzle, parameters );
+		// prototype constructor
 		
-	}
-	
-	Grid.prototype = {
+		_Model.Instance.call( this, parameters );
 		
-		reset: function ( puzzle, parameters ) {
-			
-			this._puzzle = puzzle;
-			
-			// init state materials
-				
-			this.init_state_materials( true, parameters );
-			
-			// if valid puzzle
-			
-			if ( typeof this.puzzle !== 'undefined' ) {
-				
-				// init modules
-				
-				this.init_modules( true );
-				
-			}
-			
-		},
+		// handle parameters
 		
-		init_state_materials: function ( reset, parameters ) {
-			
-			var psm;
+		parameters = parameters || {};
 		
-			if ( reset === true || typeof this.stateMaterials === 'undefined' ) {
-				
-				// handle parameters
-				
-				parameters = parameters || {};
-				
-				// state materials
-				
-				psm = parameters.stateMaterials = parameters.stateMaterials || {};
-				
-				psm.base = ( psm.base instanceof THREE.Material ) ? psm.base : new THREE.MeshLambertMaterial( { color: colorBase, ambient: ambientBase, transparent: transparentBase, opacity: opacityBase } );
-				
-				// if valid puzzle, init state materials list
-				
-				if ( typeof this.puzzle !== 'undefined' && typeof this.puzzle.geometry !== 'undefined' ) {
-					
-					this.stateMaterials = main.ensure_array( this.puzzle.geometry.materials );
-					
-				}
-				else {
-					
-					this.stateMaterials = [];
-					
-				}
-				
-				// init state materials names map
-				
-				this.stateMaterialsMap = {};
-				
-				// set base material
-			
-				this.add_state_material( psm.base );
-				
-			}
-			
-		},
+		// store puzzle reference
 		
-		modify_state_materials: function ( materials, ids, remove ) {
-			
-			var i, l,
-				material,
-				id;
-			
-			if ( typeof materials !== 'undefined'  && ( remove === true || typeof ids !== 'undefined' ) ) {
-				
-				// ensure arrays
-				
-				materials = main.ensure_array( materials );
-				
-				ids = main.ensure_array( ids );
-				
-				this.init_state_materials();
-				
-				// for each material
-					
-				for ( i = 0, l = materials.length; i < l; i++ ) {
-					
-					material = materials[ i ];
-					
-					id = ids[ i ];
-					
-					// remove if needed
-					
-					if ( remove === true ) {
-						
-						this.remove_state_material( material || id );
-						
-					}
-					// default to add
-					else {
-						
-						this.add_state_material( material, id );
-						
-					}
-					
-				}
-				
-			}
-			
-		},
+		this.puzzle = parameters.puzzle;
 		
-		add_state_materials: function ( materials, ids ) {
-			
-			this.modify_state_materials( materials, ids );
-			
-		},
+		// init modules
 		
-		remove_state_materials: function ( materials, ids ) {
-			
-			this.modify_state_materials( materials, ids, true );
-			
-		},
+		this.modules = [];
 		
-		add_state_material: function ( material, id ) {
-			
-			var stateMaterialIndex;
-			
-			// if is valid material
-			
-			if ( material instanceof THREE.Material ) {
-				
-				this.init_state_materials();
-				
-				// check id
-				
-				id = ( typeof id === 'string' ) ? id : idStateMaterialBase;
-				
-				stateMaterialIndex = this.stateMaterialsMap[ id ];
-					
-				// if material exists, remove
-				
-				this.remove_state_material( stateMaterialIndex );
-				
-				// add material
-				
-				this.stateMaterials.push( material );
-				
-				// store entry in map
-				
-				this.stateMaterialsMap[ id ] = this.stateMaterials.indexOf( material );
-				
-			}
-			
-		},
+		// if parameters passed modules as string
 		
-		remove_state_material: function ( searchFor ) {
+		if ( typeof parameters.modulesGeometry === 'string' ) {
 			
-			var index,
-				id,
-				idPotential;
-			
-			if ( typeof materialOrId !== 'undefined' ) {
-				
-				this.init_state_materials();
-				
-				// remove by material, index, or id
-				
-				if ( searchFor instanceof THREE.Material ) {
-					
-					index = this.stateMaterials.indexOf( searchFor );
-					
-				}
-				else if ( _MathHelper.is_number( searchFor ) ) {
-					
-					index = searchFor;
-					
-				}
-				else if ( typeof materialOrId === 'string' ) {
-					
-					id = materialOrId;
-					
-					index = this.stateMaterialsMap[ id ];
-					
-				}
-				
-				// remove by index
-				
-				if ( index !== -1 ) {
-					
-					this.stateMaterials.splice( index, 1 );
-					
-				}
-				
-				// remove by id
-				
-				if ( typeof id !== 'string' ) {
-					
-					for ( idPotential in stateMaterialsMap ) {
-						
-						if ( this.stateMaterialsMap.hasOwnProperty( idPotential ) && this.stateMaterialsMap[ idPotential ] === index ) {
-							
-							id = idPotential;
-							
-							break;
-							
-						}
-						
-					}
-					
-				}
-				
-				if ( typeof id === 'string' ) {
-					
-					delete this.stateMaterialsMap[ id ];
-					
-				}
-				
-			}
-			
-		},
-		
-		get_state_material: function ( id ) {
-			
-			return this.stateMaterials[ this.get_state_material_index( id ) ];
-			
-		},
-		
-		get_state_material_index: function ( id ) {
-			
-			this.init_state_materials();
-			
-			return this.stateMaterialsMap[ id ];
-			
-		},
-		
-		init_modules: function ( reset ) {
-			
-			if ( reset === true || typeof this.modules === 'undefined' ) {
-				
-				// init modules list
-				
-				this.modules = [];
-				
-				// if valid puzzle
-				
-				if ( typeof this.puzzle !== 'undefined' && typeof this.puzzle.geometry !== 'undefined' ) {
-					
-					// parse faces as modules
-					
-					this.modify_modules( this.puzzle.geometry.faces );
-					
-				}
-				
-			}
-			
-		},
-		
-		modify_modules: function ( facesOrModules, remove ) {
-			
-			var i, l,
-				faceOrModule,
-				module,
-				index;
-			
-			if ( typeof facesOrModules !== 'undefined' ) {
-				
-				facesOrModules = main.ensure_array( facesOrModules );
-				
-				// for each face or module
-				
-				for ( i = 0, l = facesOrModules.length; i < l; i++ ) {
-					
-					faceOrModule = facesOrModules[ i ];
-					
-					// if should remove
-					
-					if ( remove === true ) {
-						
-						this.remove_module( faceOrModule );
-					
-					}
-					// base to add
-					else {
-						
-						this.add_module( faceOrModule );
-						
-					}
-					
-				}
-				
-			}
-			
-		},
-		
-		add_modules: function ( facesOrModules ) {
-			
-			this.modify_modules( facesOrModules );
-			
-		},
-		
-		remove_modules: function ( facesOrModules ) {
-			
-			this.modify_modules( facesOrModules, true );
-			
-		},
-		
-		add_module: function ( faceOrModule ) {
-			
-			var module,
-				index;
-			
-			if ( typeof faceOrModule !== 'undefined' ) {
-				
-				this.init_modules();
-				
-				// if is module already
-				
-				if ( faceOrModule instanceof _GridModule.Instance ) {
-					
-					module = faceOrModule;
-					
-				}
-				// else assume is face
-				else {
-					
-					module = new _GridModule.Instance( faceOrModule, this );
-					
-				}
-				
-				// store module
-				
-				index = this.modules.indexOf( module );
-				
-				if ( index === -1 ) {
-					
-					this.modules.push( module );
-					
-				}
-				
-			}
-			
-		},
-		
-		remove_module: function ( faceOrModule ) {
-			
-			var i, l,
-				j, k,
-				module,
-				removed,
-				index;
-			
-			if ( typeof faceOrModule !== 'undefined' ) {
-				
-				this.init_modules();
-				
-				// init removed list
-				
-				removed = [];
-				
-				// search all modules and remove matches
-				
-				for ( i = this.modules.length - 1, l = 0; i >= l; i-- ) {
-					
-					module = this.modules[ i ];
-					
-					if ( faceOrModule === module || faceOrModule === module.face ) {
-						
-						// remove from this list
-						
-						removed.push( this.modules.splice( i, 1 )[ 0 ] );
-						
-					}
-					
-				}
-				
-				// for all removed, check for connections and set connected dirty flag
-				
-				for ( i = 0, l = removed.length; i < l; i++ ) {
-					
-					for ( j = 0, k = this.modules.length; j < k; j++ ) {
-						
-						module = this.modules[ j ];
-						
-						index = module.connected.indexOf( removed[ i ] );
-						
-						if ( index !== -1 ) {
-							
-							module.dirtyConnected = true;
-							
-						}
-						
-					}
-					
-				}
-				
-			}
-			
-		},
-		
-		get_modules: function ( searchFor, modulesExcluding, modulesMatching ) {
-			
-			var i, l,
-				module,
-				moduleFace;
-			
-			// handle modules excluding list
-			
-			modulesExcluding = main.ensure_array( modulesExcluding );
-			
-			// handle modules matching list
-			
-			modulesMatching = main.ensure_array( modulesMatching );
-			
-			// search by modules, face, or vertex index
-			
-			// module
-			
-			if ( searchFor instanceof _GridModule.Instance ) {
-				
-				for ( i = 0, l = this.modules.length; i < l; i++ ) {
-					
-					module = this.modules[ i ];
-					
-					if ( searchFor === module && modulesMatching.indexOf( module ) === -1 && modulesExcluding.indexOf( module ) === -1 ) {
-						
-						modulesMatching.push( module );
-						
-					}
-					
-				}
-				
-			}
-			// face
-			else if ( searchFor instanceof THREE.Face4 || searchFor instanceof THREE.Face3 ) {
-				
-				for ( i = 0, l = this.modules.length; i < l; i++ ) {
-					
-					module = this.modules[ i ];
-					
-					if ( searchFor === module.face && modulesMatching.indexOf( module ) === -1 && modulesExcluding.indexOf( module ) === -1 ) {
-						
-						modulesMatching.push( module );
-						
-					}
-					
-				}
-				
-			}
-			// vertex index
-			else if ( _MathHelper.is_number( searchFor ) ) {
-				
-				for ( i = 0, l = this.modules.length; i < l; i++ ) {
-					
-					module = this.modules[ i ];
-					
-					moduleFace = module.face;
-					
-					if ( typeof moduleFace !== 'undefined' && ( searchFor === moduleFace.a || searchFor === moduleFace.b || searchFor === moduleFace.c || searchFor === moduleFace.d ) && modulesMatching.indexOf( module ) === -1 && modulesExcluding.indexOf( module ) === -1 ) {
-						
-						modulesMatching.push( module );
-						
-					}
-					
-				}
-				
-			}
-			
-			return modulesMatching;
+			parameters.modulesGeometry = main.get_asset_data( parameters.modulesGeometry );
 			
 		}
 		
-	};
+		// if parameters passed modules as geometry
+		
+		if ( parameters.modulesGeometry instanceof THREE.Geometry ) {
+			
+			// store original modules geometry
+			
+			this.modulesGeometry = parameters.modulesGeometry;
+			
+			// create new module for each face
+			
+			faces = this.modulesGeometry.faces;
+			
+			vertices = this.modulesGeometry.vertices;
+			
+			for ( i = 0, l = faces.length; i < l; i++ ) {
+				
+				face = faces[ i ];
+				
+				// copy geometry references
+				// keeps actual faces/vertices centralized with grid
+				
+				moduleGeometry = new THREE.Geometry();
+				
+				// vertices
+				
+				moduleGeometry.vertices = vertices;
+				
+				// face
+				
+				moduleGeometry.faces.push( face );
+				
+				// init
+				
+				module = new _GridModule.Instance( { geometry: moduleGeometry, grid: this } );
+				
+				// store
+				
+				this.add_module( module );
+				
+			}
+			
+		}
+		
+	}
 	
-	/*===================================================
+	function modify_modules ( modules, remove ) {
+		
+		var i, l,
+			module,
+			index;
+		
+		if ( typeof modules !== 'undefined' ) {
+			
+			modules = main.ensure_array( modules );
+			
+			// for each module
+			
+			for ( i = 0, l = modules.length; i < l; i++ ) {
+				
+				module = modules[ i ];
+				
+				// if should remove
+				
+				if ( remove === true ) {
+					
+					this.remove_module( module );
+				
+				}
+				// base to add
+				else {
+					
+					this.add_module( module );
+					
+				}
+				
+			}
+			
+		}
+		
+	}
 	
-	get / set
+	function add_modules( modules ) {
+		
+		this.modify_modules( modules );
+		
+	}
 	
-	=====================================================*/
+	function remove_modules( modules ) {
+		
+		this.modify_modules( modules, true );
+		
+	}
 	
-	Object.defineProperty( Grid.prototype, 'puzzle', { 
-		get : function () { return this._puzzle; },
-		set : Grid.prototype.reset
-	});
+	function add_module ( module ) {
+		
+		var index;
+		
+		if ( module instanceof _GridModule.Instance ) {
+			
+			// store module
+			
+			index = this.modules.indexOf( module );
+			
+			if ( index === -1 ) {
+				
+				this.modules.push( module );
+				
+			}
+			
+			// add module to grid
+			
+			this.add( module );
+			
+		}
+		
+	}
+	
+	function remove_module ( module ) {
+		
+		var i, l,
+			j, k,
+			modulePotential,
+			removing,
+			moduleRemove,
+			index;
+		
+		if ( module instanceof _GridModule.Instance ) {
+			
+			// init removing list
+			
+			removing = [];
+			
+			// search all potential modules and remove matches
+			
+			for ( i = this.modules.length - 1, l = 0; i >= l; i-- ) {
+				
+				modulePotential = this.modules[ i ];
+				
+				if ( modulePotential === module ) {
+					
+					// remove from this list
+					
+					removing.push( this.modules.splice( i, 1 )[ 0 ] );
+					
+				}
+				
+			}
+			
+			// for all removing
+			
+			for ( i = 0, l = removing.length; i < l; i++ ) {
+				
+				moduleRemove = removing[ i ];
+				
+				// check for connections and set connected dirty flag
+				
+				for ( j = 0, k = this.modules.length; j < k; j++ ) {
+					
+					module = this.modules[ j ];
+					
+					index = module.connected.indexOf( moduleRemove );
+					
+					if ( index !== -1 ) {
+						
+						module.dirtyConnected = true;
+						
+					}
+					
+				}
+				
+				// remove from grid
+			
+				this.remove( moduleRemove );
+				
+			}
+			
+		}
+		
+	}
+	
+	function get_modules ( searchFor, modulesExcluding, modulesMatching ) {
+		
+		var i, l,
+			j, k,
+			module,
+			moduleFace,
+			searchMatch,
+			searchItem;
+		
+		// handle modules excluding list
+		
+		modulesExcluding = main.ensure_array( modulesExcluding );
+		
+		// handle modules matching list
+		
+		modulesMatching = main.ensure_array( modulesMatching );
+		
+		// search by modules, face, or vertex index
+		
+		// module
+		
+		if ( searchFor instanceof _GridModule.Instance ) {
+			
+			for ( i = 0, l = this.modules.length; i < l; i++ ) {
+				
+				module = this.modules[ i ];
+				
+				if ( searchFor === module && modulesMatching.indexOf( module ) === -1 && modulesExcluding.indexOf( module ) === -1 ) {
+					
+					modulesMatching.push( module );
+					
+				}
+				
+			}
+			
+		}
+		// face
+		else if ( searchFor instanceof THREE.Face4 || searchFor instanceof THREE.Face3 ) {
+			
+			for ( i = 0, l = this.modules.length; i < l; i++ ) {
+				
+				module = this.modules[ i ];
+				
+				if ( searchFor === module.face && modulesMatching.indexOf( module ) === -1 && modulesExcluding.indexOf( module ) === -1 ) {
+					
+					modulesMatching.push( module );
+					
+				}
+				
+			}
+			
+		}
+		// vertex list
+		else if ( main.is_array( searchFor ) ) {
+			
+			for ( i = 0, l = this.modules.length; i < l; i++ ) {
+				
+				module = this.modules[ i ];
+				
+				moduleFace = module.face;
+				
+				if ( typeof moduleFace !== 'undefined' ) {
+					
+					searchMatch = [];
+					
+					for ( j = 0, k = searchFor.length; j < k; j++ ) {
+						
+						searchItem = searchFor[ j ];
+						
+						if ( searchItem === moduleFace.a || searchItem === moduleFace.b || searchItem === moduleFace.c || searchItem === moduleFace.d ) {
+							
+							searchMatch.push( true );
+							
+							if ( searchMatch.length === searchFor.length && modulesMatching.indexOf( module ) === -1 && modulesExcluding.indexOf( module ) === -1 ) {
+								
+								modulesMatching.push( module );
+								
+							}
+						
+						}
+						
+					}
+					
+				}
+				
+			}
+			
+		}
+		// vertex index
+		else if ( _MathHelper.is_number( searchFor ) ) {
+			
+			for ( i = 0, l = this.modules.length; i < l; i++ ) {
+				
+				module = this.modules[ i ];
+				
+				moduleFace = module.face;
+				
+				if ( typeof moduleFace !== 'undefined' && ( searchFor === moduleFace.a || searchFor === moduleFace.b || searchFor === moduleFace.c || searchFor === moduleFace.d ) && modulesMatching.indexOf( module ) === -1 && modulesExcluding.indexOf( module ) === -1 ) {
+					
+					modulesMatching.push( module );
+					
+				}
+				
+			}
+			
+		}
+		
+		return modulesMatching;
+		
+	}
 	
 } (KAIOPUA) );

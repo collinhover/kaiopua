@@ -348,10 +348,18 @@
 		
 		me.parts.trees.add( me.parts.palmTrees );
 		
+		/*===================================================
+		
+		puzzles
+		
+		=====================================================*/
+		
 		// puzzles
 		
 		me.parts.puzzleTutorial = new _Puzzles.Instance( {
-			geometry: main.get_asset_data("assets/models/Field_Tutorial.js")
+			grid: {
+				modulesGeometry: main.get_asset_data("assets/models/Field_Tutorial.js")
+			}
 		});
 		
 		me.parts.body.add( me.parts.puzzleTutorial );

@@ -13,7 +13,8 @@
 		_Hero = {},
 		_Character,
 		_Game,
-		_Puzzles;
+		_Puzzles,
+		_GridModule;
 	
 	/*===================================================
     
@@ -26,7 +27,8 @@
 		requirements: [
 			"assets/modules/characters/Character.js",
 			"assets/modules/core/Game.js",
-			"assets/modules/puzzles/Puzzles.js"
+			"assets/modules/puzzles/Puzzles.js",
+			"assets/modules/puzzles/GridModule.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -38,12 +40,13 @@
     
     =====================================================*/
 	
-	function init_internal( c, g, p ) {
+	function init_internal( c, g, p, gm ) {
 		console.log('internal hero', _Hero);
 		
 		_Character = c;
 		_Game = g;
 		_Puzzles = p;
+		_GridModule = gm;
 		
 		_Hero.Instance = Hero;
 		_Hero.Instance.prototype = new _Character.Instance();
@@ -69,7 +72,7 @@
 		parameters.id = 'kaiopua_hero';
 		
 		parameters.model = parameters.modelInfo || {};
-		parameters.model.geometryAssetPath = "assets/models/Hero.js";
+		parameters.model.geometry = main.get_asset_data( "assets/models/Hero.js" );
 		parameters.model.materials = new THREE.MeshLambertMaterial( { color: 0xFFF7E0, ambient: 0xFFF7E0, vertexColors: THREE.VertexColors } );
 		parameters.model.shading = THREE.SmoothShading;
 		
@@ -135,7 +138,7 @@
 		
 		=====================================================*/
 		
-		function plant () {
+		function plant ( parameters ) {
 			
 			var intersection,
 				targetModel,
@@ -159,21 +162,34 @@
 				
 				targetFace = intersection.face;
 				
-				// if is puzzle
+				// if is grid module
 				
-				if ( targetModel instanceof _Puzzles.Instance ) {
+				if ( targetModel instanceof _GridModule.Instance ) {
 					
-					console.log(' > intersected model is puzzle!');
+					console.log(' > intersected model is grid module!');
 					
-					// get puzzle grid
+					// set target as module
 					
-					grid = targetModel.grid;
+					module = targetModel;
 					
-					// find module based on face
+					// get grid
 					
-					module = grid.get_modules( targetFace )[ 0 ];
+					grid = module.grid;
 					
-					console.log(' >> intersected grid module is', module, ', with ', module.connected.length, ' connected modules: ', module.connected );
+					//console.log(' >> intersected module is', module, ', with ', module.connected.length, ' connected modules: ', module.connected );
+					
+					if ( parameters.stop === true ) {
+						
+						//module.set_state( grid.STATE_BASE );
+						//module.connected[ 0 ].set_state( grid.STATE_BASE );
+						
+					}
+					else {
+						
+						module.set_state( _GridModule.STATE_VACANT );
+						//module.connected[ 0 ].set_state( grid.STATE_OCCUPIED );
+						
+					}
 					
 				}
 				

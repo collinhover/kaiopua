@@ -110,14 +110,14 @@
 		
 		// geometry
 		
-		if ( parameters.hasOwnProperty( 'geometry' ) ) {
+		if ( parameters.geometry instanceof THREE.Geometry ) {
 			
 			geometry = parameters.geometry;
 			
 		}
-		else if ( parameters.hasOwnProperty( 'geometryAssetPath' ) ) {
+		else if ( typeof parameters.geometry === 'string' ) {
 			
-			geometry = main.get_asset_data( parameters.geometryAssetPath );
+			geometry = main.get_asset_data( parameters.geometry );
 			
 		}
 		else {

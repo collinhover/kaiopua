@@ -161,11 +161,15 @@ var KAIOPUA = (function (main) {
 		
 	};
 	
+	main.is_array = function ( target ) {
+		return Object.prototype.toString.call( target ) === '[object Array]';
+	};
+	
 	main.ensure_array = function ( target ) {
 		
 		target = target || [];
 		
-		if ( typeof target === 'string' || typeof target === 'function' || target.hasOwnProperty( 'length' ) === false ) {
+		if ( main.is_array ( target ) !== true ) {
 			target = [target];
 		}
 		

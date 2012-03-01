@@ -47,13 +47,20 @@
 		
 		parameters = parameters || {};
 		
+		parameters.grid = parameters.grid || {};
+		parameters.grid.puzzle = this;
+		
 		// prototype constructor
 		
 		_Model.Instance.call( this, parameters );
 		
 		// init grid
 		
-		this.grid = new _Grid.Instance( this );
+		this.grid = new _Grid.Instance( parameters.grid );
+		
+		// add grid
+		console.log(' grid!', this.grid);
+		this.add( this.grid );
 		
 		/*
 		this.geometry.materials = [
