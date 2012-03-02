@@ -59,7 +59,7 @@
 		this.grid = new _Grid.Instance( parameters.grid );
 		
 		// add grid
-		console.log(' grid!', this.grid);
+		
 		this.add( this.grid );
 		
 		/*

@@ -176,18 +176,26 @@
 					
 					grid = module.grid;
 					
-					//console.log(' >> intersected module is', module, ', with ', module.connected.length, ' connected modules: ', module.connected );
+					console.log(' >> intersected module is', module, ', with ', module.connectedList.length, ' connected modules: ', module.connectedList, ' + refs: ', module.connected );
 					
 					if ( parameters.stop === true ) {
 						
-						//module.set_state( grid.STATE_BASE );
-						//module.connected[ 0 ].set_state( grid.STATE_BASE );
+						module.state = _GridModule.STATE_BASE;
+						module.connected.up.state = _GridModule.STATE_BASE;
+						module.connected.down.state = _GridModule.STATE_BASE;
+						module.connected.right.state = _GridModule.STATE_BASE;
+						module.connected.downright.state = _GridModule.STATE_BASE;
+						module.connected.left.state = _GridModule.STATE_BASE;
 						
 					}
 					else {
 						
-						module.set_state( _GridModule.STATE_VACANT );
-						//module.connected[ 0 ].set_state( grid.STATE_OCCUPIED );
+						module.state = _GridModule.STATE_VACANT;
+						module.connected.up.state = _GridModule.STATE_VACANT;
+						module.connected.down.state = _GridModule.STATE_OCCUPIED;
+						module.connected.right.state = _GridModule.STATE_OCCUPIED;
+						module.connected.downright.state = _GridModule.STATE_OCCUPIED;
+						module.connected.left.state = _GridModule.STATE_VACANT;
 						
 					}
 					

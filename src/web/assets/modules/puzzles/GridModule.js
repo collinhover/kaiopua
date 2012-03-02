@@ -11,7 +11,8 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/puzzles/GridModule.js",
 		_GridModule = {},
-		_Model;
+		_Model,
+		states;
 	
 	/*===================================================
 	
@@ -44,6 +45,20 @@
 		_GridModule.STATE_VACANT = 'vacant';
 		_GridModule.STATE_OCCUPIED = 'occupied';
 		
+		_GridModule.STATES = {};
+		_GridModule.STATES[ _GridModule.STATE_BASE ] = { 
+			color: 0xe6b266,
+			ambient: 0xe6b266,
+		};
+		_GridModule.STATES[ _GridModule.STATE_VACANT ] = { 
+			color: 0x0ccd6f,
+			ambient: 0x0ccd6f,
+		};
+		_GridModule.STATES[ _GridModule.STATE_OCCUPIED ] = { 
+			color: 0xff2830,
+			ambient: 0xff2830,
+		};
+	
 		// instance
 		
 		_GridModule.Instance = GridModule;
@@ -51,10 +66,16 @@
 		_GridModule.Instance.prototype.constructor = _GridModule.Instance;
 		_GridModule.Instance.prototype.reset = reset;
 		_GridModule.Instance.prototype.set_state = set_state;
+		_GridModule.Instance.prototype.has_face_or_vertex_index = has_face_or_vertex_index;
 		_GridModule.Instance.prototype.get_modules_connected = get_modules_connected;
+		_GridModule.Instance.prototype.find_and_store_connected = find_and_store_connected;
 		
 		Object.defineProperty( _GridModule.Instance.prototype, 'connected', { 
-			get: get_modules_connected
+			get: function () { this.get_modules_connected(); return this._connected; }
+		});
+		
+		Object.defineProperty( _GridModule.Instance.prototype, 'connectedList', { 
+			get: function () { return this.get_modules_connected(); }
 		});
 		
 		Object.defineProperty( _GridModule.Instance.prototype, 'grid', { 
@@ -63,7 +84,7 @@
 				
 				this._grid = grid;
 				
-				this.dirtyConnected = true;
+				this._dirtyConnected = true;
 				
 			}
 		});
@@ -87,7 +108,7 @@
 		
 		parameters = parameters || {};
 		
-		parameters.materials = new THREE.MeshLambertMaterial( { color: 0xAAAAAA, ambient: 0xFFFFFF, transparent: false, opacity: 1 } );
+		parameters.materials = new THREE.MeshLambertMaterial( { color: 0xFFFFFF, ambient: 0xFFFFFF, transparent: false, opacity: 1 } );
 		
 		// prototype constructor
 		
@@ -97,36 +118,75 @@
 		
 		this.grid = parameters.grid;
 		
+		// init connected
+		
+		this._connected = {};
+		this._connectedList = [];
+		
+		// set to base state
+		
 		this.reset();
 		
 	}
 	
 	function reset () {
 			
-		this.set_state( _GridModule.STATE_BASE );
+		this.state = _GridModule.STATE_BASE;
 			
 	}
 		
 	function set_state ( id ) {
 		console.log('module setting state...');
-		if ( typeof this.grid !== 'undefined' && typeof id === 'string' ) {
+		if ( typeof this.grid !== 'undefined' && typeof id === 'string' && typeof _GridModule.STATES[ id ] !== 'undefined' ) {
 			
 			this._state = id;
 			
-			this.material.color.setRGB( Math.random(), Math.random(), Math.random() );
+			this.material.color.setHex( _GridModule.STATES[ id ].color );
+			
+			this.material.ambient.setHex( _GridModule.STATES[ id ].ambient );
 			
 			console.log('... state set to', this.state );
 			
 		}
 		
 	}
+	
+	function has_face_or_vertex_index( searchFor ) {
+		
+		var i, l,
+			faces,
+			face,
+			has = false;
+		
+		// search all faces
+		
+		faces = this.geometry.faces;
+		
+		for ( i = 0, l = faces.length; i < l; i++ ) {
+			
+			face = faces[ i ];
+			
+			if ( ( ( searchFor instanceof THREE.Face4 || searchFor instanceof THREE.Face3 ) && searchFor === face ) 
+				|| ( _MathHelper.is_number( searchFor ) && ( searchFor === face.a || searchFor === face.b || searchFor === face.c || searchFor === face.d ) ) ) {
+				
+				has = true;
+				
+				break;
+				
+			}
+			
+		}
+		
+		return has;
+		
+	}
 		
 	function get_modules_connected ( connected, recalculate ) {
 		
 		var i, l,
-			faceVertexIndices,
-			faceVertexIndex,
-			modulePotential;
+			j, k,
+			faces,
+			face;
 		
 		// handle connected
 		
@@ -134,54 +194,134 @@
 		
 		// if should recalculate
 		
-		if ( typeof this._connected === 'undefined' || this.dirtyConnected !== false || recalculate === true ) {
-				
-			// get indices of vertices in face of module
+		if ( this._dirtyConnected !== false || recalculate === true ) {
 			
-			if ( this.face instanceof THREE.Face3 ) {
-				
-				faceVertexIndices = [ this.face.a, this.face.b, this.face.c ];
-				
-			}
-			else if ( this.face instanceof THREE.Face4 ) {
-				
-				faceVertexIndices = [ this.face.a, this.face.b, this.face.c, this.face.d ];
-				
-			}
+			// for each face
 			
-			// if grid is valid
+			faces = this.geometry.faces;
 			
-			if ( typeof this.grid !== 'undefined' ) {
+			for ( i = 0, l = faces.length; i < l; i++ ) {
 				
-				// init direct connections list
+				face = faces[ i ];
 				
-				this._connected = [];
+				// get connected sides
 				
-				// for each vertex index in face, find modules that share
-				// add to direct connections list
-				this._connected = this.grid.get_modules( [ faceVertexIndices[ 0 ], faceVertexIndices[ 1 ] ], this, this._connected );
-				/*
-				for ( i = 0, l = faceVertexIndices.length; i < l; i++ ) {
+				// ab / up
+				
+				this.find_and_store_connected( face.a, face.b, [ 'ab', 'up' ] );
+				
+				// bc / right
+				
+				this.find_and_store_connected( face.b, face.c, [ 'bc', 'right' ] );
+				
+				// by face type
+				
+				if ( face instanceof THREE.Face4 ) {
 					
-					faceVertexIndex = faceVertexIndices[ i ];
+					// cd / down
 					
-					this._connected = this.grid.get_modules( faceVertexIndex, this, this._connected );
+					this.find_and_store_connected( face.c, face.d, [ 'cd', 'down' ] );
+					
+					// da / left
+					
+					this.find_and_store_connected( face.d, face.a, [ 'da', 'left' ] );
 					
 				}
-				*/
-				// remove flag
+				else {
+					
+					// ca / left / down
+					
+					this.find_and_store_connected( face.c, face.a, [ 'ca', 'left', 'down' ] );
+					
+				}
 				
-				this.dirtyConnected = false;
+				// get connected corners
+				
+				// a / upleft
+				
+				this.find_and_store_connected( face.a, undefined, [ 'a', 'upleft' ] );
+				
+				// b / upright
+				
+				this.find_and_store_connected( face.b, undefined, [ 'a', 'upright' ] );
+				
+				// c / downright
+				
+				this.find_and_store_connected( face.c, undefined, [ 'c', 'downright' ] );
+				
+				// d / downleft
+				
+				this.find_and_store_connected( face.d, undefined, [ 'd', 'downleft' ] );
 				
 			}
+			
+			// remove flag
+			
+			this._dirtyConnected = false;
 			
 		}
 		
 		// add all direct connections to connected
 		
-		connected = connected.concat( this._connected );
+		connected = connected.concat( this._connectedList );
 		
 		return connected;
+		
+	}
+	
+	function find_and_store_connected ( vertexIndexA, vertexIndexB, ids ) {
+		
+		var i, l,
+			searchFor,
+			connectedModules,
+			connectedModule;
+		
+		// if grid is valid
+		
+		if ( typeof this.grid !== 'undefined' ) {
+			
+			// set search target(s)
+			
+			if ( typeof vertexIndexB !== 'undefined' ) {
+				
+				searchFor = [ vertexIndexA, vertexIndexB ];
+				
+			}
+			else {
+				
+				searchFor = vertexIndexA;
+				
+			}
+			
+			// get connected modules
+			
+			connectedModules = this.grid.get_modules( searchFor, [ this ].concat( this._connectedList ) );
+			
+			if ( connectedModules.length > 0 ) {
+				
+				// take just first found module
+				
+				connectedModule = connectedModules[ 0 ];
+				
+				// check ids
+				
+				ids = main.ensure_array( ids );
+				
+				// store for each id
+				
+				for ( i = 0, l = ids.length; i < l; i++ ) {
+					
+					this._connected[ ids[ i ] ] = connectedModule;
+					
+				}
+				
+				// store in list
+				
+				this._connectedList.push( connectedModule );
+				
+			}
+			
+		}
 		
 	}
 	

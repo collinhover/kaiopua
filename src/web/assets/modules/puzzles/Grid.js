@@ -333,7 +333,7 @@
 				
 				module = this.modules[ i ];
 				
-				if ( searchFor === module.face && modulesMatching.indexOf( module ) === -1 && modulesExcluding.indexOf( module ) === -1 ) {
+				if ( module.has_face_or_vertex_index( searchFor ) && modulesMatching.indexOf( module ) === -1 && modulesExcluding.indexOf( module ) === -1 ) {
 					
 					modulesMatching.push( module );
 					
@@ -349,28 +349,22 @@
 				
 				module = this.modules[ i ];
 				
-				moduleFace = module.face;
+				searchMatch = [];
 				
-				if ( typeof moduleFace !== 'undefined' ) {
+				for ( j = 0, k = searchFor.length; j < k; j++ ) {
 					
-					searchMatch = [];
+					searchItem = searchFor[ j ];
 					
-					for ( j = 0, k = searchFor.length; j < k; j++ ) {
+					if ( module.has_face_or_vertex_index( searchItem ) ) {
 						
-						searchItem = searchFor[ j ];
+						searchMatch.push( true );
 						
-						if ( searchItem === moduleFace.a || searchItem === moduleFace.b || searchItem === moduleFace.c || searchItem === moduleFace.d ) {
+						if ( searchMatch.length === searchFor.length && modulesMatching.indexOf( module ) === -1 && modulesExcluding.indexOf( module ) === -1 ) {
 							
-							searchMatch.push( true );
+							modulesMatching.push( module );
 							
-							if ( searchMatch.length === searchFor.length && modulesMatching.indexOf( module ) === -1 && modulesExcluding.indexOf( module ) === -1 ) {
-								
-								modulesMatching.push( module );
-								
-							}
-						
 						}
-						
+					
 					}
 					
 				}
@@ -385,9 +379,7 @@
 				
 				module = this.modules[ i ];
 				
-				moduleFace = module.face;
-				
-				if ( typeof moduleFace !== 'undefined' && ( searchFor === moduleFace.a || searchFor === moduleFace.b || searchFor === moduleFace.c || searchFor === moduleFace.d ) && modulesMatching.indexOf( module ) === -1 && modulesExcluding.indexOf( module ) === -1 ) {
+				if ( module.has_face_or_vertex_index( searchFor ) && modulesMatching.indexOf( module ) === -1 && modulesExcluding.indexOf( module ) === -1 ) {
 					
 					modulesMatching.push( module );
 					
