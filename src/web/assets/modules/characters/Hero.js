@@ -63,7 +63,8 @@
 	function Hero ( parameters ) {
 		
 		var me = this,
-			actionsMap;
+			actionsMap,
+			planting;
 		
 		// handle parameters
 		
@@ -138,70 +139,326 @@
 		
 		=====================================================*/
 		
+		planting = me.planting = {};
+		planting.started = false;
+		
 		function plant ( parameters ) {
 			
-			var intersection,
-				targetModel,
-				targetFace,
-				grid,
-				module;
+			// store parameters
 			
-			// find intersection from mouse
+			planting.parameters = parameters || {};
 			
-			intersection = _Game.get_intersection_from_mouse( me.scene );
+			// check stop state ( i.e. mouse/key up )
 			
-			console.log( 'intersection from mouse?', intersection );
-			
-			// if is puzzle
-			
-			if ( typeof intersection !== 'undefined' ) {
-			
-				// store info
+			if ( planting.parameters.stop === true ) {
 				
-				targetModel = intersection.object;
+				// step planting cycle
+			
+				step_planting();
 				
-				targetFace = intersection.face;
+			}
+			
+		}
+		
+		function step_planting() {
+			console.log('step PLANTING!');
+			var plantingObjects,
+				plantingObject,
+				targetModel;
+			
+			// steps
+			
+			// if needs seed
+			
+			if ( typeof planting.seed === 'undefined' ) {
+				console.log(' > PLANTING: step no seed yet!');
+				// set array of objects that are involved in this step of planting process
 				
-				// if is grid module
+				plantingObjects = me;
 				
-				if ( targetModel instanceof _GridModule.Instance ) {
+				// find if any planting objects under mouse
+				
+				plantingObject = _Game.get_intersection_from_mouse( plantingObjects );
+				
+				if ( typeof plantingObject !== 'undefined' ) {
 					
-					console.log(' > intersected model is grid module!');
+					// store info
 					
-					// set target as module
+					targetModel = plantingObject.object;
 					
-					module = targetModel;
+					// if is me
 					
-					// get grid
-					
-					grid = module.grid;
-					
-					console.log(' >> intersected module is', module, ', with ', module.connectedList.length, ' connected modules: ', module.connectedList, ' + refs: ', module.connected );
-					
-					if ( parameters.stop === true ) {
+					if ( targetModel === me ) {
 						
-						module.state = _GridModule.STATE_BASE;
-						module.connected.up.state = _GridModule.STATE_BASE;
-						module.connected.down.state = _GridModule.STATE_BASE;
-						module.connected.right.state = _GridModule.STATE_BASE;
-						module.connected.downright.state = _GridModule.STATE_BASE;
-						module.connected.left.state = _GridModule.STATE_BASE;
+						// set seed
+						// TODO: open menu with seed choice
 						
-					}
-					else {
+						change_planting_seed( 'SEED' );
 						
-						module.state = _GridModule.STATE_VACANT;
-						module.connected.up.state = _GridModule.STATE_VACANT;
-						module.connected.down.state = _GridModule.STATE_OCCUPIED;
-						module.connected.right.state = _GridModule.STATE_OCCUPIED;
-						module.connected.downright.state = _GridModule.STATE_OCCUPIED;
-						module.connected.left.state = _GridModule.STATE_VACANT;
+						// start planting
+						
+						start_planting();
 						
 					}
 					
 				}
 				
 			}
+			// if has seed
+			else {
+				console.log(' > PLANTING: step has seed!');
+				// set array of objects that are involved in this step of planting process
+				
+				plantingObjects = _Puzzles.all;
+				
+				// find if any planting objects under mouse
+				
+				plantingObject = _Game.get_intersection_from_mouse( plantingObjects );
+				
+				// if planting object found
+				
+				if ( typeof plantingObject !== 'undefined' ) {
+				
+					// store info
+					
+					targetModel = plantingObject.object;
+					
+					// if target is grid module
+					if ( targetModel instanceof _GridModule.Instance ) {
+						
+						// complete planting
+						
+						complete_planting();
+						
+					}
+					
+				}
+				else {
+					
+					// stop planting
+					
+					stop_planting();
+					
+				}
+				
+			}
+			
+		}
+		
+		function start_planting () {
+			
+			// if has not started planting and seed is valid
+			
+			if ( planting.started !== true && typeof planting.seed !== 'undefined' ) {
+				console.log('start PLANTING!');
+				
+				// set started
+				
+				planting.started = true;
+				
+				// continue planting
+				
+				continue_planting();
+				
+				// continue on signal
+				
+				shared.signals.mousemoved.add( continue_planting );
+				
+			}
+			
+		}
+		
+		function continue_planting () {
+			console.log(' > PLANTING: continue planting!');
+			var plantingObjects,
+				plantingObject,
+				targetModel,
+				module,
+				grid,
+				puzzle;
+			
+			if ( planting.started === true ) {
+			
+				// set array of objects that are involved in planting process
+				
+				plantingObjects = _Puzzles.all;
+				
+				// find if any planting objects under mouse
+				
+				plantingObject = _Game.get_intersection_from_mouse( plantingObjects );
+				
+				// if planting object found
+				
+				if ( typeof plantingObject !== 'undefined' ) {
+				
+					// store info
+					
+					targetModel = plantingObject.object;
+					
+					// if target is grid module
+					if ( targetModel instanceof _GridModule.Instance ) {
+						
+						// set target as module
+						
+						module = targetModel;
+
+						// change to new module
+						
+						change_planting_module( module );
+						
+					}
+					
+				}
+				
+			}
+			else {
+				
+				stop_planting();
+				
+			}
+			
+		}
+		
+		function change_planting_module ( moduleNew ) {
+			
+			var module,
+				grid,
+				puzzle;
+			
+			// if is new module
+			
+			if ( planting.module !== moduleNew ) {
+				
+				// store module
+				
+				module = planting.module = moduleNew;
+				
+				// if valid module
+				
+				if ( module instanceof _GridModule.Instance ) {
+					
+					// get grid
+					
+					grid = module.grid;
+					
+					// get puzzle
+					
+					puzzle = grid.puzzle;
+					
+					// change puzzle
+					
+					change_planting_puzzle( puzzle );
+					
+					// clear all puzzle modules except target
+					
+					clear_planting_puzzle( planting.puzzle );
+					
+					// show occupied state
+					
+					module.show_state( 'occupied' );
+					console.log(' > PLANTING: intersected module is', module, ', with ', module.connectedList.length, ' connected modules' );
+				}
+				
+			}
+			
+		}
+		
+		function change_planting_seed ( seed ) {
+			
+			// if new seed is different from one stored in planting
+			
+			if ( planting.seed !== seed ) {
+				
+				// store new seed
+				
+				planting.seed = seed;
+				console.log(' > PLANTING: seed to', planting.seed);
+			}
+			
+		}
+		
+		function change_planting_puzzle ( puzzle ) {
+			
+			// if new puzzle is different from one stored in planting
+			
+			if ( planting.puzzle !== puzzle ) {
+				
+				// clear previous puzzle
+				
+				if ( planting.puzzle instanceof _Puzzles.Instance ) {
+					
+					clear_planting_puzzle( planting.puzzle );
+					
+				}
+				
+				// store new puzzle
+				
+				planting.puzzle = puzzle;
+				
+			}
+			
+		}
+		
+		function clear_planting_puzzle ( puzzle ) {
+			
+			if ( puzzle instanceof _Puzzles.Instance ) {
+				
+				puzzle.grid.each_module( function () {
+					this.show_state( false );
+				}, planting.module );
+				
+			}
+			
+		}
+		
+		function complete_planting () {
+			console.log(' > PLANTING: completing...');
+			var module = planting.module;
+			
+			// add seed to module
+			
+			if ( module.occupied === false ) {
+				console.log(' > PLANTING: added to module!');
+				module.change_state( 'occupied', true );
+				
+			}
+			else {
+				
+				console.log(' > PLANTING: module already occupied!');
+				
+			}
+
+			// stop planting
+			
+			stop_planting();
+			
+		}
+		
+		function stop_planting () {
+			console.log('stop PLANTING!');
+			var plantingObjects,
+				plantingObject,
+				targetModel;
+			
+			// no more planting
+			
+			shared.signals.mousemoved.remove( continue_planting );
+			
+			// clear module
+			
+			change_planting_module();
+			
+			// clear puzzle modules
+			
+			change_planting_puzzle();
+			
+			// clear seed
+			
+			change_planting_seed();
+			
+			// set stopped
+				
+			planting.started = false;
 			
 		}
 		

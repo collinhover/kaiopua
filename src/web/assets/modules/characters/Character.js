@@ -226,10 +226,6 @@
 		
 		var state = this.movement.state;
 		
-		if ( typeof stop === 'undefined' ) {
-			stop = false;
-		}
-		
 		// handle state property
 		
 		if ( state.hasOwnProperty( propertyName ) ) {

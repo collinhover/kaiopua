@@ -96,6 +96,7 @@
 			"assets/modules/puzzles/Puzzles.js",
 			"assets/modules/puzzles/Grid.js",
 			"assets/modules/puzzles/GridModule.js",
+			"assets/modules/puzzles/GridModuleState.js",
 			"assets/modules/sections/Intro.js",
             { path: "assets/models/Whale_Head.js", type: 'model' },
 			{ path: "assets/models/Whale_Tail.js", type: 'model' },
@@ -512,6 +513,8 @@
 		
 		// init menus
 		
+		init_footer_menu();
+		
 		init_start_menu();
 		
 		init_pause_menu();
@@ -527,6 +530,16 @@
     game menus
     
     =====================================================*/
+	
+	function init_footer_menu() {
+		
+		var menu;
+		
+		// init footer menu
+		
+		menu = menus.footer = _UIHelper.make_ui_element( { domElement: shared.html.footerMenu } );
+			
+	}
 	
 	function init_start_menu () {
 		var menu;
@@ -924,7 +937,7 @@
 		return mouse;
 	}
 	
-	function get_intersection_from_mouse ( sceneTarget, mouse, cameraTarget ) {
+	function get_intersection_from_mouse ( objects, mouse, cameraTarget ) {
 		
 		var projector = utilProjector1Selection,
 			ray = utilRay1Selection,
@@ -938,7 +951,19 @@
 		
 		cameraTarget = cameraTarget || camera;
 		
-		sceneTarget = sceneTarget || scene;
+		objects = objects || scene;
+		
+		// if objects is instance of scene
+		
+		if ( objects instanceof THREE.Scene ) {
+			
+			objects = objects.children;
+			
+		}
+		
+		// ensure objects is array
+		
+		objects = main.ensure_array( objects );
 		
 		// get corrected mouse position
 		
@@ -957,7 +982,7 @@
 		
 		// find ray intersections
 		
-		intersections = ray.intersectScene( sceneTarget );
+		intersections = ray.intersectObjects( objects );
 		
 		if ( intersections.length > 0 ) {
 			
@@ -967,9 +992,9 @@
 		
 	}
 	
-	function get_object_under_mouse ( sceneTarget, mouse, cameraTarget ) {
+	function get_object_under_mouse ( objects, mouse, cameraTarget ) {
 		
-		var intersection = get_intersection_from_mouse( sceneTarget, mouse, cameraTarget ),
+		var intersection = get_intersection_from_mouse( objects, mouse, cameraTarget ),
 			intersectedMesh;
 		
 		// extract mesh and, if present, model
@@ -1098,26 +1123,26 @@
     =====================================================*/
     
     function start_game () {
-        var ms = menus.start;
 		
 		// assets
 		
 		_Physics = main.get_asset_data( 'assets/modules/core/Physics.js' );
 		_Intro = main.get_asset_data( 'assets/modules/sections/Intro.js' );
 		
-		// hide static menu
+		// hide footer menu
 		
-		$(shared.html.staticMenu).stop(true).fadeTo( transitionIn, 0 );
+		menus.footer.ui_hide( true );
+		//$(shared.html.staticMenu).stop(true).fadeTo( transitionIn, 0 );
 		
         // disable start menu
 		
-        ms.disable();
+        menus.start.disable();
         
         // hide start menu
 		
-        ms.ui_hide( true );
+        menus.start.ui_hide( true );
         
-        // set intro section
+		// set intro section
 		
         set_section( _Intro );
 		
@@ -1129,26 +1154,24 @@
 	
 	function stop_game () {
 		
-		var ms = menus.start,
-			mp = menus.pause;
-		
 		// set started
 		
 		started = false;
 		
 		// hide and disable pause menu
 		
-		if ( typeof mp !== 'undefined' ) {
+		if ( typeof menus.pause !== 'undefined' ) {
 			
-			mp.disable();
+			menus.pause.disable();
 		
-			mp.ui_hide( true );
+			menus.pause.ui_hide( true );
 			
 		}
 		
-		// show static menu
+		// show footer menu
 		
-		$(shared.html.staticMenu).stop(true).fadeTo( transitionOut, 1 );
+		menus.footer.ui_show();
+		//$(shared.html.staticMenu).stop(true).fadeTo( transitionOut, 1 );
 		
 		// set launcher section
 		
@@ -1156,9 +1179,9 @@
 			
 			// show / enable start menu
 			
-			ms.ui_show( containerUI.domElement );
+			menus.start.ui_show( containerUI.domElement );
 			
-			ms.enable();
+			menus.start.enable();
 			
 		});
 		
@@ -1178,7 +1201,8 @@
 				
 				menus.pause.enable();
 				
-				$(shared.html.staticMenu).stop(true).fadeTo( transitionOut, 1 );
+				menus.footer.ui_show();
+				//$(shared.html.staticMenu).stop(true).fadeTo( transitionOut, 1 );
 				
 			}
 			else {
@@ -1213,7 +1237,8 @@
 				
 				menus.pause.ui_hide( true, undefined, 0, on_menu_hidden );
 				
-				$(shared.html.staticMenu).stop(true).fadeTo( transitionIn, 0 );
+				menus.footer.ui_hide( true );
+				//$(shared.html.staticMenu).stop(true).fadeTo( transitionIn, 0 );
 				
 			}
 			else {

@@ -55,6 +55,7 @@
 		_Grid.Instance.prototype.remove_modules = remove_modules;
 		_Grid.Instance.prototype.remove_module = remove_module;
 		_Grid.Instance.prototype.get_modules = get_modules;
+		_Grid.Instance.prototype.each_module = each_module;
 		
 		// get / set
 		
@@ -143,11 +144,21 @@
 				
 				// init
 				
-				module = new _GridModule.Instance( { geometry: moduleGeometry, grid: this } );
+				module = new _GridModule.Instance( { geometry: moduleGeometry } );
 				
 				// store
 				
 				this.add_module( module );
+				
+			}
+			
+			// set grid for all modules to calculate all connected modules
+			
+			for ( i = 0, l = this.modules.length; i < l; i++ ) {
+				
+				module = this.modules[ i ];
+				
+				module.grid = this;
 				
 			}
 			
@@ -390,6 +401,47 @@
 		}
 		
 		return modulesMatching;
+		
+	}
+	
+	function each_module( methods, modulesExcluding ) {
+		
+		var i, l,
+			j, k,
+			module,
+			method;
+		
+		// handle parameters
+		
+		methods = main.ensure_array( methods );
+		
+		modulesExcluding = main.ensure_array( modulesExcluding );
+		
+		// for each module
+		
+		for ( i = 0, l = this.modules.length; i < l; i++ ) {
+			
+			module = this.modules[ i ];
+			
+			// if not to be excluded
+			
+			if ( modulesExcluding.indexOf( module ) === -1 ) {
+				
+				// for each method
+				
+				for ( j = 0, k = methods.length; j < k; j++ ) {
+					
+					method = methods[ j ];
+					
+					// call method in context of module
+					
+					method.call( module );
+					
+				}
+				
+			}
+			
+		}
 		
 	}
 	

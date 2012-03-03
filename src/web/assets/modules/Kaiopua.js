@@ -51,7 +51,7 @@ var KAIOPUA = (function (main) {
         shared.timeDeltaExpected = 1000 / 60;
         
         shared.html = {
-            staticMenu: $('#static_menu'),
+            footerMenu: $('#footer_menu'),
             gameContainer: $('#game'),
             errorContainer: $('#error_container')
         };

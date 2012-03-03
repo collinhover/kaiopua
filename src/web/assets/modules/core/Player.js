@@ -27,7 +27,6 @@
 		keybindingsDefault,
 		character,
 		characterLight,
-		characterLightFollowSettings,
 		following = [],
 		selecting;
 	
@@ -237,9 +236,9 @@
 		
 		// init light to follow character
 		
-		characterLight = new THREE.PointLight( 0xfeb41c, 1, 400 );
+		characterLight = new THREE.PointLight( 0xfeb41c, 0.8, 400 );
 		
-		characterLight.position.set( -30, -20, 5 );
+		characterLight.position.set( -20, 25, 60 );//-30, -20, 5 );
 		
 		character.add( characterLight );
 		
@@ -274,8 +273,8 @@
 		// mouse buttons
 		
 		map[ 'mouseleft' ] = {
-			keydown: function ( e ) { action( '001', { event: e } ); },
-			keyup: function ( e ) { action( '001', { event: e, stop: true } ); }
+			keydown: function ( e ) { action( '001' ); },
+			keyup: function ( e ) { action( '001', { stop: true } ); }
 		};
 		map[ 'mousemiddle' ] = {
 			keydown: function ( e ) { console.log('key down: mousemiddle'); },
@@ -363,6 +362,7 @@
 		};
 		
 		map[ '82' /*r*/ ] = map[ 'r' ] = {
+			keydown: function () { console.log('key down: r'); },
 			keyup: function () { console.log('key up: r'); }
 		};
 		

@@ -1,6 +1,6 @@
 /*
  *
- * Puzzles.js
+ * UIHelper.js
  * Adds UI functionality to objects.
  *
  * @author Collin Hover / http://collinhover.com/
@@ -32,13 +32,10 @@
     =====================================================*/
     
     function make_ui_element ( parameters, el ) {
+		
         var i, l,
 			elementType,
-            id,
-            classes,
             autoPosition,
-            text,
-            cssmap,
 			subElementParameters,
 			subElement,
             domElement;
@@ -49,35 +46,44 @@
         
         parameters = parameters || {};
         
-        elementType = parameters.elementType || 'div';
-        
-        id = parameters.id || uiElementIDBase;
-        
-        classes = parameters.classes || '';
-        
-        text = parameters.text || '';
-        
-        cssmap = parameters.cssmap || {};
-        
         // init dom element
-        
-        el.domElement = $( document.createElement( elementType ) );
-        
-        el.domElement.html( text );
-        
-        // id
-        
-        el.id = id;
-        
-        el.domElement.attr( 'id', id );
-        
-        // classes
-        
-        el.domElement.addClass( classes );
-        
-        // css
 		
-        el.domElement.css( cssmap );
+		if ( typeof parameters.domElement !== 'undefined' ) {
+			
+			el.domElement = $( parameters.domElement );
+			
+		}
+		else {
+			
+			elementType = parameters.elementType || 'div';
+        
+			el.domElement = $( document.createElement( elementType ) );
+			
+			// id
+			
+			el.domElement.attr( 'id', parameters.id || uiElementIDBase );
+			
+		}
+		
+		el.id = el.domElement.attr( 'id' );
+		
+		// text
+		
+		if ( parameters.hasOwnProperty('text') ) {
+			el.domElement.html( parameters.text );
+		}
+		
+		// classes
+		
+		if ( parameters.hasOwnProperty('classes') ) {
+			el.domElement.addClass( parameters.classes );
+		}
+		
+		// css
+		
+		if ( parameters.hasOwnProperty('cssmap') ) {
+			el.domElement.css( parameters.cssmap );
+		}
         
         // dimensions
         
@@ -169,11 +175,11 @@
                 
             };
 			
+			container = container || el.containerLast;
+			
             if ( typeof container !== 'undefined' ) {
 				
-				container = $( container );
-				
-                container.append( el.domElement );
+                $( container ).append( el.domElement );
 				
             }
             
@@ -205,12 +211,26 @@
         el.ui_hide = function ( remove, time, opacity, callback ) {
 			
 			var on_hide_callback = function () {
+				
+				var container;
                 
                 if ( typeof callback !== 'undefined' ) {
                     callback.call();
                 }
                 
                 if ( remove === true ) {
+					
+					// store current container
+					
+					container = el.domElement.parent();
+					
+					if ( typeof container !== 'undefined' && container.length > 0 ) {
+						
+						el.containerLast = container;
+						
+					}
+					
+					// remove element from container
 					
                     el.domElement.detach();
 					
