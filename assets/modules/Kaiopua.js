@@ -18,6 +18,7 @@ var KAIOPUA = (function (main) {
             "js/lib/requestInterval.js",
             "js/lib/requestTimeout.js",
             "js/lib/signals.min.js",
+			"js/lib/sylvester.js",
 			"assets/modules/utils/AssetLoader.js"
         ],
         setupList = [
@@ -49,9 +50,11 @@ var KAIOPUA = (function (main) {
         shared.time = new Date().getTime();
         shared.timeLast = shared.time;
         shared.timeDeltaExpected = 1000 / 60;
+		
+		shared.multitouch = false;
         
         shared.html = {
-            staticMenu: $('#static_menu'),
+            footerMenu: $('#footer_menu'),
             gameContainer: $('#game'),
             errorContainer: $('#error_container')
         };
@@ -89,6 +92,7 @@ var KAIOPUA = (function (main) {
         $(document).bind( 'mousedown touchstart', on_mouse_down );
         $(document).bind( 'mouseup touchend', on_mouse_up );
         $(document).bind( 'mousemove touchmove', on_mouse_move );
+		$(document).bind( 'mouseenter touchenter', on_mouse_enter );
 		$(document).bind( 'mouseleave touchleave', on_mouse_leave );
         $(document).bind( 'mousewheel', on_mouse_wheel );
 		$(shared.html.gameContainer).bind( 'contextmenu', on_game_context_menu );
@@ -158,27 +162,75 @@ var KAIOPUA = (function (main) {
 		
 		return destination;
 		
-	}
+	};
+	
+	main.is_array = function ( target ) {
+		return Object.prototype.toString.call( target ) === '[object Array]';
+	};
 	
 	main.ensure_array = function ( target ) {
 		
 		target = target || [];
 		
-		if ( typeof target === 'string' || typeof target === 'function' || target.hasOwnProperty( 'length' ) === false ) {
+		if ( main.is_array ( target ) !== true ) {
 			target = [target];
 		}
 		
 		return target;
 		
-	}
+	};
+	
+	main.modify_array = function ( target, elements, remove ) {
+		
+		var i, l,
+			element,
+			index;
+		
+		if ( typeof target !== 'undefined' && typeof elements !== 'undefined' && typeof forEach === 'function' ) {
+			
+			elements = main.ensure_array( elements );
+			
+			// for each element
+			
+			for ( i = 0, l = elements.length; i < l; i++ ) {
+				
+				element = elements[ i ];
+				
+				index = target.indexof( element );
+				
+				if ( remove === true ) {
+					
+					if ( index !== -1 ) {
+						
+						target.splice( index, 1 );
+						
+					}
+					
+				}
+				else {
+					
+					if ( index === -1 ) {
+						
+						target.push( element );
+						
+					}
+					
+				}
+				
+			}
+			
+		}
+		
+	};
 	
 	main.get_asset_path = function ( location ) {
 		
 		return location.path || location
 		
-	}
+	};
 	
 	main.get_ext = function ( location ) {
+		
         var path, dotIndex, ext = '';
 		
 		path = main.get_asset_path( location );
@@ -190,7 +242,8 @@ var KAIOPUA = (function (main) {
         }
         
         return ext;
-    }
+        
+    };
 	
 	main.add_default_ext = function ( location ) {
 		
@@ -200,7 +253,7 @@ var KAIOPUA = (function (main) {
 		
 		return path;
 		
-	}
+	};
 	
 	main.remove_ext = function ( location ) {
 		
@@ -216,7 +269,7 @@ var KAIOPUA = (function (main) {
 		
 		return path;
 		
-	}
+	};
 	
 	main.get_alt_path = function ( location ) {
 		
@@ -239,7 +292,7 @@ var KAIOPUA = (function (main) {
 			
 		}
 		
-	}
+	};
 	
 	main.is_image_ext = function ( ext ) {
 		
@@ -250,7 +303,7 @@ var KAIOPUA = (function (main) {
 			return false;
 		}
 		
-    }
+    };
 	
 	/*===================================================
     
@@ -921,7 +974,7 @@ var KAIOPUA = (function (main) {
 	
 	function handle_mouse_identifier ( e ) {
 		
-		var id = e.identifier = e.identifier || 0;
+		var id = e.identifier = ( typeof e.identifier !== 'undefined' && shared.multitouch === true ) ? e.identifier : 0;
 		
 		if ( id >= shared.mice.length ) {
 			shared.mice[ id ] = { 
@@ -1012,6 +1065,29 @@ var KAIOPUA = (function (main) {
 			mouse.dy = mouse.y - mouse.ly;
 			
 			shared.signals.mousemoved.dispatch( e );
+			
+		}
+        
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }
+	
+	function on_mouse_enter ( e ) {
+		
+		var eOriginal = e.originalEvent, mouse;
+		
+		// is touch event
+		
+		if (typeof eOriginal !== "undefined" && typeof eOriginal.touches !== "undefined" && typeof eOriginal.changedTouches !== "undefined"){
+			
+			handle_touch_event( eOriginal, on_mouse_enter );
+		}
+		else {
+			
+			handle_mouse_identifier( e );
+			
+			mouse = shared.mice[ e.identifier ];
 			
 		}
         

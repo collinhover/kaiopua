@@ -9,10 +9,10 @@
 (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/core/Character.js",
+		assetPath = "assets/modules/characters/Character.js",
 		_Character = {},
 		_Model,
-		_EmptyCharacter, 
+		_MathHelper,
 		characterIDBase = 'kaiopua_character',
 		utilQ1Rotate;
 	
@@ -25,8 +25,8 @@
 	main.asset_register( assetPath, { 
 		data: _Character,
 		requirements: [
+			"assets/modules/core/Game.js",
 			"assets/modules/core/Model.js",
-			"assets/modules/characters/EmptyCharacter.js",
 			"assets/modules/utils/MathHelper.js"
 		],
 		callbacksOnReqs: init_internal,
@@ -39,26 +39,50 @@
     
     =====================================================*/
 	
-	function init_internal ( m, ec, mh ) {
-		console.log('internal character');
+	function init_internal ( g, m, mh ) {
+		console.log('internal character', _Character);
 		// modules
 		
+		_Game = g;
 		_Model = m;
-		_EmptyCharacter = ec;
 		_MathHelper = mh;
 		
-		// utils
+		// utility
 		
 		utilQ1Rotate = new THREE.Quaternion();
 		
 		// character instance
 		
-		_Character.Instance = KaiopuaCharacter;
+		_Character.Instance = Character;
 		_Character.Instance.prototype = new _Model.Instance();
 		_Character.Instance.prototype.constructor = _Character.Instance;
-		_Character.Instance.prototype.action = action;
-		_Character.Instance.prototype.update = update;
+		_Character.Instance.prototype.move_state_change = move_state_change;
 		_Character.Instance.prototype.rotate_by_delta = rotate_by_delta;
+		_Character.Instance.prototype.morph_cycle = morph_cycle;
+		_Character.Instance.prototype.action = action;
+		_Character.Instance.prototype.show = show;
+		_Character.Instance.prototype.hide = hide;
+		_Character.Instance.prototype.update = update;
+		_Character.Instance.prototype.update_followers = update_followers;
+		
+		Object.defineProperty( _Character.Instance.prototype, 'scene', { 
+			get : function () { return this._scene; },
+			set : function ( newScene ) {
+				
+				if ( typeof newScene !== 'undefined' ) {
+					
+					// remove from previous
+					
+					this.hide();
+					
+					// add to new
+					
+					this.show( newScene );
+					
+				}
+				
+			}
+		});
 		
 	}
 	
@@ -70,10 +94,12 @@
 	
 	// adds functionality to and inherits from Model
 	
-	function KaiopuaCharacter ( parameters ) {
+	function Character ( parameters ) {
 		
-		var modelInfo,
-			movementInfo,
+		var me = this,
+			parametersModel,
+			parametersMovement,
+			movement,
 			move,
 			rotate,
 			jump,
@@ -83,81 +109,75 @@
 		
 		parameters = parameters || {};
 		
-		// type
-		
-		this.type = parameters.type || _EmptyCharacter;
-		
 		// model
 		
-		modelInfo = parameters.modelInfo || this.type.modelInfo || {};
+		parametersModel = parameters.model || {};
 		
 		// physics
 		
-		modelInfo.physicsParameters = modelInfo.physicsParameters || this.type.physicsParameters;
-		
-		if ( typeof modelInfo.physicsParameters !== 'undefined' ) {
+		if ( typeof parametersModel.physics !== 'undefined' ) {
 			
-			modelInfo.physicsParameters.dynamic = true;
-			modelInfo.physicsParameters.movementDamping = modelInfo.physicsParameters.movementDamping || 0.5;
+			parametersModel.physics.dynamic = true;
+			parametersModel.physics.movementDamping = parametersModel.physics.movementDamping || 0.5;
 			
 		}
 		
 		// prototype constructor
 		
-		_Model.Instance.call( this, modelInfo );
+		_Model.Instance.call( me, parametersModel );
 		
 		// movement
 		
-		movementInfo = parameters.movementInfo || this.type.movementInfo || {};
+		parametersMovement = parameters.movement || {};
 		
-		this.movement = {};
+		movement = me.movement = {};
 		
 		// move
 		
-		move = this.movement.move = {};
-		move.speed = movementInfo.moveSpeed || 6;
-		move.speedBack = movementInfo.moveSpeedBack || move.speed;
-		move.runThreshold = movementInfo.moveRunThreshold || 0;
-		move.walkAnimationTime = movementInfo.moveWalkAnimationTime || 750;
-		move.runAnimationTime = movementInfo.moveRunAnimationTime || 500;
-		move.idleAnimationTime = movementInfo.moveIdleAnimationTime || 3000;
-		move.morphClearTime = movementInfo.moveCycleClearTime || 125;
-		move.animationChangeTimeThreshold = movementInfo.animationChangeTimeThreshold || 0;
+		move = movement.move = {};
+		move.speed = parametersMovement.moveSpeed || 6;
+		move.speedBack = parametersMovement.moveSpeedBack || move.speed;
+		move.runThreshold = parametersMovement.moveRunThreshold || 0;
+		move.walkAnimationTime = parametersMovement.moveWalkAnimationTime || 750;
+		move.runAnimationTime = parametersMovement.moveRunAnimationTime || 500;
+		move.idleAnimationTime = parametersMovement.moveIdleAnimationTime || 3000;
+		move.morphClearTime = parametersMovement.moveCycleClearTime || 125;
+		move.animationChangeTimeThreshold = parametersMovement.animationChangeTimeThreshold || 0;
 		move.animationChangeTimeTotal = move.animationChangeTimeThreshold;
 		move.direction = new THREE.Vector3();
 		move.vector = new THREE.Vector3();
 		
 		// rotate
-		rotate = this.movement.rotate = {};
-		rotate.speed = movementInfo.rotateSpeed || 0.015;
+		rotate = me.movement.rotate = {};
+		rotate.speed = parametersMovement.rotateSpeed || 0.015;
 		rotate.direction = new THREE.Vector3();
 		rotate.delta = new THREE.Quaternion();
 		rotate.vector = new THREE.Quaternion();
 		
 		// jump
-		jump = this.movement.jump = {};
-		jump.speedStart = movementInfo.jumpSpeedStart || 6;
-		jump.speedEnd = movementInfo.jumpSpeedEnd || 0;
+		jump = me.movement.jump = {};
+		jump.speedStart = parametersMovement.jumpSpeedStart || 6;
+		jump.speedEnd = parametersMovement.jumpSpeedEnd || 0;
 		jump.timeTotal = 0;
-		jump.timeMax = movementInfo.jumpTimeMax || 50;
+		jump.timeMax = parametersMovement.jumpTimeMax || 50;
 		jump.timeAfterNotGrounded = 0;
 		jump.timeAfterNotGroundedMax = 125;
-		jump.startDelay = movementInfo.jumpStartDelay || 125;
+		jump.startDelay = parametersMovement.jumpStartDelay || 125;
 		jump.startDelayTime = 0;
-		jump.animationTime = movementInfo.jumpAnimationTime || 700;
+		jump.animationTime = parametersMovement.jumpAnimationTime || 700;
 		jump.ready = true;
 		jump.active = false;
 		
 		// state
-		state = this.movement.state = {};
+		state = me.movement.state = {};
 		state.up = 0;
 		state.down = 0;
 		state.left = 0;
 		state.right = 0;
 		state.forward = 0;
 		state.back = 0;
-		state.turnLeft = 0;
-		state.turnRight = 0;
+		state.turnleft = 0;
+		state.turnright = 0;
 		state.grounded = false;
 		state.groundedLast = false;
 		state.moving = false;
@@ -166,9 +186,15 @@
 		
 		// properties
 		
-		this.id = parameters.id || this.type.id || this.id || characterIDBase;
+		me.id = parameters.id || characterIDBase;
 		
-		this.targeting = {
+		me.acting = false;
+		
+		me.showing = false;
+		
+		me.followers = [];
+		
+		me.targeting = {
 			
 			targets: [],
 			targetsToRemove: [],
@@ -176,29 +202,136 @@
 			
 		};
 		
-		this.actionData = {};
+	}
+	
+	/*===================================================
+	
+	action
+	
+	=====================================================*/
+	
+	function action () {
+		
+		return this.acting;
 		
 	}
 	
-	function action ( actionName, parameters ) {
+	/*===================================================
+	
+	move
+	
+	=====================================================*/
+	
+	function move_state_change ( propertyName, stop ) {
 		
-		// if character type has action
+		var state = this.movement.state;
 		
-		if ( this.type.hasOwnProperty( actionName ) ) {
+		// handle state property
+		
+		if ( state.hasOwnProperty( propertyName ) ) {
 			
-			// handle parameters
-			
-			parameters = parameters || {};
-			
-			parameters.character = this;
-			
-			// pass parameters to character type's action
-			
-			this.type[ actionName ]( parameters );
+			state[ propertyName ] = stop === true ? 0 : 1;
 			
 		}
 		
-	};
+	}
+	
+	/*===================================================
+	
+	rotate
+	
+	=====================================================*/
+	
+	function rotate_by_delta ( dx, dy, dz, dw ) {
+		
+		var q = this.quaternion,
+			rotate = this.movement.rotate,
+			rotateDelta = rotate.delta,
+			rotateVec = rotate.vector,
+			rotateUtilQ1 = utilQ1Rotate;
+		
+		rotateDelta.set( dx || 0, dy || 0, dz || 0, dw || 1 ).normalize();
+		
+		rotateVec.multiplySelf( rotateDelta );
+		
+		rotateUtilQ1.multiply( q, rotateDelta );
+		
+		q.copy( rotateUtilQ1 );
+		
+	}
+	
+	/*===================================================
+	
+	morph cycling
+	
+	=====================================================*/
+	
+	function morph_cycle ( timeDelta, cycleType, duration, loop, reverse ) {
+		
+		var morphs = this.morphs,
+			movement = this.movement,
+			move = movement.move,
+			state = movement.state;
+		
+		if ( state.moveType !== cycleType ) {
+			
+			if ( move.animationChangeTimeTotal < move.animationChangeTimeThreshold ) {
+				
+				move.animationChangeTimeTotal += timeDelta;
+				
+			}
+			else {
+				
+				move.animationChangeTimeTotal = 0;
+				
+				morphs.clear( state.moveType, move.morphClearTime );
+				
+				state.moveType = cycleType;
+				
+			}
+			
+		}
+		
+		morphs.play( state.moveType, { duration: duration, loop: loop, reverse: reverse } );
+		
+	}
+	
+	/*===================================================
+	
+	followers
+	
+	=====================================================*/
+	
+	function update_followers () {
+		
+		var i, l,
+			followSettings;
+		
+		/*
+		// example follow settings
+		followSettings = {
+			obj: model,
+			rotationBase: new THREE.Quaternion(),
+			rotationOffset: new THREE.Vector3( 0, 0, 0 ),
+			positionOffset: new THREE.Vector3( 0, 0, 0 )
+		};
+		*/
+		
+		for ( i = 0, l = this.followers.length; i < l; i ++ ) {
+			
+			followSettings = this.followers[ i ];
+			
+			_ObjectHelper.object_follow_object( this, followSettings.obj, followSettings.rotationBase, followSettings.rotationOffset, followSettings.positionOffset );
+				
+		}
+		
+	}
+	
+	/*===================================================
+	
+	update
+	
+	=====================================================*/
 	
 	function update ( timeDelta, timeDeltaMod ) {
 		
@@ -206,17 +339,17 @@
 			rigidBody = physics.rigidBody,
 			morphs = this.morphs,
 			movement = this.movement,
-			state,
+			move = movement.move,
 			rotate = movement.rotate,
+			jump = movement.jump,
+			state = movement.state,
 			rotateDir = rotate.direction,
 			rotateDelta = rotate.delta,
 			rotateSpeed = rotate.speed * timeDeltaMod,
-			move,
-			moveDir,
-			moveVec,
-			moveSpeed,
-			moveSpeedBack,
-			jump,
+			moveDir = move.direction,
+			moveVec = move.vector,
+			moveSpeed = move.speed * timeDeltaMod,
+			moveSpeedBack = move.speedBack * timeDeltaMod,
 			jumpSpeedStart,
 			jumpSpeedEnd,
 			jumpTimeTotal,
@@ -235,6 +368,26 @@
 			terminalVelocity,
 			playSpeedModifier;
 		
+		// update vectors with state
+		
+		moveDir.x = ( state.left - state.right );
+		moveDir.z = ( state.forward - state.back );
+		
+		rotateDir.y = ( state.turnleft - state.turnright );
+		
+		// set moving
+				
+		if ( state.forward === 1 || state.back === 1 || state.turnleft === 1 || state.turnright === 1 || state.up === 1 || state.down === 1 || state.left === 1 || state.right === 1 ) {
+			
+			state.moving = true;
+			
+		}
+		else {
+			
+			state.moving = false;
+			
+		}
+		
 		// rotate self
 		
 		this.rotate_by_delta( rotateDir.x * rotateSpeed, rotateDir.y * rotateSpeed, rotateDir.z * rotateSpeed, 1 );
@@ -245,15 +398,6 @@
 			
 			// properties
 			
-			move = movement.move;
-			moveDir = move.direction;
-			moveVec = move.vector;
-			moveSpeed = move.speed * timeDeltaMod;
-			moveSpeedBack = move.speedBack * timeDeltaMod;
-			
-			state = movement.state;
-			
-			jump = movement.jump;
 			jumpTimeTotal = jump.timeTotal;
 			jumpTimeMax = jump.timeMax;
 			jumpTimeAfterNotGroundedMax = jump.timeAfterNotGroundedMax;
@@ -290,7 +434,7 @@
 				
 				// play jump
 				
-				morphCycle ( timeDelta, morphs, move, state, 'jump', jumpAnimationTime, false );
+				this.morph_cycle ( timeDelta, 'jump', jumpAnimationTime, false );
 				
 				// count delay
 				
@@ -391,12 +535,12 @@
 					
 					if ( velocityMovementForceLength > move.runThreshold ) {
 						
-						morphCycle ( timeDelta, morphs, move, state, 'run', move.runAnimationTime * playSpeedModifier, true, state.movingBack );
+						this.morph_cycle ( timeDelta, 'run', move.runAnimationTime * playSpeedModifier, true, state.movingBack );
 						
 					}
 					else {
 						
-						morphCycle ( timeDelta, morphs, move, state, 'walk', move.walkAnimationTime * playSpeedModifier, true, state.movingBack );
+						this.morph_cycle ( timeDelta, 'walk', move.walkAnimationTime * playSpeedModifier, true, state.movingBack );
 						
 					}
 					
@@ -404,7 +548,7 @@
 				// idle cycle
 				else {
 					
-					morphCycle ( timeDelta, morphs, move, state, 'idle', move.idleAnimationTime, true, false );
+					this.morph_cycle ( timeDelta, 'idle', move.idleAnimationTime, true, false );
 					
 				}
 				
@@ -412,50 +556,42 @@
 			
 		}
 		
-	};
-	
-	function morphCycle ( timeDelta, morphs, moveInfo, stateInfo, cycleType, duration, loop, reverse ) {
-			
-		if ( stateInfo.moveType !== cycleType ) {
-			
-			if ( moveInfo.animationChangeTimeTotal < moveInfo.animationChangeTimeThreshold ) {
-				
-				moveInfo.animationChangeTimeTotal += timeDelta;
-				
-			}
-			else {
-				
-				moveInfo.animationChangeTimeTotal = 0;
-				
-				morphs.clear( stateInfo.moveType, moveInfo.morphClearTime );
-				
-				stateInfo.moveType = cycleType;
-				
-			}
-			
-		}
+		// update followers
 		
-		morphs.play( stateInfo.moveType, { duration: duration, loop: loop, reverse: reverse } );
+		this.update_followers();
 		
 	}
 	
-	function rotate_by_delta ( dx, dy, dz, dw ) {
+	/*===================================================
+	
+	show / hide
+	
+	=====================================================*/
+	
+	function show ( scene ) {
 		
-		var q = this.quaternion,
-			movement = this.movement,
-			rotate = movement.rotate,
-			rotateDelta = rotate.delta,
-			rotateVec = rotate.vector,
-			rotateUtilQ1 = utilQ1Rotate;
+		if ( this.showing === false ) {
+			
+			this._scene = scene || _Game.scene;
+			
+			this.scene.add( this );
+			
+			this.showing = true;
+			
+		}
 		
-		rotateDelta.set( dx || 0, dy || 0, dz || 0, dw || 1 ).normalize();
+	}
+	
+	function hide () {
 		
-		rotateVec.multiplySelf( rotateDelta );
+		if ( this.showing === true ) {
+			
+			this.scene.remove( this );
+			
+			this.showing = false;
+			
+		}
 		
-		rotateUtilQ1.multiply( q, rotateDelta );
-		
-		q.copy( rotateUtilQ1 );
-		
-	};
+	}
 	
 } ( KAIOPUA ) );

@@ -13,7 +13,6 @@
         _Player = {},
 		_Game,
 		_CameraControls,
-		_Character,
 		_Hero,
 		_Physics,
 		_World,
@@ -22,17 +21,13 @@
 		ready = false,
 		enabled = false,
 		showing = false,
-		scene,
-		addOnShow = [],
-		keybindings = {},
-		keybindingsDefault = {},
+		cameraControls,
+		actionsMap,
+		keybindings,
+		keybindingsDefault,
 		character,
 		characterLight,
-		characterLightFollowSettings,
 		following = [],
-		projector,
-		utilRay1Selection,
-		utilVec31Selection,
 		selecting;
 	
 	/*===================================================
@@ -64,8 +59,16 @@
 		}
 	});
 	
+	Object.defineProperty(_Player, 'camera', { 
+		get : function () { return cameraControls.camera; }
+	});
+	
 	Object.defineProperty(_Player, 'character', { 
 		get : function () { return character; }
+	});
+	
+	Object.defineProperty(_Player, 'scene', { 
+		get : function () { return character.scene; }
 	});
 	
 	Object.defineProperty(_Player, 'moving', { 
@@ -77,10 +80,9 @@
 		requirements: [
 			"assets/modules/core/Game.js",
 			"assets/modules/core/CameraControls.js",
-			"assets/modules/core/Character.js",
 			"assets/modules/characters/Hero.js",
 			"assets/modules/core/Physics.js",
-			"assets/modules/core/World.js",
+			"assets/modules/env/World.js",
 			"assets/modules/utils/ObjectHelper.js",
 			"assets/modules/utils/MathHelper.js"
 		],
@@ -94,7 +96,7 @@
     
     =====================================================*/
 	
-	function init_internal ( g, cc, c, h, physx, w, oh, mh ) {
+	function init_internal ( g, cc, h, physx, w, oh, mh ) {
 		console.log('internal player');
 		
 		if ( ready !== true ) {
@@ -103,19 +105,11 @@
 			
 			_Game = g;
 			_CameraControls = cc;
-			_Character = c;
 			_Hero = h;
 			_Physics = physx;
 			_World = w;
 			_ObjectHelper = oh;
 			_MathHelper = mh;
-			
-			// utility objects
-			
-			utilRay1Selection = new THREE.Ray();
-			utilVec31Selection = new THREE.Vector3();
-			
-			projector = new THREE.Projector();
 			
 			// selecting
 			
@@ -134,11 +128,11 @@
 			
 			init_cameracontrols();
 			
+			init_character();
+			
 			init_keybindings();
 			
 			init_controls();
-			
-			init_character();
 			
 			// signals
 			
@@ -158,7 +152,35 @@
 	
 	function init_cameracontrols () {
 		
-		_CameraControls.init( _Player, _Game.camera );
+		cameraControls = new _CameraControls.Instance( _Player, _Game.camera );
+		
+	}
+    
+    /*===================================================
+    
+    character
+    
+    =====================================================*/
+	
+	function init_character () {
+		
+		// create character
+		
+		character = new _Hero.Instance();
+		
+		// init light to follow character
+		
+		characterLight = new THREE.PointLight( 0xfeb41c, 0.8, 400 );
+		
+		characterLight.position.set( -20, 25, 60 );//-30, -20, 5 );
+		
+		character.add( characterLight );
+		
+	}
+	
+	function character_move ( movementTypeName, stop ) {
+		
+		character.move_state_change( movementTypeName, stop );
 		
 	}
 	
@@ -170,90 +192,109 @@
 	
 	function init_keybindings () {
 		
-		var kbMap;
-		
-		// init keybindings
-		
-		kbMap = keybindingsDefault;
+		var map = keybindingsDefault = {};
 		
 		// default keybindings
 		
 		// mouse buttons
 		
-		kbMap[ 'mouseleft' ] = {
-			keydown: function ( e ) { _CameraControls.rotate( e ); },//character_action( 'ability_001_start', { mouseIndex: e ? e.identifier : 0 } ); },
-			keyup: function ( e ) { _CameraControls.rotate( e, true ); }//character_action( 'ability_001_end', { mouseIndex: e ? e.identifier : 0 } ); }
+		map[ 'mouseleft' ] = {
+			keydown: function ( e ) {
+				
+				// modify character action if started
+				
+				var acting = character.action( '001', { event: e, stop: !enabled } );
+				
+				// start rotating camera if character is not acting
+				
+				if ( acting !== true ) {
+					
+					cameraControls.rotate( e );
+					
+				}
+				
+			},
+			keyup: function ( e ) {
+				
+				// stop camera rotate
+				
+				cameraControls.rotate( e, true );
+				
+				// start character action
+				
+				character.action( '002', { event: e, stop: !enabled } );
+				
+			}
 		};
-		kbMap[ 'mousemiddle' ] = {
+		map[ 'mousemiddle' ] = {
 			keydown: function ( e ) { console.log('key down: mousemiddle'); },
 			keyup: function ( e ) { console.log('key up: mousemiddle'); }
 		};
-		kbMap[ 'mouseright' ] = {
-			keydown: function ( e ) { _CameraControls.rotate( e ); },
-			keyup: function ( e ) { _CameraControls.rotate( e, true ); }
+		map[ 'mouseright' ] = {
+			keydown: function ( e ) { cameraControls.rotate( e ); },
+			keyup: function ( e ) { cameraControls.rotate( e, true ); }
 		};
-		kbMap[ 'mousewheel' ] = {
-			keyup: function ( e ) { _CameraControls.zoom( e ); }
+		map[ 'mousewheel' ] = {
+			keyup: function ( e ) { cameraControls.zoom( e ); }
 		};
-			
 		
 		// wasd / uldr
 		
-		kbMap[ '38' /*up*/ ] = kbMap[ '87' /*w*/ ] = kbMap[ 'w' ] = {
+		map[ '38' /*up*/ ] = map[ '87' /*w*/ ] = map[ 'w' ] = {
 			keydown: function () { character_move( 'forward' ); },
 			keyup: function () { character_move( 'forward', true ); }
 		};
 		
-		kbMap[ '40' /*down*/ ] = kbMap[ '83' /*s*/ ] = kbMap[ 's' ] = {
+		map[ '40' /*down*/ ] = map[ '83' /*s*/ ] = map[ 's' ] = {
 			keydown: function () { character_move( 'back' ); },
 			keyup: function () { character_move( 'back', true ); }
 		};
 		
-		kbMap[ '37' /*left*/ ] = kbMap[ '65' /*a*/ ] = kbMap[ 'a' ] = {
-			keydown: function () { character_move( 'turnLeft' ); },
-			keyup: function () { character_move( 'turnLeft', true ); }
+		map[ '37' /*left*/ ] = map[ '65' /*a*/ ] = map[ 'a' ] = {
+			keydown: function () { character_move( 'turnleft' ); },
+			keyup: function () { character_move( 'turnleft', true ); }
 		};
 		
-		kbMap[ '39' /*right*/ ] = kbMap[ '68' /*d*/ ] = kbMap[ 'd' ] = {
-			keydown: function () { character_move( 'turnRight' ); },
-			keyup: function () { character_move( 'turnRight', true ); }
+		map[ '39' /*right*/ ] = map[ '68' /*d*/ ] = map[ 'd' ] = {
+			keydown: function () { character_move( 'turnright' ); },
+			keyup: function () { character_move( 'turnright', true ); }
 		};
 		
 		// qe
 		
-		kbMap[ '81' /*q*/ ] = kbMap[ 'q' ] = {
+		map[ '81' /*q*/ ] = map[ 'q' ] = {
 			keyup: function () { console.log('key up: q'); }
 		};
 		
-		kbMap[ '69' /*e*/ ] = kbMap[ 'e' ] = {
+		map[ '69' /*e*/ ] = map[ 'e' ] = {
 			keyup: function () { console.log('key up: e'); }
 		};
 		
 		// numbers
 		
-		kbMap[ '49' /*1*/ ] = kbMap[ '1' ] = {
+		map[ '49' /*1*/ ] = map[ '1' ] = {
 			keyup: function () { console.log('key up: 1'); }
 		};
-		kbMap[ '50' /*2*/ ] = kbMap[ '2' ] = {
+		map[ '50' /*2*/ ] = map[ '2' ] = {
 			keyup: function () { console.log('key up: 2'); }
 		};
-		kbMap[ '51' /*3*/ ] = kbMap[ '3' ] = {
+		map[ '51' /*3*/ ] = map[ '3' ] = {
 			keyup: function () { console.log('key up: 3'); }
 		};
-		kbMap[ '52' /*4*/ ] = kbMap[ '4' ] = {
+		map[ '52' /*4*/ ] = map[ '4' ] = {
 			keyup: function () { console.log('key up: 4'); }
 		};
-		kbMap[ '53' /*5*/ ] = kbMap[ '5' ] = {
+		map[ '53' /*5*/ ] = map[ '5' ] = {
 			keyup: function () { console.log('key up: 5'); }
 		};
-		kbMap[ '54' /*6*/ ] = kbMap[ '6' ] = {
+		map[ '54' /*6*/ ] = map[ '6' ] = {
 			keyup: function () { console.log('key up: 6'); }
 		};
 		
 		// misc
 		
-		kbMap[ '27' /*escape*/ ] = {
-			keyup: function () { 
+		map[ '27' /*escape*/ ] = {
+			keyup: function () {
 				
 				if ( _Game.paused === true ) {
 					_Game.resume();
@@ -265,28 +306,37 @@
 			}
 		};
 		
-		kbMap[ '32' /*space*/ ] = {
+		map[ '32' /*space*/ ] = {
 			keydown: function () { character_move( 'up' ); },
 			keyup: function () { character_move( 'up', true ); }
 		};
 		
-		kbMap[ '82' /*r*/ ] = kbMap[ 'r' ] = {
+		map[ '82' /*r*/ ] = map[ 'r' ] = {
+			keydown: function () { console.log('key down: r'); },
 			keyup: function () { console.log('key up: r'); }
 		};
 		
-		kbMap[ '70' /*f*/ ] = kbMap[ 'f' ] = {
+		map[ '70' /*f*/ ] = map[ 'f' ] = {
 			keyup: function () { console.log('key up: f'); }
 		};
 		
+		// set list of keys that are always available
+		
+		map.alwaysAvailable = ['27'];
+		
 		// set default as current
 		
-		set_keybindings( kbMap );
+		set_keybindings( map );
 		
 	}
 	
 	function set_keybindings ( map ) {
 		
 		var key;
+		
+		// reset keybindings
+		
+		keybindings = {};
 		
 		// set all new keybindings in map
 		
@@ -316,18 +366,14 @@
 	
 	function allow_control () {
 		
-		if ( showing === true ) {
-			
-			// signals
-			
-			shared.signals.mousedown.add( on_mouse_pressed );
-			shared.signals.mouseup.add( on_mouse_pressed );
-			shared.signals.mousewheel.add( on_mouse_pressed );
-			
-			shared.signals.keydown.add( on_keyboard_used );
-			shared.signals.keyup.add( on_keyboard_used );
-			
-		}
+		// signals
+		
+		shared.signals.mousedown.add( on_mouse_pressed );
+		shared.signals.mouseup.add( on_mouse_pressed );
+		shared.signals.mousewheel.add( on_mouse_pressed );
+		
+		shared.signals.keydown.add( on_keyboard_used );
+		shared.signals.keyup.add( on_keyboard_used );
 		
 	}
 	
@@ -384,14 +430,14 @@
 		
 	}
 	
-	function trigger_key ( keyName, eventType, arguments ) {
+	function trigger_key ( keyName, eventType, parameters ) {
 		
 		var kbMap = keybindings,
 			kbInfo;
 		
 		// trigger by name
 		
-		if ( kbMap.hasOwnProperty( keyName ) === true ) {
+		if ( kbMap.hasOwnProperty( keyName ) === true && ( enabled === true || kbMap.alwaysAvailable.indexOf( keyName ) !== -1 ) ) {
 			
 			kbInfo = kbMap[ keyName ];
 			
@@ -410,11 +456,9 @@
 				
 				// check arguments
 				
-				if ( typeof arguments !== 'undefined' && arguments.hasOwnProperty('length') === false ) {
-					arguments = [ arguments ];
-				}
+				parameters = main.ensure_array( parameters );
 				
-				kbInfo[ eventType ].apply( this, arguments );
+				kbInfo[ eventType ].apply( this, parameters );
 				
 			}
 			
@@ -438,94 +482,6 @@
 			}
 			
 		}
-		
-	}
-	
-	/*===================================================
-    
-    character
-    
-    =====================================================*/
-	
-	function init_character () {
-		
-		// create character
-		
-		character = new _Character.Instance( {
-			
-			type: _Hero
-			
-		} );
-		
-		// init light to follow character
-		
-		characterLight = new THREE.PointLight( 0xfeb41c, 0.35, 400 );
-		
-		characterLightFollowSettings = {
-			obj: characterLight,
-			rotationBase: new THREE.Quaternion(),
-			rotationOffset: new THREE.Vector3( 0, 0, 0 ),
-			positionOffset: new THREE.Vector3( 0, 40, -20 )
-		};
-		
-		following.push( characterLightFollowSettings );
-		
-		// add on show
-		
-		addOnShow.push( character, characterLight );
-		
-	}
-	
-	function character_move ( movementTypeName, stop ) {
-			
-		var movement = character.movement,
-			move = movement.move,
-			rotate = movement.rotate,
-			state = movement.state,
-			moveDir = move.direction,
-			rotateDir = rotate.direction;
-		
-		if ( typeof stop === 'undefined' ) {
-			stop = false;
-		}
-		
-		// handle movement by type name
-		
-		if ( state.hasOwnProperty( movementTypeName ) ) {
-			
-			state[ movementTypeName ] = stop === true ? 0 : 1;
-			
-		}
-		
-		// special cases
-		
-		// set moving
-				
-		if ( state.forward === 1 || state.back === 1 || state.turnLeft === 1 || state.turnRight === 1 || state.up === 1 || state.down === 1 || state.left === 1 || state.right === 1 ) {
-			
-			state.moving = true;
-			
-		}
-		else {
-			
-			state.moving = false;
-			
-		}
-		
-		// update vectors with state
-		
-		moveDir.x = ( state.left - state.right );
-		moveDir.z = ( state.forward - state.back );
-		
-		rotateDir.y = ( state.turnLeft - state.turnRight );
-			
-	}
-	
-	function character_action ( actionName, parameters ) {
-		
-		// handle action
-		
-		character.action( actionName, parameters );
 		
 	}
 	
@@ -565,11 +521,11 @@
 		
 		// select
 			
-		selectedModel = find_selection( mouse );
+		selectedModel = object_under_mouse( mouse );
 		
 		// if a selection was made
 		
-		if ( typeof selectedModel !== 'undefined' ) {
+		if ( typeof selectedModel !== 'undefined' && selectedModel.targetable === true ) {
 			
 			// todo
 			// special selection cases
@@ -697,54 +653,6 @@
 		
 	}
 	
-	function find_selection ( mouse ) {
-		
-		var ray = utilRay1Selection,
-			mousePosition = utilVec31Selection,
-			camera = _CameraControls.camera,
-			intersections,
-			intersectedMesh,
-			intersectedModel;
-		
-		// handle mouse
-		
-		mouse = mouse || get_mouse();
-		
-		// get corrected mouse position
-		
-		mousePosition.x = ( mouse.x / shared.screenWidth ) * 2 - 1;
-		mousePosition.y = -( mouse.y / shared.screenHeight ) * 2 + 1;
-		mousePosition.z = 0.5;
-		
-		// unproject mouse position
-		
-		projector.unprojectVector( mousePosition, camera );
-		
-		// set ray
-
-		ray.origin = camera.position;
-		ray.direction = mousePosition.subSelf( camera.position ).normalize();
-		
-		// find ray intersections
-
-		intersections = ray.intersectScene( scene );
-		
-		if ( intersections.length > 0 ) {
-			
-			intersectedMesh = intersections[ 0 ].object;
-			
-			intersectedModel = intersectedMesh.kaiopuaModel;
-			
-			if ( typeof intersectedModel !== 'undefined' && intersectedModel.targetable === true ) {
-			
-				return intersectedModel;
-				
-			}
-			
-		}
-		
-	}
-	
 	function update_selections ( timeDelta ) {
 		
 		var material = selecting.material,
@@ -803,27 +711,6 @@
 	
 	/*===================================================
     
-    following
-    
-    =====================================================*/
-	
-	function update_following () {
-		
-		var i, l,
-			followSettings;
-		
-		for ( i = 0, l = following.length; i < l; i ++ ) {
-			
-			followSettings = following[ i ];
-			
-			_ObjectHelper.object_follow_object( character, followSettings.obj, followSettings.rotationBase, followSettings.rotationOffset, followSettings.positionOffset );
-				
-		}
-		
-	}
-	
-	/*===================================================
-    
     custom functions
     
     =====================================================*/
@@ -851,8 +738,6 @@
 			enabled = true;
 			
 			shared.signals.update.add( update );
-			
-			allow_control();
 		
 		}
 		
@@ -860,9 +745,17 @@
 	
 	function disable () {
 		
-		enabled = false;
+		// clear keys
 		
-		remove_control();
+		clear_keys_active();
+		
+		// clear character actions
+		
+		character.acting = false;
+		
+		// disable and pause updating
+		
+		enabled = false;
 		
 		shared.signals.update.remove( update );
 		
@@ -872,11 +765,13 @@
 		
 		if ( showing === false ) {
 			
-			scene = _Game.scene;
+			character.show( _Game.scene );
 			
-			_Game.add_to_scene( addOnShow, scene );
+			cameraControls.camera = _Game.camera;
 			
 			showing = true;
+			
+			allow_control();
 			
 		}
 		
@@ -885,8 +780,12 @@
 	function hide () {
 		
 		if ( showing === true ) {
-		
-			_Game.remove_from_scene( addOnShow, scene );
+			
+			remove_control();
+			
+			disable();
+			
+			character.hide();
 			
 			showing = false;
 			
@@ -902,11 +801,7 @@
 		
 		// update camera
 		
-		_CameraControls.update( timeDelta );
-		
-		// items that follow character
-		
-		update_following();
+		cameraControls.update( timeDelta );
 		
 		// selection material
 		

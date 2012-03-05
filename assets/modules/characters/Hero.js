@@ -10,7 +10,10 @@
     
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/characters/Hero.js",
-		_Hero = {};
+		_Hero = {},
+		_Character,
+		_Game,
+		_Farming;
 	
 	/*===================================================
     
@@ -18,85 +21,183 @@
     
     =====================================================*/
 	
-	_Hero.ability_001_start = select_and_scale_start;
-	_Hero.ability_001_end = select_and_scale_end;
-	
-	Object.defineProperty( _Hero, 'id', { 
-		get : get_id
-	});
-	
-	Object.defineProperty( _Hero, 'modelInfo', { 
-		get : get_model_info
-	});
-	
-	Object.defineProperty( _Hero, 'movementInfo', { 
-		get : get_movement_info
-	});
-	
-	Object.defineProperty( _Hero, 'physicsParameters', { 
-		get : get_physics_parameters
-	});
-	
 	main.asset_register( assetPath, { 
-		data: _Hero
+		data: _Hero,
+		requirements: [
+			"assets/modules/characters/Character.js",
+			"assets/modules/core/Game.js",
+			"assets/modules/abilities/Farming.js"
+		],
+		callbacksOnReqs: init_internal,
+		wait: true
 	});
 	
 	/*===================================================
     
-    properties
+    internal init
     
     =====================================================*/
 	
-	function get_id () {
+	function init_internal( c, g, f ) {
+		console.log('internal hero', _Hero);
 		
-		return 'kaiopua_hero';
+		_Character = c;
+		_Game = g;
+		_Farming = f;
 		
-	}
-	
-	function get_model_info () {
+		_Hero.Instance = Hero;
+		_Hero.Instance.prototype = new _Character.Instance();
+		_Hero.Instance.prototype.constructor = _Hero.Instance;
+		_Hero.Instance.prototype.action = action;
+		_Hero.Instance.prototype.add_action = add_action;
 		
-		return {
-			
-			geometryAssetPath: "assets/models/Hero.js",
-			materials:  new THREE.MeshLambertMaterial( { color: 0xFFF7E0, ambient: 0xFFF7E0, vertexColors: THREE.VertexColors } ),
-			shading: THREE.SmoothShading
-			
-		};
-		
-	}
-	
-	function get_movement_info () {
-		
-		var mi = {};
-		
-		mi.moveSpeed = 6;
-		mi.moveSpeedBack = 2;
-		mi.moveRunThreshold = mi.moveSpeed;
-		mi.rotateSpeed = 0.019;
-		mi.jumpSpeedStart = 6;
-		mi.jumpSpeedEnd = 0;
-		mi.jumpTimeMax = 100;
-		
-		return mi;
-		
-	}
-		
-	function get_physics_parameters () {
-		
-		return {
-			
-			bodyType: 'capsule',
-			movementDamping: 0.5
-			
-		};
+		Object.defineProperty( _Hero.Instance.prototype, 'acting', { 
+			get: is_acting,
+			set: is_acting
+		});
 		
 	}
 	
 	/*===================================================
     
-    abilities
+    hero
     
     =====================================================*/
+	
+	function Hero ( parameters ) {
+		
+		// handle parameters
+		
+		parameters = parameters || {};
+		
+		parameters.id = 'kaiopua_hero';
+		
+		parameters.model = parameters.modelInfo || {};
+		parameters.model.geometry = main.get_asset_data( "assets/models/Hero.js" );
+		parameters.model.materials = new THREE.MeshLambertMaterial( { color: 0xFFF7E0, ambient: 0xFFF7E0, vertexColors: THREE.VertexColors } );
+		parameters.model.shading = THREE.SmoothShading;
+		
+		parameters.model.physics = parameters.model.physics || {};
+		parameters.model.physics.bodyType = 'capsule';
+		parameters.model.physics.movementDamping = 0.5;
+		
+		parameters.movement = parameters.movement || {};
+		parameters.movement.moveSpeed = 6;
+		parameters.movement.moveSpeedBack = 2;
+		parameters.movement.moveRunThreshold = parameters.movement.moveSpeed;
+		parameters.movement.rotateSpeed = 0.019;
+		parameters.movement.jumpSpeedStart = 6;
+		parameters.movement.jumpSpeedEnd = 0;
+		parameters.movement.jumpTimeMax = 100;
+		
+		// prototype constructor
+		
+		_Character.Instance.call( this, parameters );
+	
+		// init actions map
+		
+		this.actions = {};
+
+		// farming
+		
+		this.farming = new _Farming.Instance( this );
+		
+		// add to actions
+		
+		this.add_action( this.farming.plant, [ '002', 'plant' ], this.farming );
+		this.add_action( this.farming.rotate_plant, [ '001', 'rotate_plant' ], this.farming );
+		
+	}
+	
+	/*===================================================
+	
+	actions
+	
+	=====================================================*/
+	
+	function action ( actionName, parameters ) {
+		
+		var actionInfo;
+		
+		// if action type is in actions map, do it
+		if ( this.actions.hasOwnProperty( actionName ) ) {
+			
+			actionInfo = this.actions[ actionName ];
+			
+			actionInfo.active = actionInfo.action.call( actionInfo.context, parameters );
+			
+			return actionInfo.active;
+			
+		}
+		// clear all actions
+		else {
+			
+			this.acting = false;
+			
+		}
+		
+	}
+	
+	function add_action ( actionCallback, actionNames, context ) {
+		
+		var i, l,
+			actionName;
+		
+		actionNames = main.ensure_array( actionNames );
+		
+		for ( i = 0, l = actionNames.length; i < l; i++ ) {
+			
+			actionName = actionNames[ i ];
+			
+			// add to actions map
+			
+			this.actions[ actionName ] = {
+				action: actionCallback,
+				context: context || this
+			};
+		
+		}
+		
+	}
+	
+	function is_acting ( continueActing ) {
+		
+		var actionName,
+			actionInfo,
+			acting = false;
+		
+		// trigger stop for all actions that are active
+		
+		for ( actionName in this.actions ) {
+			
+			actionInfo = this.actions[ actionName ];
+			
+			if ( actionInfo.active === true ) {
+				
+				if ( continueActing === false ) {
+					
+					this.action( actionName, false );
+					
+				}
+				else {
+					
+					acting = true;
+					
+					break;
+					
+				}
+				
+			}
+			
+		}
+		
+		return acting;
+		
+	}
+    
+	/*
+	// OLD SCALE ACTION
+	// NOT IN USE, SAVE ANYWAY
 	
 	function select_and_scale_start ( parameters ) {
 		
@@ -308,5 +409,6 @@
 		target.scale.set( scaleX, scaleY, scaleZ );
 		
 	}
+	*/
 	
 } ( KAIOPUA ) );

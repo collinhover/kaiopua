@@ -604,76 +604,111 @@
 		return link;
 	}
 	
-	// adds mesh's rigid body to physics world
-	// creates new rigid body if one is not passed
+	// adds object's physics link to physics world
 	
-	function add ( linkOrMesh, parameters ) {
+	function add ( object ) {
 		
-		var rigidBody,
-			link;
-		
-		if ( typeof linkOrMesh !== 'undefined' ) {
-			
-			// if link is object3D or rigidBody does not exist, translate
-			
-			if ( linkOrMesh instanceof THREE.Object3D || typeof linkOrMesh.rigidBody === 'undefined' ) {
-				
-				link = translate( linkOrMesh, parameters );
-				
-			}
-			else {
-				
-				link = linkOrMesh;
-				
-			}
-			
-			rigidBody = link.rigidBody;
-			
-			// add to system
-			
-			system.colliders.push( rigidBody.collider );
-			
-			// zero out velocities
-			
-			rigidBody.velocityMovement.force.set( 0, 0, 0 );
-			
-			rigidBody.velocityGravity.force.set( 0, 0, 0 );
-			
-			// add to links list
-			
-			links.push( link );
-			
-		}
-		
-		return link;
+		modify_links( object, true );
 		
 	}
 	
-	// removes mesh's rigid body from physics world
+	// removes object's physics link from physics world
 	
-	function remove ( linkOrMeshOrBodyOrName ) {
+	function remove( object ) {
+		
+		modify_links( object );
+		
+	}
+	
+	// adds or removes physics links from physics world
+	// TODO: allow passing of links directly
+	
+	function modify_links ( object, adding ) {
 		
 		var i, l,
 			link,
-			index;
+			rigidBody,
+			indexCollider,
+			indexLink,
+			child;
+		
+		if ( typeof object !== 'undefined' ) {
+				
+			// own physics
 			
-		for ( i = 0, l = links.length; i < l; i ++ ) {
-			
-			link = links[ i ];
-			
-			if ( link === linkOrMeshOrBodyOrName || link.mesh === linkOrMeshOrBodyOrName || link.rigidBody === linkOrMeshOrBodyOrName || link.name === linkOrMeshOrBodyOrName ) {
+			if ( typeof object.physics !== 'undefined' ) {
 				
-				links.splice( i, 1 );
+				link = object.physics;
 				
-				index = system.colliders.indexOf( link.rigidBody.collider );
+				rigidBody = link.rigidBody;
 				
-				if ( index !== -1 ) {
+				// zero out velocities
 				
-					system.colliders.splice( index, 1 );
+				rigidBody.velocityMovement.force.set( 0, 0, 0 );
+				
+				rigidBody.velocityGravity.force.set( 0, 0, 0 );
+				
+				// get indices
+				
+				indexCollider = system.colliders.indexOf( rigidBody.collider );
+				
+				indexLink = links.indexOf( link );
+				
+				// if adding
+				
+				if ( adding === true ) {
+					
+					// system
+					
+					if ( indexCollider === -1 ) {
+						
+						system.colliders.push( rigidBody.collider );
+						
+					}
+					
+					// links
+					
+					if ( indexLink === -1 ) {
+						
+						links.push( link );
+						
+					}
+					
+				}
+				// default to remove
+				else {
+					
+					// system
+					
+					if ( indexCollider !== -1 ) {
+						
+						system.colliders.splice( indexCollider, 1 );
+						
+					}
+					
+					// links
+					
+					if ( indexLink !== -1 ) {
+						
+						links.splice( indexLink, 1 );
+						
+					}
 					
 				}
 				
-				break;
+			}
+			
+			// search for physics in children
+			
+			if ( typeof object.children !== 'undefined' ) {
+				
+				for ( i = 0, l = object.children.length; i < l; i++ ) {
+					
+					child = object.children[ i ];
+					
+					modify_links( child, adding );
+					
+				}
 				
 			}
 			

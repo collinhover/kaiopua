@@ -20,6 +20,10 @@
 		_Intro,
         transitioner,
         domElement,
+		containerOverlayAll,
+		containerOverlayDisplay,
+		containerUI,
+		containerDisplay,
         renderer, 
         renderTarget,
 		renderComposer,
@@ -39,8 +43,12 @@
         previousSection,
         paused = false,
 		started = false,
+		utilProjector1Selection,
+		utilRay1Selection,
+		utilVec31Selection,
         transitionOut = 1000, 
         transitionIn = 400,
+		transitionerAlpha = 0.75,
         loadAssetsDelay = 500,
 		dependencies = [
 			"assets/modules/utils/AssetLoader.js",
@@ -74,18 +82,24 @@
 			"js/lib/three/physics/Collisions.js",
 			"js/lib/three/physics/CollisionUtils.js",
 			"assets/modules/core/Physics.js",
-			"assets/modules/core/World.js",
 			"assets/modules/core/Player.js",
 			"assets/modules/core/Model.js",
 			"assets/modules/core/CameraControls.js",
-			"assets/modules/core/Character.js",
-			"assets/modules/core/Puzzles.js",
 			"assets/modules/utils/ObjectMaker.js",
 			"assets/modules/utils/ObjectHelper.js",
 			"assets/modules/utils/MenuMaker.js",
-			"assets/modules/characters/EmptyCharacter.js",
+			"assets/modules/characters/Character.js",
 			"assets/modules/characters/Hero.js",
+			"assets/modules/env/World.js",
+			"assets/modules/env/WorldIsland.js",
 			"assets/modules/env/Water.js",
+			"assets/modules/puzzles/Puzzles.js",
+			"assets/modules/puzzles/Grid.js",
+			"assets/modules/puzzles/GridModule.js",
+			"assets/modules/puzzles/GridModuleState.js",
+			"assets/modules/puzzles/GridElement.js",
+			"assets/modules/puzzles/Plant.js",
+			"assets/modules/abilities/Farming.js",
 			"assets/modules/sections/Intro.js",
             { path: "assets/models/Whale_Head.js", type: 'model' },
 			{ path: "assets/models/Whale_Tail.js", type: 'model' },
@@ -153,9 +167,13 @@
 	
     _Game.resume = resume;
     _Game.pause = pause;
-	_Game.get_mouse = get_mouse;
+	
 	_Game.add_to_scene = add_to_scene;
 	_Game.remove_from_scene = remove_from_scene;
+	
+	_Game.get_mouse = get_mouse;
+	_Game.get_intersection_from_mouse = get_intersection_from_mouse;
+	_Game.get_object_under_mouse = get_object_under_mouse;
 	
 	// getters and setters
 	
@@ -259,7 +277,7 @@
 			
 			// load game assets and init game
 			
-			main.asset_require( assetsGame, init_game, true, domElement );
+			main.asset_require( assetsGame, init_game, true, containerOverlayAll.domElement );
 			
 		}, loadAssetsDelay);
 		
@@ -285,14 +303,9 @@
 		
 		_MathHelper = main.get_asset_data( "assets/modules/utils/MathHelper.js" );
 		
-		// modify THREE classes
-		
-		add_three_modifications();
-		
-        // transitioner
-        transitioner = _UIHelper.make_ui_element({
-            classes: 'transitioner'
-        });
+		utilProjector1Selection = new THREE.Projector();
+		utilRay1Selection = new THREE.Ray();
+		utilVec31Selection = new THREE.Vector3();
 		
 		// cardinal axes
 		shared.cardinalAxes = {
@@ -306,6 +319,44 @@
         shared.signals.paused = new signals.Signal();
         shared.signals.resumed = new signals.Signal();
         shared.signals.update = new signals.Signal();
+		
+		// set up game dom elements
+		
+		domElement = shared.html.gameContainer;
+		
+		containerOverlayAll = _UIHelper.make_ui_element( {
+			id: 'game_overlay_all',
+			classes: 'container_fullscreen',
+			pointerEventsOnlyWithChildren: true
+        });
+		containerOverlayDisplay = _UIHelper.make_ui_element( {
+			id: 'game_overlay_display',
+			classes: 'container_fullscreen',
+			pointerEventsOnlyWithChildren: true
+        });
+		containerUI = _UIHelper.make_ui_element( {
+			id: 'game_ui',
+			classes: 'container_fullscreen'
+        });
+		containerDisplay = _UIHelper.make_ui_element( {
+			id: 'game_visuals',
+			classes: 'container_fullscreen'
+        });
+		
+		domElement.append( containerDisplay.domElement );
+		domElement.append( containerOverlayDisplay.domElement );
+		domElement.append( containerUI.domElement );
+		domElement.append( containerOverlayAll.domElement );
+		
+        // transitioner
+		
+        transitioner = _UIHelper.make_ui_element({
+            classes: 'transitioner container_fullscreen'
+        });
+		
+		// modify THREE classes
+		
+		add_three_modifications();
 		
 		// renderer
         renderer = new THREE.WebGLRenderer( { antialias: true, clearColor: 0x000000, clearAlpha: 0/*, maxLights: 10 */} );
@@ -381,11 +432,9 @@
         
         set_render_processing();
 		
-		// add renderer to game dom element
+		// add to display
 		
-		domElement = shared.html.gameContainer;
-		
-        domElement.append( renderer.domElement );
+        containerDisplay.domElement.append( renderer.domElement );
 		
 		// resize
 		
@@ -467,13 +516,15 @@
 		
 		// init menus
 		
+		init_footer_menu();
+		
 		init_start_menu();
 		
 		init_pause_menu();
 		
 		// show start menu
 		
-		menus.start.ui_show( domElement );
+		menus.start.ui_show( containerUI.domElement );
 		
     }
 	
@@ -482,6 +533,16 @@
     game menus
     
     =====================================================*/
+	
+	function init_footer_menu() {
+		
+		var menu;
+		
+		// init footer menu
+		
+		menu = menus.footer = _UIHelper.make_ui_element( { domElement: shared.html.footerMenu } );
+			
+	}
 	
 	function init_start_menu () {
 		var menu;
@@ -742,14 +803,6 @@
 				
 				sceneTarget.add( object3D );
 				
-				// physics
-				
-				if ( typeof object3D.physics !== 'undefined' ) {
-					
-					_Physics.add( object3D.physics );
-					
-				}
-				
 			}
 			
 			// if callback passed
@@ -797,14 +850,6 @@
 			if ( typeof object3D !== 'undefined' ) {
 				
 				sceneTarget.remove( object3D );
-				
-				// physics
-				
-				if ( typeof object3D.physics !== 'undefined' ) {
-					
-					_Physics.remove( object3D.physics );
-					
-				}
 				
 			}
 			
@@ -895,6 +940,78 @@
 		return mouse;
 	}
 	
+	function get_intersection_from_mouse ( objects, mouse, cameraTarget ) {
+		
+		var projector = utilProjector1Selection,
+			ray = utilRay1Selection,
+			mousePosition = utilVec31Selection,
+			intersections,
+			intersectedMesh;
+		
+		// handle parameters
+		
+		mouse = mouse || get_mouse();
+		
+		cameraTarget = cameraTarget || camera;
+		
+		objects = objects || scene;
+		
+		// if objects is instance of scene
+		
+		if ( objects instanceof THREE.Scene ) {
+			
+			objects = objects.children;
+			
+		}
+		
+		// ensure objects is array
+		
+		objects = main.ensure_array( objects );
+		
+		// get corrected mouse position
+		
+		mousePosition.x = ( mouse.x / shared.screenWidth ) * 2 - 1;
+		mousePosition.y = -( mouse.y / shared.screenHeight ) * 2 + 1;
+		mousePosition.z = 0.5;
+		
+		// unproject mouse position
+		
+		projector.unprojectVector( mousePosition, cameraTarget );
+		
+		// set ray
+
+		ray.origin = cameraTarget.position;
+		ray.direction = mousePosition.subSelf( cameraTarget.position ).normalize();
+		
+		// find ray intersections
+		
+		intersections = ray.intersectObjects( objects );
+		
+		if ( intersections.length > 0 ) {
+			
+			return intersections[ 0 ];
+			
+		}
+		
+	}
+	
+	function get_object_under_mouse ( objects, mouse, cameraTarget ) {
+		
+		var intersection = get_intersection_from_mouse( objects, mouse, cameraTarget ),
+			intersectedMesh;
+		
+		// extract mesh and, if present, model
+		
+		if ( typeof intersection !== 'undefined' ) {
+			
+			intersectedMesh = intersection.object;
+			
+			return intersectedMesh.kaiopuaModel || intersectedMesh;
+			
+		}
+		
+	}
+	
 	/*===================================================
     
     section functions
@@ -922,7 +1039,7 @@
 					
 				}
 				
-				$(domElement).append(transitioner.domElement);
+				transitioner.ui_hide( true, transitionOut );
 				
 				section.resize(shared.screenWidth, shared.screenHeight);
 				
@@ -931,12 +1048,6 @@
                 currentSection = section;
 				
 				resume();
-                
-                $(transitioner.domElement).stop(true).fadeTo(transitionOut, 0, function () {
-					
-                    $(transitioner.domElement).detach();
-					
-				});
 				
 				// callback after transition out time
 				
@@ -963,9 +1074,7 @@
             
             previousSection.hide();
             
-            $(domElement).append(transitioner.domElement);
-            
-            $(transitioner.domElement).stop(true).fadeTo(transitionIn, 1 );
+			transitioner.ui_show( containerOverlayAll.domElement, transitionIn );
             
         }
 		
@@ -1017,26 +1126,26 @@
     =====================================================*/
     
     function start_game () {
-        var ms = menus.start;
 		
 		// assets
 		
 		_Physics = main.get_asset_data( 'assets/modules/core/Physics.js' );
 		_Intro = main.get_asset_data( 'assets/modules/sections/Intro.js' );
 		
-		// hide static menu
+		// hide footer menu
 		
-		$(shared.html.staticMenu).stop(true).fadeTo( transitionIn, 0 );
+		menus.footer.ui_hide( true );
+		//$(shared.html.staticMenu).stop(true).fadeTo( transitionIn, 0 );
 		
         // disable start menu
 		
-        ms.disable();
+        menus.start.disable();
         
         // hide start menu
 		
-        ms.ui_hide( true );
+        menus.start.ui_hide( true );
         
-        // set intro section
+		// set intro section
 		
         set_section( _Intro );
 		
@@ -1048,26 +1157,24 @@
 	
 	function stop_game () {
 		
-		var ms = menus.start,
-			mp = menus.pause;
-		
 		// set started
 		
 		started = false;
 		
 		// hide and disable pause menu
 		
-		if ( typeof mp !== 'undefined' ) {
+		if ( typeof menus.pause !== 'undefined' ) {
 			
-			mp.disable();
+			menus.pause.disable();
 		
-			mp.ui_hide( true );
+			menus.pause.ui_hide( true );
 			
 		}
 		
-		// show static menu
+		// show footer menu
 		
-		$(shared.html.staticMenu).stop(true).fadeTo( transitionOut, 1 );
+		menus.footer.ui_show();
+		//$(shared.html.staticMenu).stop(true).fadeTo( transitionOut, 1 );
 		
 		// set launcher section
 		
@@ -1075,36 +1182,42 @@
 			
 			// show / enable start menu
 			
-			ms.ui_show( domElement );
+			menus.start.ui_show( containerUI.domElement );
 			
-			ms.enable();
+			menus.start.enable();
 			
 		});
 		
 	}
     
     function pause () {
+		
         if (paused === false) {
             
             paused = true;
 			
-			$(domElement).append(transitioner.domElement);
-            
-			$(transitioner.domElement).stop(true).fadeTo(transitionIn, 0.75);
-			
 			if ( started === true ) {
 				
-				menus.pause.ui_show( domElement );
+				transitioner.ui_show( containerOverlayDisplay.domElement, transitionIn, transitionerAlpha );
+				
+				menus.pause.ui_show( containerUI.domElement );
 				
 				menus.pause.enable();
 				
-				$(shared.html.staticMenu).stop(true).fadeTo( transitionOut, 1 );
+				menus.footer.ui_show();
+				//$(shared.html.staticMenu).stop(true).fadeTo( transitionOut, 1 );
+				
+			}
+			else {
+				
+				transitioner.ui_show( containerOverlayAll.domElement, transitionIn, transitionerAlpha );
 				
 			}
             
             shared.signals.paused.dispatch();
             
         }
+		
     }
     
     function resume () {
@@ -1119,21 +1232,16 @@
 		
         if (paused === true) {
 			
-			$(domElement).append(transitioner.domElement);
-			
-			$(transitioner.domElement).stop(true).fadeTo(transitionOut, 0, function () {
-				
-				$(transitioner.domElement).detach();
-				
-			});
+			transitioner.ui_hide( true, transitionOut );
 			
 			if ( started === true ) {
 				
 				menus.pause.disable();
 				
-				menus.pause.ui_hide( true, undefined, on_menu_hidden );
+				menus.pause.ui_hide( true, undefined, 0, on_menu_hidden );
 				
-				$(shared.html.staticMenu).stop(true).fadeTo( transitionIn, 0 );
+				menus.footer.ui_hide( true );
+				//$(shared.html.staticMenu).stop(true).fadeTo( transitionIn, 0 );
 				
 			}
 			else {

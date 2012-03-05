@@ -69,7 +69,7 @@
 	Object.defineProperty(_AssetLoader, 'loadingTips', { 
 		get : function () { return loadingTips; },
 		set: function ( newTips ) {
-			loadingTips = newTips.slice( 1 );
+			loadingTips = newTips.slice( 0 );
 		}
 	});
 	
@@ -285,7 +285,7 @@
 			// set loading message
 			
 			if ( typeof message !== 'undefined' ) {
-		
+				
 				$(message.domElement).html( message );
 				
 			}

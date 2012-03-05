@@ -34,11 +34,51 @@
 		_Physics = p;
 		_MathHelper = mh;
 		
-		_Model.Instance = KaiopuaModel;
+		_Model.Instance = Model;
 		_Model.Instance.prototype = new THREE.Mesh();
 		_Model.Instance.prototype.constructor = _Model.Instance;
 		_Model.Instance.prototype.compute_dimensions_from_bounding_box = compute_dimensions_from_bounding_box;
 		_Model.Instance.prototype.compute_center_offset = compute_center_offset;
+		
+		// catch parent changes and add / remove physics automatically
+		
+		Object.defineProperty( _Model.Instance.prototype, 'parent', { 
+			get : function () { return this._parent; },
+			set : function ( newParent ) {
+				
+				var scene;
+				
+				// store new parent
+				
+				this._parent = newParent;
+				
+				// search for scene
+				
+				scene = this;
+				
+				while ( typeof scene.parent !== 'undefined' ) {
+					
+					scene = scene.parent;
+					
+				}
+				
+				// if parent is child of scene, add physics
+				
+				if ( scene instanceof THREE.Scene )  {
+					
+					_Physics.add( this );
+					
+				}
+				// else default to remove
+				else {
+					
+					_Physics.remove( this );
+					
+				}
+				
+			}
+			
+		});
 		
 	}
 	
@@ -50,7 +90,7 @@
 	
 	// adds functionality to and inherits from THREE.Mesh
 	
-	function KaiopuaModel ( parameters ) {
+	function Model ( parameters ) {
 		
 		var i, l,
 			geometry,
@@ -70,14 +110,14 @@
 		
 		// geometry
 		
-		if ( parameters.hasOwnProperty( 'geometry' ) ) {
+		if ( parameters.geometry instanceof THREE.Geometry ) {
 			
 			geometry = parameters.geometry;
 			
 		}
-		else if ( parameters.hasOwnProperty( 'geometryAssetPath' ) ) {
+		else if ( typeof parameters.geometry === 'string' ) {
 			
-			geometry = main.get_asset_data( parameters.geometryAssetPath );
+			geometry = main.get_asset_data( parameters.geometry );
 			
 		}
 		else {
@@ -250,11 +290,7 @@
 		
 		this.compute_center_offset();
 		
-		//
-		//
-		//
-		//
-		// TESTING
+		// adjust for offset if needed
 		
 		if ( parameters.adjustForOffset === true ) {
 			
@@ -318,14 +354,13 @@
 		
 		if ( parameters.hasOwnProperty( 'physics' ) ) {
 			
-			this.physics = parameters.physics;
+			this.physics = _Physics.translate( this, parameters.physics );
 			
 		}
-		else if ( parameters.hasOwnProperty( 'physicsParameters' ) ) {
-			
-			this.physics = _Physics.translate( this, parameters.physicsParameters );
-			
-		}
+		
+		// id
+		
+		this.id = parameters.id || this.id;
 		
 	}
 	

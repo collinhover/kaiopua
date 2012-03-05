@@ -472,15 +472,20 @@ footer .copyright {
     text-align: center;
 }
 
-/* transitioner
+/* full-screen container
 -------------------------*/
-.transitioner {
-    min-height: 100%;
+.container_fullscreen {
+	min-height: 100%;
 	width: 100%;
 	height: auto;
 	position: fixed;
 	top: 0;
 	left: 0;
+}
+
+/* transitioner
+-------------------------*/
+.transitioner {
     background-color: #333333;
 }
 
