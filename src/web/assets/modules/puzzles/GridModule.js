@@ -11,8 +11,9 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/puzzles/GridModule.js",
 		_GridModule = {},
-		_GridModuleState,
 		_Model,
+		_GridModuleState,
+		_GridElement,
 		states;
 	
 	/*===================================================
@@ -24,8 +25,9 @@
 	main.asset_register( assetPath, {
 		data: _GridModule,
 		requirements: [
+			"assets/modules/core/Model.js",
 			"assets/modules/puzzles/GridModuleState.js",
-			"assets/modules/core/Model.js"
+			"assets/modules/puzzles/GridElement.js",
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -37,10 +39,11 @@
 	
 	=====================================================*/
 	
-	function init_internal ( gms, m ) {
+	function init_internal ( m, gms, ge ) {
 		console.log("internal grid module", _GridModule);
-		_GridModuleState = gms;
 		_Model = m;
+		_GridModuleState = gms;
+		_GridElement = ge;
 	
 		// instance
 		
@@ -51,6 +54,8 @@
 		_GridModule.Instance.prototype.change_state = change_state;
 		_GridModule.Instance.prototype.show_state = show_state;
 		_GridModule.Instance.prototype.get_state = get_state;
+		_GridModule.Instance.prototype.add_grid_element = add_grid_element;
+		_GridModule.Instance.prototype.test_grid_element = test_grid_element;
 		_GridModule.Instance.prototype.has_face_or_vertex_index = has_face_or_vertex_index;
 		_GridModule.Instance.prototype.get_modules_connected = get_modules_connected;
 		_GridModule.Instance.prototype.find_and_store_connected = find_and_store_connected;
@@ -77,7 +82,7 @@
 		});
 		
 		Object.defineProperty( _GridModule.Instance.prototype, 'occupied', { 
-			get: function () { return Boolean( this.states.occupied.active ); }
+			get: function () { return this.states.occupied.active; }
 		});
 		
 	}
@@ -90,8 +95,6 @@
 	
 	function GridModule ( parameters ) {
 		
-		var me = this;
-		
 		// handle parameters
 		
 		parameters = parameters || {};
@@ -100,35 +103,35 @@
 		
 		// prototype constructor
 		
-		_Model.Instance.call( me, parameters );
+		_Model.Instance.call( this, parameters );
 		
 		// store grid reference
 		
-		me.grid = parameters.grid;
+		this.grid = parameters.grid;
 		
 		// states
 		
-		me.states = {};
-		me.states.list = [
+		this.states = {};
+		this.states.list = [
 			'base',
 			'occupied',
 			'water'
 		];
 		
-		me.states.overdraw = false;
+		this.states.overdraw = false;
 		
-		me.states.base = new _GridModuleState.Instance( {
+		this.states.base = new _GridModuleState.Instance( {
 			active: 1,
 			dynamic: false,
 			color: 0xe6b266,
 			ambient: 0xe6b266
 		} );
-		me.states.water = new _GridModuleState.Instance( {
+		this.states.water = new _GridModuleState.Instance( {
 			priority: 1,
 			color: 0x17DAF8,
 			ambient: 0x17DAF8
 		} );
-		me.states.occupied = new _GridModuleState.Instance( {
+		this.states.occupied = new _GridModuleState.Instance( {
 			constant: false,
 			color0: 0x0ccd6f,
 			ambient0: 0x0ccd6f,
@@ -138,7 +141,7 @@
 		
 		// set to base state
 		
-		me.reset();
+		this.reset();
 		
 	}
 	
@@ -152,6 +155,12 @@
 		this.change_state( statesList, false );
 			
 	}
+	
+	/*===================================================
+	
+	states
+	
+	=====================================================*/
 	
 	function change_state ( ids, activates ) {
 		
@@ -201,7 +210,7 @@
 		
 	}
 	
-	function show_state ( overdraw ) {
+	function show_state ( overdraw, activeLevel ) {
 		
 		var state,
 			overdrawPrev = this.states.overdraw;
@@ -247,7 +256,7 @@
 			
 			// modify module material with state
 			
-			state.modify_material( this.material );
+			state.modify_material( this.material, activeLevel );
 			
 			// clear dirty
 			
@@ -310,35 +319,212 @@
 		return b.priority - a.priority;
 	}
 	
-	function has_face_or_vertex_index( searchFor ) {
+	/*===================================================
+	
+	grid elements
+	
+	=====================================================*/
+	
+	function add_grid_element ( gridElement, show ) {
+		
+		return this.test_grid_element( gridElement, show, true );
+		
+	}
+	
+	function test_grid_element ( gridElement, show, add ) {
 		
 		var i, l,
-			faces,
-			face,
-			has = false;
+			success = 0,
+			layout,
+			dimensions,
+			rows,
+			cols,
+			testResults,
+			spreadRecord,
+			center,
+			modulesTested,
+			moduleTested;
 		
-		// search all faces
+		// valid grid element
 		
-		faces = this.geometry.faces;
-		
-		for ( i = 0, l = faces.length; i < l; i++ ) {
+		if ( gridElement instanceof _GridElement.Instance ) {
 			
-			face = faces[ i ];
+			// basics
 			
-			if ( ( ( searchFor instanceof THREE.Face4 || searchFor instanceof THREE.Face3 ) && searchFor === face ) 
-				|| ( _MathHelper.is_number( searchFor ) && ( searchFor === face.a || searchFor === face.b || searchFor === face.c || searchFor === face.d ) ) ) {
+			layout = gridElement.layout;
+			dimensions = layout.dimensions();
+			rows = dimensions.rows;
+			cols = dimensions.cols;
+			testResults = Matrix.Zero( rows, cols );
+			spreadRecord = testResults.dup();
+			center = gridElement.get_center_layout();
+			modulesTested = [];
+			
+			// return recursive test results
+			
+			success = test_grid_element_spread( this, layout, testResults, spreadRecord, center.row, center.col, rows, cols, modulesTested );
+			
+			// show / add test results of grid element on modules tested
+			// force occupied state to match success
+			
+			for ( i = 0, l = modulesTested.length; i < l; i++ ) {
 				
-				has = true;
+				moduleTested = modulesTested[ i ];
 				
-				break;
+				// show if required
+				
+				if ( show === true ) {
+				
+					moduleTested.show_state( 'occupied', 1 - success );
+					
+				}
+				
+				// add if successful and required
+				
+				if ( success && add === true ) {
+					
+					moduleTested.change_state( 'occupied', true );
+					
+				}
 				
 			}
 			
 		}
 		
-		return has;
+		return Boolean( success );
 		
 	}
+	
+	function test_grid_element_spread ( module, layout, testResults, spreadRecord, rowIndex, colIndex, numRows, numCols, modulesTested ) {
+		
+		var i, l,
+			j, k,
+			success = 1,
+			successNext,
+			connected,
+			moduleNext,
+			index,
+			elements = layout.elements,
+			elementsTR = testResults.elements,
+			elementsSR = spreadRecord.elements,
+			element,
+			rowNext,
+			rowArr = Math.max( 0, rowIndex - 1 ),
+			rowMin,
+			rowIndexToMin,
+			rowMax,
+			rowsSq,
+			colNext,
+			colArr = Math.max( 0, colIndex - 1 ),
+			colMin,
+			colIndexToMin,
+			colMax,
+			colsSq;
+		
+		// update spread record
+		
+		elementsSR[ rowArr ][ colArr ] = 1;
+		
+		// test element
+			
+		element = elements[ rowArr ][ colArr ];
+		
+		// if layout element present
+		
+		if ( element === 1 ) {
+			
+			// if module is valid
+			
+			if ( module instanceof _GridModule.Instance ) {
+				
+				// test success
+				
+				success = 1 - module.occupied;
+				
+				// add module to tested list
+				
+				index = modulesTested.indexOf( module );
+				
+				if ( index === -1 ) {
+					
+					modulesTested.push( module );
+					
+				}
+				
+			}
+			// no module where needed
+			else {
+				
+				success = 0;
+				
+			}
+			
+			// store success
+			
+			elementsTR[ rowArr ][ colArr ] = success;
+			
+		}
+		
+		// if module is valid
+			
+		if ( module instanceof _GridModule.Instance ) {
+			
+			// get square around module in layout
+			
+			rowMin = Math.max( 1, rowArr );
+			rowIndexToMin = rowIndex - rowMin;
+			rowMax = Math.min( numRows, rowIndex + 1 );
+			rowsSq = Math.min( numRows, rowMax - rowMin + 1 );
+			colMin = Math.max( 1, colArr );
+			colIndexToMin = colIndex - colMin;
+			colMax = Math.min( numCols, colIndex + 1 );
+			colsSq = Math.min( numCols, colMax - colMin + 1 );
+			
+			// spread to all connected modules
+			// continue even if unsuccessful to record all modules affected by layout
+			
+			connected = module.connected;
+			
+			for ( i = 0, l = rowsSq; i < l; i++ ) {
+				
+				for ( j = 0, k = colsSq; j < k; j++ ) {
+					
+					rowNext = rowMin + i;
+					colNext = colMin + j;
+					
+					// get next module
+					
+					moduleNext = connected[ ( ( i + ( 1 - rowIndexToMin ) ) * 3 + ( j + ( 1 - colIndexToMin ) ) ) ];
+					
+					// if module location not tested yet
+					
+					if ( spreadRecord.e( rowNext, colNext ) !== 1 ) {
+						
+						successNext = test_grid_element_spread( moduleNext, layout, testResults, spreadRecord, rowNext, colNext, numRows, numCols, modulesTested );
+						
+						// record next success while successful
+						
+						if ( success ) {
+							success = successNext;
+						}
+						
+					}
+					
+				}
+				
+			}
+			
+		}
+			
+		return success;
+		
+	}
+	
+	/*===================================================
+	
+	connected
+	
+	=====================================================*/
 		
 	function get_modules_connected ( connected, recalculate ) {
 		
@@ -376,11 +562,11 @@
 					
 					// ab / up
 					
-					this.find_and_store_connected( face.a, face.b, [ 'ab', 'up' ] );
+					this.find_and_store_connected( face.a, face.b, [ 1, 'ab', 'up' ] );
 					
 					// bc / left
 					
-					this.find_and_store_connected( face.b, face.c, [ 'bc', 'left' ] );
+					this.find_and_store_connected( face.b, face.c, [ 3, 'bc', 'left' ] );
 					
 					// by face type
 					
@@ -388,18 +574,18 @@
 						
 						// cd / down
 						
-						this.find_and_store_connected( face.c, face.d, [ 'cd', 'down' ] );
+						this.find_and_store_connected( face.c, face.d, [ 7, 'cd', 'down' ] );
 						
 						// da / right
 						
-						this.find_and_store_connected( face.d, face.a, [ 'da', 'right' ] );
+						this.find_and_store_connected( face.d, face.a, [ 5, 'da', 'right' ] );
 						
 					}
 					else {
 						
 						// ca / right / down
 						
-						this.find_and_store_connected( face.c, face.a, [ 'ca', 'right', 'down' ] );
+						this.find_and_store_connected( face.c, face.a, [ 5, 7, 'ca', 'right', 'down' ] );
 						
 					}
 					
@@ -407,19 +593,19 @@
 					
 					// a / upright
 					
-					this.find_and_store_connected( face.a, undefined, [ 'a', 'upright' ] );
+					this.find_and_store_connected( face.a, undefined, [ 2, 'a', 'upright' ] );
 					
 					// b / upleft
 					
-					this.find_and_store_connected( face.b, undefined, [ 'b', 'upleft' ] );
+					this.find_and_store_connected( face.b, undefined, [ 0, 'b', 'upleft' ] );
 					
 					// c / downleft
 					
-					this.find_and_store_connected( face.c, undefined, [ 'c', 'downleft' ] );
+					this.find_and_store_connected( face.c, undefined, [ 6, 'c', 'downleft' ] );
 					
 					// d / downright
 					
-					this.find_and_store_connected( face.d, undefined, [ 'd', 'downright' ] );
+					this.find_and_store_connected( face.d, undefined, [ 8, 'd', 'downright' ] );
 					
 				}
 				
@@ -492,6 +678,36 @@
 			}
 			
 		}
+		
+	}
+	
+	function has_face_or_vertex_index( searchFor ) {
+		
+		var i, l,
+			faces,
+			face,
+			has = false;
+		
+		// search all faces
+		
+		faces = this.geometry.faces;
+		
+		for ( i = 0, l = faces.length; i < l; i++ ) {
+			
+			face = faces[ i ];
+			
+			if ( ( ( searchFor instanceof THREE.Face4 || searchFor instanceof THREE.Face3 ) && searchFor === face ) 
+				|| ( _MathHelper.is_number( searchFor ) && ( searchFor === face.a || searchFor === face.b || searchFor === face.c || searchFor === face.d ) ) ) {
+				
+				has = true;
+				
+				break;
+				
+			}
+			
+		}
+		
+		return has;
 		
 	}
 	

@@ -13,8 +13,7 @@
 		_Hero = {},
 		_Character,
 		_Game,
-		_Puzzles,
-		_GridModule;
+		_Farming;
 	
 	/*===================================================
     
@@ -27,8 +26,7 @@
 		requirements: [
 			"assets/modules/characters/Character.js",
 			"assets/modules/core/Game.js",
-			"assets/modules/puzzles/Puzzles.js",
-			"assets/modules/puzzles/GridModule.js"
+			"assets/modules/abilities/Farming.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -40,17 +38,23 @@
     
     =====================================================*/
 	
-	function init_internal( c, g, p, gm ) {
+	function init_internal( c, g, f ) {
 		console.log('internal hero', _Hero);
 		
 		_Character = c;
 		_Game = g;
-		_Puzzles = p;
-		_GridModule = gm;
+		_Farming = f;
 		
 		_Hero.Instance = Hero;
 		_Hero.Instance.prototype = new _Character.Instance();
-		_Hero.Instance.constructor = _Hero.Instance;
+		_Hero.Instance.prototype.constructor = _Hero.Instance;
+		_Hero.Instance.prototype.action = action;
+		_Hero.Instance.prototype.add_action = add_action;
+		
+		Object.defineProperty( _Hero.Instance.prototype, 'acting', { 
+			get: is_acting,
+			set: is_acting
+		});
 		
 	}
 	
@@ -61,10 +65,6 @@
     =====================================================*/
 	
 	function Hero ( parameters ) {
-		
-		var me = this,
-			actionsMap,
-			planting;
 		
 		// handle parameters
 		
@@ -92,375 +92,106 @@
 		
 		// prototype constructor
 		
-		_Character.Instance.call( me, parameters );
+		_Character.Instance.call( this, parameters );
+	
+		// init actions map
 		
-		// public
+		this.actions = {};
+
+		// farming
 		
-		me.action = action;
+		this.farming = new _Farming.Instance( this );
 		
-		// map generic numbers to actions
-    	
-    	actionsMap = {
-    		
-    		'001': plant
-    	
-    	};
-    	
-    	// functions
-    	
-    	/*===================================================
+		// add to actions
 		
-		actions
+		this.add_action( this.farming.plant, [ '002', 'plant' ], this.farming );
+		this.add_action( this.farming.rotate_plant, [ '001', 'rotate_plant' ], this.farming );
 		
-		=====================================================*/
+	}
+	
+	/*===================================================
+	
+	actions
+	
+	=====================================================*/
+	
+	function action ( actionName, parameters ) {
 		
-		function action ( actionTypeName, parameters ) {
+		var actionInfo;
+		
+		// if action type is in actions map, do it
+		if ( this.actions.hasOwnProperty( actionName ) ) {
 			
-			// if action type is in actions map, do it
+			actionInfo = this.actions[ actionName ];
 			
-			if ( actionsMap.hasOwnProperty( actionTypeName ) ) {
-				
-				me.acting = true;
-				
-				actionsMap[ actionTypeName ].call( me, parameters );
-				
-			}
-			else {
-				
-				me.acting = false;
-				
-			}
+			actionInfo.active = actionInfo.action.call( actionInfo.context, parameters );
+			
+			return actionInfo.active;
+			
+		}
+		// clear all actions
+		else {
+			
+			this.acting = false;
 			
 		}
 		
-		/*===================================================
+	}
+	
+	function add_action ( actionCallback, actionNames, context ) {
 		
-		planting
+		var i, l,
+			actionName;
 		
-		=====================================================*/
+		actionNames = main.ensure_array( actionNames );
 		
-		planting = me.planting = {};
-		planting.started = false;
+		for ( i = 0, l = actionNames.length; i < l; i++ ) {
+			
+			actionName = actionNames[ i ];
+			
+			// add to actions map
+			
+			this.actions[ actionName ] = {
+				action: actionCallback,
+				context: context || this
+			};
 		
-		function plant ( parameters ) {
-			
-			// store parameters
-			
-			planting.parameters = parameters || {};
-			
-			// check stop state ( i.e. mouse/key up )
-			
-			if ( planting.parameters.stop === true ) {
-				
-				// step planting cycle
-			
-				step_planting();
-				
-			}
-			
 		}
 		
-		function step_planting() {
-			console.log('step PLANTING!');
-			var plantingObjects,
-				plantingObject,
-				targetModel;
+	}
+	
+	function is_acting ( continueActing ) {
+		
+		var actionName,
+			actionInfo,
+			acting = false;
+		
+		// trigger stop for all actions that are active
+		
+		for ( actionName in this.actions ) {
 			
-			// steps
+			actionInfo = this.actions[ actionName ];
 			
-			// if needs seed
-			
-			if ( typeof planting.seed === 'undefined' ) {
-				console.log(' > PLANTING: step no seed yet!');
-				// set array of objects that are involved in this step of planting process
+			if ( actionInfo.active === true ) {
 				
-				plantingObjects = me;
-				
-				// find if any planting objects under mouse
-				
-				plantingObject = _Game.get_intersection_from_mouse( plantingObjects );
-				
-				if ( typeof plantingObject !== 'undefined' ) {
+				if ( continueActing === false ) {
 					
-					// store info
-					
-					targetModel = plantingObject.object;
-					
-					// if is me
-					
-					if ( targetModel === me ) {
-						
-						// set seed
-						// TODO: open menu with seed choice
-						
-						change_planting_seed( 'SEED' );
-						
-						// start planting
-						
-						start_planting();
-						
-					}
-					
-				}
-				
-			}
-			// if has seed
-			else {
-				console.log(' > PLANTING: step has seed!');
-				// set array of objects that are involved in this step of planting process
-				
-				plantingObjects = _Puzzles.all;
-				
-				// find if any planting objects under mouse
-				
-				plantingObject = _Game.get_intersection_from_mouse( plantingObjects );
-				
-				// if planting object found
-				
-				if ( typeof plantingObject !== 'undefined' ) {
-				
-					// store info
-					
-					targetModel = plantingObject.object;
-					
-					// if target is grid module
-					if ( targetModel instanceof _GridModule.Instance ) {
-						
-						// complete planting
-						
-						complete_planting();
-						
-					}
+					this.action( actionName, false );
 					
 				}
 				else {
 					
-					// stop planting
+					acting = true;
 					
-					stop_planting();
-					
-				}
-				
-			}
-			
-		}
-		
-		function start_planting () {
-			
-			// if has not started planting and seed is valid
-			
-			if ( planting.started !== true && typeof planting.seed !== 'undefined' ) {
-				console.log('start PLANTING!');
-				
-				// set started
-				
-				planting.started = true;
-				
-				// continue planting
-				
-				continue_planting();
-				
-				// continue on signal
-				
-				shared.signals.mousemoved.add( continue_planting );
-				
-			}
-			
-		}
-		
-		function continue_planting () {
-			console.log(' > PLANTING: continue planting!');
-			var plantingObjects,
-				plantingObject,
-				targetModel,
-				module,
-				grid,
-				puzzle;
-			
-			if ( planting.started === true ) {
-			
-				// set array of objects that are involved in planting process
-				
-				plantingObjects = _Puzzles.all;
-				
-				// find if any planting objects under mouse
-				
-				plantingObject = _Game.get_intersection_from_mouse( plantingObjects );
-				
-				// if planting object found
-				
-				if ( typeof plantingObject !== 'undefined' ) {
-				
-					// store info
-					
-					targetModel = plantingObject.object;
-					
-					// if target is grid module
-					if ( targetModel instanceof _GridModule.Instance ) {
-						
-						// set target as module
-						
-						module = targetModel;
-
-						// change to new module
-						
-						change_planting_module( module );
-						
-					}
+					break;
 					
 				}
 				
 			}
-			else {
-				
-				stop_planting();
-				
-			}
 			
 		}
 		
-		function change_planting_module ( moduleNew ) {
-			
-			var module,
-				grid,
-				puzzle;
-			
-			// if is new module
-			
-			if ( planting.module !== moduleNew ) {
-				
-				// store module
-				
-				module = planting.module = moduleNew;
-				
-				// if valid module
-				
-				if ( module instanceof _GridModule.Instance ) {
-					
-					// get grid
-					
-					grid = module.grid;
-					
-					// get puzzle
-					
-					puzzle = grid.puzzle;
-					
-					// change puzzle
-					
-					change_planting_puzzle( puzzle );
-					
-					// clear all puzzle modules except target
-					
-					clear_planting_puzzle( planting.puzzle );
-					
-					// show occupied state
-					
-					module.show_state( 'occupied' );
-					console.log(' > PLANTING: intersected module is', module, ', with ', module.connectedList.length, ' connected modules' );
-				}
-				
-			}
-			
-		}
-		
-		function change_planting_seed ( seed ) {
-			
-			// if new seed is different from one stored in planting
-			
-			if ( planting.seed !== seed ) {
-				
-				// store new seed
-				
-				planting.seed = seed;
-				console.log(' > PLANTING: seed to', planting.seed);
-			}
-			
-		}
-		
-		function change_planting_puzzle ( puzzle ) {
-			
-			// if new puzzle is different from one stored in planting
-			
-			if ( planting.puzzle !== puzzle ) {
-				
-				// clear previous puzzle
-				
-				if ( planting.puzzle instanceof _Puzzles.Instance ) {
-					
-					clear_planting_puzzle( planting.puzzle );
-					
-				}
-				
-				// store new puzzle
-				
-				planting.puzzle = puzzle;
-				
-			}
-			
-		}
-		
-		function clear_planting_puzzle ( puzzle ) {
-			
-			if ( puzzle instanceof _Puzzles.Instance ) {
-				
-				puzzle.grid.each_module( function () {
-					this.show_state( false );
-				}, planting.module );
-				
-			}
-			
-		}
-		
-		function complete_planting () {
-			console.log(' > PLANTING: completing...');
-			var module = planting.module;
-			
-			// add seed to module
-			
-			if ( module.occupied === false ) {
-				console.log(' > PLANTING: added to module!');
-				module.change_state( 'occupied', true );
-				
-			}
-			else {
-				
-				console.log(' > PLANTING: module already occupied!');
-				
-			}
-
-			// stop planting
-			
-			stop_planting();
-			
-		}
-		
-		function stop_planting () {
-			console.log('stop PLANTING!');
-			var plantingObjects,
-				plantingObject,
-				targetModel;
-			
-			// no more planting
-			
-			shared.signals.mousemoved.remove( continue_planting );
-			
-			// clear module
-			
-			change_planting_module();
-			
-			// clear puzzle modules
-			
-			change_planting_puzzle();
-			
-			// clear seed
-			
-			change_planting_seed();
-			
-			// set stopped
-				
-			planting.started = false;
-			
-		}
+		return acting;
 		
 	}
     

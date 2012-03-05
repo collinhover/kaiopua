@@ -128,8 +128,6 @@
 			
 			init_cameracontrols();
 			
-			init_actions();
-			
 			init_character();
 			
 			init_keybindings();
@@ -157,70 +155,6 @@
 		cameraControls = new _CameraControls.Instance( _Player, _Game.camera );
 		
 	}
-	
-	/*===================================================
-    
-    actions
-    
-    =====================================================*/
-    
-    function init_actions () {
-    	
-    	// map action strings to actions
-    	
-    	actionsMap = {
-    		
-    		'001': {
-    			
-    			before: function ( parameters ) {
-    				
-    				cameraControls.rotate( parameters.event, parameters.stop );
-    				
-    			}
-    			
-    		},
-    	
-    	};
-    	
-    }
-    
-    function action ( actionString, parameters ) {
-    	
-    	var actionInfo;
-    	
-    	// handle parameters
-    	
-    	parameters = parameters || {};
-    	
-    	// if action string is in actions map
-    	
-    	if ( actionsMap.hasOwnProperty( actionString ) ) {
-    		
-    		actionInfo = actionsMap[ actionString ];
-    		
-    	}
-    	
-    	// if action info has before character action
-    	
-    	if ( typeof actionInfo !== 'undefined' && typeof actionInfo.before === 'function' ) {
-    		
-    		actionInfo.before.call( this, parameters );
-    		
-    	}
-    	
-    	// do character action
-    	
-    	character_action( actionString, parameters );
-    	
-    	// if action info has after character action
-    	
-    	if ( typeof actionInfo !== 'undefined' && typeof actionInfo.after === 'function' ) {
-    		
-    		actionInfo.after.call( this, parameters );
-    		
-    	}
-    	
-    }
     
     /*===================================================
     
@@ -250,14 +184,6 @@
 		
 	}
 	
-	function character_action ( actionTypeName, parameters ) {
-		
-		// character action
-		
-		character.action( actionTypeName, parameters );
-		
-	}
-	
 	/*===================================================
     
     keybindings
@@ -273,8 +199,32 @@
 		// mouse buttons
 		
 		map[ 'mouseleft' ] = {
-			keydown: function ( e ) { action( '001' ); },
-			keyup: function ( e ) { action( '001', { stop: true } ); }
+			keydown: function ( e ) {
+				
+				// modify character action if started
+				
+				var acting = character.action( '001', { event: e, stop: !enabled } );
+				
+				// start rotating camera if character is not acting
+				
+				if ( acting !== true ) {
+					
+					cameraControls.rotate( e );
+					
+				}
+				
+			},
+			keyup: function ( e ) {
+				
+				// stop camera rotate
+				
+				cameraControls.rotate( e, true );
+				
+				// start character action
+				
+				character.action( '002', { event: e, stop: !enabled } );
+				
+			}
 		};
 		map[ 'mousemiddle' ] = {
 			keydown: function ( e ) { console.log('key down: mousemiddle'); },
@@ -344,7 +294,7 @@
 		// misc
 		
 		map[ '27' /*escape*/ ] = {
-			keyup: function () { 
+			keyup: function () {
 				
 				if ( _Game.paused === true ) {
 					_Game.resume();
@@ -795,7 +745,15 @@
 	
 	function disable () {
 		
+		// clear keys
+		
 		clear_keys_active();
+		
+		// clear character actions
+		
+		character.acting = false;
+		
+		// disable and pause updating
 		
 		enabled = false;
 		

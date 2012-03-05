@@ -26,6 +26,7 @@
 	_GridModuleState.Instance = GridModuleState;
 	
 	_GridModuleState.Instance.prototype.add_property = add_property;
+	_GridModuleState.Instance.prototype.get_properties = get_properties;
 	_GridModuleState.Instance.prototype.modify_material = modify_material;
 	
 	Object.defineProperty( _GridModuleState.Instance.prototype, 'active', { 
@@ -42,7 +43,7 @@
 	});
 	
 	Object.defineProperty( _GridModuleState.Instance.prototype, 'properties', { 
-		get: function () { return ( this._properties.hasOwnProperty( this.active ) ? this._properties[ this.active ] : this._properties[ 0 ] ); }
+		get: get_properties
 	});
 
 	Object.defineProperty( _GridModuleState.Instance.prototype, 'color', { 
@@ -92,7 +93,7 @@
 		
 	}
 	
-	function add_property ( activeState, parameters ) {
+	function add_property ( activeLevel, parameters ) {
 		
 		// handle parameters
 		
@@ -102,24 +103,42 @@
 		
 		// add property
 		
-		if ( typeof activeState === 'undefined' ) {
+		if ( typeof activeLevel === 'undefined' ) {
 			
-			activeState = 0;
+			activeLevel = 0;
 			
 		}
 		
-		this._properties[ activeState ] = {
-			color: parameters[ 'color' + activeState ] || parameters.color || 0xffffff,
-			ambient: parameters[ 'ambient' + activeState ] || parameters.ambient || 0xffffff,
-			transparent: parameters[ 'transparent' + activeState ] || parameters.transparent || false,
-			opacity: parameters[ 'opacity' + activeState ] || parameters.opacity || 1
+		this._properties[ activeLevel ] = {
+			color: parameters[ 'color' + activeLevel ] || parameters.color || 0xffffff,
+			ambient: parameters[ 'ambient' + activeLevel ] || parameters.ambient || 0xffffff,
+			transparent: parameters[ 'transparent' + activeLevel ] || parameters.transparent || false,
+			opacity: parameters[ 'opacity' + activeLevel ] || parameters.opacity || 1
 		};
 		
 	}
 	
-	function modify_material ( material ) {
+	function get_properties ( activeLevel ) {
 		
-		var p = this.properties;
+		var properties;
+		
+		if ( this._properties.hasOwnProperty( activeLevel ) ) {
+			properties = this._properties[ activeLevel ];
+		}
+		else if ( this._properties.hasOwnProperty( this.active ) ) {
+			properties = this._properties[ this.active ];
+		}
+		else {
+			properties = this._properties[ 0 ];
+		}
+		
+		return properties;
+		
+	}
+	
+	function modify_material ( material, activeLevel ) {
+		
+		var p = this.get_properties( activeLevel );
 		
 		// valid material
 		

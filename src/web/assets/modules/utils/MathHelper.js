@@ -38,6 +38,18 @@
 		
 	};
 	
+	_MathHelper.sign = function ( n ) {
+		
+		return n > 0 ? 1 : n === 0 ? 0 : -1;
+		
+	};
+	
+	_MathHelper.round_towards_zero = function ( n ) {
+		
+		return n < 0 ? Math.ceil( n ) : Math.floor( n );
+		
+	};
+	
 	main.asset_register( assetPath, { data: _MathHelper } );
     
 } ( KAIOPUA ) );

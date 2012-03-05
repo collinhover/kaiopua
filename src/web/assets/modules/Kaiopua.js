@@ -18,6 +18,7 @@ var KAIOPUA = (function (main) {
             "js/lib/requestInterval.js",
             "js/lib/requestTimeout.js",
             "js/lib/signals.min.js",
+			"js/lib/sylvester.js",
 			"assets/modules/utils/AssetLoader.js"
         ],
         setupList = [
@@ -49,6 +50,8 @@ var KAIOPUA = (function (main) {
         shared.time = new Date().getTime();
         shared.timeLast = shared.time;
         shared.timeDeltaExpected = 1000 / 60;
+		
+		shared.multitouch = false;
         
         shared.html = {
             footerMenu: $('#footer_menu'),
@@ -971,7 +974,7 @@ var KAIOPUA = (function (main) {
 	
 	function handle_mouse_identifier ( e ) {
 		
-		var id = e.identifier = e.identifier || 0;
+		var id = e.identifier = ( typeof e.identifier !== 'undefined' && shared.multitouch === true ) ? e.identifier : 0;
 		
 		if ( id >= shared.mice.length ) {
 			shared.mice[ id ] = { 
