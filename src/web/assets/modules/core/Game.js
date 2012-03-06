@@ -171,6 +171,8 @@
 	_Game.add_to_scene = add_to_scene;
 	_Game.remove_from_scene = remove_from_scene;
 	
+	_Game.extract_children_from_objects = extract_children_from_objects;
+	
 	_Game.get_mouse = get_mouse;
 	_Game.get_intersection_from_mouse = get_intersection_from_mouse;
 	_Game.get_object_under_mouse = get_object_under_mouse;
@@ -359,7 +361,7 @@
 		add_three_modifications();
 		
 		// renderer
-        renderer = new THREE.WebGLRenderer( { antialias: true, clearColor: 0x000000, clearAlpha: 0/*, maxLights: 10 */} );
+        renderer = new THREE.WebGLRenderer( { antialias: true, clearColor: 0x000000, clearAlpha: 0, maxLights: 8 } );
         renderer.setSize( shared.screenWidth, shared.screenHeight );
         renderer.autoClear = false;
 		
@@ -940,6 +942,39 @@
 		return mouse;
 	}
 	
+	function extract_children_from_objects ( objects, cascade ) {
+		
+		var i, l;
+		
+		objects = main.ensure_array( objects );
+		
+		for ( i = 0, l = objects.length; i < l; i++ ) {
+			
+			cascade = extract_child_cascade( objects[ i ], cascade );
+			
+		}
+		
+		return cascade;
+		
+	}
+	
+	function extract_child_cascade ( object, cascade ) {
+		
+		var i, l,
+			children = object.children;
+		
+		cascade = ( cascade || [] ).concat( children );
+		
+		for ( i = 0, l = children.length; i < l; i++ ) {
+			
+			cascade = extract_child_cascade( children[ i ], cascade );
+			
+		}
+		
+		return cascade;
+		
+	}
+	
 	function get_intersection_from_mouse ( objects, mouse, cameraTarget ) {
 		
 		var projector = utilProjector1Selection,
@@ -956,17 +991,9 @@
 		
 		objects = objects || scene;
 		
-		// if objects is instance of scene
+		// account for hierarchy and extract all children
 		
-		if ( objects instanceof THREE.Scene ) {
-			
-			objects = objects.children;
-			
-		}
-		
-		// ensure objects is array
-		
-		objects = main.ensure_array( objects );
+		objects = extract_children_from_objects( objects, objects );
 		
 		// get corrected mouse position
 		

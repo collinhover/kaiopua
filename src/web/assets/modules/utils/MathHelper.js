@@ -50,6 +50,102 @@
 		
 	};
 	
+	_MathHelper.rotate_matrix2d_90 = function ( matrix2d, degrees ) {
+		
+		var i, l,
+			turns;
+		
+		// snap degrees to closest multiple of increment
+		
+		turns = _MathHelper.round_towards_zero( ( degrees % 360 ) / 90 );
+			
+		degrees = 90 * turns;
+		
+		// rotate matrix2d
+		
+		if ( turns !== 0 ) {
+			
+			// positive rotation
+			if ( degrees > 0 ) {
+				
+				for ( i = 0, l = Math.abs( turns ); i < l; i++ ) {
+					
+					matrix2d = _MathHelper.rotate_matrix2d_clockwise_90( matrix2d );
+					
+				}
+				
+			}
+			// negative rotation
+			else {
+				
+				for ( i = 0, l = Math.abs( turns ); i < l; i++ ) {
+					
+					matrix2d = _MathHelper.rotate_matrix2d_anticlockwise_90( matrix2d );
+					
+				}
+				
+			}
+			
+		}
+		
+		return matrix2d;
+		
+	};
+	
+	_MathHelper.rotate_matrix2d_clockwise_90 = function ( matrix2d ) {
+		
+		var i, l,
+			j, k,
+			dimensions = matrix2d.dimensions(),
+			rows = dimensions.rows,
+			cols = dimensions.cols,
+			matrix2dRotated = Matrix.Zero( cols, rows ),
+			elements = matrix2d.elements,
+			elementsRot = matrix2dRotated.elements;
+		
+		// 90 degree positive / clockwise rotation of 2d ( n x m ) matrix
+		
+		for ( i = 0, l = cols; i < l; i++ ) {
+			
+			for ( j = 0, k = rows; j < k; j++ ) {
+				
+				elementsRot[ i ][ j ] = elements[ rows - 1 - j ][ i ];
+				
+			}
+			
+		}
+		
+		return matrix2dRotated;
+		
+	}
+	
+	_MathHelper.rotate_matrix2d_anticlockwise_90 = function ( matrix2d ) {
+		
+		var i, l,
+			j, k,
+			dimensions = matrix2d.dimensions(),
+			rows = dimensions.rows,
+			cols = dimensions.cols,
+			matrix2dRotated = Matrix.Zero( cols, rows ),
+			elements = matrix2d.elements,
+			elementsRot = matrix2dRotated.elements;
+		
+		// 90 degree negative / anticlockwise rotation of 2d ( n x m ) matrix
+		
+		for ( i = 0, l = rows; i < l; i++ ) {
+			
+			for ( j = 0, k = cols; j < k; j++ ) {
+				
+				elementsRot[ cols - 1 - j ][ i ] = elements[ i ][ j ];
+				
+			}
+			
+		}
+		
+		return matrix2dRotated;
+		
+	}
+	
 	main.asset_register( assetPath, { data: _MathHelper } );
     
 } ( KAIOPUA ) );

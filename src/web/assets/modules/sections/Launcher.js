@@ -13,20 +13,21 @@
 		launcher = {},
         ready = false,
 		waitingToShow = false,
-		game,
+		_Game,
+		_WaterLauncher,
+        _Sky,
         camera,
         scene,
 		sceneBG,
 		addOnShow = [],
 		addBGOnShow = [],
 		ambientLight,
-		light,
+		lightSky,
+		lightWater,
 		fogColor = 0x529ad1,
         water,
-        sky,
         skybox,
         time,
-        envRotationY = -90 * Math.PI / 180,
 		camRotationBaseQ,
 		camRotationOffset,
 		camRotationOffsetQ,
@@ -37,7 +38,7 @@
             ry: 0, 
             rangeTransMaxX: 500, 
             rangeTransMinX: -500,
-            rangeTransMaxY: 250, 
+            rangeTransMaxY: 0, 
             rangeTransMinY: -250,
             speedTransX: 0.01, 
             speedTransY: 0.01,
@@ -82,9 +83,9 @@
 		
 		if ( ready !== true ) {
 			console.log('internal launcher');
-			game = g;
-			sky = s;
-			water = w;
+			_Game = g;
+			_Sky = s;
+			_WaterLauncher = w;
 			
 			init_environment();
 			
@@ -116,11 +117,14 @@
 		
 		ambientLight = new THREE.AmbientLight( 0xeeeeee );
 		
-		//light = new THREE.DirectionalLight( 0xffffff, 1 );
-		//light.position = new THREE.Vector3(-1, 1, -1).normalize();
+		//lightSky = new THREE.DirectionalLight( 0xffffff, 1 );
+		//lightSky.position = new THREE.Vector3(-1, 1, -1).normalize();
 		
-		light = new THREE.PointLight( 0xffffcc, 0.75, 40000 );
-		light.position.set( 0, 3000, 2000 );
+		lightSky = new THREE.PointLight( 0xffffcc, 0.75, 40000 );
+		lightSky.position.set( 0, 3000, 2000 );
+		
+		lightWater = new THREE.PointLight( 0xffffcc, 0.25, 20000 );
+		lightWater.position.set( 0, -6000, 0 );
 		
 		// skybox
 		
@@ -128,24 +132,22 @@
 		
 		// water
 		
-		water.init( { wavesColor: fogColor } );
-		
-		water.environment.rotation.x = envRotationY;
+		water = new _WaterLauncher.Instance( { wavesColor: fogColor } );
 		
 		// sky
 		
-		sky.init();
+		_Sky.init();
 		
 		// sky environment
 		
-		sky.environment.position.x = 0;
-		sky.environment.position.y = 2000;
+		_Sky.environment.position.x = 0;
+		_Sky.environment.position.y = 2000;
 		
-		sky.environment.rotation.y = envRotationY;
+		_Sky.environment.rotation.y = -90 * Math.PI / 180;
 		
 		// set items to add on show
 		
-		addOnShow.push( ambientLight, light, water.environment, sky.environment );
+		addOnShow.push( ambientLight, lightSky, lightWater, water.environment, _Sky.environment );
 		
 		addBGOnShow.push( skybox );
 		
@@ -231,7 +233,7 @@
 			
 			// camera
 			
-			camera = game.camera;
+			camera = _Game.camera;
 			
 			// starting position
 			camera.position.set(-5800, 0, 0);
@@ -242,18 +244,18 @@
 			
 			// scene
 			
-			scene = game.scene;
+			scene = _Game.scene;
 			
-			sceneBG = game.sceneBG;
+			sceneBG = _Game.sceneBG;
 			
 			// fog
 			scene.fog = new THREE.Fog( fogColor, -100, 10000 );
 			
 			// add items
 			
-			game.add_to_scene( addOnShow, scene );
+			_Game.add_to_scene( addOnShow, scene );
 			
-			game.add_to_scene( addBGOnShow, sceneBG );
+			_Game.add_to_scene( addBGOnShow, sceneBG );
 			
 			// shared
 			
@@ -291,9 +293,9 @@
 			
 			// remove added items
 			
-			game.remove_from_scene( addOnShow, scene );
+			_Game.remove_from_scene( addOnShow, scene );
 			
-			game.remove_from_scene( addBGOnShow, sceneBG );
+			_Game.remove_from_scene( addBGOnShow, sceneBG );
 			
 		}
 		else {
@@ -320,9 +322,9 @@
 		
         // update environment
         
-        sky.wind_blow( timeDelta );
+        _Sky.wind_blow( timeDelta );
         
-        water.waves( timeDelta );
+        water.generate_waves( timeDelta );
         
     }
 	

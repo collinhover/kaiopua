@@ -63,6 +63,8 @@
 		
 		parameters = parameters || {};
 		
+		parameters.geometry = new THREE.CubeGeometry( 50, 100, 50 );
+		
 		// prototype constructor
 		
 		_Model.Instance.call( this, parameters );
@@ -143,95 +145,13 @@
 	
 	function rotate ( degrees ) {
 		
-		return this.rotate_layout( degrees );
+		this.rotate_layout( degrees );
 		
 	}
 	
 	function rotate_layout ( degrees ) {
 		
-		var i, l,
-			j, k,
-			rotated = false,
-			turns,
-			layout,
-			layoutRotated,
-			dimensions,
-			rows,
-			cols,
-			elements,
-			elementsRot;
-		
-		// if degrees is number
-		
-		if ( _MathHelper.is_number( degrees ) ) {
-			
-			// basics
-			
-			layout = this.layout;
-			dimensions = layout.dimensions();
-			rows = dimensions.rows;
-			cols = dimensions.cols;
-			layoutRotated = Matrix.Zero( cols, rows );
-			elements = layout.elements;
-			elementsRot = layoutRotated.elements;
-			
-			// snap degrees to closest multiple of 90
-			
-			turns = _MathHelper.round_towards_zero( ( degrees % 360 ) / 90 );
-			
-			degrees = 90 * turns;
-			
-			// rotate layout by degrees into new rotated matrix
-			
-			if ( degrees !== 0 ) {
-				
-				console.log(' layout before rotated: ');
-				console.log(this.layout.inspect());
-				
-				// positive rotation
-				if ( degrees > 0 ) {
-					console.log('ROTATION ++++ POSITIVE');
-					for ( i = 0, l = cols; i < l; i++ ) {
-						
-						for ( j = 0, k = rows; j < k; j++ ) {
-							//console.log('i', (rows - 1 - j), ', j', i, ' >> i', i, ', j', j );
-							elementsRot[ i ][ j ] = elements[ rows - 1 - j ][ i ];
-							
-						}
-						
-					}
-					
-				}
-				// negative rotation
-				else {
-					console.log('ROTATION ---- NEGATIVE');
-					for ( i = 0, l = rows; i < l; i++ ) {
-						
-						for ( j = 0, k = cols; j < k; j++ ) {
-							//console.log('i', i, ', j', j, ' >> i', (cols - 1 - j), ', j', i );
-							elementsRot[ cols - 1 - j ][ i ] = elements[ i ][ j ];
-							
-						}
-						
-					}
-					
-				}
-				
-				// set layout as rotated
-				
-				this.layout = layoutRotated;
-				console.log(' layout after rotated: ');
-				console.log(this.layout.inspect());
-				
-				// set rotated
-				
-				rotated = true;
-				
-			}
-			
-		}
-		
-		return rotated;
+		this.layout = _MathHelper.rotate_matrix2d_90( this.layout, degrees );
 		
 	}
 	

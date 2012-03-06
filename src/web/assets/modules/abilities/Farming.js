@@ -298,7 +298,7 @@
 				
 				// set array of objects that are involved in planting process
 				
-				plantingObjects = [ this.character ].concat( _Puzzles.all );
+				plantingObjects = _Puzzles.all;
 				
 				// find if any planting objects under mouse
 				
@@ -584,6 +584,7 @@
 			pr = planting.rotation,
 			mouse = pr.mouse,
 			rotation,
+			rotationAbs,
 			resetTotals,
 			dirx,
 			diry;
@@ -620,10 +621,11 @@
 		// set rotation from totals
 		
 		rotation = pr.tx + ( Math.abs( pr.ty ) * _MathHelper.sign( pr.tx ) );
+		rotationAbs = Math.abs( rotation );
 		
 		// if rotation above threshold
 		
-		if ( Math.abs( rotation ) >= pr.startThreshold ) {
+		if ( rotationAbs >= pr.startThreshold ) {
 			
 			// set rotated
 			
@@ -631,11 +633,11 @@
 			
 			// rotate plant
 			
-			resetTotals = plant.rotate( rotation );
+			plant.rotate( rotation );
 			
 			// if rotation made
 			
-			if ( resetTotals === true ) {
+			if ( rotationAbs >= 90 ) {
 				
 				// update planting
 				
@@ -646,16 +648,8 @@
 		}
 		
 		// if direction change counters are over threshold, reset totals
-		
-		if ( pr.dcx/* + pr.dcy */ >= pr.dirChangeThreshold ) {
 			
-			resetTotals = true;
-			
-		}
-		
-		// reset totals
-			
-		if ( resetTotals === true ) {
+		if ( rotationAbs >= 90 || pr.dcx/* + pr.dcy */ >= pr.dirChangeThreshold ) {
 			
 			this.rotate_plant_reset();
 			
