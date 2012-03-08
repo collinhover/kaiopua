@@ -13,6 +13,7 @@
 		_Grid = {},
 		_Model,
 		_GridModule,
+		_ObjectHelper,
 		_MathHelper,
 		idStateMaterialBase = 'base';
 	
@@ -27,6 +28,7 @@
 		requirements: [
 			"assets/modules/core/Model.js",
 			"assets/modules/puzzles/GridModule.js",
+			"assets/modules/utils/ObjectHelper.js",
 			"assets/modules/utils/MathHelper.js"
 		],
 		callbacksOnReqs: init_internal,
@@ -39,11 +41,12 @@
 	
 	=====================================================*/
 	
-	function init_internal ( m, gu, mh ) {
+	function init_internal ( m, gu, oh, mh ) {
 		console.log("internal grid", _Grid);
 		
 		_Model = m;
 		_GridModule = gu;
+		_ObjectHelper = oh;
 		_MathHelper = mh;
 		
 		_Grid.Instance = Grid;
@@ -82,18 +85,22 @@
 			psm,
 			faces,
 			face,
+			faceCopy,
 			vertices,
 			verticesFromFace,
+			offset,
 			moduleGeometry,
 			module;
-		
-		// prototype constructor
-		
-		_Model.Instance.call( this, parameters );
 		
 		// handle parameters
 		
 		parameters = parameters || {};
+		
+		parameters.center = true;
+		
+		// prototype constructor
+		
+		_Model.Instance.call( this, parameters );
 		
 		// store puzzle reference
 		
@@ -119,6 +126,14 @@
 			
 			this.modulesGeometry = parameters.modulesGeometry;
 			
+			// adjust modules geometry for offset
+			
+			offset = _ObjectHelper.object_center( this.modulesGeometry );
+			
+			// adjust offset for initial grid position
+			
+			offset.addSelf( this.position );
+			
 			// create new module for each face
 			
 			faces = this.modulesGeometry.faces;
@@ -136,15 +151,36 @@
 				
 				// vertices
 				
-				moduleGeometry.vertices = vertices;
+				moduleGeometry.vertices.push( vertices[ face.a ].clone() );
+				moduleGeometry.vertices.push( vertices[ face.b ].clone() );
+				moduleGeometry.vertices.push( vertices[ face.c ].clone() );
 				
 				// face
 				
-				moduleGeometry.faces.push( face );
+				faceCopy = face.clone();
+				faceCopy.a = 0;
+				faceCopy.b = 1;
+				faceCopy.c = 2;
+				
+				moduleGeometry.faces.push( faceCopy );
+				
+				// extras for face4
+				
+				if ( face instanceof THREE.Face4 ) {
+					
+					moduleGeometry.vertices.push( vertices[ face.d ].clone() );
+					
+					faceCopy.d = 3;
+					
+				}
 				
 				// init
 				
 				module = new _GridModule.Instance( { geometry: moduleGeometry } );
+				
+				// offset module
+				
+				module.position.subSelf( offset );
 				
 				// store
 				
@@ -328,7 +364,7 @@
 				
 				module = this.modules[ i ];
 				
-				if ( searchFor === module && modulesMatching.indexOf( module ) === -1 && modulesExcluding.indexOf( module ) === -1 ) {
+				if ( modulesMatching.indexOf( module ) === -1 && modulesExcluding.indexOf( module ) === -1 && searchFor === module ) {
 					
 					modulesMatching.push( module );
 					
@@ -344,7 +380,7 @@
 				
 				module = this.modules[ i ];
 				
-				if ( module.has_face_or_vertex_index( searchFor ) && modulesMatching.indexOf( module ) === -1 && modulesExcluding.indexOf( module ) === -1 ) {
+				if ( modulesMatching.indexOf( module ) === -1 && modulesExcluding.indexOf( module ) === -1 && module.has_face_or_vertex( searchFor ) ) {
 					
 					modulesMatching.push( module );
 					
@@ -360,22 +396,30 @@
 				
 				module = this.modules[ i ];
 				
-				searchMatch = [];
+				// if module not already matched or excluded
 				
-				for ( j = 0, k = searchFor.length; j < k; j++ ) {
+				if ( modulesMatching.indexOf( module ) === -1 && modulesExcluding.indexOf( module ) === -1 ) {
 					
-					searchItem = searchFor[ j ];
+					searchMatch = [];
 					
-					if ( module.has_face_or_vertex_index( searchItem ) ) {
+					// for each search item
+					
+					for ( j = 0, k = searchFor.length; j < k; j++ ) {
 						
-						searchMatch.push( true );
+						searchItem = searchFor[ j ];
 						
-						if ( searchMatch.length === searchFor.length && modulesMatching.indexOf( module ) === -1 && modulesExcluding.indexOf( module ) === -1 ) {
+						if ( module.has_face_or_vertex( searchItem ) ) {
 							
-							modulesMatching.push( module );
+							searchMatch.push( true );
 							
+							if ( searchMatch.length === searchFor.length ) {
+								
+								modulesMatching.push( module );
+								
+							}
+						
 						}
-					
+						
 					}
 					
 				}
@@ -383,14 +427,14 @@
 			}
 			
 		}
-		// vertex index
-		else if ( _MathHelper.is_number( searchFor ) ) {
+		// vertex
+		else if ( searchFor instanceof THREE.Vertex ) {
 			
 			for ( i = 0, l = this.modules.length; i < l; i++ ) {
 				
 				module = this.modules[ i ];
 				
-				if ( module.has_face_or_vertex_index( searchFor ) && modulesMatching.indexOf( module ) === -1 && modulesExcluding.indexOf( module ) === -1 ) {
+				if ( modulesMatching.indexOf( module ) === -1 && modulesExcluding.indexOf( module ) === -1 && module.has_face_or_vertex( searchFor ) ) {
 					
 					modulesMatching.push( module );
 					

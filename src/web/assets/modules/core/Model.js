@@ -13,6 +13,7 @@
 		assetPath = "assets/modules/core/Model.js",
 		_Model = {},
 		_Physics,
+		_ObjectHelper,
 		_MathHelper,
 		durationBase = 1000,
 		durationPerFrameMinimum = shared.timeDeltaExpected || 1000 / 60;
@@ -23,22 +24,23 @@
 		data: _Model,
 		requirements: [
 			"assets/modules/core/Physics.js",
+			"assets/modules/utils/ObjectHelper.js",
 			"assets/modules/utils/MathHelper.js"
 		], 
 		callbacksOnReqs: init_internal,
 		wait: true
 	} );
 	
-	function init_internal ( p, mh ) {
+	function init_internal ( p, oh, mh ) {
 		console.log('internal model', _Model);
 		_Physics = p;
+		_ObjectHelper = oh;
 		_MathHelper = mh;
 		
 		_Model.Instance = Model;
 		_Model.Instance.prototype = new THREE.Mesh();
 		_Model.Instance.prototype.constructor = _Model.Instance;
-		_Model.Instance.prototype.compute_dimensions_from_bounding_box = compute_dimensions_from_bounding_box;
-		_Model.Instance.prototype.compute_center_offset = compute_center_offset;
+		_Model.Instance.prototype.compute_dimensions = compute_dimensions;
 		
 		// catch parent changes and add / remove physics automatically
 		
@@ -286,20 +288,21 @@
 		
 		this.morphs = make_morphs_handler( this );
 		
-		// center offset
-		
-		this.compute_center_offset();
-		
 		// adjust for offset if needed
 		
-		if ( parameters.adjustForOffset === true ) {
+		if ( parameters.center === true ) {
 			
+			_ObjectHelper.object_center( this );
+			
+			/*
 			// use center offset to correct model
 			// subtract offset from all vertices
 			
 			var vertices = this.geometry.vertices,
 				vertex,
 				vertexPosition;
+			
+			geometry.applyMatrix( new THREE.Matrix4().setTranslation( offset.x, offset.y, offset.z ) );
 			
 			for ( i = 0, l = vertices.length; i < l; i ++) {
 				
@@ -336,19 +339,25 @@
 				
 			}
 			
-			// force recompute of bounding box
+			// force recompute of centroids and bounds
+			
+			this.geometry.computeCentroids();
+			
+			this.geometry.computeBoundingSphere();
 			
 			this.geometry.computeBoundingBox();
+			
+			this.boundRadius = geometry.boundingSphere.radius;
 			
 			// add offset to position
 			
 			this.position.addSelf( this.centerOffset );
-			
-			// force recompute of center offset
-			
-			this.compute_center_offset();
-			
+			*/
 		}
+		
+		// compute dimensions
+		
+		this.compute_dimensions();
 		
 		// physics
 		
@@ -370,7 +379,7 @@
 	
 	=====================================================*/
 	
-	function compute_dimensions_from_bounding_box ( ignoreScale ) {
+	function compute_dimensions ( ignoreScale ) {
 		
 		var g = this.geometry,
 			d,
@@ -414,57 +423,6 @@
 		}
 		
 		return d;
-		
-	}
-	
-	function compute_center_offset ( ignoreScale ) {
-		
-		var g = this.geometry,
-			co,
-			d,
-			bbox;
-		
-		// if needs dimensions
-		
-		if ( this.hasOwnProperty( 'dimensions' ) && this.dimensions instanceof THREE.Vector3 ) {
-			
-			d = this.dimensions;
-			
-		}
-		else {
-			
-			d = this.compute_dimensions_from_bounding_box( ignoreScale );
-			
-		}
-		
-		// if needs center offset
-		
-		if ( this.hasOwnProperty( 'centerOffset' ) && this.centerOffset instanceof THREE.Vector3 ) {
-			
-			co = this.centerOffset;
-			
-		}
-		else {
-			
-			co = this.centerOffset = new THREE.Vector3();
-			
-		}
-		
-		// copy dimensions and half
-		
-		co.copy( d ).multiplyScalar( 0.5 );
-		
-		// add minimum bounds
-		
-		bbox = g.boundingBox;
-		
-		if ( bbox ) {
-			
-			co.addSelf( bbox.min );
-			
-		}
-		
-		return co;
 		
 	}
 	

@@ -56,7 +56,7 @@
 		_GridModule.Instance.prototype.get_state = get_state;
 		_GridModule.Instance.prototype.add_grid_element = add_grid_element;
 		_GridModule.Instance.prototype.test_grid_element = test_grid_element;
-		_GridModule.Instance.prototype.has_face_or_vertex_index = has_face_or_vertex_index;
+		_GridModule.Instance.prototype.has_face_or_vertex = has_face_or_vertex;
 		_GridModule.Instance.prototype.get_modules_connected = get_modules_connected;
 		_GridModule.Instance.prototype.find_and_store_connected = find_and_store_connected;
 		
@@ -100,6 +100,8 @@
 		parameters = parameters || {};
 		
 		parameters.materials = new THREE.MeshLambertMaterial();
+		
+		//parameters.center = true;
 		
 		// prototype constructor
 		
@@ -530,6 +532,7 @@
 		
 		var i, l,
 			j, k,
+			vertices,
 			faces,
 			face;
 		
@@ -552,6 +555,8 @@
 				
 				// for each face
 				
+				vertices = this.geometry.vertices;
+				
 				faces = this.geometry.faces;
 				
 				for ( i = 0, l = faces.length; i < l; i++ ) {
@@ -562,11 +567,11 @@
 					
 					// ab / up
 					
-					this.find_and_store_connected( face.a, face.b, [ 1, 'ab', 'up' ] );
+					this.find_and_store_connected( vertices[ face.a ], vertices[ face.b ], [ 1, 'ab', 'up' ] );
 					
 					// bc / left
 					
-					this.find_and_store_connected( face.b, face.c, [ 3, 'bc', 'left' ] );
+					this.find_and_store_connected( vertices[ face.b ], vertices[ face.c ], [ 3, 'bc', 'left' ] );
 					
 					// by face type
 					
@@ -574,18 +579,18 @@
 						
 						// cd / down
 						
-						this.find_and_store_connected( face.c, face.d, [ 7, 'cd', 'down' ] );
+						this.find_and_store_connected( vertices[ face.c ], vertices[ face.d ], [ 7, 'cd', 'down' ] );
 						
 						// da / right
 						
-						this.find_and_store_connected( face.d, face.a, [ 5, 'da', 'right' ] );
+						this.find_and_store_connected( vertices[ face.d ], vertices[ face.a ], [ 5, 'da', 'right' ] );
 						
 					}
 					else {
 						
 						// ca / right / down
 						
-						this.find_and_store_connected( face.c, face.a, [ 5, 7, 'ca', 'right', 'down' ] );
+						this.find_and_store_connected( vertices[ face.c ], vertices[ face.a ], [ 5, 7, 'ca', 'right', 'down' ] );
 						
 					}
 					
@@ -593,19 +598,19 @@
 					
 					// a / upright
 					
-					this.find_and_store_connected( face.a, undefined, [ 2, 'a', 'upright' ] );
+					this.find_and_store_connected( vertices[ face.a ], undefined, [ 2, 'a', 'upright' ] );
 					
 					// b / upleft
 					
-					this.find_and_store_connected( face.b, undefined, [ 0, 'b', 'upleft' ] );
+					this.find_and_store_connected( vertices[ face.b ], undefined, [ 0, 'b', 'upleft' ] );
 					
 					// c / downleft
 					
-					this.find_and_store_connected( face.c, undefined, [ 6, 'c', 'downleft' ] );
+					this.find_and_store_connected( vertices[ face.c ], undefined, [ 6, 'c', 'downleft' ] );
 					
 					// d / downright
 					
-					this.find_and_store_connected( face.d, undefined, [ 8, 'd', 'downright' ] );
+					this.find_and_store_connected( vertices[ face.d ], undefined, [ 8, 'd', 'downright' ] );
 					
 				}
 				
@@ -625,7 +630,7 @@
 		
 	}
 	
-	function find_and_store_connected ( vertexIndexA, vertexIndexB, ids ) {
+	function find_and_store_connected ( vertexA, vertexB, ids ) {
 		
 		var i, l,
 			searchFor,
@@ -638,14 +643,14 @@
 			
 			// set search target(s)
 			
-			if ( typeof vertexIndexB !== 'undefined' ) {
+			if ( typeof vertexB !== 'undefined' ) {
 				
-				searchFor = [ vertexIndexA, vertexIndexB ];
+				searchFor = [ vertexA, vertexB ];
 				
 			}
 			else {
 				
-				searchFor = vertexIndexA;
+				searchFor = vertexA;
 				
 			}
 			
@@ -681,27 +686,45 @@
 		
 	}
 	
-	function has_face_or_vertex_index( searchFor ) {
+	function has_face_or_vertex( searchFor ) {
 		
 		var i, l,
+			vertices,
+			vertex,
 			faces,
-			face,
 			has = false;
 		
-		// search all faces
+		// search
 		
-		faces = this.geometry.faces;
-		
-		for ( i = 0, l = faces.length; i < l; i++ ) {
+		if ( searchFor instanceof THREE.Vertex ) {
 			
-			face = faces[ i ];
+			vertices = this.geometry.vertices;
 			
-			if ( ( ( searchFor instanceof THREE.Face4 || searchFor instanceof THREE.Face3 ) && searchFor === face ) 
-				|| ( _MathHelper.is_number( searchFor ) && ( searchFor === face.a || searchFor === face.b || searchFor === face.c || searchFor === face.d ) ) ) {
+			// compare searchFor to each vertex
+			// instead of searching via indexOf
+			
+			for ( i = 0, l = vertices.length; i < l; i++ ) {
+				
+				vertex = vertices[ i ];
+				
+				if ( searchFor.position.equals( vertex.position ) ) {
+					
+					has = true;
+					
+					break;
+					
+				}
+				
+			}
+			
+		}
+		else if ( searchFor instanceof THREE.Face4 || searchFor instanceof THREE.Face3 ) {
+			
+			faces = this.geometry.faces;
+			
+			if ( faces.indexOf( searchFor ) !== -1 ) {
 				
 				has = true;
-				
-				break;
 				
 			}
 			

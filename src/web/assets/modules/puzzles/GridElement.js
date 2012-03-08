@@ -64,6 +64,7 @@
 		parameters = parameters || {};
 		
 		parameters.geometry = new THREE.CubeGeometry( 50, 100, 50 );
+		parameters.materials = new THREE.MeshNormalMaterial();
 		
 		// prototype constructor
 		

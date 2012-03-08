@@ -218,11 +218,15 @@
 				
 				// stop camera rotate
 				
-				cameraControls.rotate( e, true );
+				var rotated = cameraControls.rotate( e, true );
 				
-				// start character action
+				// start character action if camera was not just rotated
 				
-				character.action( '002', { event: e, stop: !enabled } );
+				if ( rotated !== true ) {
+					
+					character.action( '002', { event: e, stop: !enabled } );
+					
+				}
 				
 			}
 		};

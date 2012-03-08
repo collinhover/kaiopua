@@ -14,7 +14,7 @@
 		_Plant,
 		_Game,
 		_Puzzles,
-		_GridModule
+		_GridModule,
 		_MathHelper;
 	
 	/*===================================================
@@ -64,6 +64,7 @@
 		_Farming.Instance.prototype.change_module = change_module;
 		_Farming.Instance.prototype.change_puzzle = change_puzzle;
 		_Farming.Instance.prototype.clear_puzzle = clear_puzzle;
+		_Farming.Instance.prototype.position_plant = position_plant;
 		_Farming.Instance.prototype.rotate_plant = rotate_plant;
 		_Farming.Instance.prototype.rotate_plant_reset = rotate_plant_reset;
 		_Farming.Instance.prototype.rotate_plant_update = rotate_plant_update;
@@ -169,7 +170,7 @@
 		// if was not just rotated
 		
 		if ( plantingWasRotated !== true ) {
-			console.log('step PLANTING!');
+			
 			// set array of objects that are involved in this step of planting process
 			
 			plantingObjects = [ this.character ].concat( _Puzzles.all );
@@ -187,7 +188,7 @@
 				targetModel = intersection.object;
 				
 			}
-				
+			console.log('step PLANTING, targetModel', targetModel);
 			// steps
 			
 			// if has plant
@@ -343,6 +344,10 @@
 		
 		this.clear_puzzle( planting.puzzle );
 		
+		// position plant
+		
+		this.position_plant();
+		
 		// test plant compatibility
 		
 		if ( module instanceof _GridModule.Instance ) {
@@ -472,13 +477,29 @@
 		
 		if ( planting.plant !== plantNew ) {
 			
+			// remove last plant
+			
+			if ( planting.plant instanceof _Plant.Instance ) {
+				
+				this.character.scene.remove( planting.plant );
+			
+			}
+			
 			// store new plant
 			
 			planting.plant = plantNew;
 			console.log(' > PLANTING: plant to', planting.plant);
 			
+			// add plant
+			
+			if ( planting.plant instanceof _Plant.Instance ) {
+				
+				this.character.scene.add( planting.plant );
+				
+			}
+			
 			// update planting visual
-		
+			
 			this.update_planting_visual();
 			
 		}
@@ -521,6 +542,51 @@
 	
 	/*===================================================
 	
+	plant position
+	
+	=====================================================*/
+	
+	function position_plant () {
+		
+		var planting = this.planting,
+			plant = planting.plant,
+			module = planting.module,
+			mouse = planting.parameters.mouse,
+			matrix,
+			position;
+		
+		// if plant valid
+		
+		if ( plant instanceof _Plant.Instance ) {
+			
+			// snap to module when possible
+			
+			if ( module instanceof _GridModule.Instance ) {
+				
+				matrix = module.matrixWorld;
+				
+				position = matrix.getPosition();
+				
+			}
+			// else follow mouse 
+			else {
+				
+				matrix = this.character.matrixWorld;
+				
+				position = matrix.getPosition();
+				
+			}
+			
+			// position plant
+			
+			plant.position.copy( position );
+console.log('plant.position:', plant.position.x.toFixed(2), plant.position.y.toFixed(2), plant.position.z.toFixed(2), matrix.n14, matrix.n24, matrix.n34 );
+		}
+		
+	}
+	
+	/*===================================================
+	
 	plant rotation
 	
 	=====================================================*/
@@ -541,7 +607,6 @@
 			// init rotation info
 			
 			pr = this.planting.rotation = {};
-			pr.mouse = _Game.get_mouse( parameters.event );
 			pr.startThreshold = 10;
 			pr.dirChangeThreshold = 15;
 			
@@ -582,7 +647,7 @@
 		var planting = this.planting,
 			plant = planting.plant,
 			pr = planting.rotation,
-			mouse = pr.mouse,
+			mouse = planting.parameters.mouse,
 			rotation,
 			rotationAbs,
 			resetTotals,

@@ -13,6 +13,8 @@
 		_Game = {},
         _AssetLoader,
 		_ErrorHandler,
+		_MathHelper,
+		_ObjectHelper,
 		_Physics,
 		_UIHelper,
 		_MenuMaker,
@@ -171,8 +173,6 @@
 	_Game.add_to_scene = add_to_scene;
 	_Game.remove_from_scene = remove_from_scene;
 	
-	_Game.extract_children_from_objects = extract_children_from_objects;
-	
 	_Game.get_mouse = get_mouse;
 	_Game.get_intersection_from_mouse = get_intersection_from_mouse;
 	_Game.get_object_under_mouse = get_object_under_mouse;
@@ -301,6 +301,10 @@
 				startBottom: true
 			} )*/
 		
+		// modify THREE classes
+		
+		add_three_modifications();
+		
 		// utility
 		
 		_MathHelper = main.get_asset_data( "assets/modules/utils/MathHelper.js" );
@@ -355,10 +359,6 @@
         transitioner = _UIHelper.make_ui_element({
             classes: 'transitioner container_fullscreen'
         });
-		
-		// modify THREE classes
-		
-		add_three_modifications();
 		
 		// renderer
         renderer = new THREE.WebGLRenderer( { antialias: true, clearColor: 0x000000, clearAlpha: 0, maxLights: 8 } );
@@ -514,6 +514,7 @@
 		
 		// assets
 		
+		_ObjectHelper = main.get_asset_data( "assets/modules/utils/ObjectHelper.js" );
 		_MenuMaker = main.get_asset_data( 'assets/modules/utils/MenuMaker.js' );
 		
 		// init menus
@@ -942,39 +943,6 @@
 		return mouse;
 	}
 	
-	function extract_children_from_objects ( objects, cascade ) {
-		
-		var i, l;
-		
-		objects = main.ensure_array( objects );
-		
-		for ( i = 0, l = objects.length; i < l; i++ ) {
-			
-			cascade = extract_child_cascade( objects[ i ], cascade );
-			
-		}
-		
-		return cascade;
-		
-	}
-	
-	function extract_child_cascade ( object, cascade ) {
-		
-		var i, l,
-			children = object.children;
-		
-		cascade = ( cascade || [] ).concat( children );
-		
-		for ( i = 0, l = children.length; i < l; i++ ) {
-			
-			cascade = extract_child_cascade( children[ i ], cascade );
-			
-		}
-		
-		return cascade;
-		
-	}
-	
 	function get_intersection_from_mouse ( objects, mouse, cameraTarget ) {
 		
 		var projector = utilProjector1Selection,
@@ -993,7 +961,7 @@
 		
 		// account for hierarchy and extract all children
 		
-		objects = extract_children_from_objects( objects, objects );
+		objects = _ObjectHelper.extract_children_from_objects( objects, objects );
 		
 		// get corrected mouse position
 		

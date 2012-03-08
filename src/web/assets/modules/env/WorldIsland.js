@@ -148,6 +148,9 @@
 		
 		me.parts.sunmoon = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Sun_Moon.js"),
+			physics: {
+				bodyType: 'mesh'
+			},
 			materials: new THREE.MeshBasicMaterial( { color: 0xffffff, shading: THREE.NoShading, vertexColors: THREE.VertexColors } )
         });
 		
