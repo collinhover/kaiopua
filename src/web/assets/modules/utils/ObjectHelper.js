@@ -50,6 +50,7 @@
 		
 		utilVec31Follow = new THREE.Vector3();
 		utilVec32Follow = new THREE.Vector3();
+		utilVec31Offset = new THREE.Vector3();
 		utilQ1Follow = new THREE.Quaternion();
 		utilQ2Follow = new THREE.Quaternion();
 		utilQ3Follow = new THREE.Quaternion();

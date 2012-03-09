@@ -101,7 +101,7 @@
 		
 		parameters.materials = new THREE.MeshLambertMaterial();
 		
-		//parameters.center = true;
+		parameters.center = true;
 		
 		// prototype constructor
 		
@@ -656,7 +656,7 @@
 			
 			// get connected modules
 			
-			connectedModules = this.grid.get_modules( searchFor, [ this ].concat( this._connectedList ) );
+			connectedModules = this.grid.get_modules_with_vertices( searchFor, this, [ this ].concat( this._connectedList ) );
 			
 			if ( connectedModules.length > 0 ) {
 				

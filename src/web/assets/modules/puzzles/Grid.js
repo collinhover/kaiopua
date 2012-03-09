@@ -15,7 +15,10 @@
 		_GridModule,
 		_ObjectHelper,
 		_MathHelper,
-		idStateMaterialBase = 'base';
+		idStateMaterialBase = 'base',
+		utilVec31Vertex,
+		utilVec32Vertex,
+		utilVec33Vertex;
 	
 	/*===================================================
 	
@@ -49,6 +52,12 @@
 		_ObjectHelper = oh;
 		_MathHelper = mh;
 		
+		utilVec31Vertex = new THREE.Vector3();
+		utilVec32Vertex = new THREE.Vector3();
+		utilVec33Vertex = new THREE.Vector3();
+		
+		// grid
+		
 		_Grid.Instance = Grid;
 		_Grid.Instance.prototype = new _Model.Instance();
 		_Grid.Instance.prototype.constructor = _Grid.Instance;
@@ -57,7 +66,7 @@
 		_Grid.Instance.prototype.add_module = add_module;
 		_Grid.Instance.prototype.remove_modules = remove_modules;
 		_Grid.Instance.prototype.remove_module = remove_module;
-		_Grid.Instance.prototype.get_modules = get_modules;
+		_Grid.Instance.prototype.get_modules_with_vertices = get_modules_with_vertices;
 		_Grid.Instance.prototype.each_module = each_module;
 		
 		// get / set
@@ -88,7 +97,6 @@
 			faceCopy,
 			vertices,
 			verticesFromFace,
-			offset,
 			moduleGeometry,
 			module;
 		
@@ -101,6 +109,10 @@
 		// prototype constructor
 		
 		_Model.Instance.call( this, parameters );
+		
+		// properties
+		
+		this.vertexDistanceMergeLimit = _MathHelper.is_number( parameters.vertexDistanceMergeLimit ) ? parameters.vertexDistanceMergeLimit : 5;
 		
 		// store puzzle reference
 		
@@ -125,14 +137,6 @@
 			// store original modules geometry
 			
 			this.modulesGeometry = parameters.modulesGeometry;
-			
-			// adjust modules geometry for offset
-			
-			offset = _ObjectHelper.object_center( this.modulesGeometry );
-			
-			// adjust offset for initial grid position
-			
-			offset.addSelf( this.position );
 			
 			// create new module for each face
 			
@@ -177,10 +181,6 @@
 				// init
 				
 				module = new _GridModule.Instance( { geometry: moduleGeometry } );
-				
-				// offset module
-				
-				module.position.subSelf( offset );
 				
 				// store
 				
@@ -337,106 +337,122 @@
 		
 	}
 	
-	function get_modules ( searchFor, modulesExcluding, modulesMatching ) {
+	function get_modules_with_vertices ( searchVertices, searchFrom, modulesExcluding, modulesMatching ) {
 		
 		var i, l,
 			j, k,
+			n, m,
+			searchVertex,
+			searchVertexPosition = utilVec31Vertex,
+			searchPosition = utilVec32Vertex,
+			searchScale = 1,
+			searchRadius = 0,
+			searchMatches,
 			module,
-			moduleFace,
-			searchMatch,
-			searchItem;
+			moduleScale,
+			moduleRadius,
+			vertices,
+			vertex,
+			position = utilVec33Vertex,
+			distance;
 		
-		// handle modules excluding list
+		// handle arguments
+		
+		searchVertices = main.ensure_array( searchVertices );
 		
 		modulesExcluding = main.ensure_array( modulesExcluding );
 		
-		// handle modules matching list
-		
 		modulesMatching = main.ensure_array( modulesMatching );
 		
-		// search by modules, face, or vertex index
+		// find search position
 		
-		// module
-		
-		if ( searchFor instanceof _GridModule.Instance ) {
+		if ( searchFrom instanceof THREE.Vector3 ) {
 			
-			for ( i = 0, l = this.modules.length; i < l; i++ ) {
-				
-				module = this.modules[ i ];
-				
-				if ( modulesMatching.indexOf( module ) === -1 && modulesExcluding.indexOf( module ) === -1 && searchFor === module ) {
-					
-					modulesMatching.push( module );
-					
-				}
-				
-			}
+			searchPosition.copy( searchFrom );
 			
 		}
-		// face
-		else if ( searchFor instanceof THREE.Face4 || searchFor instanceof THREE.Face3 ) {
+		else if ( searchFrom instanceof THREE.Object3D ) {
 			
-			for ( i = 0, l = this.modules.length; i < l; i++ ) {
-				
-				module = this.modules[ i ];
-				
-				if ( modulesMatching.indexOf( module ) === -1 && modulesExcluding.indexOf( module ) === -1 && module.has_face_or_vertex( searchFor ) ) {
-					
-					modulesMatching.push( module );
-					
-				}
-				
-			}
+			searchPosition.copy( searchFrom.position );
+			
+			searchRadius += searchFrom.geometry.boundingSphere.radius;
+			
+			searchScale = Math.max( searchFrom.matrixWorld.getColumnX().length(), searchFrom.matrixWorld.getColumnY().length(), searchFrom.matrixWorld.getColumnZ().length() );
 			
 		}
-		// vertex list
-		else if ( main.is_array( searchFor ) ) {
+		else {
 			
-			for ( i = 0, l = this.modules.length; i < l; i++ ) {
-				
-				module = this.modules[ i ];
-				
-				// if module not already matched or excluded
-				
-				if ( modulesMatching.indexOf( module ) === -1 && modulesExcluding.indexOf( module ) === -1 ) {
+			searchPosition.set( 0, 0, 0 );
+			
+		}
+		
+		// set search radius
+		
+		searchRadius = searchRadius * searchScale + this.vertexDistanceMergeLimit;
+		
+		// search each module
+		
+		for ( i = 0, l = this.modules.length; i < l; i++ ) {
 					
-					searchMatch = [];
+			module = this.modules[ i ];
+			
+			// if module not matched or excluded
+			
+			if ( modulesMatching.indexOf( module ) === -1 && modulesExcluding.indexOf( module ) === -1 ) {
+				
+				// distance from search to module 
+				
+				distance = searchPosition.distanceTo( module.position );
+				
+				// module radius
+				
+				moduleRadius = module.geometry.boundingSphere.radius * Math.max( module.matrixWorld.getColumnX().length(), module.matrixWorld.getColumnY().length(), module.matrixWorld.getColumnZ().length() );
+
+				if ( searchRadius + moduleRadius >= distance ) {
 					
-					// for each search item
+					vertices = module.geometry.vertices;
 					
-					for ( j = 0, k = searchFor.length; j < k; j++ ) {
+					searchMatches = [];
+					
+					for ( j = 0, k = searchVertices.length; j < k; j++ ) {
 						
-						searchItem = searchFor[ j ];
+						searchVertex = searchVertices[ j ];
 						
-						if ( module.has_face_or_vertex( searchItem ) ) {
+						searchVertexPosition.add( searchVertex.position, searchPosition );
+						
+						// for each vertex in module
+						
+						for ( n = 0, m = vertices.length; n < m; n++ ) {
 							
-							searchMatch.push( true );
+							vertex = vertices[ n ];
 							
-							if ( searchMatch.length === searchFor.length ) {
+							position.add( vertex.position, module.position );
+							
+							// find distance between search and position 
+							
+							distance = searchVertexPosition.distanceTo( position );
+							
+							// if distance between positions is less than or equal to merge limit
+							
+							if ( distance <= this.vertexDistanceMergeLimit ) {
 								
-								modulesMatching.push( module );
+								searchMatches.push( 1 );
+								
+								break;
 								
 							}
+							
+						}
 						
+						if ( searchMatches.length === searchVertices.length ) {
+							
+							modulesMatching.push( module );
+							
+							break;
+							
 						}
 						
 					}
-					
-				}
-				
-			}
-			
-		}
-		// vertex
-		else if ( searchFor instanceof THREE.Vertex ) {
-			
-			for ( i = 0, l = this.modules.length; i < l; i++ ) {
-				
-				module = this.modules[ i ];
-				
-				if ( modulesMatching.indexOf( module ) === -1 && modulesExcluding.indexOf( module ) === -1 && module.has_face_or_vertex( searchFor ) ) {
-					
-					modulesMatching.push( module );
 					
 				}
 				
