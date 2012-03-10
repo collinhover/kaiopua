@@ -54,6 +54,8 @@
 	
 	function Puzzle ( parameters ) {
 		
+		var emptyPuzzle = typeof parameters === 'undefined';
+		
 		// handle parameters
 		
 		parameters = parameters || {};
@@ -70,12 +72,16 @@
 		this.grid = new _Grid.Instance( parameters.grid );
 		
 		// add grid
-		
+			
 		this.add( this.grid );
 		
 		// add to puzzles list
 		
-		ALL.push( this );
+		if ( emptyPuzzle === false ) {
+			
+			ALL.push( this );
+			
+		}
 		
 	}
 	

@@ -15,7 +15,7 @@
         _Game,
 		_Model,
 		_Physics,
-		_Puzzles,
+		_Field,
 		_ObjectMaker,
 		_Water;
 	
@@ -32,7 +32,7 @@
 			"assets/modules/env/World.js",
 			"assets/modules/core/Model.js",
 			"assets/modules/core/Physics.js",
-			"assets/modules/puzzles/Puzzles.js",
+			"assets/modules/farming/Field.js",
 			"assets/modules/utils/ObjectMaker.js",
 			"assets/modules/env/Water.js"
 		],
@@ -46,7 +46,7 @@
     
     =====================================================*/
 	
-	function init_internal ( g, world, m, physics, puzzles, om, w ) {
+	function init_internal ( g, world, m, physics, f, om, w ) {
 		console.log('internal world island');
 		
 		// assets
@@ -55,7 +55,7 @@
 		_World = world;
 		_Model = m;
 		_Physics = physics;
-		_Puzzles = puzzles;
+		_Field = f;
 		_ObjectMaker = om;
 		_Water = w;
 		
@@ -359,13 +359,13 @@
 		
 		// puzzles
 		
-		me.parts.puzzleTutorial = new _Puzzles.Instance( {
+		me.parts.fieldTutorial = new _Field.Instance( {
 			grid: {
 				modulesGeometry: main.get_asset_data("assets/models/Field_Tutorial.js")
 			}
 		});
 		
-		me.parts.body.add( me.parts.puzzleTutorial );
+		me.parts.body.add( me.parts.fieldTutorial );
 		
 		// functions
 		

@@ -100,8 +100,10 @@
 			"assets/modules/puzzles/GridModule.js",
 			"assets/modules/puzzles/GridModuleState.js",
 			"assets/modules/puzzles/GridElement.js",
-			"assets/modules/puzzles/Plant.js",
-			"assets/modules/abilities/Farming.js",
+			"assets/modules/farming/Farming.js",
+			"assets/modules/farming/Planting.js",
+			"assets/modules/farming/Field.js",
+			"assets/modules/farming/Plant.js",
 			"assets/modules/sections/Intro.js",
             { path: "assets/models/Whale_Head.js", type: 'model' },
 			{ path: "assets/models/Whale_Tail.js", type: 'model' },
@@ -176,6 +178,8 @@
 	_Game.get_mouse = get_mouse;
 	_Game.get_intersection_from_mouse = get_intersection_from_mouse;
 	_Game.get_object_under_mouse = get_object_under_mouse;
+	
+	_Game.is_stop_parameter = is_stop_parameter;
 	
 	// getters and setters
 	
@@ -992,16 +996,11 @@
 	
 	function get_object_under_mouse ( objects, mouse, cameraTarget ) {
 		
-		var intersection = get_intersection_from_mouse( objects, mouse, cameraTarget ),
-			intersectedMesh;
-		
-		// extract mesh and, if present, model
+		var intersection = get_intersection_from_mouse( objects, mouse, cameraTarget );
 		
 		if ( typeof intersection !== 'undefined' ) {
 			
-			intersectedMesh = intersection.object;
-			
-			return intersectedMesh.kaiopuaModel || intersectedMesh;
+			return intersection.object;
 			
 		}
 		
@@ -1329,6 +1328,18 @@
         renderComposer.reset();
         
     }
+	
+	/*===================================================
+	
+	utility
+	
+	=====================================================*/
+	
+	function is_stop_parameter ( parameters ) {
+		
+		return parameters === false || ( typeof parameters !== 'undefined' && parameters.stop === true );
+		
+	}
 	
 	function on_error ( error, url, lineNumber ) {
         

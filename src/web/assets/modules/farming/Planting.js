@@ -1,7 +1,7 @@
 /*
  *
- * Farming.js
- * Gives a character the ability to farm.
+ * Planting.js
+ * Basic activity of farming.
  *
  * @author Collin Hover / http://collinhover.com/
  *
@@ -9,12 +9,12 @@
 (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/abilities/Farming.js",
-		_Farming = {},
-		_Plant,
+		assetPath = "assets/modules/farming/Planting.js",
+		_Planting = {},
 		_Game,
 		_Puzzles,
 		_GridModule,
+		_Plant,
 		_ObjectHelper,
 		_MathHelper;
 	
@@ -25,12 +25,12 @@
     =====================================================*/
 	
 	main.asset_register( assetPath, { 
-		data: _Farming,
+		data: _Planting,
 		requirements: [
 			"assets/modules/core/Game.js",
 			"assets/modules/puzzles/Puzzles.js",
 			"assets/modules/puzzles/GridModule.js",
-			"assets/modules/puzzles/Plant.js",
+			"assets/modules/farming/Plant.js",
 			"assets/modules/utils/ObjectHelper.js",
 			"assets/modules/utils/MathHelper.js"
 		],
@@ -44,125 +44,86 @@
     
     =====================================================*/
 	
-	function init_internal( g, p, gm, pl, oh, mh ) {
-		console.log('internal farming', _Farming);
+	function init_internal ( g, pzl, gm, pl, oh, mh ) {
+		console.log('internal planting', _Planting);
 		
 		_Game = g;
-		_Puzzles = p;
+		_Puzzles = pzl;
 		_GridModule = gm;
 		_Plant = pl;
 		_ObjectHelper = oh;
 		_MathHelper = mh;
 		
-		_Farming.Instance = Farming;
-		_Farming.Instance.prototype.plant = plant;
-		_Farming.Instance.prototype.reset_planting = reset_planting;
-		_Farming.Instance.prototype.step_planting = step_planting;
-		_Farming.Instance.prototype.start_planting = start_planting;
-		_Farming.Instance.prototype.update_planting = update_planting;
-		_Farming.Instance.prototype.update_planting_visual = update_planting_visual;
-		_Farming.Instance.prototype.complete_planting = complete_planting;
-		_Farming.Instance.prototype.stop_planting = stop_planting;
-		_Farming.Instance.prototype.change_plant = change_plant;
-		_Farming.Instance.prototype.change_module = change_module;
-		_Farming.Instance.prototype.change_puzzle = change_puzzle;
-		_Farming.Instance.prototype.clear_puzzle = clear_puzzle;
-		_Farming.Instance.prototype.position_plant = position_plant;
-		_Farming.Instance.prototype.rotate_plant = rotate_plant;
-		_Farming.Instance.prototype.rotate_plant_reset = rotate_plant_reset;
-		_Farming.Instance.prototype.rotate_plant_update = rotate_plant_update;
+		_Planting.Instance = Planting;
+		
+		_Planting.Instance.prototype.reset = reset;
+		_Planting.Instance.prototype.step = step;
+		_Planting.Instance.prototype.start = start;
+		_Planting.Instance.prototype.update = update;
+		_Planting.Instance.prototype.update_visual = update_visual;
+		_Planting.Instance.prototype.complete = complete;
+		_Planting.Instance.prototype.stop = stop;
+		
+		_Planting.Instance.prototype.change_module = change_module;
+		
+		_Planting.Instance.prototype.change_plant = change_plant;
+		_Planting.Instance.prototype.position_plant = position_plant;
+		_Planting.Instance.prototype.rotate_plant = rotate_plant;
+		_Planting.Instance.prototype.reset_rotate_plant = reset_rotate_plant;
+		_Planting.Instance.prototype.update_rotate_plant = update_rotate_plant;
 		
 	}
 	
 	/*===================================================
     
-    farming
+    planting
     
     =====================================================*/
 	
-	function Farming ( character ) {
+	function Planting ( farming ) {
 		
-		var planting;
+		// store farming reference
 		
-		// store character ref
+		this.farming = farming;
 		
-		this.character = character;
+		// reset
 		
-		// reset planting
-		
-		this.reset_planting();
+		this.reset();
 		
 	}
 	
 	/*===================================================
 	
-	planting
+	reset
 	
 	=====================================================*/
 	
-	function plant ( parameters ) {
+	function reset () {
 		
-		// handle parameters
-		
-		if ( is_stop( parameters ) ) {
-			
-			// stop planting cycle
-			
-			this.stop_planting();
-			
-		}
-		else {
-			
-			// store parameters
-			
-			this.planting.parameters = parameters || {};
-			
-			this.planting.parameters.mouse = _Game.get_mouse( this.planting.parameters.event );
-			
-			// step planting cycle
-			
-			this.step_planting();
-			
-		}
-		
-		return this.planting.started;
+		this.started = false;
+		this.rotating = false;
 		
 	}
 	
 	/*===================================================
 	
-	planting reset
+	step
 	
 	=====================================================*/
 	
-	function reset_planting () {
-		
-		this.planting = {};
-		this.planting.started = false;
-		this.planting.rotating = false;
-		
-	}
-	
-	/*===================================================
-	
-	planting step
-	
-	=====================================================*/
-	
-	function step_planting () {
+	function step () {
 		
 		var plantingObjects,
-			intersection,
 			targetModel,
-			plantingWasRotated;
+			wasRotated;
 		
 		// if is rotating
 		
-		if ( this.planting.rotating === true ) {
+		if ( this.rotating === true ) {
 			
 			// record if rotated
 			
-			plantingWasRotated = this.planting.rotation.rotated;
+			wasRotated = this.rotation.rotated;
 			
 			// stop rotating
 			
@@ -172,45 +133,36 @@
 		
 		// if was not just rotated
 		
-		if ( plantingWasRotated !== true ) {
+		if ( wasRotated !== true ) {
 			
 			// set array of objects that are involved in this step of planting process
 			
-			plantingObjects = [ this.character ].concat( _Puzzles.all );
+			plantingObjects = [ this.farming.character ].concat( _Puzzles.all );
 			
 			// find if any planting objects under mouse
 			
-			intersection = _Game.get_intersection_from_mouse( plantingObjects, this.planting.parameters.mouse );
+			targetModel = _Game.get_object_under_mouse( plantingObjects, this.mouse );
 			
-			// if planting object found
-				
-			if ( typeof intersection !== 'undefined' ) {
-				
-				// store info
-					
-				targetModel = intersection.object;
-				
-			}
 			console.log('step PLANTING, targetModel', targetModel);
 			// steps
 			
 			// if has plant
 			
-			if ( this.planting.plant instanceof _Plant.Instance ) {
+			if ( this.plant instanceof _Plant.Instance ) {
 				
-				console.log(' > PLANTING: step has plant: ', this.planting.plant);
+				console.log(' > PLANTING: step has plant: ', this.plant);
 				
 				// if target is grid module
 				if ( targetModel instanceof _GridModule.Instance ) {
 					
 					// complete planting
 					
-					this.complete_planting();
+					this.complete();
 					
 				}
 				else {
 					
-					this.stop_planting();
+					this.stop();
 					
 				}
 				
@@ -222,7 +174,7 @@
 				
 				// if is character
 				
-				if ( targetModel === this.character ) {
+				if ( targetModel === this.farming.character ) {
 					
 					// set plant
 					// TODO: open menu with plant choice
@@ -233,7 +185,7 @@
 					
 					// start planting
 					
-					this.start_planting();
+					this.start();
 					
 				}
 				
@@ -245,46 +197,44 @@
 	
 	/*===================================================
 	
-	planting start / continue / complete / stop
+	start / continue / complete / stop
 	
 	=====================================================*/
 	
-	function start_planting () {
+	function start () {
 		
 		// if has not started planting and plant is valid
 		
-		if ( this.planting.started !== true && this.planting.plant instanceof _Plant.Instance ) {
+		if ( this.started !== true && this.plant instanceof _Plant.Instance ) {
 			console.log('start PLANTING!');
 			
 			// set started
 			
-			this.planting.started = true;
+			this.started = true;
 			
 			// start updating planting
 			
-			this.update_planting();
+			this.update();
 			
-			shared.signals.mousemoved.add( this.update_planting, this );
+			shared.signals.mousemoved.add( this.update, this );
 			
 		}
 		
 	}
 	
-	function update_planting ( skipRotate, updateVisualOnly ) {
+	function update ( skipRotate, updateVisualOnly ) {
 		console.log(' > PLANTING: update planting!');
-		var planting = this.planting,
-			plantingObjects,
-			intersection,
+		var plantingObjects,
 			targetModel,
 			module,
 			grid,
-			puzzle;
+			field;
 		
 		// if rotating
 		
-		if ( skipRotate !== true && planting.rotating === true ) {
+		if ( skipRotate !== true && this.rotating === true ) {
 			
-			this.rotate_plant_update();
+			this.update_rotate_plant();
 			
 		}
 		// else regular update
@@ -294,7 +244,7 @@
 			
 			if ( updateVisualOnly === true ) {
 				
-				this.update_planting_visual();
+				this.update_visual();
 				
 			}
 			// else update fully
@@ -306,17 +256,7 @@
 				
 				// find if any planting objects under mouse
 				
-				intersection = _Game.get_intersection_from_mouse( plantingObjects, planting.parameters.mouse );
-				
-				// if planting object found
-				
-				if ( typeof intersection !== 'undefined' ) {
-				
-					// store info
-					
-					targetModel = intersection.object;
-					
-				}
+				targetModel = _Game.get_object_under_mouse( plantingObjects, this.mouse );
 				
 				// if target is grid module
 				
@@ -338,14 +278,13 @@
 		
 	}
 	
-	function update_planting_visual () {
+	function update_visual () {
 		
-		var planting = this.planting,
-			module = planting.module;
+		var module = this.module;
 		
-		// clear all puzzle modules
+		// clean all field modules
 		
-		this.clear_puzzle( planting.puzzle );
+		this.farming.clean_field();
 		
 		// position plant
 		
@@ -355,23 +294,22 @@
 		
 		if ( module instanceof _GridModule.Instance ) {
 			
-			module.test_grid_element( planting.plant, true );
+			module.test_grid_element( this.plant, true );
 			
 		}
 		
 	}
 	
-	function complete_planting () {
+	function complete () {
 		console.log(' > PLANTING: completing...');
-		var planting = this.planting,
-			module = planting.module,
+		var module = this.module,
 			plantSuccessful = false;
 		
 		// try adding plant
 		
 		if ( module instanceof _GridModule.Instance ) {
 			
-			plantSuccessful = module.add_grid_element( planting.plant, false );
+			plantSuccessful = module.add_grid_element( this.plant, false );
 			
 		}
 		
@@ -382,7 +320,7 @@
 			
 			// stop planting
 		
-			this.stop_planting();
+			this.stop();
 			
 		}
 		else {
@@ -393,13 +331,12 @@
 		
 	}
 	
-	function stop_planting () {
+	function stop () {
 		console.log('stop PLANTING!');
-		var planting = this.planting;
 		
 		// stop updating
 		
-		shared.signals.mousemoved.remove( this.update_planting, this );
+		shared.signals.mousemoved.remove( this.update, this );
 		
 		// stop rotating
 		
@@ -409,9 +346,9 @@
 		
 		this.change_module();
 		
-		// clear puzzle modules
+		// clear field modules
 		
-		this.change_puzzle();
+		this.farming.change_field();
 		
 		// clear plant
 		
@@ -419,7 +356,7 @@
 		
 		// stop
 			
-		planting.started = false;
+		this.started = false;
 		
 	}
 	
@@ -431,18 +368,17 @@
 	
 	function change_module ( moduleNew ) {
 		
-		var planting = this.planting,
-			module,
+		var module,
 			grid,
-			puzzle;
+			field;
 		
 		// if is new module
 		
-		if ( planting.module !== moduleNew ) {
+		if ( this.module !== moduleNew ) {
 			
 			// store module
 			
-			module = planting.module = moduleNew;
+			module = this.module = moduleNew;
 			
 			// if valid module
 			
@@ -452,92 +388,56 @@
 				
 				grid = module.grid;
 				
-				// get puzzle
+				// get field
 				
-				puzzle = grid.puzzle;
+				field = grid.puzzle;
 				
 				console.log(' > PLANTING: intersected module is', module, ', with ', module.connectedList.length, ' connected modules', module.connected );
 				
 			}
 			
-			// change puzzle
+			// change field
 		
-			this.change_puzzle( puzzle );
+			this.farming.change_field( field );
 			
 		}
 		
 		// update planting visual
 		
-		this.update_planting_visual();
+		this.update_visual();
 		
 	}
 	
 	function change_plant ( plantNew ) {
 		
-		var planting = this.planting;
-		
 		// if new plant is different from one stored in planting
 		
-		if ( planting.plant !== plantNew ) {
+		if ( this.plant !== plantNew ) {
 			
 			// remove last plant
 			
-			if ( planting.plant instanceof _Plant.Instance ) {
+			if ( this.plant instanceof _Plant.Instance ) {
 				
-				this.character.scene.remove( planting.plant );
+				this.farming.character.scene.remove( this.plant );
 			
 			}
 			
 			// store new plant
 			
-			planting.plant = plantNew;
-			console.log(' > PLANTING: plant to', planting.plant);
+			this.plant = plantNew;
+			console.log(' > PLANTING: plant to', this.plant);
 			
 			// add plant
 			
-			if ( planting.plant instanceof _Plant.Instance ) {
+			if ( this.plant instanceof _Plant.Instance ) {
 				
-				this.character.scene.add( planting.plant );
+				this.farming.character.scene.add( this.plant );
 				
 			}
 			
 			// update planting visual
 			
-			this.update_planting_visual();
-			
-		}
-		
-	}
-	
-	function change_puzzle ( puzzle ) {
-		
-		// if new puzzle is different from one stored in planting
-		
-		if ( this.planting.puzzle !== puzzle ) {
-			
-			// clear previous puzzle
-			
-			if ( this.planting.puzzle instanceof _Puzzles.Instance ) {
-				
-				this.clear_puzzle( this.planting.puzzle );
-				
-			}
-			
-			// store new puzzle
-			
-			this.planting.puzzle = puzzle;
-			
-		}
-		
-	}
-	
-	function clear_puzzle ( puzzle, module ) {
-		
-		if ( puzzle instanceof _Puzzles.Instance ) {
-			
-			puzzle.grid.each_module( function () {
-				this.show_state( false );
-			}, module );
+			this.update_visual();
 			
 		}
 		
@@ -551,10 +451,9 @@
 	
 	function position_plant () {
 		
-		var planting = this.planting,
-			plant = planting.plant,
-			module = planting.module,
-			mouse = planting.parameters.mouse,
+		var plant = this.plant,
+			module = this.module,
+			mouse = this.mouse,
 			matrix,
 			position;
 		
@@ -568,15 +467,11 @@
 				
 				_ObjectHelper.object_follow_object( plant, module );
 				
-				//matrix = module.matrixWorld;
-				
-				//position = matrix.getPosition();
-				
 			}
 			// else follow mouse 
 			else {
 				
-				matrix = this.character.matrixWorld;
+				matrix = this.farming.character.matrixWorld;
 				
 				position = matrix.getPosition();
 				
@@ -599,38 +494,38 @@
 		
 		var pr;
 		
-		if ( is_stop( parameters ) ) {
-			
+		if ( _Game.is_stop_parameter( parameters ) ) {
+			console.log(' > PLANTING: rotation STOP ');
 			// rotate stop
 			
-			this.planting.rotating = false;
+			this.rotating = false;
 			
 		}
-		else if ( this.planting.started === true && this.planting.rotating !== true ) {
-			
+		else if ( this.started === true && this.rotating !== true ) {
+			console.log(' > PLANTING: rotation START ');
 			// init rotation info
 			
-			pr = this.planting.rotation = {};
+			pr = this.rotation = {};
 			pr.startThreshold = 10;
 			pr.dirChangeThreshold = 15;
 			
 			// reset
 			
-			this.rotate_plant_reset( true );
+			this.reset_rotate_plant( true );
 			
 			// rotate start
 			
-			this.planting.rotating = true;
+			this.rotating = true;
 			
 		}
 		
-		return this.planting.rotating;
+		return this.rotating;
 		
 	}
 	
-	function rotate_plant_reset ( all ) {
+	function reset_rotate_plant ( all ) {
 		console.log(' > PLANTING: rotation TOTALS RESET ');
-		var pr = this.planting.rotation;
+		var pr = this.rotation;
 		
 		// counters
 		
@@ -648,12 +543,11 @@
 		
 	}
 	
-	function rotate_plant_update () {
+	function update_rotate_plant () {
 		
-		var planting = this.planting,
-			plant = planting.plant,
-			pr = planting.rotation,
-			mouse = planting.parameters.mouse,
+		var plant = this.plant,
+			pr = this.rotation,
+			mouse = this.mouse,
 			rotation,
 			rotationAbs,
 			resetTotals,
@@ -704,7 +598,7 @@
 			
 			// rotate plant
 			
-			plant.rotate( rotation );
+			plant.rotate_by( rotation );
 			
 			// if rotation made
 			
@@ -712,7 +606,7 @@
 				
 				// update planting
 				
-				this.update_planting( true, true );
+				this.update( true, true );
 				
 			}
 			
@@ -722,21 +616,9 @@
 			
 		if ( rotationAbs >= 90 || pr.dcx/* + pr.dcy */ >= pr.dirChangeThreshold ) {
 			
-			this.rotate_plant_reset();
+			this.reset_rotate_plant();
 			
 		}
-		
-	}
-	
-	/*===================================================
-	
-	utility
-	
-	=====================================================*/
-	
-	function is_stop ( parameters ) {
-		
-		return parameters === false || ( typeof parameters !== 'undefined' && parameters.stop === true );
 		
 	}
 	

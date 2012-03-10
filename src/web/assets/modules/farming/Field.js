@@ -1,7 +1,7 @@
 /*
  *
- * Plant.js
- * Basic element of farming.
+ * Field.js
+ * Basic puzzle of farming.
  *
  * @author Collin Hover / http://collinhover.com/
  *
@@ -9,9 +9,9 @@
 (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/puzzles/Plant.js",
-		_Plant = {},
-		_GridElement;
+		assetPath = "assets/modules/farming/Field.js",
+		_Field = {},
+		_Puzzles;
 	
 	/*===================================================
     
@@ -20,9 +20,9 @@
     =====================================================*/
 	
 	main.asset_register( assetPath, { 
-		data: _Plant,
+		data: _Field,
 		requirements: [
-			"assets/modules/puzzles/GridElement.js"
+			"assets/modules/puzzles/Puzzles.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -34,24 +34,24 @@
     
     =====================================================*/
 	
-	function init_internal( ge ) {
-		console.log('internal plant', _Plant);
+	function init_internal ( pzl ) {
+		console.log('internal field', _Field);
 		
-		_GridElement = ge;
+		_Puzzles = pzl;
 		
-		_Plant.Instance = Plant;
-		_Plant.Instance.prototype = new _GridElement.Instance();
-		_Plant.Instance.prototype.constructor = _Plant.Instance;
+		_Field.Instance = Field;
+		_Field.Instance.prototype = new _Puzzles.Instance();
+		_Field.Instance.prototype.constructor = _Field.Instance;
 		
 	}
 	
 	/*===================================================
     
-    plant
+    planting
     
     =====================================================*/
 	
-	function Plant ( parameters ) {
+	function Field ( parameters ) {
 		
 		// handle parameters
 		
@@ -59,11 +59,7 @@
 		
 		// prototype constructor
 		
-		_GridElement.Instance.call( this, parameters );
-		
-		// properties
-		
-		this.seed = parameters.seed;
+		_Puzzles.Instance.call( this, parameters );
 		
 	}
 	

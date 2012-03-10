@@ -12,6 +12,7 @@
 		assetPath = "assets/modules/puzzles/GridElement.js",
 		_GridElement = {},
 		_Model,
+		_ObjectHelper,
 		_MathHelper;
 	
 	/*===================================================
@@ -24,6 +25,7 @@
 		data: _GridElement,
 		requirements: [
 			"assets/modules/core/Model.js",
+			"assets/modules/utils/ObjectHelper.js",
 			"assets/modules/utils/MathHelper.js"
 		],
 		callbacksOnReqs: init_internal,
@@ -36,18 +38,19 @@
     
     =====================================================*/
 	
-	function init_internal( m, mh ) {
+	function init_internal( m, oh, mh ) {
 		console.log('internal grid element', _GridElement);
 		
 		_Model = m;
+		_ObjectHelper = oh;
 		_MathHelper = mh;
 		
 		_GridElement.Instance = GridElement;
 		_GridElement.Instance.prototype = new _Model.Instance();
 		_GridElement.Instance.prototype.constructor = _GridElement.Instance;
 		_GridElement.Instance.prototype.get_center_layout = get_center_layout;
-		_GridElement.Instance.prototype.rotate = rotate;
-		_GridElement.Instance.prototype.rotate_layout = rotate_layout;
+		_GridElement.Instance.prototype.rotate_by = rotate_by;
+		_GridElement.Instance.prototype.rotate_layout_by = rotate_layout_by;
 		
 	}
 	
@@ -144,13 +147,13 @@
     
     =====================================================*/
 	
-	function rotate ( degrees ) {
+	function rotate_by ( degrees ) {
 		
-		this.rotate_layout( degrees );
+		this.rotate_layout_by( degrees );
 		
 	}
 	
-	function rotate_layout ( degrees ) {
+	function rotate_layout_by ( degrees ) {
 		
 		this.layout = _MathHelper.rotate_matrix2d_90( this.layout, degrees );
 		

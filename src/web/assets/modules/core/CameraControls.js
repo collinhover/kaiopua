@@ -137,13 +137,13 @@
 		pPos.offsetBase.set( 0, 50, 300 );
 		pPos.offset.copy( pPos.offsetBase );
 		pPos.offsetMin.set( 0, 0, -25 );
-		pPos.offsetMax.set( 0, 50, 10000 );
+		pPos.offsetMax.set( 0, 50, 1000 );
 		pPos.offsetSnap.copy( pPos.offset );
 		pPos.offsetSnapToMinDist.set( 0, 0, firstPersonDist );
 		pPos.deltaMin.set( -80, -80, -80 );
 		pPos.deltaMax.set( 80, 80, 80 );
-		pPos.deltaSpeedMin = 0.01;
-		pPos.deltaSpeedMax = 0.25;
+		pPos.deltaSpeedMin = 0.1;
+		pPos.deltaSpeedMax = 0.3;
 		pPos.deltaDecay = 0.7;
 		
 		// misc

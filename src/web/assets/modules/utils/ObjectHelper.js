@@ -87,7 +87,8 @@
 	
 	function extract_children_from_objects ( objects, cascade ) {
 		
-		var i, l;
+		var i, l,
+			object;
 		
 		objects = main.ensure_array( objects );
 		
@@ -104,13 +105,21 @@
 	function extract_child_cascade ( object, cascade ) {
 		
 		var i, l,
-			children = object.children;
+			children;
 		
-		cascade = ( cascade || [] ).concat( children );
-		
-		for ( i = 0, l = children.length; i < l; i++ ) {
+		cascade = cascade || [];
 			
-			cascade = extract_child_cascade( children[ i ], cascade );
+		if ( typeof object !== 'undefined' ) {
+			
+			children = object.children;
+			
+			cascade = cascade.concat( children );
+			
+			for ( i = 0, l = children.length; i < l; i++ ) {
+				
+				cascade = extract_child_cascade( children[ i ], cascade );
+				
+			}
 			
 		}
 		
