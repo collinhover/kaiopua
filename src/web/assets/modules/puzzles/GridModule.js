@@ -61,11 +61,31 @@
 		_GridModule.Instance.prototype.find_and_store_connected = find_and_store_connected;
 		
 		Object.defineProperty( _GridModule.Instance.prototype, 'connected', { 
-			get: function () { return this._connected; }
+			get: function () { 
+				
+				if ( this._dirtyConnected !== false ) {
+					
+					this.get_modules_connected();
+					
+				}
+				
+				return this._connected;
+			
+			}
 		});
 		
 		Object.defineProperty( _GridModule.Instance.prototype, 'connectedList', { 
-			get: function () { return this._connectedList; }
+			get: function () { 
+				
+				if ( this._dirtyConnected !== false ) {
+					
+					this.get_modules_connected();
+					
+				}
+				
+				return this._connectedList;
+			
+			}
 		});
 		
 		Object.defineProperty( _GridModule.Instance.prototype, 'grid', { 
@@ -75,8 +95,6 @@
 				this._grid = grid;
 				
 				this._dirtyConnected = true;
-				
-				this.get_modules_connected();
 				
 			}
 		});
@@ -102,6 +120,8 @@
 		parameters.materials = new THREE.MeshLambertMaterial();
 		
 		parameters.center = true;
+		
+		parameters.centerRotation = true;
 		
 		// prototype constructor
 		
@@ -655,7 +675,7 @@
 			}
 			
 			// get connected modules
-			
+			//console.log( this.id, ' searching for connected at ', ids[ 2 ]);
 			connectedModules = this.grid.get_modules_with_vertices( searchFor, this, [ this ].concat( this._connectedList ) );
 			
 			if ( connectedModules.length > 0 ) {

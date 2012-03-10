@@ -15,6 +15,7 @@
 		_Game,
 		_Puzzles,
 		_GridModule,
+		_ObjectHelper,
 		_MathHelper;
 	
 	/*===================================================
@@ -30,6 +31,7 @@
 			"assets/modules/puzzles/Puzzles.js",
 			"assets/modules/puzzles/GridModule.js",
 			"assets/modules/puzzles/Plant.js",
+			"assets/modules/utils/ObjectHelper.js",
 			"assets/modules/utils/MathHelper.js"
 		],
 		callbacksOnReqs: init_internal,
@@ -42,13 +44,14 @@
     
     =====================================================*/
 	
-	function init_internal( g, p, gm, pl, mh ) {
+	function init_internal( g, p, gm, pl, oh, mh ) {
 		console.log('internal farming', _Farming);
 		
 		_Game = g;
 		_Puzzles = p;
 		_GridModule = gm;
 		_Plant = pl;
+		_ObjectHelper = oh;
 		_MathHelper = mh;
 		
 		_Farming.Instance = Farming;
@@ -563,9 +566,11 @@
 			
 			if ( module instanceof _GridModule.Instance ) {
 				
-				matrix = module.matrixWorld;
+				_ObjectHelper.object_follow_object( plant, module );
 				
-				position = matrix.getPosition();
+				//matrix = module.matrixWorld;
+				
+				//position = matrix.getPosition();
 				
 			}
 			// else follow mouse 
@@ -575,12 +580,11 @@
 				
 				position = matrix.getPosition();
 				
+				plant.position.copy( position );
+				
 			}
 			
-			// position plant
-			
-			plant.position.copy( position );
-console.log('plant.position:', plant.position.x.toFixed(2), plant.position.y.toFixed(2), plant.position.z.toFixed(2), matrix.n14, matrix.n24, matrix.n34 );
+			console.log('plant.position:', plant.position.x.toFixed(2), plant.position.y.toFixed(2), plant.position.z.toFixed(2) );
 		}
 		
 	}
@@ -629,6 +633,8 @@ console.log('plant.position:', plant.position.x.toFixed(2), plant.position.y.toF
 		var pr = this.planting.rotation;
 		
 		// counters
+		
+		//pr.x.total = pr.totaly = 0;
 		
 		pr.dirx = pr.diry = pr.dcx = pr.dcy = pr.tx = pr.ty = 0;
 		

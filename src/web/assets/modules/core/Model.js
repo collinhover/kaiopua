@@ -294,65 +294,12 @@
 			
 			_ObjectHelper.object_center( this );
 			
-			/*
-			// use center offset to correct model
-			// subtract offset from all vertices
+		}
+		
+		if ( parameters.centerRotation === true ) {
 			
-			var vertices = this.geometry.vertices,
-				vertex,
-				vertexPosition;
+			_ObjectHelper.object_center_rotation( this );
 			
-			geometry.applyMatrix( new THREE.Matrix4().setTranslation( offset.x, offset.y, offset.z ) );
-			
-			for ( i = 0, l = vertices.length; i < l; i ++) {
-				
-				vertex = vertices[ i ];
-				
-				vertexPosition = vertex.position;
-				
-				vertexPosition.subSelf( this.centerOffset );
-				
-			}
-			
-			// also subtract offset from all morph target vertices
-			
-			var morphTargets = this.geometry.morphTargets,
-				morphTarget,
-				morphVertices,
-				j, k;
-			
-			for ( i = 0, l = morphTargets.length; i < l; i ++) {
-				
-				morphTarget = morphTargets[ i ];
-				
-				vertices = morphTarget.vertices;
-				
-				for ( j = 0, k = vertices.length; j < k; j ++) {
-					
-					vertex = vertices[ j ];
-					
-					vertexPosition = vertex.position;
-					
-					vertexPosition.subSelf( this.centerOffset );
-					
-				}
-				
-			}
-			
-			// force recompute of centroids and bounds
-			
-			this.geometry.computeCentroids();
-			
-			this.geometry.computeBoundingSphere();
-			
-			this.geometry.computeBoundingBox();
-			
-			this.boundRadius = geometry.boundingSphere.radius;
-			
-			// add offset to position
-			
-			this.position.addSelf( this.centerOffset );
-			*/
 		}
 		
 		// compute dimensions

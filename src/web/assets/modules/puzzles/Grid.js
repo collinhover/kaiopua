@@ -18,7 +18,10 @@
 		idStateMaterialBase = 'base',
 		utilVec31Vertex,
 		utilVec32Vertex,
-		utilVec33Vertex;
+		utilVec33Vertex,
+		utilVec34Vertex,
+		utilMat41Vertex,
+		utilMat42Vertex;
 	
 	/*===================================================
 	
@@ -55,6 +58,9 @@
 		utilVec31Vertex = new THREE.Vector3();
 		utilVec32Vertex = new THREE.Vector3();
 		utilVec33Vertex = new THREE.Vector3();
+		utilVec34Vertex = new THREE.Vector3();
+		utilMat41Vertex = new THREE.Matrix4();
+		utilMat42Vertex = new THREE.Matrix4();
 		
 		// grid
 		
@@ -344,6 +350,7 @@
 			n, m,
 			searchVertex,
 			searchVertexPosition = utilVec31Vertex,
+			searchFromMatrix = utilMat41Vertex,
 			searchPosition = utilVec32Vertex,
 			searchScale = 1,
 			searchRadius = 0,
@@ -351,9 +358,11 @@
 			module,
 			moduleScale,
 			moduleRadius,
+			moduleMatrix = utilMat42Vertex,
+			modulePosition = utilVec33Vertex,
 			vertices,
 			vertex,
-			position = utilVec33Vertex,
+			position = utilVec34Vertex,
 			distance;
 		
 		// handle arguments
@@ -364,27 +373,31 @@
 		
 		modulesMatching = main.ensure_array( modulesMatching );
 		
-		// find search position
+		// find search matrix world
 		
-		if ( searchFrom instanceof THREE.Vector3 ) {
+		if ( searchFrom instanceof THREE.Matrix4 ) {
 			
-			searchPosition.copy( searchFrom );
+			searchFromMatrix.copy( searchFrom );
 			
 		}
 		else if ( searchFrom instanceof THREE.Object3D ) {
 			
-			searchPosition.copy( searchFrom.position );
+			searchFromMatrix.copy( searchFrom.matrixWorld );
 			
 			searchRadius += searchFrom.geometry.boundingSphere.radius;
 			
-			searchScale = Math.max( searchFrom.matrixWorld.getColumnX().length(), searchFrom.matrixWorld.getColumnY().length(), searchFrom.matrixWorld.getColumnZ().length() );
+			searchScale = Math.max( searchFromMatrix.getColumnX().length(), searchFromMatrix.getColumnY().length(), searchFromMatrix.getColumnZ().length() );
 			
 		}
 		else {
 			
-			searchPosition.set( 0, 0, 0 );
+			searchFromMatrix.identity();
 			
 		}
+		
+		// set search position
+		
+		searchPosition.copy( searchFromMatrix.getPosition() );
 		
 		// set search radius
 		
@@ -399,15 +412,23 @@
 			// if module not matched or excluded
 			
 			if ( modulesMatching.indexOf( module ) === -1 && modulesExcluding.indexOf( module ) === -1 ) {
+				//console.log('searching ', module );
+				// get module matrix world
+				
+				moduleMatrix.copy( module.matrixWorld );
+				
+				// get module position
+				
+				modulePosition.copy( moduleMatrix.getPosition() );
 				
 				// distance from search to module 
 				
-				distance = searchPosition.distanceTo( module.position );
+				distance = searchPosition.distanceTo( modulePosition );
 				
 				// module radius
 				
-				moduleRadius = module.geometry.boundingSphere.radius * Math.max( module.matrixWorld.getColumnX().length(), module.matrixWorld.getColumnY().length(), module.matrixWorld.getColumnZ().length() );
-
+				moduleRadius = module.geometry.boundingSphere.radius * Math.max( moduleMatrix.getColumnX().length(), moduleMatrix.getColumnY().length(), moduleMatrix.getColumnZ().length() );
+				//console.log( module.id, ' search radius ', searchRadius, ' + module radius ', moduleRadius, ' = ', (searchRadius + moduleRadius), ' vs distance ', distance );
 				if ( searchRadius + moduleRadius >= distance ) {
 					
 					vertices = module.geometry.vertices;
@@ -418,20 +439,24 @@
 						
 						searchVertex = searchVertices[ j ];
 						
-						searchVertexPosition.add( searchVertex.position, searchPosition );
+						searchVertexPosition.copy( searchVertex.position );
 						
+						searchFromMatrix.multiplyVector3( searchVertexPosition );
+//console.log(' searchVertexPosition:', searchVertexPosition.x.toFixed(3), searchVertexPosition.y.toFixed(3), searchVertexPosition.z.toFixed(3) );
 						// for each vertex in module
 						
 						for ( n = 0, m = vertices.length; n < m; n++ ) {
 							
 							vertex = vertices[ n ];
 							
-							position.add( vertex.position, module.position );
+							position.copy( vertex.position );
 							
+							moduleMatrix.multiplyVector3( position );
+							//console.log( 'vertex position:', position.x.toFixed(3), position.y.toFixed(3), position.z.toFixed(3) );
 							// find distance between search and position 
 							
 							distance = searchVertexPosition.distanceTo( position );
-							
+							//console.log( 'distance?', distance.toFixed(3) );
 							// if distance between positions is less than or equal to merge limit
 							
 							if ( distance <= this.vertexDistanceMergeLimit ) {

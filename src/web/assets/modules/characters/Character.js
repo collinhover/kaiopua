@@ -323,7 +323,7 @@
 			
 			followSettings = this.followers[ i ];
 			
-			_ObjectHelper.object_follow_object( this, followSettings.obj, followSettings.rotationBase, followSettings.rotationOffset, followSettings.positionOffset );
+			_ObjectHelper.object_follow_object( followSettings.obj, this, followSettings.rotationBase, followSettings.rotationOffset, followSettings.positionOffset );
 				
 		}
 		
@@ -463,7 +463,7 @@
 					
 					// play jump start
 					
-					//morphs.play( 'jump_start', { duration: jump.startAnimationTime, loop: false, callback: function () { morphs.clear( 'jump_start', move.morphClearTime ); } } );
+					morphs.play( 'jump_start', { duration: jump.startAnimationTime, loop: false, callback: function () { morphs.clear( 'jump_start' ); } } );
 					
 					// hold velocity
 					velocityGravityForce.y  = 0;
