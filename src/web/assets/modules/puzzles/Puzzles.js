@@ -13,7 +13,8 @@
 		_Puzzles = {},
 		_Model,
 		_Grid,
-		ALL;
+		allPuzzles,
+		allModules;
 	
 	main.asset_register( assetPath, {
 		data: _Puzzles,
@@ -30,12 +31,38 @@
 		_Model = m;
 		_Grid = g;
 		
-		// puzzles list
+		// puzzles / modules list
 		
-		ALL = [];
+		allPuzzles = [];
 		
-		Object.defineProperty( _Puzzles, 'all', { 
-			get: function () { return ALL.slice( 0 ); }
+		Object.defineProperty( _Puzzles, 'allPuzzles', { 
+			get: function () { return allPuzzles; }
+		});
+		
+		Object.defineProperty( _Puzzles, 'allModules', { 
+			get: function () {
+				
+				var i, l;
+				
+				// if puzzles list dirty
+				
+				if ( this._dirtyPuzzles !== false ) {
+					
+					allModules = [];
+					
+					for ( i = 0, l = allPuzzles.length; i < l; i++ ) {
+						
+						allModules = allModules.concat( allPuzzles[ i ].grid.modules );
+						
+					}
+					
+					this._dirtyPuzzles = false;
+					
+				}
+				
+				return allModules;
+			
+			}
 		});
 		
 		// instance
@@ -43,6 +70,31 @@
 		_Puzzles.Instance = Puzzle;
 		_Puzzles.Instance.prototype = new _Model.Instance();
 		_Puzzles.Instance.prototype.constructor = _Puzzles.Instance;
+		
+		Object.defineProperty( _Puzzles.Instance.prototype, 'occupants', { 
+			get: function () {
+				
+				var i, l,
+					modules = this.grid.modules,
+					module,
+					allOccupants = [];
+				
+				for ( i = 0, l = modules.length; i < l; i++ ) {
+					
+					module = modules[ i ];
+					
+					if ( module.occupied && allOccupants.indexOf( module.occupant ) === -1 ) {
+						
+						allOccupants.push( module.occupant );
+						
+					}
+					
+				}
+				
+				return allOccupants;
+			
+			}
+		});
 		
 	}
 	
@@ -53,8 +105,6 @@
 	=====================================================*/
 	
 	function Puzzle ( parameters ) {
-		
-		var emptyPuzzle = typeof parameters === 'undefined';
 		
 		// handle parameters
 		
@@ -75,11 +125,15 @@
 			
 		this.add( this.grid );
 		
-		// add to puzzles list
+		// if not empty
 		
-		if ( emptyPuzzle === false ) {
+		if ( this.grid.modules.length > 0 ) {
 			
-			ALL.push( this );
+			// add to puzzles list
+			
+			allPuzzles.push( this );
+			
+			_Puzzles._dirtyPuzzles = true;
 			
 		}
 		

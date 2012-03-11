@@ -53,7 +53,6 @@
 		_Farming.Instance.prototype.plant = plant;
 		
 		_Farming.Instance.prototype.change_field = change_field;
-		_Farming.Instance.prototype.clean_field = clean_field;
 		
 	}
 	
@@ -122,27 +121,17 @@
 		
 		if ( this.field !== field ) {
 			
-			// clear previous field
+			// clear previous field grid
 			
-			this.clean_field();
+			if ( this.field instanceof _Field.Instance ) {
+				
+				this.field.grid.clean();
+				
+			}
 			
 			// store new field
 			
 			this.field = field;
-			
-		}
-		
-	}
-	
-	function clean_field ( field, module ) {
-		
-		field = field || this.field;
-		
-		if ( field instanceof _Puzzles.Instance ) {
-			
-			field.grid.each_module( function () {
-				this.show_state( false );
-			}, module );
 			
 		}
 		

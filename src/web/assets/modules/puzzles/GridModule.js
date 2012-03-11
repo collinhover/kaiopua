@@ -13,7 +13,6 @@
 		_GridModule = {},
 		_Model,
 		_GridModuleState,
-		_GridElement,
 		states;
 	
 	/*===================================================
@@ -27,7 +26,6 @@
 		requirements: [
 			"assets/modules/core/Model.js",
 			"assets/modules/puzzles/GridModuleState.js",
-			"assets/modules/puzzles/GridElement.js",
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -39,11 +37,10 @@
 	
 	=====================================================*/
 	
-	function init_internal ( m, gms, ge ) {
+	function init_internal ( m, gms ) {
 		console.log("internal grid module", _GridModule);
 		_Model = m;
 		_GridModuleState = gms;
-		_GridElement = ge;
 	
 		// instance
 		
@@ -51,14 +48,39 @@
 		_GridModule.Instance.prototype = new _Model.Instance();
 		_GridModule.Instance.prototype.constructor = _GridModule.Instance;
 		_GridModule.Instance.prototype.reset = reset;
+		_GridModule.Instance.prototype.set_dirty = set_dirty;
+		
 		_GridModule.Instance.prototype.change_state = change_state;
 		_GridModule.Instance.prototype.show_state = show_state;
 		_GridModule.Instance.prototype.get_state = get_state;
-		_GridModule.Instance.prototype.add_grid_element = add_grid_element;
-		_GridModule.Instance.prototype.test_grid_element = test_grid_element;
+		
+		_GridModule.Instance.prototype.set_occupant = set_occupant;
+		
 		_GridModule.Instance.prototype.has_face_or_vertex = has_face_or_vertex;
 		_GridModule.Instance.prototype.get_modules_connected = get_modules_connected;
 		_GridModule.Instance.prototype.find_and_store_connected = find_and_store_connected;
+		
+		_GridModule.Instance.prototype.remove = function ( object ) {
+			
+			_Model.Instance.prototype.remove.call( this, object );
+			
+			// if is occupant, clear
+			
+			if ( this.occupant === object ) {
+				
+				this.occupant = undefined;
+				
+			}
+			
+			// clean grid
+			
+			if ( typeof this.grid !== 'undefined' ) {
+				
+				this.grid.clean();
+				
+			}
+			
+		};
 		
 		Object.defineProperty( _GridModule.Instance.prototype, 'connected', { 
 			get: function () { 
@@ -99,8 +121,13 @@
 			}
 		});
 		
+		Object.defineProperty( _GridModule.Instance.prototype, 'occupant', { 
+			get: function () { return this._occupant; },
+			set: set_occupant
+		});
+		
 		Object.defineProperty( _GridModule.Instance.prototype, 'occupied', { 
-			get: function () { return this.states.occupied.active; }
+			get: function () { return typeof this.occupant !== 'undefined'; }
 		});
 		
 	}
@@ -175,6 +202,10 @@
 		// reset active for each state in states list
 		
 		this.change_state( statesList, false );
+		
+		// clear occupant
+		
+		this.occupant = undefined;
 			
 	}
 	
@@ -183,6 +214,17 @@
 	states
 	
 	=====================================================*/
+	
+	function set_dirty () {
+		
+		this._dirtyStates = true;
+		
+		if ( typeof this.grid !== 'undefined' ) {
+			
+			this.grid._dirtyModules = true;
+			
+		}
+	}
 	
 	function change_state ( ids, activates ) {
 		
@@ -218,7 +260,7 @@
 				
 				if ( state.active !== activePrev ) {
 					
-					this._dirtyStates = true;
+					this.set_dirty();
 					
 				}
 				
@@ -254,7 +296,7 @@
 		
 		if ( this.states.overdraw !== overdrawPrev ) {
 			
-			this._dirtyStates = true;
+			this.set_dirty();
 			
 		}
 		
@@ -280,7 +322,7 @@
 			
 			state.modify_material( this.material, activeLevel );
 			
-			// clear dirty
+			// clear dirty states
 			
 			this._dirtyStates = false;
 			
@@ -343,202 +385,19 @@
 	
 	/*===================================================
 	
-	grid elements
+	occupants
 	
 	=====================================================*/
 	
-	function add_grid_element ( gridElement, show ) {
+	function set_occupant ( occupant ) {
 		
-		return this.test_grid_element( gridElement, show, true );
+		// store
 		
-	}
-	
-	function test_grid_element ( gridElement, show, add ) {
+		this._occupant = occupant;
 		
-		var i, l,
-			success = 0,
-			layout,
-			dimensions,
-			rows,
-			cols,
-			testResults,
-			spreadRecord,
-			center,
-			modulesTested,
-			moduleTested;
+		// set occupied state
 		
-		// valid grid element
-		
-		if ( gridElement instanceof _GridElement.Instance ) {
-			
-			// basics
-			
-			layout = gridElement.layout;
-			dimensions = layout.dimensions();
-			rows = dimensions.rows;
-			cols = dimensions.cols;
-			testResults = Matrix.Zero( rows, cols );
-			spreadRecord = testResults.dup();
-			center = gridElement.get_center_layout();
-			modulesTested = [];
-			
-			// return recursive test results
-			
-			success = test_grid_element_spread( this, layout, testResults, spreadRecord, center.row, center.col, rows, cols, modulesTested );
-			
-			// show / add test results of grid element on modules tested
-			// force occupied state to match success
-			
-			for ( i = 0, l = modulesTested.length; i < l; i++ ) {
-				
-				moduleTested = modulesTested[ i ];
-				
-				// show if required
-				
-				if ( show === true ) {
-				
-					moduleTested.show_state( 'occupied', 1 - success );
-					
-				}
-				
-				// add if successful and required
-				
-				if ( success && add === true ) {
-					
-					moduleTested.change_state( 'occupied', true );
-					
-				}
-				
-			}
-			
-		}
-		
-		return Boolean( success );
-		
-	}
-	
-	function test_grid_element_spread ( module, layout, testResults, spreadRecord, rowIndex, colIndex, numRows, numCols, modulesTested ) {
-		
-		var i, l,
-			j, k,
-			success = 1,
-			successNext,
-			connected,
-			moduleNext,
-			index,
-			elements = layout.elements,
-			elementsTR = testResults.elements,
-			elementsSR = spreadRecord.elements,
-			element,
-			rowNext,
-			rowArr = Math.max( 0, rowIndex - 1 ),
-			rowMin,
-			rowIndexToMin,
-			rowMax,
-			rowsSq,
-			colNext,
-			colArr = Math.max( 0, colIndex - 1 ),
-			colMin,
-			colIndexToMin,
-			colMax,
-			colsSq;
-		
-		// update spread record
-		
-		elementsSR[ rowArr ][ colArr ] = 1;
-		
-		// test element
-			
-		element = elements[ rowArr ][ colArr ];
-		
-		// if layout element present
-		
-		if ( element === 1 ) {
-			
-			// if module is valid
-			
-			if ( module instanceof _GridModule.Instance ) {
-				
-				// test success
-				
-				success = 1 - module.occupied;
-				
-				// add module to tested list
-				
-				index = modulesTested.indexOf( module );
-				
-				if ( index === -1 ) {
-					
-					modulesTested.push( module );
-					
-				}
-				
-			}
-			// no module where needed
-			else {
-				
-				success = 0;
-				
-			}
-			
-			// store success
-			
-			elementsTR[ rowArr ][ colArr ] = success;
-			
-		}
-		
-		// if module is valid
-			
-		if ( module instanceof _GridModule.Instance ) {
-			
-			// get square around module in layout
-			
-			rowMin = Math.max( 1, rowArr );
-			rowIndexToMin = rowIndex - rowMin;
-			rowMax = Math.min( numRows, rowIndex + 1 );
-			rowsSq = Math.min( numRows, rowMax - rowMin + 1 );
-			colMin = Math.max( 1, colArr );
-			colIndexToMin = colIndex - colMin;
-			colMax = Math.min( numCols, colIndex + 1 );
-			colsSq = Math.min( numCols, colMax - colMin + 1 );
-			
-			// spread to all connected modules
-			// continue even if unsuccessful to record all modules affected by layout
-			
-			connected = module.connected;
-			
-			for ( i = 0, l = rowsSq; i < l; i++ ) {
-				
-				for ( j = 0, k = colsSq; j < k; j++ ) {
-					
-					rowNext = rowMin + i;
-					colNext = colMin + j;
-					
-					// get next module
-					
-					moduleNext = connected[ ( ( i + ( 1 - rowIndexToMin ) ) * 3 + ( j + ( 1 - colIndexToMin ) ) ) ];
-					
-					// if module location not tested yet
-					
-					if ( spreadRecord.e( rowNext, colNext ) !== 1 ) {
-						
-						successNext = test_grid_element_spread( moduleNext, layout, testResults, spreadRecord, rowNext, colNext, numRows, numCols, modulesTested );
-						
-						// record next success while successful
-						
-						if ( success ) {
-							success = successNext;
-						}
-						
-					}
-					
-				}
-				
-			}
-			
-		}
-			
-		return success;
+		this.change_state( 'occupied', ( typeof this.occupant !== 'undefined' ) );
 		
 	}
 	

@@ -73,6 +73,7 @@
 		_Grid.Instance.prototype.remove_modules = remove_modules;
 		_Grid.Instance.prototype.remove_module = remove_module;
 		_Grid.Instance.prototype.get_modules_with_vertices = get_modules_with_vertices;
+		_Grid.Instance.prototype.clean = clean;
 		_Grid.Instance.prototype.each_module = each_module;
 		
 		// get / set
@@ -207,6 +208,12 @@
 		}
 		
 	}
+	
+	/*===================================================
+	
+	modules
+	
+	=====================================================*/
 	
 	function modify_modules ( modules, remove ) {
 		
@@ -412,7 +419,7 @@
 			// if module not matched or excluded
 			
 			if ( modulesMatching.indexOf( module ) === -1 && modulesExcluding.indexOf( module ) === -1 ) {
-				//console.log('searching ', module );
+				
 				// get module matrix world
 				
 				moduleMatrix.copy( module.matrixWorld );
@@ -428,7 +435,7 @@
 				// module radius
 				
 				moduleRadius = module.geometry.boundingSphere.radius * Math.max( moduleMatrix.getColumnX().length(), moduleMatrix.getColumnY().length(), moduleMatrix.getColumnZ().length() );
-				//console.log( module.id, ' search radius ', searchRadius, ' + module radius ', moduleRadius, ' = ', (searchRadius + moduleRadius), ' vs distance ', distance );
+
 				if ( searchRadius + moduleRadius >= distance ) {
 					
 					vertices = module.geometry.vertices;
@@ -442,7 +449,7 @@
 						searchVertexPosition.copy( searchVertex.position );
 						
 						searchFromMatrix.multiplyVector3( searchVertexPosition );
-//console.log(' searchVertexPosition:', searchVertexPosition.x.toFixed(3), searchVertexPosition.y.toFixed(3), searchVertexPosition.z.toFixed(3) );
+						
 						// for each vertex in module
 						
 						for ( n = 0, m = vertices.length; n < m; n++ ) {
@@ -452,11 +459,11 @@
 							position.copy( vertex.position );
 							
 							moduleMatrix.multiplyVector3( position );
-							//console.log( 'vertex position:', position.x.toFixed(3), position.y.toFixed(3), position.z.toFixed(3) );
+							
 							// find distance between search and position 
 							
 							distance = searchVertexPosition.distanceTo( position );
-							//console.log( 'distance?', distance.toFixed(3) );
+							
 							// if distance between positions is less than or equal to merge limit
 							
 							if ( distance <= this.vertexDistanceMergeLimit ) {
@@ -486,6 +493,30 @@
 		}
 		
 		return modulesMatching;
+		
+	}
+	
+	/*===================================================
+	
+	cleaning
+	
+	=====================================================*/
+	
+	function clean ( modulesExcluding, force ) {
+		
+		// if dirty
+		
+		if ( this._dirtyModules !== false || force === true ) {
+			
+			this.each_module( function () {
+				
+				this.show_state( false );
+				
+			}, modulesExcluding );
+			
+			this._dirtyModules = false;
+			
+		}
 		
 	}
 	

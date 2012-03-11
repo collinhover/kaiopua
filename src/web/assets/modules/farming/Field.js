@@ -43,6 +43,14 @@
 		_Field.Instance.prototype = new _Puzzles.Instance();
 		_Field.Instance.prototype.constructor = _Field.Instance;
 		
+		Object.defineProperty( _Field.Instance.prototype, 'plants', { 
+			get: function () {
+				
+				return this.occupants;
+			
+			}
+		});
+		
 	}
 	
 	/*===================================================

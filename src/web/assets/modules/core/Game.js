@@ -947,7 +947,7 @@
 		return mouse;
 	}
 	
-	function get_intersection_from_mouse ( objects, mouse, cameraTarget ) {
+	function get_intersection_from_mouse ( objects, traverseHierarchy, mouse, cameraTarget ) {
 		
 		var projector = utilProjector1Selection,
 			ray = utilRay1Selection,
@@ -957,15 +957,21 @@
 		
 		// handle parameters
 		
+		objects = objects || scene;
+		
+		traverseHierarchy = ( typeof traverseHierarchy === 'boolean' ) ? traverseHierarchy : true;
+		
 		mouse = mouse || get_mouse();
 		
 		cameraTarget = cameraTarget || camera;
 		
-		objects = objects || scene;
-		
 		// account for hierarchy and extract all children
 		
-		objects = _ObjectHelper.extract_children_from_objects( objects, objects );
+		if ( traverseHierarchy !== false ) {
+			
+			objects = _ObjectHelper.extract_children_from_objects( objects, objects );
+			
+		}
 		
 		// get corrected mouse position
 		
@@ -994,9 +1000,9 @@
 		
 	}
 	
-	function get_object_under_mouse ( objects, mouse, cameraTarget ) {
+	function get_object_under_mouse ( objects, traverseHierarchy, mouse, cameraTarget ) {
 		
-		var intersection = get_intersection_from_mouse( objects, mouse, cameraTarget );
+		var intersection = get_intersection_from_mouse( objects, traverseHierarchy, mouse, cameraTarget );
 		
 		if ( typeof intersection !== 'undefined' ) {
 			
