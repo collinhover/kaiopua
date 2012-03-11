@@ -1,8 +1,8 @@
 Visual Communicators Made Through Play: A Game for Learning in Graphic Design
 ========
 
-Collin Hover
-University of Texas at Arlington, USA
+Collin Hover  
+University of Texas at Arlington, USA  
 
 ####ABSTRACT
 
