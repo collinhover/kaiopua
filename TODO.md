@@ -12,9 +12,10 @@
   * Twitter share url to domain name
 * Get domain name and hosting
 * Physics - fix
-* Character controls
+* Plants interactions
+* Advanced plants
 * Inventory of seeds
-* Core game mechanic: seeds & planting
+* Puzzle win state + rewards
 * Ambient occlusion
 
 #### Sound Artist
