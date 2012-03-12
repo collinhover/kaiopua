@@ -48,6 +48,9 @@
 		_Plant.Instance = Plant;
 		_Plant.Instance.prototype = new _GridElement.Instance();
 		_Plant.Instance.prototype.constructor = _Plant.Instance;
+		_Plant.Instance.prototype.supr = _GridElement.Instance.prototype;
+		
+		
 		_Plant.Instance.prototype.grow = grow;
 		_Plant.Instance.prototype.uproot = uproot;
 		_Plant.Instance.prototype.change_module = change_module;
@@ -89,7 +92,7 @@
 		
 		// prototype call
 		
-		_GridElement.Instance.prototype.change_module.apply( this, arguments );
+		_Plant.Instance.prototype.supr.change_module.apply( this, arguments );
 		
 		// handle planted state
 		
@@ -142,7 +145,7 @@
 	
 	function update () {
 		
-		_GridElement.Instance.prototype.update.apply( this, arguments );
+		_Plant.Instance.prototype.supr.update.apply( this, arguments );
 		
 	}
 	

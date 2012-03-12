@@ -231,27 +231,10 @@ a:hover, a:active {
     box-shadow: -2px 2px 10px rgba(0, 0, 0, 0.15);
 }
 
-.item_box {
-	width: 150px;
-	-moz-border-radius: 5px;
-    -webkit-border-radius: 5px;
-    border-radius: 5px;
-}
-
-.item_circle {
-	float: left;
-	width: 160px;
-	height: 160px;
-	border-radius: 80px;
-	-moz-border-radius: 80px;
-	-webkit-border-radius: 80px;
-	-khtml-border-radius: 80px;
-}
-
 .item_text_container {
 	display: table-cell;
 	vertical-align: middle;
-	width: 100%0%;
+	width: 100%;
 	margin: 0 auto;
 	text-align: center;
 }
@@ -318,7 +301,7 @@ a:hover, a:active {
 
 .info_panel {
     overflow: auto;
-	 background: #222222;
+	background: #222222;
     -moz-border-radius: 15px;
     -webkit-border-radius: 15px;
     border-radius: 15px;
@@ -346,14 +329,6 @@ a:hover, a:active {
 .info_panel p {
     text-align: center;
     color: #eeeeee;
-}
-
-/* load bar 
--------------------------*/
-
-.load_bar {
-    margin-top: 15px;
-    margin-bottom: 15px;
 }
 
 /* errors 
@@ -470,23 +445,6 @@ footer nav .icon {
 footer .copyright {
     clear:both; 
     text-align: center;
-}
-
-/* full-screen container
--------------------------*/
-.container_fullscreen {
-	min-height: 100%;
-	width: 100%;
-	height: auto;
-	position: fixed;
-	top: 0;
-	left: 0;
-}
-
-/* transitioner
--------------------------*/
-.transitioner {
-    background-color: #333333;
 }
 
 /* image replacements 

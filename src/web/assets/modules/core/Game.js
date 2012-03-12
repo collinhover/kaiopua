@@ -16,8 +16,10 @@
 		_MathHelper,
 		_ObjectHelper,
 		_Physics,
-		_UIHelper,
+		_UIElement,
 		_MenuMaker,
+		_Menu,
+		_Button,
 		_Launcher,
 		_Intro,
         transitioner,
@@ -55,11 +57,13 @@
 		dependencies = [
 			"assets/modules/utils/AssetLoader.js",
             "assets/modules/utils/ErrorHandler.js",
-			"assets/modules/utils/UIHelper.js",
+			"assets/modules/ui/UIElement.js",
+			"assets/modules/utils/UIHelper.js", // TODO: remove me!
 			"assets/modules/utils/MathHelper.js",
-			"assets/modules/utils/Dev.js"
+			"assets/modules/utils/Dev.js",
 		],
         assetsBasic = [
+			"js/lib/jquery.transform2d.js",
             "js/lib/three/Three.js",
             "js/lib/three/ThreeExtras.js",
             "js/lib/three/postprocessing/ShaderExtras.js",
@@ -87,6 +91,10 @@
 			"assets/modules/core/Player.js",
 			"assets/modules/core/Model.js",
 			"assets/modules/core/CameraControls.js",
+			"assets/modules/ui/Button.js",
+			"assets/modules/ui/Menu.js",
+			"assets/modules/ui/MenuDynamic.js",
+			"assets/modules/ui/Inventory.js",
 			"assets/modules/utils/ObjectMaker.js",
 			"assets/modules/utils/ObjectHelper.js",
 			"assets/modules/utils/MenuMaker.js",
@@ -229,11 +237,11 @@
     
     =====================================================*/
 	
-	function init_internal ( al, err, u ) {
+	function init_internal ( al, err, uie ) {
 		console.log('internal game');
 		_AssetLoader = al;
 		_ErrorHandler = err;
-		_UIHelper = u;
+		_UIElement = uie;
 		
 		// register error listeners
 		
@@ -283,7 +291,7 @@
 			
 			// load game assets and init game
 			
-			main.asset_require( assetsGame, init_game, true, containerOverlayAll.domElement );
+			main.asset_require( assetsGame, init_game, true, containerUI.domElement );
 			
 		}, loadAssetsDelay);
 		
@@ -334,23 +342,23 @@
 		
 		domElement = shared.html.gameContainer;
 		
-		containerOverlayAll = _UIHelper.make_ui_element( {
+		containerOverlayAll = new _UIElement.Instance( {
 			id: 'game_overlay_all',
-			classes: 'container_fullscreen',
-			pointerEventsOnlyWithChildren: true
+			pointerEventsOnlyWithChildren: true,
+			fullwindow: true
         });
-		containerOverlayDisplay = _UIHelper.make_ui_element( {
+		containerOverlayDisplay = new _UIElement.Instance( {
 			id: 'game_overlay_display',
-			classes: 'container_fullscreen',
-			pointerEventsOnlyWithChildren: true
+			pointerEventsOnlyWithChildren: true,
+			fullwindow: true
         });
-		containerUI = _UIHelper.make_ui_element( {
+		containerUI = new _UIElement.Instance( {
 			id: 'game_ui',
-			classes: 'container_fullscreen'
+			fullwindow: true
         });
-		containerDisplay = _UIHelper.make_ui_element( {
+		containerDisplay = new _UIElement.Instance( {
 			id: 'game_visuals',
-			classes: 'container_fullscreen'
+			fullwindow: true
         });
 		
 		domElement.append( containerDisplay.domElement );
@@ -360,8 +368,12 @@
 		
         // transitioner
 		
-        transitioner = _UIHelper.make_ui_element({
-            classes: 'transitioner container_fullscreen'
+        transitioner = new _UIElement.Instance({
+			id: 'transitioner',
+			cssmap: {
+				"background-color" : "#333333"
+			},
+			fullwindow: true
         });
 		
 		// renderer
@@ -520,6 +532,8 @@
 		
 		_ObjectHelper = main.get_asset_data( "assets/modules/utils/ObjectHelper.js" );
 		_MenuMaker = main.get_asset_data( 'assets/modules/utils/MenuMaker.js' );
+		_Button = main.get_asset_data( 'assets/modules/ui/Button.js' );
+		_Menu = main.get_asset_data( 'assets/modules/ui/Menu.js' );
 		
 		// init menus
 		
@@ -531,7 +545,7 @@
 		
 		// show start menu
 		
-		menus.start.ui_show( containerUI.domElement );
+		menus.start.show( containerUI.domElement );
 		
     }
 	
@@ -543,94 +557,100 @@
 	
 	function init_footer_menu() {
 		
-		var menu;
-		
 		// init footer menu
 		
-		menu = menus.footer = _UIHelper.make_ui_element( { domElement: shared.html.footerMenu } );
+		menus.footer = new _UIElement.Instance( { domElement: shared.html.footerMenu } );
 			
 	}
 	
 	function init_start_menu () {
-		var menu;
         
         // init start menu
 		
-        menu = menus.start = _MenuMaker.make_menu( {
+        menus.start = new _Menu.Instance( {
             id: 'start_menu',
 			transparent: true,
             width: 570
         } );
         
-        menu.add_item( _MenuMaker.make_button( {
-            id: 'Start', 
+        menus.start.add_item( new _Button.Instance( {
+            id: 'Start',
+            classes: 'item_big',
+			width: 160,
+			circle: true,
             callback: function () {
                 start_game();
             },
-            classes: 'item_big',
-			circleButton: true
+			context: this
         } ) );
-        menu.add_item( _MenuMaker.make_button( {
+        menus.start.add_item( new _Button.Instance( {
             id: 'Continue', 
+			width: 160,
+			circle: true,
             callback: function () {},
-            disabled: true,
-			circleButton: true
+			context: this,
+            enabled: false
         } ) );
-        menu.add_item( _MenuMaker.make_button( {
-            id: 'Options', 
+        menus.start.add_item( new _Button.Instance( {
+            id: 'Options',
+			width: 160,
+			circle: true,
             callback: function () {},
-            disabled: true,
-			circleButton: true
+			context: this,
+            enabled: false
         } ) );
 		
-        menu.ui_keep_centered();
+        menus.start.centerAutoUpdate = true;
         
-        menu.ui_hide( true, 0 );
+        menus.start.hide( true, 0 );
 		
 	}
 	
 	function init_pause_menu () {
-		var menu;
         
         // init menu
         
-        menu = menus.pause = _MenuMaker.make_menu( {
+		menus.pause = new _Menu.Instance( {
             id: 'pause_menu',
             width: 760,
 			transparent: true
         } );
         
-        menu.add_item( _MenuMaker.make_button( {
-            id: 'Resume', 
+        menus.pause.add_item( new _Button.Instance( {
+            id: 'Resume',
+            classes: 'item_big',
+			circle: true, 
             callback: function () {
                 resume();
             },
-            classes: 'item_big',
-			circleButton: true
+			context: this
         } ) );
-		menu.add_item( _MenuMaker.make_button( {
-            id: 'Options', 
+		menus.pause.add_item( new _Button.Instance( {
+            id: 'Options',
+			circle: true, 
             callback: function () {},
-            disabled: true,
-			circleButton: true
+			context: this,
+            enabled: false
         } ) );
-        menu.add_item( _MenuMaker.make_button( {
-            id: 'Save', 
+        menus.pause.add_item( new _Button.Instance( {
+            id: 'Save',
+			circle: true, 
             callback: function () {},
-            disabled: true,
-			circleButton: true
+			context: this,
+            enabled: false
         } ) );
-		menu.add_item( _MenuMaker.make_button( {
-            id: 'End Game', 
+		menus.pause.add_item( new _Button.Instance( {
+            id: 'End Game',
+			circle: true, 
             callback: function () {
 				stop_game();
 			},
-			circleButton: true
+			context: this
         } ) );
         
-        menu.ui_keep_centered();
+        menus.pause.centerAutoUpdate = true;
         
-        menu.ui_hide( true, 0 );
+        menus.pause.hide( true, 0 );
         
 	}
 	
@@ -1039,7 +1059,7 @@
 					
 				}
 				
-				transitioner.ui_hide( true, transitionOut );
+				transitioner.hide( true, transitionOut );
 				
 				section.resize(shared.screenWidth, shared.screenHeight);
 				
@@ -1074,7 +1094,7 @@
             
             previousSection.hide();
             
-			transitioner.ui_show( containerOverlayAll.domElement, transitionIn );
+			transitioner.show( containerOverlayAll.domElement, transitionIn );
             
         }
 		
@@ -1134,8 +1154,7 @@
 		
 		// hide footer menu
 		
-		menus.footer.ui_hide( true );
-		//$(shared.html.staticMenu).stop(true).fadeTo( transitionIn, 0 );
+		menus.footer.hide( true );
 		
         // disable start menu
 		
@@ -1143,7 +1162,7 @@
         
         // hide start menu
 		
-        menus.start.ui_hide( true );
+        menus.start.hide( true );
         
 		// set intro section
 		
@@ -1167,14 +1186,13 @@
 			
 			menus.pause.disable();
 		
-			menus.pause.ui_hide( true );
+			menus.pause.hide( true );
 			
 		}
 		
 		// show footer menu
 		
-		menus.footer.ui_show();
-		//$(shared.html.staticMenu).stop(true).fadeTo( transitionOut, 1 );
+		menus.footer.show();
 		
 		// set launcher section
 		
@@ -1182,7 +1200,7 @@
 			
 			// show / enable start menu
 			
-			menus.start.ui_show( containerUI.domElement );
+			menus.start.show( containerUI.domElement );
 			
 			menus.start.enable();
 			
@@ -1198,19 +1216,18 @@
 			
 			if ( started === true ) {
 				
-				transitioner.ui_show( containerOverlayDisplay.domElement, transitionIn, transitionerAlpha );
+				transitioner.show( containerOverlayDisplay.domElement, transitionIn, transitionerAlpha );
 				
-				menus.pause.ui_show( containerUI.domElement );
+				menus.pause.show( containerUI.domElement );
 				
 				menus.pause.enable();
 				
-				menus.footer.ui_show();
-				//$(shared.html.staticMenu).stop(true).fadeTo( transitionOut, 1 );
+				menus.footer.show();
 				
 			}
 			else {
 				
-				transitioner.ui_show( containerOverlayAll.domElement, transitionIn, transitionerAlpha );
+				transitioner.show( containerOverlayAll.domElement, transitionIn, transitionerAlpha );
 				
 			}
             
@@ -1232,16 +1249,15 @@
 		
         if (paused === true) {
 			
-			transitioner.ui_hide( true, transitionOut );
+			transitioner.hide( true, transitionOut );
 			
 			if ( started === true ) {
 				
 				menus.pause.disable();
 				
-				menus.pause.ui_hide( true, undefined, 0, on_menu_hidden );
+				menus.pause.hide( true, undefined, 0, on_menu_hidden );
 				
-				menus.footer.ui_hide( true );
-				//$(shared.html.staticMenu).stop(true).fadeTo( transitionIn, 0 );
+				menus.footer.hide( true );
 				
 			}
 			else {

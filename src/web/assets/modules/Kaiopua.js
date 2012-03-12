@@ -86,24 +86,24 @@ var KAIOPUA = (function (main) {
         
         // add listeners for events
         // each listener dispatches shared signal
-		$(window).bind( 'blur', on_focus_lose );
-		$(window).bind( 'focus', on_focus_gain );
+		$(window).on( 'blur', on_focus_lose );
+		$(window).on( 'focus', on_focus_gain );
 		
-        $(document).bind( 'mousedown touchstart', on_mouse_down );
-        $(document).bind( 'mouseup touchend', on_mouse_up );
-        $(document).bind( 'mousemove touchmove', on_mouse_move );
-		$(document).bind( 'mouseenter touchenter', on_mouse_enter );
-		$(document).bind( 'mouseleave touchleave', on_mouse_leave );
-        $(document).bind( 'mousewheel', on_mouse_wheel );
-		$(shared.html.gameContainer).bind( 'contextmenu', on_game_context_menu );
+        $(document).on( 'mousedown touchstart', on_mouse_down );
+        $(document).on( 'mouseup touchend', on_mouse_up );
+        $(document).on( 'mousemove touchmove', on_mouse_move );
+		$(document).on( 'mouseenter touchenter', on_mouse_enter );
+		$(document).on( 'mouseleave touchleave', on_mouse_leave );
+        $(document).on( 'mousewheel', on_mouse_wheel );
+		$(shared.html.gameContainer).on( 'contextmenu', on_game_context_menu );
         
-        $(document).bind( 'keydown', on_key_down );
-        $(document).bind( 'keyup', on_key_up );
+        $(document).on( 'keydown', on_key_down );
+        $(document).on( 'keyup', on_key_up );
     
-        $(window).bind( 'deviceorientation', on_window_device_orientation );
-        $(window).bind( 'MozOrientation', on_window_device_orientation);
+        $(window).on( 'deviceorientation', on_window_device_orientation );
+        $(window).on( 'MozOrientation', on_window_device_orientation);
     
-        $(window).bind( 'resize', on_window_resize );
+        $(window).on( 'resize', on_window_resize );
 		
 		// asset loader and setup
 		
@@ -293,6 +293,12 @@ var KAIOPUA = (function (main) {
 		}
 		
 	};
+	
+	main.is_image = function ( target ) {
+		
+		return ( typeof target !== 'undefined' && target.hasOwnProperty('nodeName') && target.nodeName.toLowerCase() === 'img' );
+		
+	}
 	
 	main.is_image_ext = function ( ext ) {
 		
@@ -643,7 +649,7 @@ var KAIOPUA = (function (main) {
 			
 			if ( typeof loaderUIContainer !== 'undefined' ) {
 				
-				_AssetLoader.ui_hide( true );
+				_AssetLoader.hide_ui( true );
 				
 			}
 			
@@ -726,7 +732,7 @@ var KAIOPUA = (function (main) {
 		
 		if ( typeof loaderUIContainer !== 'undefined' ) {
 			
-			_AssetLoader.ui_show( loaderUIContainer );
+			_AssetLoader.show_ui( loaderUIContainer );
 			
 		}
 		
@@ -882,7 +888,7 @@ var KAIOPUA = (function (main) {
 			
 			// if this data does not exist or source data is image, set as data instead of merging, as merging causes issues
 			
-			if ( typeof this.data === 'undefined' || ( dataSrc.hasOwnProperty('nodeName') && dataSrc.nodeName.toLowerCase() === 'img' ) ) {
+			if ( typeof this.data === 'undefined' || main.is_image( dataSrc ) ) {
 				
 				this.data = dataSrc;
 				

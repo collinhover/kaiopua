@@ -11,6 +11,7 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/utils/AssetLoader.js",
 		_AssetLoader = {},
+		_UIElement,
 		threeLoaderJSON,
 		threeLoaderBIN,
 		threeLoaderErrorMessage = 'Attempted to load model before THREE',
@@ -33,11 +34,15 @@
 		allLoadingOrLoaded = [],
 		listCurrent,
 		loadTypeDefault = 'script',
+		containerPadding = 20,
 		barWidth = 260,
-		barHeight = 12,
-		barFillSpace = 2,
+		barHeight = 10,
+		barRadius = 5,
+		barToFillSpace = 2,
+		barMargin = 15,
 		barColor = '#FFFFFF',
 		fillColor = '#FFFFFF',
+		container,
 		bar,
 		fill,
 		header,
@@ -51,6 +56,8 @@
 	=====================================================*/
 	
 	_AssetLoader.init_ui = init_ui;
+	_AssetLoader.hide_ui = hide_ui;
+	_AssetLoader.show_ui = show_ui;
 	_AssetLoader.clear_ui_progress = clear_ui_progress;
 	_AssetLoader.load = load_list;
 	
@@ -75,7 +82,7 @@
 	
 	main.asset_register( assetPath, { 
 		data: _AssetLoader,
-		requirements: "assets/modules/utils/UIHelper.js",
+		requirements: "assets/modules/ui/UIElement.js",
 		callbacksOnReqs: init_ui
 	} );
 	
@@ -197,80 +204,88 @@
 	
 	=====================================================*/
 	
-	function init_ui ( u ) {
+	function init_ui ( uie ) {
 		
-		uihelper = u;
+		_UIElement = uie;
 		
-		_AssetLoader = uihelper.make_ui_element({
+		container = new _UIElement.Instance({
+			id: 'asset_loader',
 			elementType: 'section',
 			classes: 'info_panel',
+			width: barWidth + ( containerPadding * 2 ),
 			cssmap: {
 				'padding' : '20px'
 			}
-		}, _AssetLoader);
-		
-		domElement = _AssetLoader.domElement;
+		});
 		
 		// bar
 		
-		bar = uihelper.make_ui_element({
+		bar = new _UIElement.Instance({
 			classes: 'load_bar',
 			cssmap: {
 				'border-style' : 'solid',
 				'border-color' : barColor,
 				'border-width' : '1px',
-				'border-radius' : '5px'
+				'border-radius' : barRadius + 'px',
+				'padding' : barToFillSpace + 'px',
+				'margin-top' : barMargin + 'px',
+				'margin-bottom' : barMargin + 'px'
 			},
-			staticPosition: true,
-			width: barWidth,
-			height: barHeight
+			width: barWidth
 		});
 		
 		// fill
 		
-		fill = uihelper.make_ui_element({
+		fill = new _UIElement.Instance({
 			cssmap: {
-				'margin-left' : barFillSpace + 'px',
-				'margin-top' : barFillSpace + 'px',
 				'background' : fillColor,
-				'border-radius' : '5px'
+				'border-radius' : barRadius + 'px'
 			},
-			staticPosition: true,
 			width: 0,
-			height: barHeight - barFillSpace * 2
+			height: barHeight
 		});
 		
 		// header
-		header = uihelper.make_ui_element({
+		header = new _UIElement.Instance({
 			elementType: 'header',
-			staticPosition: true,
 			width: barWidth,
 			text: loadingHeaderBase
 		});
 		
 		// message
-		message = uihelper.make_ui_element({
+		message = new _UIElement.Instance({
 			elementType: 'p',
-			staticPosition: true,
 			width: barWidth,
 			text: loadingTips[0]
 		});
 		
 		// display
 		
-		$(bar.domElement).append( fill.domElement );
+		fill.parent = bar;
 		
-		$(domElement).append( header.domElement );
-		$(domElement).append( bar.domElement );
-		$(domElement).append( message.domElement );
+		header.parent = container;
+		bar.parent = container;
+		message.parent = container;
 		
 		// center
 		
-		_AssetLoader.ui_keep_centered();
+		container.centerAutoUpdate = true;
 		
 		// hide
 		
-		_AssetLoader.ui_hide( false, 0);
+		container.hide( false, 0);
+		
+	}
+	
+	function hide_ui () {
+		
+		container.hide.apply( container, arguments );
+		
+	}
+	
+	function show_ui () {
+		
+		container.show.apply( container, arguments );
 		
 	}
 	
@@ -280,7 +295,7 @@
 			total,
 			pct = 1;
 		
-		if ( typeof domElement !== 'undefined' ) {
+		if ( typeof fill !== 'undefined' ) {
 			
 			// set loading message
 			
@@ -300,7 +315,7 @@
 					pct = loadedList.length / total;
 				}
 				
-				$(fill.domElement).width( (barWidth - barFillSpace * 2) *  pct );
+				fill.width = (barWidth - barToFillSpace * 3) *  pct;
 				
 			}
 			else {
@@ -312,9 +327,9 @@
 	}
 	
 	function clear_ui_progress () {
-		if ( typeof domElement !== 'undefined' ) {
+		if ( typeof fill !== 'undefined' ) {
 			
-			$(fill.domElement).width(0);
+			fill.width = 0;
 			
 		}
 	}
@@ -496,6 +511,7 @@
 					load_single( location );
 					
 				}
+				
 			}
 			
 		}
@@ -610,7 +626,7 @@
 		loadType = get_load_type( location );
 		
 		// register asset
-		console.log('register ' + path);
+		
 		main.asset_register( path, { data: data } );
 		
 		// add as loaded
@@ -641,6 +657,14 @@
 			
 			if ( index !== -1 ) {
 				
+				// remove location from locations list
+				
+				locationsList.splice(index, index !== -1 ? 1 : 0);
+				
+				// add location to loaded list
+				
+				loaded[ listID ].push( location );
+				
 				// if is current list
 				
 				if ( listID === listCurrent ) {
@@ -650,14 +674,6 @@
 					update_ui_progress();
 					
 				}
-				
-				// remove location from locations list
-				
-				locationsList.splice(index, index !== -1 ? 1 : 0);
-				
-				// add location to loaded list
-				
-				loaded[ listID ].push( location );
 				
 				// if current list is complete, defer until all checked
 				

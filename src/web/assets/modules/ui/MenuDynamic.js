@@ -1,7 +1,7 @@
 /*
  *
- * Field.js
- * Basic puzzle of farming.
+ * MenuDynamic.js
+ * Menu with movement.
  *
  * @author Collin Hover / http://collinhover.com/
  *
@@ -9,9 +9,9 @@
 (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/farming/Field.js",
-		_Field = {},
-		_Puzzles;
+		assetPath = "assets/modules/ui/MenuDynamic.js",
+		_MenuDynamic = {},
+		_Menu;
 	
 	/*===================================================
     
@@ -20,9 +20,9 @@
     =====================================================*/
 	
 	main.asset_register( assetPath, { 
-		data: _Field,
+		data: _MenuDynamic,
 		requirements: [
-			"assets/modules/puzzles/Puzzles.js"
+			"assets/modules/ui/Menu.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -34,35 +34,24 @@
     
     =====================================================*/
 	
-	function init_internal ( pzl ) {
-		console.log('internal field', _Field);
+	function init_internal ( mn ) {
+		console.log('internal menu dynamic', _MenuDynamic);
 		
-		_Puzzles = pzl;
+		_Menu = mn;
 		
-		_Field.Instance = Field;
-		_Field.Instance.prototype = new _Puzzles.Instance();
-		_Field.Instance.prototype.constructor = _Field.Instance;
-		_Field.Instance.prototype.supr = _Puzzles.Instance.prototype;
-		
-		Object.defineProperty( _Field.Instance.prototype, 'plants', { 
-			get: function () {
-				
-				// prototype call
-				
-				return this.occupants;
-			
-			}
-		});
+		_MenuDynamic.Instance = MenuDynamic;
+		_MenuDynamic.Instance.prototype = new _Menu.Instance();
+		_MenuDynamic.Instance.prototype.constructor = _MenuDynamic.Instance;
 		
 	}
 	
 	/*===================================================
     
-    planting
+    ui
     
     =====================================================*/
 	
-	function Field ( parameters ) {
+	function MenuDynamic ( parameters ) {
 		
 		// handle parameters
 		
@@ -70,7 +59,7 @@
 		
 		// prototype constructor
 		
-		_Puzzles.Instance.call( this, parameters );
+		_Menu.Instance.call( this, parameters );
 		
 	}
 	

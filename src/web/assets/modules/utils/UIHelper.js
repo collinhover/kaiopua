@@ -290,14 +290,14 @@
 					// fallback in-case browser does not support pointer-events property
 					// TODO: add actual support for mouse enter and leave, currently won't work
 					
-					el.domElement.bind( 'mousedown touchstart mouseup touchend mousemove touchmove mouseenter touchenter mouseleave touchleave mousewheel click', el.pointer_events_ignore );
+					el.domElement.on( 'mousedown touchstart mouseup touchend mousemove touchmove mouseenter touchenter mouseleave touchleave mousewheel click', el.pointer_events_ignore );
 					
 				}
 				else {
 					
 					el._pointerEvents = true;
 					
-					el.domElement.unbind( 'mousedown touchstart mouseup touchend mousemove touchmove mouseenter touchenter mouseleave touchleave mousewheel click', el.pointer_events_ignore );
+					el.domElement.off( 'mousedown touchstart mouseup touchend mousemove touchmove mouseenter touchenter mouseleave touchleave mousewheel click', el.pointer_events_ignore );
 					
 					el.domElement.css( 'pointer-events', 'auto' );
 					

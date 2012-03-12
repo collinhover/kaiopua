@@ -83,6 +83,9 @@
         menu.enabled = true;
         menu.items = [];
         menu.itemsByID = {};
+		
+		// functions
+		
         menu.add_items = function ( items ) {
             var i, l;
             
@@ -198,7 +201,11 @@
         button = _UIHelper.make_ui_element( parameters );
         
         button.callback = parameters.callback;
+		
         button.menu = undefined;
+		
+		// functions
+		
         button.enable = function () {
             button.enabled = true;
             button.enable_visual();
@@ -232,7 +239,7 @@
         
         // listen for clicks
         
-        $(button.domElement).bind('click', button.trigger);
+        $(button.domElement).on('click', button.trigger);
         
         return button;
     }

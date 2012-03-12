@@ -1,7 +1,7 @@
 /*
  *
- * Field.js
- * Basic puzzle of farming.
+ * Inventory.js
+ * Menu based inventory system.
  *
  * @author Collin Hover / http://collinhover.com/
  *
@@ -9,9 +9,9 @@
 (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/farming/Field.js",
-		_Field = {},
-		_Puzzles;
+		assetPath = "assets/modules/ui/Inventory.js",
+		_Inventory = {},
+		_MenuDynamic;
 	
 	/*===================================================
     
@@ -20,9 +20,9 @@
     =====================================================*/
 	
 	main.asset_register( assetPath, { 
-		data: _Field,
+		data: _Inventory,
 		requirements: [
-			"assets/modules/puzzles/Puzzles.js"
+			"assets/modules/ui/MenuDynamic.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -34,35 +34,24 @@
     
     =====================================================*/
 	
-	function init_internal ( pzl ) {
-		console.log('internal field', _Field);
+	function init_internal ( md ) {
+		console.log('internal inventory', _Inventory);
 		
-		_Puzzles = pzl;
+		_MenuDynamic = md;
 		
-		_Field.Instance = Field;
-		_Field.Instance.prototype = new _Puzzles.Instance();
-		_Field.Instance.prototype.constructor = _Field.Instance;
-		_Field.Instance.prototype.supr = _Puzzles.Instance.prototype;
-		
-		Object.defineProperty( _Field.Instance.prototype, 'plants', { 
-			get: function () {
-				
-				// prototype call
-				
-				return this.occupants;
-			
-			}
-		});
+		_Inventory.Instance = Inventory;
+		_Inventory.Instance.prototype = new _MenuDynamic.Instance();
+		_Inventory.Instance.prototype.constructor = _Inventory.Instance;
 		
 	}
 	
 	/*===================================================
     
-    planting
+    ui
     
     =====================================================*/
 	
-	function Field ( parameters ) {
+	function Inventory ( parameters ) {
 		
 		// handle parameters
 		
@@ -70,7 +59,7 @@
 		
 		// prototype constructor
 		
-		_Puzzles.Instance.call( this, parameters );
+		_MenuDynamic.Instance.call( this, parameters );
 		
 	}
 	

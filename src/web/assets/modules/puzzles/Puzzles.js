@@ -16,6 +16,12 @@
 		allPuzzles,
 		allModules;
 	
+	/*===================================================
+	
+	public
+	
+	=====================================================*/
+	
 	main.asset_register( assetPath, {
 		data: _Puzzles,
 		requirements: [
@@ -25,6 +31,12 @@
 		callbacksOnReqs: init_internal,
 		wait: true
 	} );
+
+	/*===================================================
+	
+	init
+	
+	=====================================================*/
 	
 	function init_internal ( m, g ) {
 		console.log('internal puzzles', _Puzzles);
