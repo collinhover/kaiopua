@@ -209,15 +209,14 @@ a:hover, a:active {
     
 }
 
-.item {
-	display: table;
+/* buttons
+-------------------------*/
+
+.button {
 	overflow: hidden;
     font: 24px 'OpenSansRegular', Helmet, Freesans, sans-serif;
     cursor: default;
     color: #333333;
-    padding: 5px 5px 5px 5px;
-    text-align: center;
-    margin: 10px 10px 10px 10px;
     background: #eeeeee; /* Old browsers */
 	background: -moz-linear-gradient(top, #eeeeee 30%, #cccccc 100%); /* FF3.6+ */
 	background: -webkit-gradient(linear, left top, left bottom, color-stop(30%,#eeeeee), color-stop(100%,#cccccc)); /* Chrome,Safari4+ */
@@ -397,13 +396,15 @@ a:hover, a:active {
 
 /* footer 
 -------------------------*/
+.sticky_footer {
+	position: relative; 
+    width: 520px;
+    height: 120px;
+	margin: 0 auto;
+	margin-top: -120px;
+    clear: both;
+}
 footer {
-    width: 520px; 
-    margin: 0 auto; 
-    position: relative; 
-    margin-top: -120px; 
-    height: 120px; 
-    clear:both;
     color: #eeeeee;
     text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.85);
 }
@@ -433,7 +434,6 @@ footer nav span {
     padding-left: 20px;
 	padding-right: 20px;
     margin: 14px 10px 0 10px;
-    /*border-left: 1px solid rgba(255, 255, 255, 0.5);*/
 }
 
 footer nav .icon {

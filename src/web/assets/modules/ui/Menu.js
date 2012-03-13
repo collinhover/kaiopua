@@ -91,19 +91,19 @@
 	function enable () {
 		
 		var i, l,
-			item;
+			child;
 		
 		// proto
 		
 		_Menu.Instance.prototype.supr.enable.call( this );
 		
-		for ( i = 0, l = this.itemsList.length; i < l; i++) {
+		for ( i = 0, l = this.children.length; i < l; i++) {
 			
-			item = this.itemsList[ i ];
+			child = this.children[ i ];
 			
-			if ( item instanceof _Button.Instance && item.enabledSelf === true ) {
+			if ( child instanceof _Button.Instance && child.enabledSelf === true ) {
 				
-				item.enable_visual();
+				child.enable_visual();
 				
 			}
 			
@@ -114,19 +114,19 @@
 	function disable () {
 		
 		var i, l,
-			item;
+			child;
 		
 		// proto
 		
 		_Menu.Instance.prototype.supr.disable.call( this );
 		
-		for ( i = 0, l = this.itemsList.length; i < l; i++) {
+		for ( i = 0, l = this.children.length; i < l; i++) {
 			
-			item = this.itemsList[ i ];
+			child = this.children[ i ];
 			
-			if ( item instanceof _Button.Instance && item.enabledSelf === true ) {
+			if ( child instanceof _Button.Instance && child.enabledSelf === true ) {
 				
-				item.disable_visual();
+				child.disable_visual();
 				
 			}
 			
@@ -140,17 +140,16 @@
     
     =====================================================*/
 	
-	function generate_css_map ( parameters ) {
-		
-		var cssmap;
+	function generate_css_map ( cssmap ) {
 		
 		// proto
 		
-		cssmap = _Menu.Instance.prototype.supr.generate_css_map( parameters );
+		cssmap = _Menu.Instance.prototype.supr.generate_css_map.call( this, cssmap );
 		
 		// css overrides
-		cssmap[ "color" ] = cssmap[ "color" ] || "#FF0000";
 		/*
+		cssmap[ "color" ] = cssmap[ "color" ] || "#FF0000";
+		
 		cssmap[ "display" ] = "table";
 		cssmap[ "overflow" ] = "hidden";
 		cssmap[ "padding" ] = "5px 5px 5px 5px";

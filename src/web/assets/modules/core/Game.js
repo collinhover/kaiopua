@@ -17,7 +17,6 @@
 		_ObjectHelper,
 		_Physics,
 		_UIElement,
-		_MenuMaker,
 		_Menu,
 		_Button,
 		_Launcher,
@@ -58,7 +57,6 @@
 			"assets/modules/utils/AssetLoader.js",
             "assets/modules/utils/ErrorHandler.js",
 			"assets/modules/ui/UIElement.js",
-			"assets/modules/utils/UIHelper.js", // TODO: remove me!
 			"assets/modules/utils/MathHelper.js",
 			"assets/modules/utils/Dev.js",
 		],
@@ -97,7 +95,6 @@
 			"assets/modules/ui/Inventory.js",
 			"assets/modules/utils/ObjectMaker.js",
 			"assets/modules/utils/ObjectHelper.js",
-			"assets/modules/utils/MenuMaker.js",
 			"assets/modules/characters/Character.js",
 			"assets/modules/characters/Hero.js",
 			"assets/modules/env/World.js",
@@ -531,7 +528,6 @@
 		// assets
 		
 		_ObjectHelper = main.get_asset_data( "assets/modules/utils/ObjectHelper.js" );
-		_MenuMaker = main.get_asset_data( 'assets/modules/utils/MenuMaker.js' );
 		_Button = main.get_asset_data( 'assets/modules/ui/Button.js' );
 		_Menu = main.get_asset_data( 'assets/modules/ui/Menu.js' );
 		
@@ -543,9 +539,9 @@
 		
 		init_pause_menu();
 		
-		// show start menu
+		// show start screen menus
 		
-		menus.start.show( containerUI.domElement );
+		menus.start.show( containerUI );
 		
     }
 	
@@ -559,99 +555,170 @@
 		
 		// init footer menu
 		
-		menus.footer = new _UIElement.Instance( { domElement: shared.html.footerMenu } );
-			
+		menus.footer = new _UIElement.Instance( { 
+			domElement: shared.html.footerMenu,
+		} );
+		
+		// store current width / height, then remove sticky footer class
+	
+		menus.footer.width = menus.footer.domElement.width();
+		menus.footer.height = menus.footer.domElement.height();
+		
+		menus.footer.domElement.removeClass( 'sticky_footer' );
+		
+		menus.footer.parent = containerUI;
+		
+		menus.footer.alignment = 'bottomcenter';
+		
 	}
 	
 	function init_start_menu () {
+		
+		var startButton,
+			continueButton,
+			optionsButton,
+			buttonSize = 160,
+			buttonSpacing;
         
         // init start menu
 		
         menus.start = new _Menu.Instance( {
             id: 'start_menu',
-			transparent: true,
-            width: 570
+            width: 570,
+			height: buttonSize,
+			transparent: true
         } );
-        
-        menus.start.add_item( new _Button.Instance( {
+	
+		startButton = new _Button.Instance( {
             id: 'Start',
             classes: 'item_big',
-			width: 160,
+			width: buttonSize,
 			circle: true,
             callback: function () {
                 start_game();
             },
 			context: this
-        } ) );
-        menus.start.add_item( new _Button.Instance( {
-            id: 'Continue', 
-			width: 160,
-			circle: true,
-            callback: function () {},
-			context: this,
-            enabled: false
-        } ) );
-        menus.start.add_item( new _Button.Instance( {
-            id: 'Options',
-			width: 160,
-			circle: true,
-            callback: function () {},
-			context: this,
-            enabled: false
-        } ) );
+        } );
 		
-        menus.start.centerAutoUpdate = true;
+		continueButton = new _Button.Instance( {
+            id: 'Continue', 
+			width: buttonSize,
+			circle: true,
+            callback: function () {},
+			context: this,
+            enabled: false
+        } )
+		
+		optionsButton = new _Button.Instance( {
+            id: 'Options',
+			width: buttonSize,
+			circle: true,
+            callback: function () {},
+			context: this,
+            enabled: false
+        } );
+		
+		// add buttons to menu
+        
+        menus.start.add( startButton );
+        menus.start.add( continueButton );
+        menus.start.add( optionsButton );
+		
+		// add menu to display
+		
+		menus.start.parent = containerUI;
+		
+		// position
+		
+		buttonSpacing = ( ( menus.start.width / 3 ) - buttonSize ) / 2;
+		
+		startButton.set_position( buttonSpacing, 0 );
+		continueButton.set_position( startButton.x + startButton.width + buttonSpacing * 2, 0 );
+		optionsButton.set_position( continueButton.x + continueButton.width + buttonSpacing * 2, 0 );
+		
+        menus.start.alignment = 'center';
         
         menus.start.hide( true, 0 );
 		
 	}
 	
 	function init_pause_menu () {
+		
+		var resumeButton,
+			optionsButton,
+			saveButton,
+			endButton,
+			buttonSize = 160,
+			buttonSpacing;
         
         // init menu
         
 		menus.pause = new _Menu.Instance( {
             id: 'pause_menu',
             width: 760,
+			height: buttonSize,
 			transparent: true
         } );
         
-        menus.pause.add_item( new _Button.Instance( {
+        resumeButton = new _Button.Instance( {
             id: 'Resume',
             classes: 'item_big',
+			width: buttonSize,
 			circle: true, 
             callback: function () {
                 resume();
             },
 			context: this
-        } ) );
-		menus.pause.add_item( new _Button.Instance( {
+        } );
+		optionsButton = new _Button.Instance( {
             id: 'Options',
+			width: buttonSize,
 			circle: true, 
             callback: function () {},
 			context: this,
             enabled: false
-        } ) );
-        menus.pause.add_item( new _Button.Instance( {
+        } );
+        saveButton = new _Button.Instance( {
             id: 'Save',
+			width: buttonSize,
 			circle: true, 
             callback: function () {},
 			context: this,
             enabled: false
-        } ) );
-		menus.pause.add_item( new _Button.Instance( {
+        } );
+		endButton = new _Button.Instance( {
             id: 'End Game',
+			width: buttonSize,
 			circle: true, 
             callback: function () {
 				stop_game();
 			},
 			context: this
-        } ) );
+        } );
         
-        menus.pause.centerAutoUpdate = true;
+        // add buttons to menu
+        
+        menus.pause.add( resumeButton );
+        menus.pause.add( optionsButton );
+        menus.pause.add( saveButton );
+		menus.pause.add( endButton );
+		
+		// add menu to display
+		
+		menus.pause.parent = containerUI;
+		
+		// position
+		
+		buttonSpacing = ( ( menus.pause.width / 4 ) - buttonSize ) / 2;
+		
+		resumeButton.set_position( buttonSpacing, 0 );
+		optionsButton.set_position( resumeButton.x + resumeButton.width + buttonSpacing * 2, 0 );
+		saveButton.set_position( optionsButton.x + optionsButton.width + buttonSpacing * 2, 0 );
+		endButton.set_position( saveButton.x + saveButton.width + buttonSpacing * 2, 0 );
+		
+        menus.pause.alignment = 'center';
         
         menus.pause.hide( true, 0 );
-        
 	}
 	
 	/*===================================================
@@ -1200,7 +1267,7 @@
 			
 			// show / enable start menu
 			
-			menus.start.show( containerUI.domElement );
+			menus.start.show( containerUI );
 			
 			menus.start.enable();
 			
@@ -1216,9 +1283,9 @@
 			
 			if ( started === true ) {
 				
-				transitioner.show( containerOverlayDisplay.domElement, transitionIn, transitionerAlpha );
+				transitioner.show( containerOverlayDisplay, transitionIn, transitionerAlpha );
 				
-				menus.pause.show( containerUI.domElement );
+				menus.pause.show( containerUI );
 				
 				menus.pause.enable();
 				
@@ -1227,7 +1294,7 @@
 			}
 			else {
 				
-				transitioner.show( containerOverlayAll.domElement, transitionIn, transitionerAlpha );
+				transitioner.show( containerOverlayAll, transitionIn, transitionerAlpha );
 				
 			}
             

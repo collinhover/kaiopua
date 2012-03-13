@@ -40,8 +40,6 @@
 		barRadius = 5,
 		barToFillSpace = 2,
 		barMargin = 15,
-		barColor = '#FFFFFF',
-		fillColor = '#FFFFFF',
 		container,
 		bar,
 		fill,
@@ -212,7 +210,7 @@
 			id: 'asset_loader',
 			elementType: 'section',
 			classes: 'info_panel',
-			width: barWidth + ( containerPadding * 2 ),
+			width: barWidth,
 			cssmap: {
 				'padding' : '20px'
 			}
@@ -221,42 +219,48 @@
 		// bar
 		
 		bar = new _UIElement.Instance({
-			classes: 'load_bar',
 			cssmap: {
+				'position' : 'relative',
 				'border-style' : 'solid',
-				'border-color' : barColor,
+				'border-color' : '#FFFFFF',
 				'border-width' : '1px',
 				'border-radius' : barRadius + 'px',
 				'padding' : barToFillSpace + 'px',
 				'margin-top' : barMargin + 'px',
 				'margin-bottom' : barMargin + 'px'
-			},
-			width: barWidth
+			}
 		});
 		
 		// fill
 		
 		fill = new _UIElement.Instance({
-			cssmap: {
-				'background' : fillColor,
-				'border-radius' : barRadius + 'px'
-			},
 			width: 0,
-			height: barHeight
+			height: barHeight,
+			cssmap: {
+				'position' : 'relative',
+				'background' : '#FFFFFF',
+				'border-radius' : barRadius + 'px'
+			}
 		});
 		
 		// header
 		header = new _UIElement.Instance({
 			elementType: 'header',
 			width: barWidth,
-			text: loadingHeaderBase
+			text: loadingHeaderBase,
+			cssmap: {
+				'position' : 'relative'
+			}
 		});
 		
 		// message
 		message = new _UIElement.Instance({
 			elementType: 'p',
 			width: barWidth,
-			text: loadingTips[0]
+			text: loadingTips[0],
+			cssmap: {
+				'position' : 'relative'
+			}
 		});
 		
 		// display
@@ -269,7 +273,7 @@
 		
 		// center
 		
-		container.centerAutoUpdate = true;
+		container.alignment = 'center';
 		
 		// hide
 		
@@ -315,7 +319,7 @@
 					pct = loadedList.length / total;
 				}
 				
-				fill.width = (barWidth - barToFillSpace * 3) *  pct;
+				fill.width = fill.parent.width * pct;
 				
 			}
 			else {

@@ -11,7 +11,8 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/ui/UIElement.js",
 		_UIElement = {},
-		idBase = 'ui_element';
+		idBase = 'ui_element',
+		uiElementCount = 0;
 	
 	/*===================================================
     
@@ -31,17 +32,15 @@
 	
 	_UIElement.Instance = UIElement;
 	
-	_UIElement.Instance.prototype.add_items = add_items;
-	_UIElement.Instance.prototype.add_item = add_item;
-	_UIElement.Instance.prototype.remove_items = remove_items;
-	_UIElement.Instance.prototype.remove_item = remove_item;
+	_UIElement.Instance.prototype.add = add;
+	_UIElement.Instance.prototype.remove = remove;
 	
 	_UIElement.Instance.prototype.append_to = append_to;
 	
 	_UIElement.Instance.prototype.add_do_remove = add_do_remove;
 	
 	_UIElement.Instance.prototype.set_position = set_position;
-	_UIElement.Instance.prototype.center = center;
+	_UIElement.Instance.prototype.align = align;
 	
 	_UIElement.Instance.prototype.show = show;
 	_UIElement.Instance.prototype.hide = hide;
@@ -60,9 +59,7 @@
 	
 	Object.defineProperty( _UIElement.Instance.prototype, 'width', { 
 		get : function () { return this.domElement.width(); },
-		set : function ( width ) { 
-			
-			//width = width - ( this.domElement.outerWidth() - this.domElement.width() );
+		set : function ( width ) {
 			
 			this.domElement.width( width );
 			
@@ -73,23 +70,37 @@
 		get : function () { return this.domElement.height(); },
 		set : function ( height ) {
 			
-			//height = height - ( this.domElement.outerHeight() - this.domElement.height() );
-			
 			this.domElement.height( height );
 		
 		}
 	} );
 	
 	Object.defineProperty( _UIElement.Instance.prototype, 'widthHalf', { 
-		get : function () { return this.domElement.width() * 0.5; }
+		get : function () { return this.width * 0.5; }
 	} );
 
 	Object.defineProperty( _UIElement.Instance.prototype, 'heightHalf', { 
-		get : function () { return this.domElement.height() * 0.5; }
+		get : function () { return this.height * 0.5; }
+	} );
+	
+	Object.defineProperty( _UIElement.Instance.prototype, 'outerWidth', { 
+		get : function () { return this.domElement.outerWidth(); }
+	} );
+
+	Object.defineProperty( _UIElement.Instance.prototype, 'outerHeight', { 
+		get : function () { return this.domElement.outerHeight(); }
+	} );
+	
+	Object.defineProperty( _UIElement.Instance.prototype, 'outerWidthHalf', { 
+		get : function () { return this.outerWidth * 0.5; }
+	} );
+
+	Object.defineProperty( _UIElement.Instance.prototype, 'outerHeightHalf', { 
+		get : function () { return this.outerHeight * 0.5; }
 	} );
 	
 	Object.defineProperty( _UIElement.Instance.prototype, 'x', { 
-		get : function () { return this.domElement.position().left + (this.domElement.outerWidth() * 0.5); },
+		get : function () { return this.domElement.position().left; },
 		set : function ( x ) { 
 			
 			this.set_position( x, this.y );
@@ -98,7 +109,7 @@
 	} );
 	
 	Object.defineProperty( _UIElement.Instance.prototype, 'y', { 
-		get : function () { return this.domElement.position().top + ( this.domElement.outerHeight() * 0.5 ); },
+		get : function () { return this.domElement.position().top; },
 		set : function ( y ) { 
 			
 			this.set_position( this.x, y );
@@ -106,28 +117,28 @@
 		}
 	} );
 	
-	Object.defineProperty( _UIElement.Instance.prototype, 'centerAutoUpdate', { 
-		get : function () { return this._centerAutoUpdate; },
-		set : function ( state ) {
+	Object.defineProperty( _UIElement.Instance.prototype, 'onDisplay', { 
+		get : function () { return Boolean( this.domElement.parents( "body" ).length ); }
+	} );
+	
+	Object.defineProperty( _UIElement.Instance.prototype, 'alignment', { 
+		get : function () { return this._alignment; },
+		set : function ( location ) {
 			
-			if ( state === false ) {
+			if ( typeof location === 'string' ) {
 				
-				this._centerAutoUpdate = false;
-			
-				shared.signals.windowresized.remove( this.center, this );
+				this._alignment = location.toLowerCase();
+				
+				shared.signals.windowresized.add( this.align, this );
+				
+				this.align();
 				
 			}
 			else {
 				
-				this._centerAutoUpdate = true;
+				this._alignment = false;
 				
-				shared.signals.windowresized.add( this.center, this );
-				
-				this.add_do_remove( function () {
-					
-					this.center( shared.screenWidth, shared.screenHeight );
-				
-				}, this );
+				shared.signals.windowresized.remove( this.align, this );
 				
 			}
 			
@@ -146,14 +157,24 @@
     =====================================================*/
 	
 	function UIElement ( parameters ) {
+		
+		// increase element count
+		
+		uiElementCount++;
         
         // handle parameters
         
         parameters = parameters || {};
 		
-		// generate css base
+		// id
 		
-		parameters.cssmap = this.cssmap = this.generate_css_map( parameters );
+		if ( typeof parameters.id !== 'string' ) {
+			
+			parameters.id = idBase + uiElementCount;
+			
+		}
+		
+		this.id = parameters.id;
         
         // init dom element
 		
@@ -168,14 +189,20 @@
 			
 		}
 		
-		// id
+		// generate and apply css map
 		
-		this.id = this.domElement.attr( 'id' );
+		this.cssmap = this.generate_css_map( parameters.cssmap);
+		
+		this.domElement.css( this.cssmap );
 		
 		// items
 		
-		this.items = {};
-        this.itemsList = [];
+		this.childrenByID = {};
+        this.children = [];
+		
+		// signal on display
+		
+		this.signalOnDisplay = shared.signals[ "on_display_" + this.id ] = new signals.Signal();
 		
 		// timing
 		
@@ -187,10 +214,6 @@
 		this.pointerEventsOnlyWithChildren = parameters.pointerEventsOnlyWithChildren;
 		
 		this.pointerEventsIgnore = ( this.pointerEventsOnlyWithChildren === true ) ? false : parameters.pointerEventsIgnore;
-		
-		// init by not keeping centered
-		
-		this.centerAutoUpdate = false;
 		
 		// width / height
 		
@@ -214,39 +237,48 @@
 		
 		}
 		
+		// if dom element already has parent, set as parent
+		
+		if ( this.onDisplay ) {
+			
+			this.parent = this.domElement.parent();
+			
+		}
+		
 	}
 	
 	/*===================================================
     
-    items
+    children
     
     =====================================================*/
 	
-	function add_items ( itemsList ) {
+	function add ( children ) {
 		
-		var i, l;
+		var i, l,
+			child;
 		
-		itemsList = main.ensure_array( itemsList );
+		children = main.ensure_array( children );
 		
-		for ( i = 0, l = itemsList.length; i < l; i++ ) {
+		for ( i = 0, l = children.length; i < l; i++ ) {
 			
-			this.addItem( itemsList[i] );
+			child = children[ i ];
 			
-		}
-		
-	}
-	
-	function add_item ( item ) {
-		
-		if ( this.itemsList.indexOf( item ) === -1 ) {
-			
-			this.itemsList.push( item );
-			
-			if ( item instanceof _UIElement.Instance ) {
+			if ( this.children.indexOf( child ) === -1 ) {
 				
-				this.items[ item.id ] = item;
+				this.children.push( child );
 				
-				item.parent = this;
+				if ( child instanceof _UIElement.Instance ) {
+					
+					this.childrenByID[ child.id ] = child;
+					
+					if ( child.parent !== this ) {
+						
+						child.parent = this;
+						
+					}
+					
+				}
 				
 			}
 			
@@ -254,44 +286,41 @@
 		
 	}
 	
-	function remove_items ( itemsList ) {
+	function remove ( children ) {
 		
 		var i, l,
-			removed = [];
+			child,
+			index;
 		
 		// default to removing all
 		
-		itemsList = itemsList || this.itemsList;
+		children = main.ensure_array( children || this.children );
 		
-		for ( i = 0, l = itemsList.length; i < l; i ++) {
+		for ( i = 0, l = children.length; i < l; i ++) {
 			
-			removed.push( this.removeItem( itemsList[ i ] ) );
+			child = children[ i ];
 			
-		}
-		
-		return removed;
-		
-	}
-	
-	function remove_item( item ) {
-		
-		var index = this.itemsList.indexOf( item );
-		
-		if ( index !== -1 ) {
+			index = this.children.indexOf( child );
 			
-			this.itemsList.splice( index, 1 );
-			
-			if ( item instanceof _UIElement.Instance ) {
+			if ( index !== -1 ) {
 				
-				delete this.items[ item.id ];
+				this.children.splice( index, 1 );
 				
-				item.parent = undefined;
+				if ( child instanceof _UIElement.Instance ) {
+					
+					delete this.childrenByID[ child.id ];
+					
+					if ( child.parent === this ) {
+						
+						child.parent = undefined;
+						
+					}
+					
+				}
 				
 			}
 			
 		}
-		
-		return item;
 		
 	}
 	
@@ -305,7 +334,7 @@
 		
 		var i, l,
 			domElement,
-			item;
+			child;
 		
 		// if new parent
 		
@@ -321,9 +350,19 @@
 			
 		}
 		
-		// get parent dom element
+		// if parent is ui element
 		
 		if ( this.parent instanceof _UIElement.Instance ) {
+			
+			// if not on parent child list
+			
+			if ( this.parent.children.indexOf( this ) === -1 ) {
+				
+				this.parent.add( this );
+				
+			}
+			
+			// get parent dom element
 			
 			domElement = this.parent.domElement;
 			
@@ -342,30 +381,46 @@
 			
 			domElement.append( this.domElement );
 			
-			// set all items correct parent
+			// set all children correct parent
 			
-			for ( i = 0, l = this.itemsList.length; i < l; i++ ) {
+			for ( i = 0, l = this.children.length; i < l; i++ ) {
 				
-				item = this.itemsList[ i ];
+				child = this.children[ i ];
 				
-				if ( item instanceof _UIElement.Instance ) {
+				if ( child instanceof _UIElement.Instance ) {
 					
-					item.parent = this;
+					child.parent = this;
 					
 				}
 				
 			}
 			
-			// update center
+			// dispatch on display signal
 			
-			if ( this.centerAutoUpdate === true ) {
+			if ( this.domElement.parents( "body" ).length !== 0 ) {
 				
-				this.center();
+				this.signalOnDisplay.dispatch();
 				
 			}
 			
 		}
 		else {
+			
+			// if last parent was ui element
+		
+			if ( this.parentLast instanceof _UIElement.Instance ) {
+				
+				// if was on parent child list
+				
+				if ( this.parentLast.children.indexOf( this ) === -1 ) {
+					
+					this.parentLast.remove( this );
+					
+				}
+				
+			}
+			
+			// detach
 			
 			this.domElement.detach();
 			
@@ -380,11 +435,11 @@
 		
 		// if not on display, add temporarily
 		
-		if ( this.domElement.parents( "body" ).length === 0 ) {
+		if ( this.onDisplay !== true ) {
 			
 			tempadded = true;
 			
-			this.parent = document.body;
+			$( document.body ).append( this.domElement );
 			
 		}
 		
@@ -398,7 +453,16 @@
 			
 			// if had parent, append to
 			
-			this.parent = this.parentLast;
+			if ( this.parent instanceof _UIElement.Instance ) {
+				
+				this.parent.domElement.append( this.domElement );
+				
+			}
+			else if ( typeof this.parent !== 'undefined' ) {
+				
+				$( this.parent ).append( this.domElement );
+				
+			}
 			
 		}
 		
@@ -415,31 +479,97 @@
 	function set_position ( x, y ) {
 		
 		// transform
-		console.log('reposition', this.id, ' x ', x, ' y ', y, ' w/2 ', this.widthHalf, ' h/2 ', this.heightHalf );
-		this.domElement.css( 'transform', 'translate(' + ( x - this.widthHalf ) + 'px, ' + ( y - this.heightHalf ) + 'px )' );
-		
+		//, ' w/2 ', this.widthHalf, ' h/2 ', this.heightHalf );
+		this.domElement.css( 'transform', 'translate(' + x + 'px, ' + y + 'px )' );
+		console.log('reposition', this.id, ' x ', x, ' y ', y, ' actual x', this.x, ' actual y', this.y );
 	}
 	
-	function center ( W, H ) {
+	function align () {
 		
-		var parent = this.domElement.parent(),	
-			pW,
-			pH;
+		var parent,
+			w, h;
 		
-		if ( parent.length ) {
+		// if on display
+		
+		if ( this.onDisplay ) {
 			
-			pW = parent.width();
-			pH = parent.height();
+			// get basic width and height of parent
+			
+			parent = this.domElement.parent();
+			
+			if ( parent.length ) {
+				
+				w = parent.width();
+				h = parent.height();
+				
+			}
+			else {
+				
+				w = shared.screenWidth;
+				h = shared.screenHeight;
+				
+			}
+			
+			// align by type
+			
+			if ( this.alignment === 'center' ) {
+				
+				this.set_position( w * 0.5 - this.widthHalf, h * 0.5 - this.heightHalf );
+				
+			}
+			else if ( this.alignment === 'bottomcenter' ) {
+				
+				this.set_position( w * 0.5 - this.widthHalf, h - this.height );
+				
+			}
+			else if ( this.alignment === 'topcenter' ) {
+				
+				this.set_position( w * 0.5 - this.widthHalf, 0 );
+				
+			}
+			else if ( this.alignment === 'leftcenter' ) {
+				
+				this.set_position( 0, h * 0.5 - this.heightHalf );
+				
+			}
+			else if ( this.alignment === 'rightcenter' ) {
+				
+				this.set_position( w - this.width, h * 0.5 - this.heightHalf );
+				
+			}
+			else if ( this.alignment === 'bottomright' ) {
+				
+				this.set_position( w - this.width, h - this.height );
+				
+			}
+			else if ( this.alignment === 'bottomleft' ) {
+				
+				this.set_position( 0, h - this.height );
+				
+			}
+			else if ( this.alignment === 'topright' ) {
+				
+				this.set_position( w - this.width, 0 );
+				
+			}
+			else if ( this.alignment === 'topleft' ) {
+				
+				this.set_position( 0, 0 );
+				
+			}
+			// invalid type
+			else {
+				
+				this.alignment = false;
+				
+			}
 			
 		}
 		else {
 			
-			pW = ( typeof W !== 'undefined' ) ? W : shared.screenWidth;
-			pH = ( typeof H !== 'undefined' ) ? H : shared.screenHeight;
+			this.signalOnDisplay.addOnce( this.align, this );
 			
 		}
-		
-		this.set_position( pW * 0.5, pH * 0.5 );
 		
 	}
 	
@@ -476,7 +606,7 @@
 		
 		// try appending
 		
-		this.parent = parent || this.parentLast;
+		this.parent = parent || this.parent || this.parentLast;
 		
 	}
 	
@@ -595,10 +725,11 @@
 		this.domElement.css( {
 			"min-height": "100%",
 			"width": "100%",
-			"height": "auto",
+			"height": "100%",
 			"position": "fixed",
 			"top": "0px",
-			"left": "0px"
+			"left": "0px",
+			"overflow": "hidden"
 		} );
 		
 	}
@@ -623,7 +754,7 @@
 		
 		// id
 		
-		domElement.attr( 'id', parameters.id || parameters.text || idBase );
+		domElement.attr( 'id', parameters.id );
 		
 		// text
 		
@@ -641,10 +772,6 @@
 			
 		}
 		
-		// css
-		
-		domElement.css( parameters.cssmap );
-		
 		return domElement;
 		
 	}
@@ -655,19 +782,70 @@
     
     =====================================================*/
 	
-	function generate_css_map ( parameters ) {
+	function generate_css_map ( cssmap ) {
 		
-		// proto
+		cssmap = cssmap || {};
 		
-		var cssmap;
-		
-		cssmap = parameters.cssmap || {};
-		
-		cssmap[ "position" ] = cssmap[ "position" ] || "relative";
-		cssmap[ "display" ] = cssmap[ "display" ] || "block";
-		cssmap[ "transform-origin" ] = cssmap[ "transform-origin" ] || "50% 50%";
+		cssmap[ "position" ] = cssmap[ "position" ] || "absolute";
+		cssmap[ "display" ] = cssmap[ "display" ] || "block"
+		cssmap[ "transform-origin" ] = cssmap[ "transform-origin" ] || "50% 50%"
 		
 		return cssmap;
+		
+	}
+	
+	function supported_css () {
+		
+		/*
+	var prop = "transform",
+      vendorProp, supportedProp, supports3d, supports2d, supportsFilter,
+      
+      // capitalize first character of the prop to test vendor prefix
+      capProp = prop.charAt(0).toUpperCase() + prop.slice(1),
+      prefixes = [ "Moz", "Webkit", "O", "MS" ],
+      div = document.createElement( "div" );
+
+  if ( prop in div.style ) {
+
+    // browser supports standard CSS property name
+    supportedProp = prop;
+    supports3d = div.style.perspective !== undefined;
+  } 
+  else {
+
+    // otherwise test support for vendor-prefixed property names
+    for ( var i = 0; i < prefixes.length; i++ ) {
+      vendorProp = prefixes[i] + capProp;
+
+      if ( vendorProp in div.style ) {
+        supportedProp = vendorProp;    
+        if((prefixes[i] + 'Perspective') in div.style) {
+          supports3d = true;
+        }
+        else {
+          supports2d = true;
+        }
+        break;
+      }
+    }
+  }
+  
+  if (!supportedProp) {
+    supportsFilter = ('filter' in div.style);
+    supportedProp = 'filter';
+  }
+
+  // console.log('supportedProp: '+supportedProp+', 2d: '+supports2d+', 3d: '+supports3d+', filter: '+supportsFilter);
+
+  // avoid memory leak in IE
+  div = null;
+  
+  // add property to $.support so it can be accessed elsewhere
+  $.support[ prop ] = supportedProp;
+  
+  var transformProperty = supportedProp;
+  
+  */
 		
 	}
 	

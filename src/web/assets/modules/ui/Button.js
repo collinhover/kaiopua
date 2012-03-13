@@ -96,7 +96,7 @@
 		
 		parameters = parameters || {};
 		
-		parameters.classes = 'item ' + ( parameters.classes || '' );
+		parameters.classes = 'button ' + ( parameters.classes || '' );
 		
 		// prototype constructor
 		
@@ -111,9 +111,9 @@
 			text: this.id
 		} );
 		
-		this.text.parent = this;
+		this.text.alignment = 'center';
 		
-		this.text.centerAutoUpdate = true;
+		this.add( this.text );	
 		
 		// image
 		
@@ -245,24 +245,30 @@
 	
 	function make_circle () {
 		
-		this.add_do_remove( function () {
+		// if width set explicitly
+		
+		if ( this.width !== 0 ) {
 			
-			var width = this.width,
-				height = this.height,
-				max = Math.max( width, height ),
-				maxHalf = max * 0.5;
+			this.add_do_remove( function () {
+				
+				var width = this.width,
+					height = this.height,
+					max = Math.max( width, height ),
+					maxHalf = max * 0.5;
+				
+				// set dimensions equal
+				
+				this.height = this.width = max;
+				
+				// set radius to half
+				
+				this.domElement.css( {
+					"border-radius": maxHalf + "px"
+				} );
+				
+			}, this );
 			
-			// set dimensions equal
-			
-			this.height = this.width = max;
-			
-			// set radius to half
-			
-			this.domElement.css( {
-				"border-radius": maxHalf + "px"
-			} );
-			
-		}, this );
+		}
 		
 	}
 	
@@ -282,15 +288,11 @@
     
     =====================================================*/
 	
-	function generate_css_map ( parameters ) {
-		
-		var cssmap;
+	function generate_css_map ( cssmap ) {
 		
 		// proto
 		
-		cssmap = _Button.Instance.prototype.supr.generate_css_map( parameters );
-		
-		cssmap[ "border-radius" ] = cssmap[ "border-radius" ] || "5px";
+		cssmap = _Button.Instance.prototype.supr.generate_css_map.call( this, cssmap );
 		
 		return cssmap;
 
