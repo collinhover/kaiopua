@@ -81,7 +81,7 @@
 	} );
 	
 	Object.defineProperty( _UIElement.Instance.prototype, 'enabled', { 
-		get : function () { return ( this.parent instanceof _UIElement.Instance ? this.parent.enabled : this._enabled ); },
+		get : function () { return ( this._enabled !== false && this.parent instanceof _UIElement.Instance ? this.parent.enabled : this._enabled ); },
 		set : function ( state ) {
 			
 			if ( state === true ) {
@@ -466,7 +466,7 @@
 			
 			// dispatch on display signal
 			
-			if ( this.domElement.parents( "body" ).length !== 0 ) {
+			if ( this.isVisible ) {
 				
 				this.signalOnVisible.dispatch();
 				
@@ -573,13 +573,47 @@
 	
 	function enable_visual () {
 		
+		var i, l,
+			child;
+		
 		this.apply_css( this.theme.enabled );
+		
+		this.theme.last = this.theme.enabled;
+		
+		for ( i = 0, l = this.children.length; i < l; i++) {
+			
+			child = this.children[ i ];
+			
+			if ( child instanceof _UIElement.Instance && child.enabledSelf === true ) {
+				
+				child.enable_visual();
+				
+			}
+			
+		}
 		
 	}
 	
 	function disable_visual () {
 		
+		var i, l,
+			child;
+		
 		this.apply_css( this.theme.disabled );
+		
+		this.theme.last = this.theme.disabled;
+		
+		for ( i = 0, l = this.children.length; i < l; i++) {
+			
+			child = this.children[ i ];
+			
+			if ( child instanceof _UIElement.Instance ) {
+				
+				child.disable_visual();
+				
+			}
+			
+		}
 		
 	}
 	
@@ -729,26 +763,17 @@
 		
 		var me = this;
 		
-		// show self
+		if ( main.type( opacity ) !== 'number' || opacity <= 0 || opacity > 1 ) {
+			
+			opacity = 1;
+			
+		}
 		
-		if ( time === 0 ) {
+		if ( this.domElement.css( 'opacity' ) !== opacity ) {
 			
-			this.domElement.stop( true ).show();
+			time = main.type( time ) === 'number' ? time : this.timeShow;
 			
-			on_show();
-			
-		} 
-		else {
-			
-			// animate opacity
-			
-			if ( typeof opacity === 'undefined' ) {
-				
-				opacity = 1;
-				
-			}
-			
-			this.domElement.stop( true ).fadeTo( time || this.timeShow, opacity, function () { on_show( me, callback, callbackContext ); } );
+			this.domElement.stop( true ).fadeTo( time, opacity, function () { on_show( me, callback, callbackContext ); } );
 			
 		}
 		
@@ -772,22 +797,17 @@
 		
 		var me = this;
 		
-		if ( time === 0 ) {
+		if ( main.type( opacity ) !== 'number' || opacity < 0 || opacity >= 1 ) {
 			
-			this.domElement.stop( true ).hide();
+			opacity = 0;
 			
-			on_hide();
+		}
+		
+		if ( this.domElement.css( 'opacity' ) !== opacity ) {
 			
-		} 
-		else {
+			time = main.type( time ) === 'number' ? time : this.timeHide;
 			
-			if ( typeof opacity === 'undefined' ) {
-				
-				opacity = 0;
-				
-			}
-			
-			this.domElement.stop( true ).fadeTo( time || this.timeHide, opacity, function () { on_hide( me, remove, callback, callbackContext ); } );
+			this.domElement.stop( true ).fadeTo( time, opacity, function () { on_hide( me, remove, callback, callbackContext ); } );
 			
 		}
 		
@@ -850,13 +870,17 @@
 	
 	function on_pointer_event ( uiElement, e ) {
 		
+		var opacity;
+		
 		if ( typeof e !== 'undefined' && uiElement.pointerEventsOnlyWithChildren !== true || uiElement.domElement.children().length === 0 ) {
 			
-			uiElement.domElement.hide();
+			opacity = uiElement.domElement.css( 'opacity' );
+			
+			uiElement.domElement.stop( true ).fadeTo( 0, 0 );
 			
 			$( document.elementFromPoint( e.clientX, e.clientY ) ).trigger( e );
 			
-			uiElement.domElement.show();
+			uiElement.domElement.stop( true ).fadeTo( 0, opacity );
 			
 		}
 		
@@ -1075,20 +1099,25 @@
 		
 	}
 	
-	function theme_core ( theme ) {
+	function theme_core ( overrides ) {
 		
-		var cssmap;
+		var theme,
+			cssmap,
+			or;
 		
-		theme = theme || {};
+		// deep copy all overrides into theme
+		
+		theme = main.extend( overrides, {}, true );
 		
 		// cssmap
 		
+		or = overrides.cssmap || {};
+		
 		cssmap = theme.cssmap = theme.cssmap || {};
 		
-		cssmap[ "overflow" ] = cssmap[ "overflow" ] || "hidden";
-		cssmap[ "position" ] = cssmap[ "position" ] || "absolute";
-		cssmap[ "display" ] = cssmap[ "display" ] || "block";
-		cssmap[ "transform-origin" ] = cssmap[ "transform-origin" ] || "50% 50%";
+		cssmap[ "position" ] = or[ "position" ] || "absolute";
+		cssmap[ "display" ] = or[ "display" ] || "block";
+		cssmap[ "transform-origin" ] = or[ "transform-origin" ] || "50% 50%";
 		
 		return theme;
 		

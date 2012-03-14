@@ -49,9 +49,6 @@
 		_Menu.Instance.prototype.constructor = _Menu.Instance;
 		_Menu.Instance.prototype.supr = _Button.Instance.prototype;
 		
-		_Menu.Instance.prototype.enable = enable;
-		_Menu.Instance.prototype.disable = disable;
-		
 		_Menu.Instance.prototype.themes = {};
 		_Menu.Instance.prototype.themes.core = theme_core;
 		
@@ -84,88 +81,16 @@
 			this.button = parameters.button;
 		
 		}
-		else if ( parameters.button !== null && typeof parameters.button === 'object' ) {
+		else if ( main.type( parameters.button ) === 'object' ) {
 			
 			this.button = new _Button.Instance( parameters.button );
 			
 		}
+		
+		// button events off
+		
+		this.domElement.off( '.btn' );
         
-	}
-	
-	/*===================================================
-    
-    enable / disable
-    
-    =====================================================*/
-	
-	function enable () {
-		
-		var i, l,
-			child;
-		
-		// proto
-		
-		_Menu.Instance.prototype.supr.enable.call( this );
-		
-		for ( i = 0, l = this.children.length; i < l; i++) {
-			
-			child = this.children[ i ];
-			
-			if ( child instanceof _Button.Instance && child.enabledSelf === true ) {
-				
-				child.enable_visual();
-				
-			}
-			
-		}
-		
-	}
-	
-	function disable () {
-		
-		var i, l,
-			child;
-		
-		// proto
-		
-		_Menu.Instance.prototype.supr.disable.call( this );
-		
-		for ( i = 0, l = this.children.length; i < l; i++) {
-			
-			child = this.children[ i ];
-			
-			if ( child instanceof _Button.Instance && child.enabledSelf === true ) {
-				
-				child.disable_visual();
-				
-			}
-			
-		}
-		
-	}
-	
-	/*===================================================
-    
-    css
-    
-    =====================================================*/
-	
-	function generate_cssmap ( cssmap ) {
-		
-		cssmap = cssmap || {};
-		
-		cssmap[ "cursor" ] = cssmap[ "cursor" ] || "default";
-		cssmap[ "background-color" ] = cssmap[ "background-color" ] || "transparent";
-		cssmap[ "background-image" ] = cssmap[ "background-image" ] || "none";
-		cssmap[ "box-shadow" ] = cssmap[ "box-shadow" ] || "none";
-		cssmap[ "border-radius" ] = cssmap[ "border-radius" ] || "0";
-			
-		// proto
-		
-		cssmap = _Menu.Instance.prototype.supr.generate_cssmap.call( this, cssmap );
-		
-		return cssmap;
-
 	}
 	
 	/*===================================================
@@ -174,29 +99,32 @@
     
     =====================================================*/
 	
-	function theme_core ( theme ) {
+	function theme_core ( overrides ) {
 		
-		var cssmap,
-			enabled,
-			disabled;
-		
-		theme = theme || {};
-		
-		// cssmap
-		
-		cssmap = theme.cssmap = theme.cssmap || {};
-		
-		cssmap[ "cursor" ] = cssmap[ "cursor" ] || "default";
-		cssmap[ "background-color" ] = cssmap[ "background-color" ] || "transparent";
-		cssmap[ "background-image" ] = cssmap[ "background-image" ] || "none";
-		cssmap[ "box-shadow" ] = cssmap[ "box-shadow" ] || "none";
-		cssmap[ "border-radius" ] = cssmap[ "border-radius" ] || "0";
+		var theme,
+			cssmap,
+			or;
 		
 		// proto
 		
-		theme = _Menu.Instance.prototype.supr.themes.core.call( this, theme );
+		theme = _Menu.Instance.prototype.supr.themes.core.call( this, overrides );
 		
-		theme.enabled = theme.disabled = {};
+		// cssmap
+		
+		or = overrides.cssmap || {};
+		
+		cssmap = theme.cssmap = theme.cssmap || {};
+		
+		cssmap[ "cursor" ] = or[ "cursor" ] || "default";
+		cssmap[ "background-color" ] = or[ "background-color" ] || "transparent";
+		cssmap[ "background-image" ] = or[ "background-image" ] || "none";
+		cssmap[ "box-shadow" ] = or[ "box-shadow" ] || "none";
+		cssmap[ "border-radius" ] = or[ "border-radius" ] || "0";
+		
+		theme.enabled = or.enabled || {};
+		theme.disabled = or.enabled || {};
+		theme.enter = or.enter || {};
+		theme.leave = or.leave  || {};
 		
 		return theme;
 		

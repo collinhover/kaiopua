@@ -49,6 +49,8 @@
 		_Button.Instance.prototype.make_circle = make_circle;
 		_Button.Instance.prototype.make_rectangle = make_rectangle;
 		
+		_Button.Instance.prototype.enter = enter;
+		_Button.Instance.prototype.leave = leave;
 		_Button.Instance.prototype.trigger = trigger;
 		
 		_Button.Instance.prototype.themes = {};
@@ -162,10 +164,6 @@
 		// bubble
 		
 		this.bubble = ( typeof parameters.bubble === 'boolean' ? parameters.bubble : true );
-        
-        // listen for clicks
-        
-        $( this.domElement ).on( 'click', function ( e ) { me.trigger( e ); } );
 		
 		// parent
 		
@@ -178,6 +176,34 @@
 			this.make_circle();
 		
 		}
+		
+		// events
+		
+		this.domElement.on( 'mouseenter.btn touchenter.btn', function ( e ) { me.enter( e ); } );
+		this.domElement.on( 'mouseleave.btn touchleave.btn', function ( e ) { me.leave( e ); } );
+        this.domElement.on( 'click.btn', function ( e ) { me.trigger( e ); } );
+		
+	}
+	
+	/*===================================================
+    
+    enter / leave
+    
+    =====================================================*/
+	
+	function enter ( e ) {
+		
+		if ( this.enabled ) {
+			
+			this.apply_css( this.theme.enter );
+			
+		}
+		
+	}
+	
+	function leave ( e ) {
+			
+		this.apply_css( this.theme.last );
 		
 	}
 	
@@ -244,73 +270,64 @@
 	
 	/*===================================================
     
-    css
-    
-    =====================================================*/
-	
-	function generate_cssmap ( cssmap ) {
-		
-		cssmap = cssmap || {};
-		
-		cssmap[ "cursor" ] = cssmap[ "cursor" ] || "pointer";
-		cssmap[ "color" ] = cssmap[ "color" ] || "#333333";
-		cssmap[ "font-size" ] = cssmap[ "font-size" ] || "24px";
-		cssmap[ "font-family" ] = cssmap[ "font-family" ] || "'OpenSansRegular', Helmet, Freesans, sans-serif";
-		cssmap[ "background-color" ] = cssmap[ "background-color" ] || "#eeeeee";
-		cssmap[ "background-image" ] = cssmap[ "background-image" ] || "linear-gradient(top, #eeeeee 30%, #cccccc 100%)";
-		cssmap[ "box-shadow" ] = cssmap[ "box-shadow" ] || "-2px 2px 10px rgba(0, 0, 0, 0.15)";
-		
-		// proto
-		
-		cssmap = _Button.Instance.prototype.supr.generate_cssmap.call( this, cssmap );
-		
-		return cssmap;
-
-	}
-	
-	/*===================================================
-    
     themes
     
     =====================================================*/
 	
-	function theme_core ( theme ) {
+	function theme_core ( overrides ) {
 		
-		var cssmap,
+		var theme,
+			cssmap,
 			enabled,
-			disabled;
-		
-		theme = theme || {};
-		
-		// cssmap
-		
-		cssmap = theme.cssmap = theme.cssmap || {};
-		
-		cssmap[ "font-size" ] = cssmap[ "font-size" ] || "24px";
-		cssmap[ "font-family" ] = cssmap[ "font-family" ] || "'OpenSansRegular', Helmet, Freesans, sans-serif";
-		cssmap[ "box-shadow" ] = cssmap[ "box-shadow" ] || "-2px 2px 10px rgba(0, 0, 0, 0.15)";
-		
-		// enabled state
-		
-		enabled = theme.enabled = theme.enabled || {};
-		
-		enabled[ "cursor" ] = enabled[ "cursor" ] || "pointer";
-		enabled[ "color" ] = enabled[ "color" ] || "#333333";
-		enabled[ "background-color" ] = enabled[ "background-color" ] || "#eeeeee";
-		enabled[ "background-image" ] = enabled[ "background-image" ] || "linear-gradient(top, #eeeeee 30%, #cccccc 100%)";
-		
-		// disabled state
-		
-		disabled = theme.disabled = theme.disabled || {};
-		
-		disabled[ "cursor" ] = disabled[ "cursor" ] || "default";
-		disabled[ "color" ] = disabled[ "color" ] || "#777777";
-		disabled[ "background-color" ] = disabled[ "background-color" ] || "#cccccc";
-		disabled[ "background-image" ] = disabled[ "background-image" ] || "linear-gradient(top, #cccccc 30%,#aaaaaa 100%)";
+			disabled,
+			enter,
+			or;
 		
 		// proto
 		
-		theme = _Button.Instance.prototype.supr.themes.core.call( this, theme );
+		theme = _Button.Instance.prototype.supr.themes.core.call( this, overrides );
+		
+		// cssmap
+		
+		or = overrides.cssmap || {};
+		
+		cssmap = theme.cssmap = theme.cssmap || {};
+		
+		cssmap[ "font-size" ] = or[ "font-size" ] || "24px";
+		cssmap[ "font-family" ] = or[ "font-family" ] || "'OpenSansRegular', Helmet, Freesans, sans-serif";
+		cssmap[ "box-shadow" ] = or[ "box-shadow" ] || "-2px 2px 10px rgba(0, 0, 0, 0.15)";
+		
+		// enabled state
+		
+		or = overrides.enabled || {};
+		
+		enabled = theme.enabled = theme.enabled || {};
+		
+		enabled[ "cursor" ] = or[ "cursor" ] || "pointer";
+		enabled[ "color" ] = or[ "color" ] || "#333333";
+		enabled[ "background-color" ] = or[ "background-color" ] || "#eeeeee";
+		enabled[ "background-image" ] = or[ "background-image" ] || "linear-gradient(top, #eeeeee 30%, #cccccc 100%)";
+		
+		// disabled state
+		
+		or = overrides.disabled || {};
+		
+		disabled = theme.disabled = theme.disabled || {};
+		
+		disabled[ "cursor" ] = or[ "cursor" ] || "default";
+		disabled[ "color" ] = or[ "color" ] || "#777777";
+		disabled[ "background-color" ] = or[ "background-color" ] || "#cccccc";
+		disabled[ "background-image" ] = or[ "background-image" ] || "linear-gradient(top, #cccccc 30%, #aaaaaa 100%)";
+		
+		// enter state
+		
+		or = overrides.enter || {};
+		
+		enter = theme.enter = theme.enter || {};
+		
+		enter[ "color" ] = or[ "color" ] || "#222222";
+		enter[ "background-color" ] = or[ "background-color" ] || "#ffffff";
+		enter[ "background-image" ] = or[ "background-image" ] || "linear-gradient(top, #ffffff 30%, #dddddd 100%)";
 		
 		return theme;
 		

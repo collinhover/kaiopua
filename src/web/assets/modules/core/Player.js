@@ -511,7 +511,7 @@
 		
 		parameters = parameters || {};
 		
-		mouse = parameters.mouse = parameters.mouse || _Game.get_mouse( parameters );
+		mouse = parameters.mouse = parameters.mouse || main.get_mouse( parameters );
 		
 		character = parameters.character || character;
 		

@@ -11,7 +11,6 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/core/CameraControls.js",
 		_CameraControls = {},
-		_Game,
 		_ObjectHelper,
 		_MathHelper,
 		firstPersonDist = 50,
@@ -31,7 +30,6 @@
 	main.asset_register( assetPath, { 
 		data: _CameraControls,
 		requirements: [
-			"assets/modules/core/Game.js",
 			"assets/modules/utils/ObjectHelper.js",
 			"assets/modules/utils/MathHelper.js"
 		],
@@ -45,11 +43,10 @@
     
     =====================================================*/
 	
-	function init_internal ( g, oh, mh ) {
+	function init_internal ( oh, mh ) {
 		console.log('internal cameracontrols');
 		// assets
 		
-		_Game = g;
 		_ObjectHelper = oh;
 		_MathHelper = mh;
 		
@@ -212,7 +209,7 @@
 			
 			// store mouse
 			
-			this.settingsRotation.mouse = _Game.get_mouse( ( typeof e !== 'undefined' ? e.identifier : 0 ) );
+			this.settingsRotation.mouse = main.get_mouse( ( e ? e.identifier : 0 ) );
 			
 			// reset properties
 			

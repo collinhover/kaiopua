@@ -68,6 +68,8 @@ var KAIOPUA = (function (main) {
             mouseup : new signals.Signal(),
             mousemoved : new signals.Signal(),
             mousewheel : new signals.Signal(),
+			mouseenter : new signals.Signal(),
+			mouseleave : new signals.Signal(),
     
             keydown : new signals.Signal(),
             keyup : new signals.Signal(),
@@ -132,19 +134,78 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	// add object cloning/extending
-	// with support for enumerable and non-enumerable properties
-	// and correct copying of getters and setters
-	// does not do deep copies
+	// better type checking
+	// trade off is performance
 	
-	main.extend = function ( source, destination ) {
+	main.type = function ( o ) {
+		return o==null?o+'':Object.prototype.toString.call(o).slice(8,-1).toLowerCase();
+	};
+	
+	main.is_object = function ( target ) {
+		return target !== null && target !== undefined && Object.prototype.toString.call( target ) === '[object Object]';
+	};
+	
+	main.is_array = function ( target ) {
+		return Object.prototype.toString.call( target ) === '[object Array]';
+	};
+	
+	main.is_image = function ( target ) {
+		
+		return ( typeof target !== 'undefined' && target.hasOwnProperty('nodeName') && target.nodeName.toLowerCase() === 'img' );
+		
+	}
+	
+	main.is_touch_event = function ( e ) {
+		
+		var eOriginal = e.originalEvent;
+		
+		return eOriginal && eOriginal.touches && eOriginal.changedTouches;
+		
+	}
+	
+	// shared mouse
+	
+	main.get_mouse = function ( parameters, allowNew ) {
+		
+		var id = parameters.identifier = ( shared.multitouch === true && parameters.identifier ) ? parameters.identifier : 0,
+			mouse;
+		
+		mouse = shared.mice[ id ] = ( allowNew !== true || id < shared.mice.length ) ? shared.mice[ id ] : { 
+			x: 0,
+			lx: 0,
+			y: 0,
+			ly: 0,
+			down: false 
+		};
+		
+		return mouse;
+		
+	}
+	
+	// object cloning/extending
+	// copies both enumerable and non-enumerable properties
+	// copies getters and setters correctly
+	// optional: deep copying while avoiding infinite recursion
+	// deep copy only makes one copy of any object, regardless of how many times / places it is referenced
+	
+	main.extend = function ( source, destination, deep, records ) {
 		
 		var i, l,
 			propertyNames,
 			name,
-			descriptor;
+			descriptor,
+			value,
+			valueType,
+			recordSources,
+			recordCopies,
+			recordSourceIndex,
+			recordCopyIndex,
+			recordSource,
+			recordCopy;
 		
-		if ( typeof source !== 'undefined' && typeof destination !== 'undefined' ) {
+		if ( typeof source !== 'undefined' ) {
+			
+			destination = destination || {};
 			
 			propertyNames = Object.getOwnPropertyNames( source );
 			
@@ -156,16 +217,67 @@ var KAIOPUA = (function (main) {
 				
 				Object.defineProperty( destination, name, descriptor );
 				
+				// if deep copy
+				
+				if ( deep === true ) {
+					
+					// get descriptor that was just set
+					
+					descriptor = Object.getOwnPropertyDescriptor( destination, name );
+					
+					value = descriptor.value;
+						
+					valueType = main.type( value );
+					
+					// if the value of the descriptor is an object or array
+					
+					if ( valueType === 'object' || valueType === 'array' ) {
+						
+						records = records || { sources: [], copies: [] };
+						
+						recordSources = records.sources;
+						
+						recordCopies = records.copies;
+						
+						recordSourceIndex = recordSources.indexOf( value );
+						
+						// if value does not yet exist in records
+						
+						if ( recordSourceIndex === -1 ) {
+							
+							recordSource = recordSources[ recordSources.length ] = value;
+							
+							recordCopy = recordCopies[ recordCopies.length ] = ( valueType === 'object' ? {} : [] );
+							
+							// special case when object has a reference to itself
+							
+							if ( value === source ) {
+								value[ name ] = recordCopy;
+							}
+							
+							descriptor.value = main.extend( value, recordCopy, true, records );
+							
+						}
+						else {
+							
+							descriptor.value = recordCopies[ recordSourceIndex ];
+							
+						}
+						
+						// set descriptor again with new deep copied value
+					
+						Object.defineProperty( destination, name, descriptor );
+						
+					}
+					
+				}
+				
 			}
 			
 		}
 		
 		return destination;
 		
-	};
-	
-	main.is_array = function ( target ) {
-		return Object.prototype.toString.call( target ) === '[object Array]';
 	};
 	
 	main.ensure_array = function ( target ) {
@@ -294,12 +406,6 @@ var KAIOPUA = (function (main) {
 		
 	};
 	
-	main.is_image = function ( target ) {
-		
-		return ( typeof target !== 'undefined' && target.hasOwnProperty('nodeName') && target.nodeName.toLowerCase() === 'img' );
-		
-	}
-	
 	main.is_image_ext = function ( ext ) {
 		
 		if ( ext === 'jpg' || ext === 'jpeg' || ext === 'png' || ext === 'gif' || ext === 'bmp' ) {
@@ -310,6 +416,304 @@ var KAIOPUA = (function (main) {
 		}
 		
     };
+	
+	/*===================================================
+    
+    event functions
+    
+    =====================================================*/
+	
+	main.handle_touch_event = function ( e, eventActual ) {
+		
+		var i, l, fingers, touch;
+		
+		// for each finger involved in the event
+		
+		fingers = e.changedTouches;
+		
+		for( i = 0, l = fingers.length; i < l; i += 1 ) {
+			
+			touch = fingers[ touchIndex ];
+			
+			touch.button = 0;
+			
+			// send as individual event
+			
+			eventActual( touch );
+			
+		}
+		
+	}
+    
+    function on_mouse_down( e ) {
+		
+		var mouse;
+		
+		// is touch event
+		
+		if ( main.is_touch_event( e ) ) {
+			
+			main.handle_touch_event( e.originalEvent, on_mouse_down );
+			
+		}
+		else {
+			
+			mouse = main.get_mouse( e, true );
+			
+			mouse.down = true;
+		
+			shared.signals.mousedown.dispatch( e );
+			
+		}
+        
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }
+    
+    function on_mouse_up( e ) {
+		
+		// is touch event
+		
+		if ( main.is_touch_event( e ) ){
+			
+			main.handle_touch_event( e.originalEvent, on_mouse_up );
+		}
+		else {
+			
+			mouse = main.get_mouse( e, true );
+			
+			mouse.down = false;
+			
+			shared.signals.mouseup.dispatch( e );
+        
+		}
+		
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }
+    
+    function on_mouse_move( e ) {
+		
+		var mouse;
+		
+		// is touch event
+		
+		if ( main.is_touch_event( e ) ){
+			
+			main.handle_touch_event( e.originalEvent, on_mouse_move );
+		}
+		else {
+			
+			mouse = main.get_mouse( e, true );
+			
+			mouse.lx = mouse.x;
+			mouse.ly = mouse.y;
+			
+			mouse.x = e.clientX;
+			mouse.y = e.clientY;
+			
+			mouse.dx = mouse.x - mouse.lx;
+			mouse.dy = mouse.y - mouse.ly;
+			
+			shared.signals.mousemoved.dispatch( e );
+			
+		}
+        
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }
+	
+	function on_mouse_enter ( e ) {
+		
+		// is touch event
+		
+		if ( main.is_touch_event( e ) ){
+			
+			main.handle_touch_event( e.originalEvent, on_mouse_enter );
+		}
+		else {
+			
+			main.get_mouse( e, true );
+			
+			shared.signals.mouseenter.dispatch( e );
+			
+		}
+        
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }
+	
+	function on_mouse_leave ( e ) {
+		
+		var mouse;
+		
+		// is touch event
+		
+		if ( main.is_touch_event( e ) ){
+			
+			main.handle_touch_event( e.originalEvent, on_mouse_leave );
+		}
+		else {
+			
+			mouse = main.get_mouse( e, true );
+			
+			shared.signals.mouseleave.dispatch( e );
+			
+			if ( mouse.down === true ) {
+				
+				on_mouse_up( e );
+				
+			}
+			
+		}
+        
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }
+    
+    function on_mouse_wheel( e ) {
+        shared.signals.mousewheel.dispatch( e );
+        
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }
+	
+	function on_game_context_menu( e ) {
+        
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+		
+    }
+    
+    function on_window_device_orientation( e ) {
+        var i, l, mice, mouse, eCopy, overThreshold, gamma, beta, x, y;
+        
+        if ( ! e.gamma && !e.beta ) {
+                e.gamma = -(e.x * (180 / Math.PI));
+                e.beta = -(e.y * (180 / Math.PI));
+        } 
+        else if( e.alpha === null && e.beta === null && e.gamma === null ) {
+                $(window).unbind( "deviceorientation", on_window_device_orientation );
+                $(window).unbind( "MozOrientation", on_window_device_orientation );
+        }
+        
+        overThreshold = Math.abs(e.gamma) > 4 || Math.abs(e.beta) > 4;
+        gamma = overThreshold ? e.gamma : 0;
+        beta = overThreshold ? e.beta : 0;
+        
+        if ( lastGamma !== gamma || lastBeta !== beta) {
+			
+			mice = shared.mice;
+			
+			for ( i = 0, l = mice.length; i < l; i += 1 ) {
+				
+				mouse = mice[ i ];
+			
+				x = Math.round( 1.5 * gamma ) + mouse.x;
+				y = ( - Math.round( 1.5 * beta ) ) + mouse.y;
+				
+				if( Math.abs( x ) > window.innerWidth ) {
+						if( x < 0 ) {
+								x = -window.innerWidth;
+						} 
+						else {
+								x = window.innerWidth;
+						}
+				}
+				
+				if( Math.abs( y ) > window.innerHeight ) {
+						if( y < 0 ) {
+								y = -window.innerHeight;
+						} 
+						else {
+								y = window.innerHeight;
+						}
+				}
+				
+				mouse.x = x;
+				mouse.y = y;
+				
+				eCopy = $.extend( {}, e );
+				
+				eCopy.identifier = i;
+				
+				shared.signals.mousemoved.dispatch( eCopy );
+			
+			}
+			
+			lastGamma = gamma;
+			lastBeta = beta;
+            
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+    }
+
+    function on_key_down( e ) {
+        shared.signals.keydown.dispatch( e );
+        
+        /*
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+        */
+    }
+
+    function on_key_up( e ) {
+        shared.signals.keyup.dispatch( e );
+        
+        /*
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+        */
+    }
+	
+	function on_focus_lose ( e ) {
+		
+		shared.signals.focuslose.dispatch( e );
+		
+		if ( typeof _Game !== 'undefined' ) {
+			
+			_Game.pause();
+			
+		}
+		
+	}
+	
+	function on_focus_gain ( e ) {
+		
+		shared.signals.focusgain.dispatch( e );
+		
+		if ( typeof _Game !== 'undefined' && _Game.started !== true ) {
+			
+			_Game.resume();
+			
+		}
+		
+	}
+
+    function on_window_resize( e ) {
+        
+        shared.screenWidth = $(window).width();
+        shared.screenHeight = $(window).height();
+        
+        shared.signals.windowresized.dispatch(shared.screenWidth, shared.screenHeight);
+        
+        if (typeof e !== 'undefined') {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        return false;
+    }
 	
 	/*===================================================
     
@@ -925,326 +1329,6 @@ var KAIOPUA = (function (main) {
 		main.asset_ready( this.path, this );
 		
 	}
-	
-    /*===================================================
-    
-    event functions
-    
-    =====================================================*/
-	
-	function on_focus_lose ( e ) {
-		
-		shared.signals.focuslose.dispatch( e );
-		
-		if ( typeof _Game !== 'undefined' ) {
-			
-			_Game.pause();
-			
-		}
-		
-	}
-	
-	function on_focus_gain ( e ) {
-		
-		shared.signals.focusgain.dispatch( e );
-		
-		if ( typeof _Game !== 'undefined' && _Game.started !== true ) {
-			
-			_Game.resume();
-			
-		}
-		
-	}
-	
-	function handle_touch_event ( e, eventActual ) {
-		
-		var i, l, fingers, touch;
-		
-		// for each finger involved in the event
-		
-		fingers = e.changedTouches;
-		
-		for( i = 0, l = fingers.length; i < l; i += 1 ) {
-			
-			touch = fingers[ touchIndex ];
-			
-			touch.button = 0;
-			
-			// send as individual event
-			
-			eventActual( touch );
-			
-		}
-		
-	}
-	
-	function handle_mouse_identifier ( e ) {
-		
-		var id = e.identifier = ( typeof e.identifier !== 'undefined' && shared.multitouch === true ) ? e.identifier : 0;
-		
-		if ( id >= shared.mice.length ) {
-			shared.mice[ id ] = { 
-				x: 0,
-				lx: 0,
-				y: 0,
-				ly: 0,
-				down: false 
-			};
-		}
-		
-	}
-    
-    function on_mouse_down( e ) {
-		
-		var eOriginal = e.originalEvent;
-		
-		// is touch event
-		
-		if (typeof eOriginal !== "undefined" && typeof eOriginal.touches !== "undefined" && typeof eOriginal.changedTouches !== "undefined"){
-			
-			handle_touch_event( eOriginal, on_mouse_down );
-			
-		}
-		else {
-			
-			handle_mouse_identifier( e );
-			
-			shared.mice[ e.identifier ].down = true;
-		
-			shared.signals.mousedown.dispatch( e );
-			
-		}
-        
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-    }
-    
-    function on_mouse_up( e ) {
-		
-		var eOriginal = e.originalEvent;
-		
-		// is touch event
-		
-		if (typeof eOriginal !== "undefined" && typeof eOriginal.touches !== "undefined" && typeof eOriginal.changedTouches !== "undefined"){
-			
-			handle_touch_event( eOriginal, on_mouse_up );
-		}
-		else {
-			
-			handle_mouse_identifier( e );
-			
-			shared.mice[ e.identifier ].down = false;
-			
-			shared.signals.mouseup.dispatch( e );
-        
-		}
-		
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-    }
-    
-    function on_mouse_move( e ) {
-		
-		var eOriginal = e.originalEvent, mouse;
-		
-		// is touch event
-		
-		if (typeof eOriginal !== "undefined" && typeof eOriginal.touches !== "undefined" && typeof eOriginal.changedTouches !== "undefined"){
-			
-			handle_touch_event( eOriginal, on_mouse_move );
-		}
-		else {
-			
-			handle_mouse_identifier( e );
-			
-			mouse = shared.mice[ e.identifier ];
-			
-			mouse.lx = mouse.x;
-			mouse.ly = mouse.y;
-			
-			mouse.x = e.clientX;
-			mouse.y = e.clientY;
-			
-			mouse.dx = mouse.x - mouse.lx;
-			mouse.dy = mouse.y - mouse.ly;
-			
-			shared.signals.mousemoved.dispatch( e );
-			
-		}
-        
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-    }
-	
-	function on_mouse_enter ( e ) {
-		
-		var eOriginal = e.originalEvent, mouse;
-		
-		// is touch event
-		
-		if (typeof eOriginal !== "undefined" && typeof eOriginal.touches !== "undefined" && typeof eOriginal.changedTouches !== "undefined"){
-			
-			handle_touch_event( eOriginal, on_mouse_enter );
-		}
-		else {
-			
-			handle_mouse_identifier( e );
-			
-			mouse = shared.mice[ e.identifier ];
-			
-		}
-        
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-    }
-	
-	function on_mouse_leave ( e ) {
-		
-		var eOriginal = e.originalEvent, mouse;
-		
-		// is touch event
-		
-		if (typeof eOriginal !== "undefined" && typeof eOriginal.touches !== "undefined" && typeof eOriginal.changedTouches !== "undefined"){
-			
-			handle_touch_event( eOriginal, on_mouse_leave );
-		}
-		else {
-			
-			handle_mouse_identifier( e );
-			
-			mouse = shared.mice[ e.identifier ];
-			
-			if ( mouse.down === true ) {
-				
-				on_mouse_up( e );
-				
-			}
-			
-		}
-        
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-    }
-    
-    function on_mouse_wheel( e ) {
-        shared.signals.mousewheel.dispatch( e );
-        
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-    }
-	
-	function on_game_context_menu( e ) {
-        
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-		
-    }
-    
-    function on_window_device_orientation( e ) {
-        var i, l, mice, mouse, eCopy, overThreshold, gamma, beta, x, y;
-        
-        if ( ! e.gamma && !e.beta ) {
-                e.gamma = -(e.x * (180 / Math.PI));
-                e.beta = -(e.y * (180 / Math.PI));
-        } 
-        else if( e.alpha === null && e.beta === null && e.gamma === null ) {
-                $(window).unbind( "deviceorientation", on_window_device_orientation );
-                $(window).unbind( "MozOrientation", on_window_device_orientation );
-        }
-        
-        overThreshold = Math.abs(e.gamma) > 4 || Math.abs(e.beta) > 4;
-        gamma = overThreshold ? e.gamma : 0;
-        beta = overThreshold ? e.beta : 0;
-        
-        if ( lastGamma !== gamma || lastBeta !== beta) {
-			
-			mice = shared.mice;
-			
-			for ( i = 0, l = mice.length; i < l; i += 1 ) {
-				
-				mouse = mice[ i ];
-			
-				x = Math.round( 1.5 * gamma ) + mouse.x;
-				y = ( - Math.round( 1.5 * beta ) ) + mouse.y;
-				
-				if( Math.abs( x ) > window.innerWidth ) {
-						if( x < 0 ) {
-								x = -window.innerWidth;
-						} 
-						else {
-								x = window.innerWidth;
-						}
-				}
-				
-				if( Math.abs( y ) > window.innerHeight ) {
-						if( y < 0 ) {
-								y = -window.innerHeight;
-						} 
-						else {
-								y = window.innerHeight;
-						}
-				}
-				
-				mouse.x = x;
-				mouse.y = y;
-				
-				eCopy = $.extend( {}, e );
-				
-				eCopy.identifier = i;
-				
-				shared.signals.mousemoved.dispatch( eCopy );
-			
-			}
-			
-			lastGamma = gamma;
-			lastBeta = beta;
-            
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
-        }
-    }
-
-    function on_key_down( e ) {
-        shared.signals.keydown.dispatch( e );
-        
-        /*
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-        */
-    }
-
-    function on_key_up( e ) {
-        shared.signals.keyup.dispatch( e );
-        
-        /*
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-        */
-    }
-
-    function on_window_resize( e ) {
-        
-        shared.screenWidth = $(window).width();
-        shared.screenHeight = $(window).height();
-        
-        shared.signals.windowresized.dispatch(shared.screenWidth, shared.screenHeight);
-        
-        if (typeof e !== 'undefined') {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-        return false;
-    }
     
     return main; 
     

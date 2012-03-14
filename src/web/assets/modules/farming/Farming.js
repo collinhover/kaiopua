@@ -97,7 +97,7 @@
 			
 			// store mouse
 			
-			this.planting.mouse = _Game.get_mouse( this.planting.event );
+			this.planting.mouse = main.get_mouse( this.planting.event );
 			
 			// step planting cycle
 			

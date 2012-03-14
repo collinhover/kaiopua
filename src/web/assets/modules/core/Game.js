@@ -181,7 +181,6 @@
 	_Game.add_to_scene = add_to_scene;
 	_Game.remove_from_scene = remove_from_scene;
 	
-	_Game.get_mouse = get_mouse;
 	_Game.get_intersection_from_mouse = get_intersection_from_mouse;
 	_Game.get_object_under_mouse = get_object_under_mouse;
 	
@@ -580,10 +579,9 @@
         menus.start = new _Menu.Instance( {
             id: 'start_menu',
             width: 570,
-			height: buttonSize + buttonSpacing * 2,
-			transparent: true
+			height: buttonSize + buttonSpacing * 2
         } );
-	
+		
 		startButton = new _Button.Instance( {
             id: 'button_start',
 			text: 'Start',
@@ -652,8 +650,7 @@
 		menus.pause = new _Menu.Instance( {
             id: 'pause_menu',
             width: menuWidth,
-			height: buttonSize + buttonSpacing * 2,
-			transparent: true
+			height: buttonSize + buttonSpacing * 2
         } );
         
         resumeButton = new _Button.Instance( {
@@ -1008,29 +1005,6 @@
     
     =====================================================*/
 	
-	function get_mouse ( parameters ) {
-		
-		var mouse;
-		
-		if ( typeof parameters === 'number' ) {
-			
-			mouse = shared.mice[ parameters ];
-			
-		}
-		else if ( typeof parameters === 'object' && parameters.hasOwnProperty( 'mouseIndex' ) && parameters.mouseIndex > 0 && parameters.mouseIndex < shared.mice.length ) {
-			
-			mouse = shared.mice[ parameters.mouseIndex ];
-			
-		}
-		else {
-			
-			mouse = shared.mice[ 0 ];
-			
-		}
-		
-		return mouse;
-	}
-	
 	function get_intersection_from_mouse ( objects, traverseHierarchy, mouse, cameraTarget ) {
 		
 		var projector = utilProjector1Selection,
@@ -1045,7 +1019,7 @@
 		
 		traverseHierarchy = ( typeof traverseHierarchy === 'boolean' ) ? traverseHierarchy : true;
 		
-		mouse = mouse || get_mouse();
+		mouse = mouse || main.get_mouse();
 		
 		cameraTarget = cameraTarget || camera;
 		
