@@ -34,8 +34,8 @@
 		allLoadingOrLoaded = [],
 		listCurrent,
 		loadTypeDefault = 'script',
-		containerPadding = 20,
-		barWidth = 260,
+		containerWidth = 260,
+		barWidth = containerWidth - 40,
 		barHeight = 10,
 		barRadius = 5,
 		barToFillSpace = 2,
@@ -210,15 +210,13 @@
 			id: 'asset_loader',
 			elementType: 'section',
 			classes: 'info_panel',
-			width: barWidth,
-			cssmap: {
-				'padding' : '20px'
-			}
+			width: containerWidth
 		});
 		
 		// bar
 		
 		bar = new _UIElement.Instance({
+			width: barWidth,
 			cssmap: {
 				'position' : 'relative',
 				'border-style' : 'solid',
@@ -227,7 +225,9 @@
 				'border-radius' : barRadius + 'px',
 				'padding' : barToFillSpace + 'px',
 				'margin-top' : barMargin + 'px',
-				'margin-bottom' : barMargin + 'px'
+				'margin-bottom' : barMargin + 'px',
+				'margin-left' : 'auto',
+				'margin-right' : 'auto'
 			}
 		});
 		
@@ -249,7 +249,10 @@
 			width: barWidth,
 			text: loadingHeaderBase,
 			cssmap: {
-				'position' : 'relative'
+				'position' : 'relative',
+				'margin-top' : barMargin + 'px',
+				'margin-left' : 'auto',
+				'margin-right' : 'auto'
 			}
 		});
 		
@@ -259,7 +262,10 @@
 			width: barWidth,
 			text: loadingTips[0],
 			cssmap: {
-				'position' : 'relative'
+				'position' : 'relative',
+				'margin-bottom' : barMargin + 'px',
+				'margin-left' : 'auto',
+				'margin-right' : 'auto'
 			}
 		});
 		

@@ -52,7 +52,8 @@
 		_Menu.Instance.prototype.enable = enable;
 		_Menu.Instance.prototype.disable = disable;
 		
-		_Menu.Instance.prototype.generate_css_map = generate_css_map;
+		_Menu.Instance.prototype.themes = {};
+		_Menu.Instance.prototype.themes.core = theme_core;
 		
 	}
 	
@@ -70,15 +71,24 @@
 		
 		parameters.elementType = parameters.elementType || 'section';
 		
-		parameters.classes = 'menu info_panel clearfix ' + ( parameters.classes || '' );
-		
-		if ( parameters.transparent === true ) {
-			parameters.classes += ' info_panel_nobg';
-		}
+		parameters.text = parameters.image = undefined;
 		
 		// prototype constructor
 		
 		_Button.Instance.call( this, parameters );
+		
+		// create new button for self
+		
+		if ( parameters.button instanceof _Button.Instance ) {
+			
+			this.button = parameters.button;
+		
+		}
+		else if ( parameters.button !== null && typeof parameters.button === 'object' ) {
+			
+			this.button = new _Button.Instance( parameters.button );
+			
+		}
         
 	}
 	
@@ -140,33 +150,56 @@
     
     =====================================================*/
 	
-	function generate_css_map ( cssmap ) {
+	function generate_cssmap ( cssmap ) {
 		
+		cssmap = cssmap || {};
+		
+		cssmap[ "cursor" ] = cssmap[ "cursor" ] || "default";
+		cssmap[ "background-color" ] = cssmap[ "background-color" ] || "transparent";
+		cssmap[ "background-image" ] = cssmap[ "background-image" ] || "none";
+		cssmap[ "box-shadow" ] = cssmap[ "box-shadow" ] || "none";
+		cssmap[ "border-radius" ] = cssmap[ "border-radius" ] || "0";
+			
 		// proto
 		
-		cssmap = _Menu.Instance.prototype.supr.generate_css_map.call( this, cssmap );
-		
-		// css overrides
-		/*
-		cssmap[ "color" ] = cssmap[ "color" ] || "#FF0000";
-		
-		cssmap[ "display" ] = "table";
-		cssmap[ "overflow" ] = "hidden";
-		cssmap[ "padding" ] = "5px 5px 5px 5px";
-		cssmap[ "margin" ] = "10px 10px 10px 10px";
-		cssmap[ "cursor" ] = "default";
-		cssmap[ "font" ] = "24px 'OpenSansRegular', Helmet, Freesans, sans-serif";
-		
-		cssmap[ "text-align" ] = "center";
-		cssmap[ "background" ] = "table";
-		cssmap[ "display" ] = "table";
-		cssmap[ "display" ] = "table";
-		cssmap[ "display" ] = "table";
-		cssmap[ "display" ] = "table";
-		cssmap[ "display" ] = "table";*/
+		cssmap = _Menu.Instance.prototype.supr.generate_cssmap.call( this, cssmap );
 		
 		return cssmap;
 
+	}
+	
+	/*===================================================
+    
+    themes
+    
+    =====================================================*/
+	
+	function theme_core ( theme ) {
+		
+		var cssmap,
+			enabled,
+			disabled;
+		
+		theme = theme || {};
+		
+		// cssmap
+		
+		cssmap = theme.cssmap = theme.cssmap || {};
+		
+		cssmap[ "cursor" ] = cssmap[ "cursor" ] || "default";
+		cssmap[ "background-color" ] = cssmap[ "background-color" ] || "transparent";
+		cssmap[ "background-image" ] = cssmap[ "background-image" ] || "none";
+		cssmap[ "box-shadow" ] = cssmap[ "box-shadow" ] || "none";
+		cssmap[ "border-radius" ] = cssmap[ "border-radius" ] || "0";
+		
+		// proto
+		
+		theme = _Menu.Instance.prototype.supr.themes.core.call( this, theme );
+		
+		theme.enabled = theme.disabled = {};
+		
+		return theme;
+		
 	}
 	
 } (KAIOPUA) );

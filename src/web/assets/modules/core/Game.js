@@ -52,25 +52,28 @@
         transitionOut = 1000, 
         transitionIn = 400,
 		transitionerAlpha = 0.75,
-        loadAssetsDelay = 500,
 		dependencies = [
 			"assets/modules/utils/AssetLoader.js",
             "assets/modules/utils/ErrorHandler.js",
+		],
+        assetsBasic = [
 			"assets/modules/ui/UIElement.js",
 			"assets/modules/utils/MathHelper.js",
 			"assets/modules/utils/Dev.js",
-		],
-        assetsBasic = [
-			"js/lib/jquery.transform2d.js",
             "js/lib/three/Three.js",
+			"js/lib/jquery.transform2d.js",
+        ],
+		assetsThreeExtras = [
             "js/lib/three/ThreeExtras.js",
             "js/lib/three/postprocessing/ShaderExtras.js",
             "js/lib/three/postprocessing/EffectComposer.js",
             "js/lib/three/postprocessing/RenderPass.js",
             "js/lib/three/postprocessing/ShaderPass.js",
             "js/lib/three/postprocessing/MaskPass.js",
+			"js/lib/three/physics/Collisions.js",
+			"js/lib/three/physics/CollisionUtils.js",
             "assets/modules/effects/FocusVignette.js"
-        ],
+		],
         assetsLauncher = [
             "assets/modules/sections/Launcher.js",
             "assets/modules/env/WaterLauncher.js",
@@ -83,8 +86,6 @@
         ],
         assetsGame = [
 			/*"js/lib/ammo.js",*/
-			"js/lib/three/physics/Collisions.js",
-			"js/lib/three/physics/CollisionUtils.js",
 			"assets/modules/core/Physics.js",
 			"assets/modules/core/Player.js",
 			"assets/modules/core/Model.js",
@@ -234,11 +235,10 @@
     
     =====================================================*/
 	
-	function init_internal ( al, err, uie ) {
+	function init_internal ( al, err ) {
 		console.log('internal game');
 		_AssetLoader = al;
 		_ErrorHandler = err;
-		_UIElement = uie;
 		
 		// register error listeners
 		
@@ -270,7 +270,13 @@
 	
 	function load_basics () {
 		
-		main.asset_require( assetsBasic, [init_basics, load_launcher] );
+		main.asset_require( assetsBasic, [ load_three_extras ] );
+		
+	}
+	
+	function load_three_extras () {
+		
+		main.asset_require( assetsThreeExtras, [ init_basics, load_launcher ] );
 		
 	}
 	
@@ -282,15 +288,7 @@
 	
 	function load_game () {
 		
-		// pause for short delay
-		
-		window.requestTimeout( function () {
-			
-			// load game assets and init game
-			
-			main.asset_require( assetsGame, init_game, true, containerUI.domElement );
-			
-		}, loadAssetsDelay);
+		main.asset_require( assetsGame, init_game, true, containerUI.domElement );
 		
 	}
 	
@@ -304,11 +302,6 @@
 		
 		var shaderScreen = THREE.ShaderExtras[ "screen" ],
             shaderFocusVignette = main.get_asset_data("assets/modules/effects/FocusVignette");
-			/*bg = effects.LinearGradient.generate( {
-				colors: [0x0F042E, 0x1D508F, 0x529AD1, 0x529AD1, 0x455AE0],
-				stops: [0, 0.4, 0.6, 0.8, 1.0],
-				startBottom: true
-			} )*/
 		
 		// modify THREE classes
 		
@@ -316,6 +309,7 @@
 		
 		// utility
 		
+		_UIElement = main.get_asset_data( "assets/modules/ui/UIElement.js" );
 		_MathHelper = main.get_asset_data( "assets/modules/utils/MathHelper.js" );
 		
 		utilProjector1Selection = new THREE.Projector();
@@ -577,31 +571,37 @@
 		var startButton,
 			continueButton,
 			optionsButton,
+			menuWidth = 570,
 			buttonSize = 160,
-			buttonSpacing;
+			buttonSpacing = ( ( menuWidth / 3 ) - buttonSize ) / 2;
         
         // init start menu
 		
         menus.start = new _Menu.Instance( {
             id: 'start_menu',
             width: 570,
-			height: buttonSize,
+			height: buttonSize + buttonSpacing * 2,
 			transparent: true
         } );
 	
 		startButton = new _Button.Instance( {
-            id: 'Start',
-            classes: 'item_big',
+            id: 'button_start',
+			text: 'Start',
 			width: buttonSize,
 			circle: true,
             callback: function () {
                 start_game();
             },
-			context: this
+			context: this,
+			cssmap: {
+				'font-size' : "30px",
+				'font-family' : "'CoustardRegular', Georgia, serif"
+			}
         } );
 		
 		continueButton = new _Button.Instance( {
-            id: 'Continue', 
+            id: 'button_continue',
+			text: 'Continue',
 			width: buttonSize,
 			circle: true,
             callback: function () {},
@@ -610,7 +610,8 @@
         } )
 		
 		optionsButton = new _Button.Instance( {
-            id: 'Options',
+            id: 'button_options',
+			text: 'Options',
 			width: buttonSize,
 			circle: true,
             callback: function () {},
@@ -624,17 +625,11 @@
         menus.start.add( continueButton );
         menus.start.add( optionsButton );
 		
-		// add menu to display
-		
-		menus.start.parent = containerUI;
-		
 		// position
 		
-		buttonSpacing = ( ( menus.start.width / 3 ) - buttonSize ) / 2;
-		
-		startButton.set_position( buttonSpacing, 0 );
-		continueButton.set_position( startButton.x + startButton.width + buttonSpacing * 2, 0 );
-		optionsButton.set_position( continueButton.x + continueButton.width + buttonSpacing * 2, 0 );
+		startButton.set_position( buttonSpacing, buttonSpacing );
+		continueButton.set_position( startButton.x + startButton.width + buttonSpacing * 2, buttonSpacing );
+		optionsButton.set_position( continueButton.x + continueButton.width + buttonSpacing * 2, buttonSpacing );
 		
         menus.start.alignment = 'center';
         
@@ -648,30 +643,36 @@
 			optionsButton,
 			saveButton,
 			endButton,
+			menuWidth = 760,
 			buttonSize = 160,
-			buttonSpacing;
+			buttonSpacing = ( ( menuWidth / 4 ) - buttonSize ) / 2;
         
         // init menu
         
 		menus.pause = new _Menu.Instance( {
             id: 'pause_menu',
-            width: 760,
-			height: buttonSize,
+            width: menuWidth,
+			height: buttonSize + buttonSpacing * 2,
 			transparent: true
         } );
         
         resumeButton = new _Button.Instance( {
-            id: 'Resume',
-            classes: 'item_big',
+            id: 'button_resume',
+			text: 'Resume',
 			width: buttonSize,
 			circle: true, 
             callback: function () {
                 resume();
             },
-			context: this
+			context: this,
+			cssmap: {
+				'font-size' : "30px",
+				'font-family' : "'CoustardRegular', Georgia, serif"
+			}
         } );
 		optionsButton = new _Button.Instance( {
-            id: 'Options',
+            id: 'button_options',
+			text: 'Options',
 			width: buttonSize,
 			circle: true, 
             callback: function () {},
@@ -679,7 +680,8 @@
             enabled: false
         } );
         saveButton = new _Button.Instance( {
-            id: 'Save',
+            id: 'button_save',
+			text: 'Save',
 			width: buttonSize,
 			circle: true, 
             callback: function () {},
@@ -687,7 +689,8 @@
             enabled: false
         } );
 		endButton = new _Button.Instance( {
-            id: 'End Game',
+            id: 'button_end_game',
+			text: 'End Game',
 			width: buttonSize,
 			circle: true, 
             callback: function () {
@@ -703,18 +706,12 @@
         menus.pause.add( saveButton );
 		menus.pause.add( endButton );
 		
-		// add menu to display
-		
-		menus.pause.parent = containerUI;
-		
 		// position
 		
-		buttonSpacing = ( ( menus.pause.width / 4 ) - buttonSize ) / 2;
-		
-		resumeButton.set_position( buttonSpacing, 0 );
-		optionsButton.set_position( resumeButton.x + resumeButton.width + buttonSpacing * 2, 0 );
-		saveButton.set_position( optionsButton.x + optionsButton.width + buttonSpacing * 2, 0 );
-		endButton.set_position( saveButton.x + saveButton.width + buttonSpacing * 2, 0 );
+		resumeButton.set_position( buttonSpacing, buttonSpacing );
+		optionsButton.set_position( resumeButton.x + resumeButton.width + buttonSpacing * 2, buttonSpacing );
+		saveButton.set_position( optionsButton.x + optionsButton.width + buttonSpacing * 2, buttonSpacing );
+		endButton.set_position( saveButton.x + saveButton.width + buttonSpacing * 2, buttonSpacing );
 		
         menus.pause.alignment = 'center';
         
