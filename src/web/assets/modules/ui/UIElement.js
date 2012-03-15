@@ -102,7 +102,7 @@
 		get : function () { return this.domElement.width(); },
 		set : function ( width ) {
 			
-			this.domElement.width( width );
+			this.domElement.width( Math.round( width ) );
 			
 		}
 	} );
@@ -111,7 +111,7 @@
 		get : function () { return this.domElement.height(); },
 		set : function ( height ) {
 			
-			this.domElement.height( height );
+			this.domElement.height( Math.round( height ) );
 		
 		}
 	} );
@@ -125,11 +125,11 @@
 	} );
 	
 	Object.defineProperty( _UIElement.Instance.prototype, 'outerWidth', { 
-		get : function () { return this.domElement.outerWidth(); }
+		get : function () { return this.width + this.spacingLeft + this.spacingRight; }
 	} );
 
 	Object.defineProperty( _UIElement.Instance.prototype, 'outerHeight', { 
-		get : function () { return this.domElement.outerHeight(); }
+		get : function () { return this.height + this.spacingTop + this.spacingBottom; }
 	} );
 	
 	Object.defineProperty( _UIElement.Instance.prototype, 'outerWidthHalf', { 
@@ -261,10 +261,15 @@
 		this.isVisible = Boolean( this.domElement.parents( "body" ).length );
 		this.signalOnVisible = shared.signals[ "on_display_" + this.id ] = new signals.Signal();
 		
-		// timing
+		// properties
 		
-		this.timeShow = parameters.timeShow || 500;
-        this.timeHide = parameters.timeHide || 250;
+		this.timeShow = main.type( parameters.timeShow ) === 'number' ? parameters.timeShow : 500;
+        this.timeHide = main.type( parameters.timeHide ) === 'number' ? parameters.timeHide : 250;
+		
+		this.spacingTop = parameters.spacingTop || parameters.spacingVertical || parameters.spacing || 0;
+		this.spacingBottom = parameters.spacingBottom || parameters.spacingVertical || parameters.spacing || 0;
+		this.spacingLeft = parameters.spacingLeft || parameters.spacingHorizontal || parameters.spacing || 0;
+		this.spacingRight = parameters.spacingRight || parameters.spacingHorizontal || parameters.spacing || 0;
 		
 		// position
 		
@@ -578,7 +583,7 @@
 		
 		this.apply_css( this.theme.enabled );
 		
-		this.theme.last = this.theme.enabled;
+		this.theme.stateLast = this.theme.enabled;
 		
 		for ( i = 0, l = this.children.length; i < l; i++) {
 			
@@ -601,7 +606,7 @@
 		
 		this.apply_css( this.theme.disabled );
 		
-		this.theme.last = this.theme.disabled;
+		this.theme.stateLast = this.theme.disabled;
 		
 		for ( i = 0, l = this.children.length; i < l; i++) {
 			

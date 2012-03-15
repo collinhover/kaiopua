@@ -30,6 +30,16 @@
 		
 	};
 	
+	_MathHelper.max_magnitude = function ( n1, n2 ) {
+		
+		var n1abs = Math.abs( n1 ),
+			n2abs = Math.abs( n2 ),
+			max = Math.max( n1abs, n2abs );
+		
+		return ( max === n1abs ) ? n1 : n2;
+		
+	};
+	
 	_MathHelper.round = function ( n, places ) {
 		
 		var dec = ( _MathHelper.is_number( places ) && places > 0 ) ? Math.pow( 10, places ) : 1;
@@ -47,6 +57,26 @@
 	_MathHelper.round_towards_zero = function ( n ) {
 		
 		return n < 0 ? Math.ceil( n ) : Math.floor( n );
+		
+	};
+	
+	_MathHelper.degree_between_180 = function ( n ) {
+		
+		n = n % 360;
+		
+		return ( n > 180 ) ? n - 360 : ( n < -180 ) ? n + 360 : n;
+		
+	};
+	
+	_MathHelper.degree_to_rad = function ( n ) {
+		
+		return n / 180 * Math.PI;
+		
+	};
+	
+	_MathHelper.rad_to_degree = function ( n ) {
+		
+		return n * Math.PI / 180;
 		
 	};
 	
@@ -143,6 +173,32 @@
 		}
 		
 		return matrix2dRotated;
+		
+	}
+	
+	_MathHelper.trig_table = function ( increment, degreeMin, degreeMax ) {
+		
+		var i, l,
+			rad,
+			table = {
+				sin: {},
+				cos: {}
+			};
+		
+		increment = _MathHelper.is_number( increment ) ? increment : 1;
+		degreeMin = _MathHelper.is_number( degreeMin ) ? degreeMin : -180;
+		degreeMax = _MathHelper.is_number( degreeMax ) ? degreeMax : 180;
+		
+		for ( i = degreeMin, l = degreeMax; i < l; i += increment ) {
+			
+			rad = _MathHelper.degree_to_rad( i );
+			
+			table.sin[ i ] = Math.sin( rad );
+			table.cos[ i ] = Math.cos( rad );
+			
+		}
+		
+		return table;
 		
 	}
 	

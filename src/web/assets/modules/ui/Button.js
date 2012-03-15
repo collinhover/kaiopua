@@ -203,7 +203,7 @@
 	
 	function leave ( e ) {
 			
-		this.apply_css( this.theme.last );
+		this.apply_css( this.theme.stateLast );
 		
 	}
 	
