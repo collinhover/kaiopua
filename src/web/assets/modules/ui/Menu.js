@@ -157,8 +157,12 @@
 			cw = child.outerWidth;
 			ch = child.outerHeight;
 			
-			widthMax = ( cw > widthMax ) ? cw : widthMax;
-			heightMax = ( ch > heightMax ) ? ch : heightMax;
+			if ( cw > widthMax ) {
+				widthMax = cw;
+			}
+			if ( ch > heightMax ) {
+				heightMax = ch;
+			}
 			
 			if ( circular === true ) {
 				
@@ -176,7 +180,8 @@
 			rwabs = Math.abs( rw );
 			rhabs = Math.abs( rh );
 			
-			child.set_position( xbound + child.spacingLeft, ybound + child.spacingTop );
+			child._x = xbound + child.spacingLeft;
+			child._y = ybound + child.spacingTop;
 			
 			xbound += rw;
 			ybound += rh;
@@ -191,7 +196,7 @@
 		widthTotal += widthMax - rwabs;
 		heightTotal += heightMax - rhabs;
 		
-		// set this width and height
+		// set this dimensions
 		
 		this.width = widthTotal + this.spacingLeft + this.spacingRight;
 		this.height = heightTotal + this.spacingTop + this.spacingBottom;
@@ -217,9 +222,144 @@
 		
 	}
 	
-	function arrange_circle () {
+	function arrange_circle ( degreeStart, degrees, radius, spaceBySize ) {
 		
+		var i, l,
+			degreesMax = 360 - ( 360 / this.children.length ),
+			radians,
+			thetaStart,
+			radiansPer,
+			radiansActual,
+			theta,
+			thetaSin,
+			thetaCos,
+			circumference = 0,
+			child,
+			cw, ch,
+			size,
+			xmax = 0, xmin = 0, 
+			ymax = 0, ymin = 0,
+			widthMax = 0,
+			heightMax = 0,
+			widthTotal,
+			heightTotal;
 		
+		thetaStart = main.type( degreeStart ) === 'number' ? _MathHelper.degree_to_rad( degreeStart % 360 ) : 0;
+		
+		if ( main.type( degrees ) !== 'number' ) {
+			
+			degrees = 360;
+			
+		}
+		
+		// add an additional subtending angle to degrees up to +/- 360, to ensure children end at expected degrees
+		
+		degrees = _MathHelper.clamp( degrees + ( degrees / (this.children.length - 1) ), -360, 360 );
+		
+		radians = _MathHelper.degree_to_rad( degrees );
+		
+		// if radius not passed, determine exact to fit all children
+		
+		if ( main.type( radius ) !== 'number' ) {
+			
+			radiansPer = radians / this.children.length;
+			
+			// find circumference from children
+			// each addition to circumference is ( radius based on current child size ) * ( radians per child )
+			// ( this assumes each child is roughly equal size, I think )
+			
+			for ( i = 0, l = this.children.length; i < l; i++ ) {
+				
+				child = this.children[ i ];
+				
+				circumference += ( Math.max( child.outerWidth, child.outerHeight ) / ( 2 * Math.sin( radiansPer / 2 ) ) ) * radiansPer;
+				
+			}
+			
+			radius = circumference / radians;
+			
+		}
+		else {
+			
+			circumference = 2 * Math.PI * radius;
+			
+		}
+		
+		// arrange all children in circle from theta start to theta end
+		
+		for ( i = 0, l = this.children.length; i < l; i++ ) {
+			
+			child = this.children[ i ];
+			
+			cw = child.outerWidth;
+			ch = child.outerHeight;
+			
+			if ( cw > widthMax ) {
+				widthMax = cw;
+			}
+			if ( ch > heightMax ) {
+				heightMax = ch;
+			}
+			
+			// get theta based on size
+			// size is based on biggest dimension (because we dont have theta yet)
+			
+			if ( spaceBySize === true ) {
+				
+				size = Math.max( cw, ch );
+				
+				theta = thetaStart + ( size / radius );
+				
+			}
+			// else space evenly
+			else {
+				
+				theta = thetaStart + radians * ( i / l );//( l - 1 ) );
+				
+			}
+			
+			thetaSin = Math.sin( theta );
+			thetaCos = Math.cos( theta );
+			
+			// temporarily directly modify child x/y
+			
+			child._x = radius * thetaCos;
+			child._y = radius * thetaSin;
+			
+			// max/min
+			
+			if ( child.x + cw > xmax ) {
+				xmax = child.x + cw;
+			}
+			if ( child.x < xmin ) {
+				xmin = child.x;
+			}
+			if ( child.y + ch > ymax ) {
+				ymax = child.y + ch;
+			}
+			if ( child.y < ymin ) {
+				ymin = child.y;
+			}
+			
+		}
+		
+		// set this dimensions
+		
+		widthTotal = xmax - xmin;
+		heightTotal = ymax - ymin;
+		
+		this.width = widthTotal + this.spacingLeft + this.spacingRight;
+		this.height = heightTotal + this.spacingTop + this.spacingBottom;
+		
+		// set positions of all children
+		
+		for ( i = 0, l = this.children.length; i < l; i++ ) {
+			
+			child = this.children[ i ];
+			
+			child.set_position( child.x + child.spacingLeft + this.spacingLeft - xmin, child.y + child.spacingTop + this.spacingTop - ymin );
+			
+		}
 		
 	}
 	

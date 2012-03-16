@@ -570,20 +570,21 @@
 		var startButton,
 			continueButton,
 			optionsButton,
-			buttonSize = 160;
+			buttonSize = 160,
+			buttonSpacing = 10;
         
         // init start menu
 		
         menus.start = new _Menu.Instance( {
             id: 'start_menu',
-			spacing: 10
+			spacing: buttonSpacing
         } );
 		
 		startButton = new _Button.Instance( {
             id: 'button_start',
 			text: 'Start',
 			width: buttonSize,
-			spacing: 10,
+			spacing: buttonSpacing,
 			circle: true,
             callback: function () {
                 start_game();
@@ -599,7 +600,7 @@
             id: 'button_continue',
 			text: 'Continue',
 			width: buttonSize,
-			spacing: 10,
+			spacing: buttonSpacing,
 			circle: true,
             callback: function () {},
 			context: this,
@@ -610,7 +611,7 @@
             id: 'button_options',
 			text: 'Options',
 			width: buttonSize,
-			spacing: 10,
+			spacing: buttonSpacing,
 			circle: true,
             callback: function () {},
 			context: this,
@@ -623,9 +624,22 @@
         menus.start.add( continueButton );
         menus.start.add( optionsButton );
 		
-		// arrange buttons in a line
+		// test buttons
+		/*for ( var i = 0; i < 6; i++ ) {
+			menus.start.add( new _Button.Instance( {
+				id: 'button_test',
+				text: 'test' + i,
+				width: buttonSize,
+				spacing: buttonSpacing,
+				circle: true,
+				callback: function () {},
+				context: this,
+				enabled: false
+			} ) );
+		}*/
+		// arrange buttons
 		
-		menus.start.arrange_line();
+		menus.start.arrange_circle( 180, -180 );
 		
         menus.start.alignment = 'center';
         
@@ -639,20 +653,21 @@
 			optionsButton,
 			saveButton,
 			endButton,
-			buttonSize = 160;
+			buttonSize = 160,
+			buttonSpacing = 10;
         
         // init menu
         
 		menus.pause = new _Menu.Instance( {
             id: 'pause_menu',
-			spacing: 10
+			spacing: buttonSpacing
         } );
         
         resumeButton = new _Button.Instance( {
             id: 'button_resume',
 			text: 'Resume',
 			width: buttonSize,
-			spacing: 10,
+			spacing: buttonSpacing,
 			circle: true, 
             callback: function () {
                 resume();
@@ -667,7 +682,7 @@
             id: 'button_options',
 			text: 'Options',
 			width: buttonSize,
-			spacing: 10,
+			spacing: buttonSpacing,
 			circle: true, 
             callback: function () {},
 			context: this,
@@ -677,7 +692,7 @@
             id: 'button_save',
 			text: 'Save',
 			width: buttonSize,
-			spacing: 10,
+			spacing: buttonSpacing,
 			circle: true, 
             callback: function () {},
 			context: this,
@@ -687,7 +702,7 @@
             id: 'button_end_game',
 			text: 'End Game',
 			width: buttonSize,
-			spacing: 10,
+			spacing: buttonSpacing,
 			circle: true, 
             callback: function () {
 				stop_game();
