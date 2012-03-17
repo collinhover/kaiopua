@@ -52,12 +52,37 @@
 		_Menu.Instance.prototype.constructor = _Menu.Instance;
 		_Menu.Instance.prototype.supr = _Button.Instance.prototype;
 		
+		_Menu.Instance.prototype.append_to = append_to;
+		
+		_Menu.Instance.prototype.open = open;
+		_Menu.Instance.prototype.close = close;
+		
+		_Menu.Instance.prototype.show_children = show_children;
+		_Menu.Instance.prototype.hide_children = hide_children;
+		
 		_Menu.Instance.prototype.arrange_line = arrange_line;
-		_Menu.Instance.prototype.arrange_grid = arrange_grid;
 		_Menu.Instance.prototype.arrange_circle = arrange_circle;
 		
 		_Menu.Instance.prototype.themes = {};
 		_Menu.Instance.prototype.themes.core = theme_core;
+		
+		Object.defineProperty( _Menu.Instance.prototype, 'isOpen', { 
+			get : function () { return this._isOpen; },
+			set : function ( state ) {
+				
+				if ( state === true ) {
+					
+					this.open();
+					
+				}
+				else {
+					
+					this.close();
+					
+				}
+				
+			}
+		} );
 		
 	}
 	
@@ -77,27 +102,159 @@
 		
 		parameters.text = parameters.image = undefined;
 		
+		parameters.pointerEventsIgnore = true;
+		
 		// prototype constructor
 		
 		_Button.Instance.call( this, parameters );
 		
-		// create new button for self
-		
-		if ( parameters.button instanceof _Button.Instance ) {
-			
-			this.button = parameters.button;
-		
-		}
-		else if ( main.type( parameters.button ) === 'object' ) {
-			
-			this.button = new _Button.Instance( parameters.button );
-			
-		}
-		
 		// remove button events from self
 		
 		this.domElement.off( '.btn' );
+		
+		// create new buttons for self
+		console.log( this.id, 'menu parameters', parameters);
+		// open
+		
+		if ( parameters.buttonOpen instanceof _Button.Instance ) {
+			
+			this.buttonOpen = parameters.buttonOpen;
+		
+		}
+		else if ( main.type( parameters.buttonOpen ) === 'object' ) {
+			
+			this.buttonOpen = new _Button.Instance( parameters.buttonOpen );
+			
+		}
+		
+		// close
+		
+		if ( parameters.buttonClose instanceof _Button.Instance ) {
+			
+			this.buttonClose = parameters.buttonClose;
+		
+		}
+		else if ( main.type( parameters.buttonClose ) === 'object' ) {
+			
+			this.buttonClose = new _Button.Instance( parameters.buttonClose );
+			
+		}
+		
+		// if no close or open buttons, open automatically
+		
+		if ( this.buttonOpen instanceof _Button.Instance === false || this.buttonClose instanceof _Button.Instance === false ) {
+			
+			this.open();
+			
+		}
+		
         
+	}
+	
+	/*===================================================
+    
+    children
+    
+    =====================================================*/
+	
+	function append_to () {
+		
+		// proto
+		
+		_Menu.Instance.prototype.supr.append_to.apply( this, arguments );
+		
+		// if closed remove all
+		
+		if ( this.isOpen !== true ) {
+			
+			this.close();
+			
+		}
+		
+	}
+	
+	/*===================================================
+    
+    open / close
+    
+    =====================================================*/
+	
+	function open () {
+		console.log( this.id, 'open!');
+		this._isOpen = true;
+			
+		this.show_children();
+		
+	}
+	
+	function close () {
+		
+		// only close if both open and close buttons are valid
+		
+		if ( this.buttonOpen instanceof _Button.Instance && this.buttonClose instanceof _Button.Instance ) {
+			console.log( this.id, 'close!');
+			this._isOpen = false;
+			
+			this.hide_children();
+			
+			//this.domElement.append( this.buttonOpen.domElement );
+			
+		}
+		
+	}
+	
+	/*===================================================
+    
+    show / hide children
+    
+    =====================================================*/
+	
+	function show_children ( time, opacity, callback, callbackContext ) {
+		
+		var i, l,
+			child;
+		
+		for ( i = 0, l = this.children.length; i < l; i++ ) {
+			
+			child = this.children[ i ];
+			
+			if ( child instanceof _UIElement.Instance ) {
+				
+				child.show( this, time, opacity, callback, callbackContext );
+				
+			}
+			else {
+				
+				this.show( this, time, opacity, callback, callbackContext, child );
+				
+			}
+			
+		}
+		
+	}
+	
+	function hide_children ( time, opacity, callback, callbackContext ) {
+		
+		var i, l,
+			child;
+		
+		for ( i = 0, l = this.children.length; i < l; i++ ) {
+			
+			child = this.children[ i ];
+			
+			if ( child instanceof _UIElement.Instance ) {
+				
+				child.hide( false, time, opacity, callback, callbackContext );
+				
+			}
+			else {
+				
+				this.hide( false, time, opacity, callback, callbackContext, child );
+				
+			}
+			
+		}
+		
 	}
 	
 	/*===================================================
@@ -106,14 +263,14 @@
     
     =====================================================*/
 	
-	function arrange_line ( degrees, circular ) {
+	function arrange_line ( degrees, circular, childrenPerLine, indexStart, widthTotal, heightTotal, bounds ) {
 		
-		var i, l,
+		var i, l, ib,
 			theta,
+			indexEnd,
 			child,
 			cw, ch,
 			rw, rh,
-			rwabs, rhabs,
 			thetaCos,
 			thetaSin,
 			thetaCosAbs,
@@ -121,20 +278,70 @@
 			thetaCosRnd,
 			thetaSinRnd,
 			x, y,
-			rx, ry,
-			widthMax = 0,
-			heightMax = 0,
-			widthTotal = 0,
-			heightTotal = 0,
-			xbound = 0,
-			ybound = 0;
+			xmax = 0, xmin = 0, 
+			ymax = 0, ymin = 0,
+			multiline = false;
 		
-		// handle theta, assumes passed in degrees
+		// theta passed in degrees
 		
-		theta = main.type( degrees ) === 'number' ? _MathHelper.degree_to_rad( _MathHelper.degree_between_180( degrees ) ) : 0;
-		
+		degrees = _MathHelper.degree_between_180( degrees );
+		theta = main.is_number( degrees ) ? _MathHelper.degree_to_rad( degrees ) : 0;
 		thetaCos = Math.cos(theta);
 		thetaSin = Math.sin(theta);
+		
+		// index to start arranging
+		
+		indexStart = _MathHelper.clamp( ( main.is_number( indexStart ) ? indexStart : 0 ), 0, this.children.length );
+		
+		// if children per line passed as a string suggesting vertical or horizontal preference
+		
+		if ( childrenPerLine === 'v' ) {
+			
+			childrenPerLine = Math.floor( Math.sqrt( this.children.length ) );
+			
+		}
+		else if ( childrenPerLine === 'h' ) {
+			
+			childrenPerLine = Math.ceil( Math.sqrt( this.children.length ) );
+			
+		}
+		
+		// if splitting into multiple lines
+		if ( main.is_number( childrenPerLine ) && childrenPerLine > 0 && childrenPerLine < this.children.length ) {
+			
+			multiline = true;
+			
+		}
+		// else all children on one line
+		else {
+			
+			childrenPerLine = this.children.length;
+			
+		}
+		
+		indexEnd = Math.min( this.children.length, indexStart + childrenPerLine );
+		
+		// dimensions and bounds
+		
+		widthTotal = main.is_number( widthTotal ) ? widthTotal : 0;
+		heightTotal = main.is_number( heightTotal ) ? heightTotal : 0;
+		
+		if ( main.type( bounds ) !== 'object' ) {
+			
+			bounds = {
+				x: [],
+				rx: [],
+				y: [],
+				ry: []
+			};
+			
+			for ( i = 0, l = childrenPerLine; i < l; i++ ) {
+				
+				bounds.x[ i ] = bounds.rx[ i ] = bounds.y[ i ] = bounds.ry[ i ] = 0;
+				
+			}
+			
+		}
 		
 		// if arranging for rectangular children
 		
@@ -150,19 +357,14 @@
 		
 		// arrange all children in line
 		
-		for ( i = 0, l = this.children.length; i < l; i++ ) {
+		for ( i = indexStart, l = indexEnd; i < l; i++ ) {
 			
 			child = this.children[ i ];
 			
 			cw = child.outerWidth;
 			ch = child.outerHeight;
 			
-			if ( cw > widthMax ) {
-				widthMax = cw;
-			}
-			if ( ch > heightMax ) {
-				heightMax = ch;
-			}
+			ib = i - indexStart;
 			
 			if ( circular === true ) {
 				
@@ -177,48 +379,76 @@
 				
 			}
 			
-			rwabs = Math.abs( rw );
-			rhabs = Math.abs( rh );
+			child._x = bounds.rx[ ib - 1 ] || bounds.rx[ ib ];
+			child._y = bounds.ry[ ib - 1 ] || bounds.ry[ ib ];
 			
-			child._x = xbound + child.spacingLeft;
-			child._y = ybound + child.spacingTop;
+			bounds.x[ ib ] = child.x + cw;
+			bounds.y[ ib ] = child.y + ch;
+			bounds.rx[ ib ] = child.x + rw;
+			bounds.ry[ ib ] = child.y + rh;
 			
-			xbound += rw;
-			ybound += rh;
+			// max/min
 			
-			widthTotal += rwabs;
-			heightTotal += rhabs;
+			if ( bounds.x[ ib ] > xmax ) {
+				xmax = bounds.x[ ib ];
+			}
+			if ( child.x < xmin ) {
+				xmin = child.x;
+			}
+			if ( bounds.y[ ib ] > ymax ) {
+				ymax = bounds.y[ ib ];
+			}
+			if ( child.y < ymin ) {
+				ymin = child.y;
+			}
 			
 		}
-		
-		// account for final child
-		
-		widthTotal += widthMax - rwabs;
-		heightTotal += heightMax - rhabs;
-		
 		// set this dimensions
+		
+		widthTotal = xmax - xmin;
+		heightTotal = ymax - ymin;
 		
 		this.width = widthTotal + this.spacingLeft + this.spacingRight;
 		this.height = heightTotal + this.spacingTop + this.spacingBottom;
 		
-		// shift all children based on x/y bounds
+		// set positions of children
 		
-		xbound = ( xbound < 0 ) ? xbound - rw : 0;
-		ybound = ( ybound < 0 ) ? ybound - rh : 0;
-		
-		for ( i = 0, l = this.children.length; i < l; i++ ) {
+		for ( i = indexStart, l = indexEnd; i < l; i++ ) {
 			
 			child = this.children[ i ];
 			
-			child.set_position( child.x + this.spacingLeft - xbound, child.y + this.spacingTop - ybound );
+			child.set_position( child.x + child.spacingLeft + this.spacingLeft - xmin, child.y + child.spacingTop + this.spacingTop - ymin );
 			
 		}
 		
-	}
-	
-	function arrange_grid ( m, n ) {
+		// if is multiline
 		
-		// m rows, n cols
+		if ( multiline === true && indexEnd < this.children.length ) {
+			
+			if ( ( degrees < 45 && degrees > -45 ) || degrees > 135 || degrees < -135 ) {
+				
+				for ( i = 0, l = childrenPerLine; i < l; i++ ) {
+					bounds.x[ i ] = 0;
+					bounds.y[ i ] = bounds.y[ 0 ];
+					bounds.rx[ i ] = 0;
+					bounds.ry[ i ] = bounds.y[ 0 ];	
+				}
+				
+			}
+			else {
+				
+				for ( i = 0, l = childrenPerLine; i < l; i++ ) {
+					bounds.x[ i ] = bounds.x[ 0 ];
+					bounds.y[ i ] = 0;
+					bounds.rx[ i ] = bounds.x[ 0 ];
+					bounds.ry[ i ] = 0;
+				}
+				
+			}
+			
+			this.arrange_line( degrees, circular, childrenPerLine, indexEnd, widthTotal, heightTotal, bounds );
+			
+		}
 		
 	}
 	
@@ -239,20 +469,20 @@
 			size,
 			xmax = 0, xmin = 0, 
 			ymax = 0, ymin = 0,
-			widthMax = 0,
-			heightMax = 0,
 			widthTotal,
 			heightTotal;
 		
-		thetaStart = main.type( degreeStart ) === 'number' ? _MathHelper.degree_to_rad( degreeStart % 360 ) : 0;
+		// default theta start to 180 degrees ( left side )
 		
-		if ( main.type( degrees ) !== 'number' ) {
+		thetaStart = main.is_number( degreeStart ) ? _MathHelper.degree_to_rad( degreeStart % 360 ) : Math.PI;
+		
+		if ( main.is_number( degrees ) !== true ) {
 			
 			degrees = 360;
 			
 		}
 		
-		// add an additional subtending angle to degrees up to +/- 360, to ensure children end at expected degrees
+		// add an additional subtending angle to degrees, up to +/- 360, to ensure children end at expected degrees
 		
 		degrees = _MathHelper.clamp( degrees + ( degrees / (this.children.length - 1) ), -360, 360 );
 		
@@ -260,7 +490,7 @@
 		
 		// if radius not passed, determine exact to fit all children
 		
-		if ( main.type( radius ) !== 'number' ) {
+		if ( main.is_number( radius ) !== true || radius === 0 ) {
 			
 			radiansPer = radians / this.children.length;
 			
@@ -285,6 +515,22 @@
 			
 		}
 		
+		// ensure circumference is positive
+		
+		if ( circumference < 0 ) {
+		
+			circumference = Math.abs( circumference );
+			
+		}
+		
+		// ensure radius is positive
+		
+		if ( radius < 0 ) {
+		
+			radius = Math.abs( radius );
+			
+		}
+		
 		// arrange all children in circle from theta start to theta end
 		
 		for ( i = 0, l = this.children.length; i < l; i++ ) {
@@ -293,13 +539,6 @@
 			
 			cw = child.outerWidth;
 			ch = child.outerHeight;
-			
-			if ( cw > widthMax ) {
-				widthMax = cw;
-			}
-			if ( ch > heightMax ) {
-				heightMax = ch;
-			}
 			
 			// get theta based on size
 			// size is based on biggest dimension (because we dont have theta yet)

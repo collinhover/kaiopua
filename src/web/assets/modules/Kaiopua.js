@@ -149,11 +149,13 @@ var KAIOPUA = (function (main) {
 		return Object.prototype.toString.call( target ) === '[object Array]';
 	};
 	
+	main.is_number = function ( n ) {
+		return isNaN( n ) === false && isFinite( n );
+	};
+	
 	main.is_image = function ( target ) {
-		
 		return ( typeof target !== 'undefined' && target.hasOwnProperty('nodeName') && target.nodeName.toLowerCase() === 'img' );
-		
-	}
+	};
 	
 	main.is_touch_event = function ( e ) {
 		

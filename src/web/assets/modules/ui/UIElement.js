@@ -58,8 +58,9 @@
 	
 	_UIElement.Instance.prototype.show = show;
 	_UIElement.Instance.prototype.hide = hide;
+	_UIElement.Instance.prototype.set_hidden = set_hidden;
 	
-	_UIElement.Instance.prototype.pointer_events_ignore = pointer_events_ignore;
+	_UIElement.Instance.prototype.set_pointer_events = set_pointer_events;
 	
 	_UIElement.Instance.prototype.make_fullwindow = make_fullwindow;
 	
@@ -73,7 +74,7 @@
 	
 	Object.defineProperty( _UIElement.Instance.prototype, 'parent', { 
 		get : function () { return this._parent; },
-		set : append_to
+		set : function ( parent ) { this.append_to( parent ); }
 	} );
 	
 	Object.defineProperty( _UIElement.Instance.prototype, 'enabledSelf', { 
@@ -182,9 +183,14 @@
 		}
 	} );
 	
-	Object.defineProperty( _UIElement.Instance.prototype, 'pointerEventsIgnore', { 
-		get : function () { return this._pointerEventsIgnore; },
-		set : pointer_events_ignore
+	Object.defineProperty( _UIElement.Instance.prototype, 'pointerEvents', { 
+		get : function () { return this._pointerEvents; },
+		set : function ( state ) { this.set_pointer_events( state ); }
+	});
+	
+	Object.defineProperty( _UIElement.Instance.prototype, 'hidden', { 
+		get : function () { return this._hidden; },
+		set : function ( state ) { this.set_hidden( state ); }
 	});
 	
 	/*===================================================
@@ -256,20 +262,24 @@
 		this.childrenByID = {};
         this.children = [];
 		
-		// on display
-		
-		this.isVisible = Boolean( this.domElement.parents( "body" ).length );
-		this.signalOnVisible = shared.signals[ "on_display_" + this.id ] = new signals.Signal();
-		
 		// properties
 		
-		this.timeShow = main.type( parameters.timeShow ) === 'number' ? parameters.timeShow : 500;
-        this.timeHide = main.type( parameters.timeHide ) === 'number' ? parameters.timeHide : 250;
+		this.timeShow = main.is_number( parameters.timeShow ) ? parameters.timeShow : 500;
+        this.timeHide = main.is_number( parameters.timeHide ) ? parameters.timeHide : 250;
 		
 		this.spacingTop = parameters.spacingTop || parameters.spacingVertical || parameters.spacing || 0;
 		this.spacingBottom = parameters.spacingBottom || parameters.spacingVertical || parameters.spacing || 0;
 		this.spacingLeft = parameters.spacingLeft || parameters.spacingHorizontal || parameters.spacing || 0;
 		this.spacingRight = parameters.spacingRight || parameters.spacingHorizontal || parameters.spacing || 0;
+		
+		this.pointerEventsOnlyWithChildren = parameters.pointerEventsOnlyWithChildren;
+		this.pointerEvents = this.pointerEventsWhileVisible = ( this.pointerEventsOnlyWithChildren === true ) ? true : parameters.pointerEvents;
+		
+		// on display
+		
+		this.hidden = false;
+		this.isVisible = Boolean( this.domElement.parents( "body" ).length );
+		this.signalOnVisible = shared.signals[ "on_display_" + this.id ] = new signals.Signal();
 		
 		// position
 		
@@ -278,12 +288,6 @@
 		// enable / disable
 		
 		this.enabled = ( typeof parameters.enabled === 'boolean' ? parameters.enabled : true );
-		
-		// initialize pointer events property
-		
-		this.pointerEventsOnlyWithChildren = parameters.pointerEventsOnlyWithChildren;
-		
-		this.pointerEventsIgnore = ( this.pointerEventsOnlyWithChildren === true ) ? false : parameters.pointerEventsIgnore;
 		
 		// width / height
 		
@@ -334,7 +338,7 @@
 			
 			child = children[ i ];
 			
-			if ( this.children.indexOf( child ) === -1 ) {
+			if ( typeof child !== 'undefined' && this.children.indexOf( child ) === -1 ) {
 				
 				this.children.push( child );
 				
@@ -764,71 +768,106 @@
     
     =====================================================*/
 	
-	function show ( parent, time, opacity, callback, callbackContext ) {
+	function show ( parent, time, opacity, callback, callbackContext, domElement ) {
 		
-		var me = this;
+		var me = this,
+			fadeCallback = function () { if ( typeof callback !== 'undefined' ) { callback.call( callbackContext, domElement || me ); } };
 		
-		if ( main.type( opacity ) !== 'number' || opacity <= 0 || opacity > 1 ) {
+		if ( main.is_number( opacity ) !== true || opacity <= 0 || opacity > 1 ) {
 			
 			opacity = 1;
 			
 		}
 		
-		if ( this.domElement.css( 'opacity' ) !== opacity ) {
+		// if dom element passed
+		
+		if ( domElement ) {
 			
-			time = main.type( time ) === 'number' ? time : this.timeShow;
+			domElement.stop( true ).fadeTo( time, opacity, fadeCallback );
 			
-			this.domElement.stop( true ).fadeTo( time, opacity, function () { on_show( me, callback, callbackContext ); } );
+		}
+		// else use own
+		else {
+			
+			// set hidden
+			
+			this.hidden = false;
+			
+			// show
+			
+			if ( this.domElement.css( 'opacity' ) !== opacity ) {
+				
+				time = main.is_number( time ) ? time : this.timeShow;
+				
+				this.domElement.stop( true ).fadeTo( time, opacity, fadeCallback );
+				
+			}
+			
+			// try appending
+			
+			this.parent = parent || this.parent || this.parentLast;
 			
 		}
 		
-		// try appending
-		
-		this.parent = parent || this.parent || this.parentLast;
-		
 	}
 	
-	function on_show ( uiElement, callback, callbackContext ) {
+	function hide ( remove, time, opacity, callback, callbackContext, domElement ) {
 		
-		if ( typeof callback !== 'undefined' ) {
-			
-			callback.call( callbackContext );
-			
-		}
+		var me = this,
+			fadeCallback = function () { if ( typeof callback !== 'undefined' ) { callback.call( callbackContext, domElement || me ); } if ( typeof domElement === 'undefined' && remove === true ) { me.parent = undefined; } };
 		
-	}
-	
-	function hide ( remove, time, opacity, callback, callbackContext ) {
-		
-		var me = this;
-		
-		if ( main.type( opacity ) !== 'number' || opacity < 0 || opacity >= 1 ) {
+		if ( main.is_number( opacity ) !== true || opacity < 0 || opacity >= 1 ) {
 			
 			opacity = 0;
 			
 		}
 		
-		if ( this.domElement.css( 'opacity' ) !== opacity ) {
+		// if dom element passed
+		
+		if ( domElement ) {
 			
-			time = main.type( time ) === 'number' ? time : this.timeHide;
+			domElement.stop( true ).fadeTo( time, opacity, fadeCallback );
 			
-			this.domElement.stop( true ).fadeTo( time, opacity, function () { on_hide( me, remove, callback, callbackContext ); } );
+		}
+		// else use own
+		else {
+			
+			// set hidden
+			
+			this.hidden = true;
+			
+			// hide
+			
+			if ( this.domElement.css( 'opacity' ) !== opacity ) {
+				
+				time = main.is_number( time ) ? time : this.timeHide;
+				
+				this.domElement.stop( true ).fadeTo( time, opacity, fadeCallback );
+				
+			}
 			
 		}
 		
 	}
 	
-	function on_hide ( uiElement, remove, callback, callbackContext ) {
+	function set_hidden ( state ) {
 		
-		if ( typeof callback !== 'undefined' ) {
+		if ( typeof state === 'boolean' && this.hidden !== state ) {
 			
-			callback.call( callbackContext );
+			this._hidden = state;
 			
-		}
-		
-		if ( remove === true ) {
-			
-			uiElement.parent = undefined;
+			if ( this.hidden === true ) {
+				
+				this.pointerEventsWhileVisible = this.pointerEvents;
+				
+				this.pointerEvents = true;
+				
+			}
+			else {
+				
+				this.pointerEvents = this.pointerEventsWhileVisible;
+				
+			}
 			
 		}
 		
@@ -840,34 +879,36 @@
     
     =====================================================*/
 	
-	function pointer_events_ignore ( state ) {
+	function set_pointer_events ( state ) {
 		
 		var me = this;
 		
-		if ( state === false ) {
+		if ( typeof state === 'boolean' && this.pointerEvents !== state ) {
 			
-			this._pointerEventsIgnore = false;
+			this._pointerEvents = state;
 			
-			// use pointer-events when available, easier and works better
-			
-			this.apply_css( 'pointer-events', 'none' );
-			
-			// fallback in-case browser does not support pointer-events property
-			// TODO: add actual support for mouse enter and leave, currently won't work
-			
-			this.domElement.on( 
-				'mousedown.pei touchstart.pei mouseup.pei touchend.pei mousemove.pei touchmove.pei mouseenter.pei touchenter.pei mouseleave.pei touchleave.pei mousewheel.pei click.pei', 
-				function ( e ) { on_pointer_event( me, e ); }
-			);
-			
-		}
-		else {
-			
-			this._pointerEventsIgnore = true;
-			
-			this.domElement.off( '.pei' );
-			
-			this.apply_css( 'pointer-events', 'auto' );
+			if ( this.pointerEvents === true ) {
+				
+				// use pointer-events when available, easier and works better
+				
+				this.apply_css( 'pointer-events', 'none' );
+				
+				// fallback in-case browser does not support pointer-events property
+				// TODO: add actual support for mouse enter and leave, currently won't work
+				
+				this.domElement.on( 
+					'mousedown.pei touchstart.pei mouseup.pei touchend.pei mousemove.pei touchmove.pei mouseenter.pei touchenter.pei mouseleave.pei touchleave.pei mousewheel.pei click.pei', 
+					function ( e ) { on_pointer_event( me, e ); }
+				);
+				
+			}
+			else {
+				
+				this.domElement.off( '.pei' );
+				
+				this.apply_css( 'pointer-events', 'auto' );
+				
+			}
 			
 		}
 		
@@ -877,15 +918,15 @@
 		
 		var opacity;
 		
-		if ( typeof e !== 'undefined' && uiElement.pointerEventsOnlyWithChildren !== true || uiElement.domElement.children().length === 0 ) {
+		if ( typeof e !== 'undefined' && ( uiElement.hidden === true || uiElement.pointerEventsOnlyWithChildren !== true || uiElement.domElement.children().length === 0 ) ) {
 			
 			opacity = uiElement.domElement.css( 'opacity' );
 			
-			uiElement.domElement.stop( true ).fadeTo( 0, 0 );
+			uiElement.domElement.stop( true ).hide();
 			
 			$( document.elementFromPoint( e.clientX, e.clientY ) ).trigger( e );
 			
-			uiElement.domElement.stop( true ).fadeTo( 0, opacity );
+			uiElement.domElement.stop( true ).show();
 			
 		}
 		

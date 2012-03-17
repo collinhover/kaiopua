@@ -202,35 +202,6 @@ a:hover, a:active {
     text-decoration: underline;
 }
 
-/* buttons
--------------------------*/
-
-.item_enabled:hover {
-    color: #222222;
-    background: #ffffff; /* Old browsers */
-	background: -moz-linear-gradient(top, #ffffff 30%, #dddddd 100%); /* FF3.6+ */
-	background: -webkit-gradient(linear, left top, left bottom, color-stop(30%,#ffffff), color-stop(100%,#dddddd)); /* Chrome,Safari4+ */
-	background: -webkit-linear-gradient(top, #ffffff 30%,#dddddd 100%); /* Chrome10+,Safari5.1+ */
-	background: -o-linear-gradient(top, #ffffff 30%,#dddddd 100%); /* Opera 11.10+ */
-	background: -ms-linear-gradient(top, #ffffff 30%,#dddddd 100%); /* IE10+ */
-	background: linear-gradient(top, #ffffff 30%,#dddddd 100%); /* W3C */
-	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#dddddd',GradientType=0 ); /* IE6-9 */
-}
-
-/*
-    background: #ffffff;
-    border: 1px solid #eeeeee;
-    border: 1px solid rgba(68, 68, 68, 0.75);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.25);
-    border-radius: 5px 5px 5px 5px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-    display: block-inline;
-    padding: 5px 10px 6px;
-    position: relative;
-    text-decoration: none;
-    text-shadow: 0 -1px 1px rgba(0, 0, 0, 0.25); 
-*/
-
 
 /* info panel 
 -------------------------*/

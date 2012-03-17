@@ -577,7 +577,21 @@
 		
         menus.start = new _Menu.Instance( {
             id: 'start_menu',
-			spacing: buttonSpacing
+			spacing: buttonSpacing,
+			buttonOpen: {
+				id: 'button_open',
+				text: 'OPEN',
+				width: buttonSize,
+				spacing: buttonSpacing,
+				circle: true
+			},
+			buttonClose: {
+				id: 'button_close',
+				text: 'X',
+				width: buttonSize,
+				spacing: buttonSpacing,
+				circle: true
+			}
         } );
 		
 		startButton = new _Button.Instance( {
@@ -625,7 +639,7 @@
         menus.start.add( optionsButton );
 		
 		// test buttons
-		/*for ( var i = 0; i < 6; i++ ) {
+		/*for ( var i = 0; i < 9; i++ ) {
 			menus.start.add( new _Button.Instance( {
 				id: 'button_test',
 				text: 'test' + i,
@@ -639,7 +653,8 @@
 		}*/
 		// arrange buttons
 		
-		menus.start.arrange_circle( 180, -180 );
+		menus.start.arrange_line();
+		//menus.start.arrange_circle( 180, -180 );
 		
         menus.start.alignment = 'center';
         
@@ -1337,7 +1352,7 @@
 		
 		timeDeltaMod = _MathHelper.round( timeDelta / shared.timeDeltaExpected, 2 );
 		
-		if ( _MathHelper.is_number( timeDeltaMod ) !== true ) {
+		if ( main.is_number( timeDeltaMod ) !== true ) {
 			
 			timeDeltaMod = 1;
 			

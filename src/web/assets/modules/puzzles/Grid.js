@@ -119,7 +119,7 @@
 		
 		// properties
 		
-		this.vertexDistanceMergeLimit = _MathHelper.is_number( parameters.vertexDistanceMergeLimit ) ? parameters.vertexDistanceMergeLimit : 5;
+		this.vertexDistanceMergeLimit = main.is_number( parameters.vertexDistanceMergeLimit ) ? parameters.vertexDistanceMergeLimit : 5;
 		
 		// store puzzle reference
 		

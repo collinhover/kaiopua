@@ -663,7 +663,7 @@
 			
 			// test if is number
 			
-			if ( _MathHelper.is_number(numberTest) ) {
+			if ( main.is_number(numberTest) ) {
 				
 				nameParsed.name = name.substr( 0, splitIndex );
 				
@@ -840,7 +840,7 @@
 			
 			// duration
 			
-			if ( _MathHelper.is_number( parameters.duration ) && ( parameters.duration / info.morphsMap.length ) > durationPerFrameMinimum && info.durationOriginal !== parameters.duration ) {
+			if ( main.is_number( parameters.duration ) && ( parameters.duration / info.morphsMap.length ) > durationPerFrameMinimum && info.durationOriginal !== parameters.duration ) {
 				
 				durationNew = parameters.duration;
 				
