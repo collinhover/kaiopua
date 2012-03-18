@@ -52,6 +52,7 @@
 		_Button.Instance.prototype.enter = enter;
 		_Button.Instance.prototype.leave = leave;
 		_Button.Instance.prototype.trigger = trigger;
+		_Button.Instance.prototype.cooldown = cooldown;
 		
 		_Button.Instance.prototype.themes = {};
 		_Button.Instance.prototype.themes.core = theme_core;
@@ -133,7 +134,9 @@
 		
 		if ( this.image instanceof _UIElement.Instance ) {
 			
-			this.image.alignOnce( parameters.imageAlignment || 'center' );
+			this.image.pointerEvents = false;
+			
+			this.image.align_once( parameters.imageAlignment || 'center' );
 			
 			this.add( this.image );
 			
@@ -143,7 +146,9 @@
 		
 		if ( this.text instanceof _UIElement.Instance && ( this.image instanceof _UIElement.Instance === false || parameters.textWithImage === true ) ) {
 			
-			this.text.alignOnce( parameters.textAlignment || 'center' );
+			this.text.pointerEvents = false;
+			
+			this.text.align_once( parameters.textAlignment || 'center' );
 			
 			this.add( this.text );
 			
@@ -165,16 +170,25 @@
 		
 		this.bubble = ( typeof parameters.bubble === 'boolean' ? parameters.bubble : true );
 		
+		// cooldown
+		
+		this.timeCooldown = main.is_number( parameters.timeCooldown ) ? parameters.timeCooldown : 100;
+		
 		// parent
 		
 		this.parent = undefined;
 		
-		// form
+		// form, default to rectangle
 		
 		if ( parameters.circle === true ) {
 			
 			this.make_circle();
 		
+		}
+		else {
+			
+			this.make_rectangle();
+			
 		}
 		
 		// events
@@ -215,7 +229,9 @@
 	
 	function trigger ( e ) {
 		
-		if ( this.enabled === true && typeof this.callback !== 'undefined' ) {
+		var me = this;
+		
+		if ( typeof this.callback !== 'undefined' && this.enabled === true && this.hidden !== true && this.isVisible === true ) {
 			
 			this.callback.apply( this.context, this.data );
 			
@@ -226,6 +242,18 @@
 			e.preventDefault();
 			e.stopPropagation();
 			return false;
+			
+		}
+		
+	}
+	
+	function cooldown () {
+		
+		if ( this.timeCooldown > 0 ) {
+			
+			this.disable( false );
+			
+			requestTimeout( function () { me.enable(); }, this.timeCooldown );
 			
 		}
 		
@@ -261,6 +289,19 @@
 	}
 	
 	function make_rectangle () {
+		
+		// if either dimension is not set
+		
+		if ( this.width !== 0  && this.height === 0 ) {
+			
+			this.height = this.width;
+			
+		}
+		else if ( this.width === 0  && this.height !== 0 ) {
+			
+			this.width = this.height;
+			
+		}
 		
 		// set radius to base
 		

@@ -31,7 +31,7 @@
 		camRotationBaseQ,
 		camRotationOffset,
 		camRotationOffsetQ,
-        mouse = { 
+        viewShift = { 
             x: 0, 
             y: 0,
             rx: 0,
@@ -210,14 +210,15 @@
     
     function on_mouse_moved ( e ) {
         
-        var pctX = ( shared.mice[ e.identifier ].x / shared.screenWidth ),
-            pctY = ( shared.mice[ e.identifier ].y / shared.screenHeight );
+        var mouse = main.get_mouse( e ),
+			pctX = ( mouse.x / shared.screenWidth ),
+            pctY = ( mouse.y / shared.screenHeight );
         
-        mouse.x = pctX * mouse.rangeTransMaxX + (1 - pctX) * mouse.rangeTransMinX;
-        mouse.y = pctY * mouse.rangeTransMaxY + (1 - pctY) * mouse.rangeTransMinY;
+        viewShift.x = pctX * viewShift.rangeTransMaxX + (1 - pctX) * viewShift.rangeTransMinX;
+        viewShift.y = pctY * viewShift.rangeTransMaxY + (1 - pctY) * viewShift.rangeTransMinY;
         
-        mouse.rx = (pctY)* mouse.rangeRotMaxX + (1 - pctY) * mouse.rangeRotMinX;
-        mouse.ry = (1 - pctX) * mouse.rangeRotMaxY + (pctX) * mouse.rangeRotMinY;
+        viewShift.rx = (pctY)* viewShift.rangeRotMaxX + (1 - pctY) * viewShift.rangeRotMinX;
+        viewShift.ry = (1 - pctX) * viewShift.rangeRotMaxY + (pctX) * viewShift.rangeRotMinY;
         
     }
     
@@ -308,11 +309,11 @@
     
     function update ( timeDelta ) {
         
-        camera.position.z += (  mouse.x - camera.position.z ) * mouse.speedTransX;
-        camera.position.y += ( -mouse.y - camera.position.y ) * mouse.speedTransY;
+        camera.position.z += (  viewShift.x - camera.position.z ) * viewShift.speedTransX;
+        camera.position.y += ( -viewShift.y - camera.position.y ) * viewShift.speedTransY;
         
-        camRotationOffset.z += ( mouse.rx - camRotationOffset.z ) * mouse.speedRotX;
-        camRotationOffset.y += ( mouse.ry - camRotationOffset.y ) * mouse.speedRotY;
+        camRotationOffset.z += ( viewShift.rx - camRotationOffset.z ) * viewShift.speedRotX;
+        camRotationOffset.y += ( viewShift.ry - camRotationOffset.y ) * viewShift.speedRotY;
 		
 		// update rotation
 		

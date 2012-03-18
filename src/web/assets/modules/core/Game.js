@@ -334,16 +334,17 @@
 		
 		containerOverlayAll = new _UIElement.Instance( {
 			id: 'game_overlay_all',
-			pointerEventsOnlyWithChildren: true,
+			pointerEvents: false,
 			fullwindow: true
         });
 		containerOverlayDisplay = new _UIElement.Instance( {
 			id: 'game_overlay_display',
-			pointerEventsOnlyWithChildren: true,
+			pointerEvents: false,
 			fullwindow: true
         });
 		containerUI = new _UIElement.Instance( {
 			id: 'game_ui',
+			pointerEvents: false,
 			fullwindow: true
         });
 		containerDisplay = new _UIElement.Instance( {
@@ -576,22 +577,8 @@
         // init start menu
 		
         menus.start = new _Menu.Instance( {
-            id: 'start_menu',
-			spacing: buttonSpacing,
-			buttonOpen: {
-				id: 'button_open',
-				text: 'OPEN',
-				width: buttonSize,
-				spacing: buttonSpacing,
-				circle: true
-			},
-			buttonClose: {
-				id: 'button_close',
-				text: 'X',
-				width: buttonSize,
-				spacing: buttonSpacing,
-				circle: true
-			}
+            id: 'menu_start',
+			spacing: buttonSpacing
         } );
 		
 		startButton = new _Button.Instance( {
@@ -638,24 +625,6 @@
         menus.start.add( continueButton );
         menus.start.add( optionsButton );
 		
-		// test buttons
-		/*for ( var i = 0; i < 9; i++ ) {
-			menus.start.add( new _Button.Instance( {
-				id: 'button_test',
-				text: 'test' + i,
-				width: buttonSize,
-				spacing: buttonSpacing,
-				circle: true,
-				callback: function () {},
-				context: this,
-				enabled: false
-			} ) );
-		}*/
-		// arrange buttons
-		
-		menus.start.arrange_line();
-		//menus.start.arrange_circle( 180, -180 );
-		
         menus.start.alignment = 'center';
         
         menus.start.hide( true, 0 );
@@ -674,7 +643,7 @@
         // init menu
         
 		menus.pause = new _Menu.Instance( {
-            id: 'pause_menu',
+            id: 'menu_pause',
 			spacing: buttonSpacing
         } );
         
@@ -731,10 +700,6 @@
         menus.pause.add( optionsButton );
         menus.pause.add( saveButton );
 		menus.pause.add( endButton );
-		
-		// arrange buttons in a line
-		
-		menus.pause.arrange_line();
 		
         menus.pause.alignment = 'center';
         
@@ -1210,7 +1175,7 @@
     =====================================================*/
     
     function start_game () {
-		
+		console.log('start game');
 		// assets
 		
 		_Physics = main.get_asset_data( 'assets/modules/core/Physics.js' );
@@ -1372,21 +1337,27 @@
 			
 			shared.signals.update.dispatch( timeDelta, timeDeltaMod );
 			
+			// have camera bg mimic camera rotation
+			
+			cameraBG.quaternion.copy( camera.quaternion );
+			
+			// finish frame
+			
+			render();
+			
 		}
 		
-		// have camera bg mimic camera rotation
+    }
+	
+	function render() {
 		
-		cameraBG.quaternion.copy( camera.quaternion );
+		renderer.setViewport( 0, 0, shared.screenWidth, shared.screenHeight );
 		
-		// render
-        
-        renderer.setViewport( 0, 0, shared.screenWidth, shared.screenHeight );
-
         renderer.clear();
         
 		renderComposer.render();
 		
-    }
+	}
     
     function resize( W, H ) {
 		
@@ -1412,6 +1383,10 @@
 		// composer
 		
         renderComposer.reset();
+		
+		// re-render
+		
+		render();
         
     }
 	

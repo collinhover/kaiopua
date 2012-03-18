@@ -169,6 +169,16 @@ var KAIOPUA = (function (main) {
 	
 	main.get_mouse = function ( parameters, allowNew ) {
 		
+		return mouse = shared.mice[ 0 ] = shared.mice[ 0 ] || { 
+			x: 0,
+			lx: 0,
+			y: 0,
+			ly: 0,
+			down: false 
+		};
+		
+		parameters = parameters || {};
+		
 		var id = parameters.identifier = ( shared.multitouch === true && parameters.identifier ) ? parameters.identifier : 0,
 			mouse;
 		

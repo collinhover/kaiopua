@@ -36,6 +36,40 @@
 	_UIElement.str_to_camel = str_to_camel;
 	_UIElement.str_from_camel = str_from_camel;
 	
+	// css special cases
+	
+	_UIElement.cssSpecialCases = {};
+	
+	_UIElement.cssSpecialCases.pointerEvents = _UIElement.supported_css_property( 'pointer-events' );
+	_UIElement.cssSpecialCases.lineargradient = ( function () {
+		
+		// get correct linear gradient value name
+		
+		var test = document.createElement('div'),
+			prefixes = ' -webkit- -moz- -o- -ms- -khtml- '.split(' '),
+			strBGImg = 'background-image:',
+			strLinGrad = 'linear-gradient',
+			strGradVal = '(left top,#9f9, white);',
+			strStyle,
+			index,
+			strPropertyName = strLinGrad;
+
+		test.style.cssText = (strBGImg + prefixes.join( ( strLinGrad + strGradVal ) + strBGImg ) ).slice( 0, -strBGImg.length );
+		
+		strStyle = test.style.backgroundImage.toString();
+		
+		index = strStyle.indexOf( strLinGrad );
+		
+		if ( index !== -1 ) {
+			
+			strPropertyName = strStyle.substr( 0, index + strLinGrad.length );
+			
+		}
+		
+		return strPropertyName;
+		
+	} () );
+	console.log( "_UIElement.cssSpecialCases", _UIElement.cssSpecialCases );
 	// instance
 	
 	_UIElement.Instance = UIElement;
@@ -53,14 +87,17 @@
 	_UIElement.Instance.prototype.disable_visual = disable_visual;
 	
 	_UIElement.Instance.prototype.set_position = set_position;
-	_UIElement.Instance.prototype.alignOnce = alignOnce;
 	_UIElement.Instance.prototype.align = align;
+	_UIElement.Instance.prototype.align_once = align_once;
 	
 	_UIElement.Instance.prototype.show = show;
 	_UIElement.Instance.prototype.hide = hide;
-	_UIElement.Instance.prototype.set_hidden = set_hidden;
 	
-	_UIElement.Instance.prototype.set_pointer_events = set_pointer_events;
+	_UIElement.Instance.prototype.show_children = show_children;
+	_UIElement.Instance.prototype.hide_children = hide_children;
+	_UIElement.Instance.prototype.show_hide_children_exchange = show_hide_children_exchange;
+	_UIElement.Instance.prototype.child_showing = child_showing;
+	_UIElement.Instance.prototype.child_hidden = child_hidden;
 	
 	_UIElement.Instance.prototype.make_fullwindow = make_fullwindow;
 	
@@ -82,7 +119,7 @@
 	} );
 	
 	Object.defineProperty( _UIElement.Instance.prototype, 'enabled', { 
-		get : function () { return ( this._enabled !== false && this.parent instanceof _UIElement.Instance ? this.parent.enabled : this._enabled ); },
+		get : function () { return ( this._enabledOverride === false ? this._enabledOverride : ( this.enabledSelf !== false && this.parent instanceof _UIElement.Instance ? this.parent.enabled : this.enabledSelf ) ); },
 		set : function ( state ) {
 			
 			if ( state === true ) {
@@ -185,12 +222,98 @@
 	
 	Object.defineProperty( _UIElement.Instance.prototype, 'pointerEvents', { 
 		get : function () { return this._pointerEvents; },
-		set : function ( state ) { this.set_pointer_events( state ); }
+		set : function ( state ) {
+			
+			var me = this;
+			
+			if ( typeof state === 'boolean' && ( this.hasOwnProperty( '_pointerEvents' ) !== true || this.pointerEvents !== state ) ) {
+				
+				this._pointerEvents = state;
+				
+				if ( this.pointerEvents === false ) {
+					
+					// use native pointer-events when available
+					
+					if ( _UIElement.cssSpecialCases.pointerEvents ) {
+						
+						this.apply_css( _UIElement.cssSpecialCases.pointerEvents, 'none' );
+						
+					}
+					else {
+						
+						// fallback in-case browser does not support pointer-events property
+						// this method is incredibly slow, as it has to hide domElement, retrigger event to find what is under, then show again
+						
+						this.domElement.on( 
+							'mousedown.pe touchstart.pe mouseup.pe touchend.pe click.pe mouseenter.pe touchenter.pe mouseleave.pe touchleave.pe', 
+							function ( e ) { on_pointer_event( me, e ); }
+						);
+						
+					}
+					
+				}
+				else {
+					
+					// use native pointer-events when available
+					
+					if ( _UIElement.cssSpecialCases.pointerEvents ) {
+						
+						this.apply_css( _UIElement.cssSpecialCases.pointerEvents, 'auto' );
+						
+					}
+					else {
+					
+						this.domElement.off( '.pe' );
+					
+					}
+					
+				}
+				
+			}
+			
+		}
+		
 	});
 	
 	Object.defineProperty( _UIElement.Instance.prototype, 'hidden', { 
 		get : function () { return this._hidden; },
-		set : function ( state ) { this.set_hidden( state ); }
+		set : function ( state ) {
+			
+			if ( typeof state === 'boolean' && ( this.hasOwnProperty( '_hidden' ) === false || this.hidden !== state ) ) {
+				
+				this._hidden = state;
+				
+				// hidden
+				if ( this.hidden === true ) {
+					
+					if ( this.parent instanceof _UIElement.Instance ) {
+						
+						this.parent.child_hidden( this );
+						
+					}
+					
+					this.pointerEventsWhileVisible = this.pointerEvents;
+					
+					this.pointerEvents = false;
+					
+				}
+				// showing
+				else {
+					
+					if ( this.parent instanceof _UIElement.Instance ) {
+						
+						this.parent.child_showing( this );
+						
+					}
+					
+					this.pointerEvents = this.pointerEventsWhileVisible;
+					
+				}
+				
+			}
+			
+		}
+		
 	});
 	
 	/*===================================================
@@ -261,6 +384,8 @@
 		
 		this.childrenByID = {};
         this.children = [];
+		this.childrenShowing = [];
+		this.childrenHidden = [];
 		
 		// properties
 		
@@ -272,8 +397,7 @@
 		this.spacingLeft = parameters.spacingLeft || parameters.spacingHorizontal || parameters.spacing || 0;
 		this.spacingRight = parameters.spacingRight || parameters.spacingHorizontal || parameters.spacing || 0;
 		
-		this.pointerEventsOnlyWithChildren = parameters.pointerEventsOnlyWithChildren;
-		this.pointerEvents = this.pointerEventsWhileVisible = ( this.pointerEventsOnlyWithChildren === true ) ? true : parameters.pointerEvents;
+		this.pointerEvents = this.pointerEventsWhileVisible = ( typeof parameters.pointerEvents === 'boolean' ) ? parameters.pointerEvents : true;
 		
 		// on display
 		
@@ -338,19 +462,15 @@
 			
 			child = children[ i ];
 			
-			if ( typeof child !== 'undefined' && this.children.indexOf( child ) === -1 ) {
+			if ( child instanceof _UIElement.Instance && this.children.indexOf( child ) === -1 ) {
 				
 				this.children.push( child );
 				
-				if ( child instanceof _UIElement.Instance ) {
+				this.childrenByID[ child.id ] = child;
+				
+				if ( child.parent !== this ) {
 					
-					this.childrenByID[ child.id ] = child;
-					
-					if ( child.parent !== this ) {
-						
-						child.parent = this;
-						
-					}
+					child.parent = this;
 					
 				}
 				
@@ -380,15 +500,31 @@
 				
 				this.children.splice( index, 1 );
 				
-				if ( child instanceof _UIElement.Instance ) {
+				delete this.childrenByID[ child.id ];
+				
+				// if showing
+				
+				index = this.childrenShowing.indexOf( child );
+				
+				if ( index !== -1 ) {
 					
-					delete this.childrenByID[ child.id ];
+					this.childrenShowing.splice( index, 1 );
 					
-					if ( child.parent === this ) {
-						
-						child.parent = undefined;
-						
-					}
+				}
+				
+				// if hidden
+				
+				index = this.childrenHidden.indexOf( child );
+				
+				if ( index !== -1 ) {
+					
+					this.childrenHidden.splice( index, 1 );
+					
+				}
+				
+				if ( child.parent === this ) {
+					
+					child.parent = undefined;
 					
 				}
 				
@@ -436,6 +572,19 @@
 				
 			}
 			
+			// shift children to hidden or showing lists
+			
+			if ( this.hidden === true ) {
+				
+				this.parent.child_hidden( this );
+				
+			}
+			else {
+				
+				this.parent.child_showing( this );
+				
+			}
+			
 			// get parent dom element
 			
 			domElement = this.parent.domElement;
@@ -459,23 +608,21 @@
 			
 			this.isVisible = ( typeof visible === 'boolean' ? visible : Boolean( domElement.parents( "body" ).length ) );
 			
-			// set all children correct parent
+			// if visible
 			
-			for ( i = 0, l = this.children.length; i < l; i++ ) {
+			if ( this.isVisible ) {
 				
-				child = this.children[ i ];
+				// set all children correct parent
 				
-				if ( child instanceof _UIElement.Instance ) {
+				for ( i = 0, l = this.children.length; i < l; i++ ) {
+					
+					child = this.children[ i ];
 					
 					child.append_to( this, this.isVisible );
 					
 				}
 				
-			}
-			
-			// dispatch on display signal
-			
-			if ( this.isVisible ) {
+				// dispatch visible signal
 				
 				this.signalOnVisible.dispatch();
 				
@@ -593,7 +740,7 @@
 			
 			child = this.children[ i ];
 			
-			if ( child instanceof _UIElement.Instance && child.enabledSelf === true ) {
+			if ( child.enabledSelf === true ) {
 				
 				child.enable_visual();
 				
@@ -616,11 +763,7 @@
 			
 			child = this.children[ i ];
 			
-			if ( child instanceof _UIElement.Instance ) {
-				
-				child.disable_visual();
-				
-			}
+			child.disable_visual();
 			
 		}
 		
@@ -650,7 +793,102 @@
 		
 	}
 	
-	function alignOnce ( alignment ) {
+	function align () {
+		
+		var parent,
+			w, h;
+		
+		// if has alignment
+		
+		if ( typeof this.alignment === 'string' ) {
+			
+			// if on display
+			
+			if ( this.isVisible ) {
+				
+				// get basic width and height of parent
+				
+				parent = this.domElement.parent();
+				
+				if ( parent.length ) {
+					
+					w = parent.width();
+					h = parent.height();
+					
+				}
+				else {
+					
+					w = shared.screenWidth;
+					h = shared.screenHeight;
+					
+				}
+				
+				// align by type
+				
+				if ( this.alignment === 'center' ) {
+					
+					this.set_position( w * 0.5 - this.widthHalf, h * 0.5 - this.heightHalf );
+					
+				}
+				else if ( this.alignment === 'bottomcenter' ) {
+					
+					this.set_position( w * 0.5 - this.widthHalf, h - this.height );
+					
+				}
+				else if ( this.alignment === 'topcenter' ) {
+					
+					this.set_position( w * 0.5 - this.widthHalf, 0 );
+					
+				}
+				else if ( this.alignment === 'leftcenter' ) {
+					
+					this.set_position( 0, h * 0.5 - this.heightHalf );
+					
+				}
+				else if ( this.alignment === 'rightcenter' ) {
+					
+					this.set_position( w - this.width, h * 0.5 - this.heightHalf );
+					
+				}
+				else if ( this.alignment === 'bottomright' ) {
+					
+					this.set_position( w - this.width, h - this.height );
+					
+				}
+				else if ( this.alignment === 'bottomleft' ) {
+					
+					this.set_position( 0, h - this.height );
+					
+				}
+				else if ( this.alignment === 'topright' ) {
+					
+					this.set_position( w - this.width, 0 );
+					
+				}
+				else if ( this.alignment === 'topleft' ) {
+					
+					this.set_position( 0, 0 );
+					
+				}
+				// invalid type
+				else {
+					
+					this.alignment = false;
+					
+				}
+				
+			}
+			else {
+				
+				this.signalOnVisible.addOnce( this.align, this );
+				
+			}
+			
+		}
+		
+	}
+	
+	function align_once ( alignment ) {
 		
 		if ( this.isVisible ) {
 			
@@ -673,105 +911,17 @@
 		
 	}
 	
-	function align () {
-		
-		var parent,
-			w, h;
-		
-		// if on display
-		
-		if ( this.isVisible ) {
-			
-			// get basic width and height of parent
-			
-			parent = this.domElement.parent();
-			
-			if ( parent.length ) {
-				
-				w = parent.width();
-				h = parent.height();
-				
-			}
-			else {
-				
-				w = shared.screenWidth;
-				h = shared.screenHeight;
-				
-			}
-			
-			// align by type
-			
-			if ( this.alignment === 'center' ) {
-				
-				this.set_position( w * 0.5 - this.widthHalf, h * 0.5 - this.heightHalf );
-				
-			}
-			else if ( this.alignment === 'bottomcenter' ) {
-				
-				this.set_position( w * 0.5 - this.widthHalf, h - this.height );
-				
-			}
-			else if ( this.alignment === 'topcenter' ) {
-				
-				this.set_position( w * 0.5 - this.widthHalf, 0 );
-				
-			}
-			else if ( this.alignment === 'leftcenter' ) {
-				
-				this.set_position( 0, h * 0.5 - this.heightHalf );
-				
-			}
-			else if ( this.alignment === 'rightcenter' ) {
-				
-				this.set_position( w - this.width, h * 0.5 - this.heightHalf );
-				
-			}
-			else if ( this.alignment === 'bottomright' ) {
-				
-				this.set_position( w - this.width, h - this.height );
-				
-			}
-			else if ( this.alignment === 'bottomleft' ) {
-				
-				this.set_position( 0, h - this.height );
-				
-			}
-			else if ( this.alignment === 'topright' ) {
-				
-				this.set_position( w - this.width, 0 );
-				
-			}
-			else if ( this.alignment === 'topleft' ) {
-				
-				this.set_position( 0, 0 );
-				
-			}
-			// invalid type
-			else {
-				
-				this.alignment = false;
-				
-			}
-			
-		}
-		else {
-			
-			this.signalOnVisible.addOnce( this.align, this );
-			
-		}
-		
-	}
-	
 	/*===================================================
     
-    show / hide
+    show / hide self
     
     =====================================================*/
 	
 	function show ( parent, time, opacity, callback, callbackContext, domElement ) {
 		
 		var me = this,
-			fadeCallback = function () { if ( typeof callback !== 'undefined' ) { callback.call( callbackContext, domElement || me ); } };
+			index,
+			fadeCallback = function () { if ( typeof callback !== 'undefined' ) { callback.call( callbackContext ); } };
 		
 		if ( main.is_number( opacity ) !== true || opacity <= 0 || opacity > 1 ) {
 			
@@ -789,9 +939,17 @@
 		// else use own
 		else {
 			
-			// set hidden
+			// try appending
 			
+			this.parent = parent || this.parent || this.parentLast;
+			
+			// set hidden
+				
 			this.hidden = false;
+			
+			// override enabled
+			
+			this._enabledOverride = true;
 			
 			// show
 			
@@ -802,10 +960,11 @@
 				this.domElement.stop( true ).fadeTo( time, opacity, fadeCallback );
 				
 			}
-			
-			// try appending
-			
-			this.parent = parent || this.parent || this.parentLast;
+			else {
+				
+				fadeCallback();
+				
+			}
 			
 		}
 		
@@ -813,8 +972,7 @@
 	
 	function hide ( remove, time, opacity, callback, callbackContext, domElement ) {
 		
-		var me = this,
-			fadeCallback = function () { if ( typeof callback !== 'undefined' ) { callback.call( callbackContext, domElement || me ); } if ( typeof domElement === 'undefined' && remove === true ) { me.parent = undefined; } };
+		var me = this;
 		
 		if ( main.is_number( opacity ) !== true || opacity < 0 || opacity >= 1 ) {
 			
@@ -826,15 +984,15 @@
 		
 		if ( domElement ) {
 			
-			domElement.stop( true ).fadeTo( time, opacity, fadeCallback );
+			domElement.stop( true ).fadeTo( time, opacity, function () { on_hidden( domElement, callback, callbackContext, remove ); } );
 			
 		}
 		// else use own
 		else {
 			
-			// set hidden
+			// override enabled
 			
-			this.hidden = true;
+			this._enabledOverride = false;
 			
 			// hide
 			
@@ -842,7 +1000,12 @@
 				
 				time = main.is_number( time ) ? time : this.timeHide;
 				
-				this.domElement.stop( true ).fadeTo( time, opacity, fadeCallback );
+				this.domElement.stop( true ).fadeTo( time, opacity, function () { on_hidden( me, callback, callbackContext, remove ); } );
+				
+			}
+			else {
+				
+				on_hidden( this, callback, callbackContext, remove );
 				
 			}
 			
@@ -850,22 +1013,135 @@
 		
 	}
 	
-	function set_hidden ( state ) {
+	function on_hidden ( hideTarget, callback, callbackContext, remove ) {
 		
-		if ( typeof state === 'boolean' && this.hidden !== state ) {
+		if ( typeof callback !== 'undefined' ) {
 			
-			this._hidden = state;
+			callback.call( callbackContext );
 			
-			if ( this.hidden === true ) {
+		}
+		
+		if ( hideTarget instanceof _UIElement.Instance ) {
+			
+			hideTarget.hidden = true;
+			
+			if ( remove === true ) {
 				
-				this.pointerEventsWhileVisible = this.pointerEvents;
-				
-				this.pointerEvents = true;
+				hideTarget.parent = undefined;
 				
 			}
-			else {
+			
+		}
+	}
+	
+	/*===================================================
+    
+    show / hide children
+    
+    =====================================================*/
+	
+	function show_children ( children, time, opacity, callback, callbackContext ) {
+		
+		var i, l,
+			child;
+		
+		// make copy of children passed
+		
+		children = ( main.type( children ) === 'array' ? children : this.childrenHidden ).slice( 0 );
+		
+		for ( i = 0, l = children.length; i < l; i++ ) {
+			
+			child = children[ i ];
+			
+			child.show( this, time, opacity, callback, callbackContext );
+			
+		}
+		
+	}
+	
+	function hide_children ( children, time, opacity, callback, callbackContext ) {
+		
+		var i, l,
+			child;
+		
+		// make copy of children passed
+		
+		children = ( main.type( children ) === 'array' ? children : this.childrenShowing ).slice( 0 );
+		
+		for ( i = 0, l = children.length; i < l; i++ ) {
+			
+			child = children[ i ];
+			
+			child.hide( false, time, opacity, callback, callbackContext );
+			
+		}
+		
+	}
+	
+	function show_hide_children_exchange ( time, opacity, callback, callbackContext ) {
+		
+		var showing = this.childrenShowing.slice( 0 ),
+			hiding = this.childrenHidden.slice( 0 );
+		
+		// hide showing
+		
+		this.hide_children( showing, time, opacity, callback, callbackContext );
+		
+		// show hiding
+		
+		this.show_children( hiding, time, opacity, callback, callbackContext );
+		
+	}
+	
+	function child_showing ( child ) {
+		
+		var index;
+		
+		if ( child.hiddenLast !== child.hidden ) {
+			
+			child.hiddenLast = child.hidden;
+			
+			index = this.childrenHidden.indexOf( child );
+			
+			if ( index !== -1 ) {
 				
-				this.pointerEvents = this.pointerEventsWhileVisible;
+				this.childrenHidden.splice( index, 1 );
+				
+			}
+			
+			index = this.childrenShowing.indexOf( child );
+			
+			if ( index === -1 ) {
+				
+				this.childrenShowing.push( child );
+				
+			}
+			
+		}
+		
+	}
+	
+	function child_hidden ( child ) {
+		
+		var index;
+		
+		if ( child.hiddenLast !== child.hidden ) {
+			
+			child.hiddenLast = child.hidden;
+			
+			index = this.childrenShowing.indexOf( child );
+			
+			if ( index !== -1 ) {
+				
+				this.childrenShowing.splice( index, 1 );
+				
+			}
+			
+			index = this.childrenHidden.indexOf( child );
+			
+			if ( index === -1 ) {
+				
+				this.childrenHidden.push( child );
 				
 			}
 			
@@ -879,46 +1155,14 @@
     
     =====================================================*/
 	
-	function set_pointer_events ( state ) {
-		
-		var me = this;
-		
-		if ( typeof state === 'boolean' && this.pointerEvents !== state ) {
-			
-			this._pointerEvents = state;
-			
-			if ( this.pointerEvents === true ) {
-				
-				// use pointer-events when available, easier and works better
-				
-				this.apply_css( 'pointer-events', 'none' );
-				
-				// fallback in-case browser does not support pointer-events property
-				// TODO: add actual support for mouse enter and leave, currently won't work
-				
-				this.domElement.on( 
-					'mousedown.pei touchstart.pei mouseup.pei touchend.pei mousemove.pei touchmove.pei mouseenter.pei touchenter.pei mouseleave.pei touchleave.pei mousewheel.pei click.pei', 
-					function ( e ) { on_pointer_event( me, e ); }
-				);
-				
-			}
-			else {
-				
-				this.domElement.off( '.pei' );
-				
-				this.apply_css( 'pointer-events', 'auto' );
-				
-			}
-			
-		}
-		
-	}
-	
 	function on_pointer_event ( uiElement, e ) {
 		
 		var opacity;
 		
-		if ( typeof e !== 'undefined' && ( uiElement.hidden === true || uiElement.pointerEventsOnlyWithChildren !== true || uiElement.domElement.children().length === 0 ) ) {
+		if ( typeof e !== 'undefined' ) {
+			
+			e.preventDefault();
+			e.stopPropagation();
 			
 			opacity = uiElement.domElement.css( 'opacity' );
 			
@@ -1000,35 +1244,6 @@
     
     =====================================================*/
 	
-	Modernizr.addTest('lineargradient', function () {
-		
-		// get correct linear gradient property name
-		
-		var test = document.createElement('div'),
-			prefixes = ' -webkit- -moz- -o- -ms- -khtml- '.split(' '),
-			strBGImg = 'background-image:',
-			strLinGrad = 'linear-gradient',
-			strGradVal = '(left top,#9f9, white);',
-			strStyle,
-			index,
-			strPropertyName = strLinGrad;
-
-		test.style.cssText = (strBGImg + prefixes.join( ( strLinGrad + strGradVal ) + strBGImg ) ).slice( 0, -strBGImg.length );
-		
-		strStyle = test.style.backgroundImage.toString();
-		
-		index = strStyle.indexOf( strLinGrad );
-		
-		if ( index !== -1 ) {
-			
-			strPropertyName = strStyle.substr( 0, index + strLinGrad.length );
-			
-		}
-		
-		return strPropertyName;
-		
-	} );
-	
 	function apply_css( property, value ) {
 		
 		var map;
@@ -1073,7 +1288,11 @@
 		
 		// convert back to original hyphenated
 		
-		propertySupported = _UIElement.str_from_camel( propertyPrefixed );
+		if ( typeof propertyPrefixed === 'string' ) {
+			
+			propertySupported = _UIElement.str_from_camel( propertyPrefixed );
+			
+		}
 		
 		return propertySupported;
 		
@@ -1091,7 +1310,7 @@
 			
 			if ( index !== -1 ) {
 				
-				return Modernizr.lineargradient + value.substr( index + 'linear-gradient'.length, value.length );
+				return _UIElement.cssSpecialCases.lineargradient + value.substr( index + 'linear-gradient'.length, value.length );
 				
 			}
 			
