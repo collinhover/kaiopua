@@ -52,6 +52,8 @@
 		_Menu.Instance.prototype.constructor = _Menu.Instance;
 		_Menu.Instance.prototype.supr = _Button.Instance.prototype;
 		
+		_Menu.Instance.prototype.show = show;
+		
 		_Menu.Instance.prototype.hide_children = hide_children;
 		_Menu.Instance.prototype.child_showing = child_showing;
 		_Menu.Instance.prototype.child_hidden = child_hidden;
@@ -74,12 +76,20 @@
 			get : function () { return this._buttonOpen; },
 			set : function ( button ) {
 				
+				var hadButtons = this.hasOpenCloseButtons;
+				
 				if ( button instanceof _Button.Instance ) {
 					
 					button.callback = this.open;
 					button.context = this;
 					
 					this._buttonOpen = button;
+					
+					if ( hadButtons === false && this.hasOpenCloseButtons ) {
+						
+						this.close();
+						
+					}
 					
 				}
 			
@@ -90,6 +100,8 @@
 			get : function () { return this._buttonClose; },
 			set : function ( button ) {
 				
+				var hadButtons = this.hasOpenCloseButtons;
+				
 				if ( button instanceof _Button.Instance ) {
 					
 					button.callback = this.close;
@@ -97,9 +109,19 @@
 					
 					this._buttonClose = button;
 					
+					if ( hadButtons === false && this.hasOpenCloseButtons ) {
+						
+						this.close();
+						
+					}
+					
 				}
 			
 			}
+		} );
+		
+		Object.defineProperty( _Menu.Instance.prototype, 'hasOpenCloseButtons', { 
+			get : function () { return this.buttonOpen instanceof _Button.Instance && this.buttonClose instanceof _Button.Instance; }
 		} );
 		
 		Object.defineProperty( _Menu.Instance.prototype, 'isOpen', { 
@@ -195,8 +217,6 @@
 		// else set buttons properties and close
 		else {
 			
-			this.buttonClose.alignment = 'topright';
-			
 			this.close();
 			
 		}
@@ -209,66 +229,68 @@
 	
 	/*===================================================
     
+    show
+    
+    =====================================================*/
+	
+	function show () {
+		
+		// proto
+		
+		_Menu.Instance.prototype.supr.show.apply( this, arguments );
+		
+		// arrangement
+		
+		this.update_arrangement();
+		
+	}
+	
+	/*===================================================
+    
     children
     
     =====================================================*/
 	
-	function hide_children () {
+	function hide_children ( children, excluding ) {
 		
-		var children,
+		var i, l,
+			child,
 			index;
+		
+		excluding = main.ensure_array( excluding );
 		
 		// if closed, modify children to hide and remove open button
 		
 		if ( this.isOpen !== true ) {
 			
-			children = arguments[ 0 ] || this.childrenShowing;
-			
-			index = children.indexOf( this.buttonOpen );
-			
-			if ( index !== -1 ) {
-				
-				children = children.slice( 0 );
-				children.splice( index, 1 );
-				
-			}
-			
-			arguments[ 0 ] = children;
+			excluding.push( this.buttonOpen );
 			
 		}
 		
 		// proto
 		
-		_Menu.Instance.prototype.supr.hide_children.apply( this, arguments );
+		_Menu.Instance.prototype.supr.hide_children.call( this, children, excluding );
 		
 	}
 	
 	function child_showing ( child ) {
 		
-		var hiddenLast = child.hiddenLast;
-		
 		// proto
 		
 		_Menu.Instance.prototype.supr.child_showing.apply( this, arguments );
 		
-		// if hidden state changed
+		// if not open, hide all
 		
-		if ( hiddenLast !== child.hidden ) {
+		if ( this.isOpen === false && child !== this.buttonOpen ) {
 			
-			// if not open, hide all
+			this.close( 0 );
 			
-			if ( this.isOpen === false && child !== this.buttonOpen ) {
-				
-				this.close( 0 );
-				
-			}
-			else {
-				
-				// set arrangement
-				
-				this.update_arrangement();
-				
-			}
+		}
+		else if ( this.isVisible ) {
+			
+			// set arrangement
+			
+			this.update_arrangement();
 			
 		}
 		
@@ -276,20 +298,22 @@
 	
 	function child_hidden ( child ) {
 		
-		var hiddenLast = child.hiddenLast;
-		
 		// proto
 		
 		_Menu.Instance.prototype.supr.child_hidden.apply( this, arguments );
 		
-		// if hidden state changed
-		
-		if ( hiddenLast !== child.hidden ) {
+		if ( this.isVisible ) {
 			
 			// set arrangement
 			
 			this.update_arrangement();
-		
+			
+			if ( this.parent instanceof _Menu.Instance && ( child === this.buttonOpen || child === this.buttonClose ) ) {
+				
+				this.parent.update_arrangement();
+				
+			}
+			
 		}
 		
 	}
@@ -330,9 +354,17 @@
 		
 		if ( this.buttonOpen instanceof _Button.Instance && this.buttonClose instanceof _Button.Instance ) {
 			
+			if ( this.parent instanceof _Menu.Instance ) {
+				
+				this.parentChildrenShowing = this.parent.childrenShowing.slice( 0 );
+				
+				this.parent.hide_children( undefined, this, time );
+				
+			}
+			
 			this.buttonOpen.hide( true, time, 0, function () {
 				
-				this.show_children( undefined, time );
+				this.show_children( undefined, this.buttonClose, time );
 				
 				this.buttonClose.show( this, time );
 				
@@ -341,7 +373,7 @@
 		}
 		else {
 			
-			this.show_children( undefined, time );
+			this.show_children( undefined, undefined, time );
 			
 		}
 		
@@ -355,11 +387,17 @@
 			
 			this._isOpen = false;
 			
-			this.hide_children( undefined, time );
+			this.hide_children( undefined, this.buttonClose, time );
 			
 			this.buttonClose.hide( true, time, 0, function () {
 				
 				this.buttonOpen.show( this, time );
+				
+				if ( this.parent instanceof _Menu.Instance ) {
+					
+					this.parent.show_children( this.parentChildrenShowing, undefined, time );
+					
+				}
 				
 			}, this );
 			

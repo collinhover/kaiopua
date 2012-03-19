@@ -46,8 +46,9 @@
 		_Button.Instance.prototype.constructor = _Button.Instance;
 		_Button.Instance.prototype.supr = _UIElement.Instance.prototype;
 		
-		_Button.Instance.prototype.make_circle = make_circle;
-		_Button.Instance.prototype.make_rectangle = make_rectangle;
+		_Button.Instance.prototype.update_form = update_form;
+		_Button.Instance.prototype.form_circle = form_circle;
+		_Button.Instance.prototype.form_rectangle = form_rectangle;
 		
 		_Button.Instance.prototype.enter = enter;
 		_Button.Instance.prototype.leave = leave;
@@ -110,6 +111,9 @@
 				imgDomElement = new Image();
 				imgDomElement.crossOrigin = '';
 				imgDomElement.src = parameters.image;
+				imgDomElement.onload = function () {
+					me.image.align_once( me.image.alignment || 'center' );
+				}
 				
 			}
 			else if ( main.is_image( parameters.image ) ) {
@@ -182,12 +186,12 @@
 		
 		if ( parameters.circle === true ) {
 			
-			this.make_circle();
+			this.form_circle();
 		
 		}
 		else {
 			
-			this.make_rectangle();
+			this.form_rectangle();
 			
 		}
 		
@@ -265,20 +269,32 @@
     
     =====================================================*/
 	
-	function make_circle () {
+	function update_form () {
+		
+		if ( this.form === 'circle' ) {
+			
+			this.form_circle();
+			
+		}
+		
+	}
+	
+	function form_circle () {
 		
 		// if width set explicitly
 		
 		if ( this.width !== 0 ) {
+			
+			this.form = 'circle';
 			
 			var width = this.width,
 				height = this.height,
 				max = Math.max( width, height ),
 				maxHalf = max * 0.5;
 			
-			// set dimensions equal
+			// match width/height
 			
-			this.height = this.width = max;
+			this.width = this.height = max;
 			
 			// set radius to half
 			
@@ -288,16 +304,18 @@
 		
 	}
 	
-	function make_rectangle () {
+	function form_rectangle () {
 		
-		// if either dimension is not set
+		this.form = 'rectangle';
 		
-		if ( this.width !== 0  && this.height === 0 ) {
+		// if either dimension is set when the other is not
+		
+		if ( this.width !== 0 && this.height === 0 ) {
 			
 			this.height = this.width;
 			
 		}
-		else if ( this.width === 0  && this.height !== 0 ) {
+		if ( this.width === 0 && this.height !== 0 ) {
 			
 			this.width = this.height;
 			
@@ -347,7 +365,7 @@
 		enabled[ "cursor" ] = or[ "cursor" ] || "pointer";
 		enabled[ "color" ] = or[ "color" ] || "#333333";
 		enabled[ "background-color" ] = or[ "background-color" ] || "#eeeeee";
-		enabled[ "background-image" ] = or[ "background-image" ] || "linear-gradient(top, #eeeeee 30%, #cccccc 100%)";
+		//enabled[ "background-image" ] = or[ "background-image" ] || "linear-gradient(top, #eeeeee 30%, #cccccc 100%)";
 		
 		// disabled state
 		
@@ -358,7 +376,7 @@
 		disabled[ "cursor" ] = or[ "cursor" ] || "default";
 		disabled[ "color" ] = or[ "color" ] || "#777777";
 		disabled[ "background-color" ] = or[ "background-color" ] || "#cccccc";
-		disabled[ "background-image" ] = or[ "background-image" ] || "linear-gradient(top, #cccccc 30%, #aaaaaa 100%)";
+		//disabled[ "background-image" ] = or[ "background-image" ] || "linear-gradient(top, #cccccc 30%, #aaaaaa 100%)";
 		
 		// enter state
 		
@@ -368,7 +386,7 @@
 		
 		enter[ "color" ] = or[ "color" ] || "#222222";
 		enter[ "background-color" ] = or[ "background-color" ] || "#ffffff";
-		enter[ "background-image" ] = or[ "background-image" ] || "linear-gradient(top, #ffffff 30%, #dddddd 100%)";
+		//enter[ "background-image" ] = or[ "background-image" ] || "linear-gradient(top, #ffffff 30%, #dddddd 100%)";
 		
 		return theme;
 		

@@ -22,7 +22,8 @@ var KAIOPUA = (function (main) {
 			"assets/modules/utils/AssetLoader.js"
         ],
         setupList = [
-			"assets/modules/core/Game.js"
+			"assets/modules/core/Game.js",
+			"assets/modules/utils/Dev.js"
         ];
 	
 	/*===================================================
@@ -56,7 +57,7 @@ var KAIOPUA = (function (main) {
         shared.html = {
             footerMenu: $('#footer_menu'),
             gameContainer: $('#game'),
-            errorContainer: $('#error_container')
+            errorContainer: $('#errors')
         };
         
         shared.signals = {
@@ -106,6 +107,8 @@ var KAIOPUA = (function (main) {
         $(window).on( 'MozOrientation', on_window_device_orientation);
     
         $(window).on( 'resize', on_window_resize );
+		
+		window.onerror = on_error;
 		
 		// asset loader and setup
 		
@@ -726,6 +729,14 @@ var KAIOPUA = (function (main) {
         }
         return false;
     }
+	
+	function on_error ( error, url, lineNumber ) {
+		
+		shared.signals.error.dispatch( error, url, lineNumber );
+		
+		return true;
+		
+	}
 	
 	/*===================================================
     

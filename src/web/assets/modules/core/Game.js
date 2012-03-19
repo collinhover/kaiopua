@@ -16,17 +16,12 @@
 		_MathHelper,
 		_ObjectHelper,
 		_Physics,
+		_GUI,
 		_UIElement,
 		_Menu,
 		_Button,
 		_Launcher,
 		_Intro,
-        transitioner,
-        domElement,
-		containerOverlayAll,
-		containerOverlayDisplay,
-		containerUI,
-		containerDisplay,
         renderer, 
         renderTarget,
 		renderComposer,
@@ -49,17 +44,17 @@
 		utilProjector1Selection,
 		utilRay1Selection,
 		utilVec31Selection,
-        transitionOut = 1000, 
-        transitionIn = 400,
-		transitionerAlpha = 0.75,
+		sectionChangePauseTime = 500,
 		dependencies = [
 			"assets/modules/utils/AssetLoader.js",
             "assets/modules/utils/ErrorHandler.js",
 		],
         assetsBasic = [
 			"assets/modules/ui/UIElement.js",
+			"assets/modules/ui/Button.js",
+			"assets/modules/ui/Menu.js",
+			"assets/modules/core/GUI.js",
 			"assets/modules/utils/MathHelper.js",
-			"assets/modules/utils/Dev.js",
             "js/lib/three/Three.js",
 			"js/lib/jquery.transform2d.js",
         ],
@@ -188,10 +183,6 @@
 	
 	// getters and setters
 	
-	Object.defineProperty(_Game, 'domElement', { 
-		get : function () { return domElement; }
-	});
-	
 	Object.defineProperty(_Game, 'paused', { 
 		get : function () { return paused; }
 	});
@@ -241,7 +232,6 @@
 		
 		// register error listeners
 		
-		window.onerror = on_error;
 		shared.signals.error.add( on_error );
 		
 		// check for errors
@@ -287,7 +277,7 @@
 	
 	function load_game () {
 		
-		main.asset_require( assetsGame, init_game, true, containerUI.domElement );
+		main.asset_require( assetsGame, init_game, true, _GUI.layers.ui.domElement );
 		
 	}
 	
@@ -309,6 +299,7 @@
 		// utility
 		
 		_UIElement = main.get_asset_data( "assets/modules/ui/UIElement.js" );
+		_GUI = main.get_asset_data( "assets/modules/core/GUI.js" );
 		_MathHelper = main.get_asset_data( "assets/modules/utils/MathHelper.js" );
 		
 		utilProjector1Selection = new THREE.Projector();
@@ -316,6 +307,7 @@
 		utilVec31Selection = new THREE.Vector3();
 		
 		// cardinal axes
+		
 		shared.cardinalAxes = {
 			up: new THREE.Vector3( 0, 1, 0 ),
 			forward: new THREE.Vector3( 0, 0, 1 ),
@@ -323,49 +315,11 @@
 		}
         
         // game signals
+		
         shared.signals = shared.signals || {};
         shared.signals.paused = new signals.Signal();
         shared.signals.resumed = new signals.Signal();
         shared.signals.update = new signals.Signal();
-		
-		// set up game dom elements
-		
-		domElement = shared.html.gameContainer;
-		
-		containerOverlayAll = new _UIElement.Instance( {
-			id: 'game_overlay_all',
-			pointerEvents: false,
-			fullwindow: true
-        });
-		containerOverlayDisplay = new _UIElement.Instance( {
-			id: 'game_overlay_display',
-			pointerEvents: false,
-			fullwindow: true
-        });
-		containerUI = new _UIElement.Instance( {
-			id: 'game_ui',
-			pointerEvents: false,
-			fullwindow: true
-        });
-		containerDisplay = new _UIElement.Instance( {
-			id: 'game_visuals',
-			fullwindow: true
-        });
-		
-		domElement.append( containerDisplay.domElement );
-		domElement.append( containerOverlayDisplay.domElement );
-		domElement.append( containerUI.domElement );
-		domElement.append( containerOverlayAll.domElement );
-		
-        // transitioner
-		
-        transitioner = new _UIElement.Instance({
-			id: 'transitioner',
-			cssmap: {
-				"background-color" : "#333333"
-			},
-			fullwindow: true
-        });
 		
 		// renderer
         renderer = new THREE.WebGLRenderer( { antialias: true, clearColor: 0x000000, clearAlpha: 0, maxLights: 8 } );
@@ -441,14 +395,18 @@
         
         set_render_processing();
 		
-		// add to display
+		// add basic ui to display
 		
-        containerDisplay.domElement.append( renderer.domElement );
+		_GUI.renderer = new _UIElement.Instance( {
+			id: 'renderer',
+			domElement: renderer.domElement 
+		} );
+		_GUI.layers.display.add( _GUI.renderer );
 		
 		// resize
 		
-        shared.signals.windowresized.add(resize);
-		resize(shared.screenWidth, shared.screenHeight);
+        shared.signals.windowresized.add( resize );
+		resize( shared.screenWidth, shared.screenHeight );
 		
 		// set ready
 		
@@ -519,192 +477,49 @@
 	
     function init_game () {
 		
+		var m;
+		
 		// assets
 		
 		_ObjectHelper = main.get_asset_data( "assets/modules/utils/ObjectHelper.js" );
 		_Button = main.get_asset_data( 'assets/modules/ui/Button.js' );
 		_Menu = main.get_asset_data( 'assets/modules/ui/Menu.js' );
 		
-		// init menus
+		// buttons
 		
-		init_footer_menu();
+		m = _GUI.menus;
 		
-		init_start_menu();
+		m.start.childrenByID.start.callback = function () {
+			start_game();
+		};
+		m.start.childrenByID.start.context = this;
 		
-		init_pause_menu();
+		m.main.childrenByID.resume.callback = function () {
+			resume();
+		};
+		m.main.childrenByID.resume.context = this;
 		
-		// show start screen menus
+		m.main.childrenByID.end.callback = function () {
+			stop_game();
+		};
+		m.main.childrenByID.end.context = this;
 		
-		menus.start.show( containerUI );
+		m.main.childrenByID.save.enabled = false;
+		m.start.childrenByID.load.enabled = m.main.childrenByID.load.enabled = false;
+		//m.start.childrenByID.options.enabled = m.main.childrenByID.options.enabled = false;
+		
+		// menus
+		
+		m.start.alignment = 'center';
+		m.main.alignment = 'center';
+		
+		// show ui
+		
+		_GUI.buttons.fullscreenEnter.show( _GUI.layers.ui );
+		
+		m.start.show( _GUI.layers.ui );
 		
     }
-	
-	/*===================================================
-    
-    game menus
-    
-    =====================================================*/
-	
-	function init_footer_menu() {
-		
-		// init footer menu
-		
-		menus.footer = new _UIElement.Instance( { 
-			domElement: shared.html.footerMenu,
-		} );
-		
-		// store current width / height, then remove sticky footer class
-	
-		menus.footer.width = menus.footer.domElement.width();
-		menus.footer.height = menus.footer.domElement.height();
-		
-		menus.footer.domElement.removeClass( 'sticky_footer' );
-		
-		menus.footer.parent = containerUI;
-		
-		menus.footer.alignment = 'bottomcenter';
-		
-	}
-	
-	function init_start_menu () {
-		
-		var startButton,
-			continueButton,
-			optionsButton,
-			buttonSize = 160,
-			buttonSpacing = 10;
-        
-        // init start menu
-		
-        menus.start = new _Menu.Instance( {
-            id: 'menu_start',
-			spacing: buttonSpacing
-        } );
-		
-		startButton = new _Button.Instance( {
-            id: 'button_start',
-			text: 'Start',
-			width: buttonSize,
-			spacing: buttonSpacing,
-			circle: true,
-            callback: function () {
-                start_game();
-            },
-			context: this,
-			cssmap: {
-				'font-size' : "30px",
-				'font-family' : "'CoustardRegular', Georgia, serif"
-			}
-        } );
-		
-		continueButton = new _Button.Instance( {
-            id: 'button_continue',
-			text: 'Continue',
-			width: buttonSize,
-			spacing: buttonSpacing,
-			circle: true,
-            callback: function () {},
-			context: this,
-            enabled: false
-        } )
-		
-		optionsButton = new _Button.Instance( {
-            id: 'button_options',
-			text: 'Options',
-			width: buttonSize,
-			spacing: buttonSpacing,
-			circle: true,
-            callback: function () {},
-			context: this,
-            enabled: false
-        } );
-		
-		// add buttons to menu
-        
-        menus.start.add( startButton );
-        menus.start.add( continueButton );
-        menus.start.add( optionsButton );
-		
-        menus.start.alignment = 'center';
-        
-        menus.start.hide( true, 0 );
-		
-	}
-	
-	function init_pause_menu () {
-		
-		var resumeButton,
-			optionsButton,
-			saveButton,
-			endButton,
-			buttonSize = 160,
-			buttonSpacing = 10;
-        
-        // init menu
-        
-		menus.pause = new _Menu.Instance( {
-            id: 'menu_pause',
-			spacing: buttonSpacing
-        } );
-        
-        resumeButton = new _Button.Instance( {
-            id: 'button_resume',
-			text: 'Resume',
-			width: buttonSize,
-			spacing: buttonSpacing,
-			circle: true, 
-            callback: function () {
-                resume();
-            },
-			context: this,
-			cssmap: {
-				'font-size' : "30px",
-				'font-family' : "'CoustardRegular', Georgia, serif"
-			}
-        } );
-		optionsButton = new _Button.Instance( {
-            id: 'button_options',
-			text: 'Options',
-			width: buttonSize,
-			spacing: buttonSpacing,
-			circle: true, 
-            callback: function () {},
-			context: this,
-            enabled: false
-        } );
-        saveButton = new _Button.Instance( {
-            id: 'button_save',
-			text: 'Save',
-			width: buttonSize,
-			spacing: buttonSpacing,
-			circle: true, 
-            callback: function () {},
-			context: this,
-            enabled: false
-        } );
-		endButton = new _Button.Instance( {
-            id: 'button_end_game',
-			text: 'End Game',
-			width: buttonSize,
-			spacing: buttonSpacing,
-			circle: true, 
-            callback: function () {
-				stop_game();
-			},
-			context: this
-        } );
-        
-        // add buttons to menu
-        
-        menus.pause.add( resumeButton );
-        menus.pause.add( optionsButton );
-        menus.pause.add( saveButton );
-		menus.pause.add( endButton );
-		
-        menus.pause.alignment = 'center';
-        
-        menus.pause.hide( true, 0 );
-	}
 	
 	/*===================================================
     
@@ -1088,8 +903,6 @@
 					
 				}
 				
-				transitioner.hide( true, transitionOut );
-				
 				section.resize(shared.screenWidth, shared.screenHeight);
 				
                 section.show();
@@ -1098,15 +911,11 @@
 				
 				resume();
 				
-				// callback after transition out time
-				
-				window.requestTimeout( function () {
-					if ( typeof callback !== 'undefined' ) {
-						
-						callback.call();
-						
-					}
-				}, transitionOut );
+				if ( typeof callback !== 'undefined' ) {
+					
+					callback.call();
+					
+				}
 				
 			};
 		
@@ -1123,7 +932,7 @@
             
             previousSection.hide();
             
-			transitioner.show( containerOverlayAll.domElement, transitionIn );
+			_GUI.transitioner.show( _GUI.layers.overlayAll, undefined, 1 );
             
         }
 		
@@ -1154,7 +963,7 @@
 					
 					newSectionCallback();
 					
-				}, transitionIn );
+				}, _GUI.transitioner.timeShow );
 			
 			}
 			// no previous section, create new immediately
@@ -1183,15 +992,15 @@
 		
 		// hide footer menu
 		
-		menus.footer.hide( true );
+		_GUI.menus.footer.hide( true );
 		
         // disable start menu
 		
-        menus.start.disable();
+        _GUI.menus.start.disable();
         
         // hide start menu
 		
-        menus.start.hide( true );
+        _GUI.menus.start.hide( true );
         
 		// set intro section
 		
@@ -1210,18 +1019,14 @@
 		started = false;
 		
 		// hide and disable pause menu
-		
-		if ( typeof menus.pause !== 'undefined' ) {
 			
-			menus.pause.disable();
+		_GUI.menus.main.disable();
 		
-			menus.pause.hide( true );
-			
-		}
+		_GUI.menus.main.hide( true );
 		
 		// show footer menu
 		
-		menus.footer.show();
+		_GUI.menus.footer.show();
 		
 		// set launcher section
 		
@@ -1229,9 +1034,9 @@
 			
 			// show / enable start menu
 			
-			menus.start.show( containerUI );
+			_GUI.menus.start.show( _GUI.layers.ui );
 			
-			menus.start.enable();
+			_GUI.menus.start.enable();
 			
 		});
 		
@@ -1245,18 +1050,18 @@
 			
 			if ( started === true ) {
 				
-				transitioner.show( containerOverlayDisplay, transitionIn, transitionerAlpha );
+				_GUI.transitioner.show( _GUI.layers.overlayDisplay );
 				
-				menus.pause.show( containerUI );
+				_GUI.menus.main.show( _GUI.layers.ui );
 				
-				menus.pause.enable();
+				_GUI.menus.main.enable();
 				
-				menus.footer.show();
+				_GUI.menus.footer.show();
 				
 			}
 			else {
 				
-				transitioner.show( containerOverlayAll, transitionIn, transitionerAlpha );
+				_GUI.transitioner.show( _GUI.layers.overlayAll );
 				
 			}
             
@@ -1268,32 +1073,23 @@
     
     function resume () {
 		
-		var on_menu_hidden = function () {
+        if ( paused === true && _ErrorHandler.errorState !== true ) {
+			
+			if ( started === true ) {
+				
+				_GUI.menus.main.disable();
+				
+				_GUI.menus.main.hide( true );
+				
+				_GUI.menus.footer.hide( true );
+				
+			}
+			
+			_GUI.transitioner.hide( true, undefined, 0 );
 			
 			paused = false;
 			
 			shared.signals.resumed.dispatch();
-			
-		};
-		
-        if (paused === true) {
-			
-			transitioner.hide( true, transitionOut );
-			
-			if ( started === true ) {
-				
-				menus.pause.disable();
-				
-				menus.pause.hide( true, undefined, 0, on_menu_hidden );
-				
-				menus.footer.hide( true );
-				
-			}
-			else {
-				
-				on_menu_hidden();
-				
-			}
             
         }
     }
@@ -1408,17 +1204,20 @@
 		
         pause();
 		
+		// check error handler state
+		
+		if ( _ErrorHandler.errorState !== true ) {
+			
+			_ErrorHandler.generate( error, url, lineNumber );
+			
+		}
+		
 		// save game
 		// TODO
 		
 		// debug
         
-        if (typeof main.assets.modules.utils.dev !== 'undefined') {
-            main.assets.modules.utils.dev.log_error(error, url, lineNumber);
-        }
-		else {
-			throw error + " at " + lineNumber + " in " + url;
-		}
+        throw error + " at " + lineNumber + " in " + url;
         
     }
     

@@ -99,6 +99,8 @@
 	_UIElement.Instance.prototype.child_showing = child_showing;
 	_UIElement.Instance.prototype.child_hidden = child_hidden;
 	
+	_UIElement.Instance.prototype.set_pointer_events = set_pointer_events;
+	
 	_UIElement.Instance.prototype.make_fullwindow = make_fullwindow;
 	
 	_UIElement.Instance.prototype.generate_dom_element = generate_dom_element;
@@ -230,44 +232,7 @@
 				
 				this._pointerEvents = state;
 				
-				if ( this.pointerEvents === false ) {
-					
-					// use native pointer-events when available
-					
-					if ( _UIElement.cssSpecialCases.pointerEvents ) {
-						
-						this.apply_css( _UIElement.cssSpecialCases.pointerEvents, 'none' );
-						
-					}
-					else {
-						
-						// fallback in-case browser does not support pointer-events property
-						// this method is incredibly slow, as it has to hide domElement, retrigger event to find what is under, then show again
-						
-						this.domElement.on( 
-							'mousedown.pe touchstart.pe mouseup.pe touchend.pe click.pe mouseenter.pe touchenter.pe mouseleave.pe touchleave.pe', 
-							function ( e ) { on_pointer_event( me, e ); }
-						);
-						
-					}
-					
-				}
-				else {
-					
-					// use native pointer-events when available
-					
-					if ( _UIElement.cssSpecialCases.pointerEvents ) {
-						
-						this.apply_css( _UIElement.cssSpecialCases.pointerEvents, 'auto' );
-						
-					}
-					else {
-					
-						this.domElement.off( '.pe' );
-					
-					}
-					
-				}
+				this.set_pointer_events( this._pointerEvents );
 				
 			}
 			
@@ -279,36 +244,30 @@
 		get : function () { return this._hidden; },
 		set : function ( state ) {
 			
-			if ( typeof state === 'boolean' && ( this.hasOwnProperty( '_hidden' ) === false || this.hidden !== state ) ) {
+			this._hidden = state;
+			
+			// hidden
+			if ( this.hidden === true ) {
 				
-				this._hidden = state;
-				
-				// hidden
-				if ( this.hidden === true ) {
+				if ( this.parent instanceof _UIElement.Instance ) {
 					
-					if ( this.parent instanceof _UIElement.Instance ) {
-						
-						this.parent.child_hidden( this );
-						
-					}
-					
-					this.pointerEventsWhileVisible = this.pointerEvents;
-					
-					this.pointerEvents = false;
+					this.parent.child_hidden( this );
 					
 				}
-				// showing
-				else {
+				
+				this.set_pointer_events( false );
+				
+			}
+			// showing
+			else {
+				
+				if ( this.parent instanceof _UIElement.Instance ) {
 					
-					if ( this.parent instanceof _UIElement.Instance ) {
-						
-						this.parent.child_showing( this );
-						
-					}
-					
-					this.pointerEvents = this.pointerEventsWhileVisible;
+					this.parent.child_showing( this );
 					
 				}
+				
+				this.set_pointer_events( this.pointerEvents );
 				
 			}
 			
@@ -392,6 +351,8 @@
 		this.timeShow = main.is_number( parameters.timeShow ) ? parameters.timeShow : 500;
         this.timeHide = main.is_number( parameters.timeHide ) ? parameters.timeHide : 250;
 		
+		this.opacityShow = main.is_number( parameters.opacityShow ) ? parameters.opacityShow : 1;
+		
 		this.spacingTop = parameters.spacingTop || parameters.spacingVertical || parameters.spacing || 0;
 		this.spacingBottom = parameters.spacingBottom || parameters.spacingVertical || parameters.spacing || 0;
 		this.spacingLeft = parameters.spacingLeft || parameters.spacingHorizontal || parameters.spacing || 0;
@@ -435,11 +396,15 @@
 		
 		}
 		
+		// alignment
+		
+		this.alignment = parameters.alignment || false;
+		
 		// if dom element already has parent, set as parent
 		
 		if ( this.isVisible ) {
 			
-			this.parent = this.domElement.parent();
+			this._parent = this.domElement.parent();
 			
 		}
 		
@@ -451,12 +416,12 @@
     
     =====================================================*/
 	
-	function add ( children ) {
+	function add () {
 		
 		var i, l,
 			child;
 		
-		children = main.ensure_array( children );
+		children = arguments;
 		
 		for ( i = 0, l = children.length; i < l; i++ ) {
 			
@@ -480,7 +445,7 @@
 		
 	}
 	
-	function remove ( children ) {
+	function remove () {
 		
 		var i, l,
 			child,
@@ -488,7 +453,7 @@
 		
 		// default to removing all
 		
-		children = main.ensure_array( children || this.children );
+		children = ( arguments.length > 0 ? arguments : this.children );
 		
 		for ( i = 0, l = children.length; i < l; i ++) {
 			
@@ -524,7 +489,7 @@
 				
 				if ( child.parent === this ) {
 					
-					child.parent = undefined;
+					child.parent = child.parentLast;// undefined;
 					
 				}
 				
@@ -740,7 +705,7 @@
 			
 			child = this.children[ i ];
 			
-			if ( child.enabledSelf === true ) {
+			if ( child.parent === this && child.enabledSelf === true ) {
 				
 				child.enable_visual();
 				
@@ -763,7 +728,11 @@
 			
 			child = this.children[ i ];
 			
-			child.disable_visual();
+			if ( child.parent === this ) {
+				
+				child.disable_visual();
+				
+			}
 			
 		}
 		
@@ -776,7 +745,7 @@
     =====================================================*/
 	
 	function set_position ( x, y ) {
-		
+		if ( this.id === 'close_text' && this.parent && this.parent.id === 'close' ) console.log( this.id, ' text w/h ', this.width, this.height, this.widthHalf, this.heightHalf );
 		// internal trackers for x and y
 		// non-integer values of x/y cause terrible text rendering
 		// around 250x faster than calling jQuery position().top/left
@@ -832,42 +801,42 @@
 				}
 				else if ( this.alignment === 'bottomcenter' ) {
 					
-					this.set_position( w * 0.5 - this.widthHalf, h - this.height );
+					this.set_position( w * 0.5 - this.widthHalf, h - this.height - this.spacingBottom );
 					
 				}
 				else if ( this.alignment === 'topcenter' ) {
 					
-					this.set_position( w * 0.5 - this.widthHalf, 0 );
+					this.set_position( w * 0.5 - this.widthHalf, this.spacingTop );
 					
 				}
 				else if ( this.alignment === 'leftcenter' ) {
 					
-					this.set_position( 0, h * 0.5 - this.heightHalf );
+					this.set_position( this.spacingLeft, h * 0.5 - this.heightHalf );
 					
 				}
 				else if ( this.alignment === 'rightcenter' ) {
 					
-					this.set_position( w - this.width, h * 0.5 - this.heightHalf );
+					this.set_position( w - this.width - this.spacingRight, h * 0.5 - this.heightHalf );
 					
 				}
 				else if ( this.alignment === 'bottomright' ) {
 					
-					this.set_position( w - this.width, h - this.height );
+					this.set_position( w - this.width - this.spacingRight, h - this.height - this.spacingBottom );
 					
 				}
 				else if ( this.alignment === 'bottomleft' ) {
 					
-					this.set_position( 0, h - this.height );
+					this.set_position( this.spacingLeft, h - this.height - this.spacingBottom );
 					
 				}
 				else if ( this.alignment === 'topright' ) {
 					
-					this.set_position( w - this.width, 0 );
+					this.set_position( w - this.width - this.spacingRight, this.spacingTop );
 					
 				}
 				else if ( this.alignment === 'topleft' ) {
 					
-					this.set_position( 0, 0 );
+					this.set_position( this.spacingLeft, this.spacingTop );
 					
 				}
 				// invalid type
@@ -923,11 +892,9 @@
 			index,
 			fadeCallback = function () { if ( typeof callback !== 'undefined' ) { callback.call( callbackContext ); } };
 		
-		if ( main.is_number( opacity ) !== true || opacity <= 0 || opacity > 1 ) {
-			
-			opacity = 1;
-			
-		}
+		time = main.is_number( time ) ? time : ( domElement ? 0 : this.timeShow );
+		
+		opacity = main.is_number( opacity ) ? opacity : ( domElement ? 1 : this.opacityShow );
 		
 		// if dom element passed
 		
@@ -941,7 +908,13 @@
 			
 			// try appending
 			
-			this.parent = parent || this.parent || this.parentLast;
+			parent = parent || this.parent || this.parentLast;
+			
+			if ( this.isVisible !== true && this.parent !== parent ) {
+			
+				this.parent = parent;
+				
+			}
 			
 			// set hidden
 				
@@ -954,8 +927,6 @@
 			// show
 			
 			if ( this.domElement.css( 'opacity' ) !== opacity ) {
-				
-				time = main.is_number( time ) ? time : this.timeShow;
 				
 				this.domElement.stop( true ).fadeTo( time, opacity, fadeCallback );
 				
@@ -974,11 +945,9 @@
 		
 		var me = this;
 		
-		if ( main.is_number( opacity ) !== true || opacity < 0 || opacity >= 1 ) {
-			
-			opacity = 0;
-			
-		}
+		time = main.is_number( time ) ? time : ( domElement ? 0 : this.timeHide );
+		
+		opacity = main.is_number( opacity ) ? opacity : 0;
 		
 		// if dom element passed
 		
@@ -997,8 +966,6 @@
 			// hide
 			
 			if ( this.domElement.css( 'opacity' ) !== opacity ) {
-				
-				time = main.is_number( time ) ? time : this.timeHide;
 				
 				this.domElement.stop( true ).fadeTo( time, opacity, function () { on_hidden( me, callback, callbackContext, remove ); } );
 				
@@ -1040,14 +1007,36 @@
     
     =====================================================*/
 	
-	function show_children ( children, time, opacity, callback, callbackContext ) {
+	function show_children ( children, excluding, time, opacity, callback, callbackContext ) {
 		
 		var i, l,
 			child;
-		
+		console.log(this.id, 'SHOW CHILDREN', children );
 		// make copy of children passed
 		
 		children = ( main.type( children ) === 'array' ? children : this.childrenHidden ).slice( 0 );
+		
+		// exclude
+		
+		if ( main.type( excluding ) === 'array' && excluding.length > 0 ) {
+			
+			for ( i = 0, l = excluding.length; i < l; i++ ) {
+				
+				child = excluding[ i ];
+				
+				index = children.indexOf( child );
+				
+				if ( index !== -1 ) {
+					
+					children.splice( index, 1 );
+					
+				}
+				
+			}
+			
+		}
+		
+		// show all
 		
 		for ( i = 0, l = children.length; i < l; i++ ) {
 			
@@ -1059,7 +1048,7 @@
 		
 	}
 	
-	function hide_children ( children, time, opacity, callback, callbackContext ) {
+	function hide_children ( children, excluding, time, opacity, callback, callbackContext ) {
 		
 		var i, l,
 			child;
@@ -1068,11 +1057,37 @@
 		
 		children = ( main.type( children ) === 'array' ? children : this.childrenShowing ).slice( 0 );
 		
+		// exclude
+		
+		if ( main.type( excluding ) === 'array' && excluding.length > 0 ) {
+			
+			for ( i = 0, l = excluding.length; i < l; i++ ) {
+				
+				child = excluding[ i ];
+				
+				index = children.indexOf( child );
+				
+				if ( index !== -1 ) {
+					
+					children.splice( index, 1 );
+					
+				}
+				
+			}
+			
+		}
+		
+		// hide all
+		
 		for ( i = 0, l = children.length; i < l; i++ ) {
 			
 			child = children[ i ];
 			
-			child.hide( false, time, opacity, callback, callbackContext );
+			if ( child.parent === this ) { 
+				
+				child.hide( false, time, opacity, callback, callbackContext );
+				
+			}
 			
 		}
 		
@@ -1097,27 +1112,25 @@
 		
 		var index;
 		
-		if ( child.hiddenLast !== child.hidden ) {
+		child.hiddenLast = child.hidden;
+		
+		index = this.childrenHidden.indexOf( child );
+		
+		if ( index !== -1 ) {
 			
-			child.hiddenLast = child.hidden;
-			
-			index = this.childrenHidden.indexOf( child );
-			
-			if ( index !== -1 ) {
-				
-				this.childrenHidden.splice( index, 1 );
-				
-			}
-			
-			index = this.childrenShowing.indexOf( child );
-			
-			if ( index === -1 ) {
-				
-				this.childrenShowing.push( child );
-				
-			}
+			this.childrenHidden.splice( index, 1 );
 			
 		}
+		
+		index = this.childrenShowing.indexOf( child );
+		
+		if ( index !== -1 ) {
+			
+			this.childrenShowing.splice( index, 1 );
+			
+		}
+		
+		this.childrenShowing.push( child );
 		
 	}
 	
@@ -1125,27 +1138,25 @@
 		
 		var index;
 		
-		if ( child.hiddenLast !== child.hidden ) {
+		child.hiddenLast = child.hidden;
+		
+		index = this.childrenShowing.indexOf( child );
+		
+		if ( index !== -1 ) {
 			
-			child.hiddenLast = child.hidden;
-			
-			index = this.childrenShowing.indexOf( child );
-			
-			if ( index !== -1 ) {
-				
-				this.childrenShowing.splice( index, 1 );
-				
-			}
-			
-			index = this.childrenHidden.indexOf( child );
-			
-			if ( index === -1 ) {
-				
-				this.childrenHidden.push( child );
-				
-			}
+			this.childrenShowing.splice( index, 1 );
 			
 		}
+		
+		index = this.childrenHidden.indexOf( child );
+		
+		if ( index !== -1 ) {
+			
+			this.childrenHidden.splice( index, 1 );
+			
+		}
+		
+		this.childrenHidden.push( child );
 		
 	}
 	
@@ -1154,6 +1165,49 @@
     pointer events
     
     =====================================================*/
+	
+	function set_pointer_events ( state ) {
+		
+		if ( state === false ) {
+			
+			// use native pointer-events when available
+			
+			if ( _UIElement.cssSpecialCases.pointerEvents ) {
+				
+				this.apply_css( _UIElement.cssSpecialCases.pointerEvents, 'none' );
+				
+			}
+			else {
+				
+				// fallback in-case browser does not support pointer-events property
+				// this method is incredibly slow, as it has to hide domElement, retrigger event to find what is under, then show again
+				
+				this.domElement.on( 
+					'mousedown.pe touchstart.pe mouseup.pe touchend.pe click.pe mouseenter.pe touchenter.pe mouseleave.pe touchleave.pe', 
+					function ( e ) { on_pointer_event( me, e ); }
+				);
+				
+			}
+			
+		}
+		else {
+			
+			// use native pointer-events when available
+			
+			if ( _UIElement.cssSpecialCases.pointerEvents ) {
+				
+				this.apply_css( _UIElement.cssSpecialCases.pointerEvents, 'auto' );
+				
+			}
+			else {
+			
+				this.domElement.off( '.pe' );
+			
+			}
+			
+		}
+		
+	}
 	
 	function on_pointer_event ( uiElement, e ) {
 		
