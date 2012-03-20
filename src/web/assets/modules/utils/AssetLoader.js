@@ -247,7 +247,7 @@
 		header = new _UIElement.Instance({
 			elementType: 'header',
 			width: barWidth,
-			text: loadingHeaderBase,
+			html: loadingHeaderBase,
 			cssmap: {
 				'position' : 'relative',
 				'margin-top' : barMargin + 'px',
@@ -260,7 +260,7 @@
 		message = new _UIElement.Instance({
 			elementType: 'p',
 			width: barWidth,
-			text: loadingTips[0],
+			html: loadingTips[0],
 			cssmap: {
 				'position' : 'relative',
 				'margin-bottom' : barMargin + 'px',

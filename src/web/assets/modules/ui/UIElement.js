@@ -240,6 +240,19 @@
 		
 	});
 	
+	Object.defineProperty( _UIElement.Instance.prototype, 'isVisibleSelf', { 
+		get : function () { return this._isVisible; }
+	} );
+	
+	Object.defineProperty( _UIElement.Instance.prototype, 'isVisible', { 
+		get : function () { return ( this._isVisible !== false && this.parent instanceof _UIElement.Instance ? this.parent.isVisible : this._isVisible ); },
+		set : function ( state ) {
+			
+			this._isVisible = state;
+			
+		}
+	} );
+	
 	Object.defineProperty( _UIElement.Instance.prototype, 'hidden', { 
 		get : function () { return this._hidden; },
 		set : function ( state ) {
@@ -345,6 +358,7 @@
         this.children = [];
 		this.childrenShowing = [];
 		this.childrenHidden = [];
+		this.childrenAlwaysVisible = [];
 		
 		// properties
 		
@@ -381,10 +395,20 @@
 			this.width = parameters.width;
 			
 		}
+		else if ( parameters.hasOwnProperty('size') ) {
+			
+			this.width = parameters.size;
+			
+		}
 		
 		if ( parameters.hasOwnProperty('height') ) {
 			
 			this.height = parameters.height;
+			
+		}
+		else if ( parameters.hasOwnProperty('size') ) {
+			
+			this.height = parameters.size;
 			
 		}
 		
@@ -419,6 +443,7 @@
 	function add () {
 		
 		var i, l,
+			children,
 			child;
 		
 		children = arguments;
@@ -448,6 +473,7 @@
 	function remove () {
 		
 		var i, l,
+			children,
 			child,
 			index;
 		
@@ -484,6 +510,16 @@
 				if ( index !== -1 ) {
 					
 					this.childrenHidden.splice( index, 1 );
+					
+				}
+				
+				// if always visible
+				
+				index = this.childrenAlwaysVisible.indexOf( child );
+				
+				if ( index !== -1 ) {
+					
+					this.childrenAlwaysVisible.splice( index, 1 );
 					
 				}
 				
@@ -1011,10 +1047,12 @@
 		
 		var i, l,
 			child;
-		console.log(this.id, 'SHOW CHILDREN', children );
+		
 		// make copy of children passed
 		
 		children = ( main.type( children ) === 'array' ? children : this.childrenHidden ).slice( 0 );
+		
+		children = children.concat( this.childrenAlwaysVisible );
 		
 		// exclude
 		
@@ -1035,7 +1073,7 @@
 			}
 			
 		}
-		
+		console.log(this.id, 'SHOW CHILDREN', children );
 		// show all
 		
 		for ( i = 0, l = children.length; i < l; i++ ) {
@@ -1059,7 +1097,10 @@
 		
 		// exclude
 		
-		if ( main.type( excluding ) === 'array' && excluding.length > 0 ) {
+		excluding = main.ensure_array( excluding );
+		excluding = excluding.concat( this.childrenAlwaysVisible );
+		
+		if ( excluding.length > 0 ) {
 			
 			for ( i = 0, l = excluding.length; i < l; i++ ) {
 				
@@ -1168,6 +1209,9 @@
 	
 	function set_pointer_events ( state ) {
 		
+		var i, l,
+			child;
+		
 		if ( state === false ) {
 			
 			// use native pointer-events when available
@@ -1204,6 +1248,16 @@
 				this.domElement.off( '.pe' );
 			
 			}
+			
+		}
+		
+		// cascade
+		
+		for ( i = 0, l = this.children.length; i < l; i++ ) {
+			
+			child = this.children[ i ];
+			
+			child.set_pointer_events( ( this.hidden === false && child.hidden === false && child.isVisible === true ) ? child.pointerEvents : false );
 			
 		}
 		
@@ -1258,25 +1312,30 @@
 	
 	function generate_dom_element ( parameters ) {
 		
-		var domElement;
+		var elementType,
+			domElement;
 		
 		// handle parameters
         
         parameters = parameters || {};
 		
-		// basic
+		// element type
 		
-		domElement = $( document.createElement( parameters.elementType || 'div' ) );
+		elementType = parameters.elementType || 'div';
+		
+		// element
+		
+		domElement = $( document.createElement( elementType ) );
 		
 		// id
 		
 		domElement.attr( 'id', parameters.id );
 		
-		// text
+		// html
 		
-		if ( typeof parameters.text === 'string' ) {
+		if ( typeof parameters.html === 'string' ) {
 			
-			domElement.html( parameters.text );
+			domElement.html( parameters.html );
 			
 		}
 		

@@ -62,12 +62,16 @@
 		
 		_Menu.Instance.prototype.open = open;
 		_Menu.Instance.prototype.close = close;
+		_Menu.Instance.prototype.reset = reset;
+		_Menu.Instance.prototype.child_opening = child_opening;
+		_Menu.Instance.prototype.child_closing = child_closing;
 		
 		_Menu.Instance.prototype.set_arrangement = set_arrangement;
 		_Menu.Instance.prototype.update_arrangement = update_arrangement;
 		_Menu.Instance.prototype.arrange_line = arrange_line;
 		_Menu.Instance.prototype.arrange_circle = arrange_circle;
 		_Menu.Instance.prototype.align_cascade = align_cascade;
+		_Menu.Instance.prototype.fit_to_child = fit_to_child;
 		
 		_Menu.Instance.prototype.themes = {};
 		_Menu.Instance.prototype.themes.core = theme_core;
@@ -165,7 +169,7 @@
 		
 		parameters.text = parameters.image = undefined;
 		
-		parameters.pointerEvents = true;
+		parameters.pointerEvents = false;
 		
 		// prototype constructor
 		
@@ -308,12 +312,6 @@
 			
 			this.update_arrangement();
 			
-			if ( this.parent instanceof _Menu.Instance && ( child === this.buttonOpen || child === this.buttonClose ) ) {
-				
-				this.parent.update_arrangement();
-				
-			}
-			
 		}
 		
 	}
@@ -348,17 +346,15 @@
     
     =====================================================*/
 	
-	function open ( time ) {
+	function open ( time, callback, callbackContext ) {
 		
 		this._isOpen = true;
 		
-		if ( this.buttonOpen instanceof _Button.Instance && this.buttonClose instanceof _Button.Instance ) {
+		if ( this.hasOpenCloseButtons ) {
 			
 			if ( this.parent instanceof _Menu.Instance ) {
 				
-				this.parentChildrenShowing = this.parent.childrenShowing.slice( 0 );
-				
-				this.parent.hide_children( undefined, this, time );
+				this.parent.child_opening( this );
 				
 			}
 			
@@ -367,6 +363,17 @@
 				this.show_children( undefined, this.buttonClose, time );
 				
 				this.buttonClose.show( this, time );
+				
+				if ( typeof callback === 'function' ) {
+					
+					if ( typeof callbackContext !== 'undefined' ) {
+						callback.call( callbackContext );
+					}
+					else {
+						callback();
+					}
+					
+				}
 				
 			}, this );
 			
@@ -379,11 +386,11 @@
 		
 	}
 	
-	function close ( time ) {
+	function close ( time, callback, callbackContext ) {
 		
 		// only close if both open and close buttons are valid
 		
-		if ( this.buttonOpen instanceof _Button.Instance && this.buttonClose instanceof _Button.Instance ) {
+		if ( this.hasOpenCloseButtons ) {
 			
 			this._isOpen = false;
 			
@@ -395,13 +402,64 @@
 				
 				if ( this.parent instanceof _Menu.Instance ) {
 					
-					this.parent.show_children( this.parentChildrenShowing, undefined, time );
+					this.parent.child_closing( this );
+					
+				}
+				
+				if ( typeof callback === 'function' ) {
+					
+					if ( typeof callbackContext !== 'undefined' ) {
+						callback.call( callbackContext );
+					}
+					else {
+						callback();
+					}
 					
 				}
 				
 			}, this );
 			
 		}
+		
+	}
+	
+	function reset ( time, child ) {
+		
+		var i, l,
+			children,
+			subchild;
+		
+		child = child instanceof _UIElement.Instance ? child : this;
+		
+		children = child.children;
+		
+		for ( i = 0, l = children.length; i < l; i++ ) {
+			
+			subchild = children[ i ];
+			
+			this.reset( time, subchild );
+			
+		}
+		
+		if ( child instanceof _Menu.Instance ) {
+			
+			child.close( time );
+			
+		}
+		
+	}
+	
+	function child_opening ( child ) {
+		
+		this.childrenShowingOrder = this.childrenShowing.slice( 0 );
+		
+		this.hide_children( this.childrenShowingOrder, child );
+		
+	}
+	
+	function child_closing ( child ) {
+		
+		this.show_children( this.childrenShowingOrder );
 		
 	}
 	
@@ -439,6 +497,12 @@
 			
 		}
 		
+		if ( this.parent instanceof _Menu.Instance ) {
+			
+			this.parent.update_arrangement();
+			
+		}
+		
 	}
 	
 	function arrange_line ( parameters ) {
@@ -471,8 +535,12 @@
 		// init persistant info
 		// can only copy certain parameters due to recursion
 		
-		this._arrangement = 'line';
-		this.arrangementParameters = this.arrangementParameters || {};
+		if ( this._arrangement !== 'line' || main.type( this.arrangementParameters ) !== 'object' ) {
+			
+			this._arrangement = 'line';
+			this.arrangementParameters = {};
+			
+		}
 		
 		// handle parameters
 		
@@ -503,179 +571,190 @@
 			
 		}
 		
-		// theta passed in degrees
+		// if only 1 child, skip arrange and fit to child
 		
-		theta = _MathHelper.degree_to_rad( degrees );
-		thetaCos = Math.cos(theta);
-		thetaSin = Math.sin(theta);
-		
-		// if children per line passed as a string suggesting vertical or horizontal preference
-		
-		if ( childrenPerLine === 'v' ) {
+		if ( children.length <= 1 ) {
 			
-			childrenPerLine = Math.floor( Math.sqrt( children.length ) );
-			
-		}
-		else if ( childrenPerLine === 'h' ) {
-			
-			childrenPerLine = Math.ceil( Math.sqrt( children.length ) );
-			
-		}
-		
-		// if splitting into multiple lines
-		if ( main.is_number( childrenPerLine ) && childrenPerLine > 0 && childrenPerLine < children.length ) {
-			
-			multiline = true;
-			
-		}
-		// else all children on one line
-		else {
-			
-			childrenPerLine = children.length;
-			
-		}
-		
-		indexStart = parameters.indexStart = _MathHelper.clamp( ( main.is_number( parameters.indexStart ) ? parameters.indexStart : 0 ), 0, children.length );
-		
-		widthTotal = main.is_number( parameters.widthTotal ) ? parameters.widthTotal : 0;
-		heightTotal = main.is_number( parameters.heightTotal ) ? parameters.heightTotal : 0;
-		
-		if ( main.type( parameters.bounds ) !== 'object' ) {
-			
-			bounds = parameters.bounds = {
-				x: [],
-				rx: [],
-				y: [],
-				ry: []
-			};
-			
-			for ( i = 0, l = childrenPerLine; i < l; i++ ) {
-				
-				bounds.x[ i ] = bounds.rx[ i ] = bounds.y[ i ] = bounds.ry[ i ] = 0;
-				
-			}
+			this.fit_to_child( children[ 0 ] );
 			
 		}
 		else {
 			
-			bounds = parameters.bounds;
+			// theta passed in degrees
 			
-		}
-		
-		indexEnd = Math.min( children.length, indexStart + childrenPerLine );
-		
-		// if arranging for rectangular children
-		
-		if ( circular !== true ) {
+			theta = _MathHelper.degree_to_rad( degrees );
+			thetaCos = Math.cos(theta);
+			thetaSin = Math.sin(theta);
 			
-			thetaCosAbs = Math.abs( thetaCos );
-			thetaSinAbs = Math.abs( thetaSin );
+			// if children per line passed as a string suggesting vertical or horizontal preference
 			
-			thetaCosRnd = thetaCosAbs > thetaSinAbs ?  Math.round( thetaCos ) : ( thetaCos / sincos45 );
-			thetaSinRnd = thetaSinAbs > thetaCosAbs ?  Math.round( thetaSin ) : ( thetaSin / sincos45 );
-			
-		}
-		
-		// arrange all children in line
-		
-		for ( i = indexStart, l = indexEnd; i < l; i++ ) {
-			
-			child = children[ i ];
-			
-			cw = child.outerWidth;
-			ch = child.outerHeight;
-			
-			ib = i - indexStart;
-			
-			if ( circular === true ) {
+			if ( childrenPerLine === 'v' ) {
 				
-				rw = cw * thetaCos;
-				rh = ch * thetaSin;
-			
+				childrenPerLine = Math.floor( Math.sqrt( children.length ) );
+				
 			}
+			else if ( childrenPerLine === 'h' ) {
+				
+				childrenPerLine = Math.ceil( Math.sqrt( children.length ) );
+				
+			}
+			
+			// if splitting into multiple lines
+			if ( main.is_number( childrenPerLine ) && childrenPerLine > 0 && childrenPerLine < children.length ) {
+				
+				multiline = true;
+				
+			}
+			// else all children on one line
 			else {
 				
-				rw = _MathHelper.max_magnitude( cw * thetaCos, cw * thetaCosRnd );
-				rh = _MathHelper.max_magnitude( ch * thetaSin, ch * thetaSinRnd );
+				childrenPerLine = children.length;
 				
 			}
 			
-			child._x = bounds.rx[ ib - 1 ] || bounds.rx[ ib ];
-			child._y = bounds.ry[ ib - 1 ] || bounds.ry[ ib ];
+			indexStart = parameters.indexStart = _MathHelper.clamp( ( main.is_number( parameters.indexStart ) ? parameters.indexStart : 0 ), 0, children.length );
 			
-			bounds.x[ ib ] = child.x + cw;
-			bounds.y[ ib ] = child.y + ch;
-			bounds.rx[ ib ] = child.x + rw;
-			bounds.ry[ ib ] = child.y + rh;
+			widthTotal = main.is_number( parameters.widthTotal ) ? parameters.widthTotal : 0;
+			heightTotal = main.is_number( parameters.heightTotal ) ? parameters.heightTotal : 0;
 			
-			// max/min
-			
-			if ( bounds.x[ ib ] > xmax ) {
-				xmax = bounds.x[ ib ];
-			}
-			if ( child.x < xmin ) {
-				xmin = child.x;
-			}
-			if ( bounds.y[ ib ] > ymax ) {
-				ymax = bounds.y[ ib ];
-			}
-			if ( child.y < ymin ) {
-				ymin = child.y;
-			}
-			
-		}
-		// set this dimensions
-		
-		widthTotal = parameters.widthTotal = xmax - xmin;
-		heightTotal = parameters.heightTotal = ymax - ymin;
-		
-		this.width = widthTotal + this.spacingLeft + this.spacingRight;
-		this.height = heightTotal + this.spacingTop + this.spacingBottom;
-		
-		// set positions of children
-		
-		for ( i = indexStart, l = indexEnd; i < l; i++ ) {
-			
-			child = children[ i ];
-			
-			child.set_position( child.x + child.spacingLeft + this.spacingLeft - xmin, child.y + child.spacingTop + this.spacingTop - ymin );
-			
-		}
-		
-		// if is continuing multiline
-		
-		if ( multiline === true && indexEnd < children.length ) {
-			
-			parameters.indexStart = indexEnd;
-			
-			if ( ( degrees < 45 && degrees > -45 ) || degrees > 135 || degrees < -135 ) {
+			if ( main.type( parameters.bounds ) !== 'object' ) {
+				
+				bounds = parameters.bounds = {
+					x: [],
+					rx: [],
+					y: [],
+					ry: []
+				};
 				
 				for ( i = 0, l = childrenPerLine; i < l; i++ ) {
-					bounds.x[ i ] = 0;
-					bounds.y[ i ] = bounds.y[ 0 ];
-					bounds.rx[ i ] = 0;
-					bounds.ry[ i ] = bounds.y[ 0 ];	
+					
+					bounds.x[ i ] = bounds.rx[ i ] = bounds.y[ i ] = bounds.ry[ i ] = 0;
+					
 				}
 				
 			}
 			else {
 				
-				for ( i = 0, l = childrenPerLine; i < l; i++ ) {
-					bounds.x[ i ] = bounds.x[ 0 ];
-					bounds.y[ i ] = 0;
-					bounds.rx[ i ] = bounds.x[ 0 ];
-					bounds.ry[ i ] = 0;
-				}
+				bounds = parameters.bounds;
 				
 			}
 			
-			this.arrange_line( parameters );
+			indexEnd = Math.min( children.length, indexStart + childrenPerLine );
 			
-		}
-		// finished
-		else {
+			// if arranging for rectangular children
 			
-			this.align_cascade();
+			if ( circular !== true ) {
+				
+				thetaCosAbs = Math.abs( thetaCos );
+				thetaSinAbs = Math.abs( thetaSin );
+				
+				thetaCosRnd = thetaCosAbs > thetaSinAbs ?  Math.round( thetaCos ) : ( thetaCos / sincos45 );
+				thetaSinRnd = thetaSinAbs > thetaCosAbs ?  Math.round( thetaSin ) : ( thetaSin / sincos45 );
+				
+			}
+			
+			// arrange all children in line
+			
+			for ( i = indexStart, l = indexEnd; i < l; i++ ) {
+				
+				child = children[ i ];
+				
+				cw = child.outerWidth;
+				ch = child.outerHeight;
+				
+				ib = i - indexStart;
+				
+				if ( circular === true ) {
+					
+					rw = cw * thetaCos;
+					rh = ch * thetaSin;
+				
+				}
+				else {
+					
+					rw = _MathHelper.max_magnitude( cw * thetaCos, cw * thetaCosRnd );
+					rh = _MathHelper.max_magnitude( ch * thetaSin, ch * thetaSinRnd );
+					
+				}
+				
+				child._x = bounds.rx[ ib - 1 ] || bounds.rx[ ib ];
+				child._y = bounds.ry[ ib - 1 ] || bounds.ry[ ib ];
+				
+				bounds.x[ ib ] = child.x + cw;
+				bounds.y[ ib ] = child.y + ch;
+				bounds.rx[ ib ] = child.x + rw;
+				bounds.ry[ ib ] = child.y + rh;
+				
+				// max/min
+				
+				if ( bounds.x[ ib ] > xmax ) {
+					xmax = bounds.x[ ib ];
+				}
+				if ( child.x < xmin ) {
+					xmin = child.x;
+				}
+				if ( bounds.y[ ib ] > ymax ) {
+					ymax = bounds.y[ ib ];
+				}
+				if ( child.y < ymin ) {
+					ymin = child.y;
+				}
+				
+			}
+			// set this dimensions
+			
+			widthTotal = parameters.widthTotal = xmax - xmin;
+			heightTotal = parameters.heightTotal = ymax - ymin;
+			
+			this.width = widthTotal + this.spacingLeft + this.spacingRight;
+			this.height = heightTotal + this.spacingTop + this.spacingBottom;
+			
+			// set positions of children
+			
+			for ( i = indexStart, l = indexEnd; i < l; i++ ) {
+				
+				child = children[ i ];
+				
+				child.set_position( child.x + child.spacingLeft + this.spacingLeft - xmin, child.y + child.spacingTop + this.spacingTop - ymin );
+				
+			}
+			
+			// if is continuing multiline
+			
+			if ( multiline === true && indexEnd < children.length ) {
+				
+				parameters.indexStart = indexEnd;
+				
+				if ( ( degrees < 45 && degrees > -45 ) || degrees > 135 || degrees < -135 ) {
+					
+					for ( i = 0, l = childrenPerLine; i < l; i++ ) {
+						bounds.x[ i ] = 0;
+						bounds.y[ i ] = bounds.y[ 0 ];
+						bounds.rx[ i ] = 0;
+						bounds.ry[ i ] = bounds.y[ 0 ];	
+					}
+					
+				}
+				else {
+					
+					for ( i = 0, l = childrenPerLine; i < l; i++ ) {
+						bounds.x[ i ] = bounds.x[ 0 ];
+						bounds.y[ i ] = 0;
+						bounds.rx[ i ] = bounds.x[ 0 ];
+						bounds.ry[ i ] = 0;
+					}
+					
+				}
+				
+				this.arrange_line( parameters );
+				
+			}
+			// finished
+			else {
+				
+				this.align_cascade();
+				
+			}
 			
 		}
 		
@@ -699,6 +778,7 @@
 			circumference = 0,
 			child,
 			cw, ch,
+			cwh, chh,
 			size,
 			xmax = 0, xmin = 0, 
 			ymax = 0, ymin = 0,
@@ -708,8 +788,12 @@
 		// init persistant info
 		// can only copy certain parameters due to recursion
 		
-		this._arrangement = 'circle';
-		this.arrangementParameters = this.arrangementParameters || {};
+		if ( this._arrangement !== 'circle' || main.type( this.arrangementParameters ) !== 'object' ) {
+			
+			this._arrangement = 'circle';
+			this.arrangementParameters = {};
+			
+		}
 		
 		// handle parameters
 		
@@ -719,6 +803,7 @@
 		degrees = this.arrangementParameters.degrees = parameters.degrees = main.is_number( parameters.degrees ) ? parameters.degrees : ( main.is_number( this.arrangementParameters.degrees ) ? this.arrangementParameters.degrees : 360 );
 		radius = this.arrangementParameters.radius = parameters.radius = main.is_number( parameters.radius ) ? parameters.radius : this.arrangementParameters.radius;
 		spaceBySize = this.arrangementParameters.spaceBySize = parameters.spaceBySize = typeof parameters.spaceBySize === 'boolean' ? parameters.spaceBySize : this.arrangementParameters.spaceBySize;
+		
 		children = parameters.children;
 		
 		if ( main.type( children ) !== 'array' ) {
@@ -741,131 +826,135 @@
 			
 		}
 		
-		// default theta start to 180 degrees ( left side )
-		
-		thetaStart = _MathHelper.degree_to_rad( degreeStart % 360 );
-		
-		// add an additional subtending angle to degrees, up to +/- 360, to ensure children end at expected degrees
-		
-		degrees = _MathHelper.clamp( degrees + ( degrees / (children.length - 1) ), -360, 360 );
-		
-		radians = _MathHelper.degree_to_rad( degrees );
-		
-		// if radius not passed, determine exact to fit all children
-		
-		if ( main.is_number( radius ) !== true || radius === 0 ) {
+		if ( children.length <= 1 ) {
 			
-			radiansPer = radians / children.length;
+			this.fit_to_child( children[ 0 ] );
 			
-			// find circumference from children
-			// each addition to circumference is ( radius based on current child size ) * ( radians per child )
-			// ( this assumes each child is roughly equal size, I think )
+		}
+		else {
+			
+			// default theta start to 180 degrees ( left side )
+			
+			thetaStart = _MathHelper.degree_to_rad( degreeStart % 360 );
+			
+			// add an additional subtending angle to degrees, up to +/- 360, to ensure children end at expected degrees
+			
+			degrees = _MathHelper.clamp( degrees + ( degrees / Math.max( children.length - 1, 1 ) ), -360, 360 );
+			
+			radians = _MathHelper.degree_to_rad( degrees );
+			
+			// if radius not passed, determine exact to fit all children
+			
+			if ( main.is_number( radius ) !== true ) {
+				
+				radiansPer = radians / children.length;
+				
+				// find circumference from children
+				// each addition to circumference is ( radius based on current child size ) * ( radians per child )
+				// ( this assumes each child is roughly equal size, I think )
+				
+				for ( i = 0, l = children.length; i < l; i++ ) {
+					
+					child = children[ i ];
+					
+					circumference += ( Math.max( child.outerWidth, child.outerHeight ) / ( 2 * Math.sin( radiansPer / 2 ) ) ) * radiansPer;
+					
+				}
+				
+				radius = circumference / radians;
+				
+			}
+			else {
+				
+				circumference = 2 * Math.PI * radius;
+				
+			}
+			
+			// ensure circumference is positive
+			
+			if ( circumference < 0 ) {
+			
+				circumference = Math.abs( circumference );
+				
+			}
+			
+			// ensure radius is positive
+			
+			if ( radius < 0 ) {
+			
+				radius = Math.abs( radius );
+				
+			}
+			
+			// arrange all children in circle from theta start to theta end
 			
 			for ( i = 0, l = children.length; i < l; i++ ) {
 				
 				child = children[ i ];
 				
-				circumference += ( Math.max( child.outerWidth, child.outerHeight ) / ( 2 * Math.sin( radiansPer / 2 ) ) ) * radiansPer;
+				cw = child.outerWidth;
+				ch = child.outerHeight;
+				
+				// get theta based on size
+				// size is based on biggest dimension (because we dont have theta yet)
+				
+				if ( spaceBySize === true ) {
+					
+					size = Math.max( cw, ch );
+					
+					theta = thetaStart + ( size / radius );
+					
+				}
+				// else space evenly
+				else {
+					
+					theta = thetaStart + radians * ( i / l );//( l - 1 ) );
+					
+				}
+				
+				thetaSin = Math.sin( theta );
+				thetaCos = Math.cos( theta );
+				
+				// temporarily directly modify child x/y
+				
+				child._x = radius + radius * thetaCos;
+				child._y = radius + radius * thetaSin;
+				
+				// max/min
+				
+				if ( child.x + cw > xmax ) {
+					xmax = child.x + cw;
+				}
+				if ( child.x < xmin ) {
+					xmin = child.x;
+				}
+				if ( child.y + ch > ymax ) {
+					ymax = child.y + ch;
+				}
+				if ( child.y < ymin ) {
+					ymin = child.y;
+				}
 				
 			}
 			
-			radius = circumference / radians;
+			// set this dimensions and positions of all children
 			
-		}
-		else {
+			this.width = radius * 2 + this.spacingLeft + this.spacingRight;
+			this.height = radius * 2 + this.spacingTop + this.spacingBottom;
 			
-			circumference = 2 * Math.PI * radius;
-			
-		}
-		
-		// ensure circumference is positive
-		
-		if ( circumference < 0 ) {
-		
-			circumference = Math.abs( circumference );
-			
-		}
-		
-		// ensure radius is positive
-		
-		if ( radius < 0 ) {
-		
-			radius = Math.abs( radius );
-			
-		}
-		
-		// arrange all children in circle from theta start to theta end
-		
-		for ( i = 0, l = children.length; i < l; i++ ) {
-			
-			child = children[ i ];
-			
-			cw = child.outerWidth;
-			ch = child.outerHeight;
-			
-			// get theta based on size
-			// size is based on biggest dimension (because we dont have theta yet)
-			
-			if ( spaceBySize === true ) {
+			for ( i = 0, l = children.length; i < l; i++ ) {
 				
-				size = Math.max( cw, ch );
+				child = children[ i ];
 				
-				theta = thetaStart + ( size / radius );
-				
-			}
-			// else space evenly
-			else {
-				
-				theta = thetaStart + radians * ( i / l );//( l - 1 ) );
+				child.set_position( child.x + child.spacingLeft + this.spacingLeft - child.outerWidthHalf, child.y + child.spacingTop + this.spacingTop - child.outerHeightHalf );
 				
 			}
 			
-			thetaSin = Math.sin( theta );
-			thetaCos = Math.cos( theta );
+			// finished
 			
-			// temporarily directly modify child x/y
-			
-			child._x = radius * thetaCos;
-			child._y = radius * thetaSin;
-			
-			// max/min
-			
-			if ( child.x + cw > xmax ) {
-				xmax = child.x + cw;
-			}
-			if ( child.x < xmin ) {
-				xmin = child.x;
-			}
-			if ( child.y + ch > ymax ) {
-				ymax = child.y + ch;
-			}
-			if ( child.y < ymin ) {
-				ymin = child.y;
-			}
+			this.align_cascade();
 			
 		}
-		
-		// set this dimensions
-		
-		widthTotal = xmax - xmin;
-		heightTotal = ymax - ymin;
-		
-		this.width = widthTotal + this.spacingLeft + this.spacingRight;
-		this.height = heightTotal + this.spacingTop + this.spacingBottom;
-		
-		// set positions of all children
-		
-		for ( i = 0, l = children.length; i < l; i++ ) {
-			
-			child = children[ i ];
-			
-			child.set_position( child.x + child.spacingLeft + this.spacingLeft - xmin, child.y + child.spacingTop + this.spacingTop - ymin );
-			
-		}
-		
-		// finished
-		
-		this.align_cascade();
 		
 	}
 	
@@ -883,6 +972,24 @@
 			child.align();
 			
 		}
+		
+	}
+	
+	function fit_to_child ( child ) {
+		
+		this.width = this.spacingLeft + this.spacingRight;
+		this.height = this.spacingTop + this.spacingBottom;
+		
+		if ( child instanceof _UIElement.Instance ) {
+		
+			this.width += child.outerWidth;
+			this.height += child.outerHeight;
+			
+			child.set_position( child.spacingLeft, child.spacingTop );
+			
+		}
+		
+		this.align_cascade();
 		
 	}
 	

@@ -69,16 +69,11 @@
 	function Button ( parameters ) {
 		
 		var me = this,
-			textString,
 			imgDomElement;
 		
 		// handle parameters
 		
 		parameters = parameters || {};
-		
-		textString = parameters.text;
-		
-		parameters.text = undefined;
 		
 		// prototype constructor
 		
@@ -88,11 +83,11 @@
 		
 		// add text
 		
-		if ( typeof textString === 'string' ) {
+		if ( typeof parameters.text === 'string' ) {
 			
 			this.text = new _UIElement.Instance( {
 				id: this.id + '_text',
-				text: textString
+				html: parameters.text
 			} );
 		
 		}
@@ -126,13 +121,14 @@
 				
 				this.image = new _UIElement.Instance( {
 					id: this.id + '_image',
-					domElement: imgDomElement
+					domElement: imgDomElement,
+					width: main.is_number( parameters.imageWidth ) ? parameters.imageWidth : parameters.imageSize,
+					height: main.is_number( parameters.imageHeight ) ? parameters.imageHeight : parameters.imageSize
 				} );
 			
 			}
 			
 		}
-		
 		
 		// if image
 		

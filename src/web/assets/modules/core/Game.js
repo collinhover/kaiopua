@@ -477,7 +477,8 @@
 	
     function init_game () {
 		
-		var m;
+		var m = _GUI.menus,
+			b = _GUI.buttons;
 		
 		// assets
 		
@@ -485,9 +486,7 @@
 		_Button = main.get_asset_data( 'assets/modules/ui/Button.js' );
 		_Menu = main.get_asset_data( 'assets/modules/ui/Menu.js' );
 		
-		// buttons
-		
-		m = _GUI.menus;
+		// ui
 		
 		m.start.childrenByID.start.callback = function () {
 			start_game();
@@ -504,8 +503,15 @@
 		};
 		m.main.childrenByID.end.context = this;
 		
-		m.main.childrenByID.save.enabled = false;
-		m.start.childrenByID.load.enabled = m.main.childrenByID.load.enabled = false;
+		// fullscreen disabled until allows alphanumeric input
+		
+		b.fullscreenEnter.enabled = false;
+		b.fullscreenExit.enabled = false;
+		
+		b.save.enabled = false;
+		b.load.enabled = false;
+		//m.core.childrenByID.save.enabled = false;
+		//m.start.childrenByID.load.enabled = m.core.childrenByID.load.enabled = false;
 		//m.start.childrenByID.options.enabled = m.main.childrenByID.options.enabled = false;
 		
 		// menus
@@ -515,9 +521,10 @@
 		
 		// show ui
 		
-		_GUI.buttons.fullscreenEnter.show( _GUI.layers.ui );
+		b.fullscreenEnter.show( _GUI.layers.ui );
 		
 		m.start.show( _GUI.layers.ui );
+		m.start.show_children( m.start );
 		
     }
 	
@@ -994,11 +1001,9 @@
 		
 		_GUI.menus.footer.hide( true );
 		
-        // disable start menu
+        // start menu
 		
         _GUI.menus.start.disable();
-        
-        // hide start menu
 		
         _GUI.menus.start.hide( true );
         
@@ -1018,10 +1023,10 @@
 		
 		started = false;
 		
-		// hide and disable pause menu
+		// pause menu
 			
 		_GUI.menus.main.disable();
-		
+		_GUI.menus.main.reset();
 		_GUI.menus.main.hide( true );
 		
 		// show footer menu
@@ -1033,9 +1038,8 @@
         set_section( _Launcher, function () {
 			
 			// show / enable start menu
-			
+			_GUI.menus.start.reset();
 			_GUI.menus.start.show( _GUI.layers.ui );
-			
 			_GUI.menus.start.enable();
 			
 		});

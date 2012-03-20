@@ -17,8 +17,12 @@
 		buttonSizeLarge = 300,
 		buttonSizeMedium = 160,
 		buttonSizeSmall = 100,
-		buttonSizeFor24x24 = 60,
-		buttonSizeFor16x16 = 40,
+		buttonSizeForIconLarge = 100,
+		buttonSizeForIconMedium = 60,
+		buttonSizeForIconSmall = 40,
+		iconSizeLarge = 64,
+		iconSizeMedium = 32,
+		iconSizeSmall = 16,
 		buttonSpacing = 10;
 	
 	/*===================================================
@@ -51,6 +55,63 @@
 		_Button = btn;
 		_Menu = mn;
 		
+		// gui properties
+		
+		_GUI.fullscreen_api = ( function () {
+			
+			var fullScreenApi = { 
+					supportsFullScreen: false,
+					isFullScreen: function() { return false; }, 
+					requestFullScreen: function() {}, 
+					cancelFullScreen: function() {},
+					fullScreenEventName: '',
+					prefix: ''
+				},
+				browserPrefixes = 'webkit moz o ms khtml'.split(' ');
+			
+			// check for native support
+			if (typeof document.cancelFullScreen != 'undefined') {
+				fullScreenApi.supportsFullScreen = true;
+				
+			} else {	 
+				// check for fullscreen support by vendor prefix
+				for (var i = 0, il = browserPrefixes.length; i < il; i++ ) {
+					fullScreenApi.prefix = browserPrefixes[i];
+					
+					if (typeof document[fullScreenApi.prefix + 'CancelFullScreen' ] != 'undefined' ) {
+						fullScreenApi.supportsFullScreen = true;
+						
+						break;
+					}
+				}
+			}
+			
+			// update methods to do something useful
+			if (fullScreenApi.supportsFullScreen) {
+				fullScreenApi.fullScreenEventName = fullScreenApi.prefix + 'fullscreenchange';
+				
+				fullScreenApi.isFullScreen = function() {
+					switch (this.prefix) {	
+						case '':
+							return document.fullScreen;
+						case 'webkit':
+							return document.webkitIsFullScreen;
+						default:
+							return document[this.prefix + 'FullScreen'];
+					}
+				}
+				fullScreenApi.requestFullScreen = function(el) {
+					return (this.prefix === '') ? el.requestFullScreen() : el[this.prefix + 'RequestFullScreen']();
+				}
+				fullScreenApi.cancelFullScreen = function(el) {
+					return (this.prefix === '') ? document.cancelFullScreen() : document[this.prefix + 'CancelFullScreen']();
+				}		
+			}
+			
+			return fullScreenApi;
+			
+		} () );
+		
 		// init
 		
 		init_core();
@@ -64,10 +125,6 @@
 		// build
 		
 		build_gui();
-		
-		// share
-		
-		shared.gui = _GUI;
 		
 	}
 	
@@ -154,8 +211,9 @@
 		
 		b.fullscreenEnter = new _Button.Instance( {
 			id: 'fullscreen',
-			image: 'img/fullscreen_16x16.png',
-			width: buttonSizeFor16x16,
+			image: 'img/icon/fullscreen_32x32.png',
+			imageSize: iconSizeSmall,
+			width: buttonSizeForIconSmall,
 			spacing: buttonSpacing,
 			circle: true,
 			callback: fullscreen_enter,
@@ -167,8 +225,9 @@
 	
 		b.fullscreenExit = new _Button.Instance( {
 			id: 'fullscreen',
-			image: 'img/fullscreen_exit_16x16.png',
-			width: buttonSizeFor16x16,
+			image: 'img/icon/fullscreen_exit_32x32.png',
+			imageSize: iconSizeSmall,
+			width: buttonSizeForIconSmall,
 			spacing: buttonSpacing,
 			circle: true,
 			callback: fullscreen_exit,
@@ -177,6 +236,24 @@
 		} );
 	
 		b.fullscreenExit.hide( true, 0 );
+		
+		b.save = new _Button.Instance( {
+			id: 'save',
+			image: 'img/icon/save_64x64.png',
+			imageSize: iconSizeMedium,
+			size: buttonSizeForIconMedium,
+			spacing: buttonSpacing,
+			circle: true
+		} );
+		
+		b.load = new _Button.Instance( {
+			id: 'load',
+			image: 'img/icon/load_64x64.png',
+			imageSize: iconSizeMedium,
+			size: buttonSizeForIconMedium,
+			spacing: buttonSpacing,
+			circle: true
+		} );
 		
 	}
 	
@@ -200,6 +277,10 @@
             id: 'main'
         } );
 		
+		m.core = new _Menu.Instance( {
+            id: 'core'
+        } );
+		
 		m.options = new _Menu.Instance( {
             id: 'options'
         } );
@@ -212,7 +293,8 @@
 	
 	function build_start_menu () {
 		
-		var m = _GUI.menus;
+		var m = _GUI.menus,
+			b = _GUI.buttons;
 		
 		m.start.hide( true, 0 );
 	
@@ -220,23 +302,24 @@
 			new _Button.Instance( {
 				id: 'start',
 				text: 'Start',
-				width: buttonSizeMedium,
+				size: buttonSizeMedium,
 				spacing: buttonSpacing,
 				circle: true,
 				cssmap: {
 					'font-size' : "30px",
 					'font-family' : "'CoustardRegular', Georgia, serif"
-				}
+				},
+				alignment: 'center'
 			} ),
-			new _Button.Instance( {
-				id: 'load',
-				text: 'Load',
-				width: buttonSizeMedium,
-				spacing: buttonSpacing,
-				circle: true
-			} ),
+			b.load,
 			m.options
 		);
+		
+		m.start.childrenAlwaysVisible.push( m.start.childrenByID.start );
+		
+		m.start.arrange_circle( {
+			radius: buttonSizeMedium + buttonSpacing
+		} );
 		
 	}
 	
@@ -256,31 +339,65 @@
 				cssmap: {
 					'font-size' : "30px",
 					'font-family' : "'CoustardRegular', Georgia, serif"
-				}
+				},
+				alignment: 'center'
 			} ),
-			new _Button.Instance( {
-				id: 'save',
-				text: 'Save',
-				width: buttonSizeMedium,
-				spacing: buttonSpacing,
-				circle: true
-			} ),
-			new _Button.Instance( {
-				id: 'load',
-				text: 'Load',
-				width: buttonSizeMedium,
-				spacing: buttonSpacing,
-				circle: true
-			} ),
-			m.options,
 			new _Button.Instance( {
 				id: 'end',
-				text: 'End Game',
-				width: buttonSizeMedium,
+				text: 'End<br/>Game',
+				size: buttonSizeSmall,
 				spacing: buttonSpacing,
-				circle: true
-			} )
+				circle: true,
+				cssmap: {
+					'font-size' : "18px",
+					//'font-family' : "'CoustardRegular', Georgia, serif",
+					'text-align' : 'center'
+				},
+			} ),
+			m.core
 		);
+		
+		m.main.childrenAlwaysVisible.push( m.main.childrenByID.resume );
+	
+		m.main.arrange_circle( {
+			radius: buttonSizeMedium + buttonSpacing
+		} );
+	
+	}
+	
+	function build_core_menu () {
+		
+		var m = _GUI.menus,
+			b = _GUI.buttons;
+		
+		m.core.buttonOpen = new _Button.Instance( {
+			id: 'open',
+			image: 'img/icon/computer_alt_64x64.png',
+			imageSize: iconSizeMedium,
+			width: buttonSizeForIconMedium,
+			spacing: buttonSpacing,
+			circle: true
+		} );
+		
+		m.core.buttonClose = new _Button.Instance( {
+			id: 'close',
+			image: 'img/icon/undo_64x64.png',
+			imageSize: iconSizeSmall,
+			width: buttonSizeForIconSmall,
+			spacing: buttonSpacing,
+			circle: true
+		} );
+		
+		m.core.add(
+			b.load,
+			b.save,
+			m.options
+		);
+		
+		m.core.arrange_circle( {
+			degrees: 180,
+			radius: buttonSizeMedium + buttonSpacing
+		} );
 	
 	}
 	
@@ -290,58 +407,69 @@
 		
 		m.options.buttonOpen = new _Button.Instance( {
 			id: 'open',
-			text: 'Options',
-			width: buttonSizeMedium,
+			image: 'img/icon/cog_64x64.png',
+			imageSize: iconSizeMedium,
+			size: buttonSizeForIconMedium,
 			spacing: buttonSpacing,
 			circle: true
 		} );
 		
 		m.options.buttonClose = new _Button.Instance( {
 			id: 'close',
-			image: 'img/undo_24x24.png',
-			width: buttonSizeFor24x24,
+			image: 'img/icon/undo_64x64.png',
+			imageSize: iconSizeSmall,
+			width: buttonSizeForIconSmall,
 			spacing: buttonSpacing,
-			spacingRight: -buttonSizeFor24x24 * 0.5,
-			circle: true,
-			alignment: 'rightcenter',
+			circle: true
 		} );
 		
-		m.options.add( 	new _Button.Instance( {
+		m.options.add(
+			new _Button.Instance( {
 				id: 'quality',
-				text: 'Quality',
-				width: buttonSizeSmall,
+				image: 'img/icon/computer_64x64.png',
+				imageSize: iconSizeMedium,
+				size: buttonSizeForIconMedium,
 				spacing: buttonSpacing,
-				circle: true,
-				enabled: false,
-				cssmap: {
-					'font-size' : "16px"
-				}
-			} ) 
-		);
-		m.options.add( 	new _Button.Instance( {
-				id: 'aa',
-				text: 'AA',
-				width: buttonSizeSmall,
+				circle: true
+			} ),
+			new _Button.Instance( {
+				id: 'keybindings',
+				image: 'img/icon/keyboard_64x64.png',
+				imageSize: iconSizeMedium,
+				size: buttonSizeForIconMedium,
 				spacing: buttonSpacing,
-				circle: true,
-				enabled: false,
-				cssmap: {
-					'font-size' : "16px"
-				}
+				circle: true
+			} ),
+			new _Button.Instance( {
+				id: 'mouse',
+				image: 'img/icon/mouse_64x64.png',
+				imageSize: iconSizeMedium,
+				size: buttonSizeForIconMedium,
+				spacing: buttonSpacing,
+				circle: true
+			} ),
+			new _Button.Instance( {
+				id: 'sound',
+				image: 'img/icon/sound_64x64.png',
+				imageSize: iconSizeMedium,
+				size: buttonSizeForIconMedium,
+				spacing: buttonSpacing,
+				circle: true
+			} ),
+			new _Button.Instance( {
+				id: 'accessibility',
+				image: 'img/icon/accessibility_64x64.png',
+				imageSize: iconSizeMedium,
+				size: buttonSizeForIconMedium,
+				spacing: buttonSpacing,
+				circle: true
 			} )
 		);
-		m.options.add( 	new _Button.Instance( {
-				id: 'aa',
-				text: 'Multitouch',
-				width: buttonSizeSmall,
-				spacing: buttonSpacing,
-				circle: true,
-				enabled: false,
-				cssmap: {
-					'font-size' : "16px"
-				}
-			} )
-		);
+	
+		m.options.arrange_circle( {
+			degreeStart: 360 / m.options.children.length,
+			radius: buttonSizeMedium + buttonSpacing
+		} );
 		
 	}
 	
@@ -373,9 +501,11 @@
 		
 		build_start_menu();
 		
-		build_main_menu();
+		build_core_menu();
 		
 		build_options_menu();
+		
+		build_main_menu();
 		
 		build_footer_menu();
 		
@@ -392,7 +522,7 @@
     =====================================================*/
 	
 	function fullscreen_enter () {
-		console.log('FULLSCREEN ENTER');
+		
 		var b = _GUI.buttons,
 			c = _GUI.container,
 			parent;
@@ -412,7 +542,7 @@
 	function on_fullscreen_changed () {
 		
 		if ( _GUI.fullscreen_api.isFullScreen() !== true ) {
-			console.log('FULLSCREEN CANCEL');
+			
 			fullscreen_exit();
 			
 		}
@@ -420,7 +550,7 @@
 	}
 	
 	function fullscreen_exit () {
-		console.log('FULLSCREEN EXIT');
+		
 		var b = _GUI.buttons,
 			c = _GUI.container,
 			parent;
@@ -437,71 +567,4 @@
 		
 	}
 	
-	_GUI.fullscreen_api = ( function () {
-		
-		var fullScreenApi = { 
-				supportsFullScreen: false,
-				isFullScreen: function() { return false; }, 
-				requestFullScreen: function() {}, 
-				cancelFullScreen: function() {},
-				fullScreenEventName: '',
-				prefix: ''
-			},
-			browserPrefixes = 'webkit moz o ms khtml'.split(' ');
-		
-		// check for native support
-		if (typeof document.cancelFullScreen != 'undefined') {
-			fullScreenApi.supportsFullScreen = true;
-			
-		} else {	 
-			// check for fullscreen support by vendor prefix
-			for (var i = 0, il = browserPrefixes.length; i < il; i++ ) {
-				fullScreenApi.prefix = browserPrefixes[i];
-				
-				if (typeof document[fullScreenApi.prefix + 'CancelFullScreen' ] != 'undefined' ) {
-					fullScreenApi.supportsFullScreen = true;
-					
-					break;
-				}
-			}
-		}
-		
-		// update methods to do something useful
-		if (fullScreenApi.supportsFullScreen) {
-			fullScreenApi.fullScreenEventName = fullScreenApi.prefix + 'fullscreenchange';
-			
-			fullScreenApi.isFullScreen = function() {
-				switch (this.prefix) {	
-					case '':
-						return document.fullScreen;
-					case 'webkit':
-						return document.webkitIsFullScreen;
-					default:
-						return document[this.prefix + 'FullScreen'];
-				}
-			}
-			fullScreenApi.requestFullScreen = function(el) {
-				return (this.prefix === '') ? el.requestFullScreen() : el[this.prefix + 'RequestFullScreen']();
-			}
-			fullScreenApi.cancelFullScreen = function(el) {
-				return (this.prefix === '') ? document.cancelFullScreen() : document[this.prefix + 'CancelFullScreen']();
-			}		
-		}
-
-		// jQuery plugin
-		if (typeof jQuery != 'undefined') {
-			jQuery.fn.requestFullScreen = function() {
-		
-				return this.each(function() {
-					var el = jQuery(this).get(0);
-					if (fullScreenApi.supportsFullScreen) {
-						fullScreenApi.requestFullScreen(el);
-					}
-				});
-			};
-		}
-		
-		return fullScreenApi;
-		
-	} () );
 } (KAIOPUA) );
