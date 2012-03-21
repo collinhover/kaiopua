@@ -471,19 +471,19 @@
 		
 		depth = parameters.depth;
 		
-		if ( _MathHelper.is_number( width ) === false ) {
+		if ( main.is_number( width ) === false ) {
 			
 			needWidth = true;
 			
 		}
 		
-		if ( _MathHelper.is_number( height ) === false ) {
+		if ( main.is_number( height ) === false ) {
 			
 			needHeight = true;
 			
 		}
 		
-		if ( _MathHelper.is_number( depth ) === false ) {
+		if ( main.is_number( depth ) === false ) {
 			
 			needDepth = true;
 			

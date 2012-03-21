@@ -26,7 +26,7 @@
 		requirements: [
 			"assets/modules/characters/Character.js",
 			"assets/modules/core/Game.js",
-			"assets/modules/abilities/Farming.js"
+			"assets/modules/farming/Farming.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -86,9 +86,10 @@
 		parameters.movement.moveSpeedBack = 2;
 		parameters.movement.moveRunThreshold = parameters.movement.moveSpeed;
 		parameters.movement.rotateSpeed = 0.019;
-		parameters.movement.jumpSpeedStart = 6;
+		parameters.movement.jumpSpeedStart = 8;
 		parameters.movement.jumpSpeedEnd = 0;
 		parameters.movement.jumpTimeMax = 100;
+		parameters.movement.jumpAnimationTime = 1500;
 		
 		// prototype constructor
 		
@@ -105,7 +106,7 @@
 		// add to actions
 		
 		this.add_action( this.farming.plant, [ '002', 'plant' ], this.farming );
-		this.add_action( this.farming.rotate_plant, [ '001', 'rotate_plant' ], this.farming );
+		this.add_action( this.farming.planting.rotate_plant, [ '001', 'rotate_plant' ], this.farming.planting );
 		
 	}
 	

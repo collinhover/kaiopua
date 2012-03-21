@@ -164,7 +164,9 @@
 		jump.timeAfterNotGroundedMax = 125;
 		jump.startDelay = parametersMovement.jumpStartDelay || 125;
 		jump.startDelayTime = 0;
-		jump.animationTime = parametersMovement.jumpAnimationTime || 700;
+		jump.animationTime = parametersMovement.jumpAnimationTime || 1000;
+		jump.startAnimationTime = parametersMovement.jumpStartAnimationTime || jump.startDelay;
+		jump.endAnimationTime = parametersMovement.jumpEndAnimationTime || move.morphClearTime;
 		jump.ready = true;
 		jump.active = false;
 		
@@ -321,7 +323,7 @@
 			
 			followSettings = this.followers[ i ];
 			
-			_ObjectHelper.object_follow_object( this, followSettings.obj, followSettings.rotationBase, followSettings.rotationOffset, followSettings.positionOffset );
+			_ObjectHelper.object_follow_object( followSettings.obj, this, followSettings.rotationBase, followSettings.rotationOffset, followSettings.positionOffset );
 				
 		}
 		
@@ -357,7 +359,6 @@
 			jumpTimeRatio,
 			jumpTimeAfterNotGroundedMax,
 			jumpStartDelay,
-			jumpAnimationTime,
 			velocityGravity,
 			velocityGravityForce,
 			velocityMovement,
@@ -402,7 +403,6 @@
 			jumpTimeMax = jump.timeMax;
 			jumpTimeAfterNotGroundedMax = jump.timeAfterNotGroundedMax;
 			jumpStartDelay = jump.startDelay;
-			jumpAnimationTime = jump.animationTime;
 			
 			velocityMovement = rigidBody.velocityMovement;
 			velocityMovementForce = velocityMovement.force;
@@ -432,10 +432,6 @@
 				
 				jump.active = true;
 				
-				// play jump
-				
-				this.morph_cycle ( timeDelta, 'jump', jumpAnimationTime, false );
-				
 				// count delay
 				
 				jump.startDelayTime += timeDelta;
@@ -443,6 +439,10 @@
 				// do jump after delay
 				
 				if ( jump.startDelayTime >= jump.startDelay ) {
+					
+					// play jump
+				
+					this.morph_cycle ( timeDelta, 'jump', jump.animationTime, true );
 					
 					// properties
 					
@@ -459,6 +459,16 @@
 					velocityGravityForce.y += jumpSpeedStart * ( 1 - jumpTimeRatio) + jumpSpeedEnd * jumpTimeRatio;
 					
 				}
+				else {
+					
+					// play jump start
+					
+					morphs.play( 'jump_start', { duration: jump.startAnimationTime, loop: false, callback: function () { morphs.clear( 'jump_start' ); } } );
+					
+					// hold velocity
+					velocityGravityForce.y  = 0;
+					
+				}
 				
 			}
 			else {
@@ -467,7 +477,13 @@
 					
 					jump.active = false;
 					
-					morphs.clear( 'jump', move.morphClearTime );
+					if ( jump.timeAfterNotGrounded >= jumpTimeAfterNotGroundedMax ) {
+						
+						morphs.clear( 'jump', move.morphClearTime );
+					
+						morphs.play( 'jump_end', { duration: jump.endAnimationTime, loop: false, callback: function () { morphs.clear( 'jump_end', move.morphClearTime ); } } );
+					
+					}
 					
 				}
 				

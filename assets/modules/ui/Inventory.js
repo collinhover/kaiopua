@@ -1,7 +1,7 @@
 /*
  *
- * Plant.js
- * Basic element of farming.
+ * Inventory.js
+ * Menu based inventory system.
  *
  * @author Collin Hover / http://collinhover.com/
  *
@@ -9,9 +9,9 @@
 (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/puzzles/Plant.js",
-		_Plant = {},
-		_GridElement;
+		assetPath = "assets/modules/ui/Inventory.js",
+		_Inventory = {},
+		_MenuDynamic;
 	
 	/*===================================================
     
@@ -20,9 +20,9 @@
     =====================================================*/
 	
 	main.asset_register( assetPath, { 
-		data: _Plant,
+		data: _Inventory,
 		requirements: [
-			"assets/modules/puzzles/GridElement.js"
+			"assets/modules/ui/MenuDynamic.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -34,24 +34,24 @@
     
     =====================================================*/
 	
-	function init_internal( ge ) {
-		console.log('internal plant', _Plant);
+	function init_internal ( md ) {
+		console.log('internal inventory', _Inventory);
 		
-		_GridElement = ge;
+		_MenuDynamic = md;
 		
-		_Plant.Instance = Plant;
-		_Plant.Instance.prototype = new _GridElement.Instance();
-		_Plant.Instance.prototype.constructor = _Plant.Instance;
+		_Inventory.Instance = Inventory;
+		_Inventory.Instance.prototype = new _MenuDynamic.Instance();
+		_Inventory.Instance.prototype.constructor = _Inventory.Instance;
 		
 	}
 	
 	/*===================================================
     
-    plant
+    ui
     
     =====================================================*/
 	
-	function Plant ( parameters ) {
+	function Inventory ( parameters ) {
 		
 		// handle parameters
 		
@@ -59,11 +59,7 @@
 		
 		// prototype constructor
 		
-		_GridElement.Instance.call( this, parameters );
-		
-		// properties
-		
-		this.seed = parameters.seed;
+		_MenuDynamic.Instance.call( this, parameters );
 		
 	}
 	

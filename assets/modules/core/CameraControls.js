@@ -11,10 +11,10 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/core/CameraControls.js",
 		_CameraControls = {},
-		_Game,
 		_ObjectHelper,
 		_MathHelper,
 		firstPersonDist = 50,
+		rotateRecordedThreshold = 4,
 		utilVec31Update,
 		utilVec32Update,
 		utilVec33Update,
@@ -30,7 +30,6 @@
 	main.asset_register( assetPath, { 
 		data: _CameraControls,
 		requirements: [
-			"assets/modules/core/Game.js",
 			"assets/modules/utils/ObjectHelper.js",
 			"assets/modules/utils/MathHelper.js"
 		],
@@ -44,11 +43,10 @@
     
     =====================================================*/
 	
-	function init_internal ( g, oh, mh ) {
+	function init_internal ( oh, mh ) {
 		console.log('internal cameracontrols');
 		// assets
 		
-		_Game = g;
 		_ObjectHelper = oh;
 		_MathHelper = mh;
 		
@@ -64,6 +62,7 @@
 		
 		_CameraControls.Instance = CameraControls;
 		_CameraControls.Instance.prototype.rotate = rotate;
+		_CameraControls.Instance.prototype.rotate_update = rotate_update;
 		_CameraControls.Instance.prototype.zoom = zoom;
 		_CameraControls.Instance.prototype.update = update;
 		
@@ -106,26 +105,21 @@
 	
 	function CameraControls ( player, camera ) {
 		
-		var me = this,
-			pRot,
+		var pRot,
 			pPos;
-		
-		// public
-		
-		me.rotate_update = rotate_update;
 		
 		// camera
 		
-		me.camera = camera;
+		this.camera = camera;
 		
 		// player
 		
-		me.player = player;
+		this.player = player;
 		
 		// controller settings
 		
-		me.settingsRotation = pRot = new PropertySettings();
-		me.settingsPosition = pPos = new PropertySettings();
+		this.settingsRotation = pRot = new PropertySettings();
+		this.settingsPosition = pPos = new PropertySettings();
 		
 		pRot.base.setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), Math.PI );
 		pRot.offsetBase.set( 25, 0, 0 );
@@ -145,39 +139,14 @@
 		pPos.offsetSnapToMinDist.set( 0, 0, firstPersonDist );
 		pPos.deltaMin.set( -80, -80, -80 );
 		pPos.deltaMax.set( 80, 80, 80 );
-		pPos.deltaSpeedMin = 0.01;
-		pPos.deltaSpeedMax = 0.25;
+		pPos.deltaSpeedMin = 0.1;
+		pPos.deltaSpeedMax = 0.3;
 		pPos.deltaDecay = 0.7;
 		
 		// misc
 		
-		me.firstPerson = false;
-		
-		// functions
-		
-		/*===================================================
-		
-		rotate
-		
-		=====================================================*/
-		
-		function rotate_update () {
-			
-			var rotDelta = pRot.delta,
-				rotDeltaMin = pRot.deltaMin,
-				rotDeltaMax = pRot.deltaMax,
-				rotDeltaSpeed = pRot.deltaSpeedMin,
-				mouse = pRot.mouse;
-			
-			// pitch
-			
-			rotDelta.x = _MathHelper.clamp( rotDelta.x + mouse.dy * rotDeltaSpeed, rotDeltaMin.x, rotDeltaMax.x );
-			
-			// yaw
-			
-			rotDelta.y = _MathHelper.clamp( rotDelta.y - mouse.dx * rotDeltaSpeed, rotDeltaMin.y, rotDeltaMax.y );
-			
-		}
+		this.firstPerson = false;
+		this.rotatedRecently = false;
 		
 	}
 	
@@ -201,6 +170,7 @@
 		this.delta = new THREE.Vector3();
 		this.deltaMin = new THREE.Vector3();
 		this.deltaMax = new THREE.Vector3();
+		this.deltaTotal = new THREE.Vector3();
 		this.deltaSpeedMin = 0;
 		this.deltaSpeedMax = 0;
 		this.deltaDecay = 0.8;
@@ -215,14 +185,23 @@
 	
 	function rotate ( e, end ) {
 		
-		var mouse;
+		var rotated = false,
+			mouse;
 		
 		// end rotation
 		if ( end === true ) {
 			
-			shared.signals.mousemoved.remove( this.rotate_update );
+			// if rotated
+			
+			rotated = this.rotatedRecently;
+			
+			// reset
+			
+			shared.signals.mousemoved.remove( rotate_update, this );
 			
 			this.settingsRotation.mouse = undefined;
+			
+			this.rotatedRecently = false;
 			
 		}
 		// start rotation
@@ -230,9 +209,55 @@
 			
 			// store mouse
 			
-			this.settingsRotation.mouse = _Game.get_mouse( ( typeof e !== 'undefined' ? e.identifier : 0 ) );
+			this.settingsRotation.mouse = main.get_mouse( ( e ? e.identifier : 0 ) );
 			
-			shared.signals.mousemoved.add( this.rotate_update );
+			// reset properties
+			
+			this.settingsRotation.deltaTotal.set( 0, 0, 0 );
+			this.settingsRotation.delta.set( 0, 0, 0 );
+			this.rotatedRecently = false;
+			
+			// update
+			
+			shared.signals.mousemoved.add( rotate_update, this );
+			
+		}
+		
+		return rotated;
+		
+	}
+	
+	function rotate_update () {
+		
+		var pRot = this.settingsRotation,
+			rotDelta = pRot.delta,
+			rotDeltaMin = pRot.deltaMin,
+			rotDeltaMax = pRot.deltaMax,
+			rotDeltaSpeed = pRot.deltaSpeedMin,
+			rotDeltaTotal = pRot.deltaTotal,
+			rotDeltaX,
+			rotDeltaY,
+			mouse = pRot.mouse;
+		
+		// pitch
+		
+		rotDelta.x = _MathHelper.clamp( rotDelta.x + mouse.dy * rotDeltaSpeed, rotDeltaMin.x, rotDeltaMax.x );
+		
+		// yaw
+		
+		rotDelta.y = _MathHelper.clamp( rotDelta.y - mouse.dx * rotDeltaSpeed, rotDeltaMin.y, rotDeltaMax.y );
+		
+		// if totals above start threshold
+		
+		if ( this.rotatedRecently !== true ) {
+			
+			rotDeltaTotal.addSelf( rotDelta );
+			
+			if ( rotDeltaTotal.length() > rotateRecordedThreshold ) {
+				
+				this.rotatedRecently = true;
+				
+			}
 			
 		}
 		
@@ -408,7 +433,7 @@
 		
 		// follow player
 		
-		_ObjectHelper.object_follow_object( pc, this.camera, rotBase, rotOffset, posOffset );
+		_ObjectHelper.object_follow_object( this.camera, pc, rotBase, rotOffset, posOffset );
 		
 		// decay deltas
 		

@@ -13,17 +13,15 @@
 		_Game = {},
         _AssetLoader,
 		_ErrorHandler,
+		_MathHelper,
+		_ObjectHelper,
 		_Physics,
-		_UIHelper,
-		_MenuMaker,
+		_GUI,
+		_UIElement,
+		_Menu,
+		_Button,
 		_Launcher,
 		_Intro,
-        transitioner,
-        domElement,
-		containerOverlayAll,
-		containerOverlayDisplay,
-		containerUI,
-		containerDisplay,
         renderer, 
         renderTarget,
 		renderComposer,
@@ -46,27 +44,32 @@
 		utilProjector1Selection,
 		utilRay1Selection,
 		utilVec31Selection,
-        transitionOut = 1000, 
-        transitionIn = 400,
-		transitionerAlpha = 0.75,
-        loadAssetsDelay = 500,
+		sectionChangePauseTime = 500,
 		dependencies = [
 			"assets/modules/utils/AssetLoader.js",
             "assets/modules/utils/ErrorHandler.js",
-			"assets/modules/utils/UIHelper.js",
-			"assets/modules/utils/MathHelper.js",
-			"assets/modules/utils/Dev.js"
 		],
         assetsBasic = [
+			"assets/modules/ui/UIElement.js",
+			"assets/modules/ui/Button.js",
+			"assets/modules/ui/Menu.js",
+			"assets/modules/core/GUI.js",
+			"assets/modules/utils/MathHelper.js",
             "js/lib/three/Three.js",
+			"js/lib/jquery.transform2d.min.js",
+			"js/lib/jquery.tipTip.min.js",
+        ],
+		assetsThreeExtras = [
             "js/lib/three/ThreeExtras.js",
             "js/lib/three/postprocessing/ShaderExtras.js",
             "js/lib/three/postprocessing/EffectComposer.js",
             "js/lib/three/postprocessing/RenderPass.js",
             "js/lib/three/postprocessing/ShaderPass.js",
             "js/lib/three/postprocessing/MaskPass.js",
+			"js/lib/three/physics/Collisions.js",
+			"js/lib/three/physics/CollisionUtils.js",
             "assets/modules/effects/FocusVignette.js"
-        ],
+		],
         assetsLauncher = [
             "assets/modules/sections/Launcher.js",
             "assets/modules/env/WaterLauncher.js",
@@ -79,15 +82,16 @@
         ],
         assetsGame = [
 			/*"js/lib/ammo.js",*/
-			"js/lib/three/physics/Collisions.js",
-			"js/lib/three/physics/CollisionUtils.js",
 			"assets/modules/core/Physics.js",
 			"assets/modules/core/Player.js",
 			"assets/modules/core/Model.js",
 			"assets/modules/core/CameraControls.js",
+			"assets/modules/ui/Button.js",
+			"assets/modules/ui/Menu.js",
+			"assets/modules/ui/MenuDynamic.js",
+			"assets/modules/ui/Inventory.js",
 			"assets/modules/utils/ObjectMaker.js",
 			"assets/modules/utils/ObjectHelper.js",
-			"assets/modules/utils/MenuMaker.js",
 			"assets/modules/characters/Character.js",
 			"assets/modules/characters/Hero.js",
 			"assets/modules/env/World.js",
@@ -98,8 +102,10 @@
 			"assets/modules/puzzles/GridModule.js",
 			"assets/modules/puzzles/GridModuleState.js",
 			"assets/modules/puzzles/GridElement.js",
-			"assets/modules/puzzles/Plant.js",
-			"assets/modules/abilities/Farming.js",
+			"assets/modules/farming/Farming.js",
+			"assets/modules/farming/Planting.js",
+			"assets/modules/farming/Field.js",
+			"assets/modules/farming/Plant.js",
 			"assets/modules/sections/Intro.js",
             { path: "assets/models/Whale_Head.js", type: 'model' },
 			{ path: "assets/models/Whale_Tail.js", type: 'model' },
@@ -171,15 +177,12 @@
 	_Game.add_to_scene = add_to_scene;
 	_Game.remove_from_scene = remove_from_scene;
 	
-	_Game.get_mouse = get_mouse;
 	_Game.get_intersection_from_mouse = get_intersection_from_mouse;
 	_Game.get_object_under_mouse = get_object_under_mouse;
 	
-	// getters and setters
+	_Game.is_stop_parameter = is_stop_parameter;
 	
-	Object.defineProperty(_Game, 'domElement', { 
-		get : function () { return domElement; }
-	});
+	// getters and setters
 	
 	Object.defineProperty(_Game, 'paused', { 
 		get : function () { return paused; }
@@ -223,15 +226,13 @@
     
     =====================================================*/
 	
-	function init_internal ( al, err, u ) {
+	function init_internal ( al, err ) {
 		console.log('internal game');
 		_AssetLoader = al;
 		_ErrorHandler = err;
-		_UIHelper = u;
 		
 		// register error listeners
 		
-		window.onerror = on_error;
 		shared.signals.error.add( on_error );
 		
 		// check for errors
@@ -259,7 +260,13 @@
 	
 	function load_basics () {
 		
-		main.asset_require( assetsBasic, [init_basics, load_launcher] );
+		main.asset_require( assetsBasic, [ load_three_extras ] );
+		
+	}
+	
+	function load_three_extras () {
+		
+		main.asset_require( assetsThreeExtras, [ init_basics, load_launcher ] );
 		
 	}
 	
@@ -271,15 +278,7 @@
 	
 	function load_game () {
 		
-		// pause for short delay
-		
-		window.requestTimeout( function () {
-			
-			// load game assets and init game
-			
-			main.asset_require( assetsGame, init_game, true, containerOverlayAll.domElement );
-			
-		}, loadAssetsDelay);
+		main.asset_require( assetsGame, init_game, true, _GUI.layers.ui.domElement );
 		
 	}
 	
@@ -293,14 +292,15 @@
 		
 		var shaderScreen = THREE.ShaderExtras[ "screen" ],
             shaderFocusVignette = main.get_asset_data("assets/modules/effects/FocusVignette");
-			/*bg = effects.LinearGradient.generate( {
-				colors: [0x0F042E, 0x1D508F, 0x529AD1, 0x529AD1, 0x455AE0],
-				stops: [0, 0.4, 0.6, 0.8, 1.0],
-				startBottom: true
-			} )*/
+		
+		// modify THREE classes
+		
+		add_three_modifications();
 		
 		// utility
 		
+		_UIElement = main.get_asset_data( "assets/modules/ui/UIElement.js" );
+		_GUI = main.get_asset_data( "assets/modules/core/GUI.js" );
 		_MathHelper = main.get_asset_data( "assets/modules/utils/MathHelper.js" );
 		
 		utilProjector1Selection = new THREE.Projector();
@@ -308,6 +308,7 @@
 		utilVec31Selection = new THREE.Vector3();
 		
 		// cardinal axes
+		
 		shared.cardinalAxes = {
 			up: new THREE.Vector3( 0, 1, 0 ),
 			forward: new THREE.Vector3( 0, 0, 1 ),
@@ -315,51 +316,14 @@
 		}
         
         // game signals
+		
         shared.signals = shared.signals || {};
         shared.signals.paused = new signals.Signal();
         shared.signals.resumed = new signals.Signal();
         shared.signals.update = new signals.Signal();
 		
-		// set up game dom elements
-		
-		domElement = shared.html.gameContainer;
-		
-		containerOverlayAll = _UIHelper.make_ui_element( {
-			id: 'game_overlay_all',
-			classes: 'container_fullscreen',
-			pointerEventsOnlyWithChildren: true
-        });
-		containerOverlayDisplay = _UIHelper.make_ui_element( {
-			id: 'game_overlay_display',
-			classes: 'container_fullscreen',
-			pointerEventsOnlyWithChildren: true
-        });
-		containerUI = _UIHelper.make_ui_element( {
-			id: 'game_ui',
-			classes: 'container_fullscreen'
-        });
-		containerDisplay = _UIHelper.make_ui_element( {
-			id: 'game_visuals',
-			classes: 'container_fullscreen'
-        });
-		
-		domElement.append( containerDisplay.domElement );
-		domElement.append( containerOverlayDisplay.domElement );
-		domElement.append( containerUI.domElement );
-		domElement.append( containerOverlayAll.domElement );
-		
-        // transitioner
-		
-        transitioner = _UIHelper.make_ui_element({
-            classes: 'transitioner container_fullscreen'
-        });
-		
-		// modify THREE classes
-		
-		add_three_modifications();
-		
 		// renderer
-        renderer = new THREE.WebGLRenderer( { antialias: true, clearColor: 0x000000, clearAlpha: 0/*, maxLights: 10 */} );
+        renderer = new THREE.WebGLRenderer( { antialias: true, clearColor: 0x000000, clearAlpha: 0, maxLights: 8 } );
         renderer.setSize( shared.screenWidth, shared.screenHeight );
         renderer.autoClear = false;
 		
@@ -432,14 +396,18 @@
         
         set_render_processing();
 		
-		// add to display
+		// add basic ui to display
 		
-        containerDisplay.domElement.append( renderer.domElement );
+		_GUI.renderer = new _UIElement.Instance( {
+			id: 'renderer',
+			domElement: renderer.domElement 
+		} );
+		_GUI.layers.display.add( _GUI.renderer );
 		
 		// resize
 		
-        shared.signals.windowresized.add(resize);
-		resize(shared.screenWidth, shared.screenHeight);
+        shared.signals.windowresized.add( resize );
+		resize( shared.screenWidth, shared.screenHeight );
 		
 		// set ready
 		
@@ -510,122 +478,44 @@
 	
     function init_game () {
 		
+		var m = _GUI.menus,
+			b = _GUI.buttons;
+		
 		// assets
 		
-		_MenuMaker = main.get_asset_data( 'assets/modules/utils/MenuMaker.js' );
+		_ObjectHelper = main.get_asset_data( "assets/modules/utils/ObjectHelper.js" );
+		_Button = main.get_asset_data( 'assets/modules/ui/Button.js' );
+		_Menu = main.get_asset_data( 'assets/modules/ui/Menu.js' );
 		
-		// init menus
+		// ui
 		
-		init_footer_menu();
+		m.start.childrenByID.play.callback = function () {
+			start_game();
+		};
+		m.start.childrenByID.play.context = this;
 		
-		init_start_menu();
+		m.main.childrenByID.resume.callback = function () {
+			resume();
+		};
+		m.main.childrenByID.resume.context = this;
 		
-		init_pause_menu();
+		m.main.childrenByID.end.callback = function () {
+			stop_game();
+		};
+		m.main.childrenByID.end.context = this;
 		
-		// show start menu
+		// menus
 		
-		menus.start.ui_show( containerUI.domElement );
+		m.start.alignment = 'center';
+		m.main.alignment = 'center';
+		
+		// show ui
+		
+		b.fullscreenEnter.show( _GUI.layers.ui );
+		
+		m.start.show( _GUI.layers.ui );
 		
     }
-	
-	/*===================================================
-    
-    game menus
-    
-    =====================================================*/
-	
-	function init_footer_menu() {
-		
-		var menu;
-		
-		// init footer menu
-		
-		menu = menus.footer = _UIHelper.make_ui_element( { domElement: shared.html.footerMenu } );
-			
-	}
-	
-	function init_start_menu () {
-		var menu;
-        
-        // init start menu
-		
-        menu = menus.start = _MenuMaker.make_menu( {
-            id: 'start_menu',
-			transparent: true,
-            width: 570
-        } );
-        
-        menu.add_item( _MenuMaker.make_button( {
-            id: 'Start', 
-            callback: function () {
-                start_game();
-            },
-            classes: 'item_big',
-			circleButton: true
-        } ) );
-        menu.add_item( _MenuMaker.make_button( {
-            id: 'Continue', 
-            callback: function () {},
-            disabled: true,
-			circleButton: true
-        } ) );
-        menu.add_item( _MenuMaker.make_button( {
-            id: 'Options', 
-            callback: function () {},
-            disabled: true,
-			circleButton: true
-        } ) );
-		
-        menu.ui_keep_centered();
-        
-        menu.ui_hide( true, 0 );
-		
-	}
-	
-	function init_pause_menu () {
-		var menu;
-        
-        // init menu
-        
-        menu = menus.pause = _MenuMaker.make_menu( {
-            id: 'pause_menu',
-            width: 760,
-			transparent: true
-        } );
-        
-        menu.add_item( _MenuMaker.make_button( {
-            id: 'Resume', 
-            callback: function () {
-                resume();
-            },
-            classes: 'item_big',
-			circleButton: true
-        } ) );
-		menu.add_item( _MenuMaker.make_button( {
-            id: 'Options', 
-            callback: function () {},
-            disabled: true,
-			circleButton: true
-        } ) );
-        menu.add_item( _MenuMaker.make_button( {
-            id: 'Save', 
-            callback: function () {},
-            disabled: true,
-			circleButton: true
-        } ) );
-		menu.add_item( _MenuMaker.make_button( {
-            id: 'End Game', 
-            callback: function () {
-				stop_game();
-			},
-			circleButton: true
-        } ) );
-        
-        menu.ui_keep_centered();
-        
-        menu.ui_hide( true, 0 );
-        
-	}
 	
 	/*===================================================
     
@@ -917,30 +807,7 @@
     
     =====================================================*/
 	
-	function get_mouse ( parameters ) {
-		
-		var mouse;
-		
-		if ( typeof parameters === 'number' ) {
-			
-			mouse = shared.mice[ parameters ];
-			
-		}
-		else if ( typeof parameters === 'object' && parameters.hasOwnProperty( 'mouseIndex' ) && parameters.mouseIndex > 0 && parameters.mouseIndex < shared.mice.length ) {
-			
-			mouse = shared.mice[ parameters.mouseIndex ];
-			
-		}
-		else {
-			
-			mouse = shared.mice[ 0 ];
-			
-		}
-		
-		return mouse;
-	}
-	
-	function get_intersection_from_mouse ( objects, mouse, cameraTarget ) {
+	function get_intersection_from_mouse ( objects, traverseHierarchy, mouse, cameraTarget ) {
 		
 		var projector = utilProjector1Selection,
 			ray = utilRay1Selection,
@@ -950,23 +817,21 @@
 		
 		// handle parameters
 		
-		mouse = mouse || get_mouse();
+		objects = objects || scene;
+		
+		traverseHierarchy = ( typeof traverseHierarchy === 'boolean' ) ? traverseHierarchy : true;
+		
+		mouse = mouse || main.get_mouse();
 		
 		cameraTarget = cameraTarget || camera;
 		
-		objects = objects || scene;
+		// account for hierarchy and extract all children
 		
-		// if objects is instance of scene
-		
-		if ( objects instanceof THREE.Scene ) {
+		if ( traverseHierarchy !== false ) {
 			
-			objects = objects.children;
+			objects = _ObjectHelper.extract_children_from_objects( objects, objects );
 			
 		}
-		
-		// ensure objects is array
-		
-		objects = main.ensure_array( objects );
 		
 		// get corrected mouse position
 		
@@ -995,18 +860,13 @@
 		
 	}
 	
-	function get_object_under_mouse ( objects, mouse, cameraTarget ) {
+	function get_object_under_mouse ( objects, traverseHierarchy, mouse, cameraTarget ) {
 		
-		var intersection = get_intersection_from_mouse( objects, mouse, cameraTarget ),
-			intersectedMesh;
-		
-		// extract mesh and, if present, model
+		var intersection = get_intersection_from_mouse( objects, traverseHierarchy, mouse, cameraTarget );
 		
 		if ( typeof intersection !== 'undefined' ) {
 			
-			intersectedMesh = intersection.object;
-			
-			return intersectedMesh.kaiopuaModel || intersectedMesh;
+			return intersection.object;
 			
 		}
 		
@@ -1039,8 +899,6 @@
 					
 				}
 				
-				transitioner.ui_hide( true, transitionOut );
-				
 				section.resize(shared.screenWidth, shared.screenHeight);
 				
                 section.show();
@@ -1049,15 +907,11 @@
 				
 				resume();
 				
-				// callback after transition out time
-				
-				window.requestTimeout( function () {
-					if ( typeof callback !== 'undefined' ) {
-						
-						callback.call();
-						
-					}
-				}, transitionOut );
+				if ( typeof callback !== 'undefined' ) {
+					
+					callback.call();
+					
+				}
 				
 			};
 		
@@ -1074,7 +928,7 @@
             
             previousSection.hide();
             
-			transitioner.ui_show( containerOverlayAll.domElement, transitionIn );
+			_GUI.transitioner.show( _GUI.layers.overlayAll, undefined, 1 );
             
         }
 		
@@ -1105,7 +959,7 @@
 					
 					newSectionCallback();
 					
-				}, transitionIn );
+				}, _GUI.transitioner.timeShow );
 			
 			}
 			// no previous section, create new immediately
@@ -1126,7 +980,7 @@
     =====================================================*/
     
     function start_game () {
-		
+		console.log('start game');
 		// assets
 		
 		_Physics = main.get_asset_data( 'assets/modules/core/Physics.js' );
@@ -1134,16 +988,13 @@
 		
 		// hide footer menu
 		
-		menus.footer.ui_hide( true );
-		//$(shared.html.staticMenu).stop(true).fadeTo( transitionIn, 0 );
+		_GUI.menus.footer.hide( true );
 		
-        // disable start menu
+        // start menu
 		
-        menus.start.disable();
-        
-        // hide start menu
+        _GUI.menus.start.disable();
 		
-        menus.start.ui_hide( true );
+        _GUI.menus.start.hide( true );
         
 		// set intro section
 		
@@ -1161,20 +1012,15 @@
 		
 		started = false;
 		
-		// hide and disable pause menu
-		
-		if ( typeof menus.pause !== 'undefined' ) {
+		// pause menu
 			
-			menus.pause.disable();
+		_GUI.menus.main.disable();
 		
-			menus.pause.ui_hide( true );
-			
-		}
+		_GUI.menus.main.hide( true );
 		
 		// show footer menu
 		
-		menus.footer.ui_show();
-		//$(shared.html.staticMenu).stop(true).fadeTo( transitionOut, 1 );
+		_GUI.menus.footer.show();
 		
 		// set launcher section
 		
@@ -1182,9 +1028,8 @@
 			
 			// show / enable start menu
 			
-			menus.start.ui_show( containerUI.domElement );
-			
-			menus.start.enable();
+			_GUI.menus.start.show( _GUI.layers.ui );
+			_GUI.menus.start.enable();
 			
 		});
 		
@@ -1198,19 +1043,18 @@
 			
 			if ( started === true ) {
 				
-				transitioner.ui_show( containerOverlayDisplay.domElement, transitionIn, transitionerAlpha );
+				_GUI.transitioner.show( _GUI.layers.overlayDisplay );
 				
-				menus.pause.ui_show( containerUI.domElement );
+				_GUI.menus.main.show( _GUI.layers.ui );
 				
-				menus.pause.enable();
+				_GUI.menus.main.enable();
 				
-				menus.footer.ui_show();
-				//$(shared.html.staticMenu).stop(true).fadeTo( transitionOut, 1 );
+				_GUI.menus.footer.show();
 				
 			}
 			else {
 				
-				transitioner.ui_show( containerOverlayAll.domElement, transitionIn, transitionerAlpha );
+				_GUI.transitioner.show( _GUI.layers.overlayAll );
 				
 			}
             
@@ -1222,33 +1066,23 @@
     
     function resume () {
 		
-		var on_menu_hidden = function () {
+        if ( paused === true && _ErrorHandler.errorState !== true ) {
+			
+			if ( started === true ) {
+				
+				_GUI.menus.main.disable();
+				
+				_GUI.menus.main.hide( true );
+				
+				_GUI.menus.footer.hide( true );
+				
+			}
+			
+			_GUI.transitioner.hide( true, undefined, 0 );
 			
 			paused = false;
 			
 			shared.signals.resumed.dispatch();
-			
-		};
-		
-        if (paused === true) {
-			
-			transitioner.ui_hide( true, transitionOut );
-			
-			if ( started === true ) {
-				
-				menus.pause.disable();
-				
-				menus.pause.ui_hide( true, undefined, 0, on_menu_hidden );
-				
-				menus.footer.ui_hide( true );
-				//$(shared.html.staticMenu).stop(true).fadeTo( transitionIn, 0 );
-				
-			}
-			else {
-				
-				on_menu_hidden();
-				
-			}
             
         }
     }
@@ -1272,7 +1106,7 @@
 		
 		timeDeltaMod = _MathHelper.round( timeDelta / shared.timeDeltaExpected, 2 );
 		
-		if ( _MathHelper.is_number( timeDeltaMod ) !== true ) {
+		if ( main.is_number( timeDeltaMod ) !== true ) {
 			
 			timeDeltaMod = 1;
 			
@@ -1292,21 +1126,27 @@
 			
 			shared.signals.update.dispatch( timeDelta, timeDeltaMod );
 			
+			// have camera bg mimic camera rotation
+			
+			cameraBG.quaternion.copy( camera.quaternion );
+			
+			// finish frame
+			
+			render();
+			
 		}
 		
-		// have camera bg mimic camera rotation
+    }
+	
+	function render() {
 		
-		cameraBG.quaternion.copy( camera.quaternion );
+		renderer.setViewport( 0, 0, shared.screenWidth, shared.screenHeight );
 		
-		// render
-        
-        renderer.setViewport( 0, 0, shared.screenWidth, shared.screenHeight );
-
         renderer.clear();
         
 		renderComposer.render();
 		
-    }
+	}
     
     function resize( W, H ) {
 		
@@ -1332,8 +1172,24 @@
 		// composer
 		
         renderComposer.reset();
+		
+		// re-render
+		
+		render();
         
     }
+	
+	/*===================================================
+	
+	utility
+	
+	=====================================================*/
+	
+	function is_stop_parameter ( parameters ) {
+		
+		return parameters === false || ( typeof parameters !== 'undefined' && parameters.stop === true );
+		
+	}
 	
 	function on_error ( error, url, lineNumber ) {
         
@@ -1341,17 +1197,20 @@
 		
         pause();
 		
+		// check error handler state
+		
+		if ( _ErrorHandler.errorState !== true ) {
+			
+			_ErrorHandler.generate( error, url, lineNumber );
+			
+		}
+		
 		// save game
 		// TODO
 		
 		// debug
         
-        if (typeof main.assets.modules.utils.dev !== 'undefined') {
-            main.assets.modules.utils.dev.log_error(error, url, lineNumber);
-        }
-		else {
-			throw error + " at " + lineNumber + " in " + url;
-		}
+        throw error + " at " + lineNumber + " in " + url;
         
     }
     

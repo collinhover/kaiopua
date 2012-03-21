@@ -13,6 +13,7 @@
 		assetPath = "assets/modules/core/Model.js",
 		_Model = {},
 		_Physics,
+		_ObjectHelper,
 		_MathHelper,
 		durationBase = 1000,
 		durationPerFrameMinimum = shared.timeDeltaExpected || 1000 / 60;
@@ -23,22 +24,23 @@
 		data: _Model,
 		requirements: [
 			"assets/modules/core/Physics.js",
+			"assets/modules/utils/ObjectHelper.js",
 			"assets/modules/utils/MathHelper.js"
 		], 
 		callbacksOnReqs: init_internal,
 		wait: true
 	} );
 	
-	function init_internal ( p, mh ) {
+	function init_internal ( p, oh, mh ) {
 		console.log('internal model', _Model);
 		_Physics = p;
+		_ObjectHelper = oh;
 		_MathHelper = mh;
 		
 		_Model.Instance = Model;
 		_Model.Instance.prototype = new THREE.Mesh();
 		_Model.Instance.prototype.constructor = _Model.Instance;
-		_Model.Instance.prototype.compute_dimensions_from_bounding_box = compute_dimensions_from_bounding_box;
-		_Model.Instance.prototype.compute_center_offset = compute_center_offset;
+		_Model.Instance.prototype.compute_dimensions = compute_dimensions;
 		
 		// catch parent changes and add / remove physics automatically
 		
@@ -286,69 +288,23 @@
 		
 		this.morphs = make_morphs_handler( this );
 		
-		// center offset
-		
-		this.compute_center_offset();
-		
 		// adjust for offset if needed
 		
-		if ( parameters.adjustForOffset === true ) {
+		if ( parameters.center === true ) {
 			
-			// use center offset to correct model
-			// subtract offset from all vertices
-			
-			var vertices = this.geometry.vertices,
-				vertex,
-				vertexPosition;
-			
-			for ( i = 0, l = vertices.length; i < l; i ++) {
-				
-				vertex = vertices[ i ];
-				
-				vertexPosition = vertex.position;
-				
-				vertexPosition.subSelf( this.centerOffset );
-				
-			}
-			
-			// also subtract offset from all morph target vertices
-			
-			var morphTargets = this.geometry.morphTargets,
-				morphTarget,
-				morphVertices,
-				j, k;
-			
-			for ( i = 0, l = morphTargets.length; i < l; i ++) {
-				
-				morphTarget = morphTargets[ i ];
-				
-				vertices = morphTarget.vertices;
-				
-				for ( j = 0, k = vertices.length; j < k; j ++) {
-					
-					vertex = vertices[ j ];
-					
-					vertexPosition = vertex.position;
-					
-					vertexPosition.subSelf( this.centerOffset );
-					
-				}
-				
-			}
-			
-			// force recompute of bounding box
-			
-			this.geometry.computeBoundingBox();
-			
-			// add offset to position
-			
-			this.position.addSelf( this.centerOffset );
-			
-			// force recompute of center offset
-			
-			this.compute_center_offset();
+			_ObjectHelper.object_center( this );
 			
 		}
+		
+		if ( parameters.centerRotation === true ) {
+			
+			_ObjectHelper.object_center_rotation( this );
+			
+		}
+		
+		// compute dimensions
+		
+		this.compute_dimensions();
 		
 		// physics
 		
@@ -370,7 +326,7 @@
 	
 	=====================================================*/
 	
-	function compute_dimensions_from_bounding_box ( ignoreScale ) {
+	function compute_dimensions ( ignoreScale ) {
 		
 		var g = this.geometry,
 			d,
@@ -414,57 +370,6 @@
 		}
 		
 		return d;
-		
-	}
-	
-	function compute_center_offset ( ignoreScale ) {
-		
-		var g = this.geometry,
-			co,
-			d,
-			bbox;
-		
-		// if needs dimensions
-		
-		if ( this.hasOwnProperty( 'dimensions' ) && this.dimensions instanceof THREE.Vector3 ) {
-			
-			d = this.dimensions;
-			
-		}
-		else {
-			
-			d = this.compute_dimensions_from_bounding_box( ignoreScale );
-			
-		}
-		
-		// if needs center offset
-		
-		if ( this.hasOwnProperty( 'centerOffset' ) && this.centerOffset instanceof THREE.Vector3 ) {
-			
-			co = this.centerOffset;
-			
-		}
-		else {
-			
-			co = this.centerOffset = new THREE.Vector3();
-			
-		}
-		
-		// copy dimensions and half
-		
-		co.copy( d ).multiplyScalar( 0.5 );
-		
-		// add minimum bounds
-		
-		bbox = g.boundingBox;
-		
-		if ( bbox ) {
-			
-			co.addSelf( bbox.min );
-			
-		}
-		
-		return co;
 		
 	}
 	
@@ -758,7 +663,7 @@
 			
 			// test if is number
 			
-			if ( _MathHelper.is_number(numberTest) ) {
+			if ( main.is_number(numberTest) ) {
 				
 				nameParsed.name = name.substr( 0, splitIndex );
 				
@@ -935,7 +840,7 @@
 			
 			// duration
 			
-			if ( _MathHelper.is_number( parameters.duration ) && ( parameters.duration / info.morphsMap.length ) > durationPerFrameMinimum && info.durationOriginal !== parameters.duration ) {
+			if ( main.is_number( parameters.duration ) && ( parameters.duration / info.morphsMap.length ) > durationPerFrameMinimum && info.durationOriginal !== parameters.duration ) {
 				
 				durationNew = parameters.duration;
 				

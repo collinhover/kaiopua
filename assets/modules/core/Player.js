@@ -218,11 +218,15 @@
 				
 				// stop camera rotate
 				
-				cameraControls.rotate( e, true );
+				var rotated = cameraControls.rotate( e, true );
 				
-				// start character action
+				// start character action if camera was not just rotated
 				
-				character.action( '002', { event: e, stop: !enabled } );
+				if ( rotated !== true ) {
+					
+					character.action( '002', { event: e, stop: !enabled } );
+					
+				}
 				
 			}
 		};
@@ -507,7 +511,7 @@
 		
 		parameters = parameters || {};
 		
-		mouse = parameters.mouse = parameters.mouse || _Game.get_mouse( parameters );
+		mouse = parameters.mouse = parameters.mouse || main.get_mouse( parameters );
 		
 		character = parameters.character || character;
 		

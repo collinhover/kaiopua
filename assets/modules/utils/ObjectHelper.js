@@ -12,7 +12,20 @@
 		assetPath = "assets/modules/utils/ObjectHelper.js",
 		_ObjectHelper = {},
 		utilVec31Follow,
-		utilQ1Follow;
+		utilVec32Follow,
+		utilVec31Offset,
+		utilVec31OffsetRot,
+		utilVec31Axis,
+		utilQ1Follow,
+		utilQ2Follow,
+		utilQ3Follow,
+		utilQ4Follow,
+		utilQ1Axis,
+		utilQ1CenterRot,
+		utilQ2CenterRot,
+		utilMat41Follow,
+		utilMat41Center,
+		utilMat41CenterRot;
     
     /*===================================================
     
@@ -20,7 +33,19 @@
     
     =====================================================*/
 	
-    _ObjectHelper.object_follow_object = object_follow_object;
+	_ObjectHelper.extract_children_from_objects = extract_children_from_objects;
+	_ObjectHelper.extract_parents_from_objects = extract_parents_from_objects;
+	
+	_ObjectHelper.object_apply_matrix = object_apply_matrix;
+	
+	_ObjectHelper.center_offset = center_offset;
+	_ObjectHelper.object_center = object_center;
+	
+	_ObjectHelper.q_to_axis = q_to_axis;
+	_ObjectHelper.rotation_offset = rotation_offset;
+	_ObjectHelper.object_center_rotation = object_center_rotation;
+	
+	_ObjectHelper.object_follow_object = object_follow_object;
 	
 	main.asset_register( assetPath, { data: _ObjectHelper } );
 	
@@ -37,49 +62,502 @@
 		// utility
 		
 		utilVec31Follow = new THREE.Vector3();
+		utilVec32Follow = new THREE.Vector3();
+		utilVec31Offset = new THREE.Vector3();
+		utilVec31OffsetRot = new THREE.Vector3();
+		utilVec31Axis = new THREE.Vector3();
 		utilQ1Follow = new THREE.Quaternion();
+		utilQ2Follow = new THREE.Quaternion();
+		utilQ3Follow = new THREE.Quaternion();
+		utilQ4Follow = new THREE.Quaternion();
+		utilQ1Axis = new THREE.Quaternion();
+		utilQ1CenterRot = new THREE.Quaternion();
+		utilQ2CenterRot = new THREE.Quaternion();
+		utilMat41Follow = new THREE.Matrix4();
+		utilMat41Center = new THREE.Matrix4();
+		utilMat41CenterRot = new THREE.Matrix4();
 		
 	}
 	
 	/*===================================================
     
-    helper functions
+    hierarchy support
     
     =====================================================*/
 	
-	function object_follow_object ( leader, follower, rotationBase, rotationOffset, positionOffset ) {
+	function extract_children_from_objects ( objects, cascade ) {
+		
+		var i, l,
+			object;
+		
+		objects = main.ensure_array( objects );
+		
+		for ( i = 0, l = objects.length; i < l; i++ ) {
+			
+			cascade = extract_child_cascade( objects[ i ], cascade );
+			
+		}
+		
+		return cascade;
+		
+	}
+	
+	function extract_child_cascade ( object, cascade ) {
+		
+		var i, l,
+			children;
+		
+		cascade = cascade || [];
+			
+		if ( typeof object !== 'undefined' ) {
+			
+			children = object.children;
+			
+			cascade = cascade.concat( children );
+			
+			for ( i = 0, l = children.length; i < l; i++ ) {
+				
+				cascade = extract_child_cascade( children[ i ], cascade );
+				
+			}
+			
+		}
+		
+		return cascade;
+		
+	}
+	
+	function extract_parents_from_objects ( objects, cascade ) {
+		
+		var i, l;
+		
+		objects = main.ensure_array( objects );
+		
+		for ( i = 0, l = objects.length; i < l; i++ ) {
+			
+			cascade = extract_parent_cascade( objects[ i ], cascade );
+			
+		}
+		
+		return cascade;
+		
+	}
+	
+	function extract_parent_cascade ( object, cascade ) {
+		
+		var i, l;
+		
+		cascade = cascade || [];
+		
+		while( typeof object.parent !== 'undefined' ) {
+			
+			cascade.push( object.parent );
+			
+			object = object.parent;
+			
+		}
+		
+		return cascade;
+		
+	}
+	
+	/*===================================================
+    
+    apply matrix
+    
+    =====================================================*/
+	
+	function object_apply_matrix ( object, matrix ) {
+		
+		var i, l,
+			j, k,
+			geometry = object instanceof THREE.Mesh ? object.geometry : object,
+			morphTargets = geometry.morphTargets,
+			morphTarget,
+			vertices,
+			vertex;
+		
+		// apply offset matrix to geometry
+		
+		geometry.applyMatrix( matrix );
+		
+		// adjust morph targets
+		
+		for ( i = 0, l = morphTargets.length; i < l; i++ ) {
+			
+			morphTarget = morphTargets[ i ];
+			
+			vertices = morphTarget.vertices;
+			
+			for ( j = 0, k = vertices.length; j < k; j++ ) {
+				
+				vertex = vertices[ j ];
+				
+				matrix.multiplyVector3( vertex.position );
+				
+			}
+			
+		}
+		
+		// force recompute bounds
+		
+		geometry.computeBoundingSphere();
+		
+		geometry.computeBoundingBox();
+		
+		// additional adjustments if object is mesh
+		
+		if ( object instanceof THREE.Mesh ) {
+			
+			object.boundRadius = geometry.boundingSphere.radius;
+			
+		}
+		
+	}
+	
+	/*===================================================
+    
+    center offset
+    
+    =====================================================*/
+	
+	function center_offset ( object ) {
+		
+		var geometry = object instanceof THREE.Mesh ? object.geometry : object,
+			offset = utilVec31Offset,
+			bbox;
+		
+		if ( !geometry.boundingBox ) {
+			
+			geometry.computeBoundingBox();
+			
+		}
+		
+		bbox = geometry.boundingBox;
+		
+		offset.add( bbox.min, bbox.max ).multiplyScalar( -0.5 );
+		
+		return offset;
+		
+	}
+	
+	function object_center ( object ) {
+		
+		var offset = center_offset( object ),
+			offsetMat4 = utilMat41Center.setTranslation( offset.x, offset.y, offset.z );
+		
+		// apply offset
+		
+		object_apply_matrix( object, offsetMat4 );
+		
+		// additional adjustments if object is mesh
+		
+		if ( object instanceof THREE.Mesh ) {
+			
+			// adjust position
+			
+			object.position.subSelf( offset );
+			
+		}
+		
+		return offset;
+		
+	}
+	
+	/*===================================================
+    
+    rotation offset
+    
+    =====================================================*/
+	
+	function q_to_axis ( axisTo, axisFrom, axisFromRightAngle ) {
+		
+		var ca = shared.cardinalAxes,
+			dist,
+			axis = utilVec31Axis,
+			angle,
+			qToA = utilQ1Axis;
+		
+		// current axes
+		
+		axisFrom = axisFrom || ca.up;
+		
+		axisFromRightAngle = axisFromRightAngle || ca.forward;
+		
+		// find dist between current axis up and average of normals
+		
+		dist = Math.max( -1, Math.min( 1, axisFrom.dot( axisTo ) ) );
+		
+		// if up axes are not same
+		
+		if ( dist !== 1 ) {
+			
+			// axis / angle
+			
+			angle = Math.acos( dist );
+			axis.cross( axisFrom, axisTo ).normalize();
+			
+			// if new axis is exactly opposite of current
+			// replace new axis with the forward axis
+			
+			if ( axis.length() === 0 ) {
+				
+				axis.copy( axisFromRightAngle );
+				
+			}
+			
+			// rotation change
+			
+			qToA.setFromAxisAngle( axis, angle );
+			
+		}
+		else {
+			
+			qToA.set( 0, 0, 0, 1 );
+			
+		}
+		
+		return qToA;
+		
+	}
+	
+	function rotation_offset ( object, axisUp, axisForward ) {
+		
+		var i, l,
+			geometry = object instanceof THREE.Mesh ? object.geometry : object,
+			faces = geometry.faces,
+			face,
+			normal,
+			normalAvg = utilVec31OffsetRot.set( 0, 0, 0 ),
+			ca = shared.cardinalAxes,
+			offset;
+		
+		// for all face normals
+		
+		for ( i = 0, l = faces.length; i < l; i++ ) {
+			
+			face = faces[ i ];
+			
+			normal = face.normal;
+			
+			normalAvg.addSelf( normal );
+			
+		}
+		
+		// find average of normals
+		
+		normalAvg.divideScalar( faces.length );
+		
+		// handle axes
+		// use physics axis if available, or default to global up
+		
+		axisUp = axisUp || ( ( typeof object.physics !== 'undefined' ) ? object.physics.axes.up : ca.up );
+		axisForward = axisForward || ( ( typeof object.physics !== 'undefined' ) ? object.physics.axes.forward : ca.forward );
+			
+		// find quaternion to go from average of normals to current axis up 
+		
+		offset = q_to_axis( axisUp, normalAvg, axisForward );
+		
+		return offset;
+		
+	}
+	
+	function object_center_rotation ( object ) {
+		
+		var offset = rotation_offset( object ),
+			offsetMat4 = utilMat41CenterRot.setRotationFromQuaternion( offset ),
+			objectMatQ = utilQ1CenterRot;
+			objectNewQ = utilQ2CenterRot;
+		
+		// apply offset to object
+		
+		object_apply_matrix( object, offsetMat4 );
+		
+		// additional adjustments if object is mesh
+		
+		if ( object instanceof THREE.Mesh ) {
+			
+			if ( object.useQuaternion === true ) {
+				
+				// quaternion rotations
+				
+				objectNewQ.multiply( offset.inverse(), object.quaternion );
+				
+				object.quaternion.copy( objectNewQ );
+			
+			}
+			else {
+				
+				// matrix rotations
+				
+				objectMatQ.setFromRotationMatrix( object.matrix );
+				
+				objectNewQ.multiply( offset.inverse(), objectMatQ );
+				
+				object.matrix.setRotationFromQuaternion( objectNewQ );
+				
+			}
+			
+		}
+		
+	}
+	
+	/*===================================================
+    
+    follow
+    
+    =====================================================*/
+	
+	function object_follow_object ( follower, leader, rotationBase, rotationOffset, positionOffset ) {
 		
 		var leaderScale = leader.scale,
-			leaderScaleMax = Math.max( leaderScale.x, leaderScale.y, leaderScale.z ), 
-			leaderQ = leader.quaternion,
+			leaderScaleMax = Math.max( leaderScale.x, leaderScale.y, leaderScale.z ),
+			leaderMatrixWorld = leader.matrixWorld,
+			leaderQWorld = utilQ1Follow.setFromRotationMatrix( leaderMatrixWorld ),
+			leaderPWorld = utilVec31Follow.copy( leaderMatrixWorld.getPosition() ),
 			followerP = follower.position,
 			followerQ = follower.quaternion,
-			followerOffsetPos = utilVec31Follow,
-			followerOffsetRot = utilQ1Follow;
+			followerBaseRot = utilQ2Follow,
+			followerOffsetRot = utilQ3Follow,
+			followerOffsetPos = utilVec32Follow,
+			parentInverseMatrix = utilMat41Follow,
+			parentInverseQ = utilQ4Follow,
+			skipBaseRot,
+			skipOffsetRot,
+			skipOffsetPos;
 		
-		// set offset base position
+		// follower base rotation
 		
-		followerOffsetPos.set( positionOffset.x, positionOffset.y, positionOffset.z ).multiplyScalar( leaderScaleMax );
+		if ( rotationBase instanceof THREE.Quaternion ) {
+			
+			followerBaseRot.copy( rotationBase );
+			
+		}
+		else if ( rotationBase instanceof THREE.Vector3 ) {
+			
+			followerBaseRot.setFromEuler( rotationBase ).normalize();
+			
+		}
+		else {
+			
+			followerBaseRot.set( 0, 0, 0, 1 );
+			
+			skipBaseRot = true;
+			
+		}
 		
-		// set offset rotation
+		// follower offset rotation
 		
-		followerOffsetRot.setFromEuler( rotationOffset ).normalize();
+		if ( rotationOffset instanceof THREE.Quaternion ) {
+			
+			followerOffsetRot.copy( rotationOffset );
+			
+		}
+		else if ( rotationOffset instanceof THREE.Vector3 ) {
+			
+			followerOffsetRot.setFromEuler( rotationOffset ).normalize();
+			
+		}
+		else {
+			
+			followerOffsetRot.set( 0, 0, 0, 1 );
+			
+			skipOffsetRot = true;
+			
+		}
 		
-		// create new camera offset position
+		// follower offset position
 		
-		rotationBase.multiplyVector3( followerOffsetPos );
+		if ( positionOffset instanceof THREE.Vector3 ) {
 		
-		followerOffsetRot.multiplyVector3( followerOffsetPos );
+			followerOffsetPos.set( positionOffset.x, positionOffset.y, positionOffset.z ).multiplyScalar( leaderScaleMax );
+			
+		}
+		else {
+			
+			skipOffsetPos = true;
+			
+		}
 		
-		leaderQ.multiplyVector3( followerOffsetPos );
+		// modify offset position
 		
-		// set new camera position
+		if ( skipOffsetPos !== true ) {
+			
+			if ( skipBaseRot !== true ) {
+				
+				followerBaseRot.multiplyVector3( followerOffsetPos );
+				
+			}
+			
+			if ( skipOffsetRot !== true ) {
+				
+				followerOffsetRot.multiplyVector3( followerOffsetPos );
+				
+			}
+			
+			leaderQWorld.multiplyVector3( followerOffsetPos );
+			
+		}
 		
-		followerP.copy( leader.position ).addSelf( followerOffsetPos );
+		// if parents are not the same
 		
-		// set new camera rotation
+		if ( follower.parent instanceof THREE.Object3D && follower.parent !== leader.parent ) {
+			
+			// get inverse position and rotation
+			
+			parentInverseMatrix.getInverse( follower.parent.matrixWorld );
+			parentInverseQ.setFromRotationMatrix( parentInverseMatrix );
+			
+			// modify offset position and leader world position
+			// to account for follower being affected by parent matrix
+			
+			if ( skipOffsetPos !== true ) {
+				
+				parentInverseQ.multiplyVector3( followerOffsetPos );
+				
+			}
+			
+			parentInverseQ.multiplyVector3( leaderPWorld );
+			
+			// copy inverse as base
+			
+			followerP.copy( parentInverseMatrix.getPosition() );
+			followerQ.copy( parentInverseQ );
+			
+		}
+		// reset pos / rot
+		else {
+			
+			followerP.set( 0, 0, 0 );
+			followerQ.set( 0, 0, 0, 1 );
+			
+		}
 		
-		followerQ.copy( leaderQ ).multiplySelf( followerOffsetRot ).multiplySelf( rotationBase );
+		// position
+		
+		followerP.addSelf( leaderPWorld );
+		
+		if ( skipOffsetPos !== true ) {
+			
+			followerP.addSelf( followerOffsetPos );
+			
+		}
+		
+		// rotation
+		
+		followerQ.multiplySelf( leaderQWorld );
+		
+		if ( skipOffsetRot !== true ) {
+			
+			followerQ.multiplySelf( followerOffsetRot );
+			
+		}
+		
+		if ( skipBaseRot !== true ) {
+			
+			followerQ.multiplySelf( followerBaseRot );
+			
+		}
 		
 	}
     

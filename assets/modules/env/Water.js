@@ -62,6 +62,7 @@
 			vvInfo,
 			wavesGeometry,
 			wavesMaterial,
+			wavesTexture,
 			wavesVertsW,
 			wavesVertsH,
 			wavesNumHorizontal,
@@ -155,16 +156,7 @@
 			
         }
         
-        // waves texture and material
-		
-		var wavesTexture = new THREE.Texture();
-		
-		main.asset_require( wavesTexturePath, function ( img ) {
-			
-			wavesTexture.image = img;
-			wavesTexture.needsUpdate = true;
-			
-		});
+		// waves material
 		
 		wavesMaterial = new THREE.MeshPhongMaterial( { 
 			ambient: wavesColor, 
@@ -174,8 +166,25 @@
 			shininess: 10, 
 			shading: THREE.SmoothShading,
 			transparent: true,
-			opacity: 0.9
+			opacity: parameters.wavesOpacity || 0.9
 		} );
+		
+		// waves texture
+		
+		if ( typeof parameters.wavesTexturePath !== 'undefined' ) {
+			
+			wavesTexture = new THREE.Texture();
+			
+			main.asset_require( wavesTexturePath, function ( img ) {
+				
+				wavesTexture.image = img;
+				wavesTexture.needsUpdate = true;
+				
+			});
+			
+			wavesMaterial.map = wavesTexture;
+			
+		}
 		
 		// create wave morph targets
 		
@@ -239,7 +248,7 @@
 				vvFreq,
 				vvw = wavesVertsW - 1,
 				vvh = wavesVertsH - 1,
-				vvpv,
+				vvpw,
 				vvph,
 				i, l;
 

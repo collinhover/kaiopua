@@ -58,121 +58,121 @@
 	<!-- CSS: screen, mobile & print are all in the same file -->
 	<link rel="stylesheet" href="css/style.css">
 	
-	<!-- all our JS is at the bottom of the page, except for Modernizr. -->
-	<script src="js/lib/modernizr-2.0.6.min.js"></script>
+	<!-- javascript -->
+	<script src="js/lib/modernizr.2.5.3.min.js"></script>
+	<script src="js/lib/LAB.min.js"></script>
+	<script src="assets/modules/Kaiopua.js"></script>
+
+	<!-- Prompt IE 6 users to install Chrome Frame. Remove this if you want to support IE 6.
+		   chromium.org/developers/how-tos/chrome-frame-getting-started -->
+	  <!--[if lt IE 7 ]>
+		<script defer src="//ajax.googleapis.com/ajax/libs/chrome-frame/1.0.3/CFInstall.min.js"></script>
+		<script defer>window.attachEvent('onload',function(){CFInstall.check({mode:'overlay'})})</script>
+	  <![endif]-->
+	
+	<noscript>
+		
+		<article id="noscript" class="error info_panel">
+			
+			<header>Oops, Javascript disabled!</header>
+			
+			<p class="error_explanation">
+				We're sorry, but this website was built on Javascript. If you've got it enabled and you still see this message, try upgrading to one of these friendly browsers:
+			</p>
+			<div class="browsers">
+				<div class="browsers_each chrome">
+					<a href="http://www.google.com/chrome/" target="_blank">Chrome</a>
+				</div>
+				<div class="browsers_each firefox">
+					<a href="http://www.mozilla.org/firefox/" target="_blank">Firefox</a>
+				</div>
+				<div class="browsers_each safari">
+					<a href="http://www.apple.com/safari/" target="_blank">Safari</a>
+				</div>
+			</div>
+		</article>
+	
+	</noscript>
 
 </head>
 
 <body>
 
-<div id="wrapper">
-    
-    <!-- game section -->
-    <section id="game" class="unselectable">
-        
-        <!-- game section header -->
-        <header class="visuallyhidden">
-            
-            <h1>Kaiopua: an interactive moon-sized Hawaiian space worm that will teach you to be a better web designer!</h1>
-            
-        </header>
-        
-    </section>
-    
-    <!-- errors section -->
-    <section id="error_container">
-        <article id="noscript" class="error info_panel">
-            
-            <header>Oops, Javascript disabled!</header>
-            
-            <p class="error_explanation">
-                We're sorry, but our play and magic relies on Javascript. If you've got it enabled and you still see this message, try upgrading to one of these friendly browsers:
-            </p>
-            <div class="browsers">
-                <div class="browsers_each chrome">
-                    <a href="http://www.google.com/chrome/" target="_blank">Chrome</a>
-                </div>
-                <div class="browsers_each firefox">
-                    <a href="http://www.mozilla.org/firefox/" target="_blank">Firefox</a>
-                </div>
-                <div class="browsers_each safari">
-                    <a href="http://www.apple.com/safari/" target="_blank">Safari</a>
-                </div>
-            </div>
-        </article>
-    </section>
-    
-</div>
-<!-- end wrapper -->
-
-<!-- footer with navigation and copyright -->
-<footer id="footer_menu" class="unselectable">
-
-    <!-- navigation area -->
-    <nav>
+	<div id="wrapper">
+		
+		<!-- game section -->
+		<section id="game" class="unselectable">
 			
-		<span><a href="https://github.com/collinhover/kaiopua" target="_blank">Source Code</a></span>
-    
-        <!-- page header and intro -->
-        <header>
-            
-            <h1>Kai 'Opua</h1>
-            
-        </header>
+			<!-- game section header -->
+			<header class="visuallyhidden">
+				
+				<h1>Kaiopua: an interactive moon-sized Hawaiian space worm that will teach you to be a better web designer!</h1>
+				
+			</header>
+			
+		</section>
 		
-		<span>Share</span>
+		<!-- errors container -->
+		<div id="errors">
+			
+		</div>
 		
-		<span class='icon'><a href="http://www.facebook.com/sharer.php?u=http%3A%2F%2Fcollinhover.com&t=Kaiopua%3A%20an%20interactive%20moon-sized%20Hawaiian%20space%20worm%20that%20will%20teach%20you%20to%20be%20a%20better%20web%2Fgame%20designer!" target="_blank"><img src="img/fb_icon.png" alt="Facebook" border="0"></a></span>
-        <span class='icon'><a href="http://twitter.com/share?url=http%3A%2F%2Fcollinhover.com&text=Kaiopua%3A%20an%20interactive%20moon-sized%20Hawaiian%20space%20worm%20that%20will%20teach%20you%20to%20be%20a%20better%20web%2Fgame%20designer!" target="_blank"><img src="img/twitter_icon.png" alt="Twitter" border="0"></a></span>
+	</div>
+	<!-- end wrapper -->
 
-        <!-- links -->
-    	<!--<ul>
-			<li><a href="https://github.com/collinhover/kaiopua" target="_blank">Source Code</a></li>
-			<li>Share</li>
-			<li class="icon"><a href="http://www.facebook.com/sharer.php?u=http%3A%2F%2Fcollinhover.com&t=Kaiopua%3A%20an%20interactive%20moon-sized%20Hawaiian%20space%20worm%20that%20will%20teach%20you%20to%20be%20a%20better%20web%2Fgame%20designer!" target="_blank"><img src="img/fb_icon.png" alt="Facebook" border="0"></a></li>
-		    <li class="icon"><a href="http://twitter.com/share?url=http%3A%2F%2Fcollinhover.com&text=Kaiopua%3A%20an%20interactive%20moon-sized%20Hawaiian%20space%20worm%20that%20will%20teach%20you%20to%20be%20a%20better%20web%2Fgame%20designer!" target="_blank"><img src="img/twitter_icon.png" alt="Twitter" border="0"></a></li>   
-		</ul>-->
-	    
-	</nav>
-	
-	<p class="copyright"><small>&copy; Copyright <a href="http://www.collinhover.com/" target="_blank">Collin Hover</a> 2011. All Rights Reserved.</small></p>
-	
-</footer>
+	<!-- footer with navigation and copyright -->
+	<footer id="footer_menu" class="sticky_footer unselectable">
 
-<!-- javascript -->
+		<!-- navigation area -->
+		<nav>
+				
+			<span><a href="https://github.com/collinhover/kaiopua" target="_blank">Source Code</a></span>
+			
+			<span class="clouda"><img src="/img/icon/cloud_64x64.png" alt="Kai 'Opua"></span>
 
-<script>
-    (function(g,b,d){var c=b.head||b.getElementsByTagName("head"),D="readyState",E="onreadystatechange",F="DOMContentLoaded",G="addEventListener",H=setTimeout;
-    function f(){
-       $LAB.script("assets/modules/Kaiopua.js")
-    }
-    H(function(){if("item"in c){if(!c[0]){H(arguments.callee,25);return}c=c[0]}var a=b.createElement("script"),e=false;a.onload=a[E]=function(){if((a[D]&&a[D]!=="complete"&&a[D]!=="loaded")||e){return false}a.onload=a[E]=null;e=true;f()};
-    
-    a.src="js/lib/LAB.min.js";
-        c.insertBefore(a,c.firstChild)},0);if(b[D]==null&&b[G]){b[D]="loading";b[G](F,d=function(){b.removeEventListener(F,d,false);b[D]="complete"},false)}})(this,document);
-</script>
+			<!-- page header and intro -->
+			<header>
+				
+				<h1>Kai 'Opua</h1>
+				
+			</header>
 
-<!-- google analytics -->
-<script>
+			<span class="cloudb"><img src="/img/icon/cloud_64x64.png" alt="Kai 'Opua"></span>
+			<span class="cloudc"><img src="/img/icon/cloud_64x64.png" alt="Kai 'Opua"></span>
+			
+			<span>Share</span>
+			
+			<span class='icon'><a href="http://www.facebook.com/sharer.php?u=http%3A%2F%2Fcollinhover.com&t=Kaiopua%3A%20an%20interactive%20moon-sized%20Hawaiian%20space%20worm%20that%20will%20teach%20you%20to%20be%20a%20better%20web%2Fgame%20designer!" target="_blank"><img src="img/fb_icon.png" alt="Facebook"></a></span>
+			<span class='icon'><a href="http://twitter.com/share?url=http%3A%2F%2Fcollinhover.com&text=Kaiopua%3A%20an%20interactive%20moon-sized%20Hawaiian%20space%20worm%20that%20will%20teach%20you%20to%20be%20a%20better%20web%2Fgame%20designer!" target="_blank"><img src="img/twitter_icon.png" alt="Twitter"></a></span>
 
-  var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', 'UA-16926846']);
-  _gaq.push(['_trackPageview']);
+			<!-- links -->
+			<!--<ul>
+				<li><a href="https://github.com/collinhover/kaiopua" target="_blank">Source Code</a></li>
+				<li>Share</li>
+				<li class="icon"><a href="http://www.facebook.com/sharer.php?u=http%3A%2F%2Fcollinhover.com&t=Kaiopua%3A%20an%20interactive%20moon-sized%20Hawaiian%20space%20worm%20that%20will%20teach%20you%20to%20be%20a%20better%20web%2Fgame%20designer!" target="_blank"><img src="img/fb_icon.png" alt="Facebook"></a></li>
+				<li class="icon"><a href="http://twitter.com/share?url=http%3A%2F%2Fcollinhover.com&text=Kaiopua%3A%20an%20interactive%20moon-sized%20Hawaiian%20space%20worm%20that%20will%20teach%20you%20to%20be%20a%20better%20web%2Fgame%20designer!" target="_blank"><img src="img/twitter_icon.png" alt="Twitter"></a></li>   
+			</ul>-->
+			
+		</nav>
+		
+		<p class="copyright"><small>&copy; Copyright <a href="http://www.collinhover.com/" target="_blank">Collin Hover</a> 2011. All Rights Reserved.</small></p>
+		
+	</footer>
 
-  (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-  })();
+	<!-- google analytics -->
+	<script>
 
-</script>
+	  var _gaq = _gaq || [];
+	  _gaq.push(['_setAccount', 'UA-16926846']);
+	  _gaq.push(['_trackPageview']);
 
-<!-- Prompt IE 6 users to install Chrome Frame. Remove this if you want to support IE 6.
-       chromium.org/developers/how-tos/chrome-frame-getting-started -->
-  <!--[if lt IE 7 ]>
-    <script defer src="//ajax.googleapis.com/ajax/libs/chrome-frame/1.0.3/CFInstall.min.js"></script>
-    <script defer>window.attachEvent('onload',function(){CFInstall.check({mode:'overlay'})})</script>
-  <![endif]-->
-  
+	  (function() {
+		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+	  })();
+
+	</script>
+	  
 </body>
 </html>

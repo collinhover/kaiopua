@@ -17,7 +17,7 @@
         errorTypes = {
             general: {
                 header: "Oops! That wasn't supposed to happen!",
-                explanation: "Something broke and we're very sorry about that. No worries though, if you were playing any progress you've made has been saved. All you need to do is reload the page!"
+                explanation: "Something broke and we're very sorry, but <span class='highlight'>any progress you've made has been saved, so all you need to do is reload the page!</span>"
             },
             webgl_browser: {
                 header: "Oops! We need WebGL!",
@@ -50,6 +50,10 @@
     _ErrorHandler.generate = generate;
     _ErrorHandler.process = process;
     _ErrorHandler.clear = clear;
+	
+	Object.defineProperty( _ErrorHandler, 'errorState', { 
+		get : function () { return errorState; }
+	} );
 	
 	main.asset_register( assetPath, { data: _ErrorHandler } );
     
@@ -147,42 +151,45 @@
     }
     
     // process error state
-    function process ( origin ) {
+    function process ( origin, lineNumber ) {
         if (errorState === true) {
             // show current
-            show(errorCurrent.type);
+            show( errorCurrent.type, origin, lineNumber );
             
             // set url back to origin link with history states
             // always hide unnecessary information from users
             history.pushState( { "pState": shared.originLink }, '', shared.originLink );
             
             // trigger shared error signal
-            shared.signals.error.dispatch(errorCurrent.type, origin || 'Unknown Origin', 'N/A');
+            shared.signals.error.dispatch(errorCurrent.type, origin || 'Unknown Origin', lineNumber || 'N/A' );
         }
     }
     
     // generate error
-    function generate ( errorType, origin ) {
-        if (typeof errorType !== 'undefined') {
+    function generate ( error, origin, lineNumber ) {
+        if (typeof error !== 'undefined') {
             // flag error
-            flag(errorType);
+            flag( error );
             
             // check for flagged errors
             check();
             
             // process errors
-            process(origin);
+            process( origin, lineNumber );
         }
     }
     
     // show error to user
-    function show ( errorType ) {
-        var header, explanation, extra, article, articleHeight, footerModifier = 0, animSpeed = 500;
+    function show ( error, origin, lineNumber ) {
+        var errorType, header, explanation, nerdtalk, extra, article, articleHeight, footerModifier = 0, animSpeed = 500;
         
         // does id not match a specific error
-        if (errorTypes.hasOwnProperty(errorType) === false) {
-           errorType = 'general';
+        if ( errorTypes.hasOwnProperty( error ) ) {
+           errorType = error;
         }
+		else {
+			errorType = 'general';
+		}
     
         // header
         header = document.createElement('header');
@@ -223,6 +230,19 @@
             articleHeight = articleHeight + $(extra).outerHeight();
             $(extra).fadeOut(0).fadeIn(animSpeed);
         }
+		
+		// error message, origin, and line number
+		
+		if ( typeof origin  !== 'undefined' && typeof lineNumber !== 'undefined' ) {
+			
+			nerdtalk = document.createElement('p');
+			$(nerdtalk).addClass("nerdtalk");
+			$(nerdtalk).html( "the error was -> '" + error + "' in " + origin + " at line # " + lineNumber);
+			$(article).append(nerdtalk);
+			articleHeight = articleHeight + $(nerdtalk).outerHeight();
+            $(nerdtalk).fadeOut(0).fadeIn(animSpeed);
+			
+		}
         
         // fade and slide smoothly to new values
         $(header).fadeOut(0).fadeIn(animSpeed);

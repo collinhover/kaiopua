@@ -12,6 +12,8 @@
 		assetPath = "assets/modules/puzzles/GridElement.js",
 		_GridElement = {},
 		_Model,
+		_GridModule,
+		_ObjectHelper,
 		_MathHelper;
 	
 	/*===================================================
@@ -24,6 +26,8 @@
 		data: _GridElement,
 		requirements: [
 			"assets/modules/core/Model.js",
+			"assets/modules/puzzles/GridModule.js",
+			"assets/modules/utils/ObjectHelper.js",
 			"assets/modules/utils/MathHelper.js"
 		],
 		callbacksOnReqs: init_internal,
@@ -36,18 +40,29 @@
     
     =====================================================*/
 	
-	function init_internal( m, mh ) {
+	function init_internal( m, gm, oh, mh ) {
 		console.log('internal grid element', _GridElement);
 		
 		_Model = m;
+		_GridModule = gm;
+		_ObjectHelper = oh;
 		_MathHelper = mh;
 		
 		_GridElement.Instance = GridElement;
 		_GridElement.Instance.prototype = new _Model.Instance();
 		_GridElement.Instance.prototype.constructor = _GridElement.Instance;
-		_GridElement.Instance.prototype.get_center_layout = get_center_layout;
+		
 		_GridElement.Instance.prototype.rotate = rotate;
 		_GridElement.Instance.prototype.rotate_layout = rotate_layout;
+		
+		_GridElement.Instance.prototype.change_module = change_module;
+		
+		_GridElement.Instance.prototype.update = update;
+		
+		_GridElement.Instance.prototype.occupy_module = occupy_module;
+		_GridElement.Instance.prototype.test_occupy_module = test_occupy_module;
+		_GridElement.Instance.prototype.each_layout_element = _GridElement.each_layout_element = each_layout_element;
+		_GridElement.Instance.prototype.get_center_layout = get_center_layout;
 		
 	}
 	
@@ -63,6 +78,9 @@
 		
 		parameters = parameters || {};
 		
+		parameters.geometry = new THREE.CubeGeometry( 50, 100, 50 );
+		parameters.materials = new THREE.MeshNormalMaterial();
+		
 		// prototype constructor
 		
 		_Model.Instance.call( this, parameters );
@@ -70,6 +88,10 @@
 		// layout
 		
 		this.layout = generate_layout( parameters.layout );
+		
+		// modules layout
+		
+		this.layoutModules = this.layout.dup();
 		
 	}
 	
@@ -141,97 +163,359 @@
     
     =====================================================*/
 	
-	function rotate ( degrees ) {
+	function rotate ( degrees, testModule ) {
 		
-		return this.rotate_layout( degrees );
+		this.rotate_layout( degrees, testModule );
 		
 	}
 	
-	function rotate_layout ( degrees ) {
+	function rotate_layout ( degrees, testModule ) {
 		
-		var i, l,
-			j, k,
-			rotated = false,
-			turns,
-			layout,
-			layoutRotated,
-			dimensions,
-			rows,
-			cols,
-			elements,
-			elementsRot;
+		var layoutRotated,
+			safeRotation = true;
 		
-		// if degrees is number
+		// rotate layout by degrees
 		
-		if ( _MathHelper.is_number( degrees ) ) {
+		layoutRotated = _MathHelper.rotate_matrix2d_90( this.layout, degrees );
+		
+		// if layout was rotated
+		
+		if ( this.layout.eql( layoutRotated ) !== true ) {
 			
-			// basics
+			// test new layout
 			
-			layout = this.layout;
-			dimensions = layout.dimensions();
-			rows = dimensions.rows;
-			cols = dimensions.cols;
-			layoutRotated = Matrix.Zero( cols, rows );
-			elements = layout.elements;
-			elementsRot = layoutRotated.elements;
+			testModule = testModule || this.module;
 			
-			// snap degrees to closest multiple of 90
+			if ( testModule instanceof _GridModule.Instance ) {
 			
-			turns = _MathHelper.round_towards_zero( ( degrees % 360 ) / 90 );
-			
-			degrees = 90 * turns;
-			
-			// rotate layout by degrees into new rotated matrix
-			
-			if ( degrees !== 0 ) {
+				safeRotation = this.test_occupy_module( testModule, true, false, layoutRotated );
 				
-				console.log(' layout before rotated: ');
-				console.log(this.layout.inspect());
-				
-				// positive rotation
-				if ( degrees > 0 ) {
-					console.log('ROTATION ++++ POSITIVE');
-					for ( i = 0, l = cols; i < l; i++ ) {
-						
-						for ( j = 0, k = rows; j < k; j++ ) {
-							//console.log('i', (rows - 1 - j), ', j', i, ' >> i', i, ', j', j );
-							elementsRot[ i ][ j ] = elements[ rows - 1 - j ][ i ];
-							
-						}
-						
-					}
-					
-				}
-				// negative rotation
-				else {
-					console.log('ROTATION ---- NEGATIVE');
-					for ( i = 0, l = rows; i < l; i++ ) {
-						
-						for ( j = 0, k = cols; j < k; j++ ) {
-							//console.log('i', i, ', j', j, ' >> i', (cols - 1 - j), ', j', i );
-							elementsRot[ cols - 1 - j ][ i ] = elements[ i ][ j ];
-							
-						}
-						
-					}
-					
-				}
-				
-				// set layout as rotated
+			}
+			
+			// if rotation is safe or only testing
+			
+			if ( safeRotation || testModule !== this.module ) {
 				
 				this.layout = layoutRotated;
-				console.log(' layout after rotated: ');
-				console.log(this.layout.inspect());
-				
-				// set rotated
-				
-				rotated = true;
 				
 			}
 			
 		}
 		
-		return rotated;
+	}
+	
+	/*===================================================
+    
+    module
+    
+    =====================================================*/
+	
+	function change_module ( moduleNew, layoutModulesNew ) {
+		
+		// if is change
+		
+		if ( this.module !== moduleNew ) {
+			
+			// remove self from previous
+			
+			if ( typeof this.parent !== 'undefined' ) {
+				
+				this.parent.remove( this );
+			
+			}
+			
+			// for each module in previous layout modules
+			
+			if ( typeof this.layoutModules !== 'undefined' ) {
+				
+				// unoccupy
+				
+				this.each_layout_element( function ( layoutModule ) {
+					
+					if ( layoutModule instanceof _GridModule.Instance ) {
+						
+						layoutModule.occupant = undefined;
+						
+					}
+					
+				}, this.layoutModules );
+				
+			}
+			
+			// store
+			
+			this.module = moduleNew;
+			
+			this.layoutModules = layoutModulesNew;
+			console.log('module and layoutModules?', this.module, ' and ', this.layoutModules );
+			// if new module and layouts are valid
+			
+			if ( this.module instanceof _GridModule.Instance && typeof this.layoutModules !== 'undefined' ) {
+				
+				// add
+				
+				this.module.add( this );
+				
+				// for each module in layout modules set this as occupant
+				
+				this.each_layout_element( function ( layoutModule ) {
+					
+					if ( layoutModule instanceof _GridModule.Instance ) {
+						
+						layoutModule.occupant = this;
+						
+					}
+					
+				}, this.layoutModules );
+				
+			}
+			
+		}
+		
+	}
+	
+	function occupy_module ( module ) {
+		
+		var occupied = this.test_occupy_module( module, true, true );
+		
+		return occupied;
+		
+	}
+	
+	function test_occupy_module ( testModule, show, occupy, testLayout ) {
+		
+		var i, l,
+			success = 0,
+			dimensions,
+			rows,
+			cols,
+			center,
+			testResults,
+			spreadRecord,
+			testLayoutModules;
+		
+		// change test modules
+			
+		if ( this.testModule !== testModule ) {
+			
+			// remove self from previous
+			
+			if ( typeof this.parent !== 'undefined' ) {
+				
+				if ( this.module instanceof _GridModule.Instance ) {
+					
+					this.module.add( this );
+					
+				}
+				else {
+					
+					this.parent.remove( this );
+					
+				}
+			
+			}
+			
+			// store as test
+			
+			this.testModule = testModule;
+			
+		}
+		
+		// valid testModule
+		
+		if ( typeof testModule !== 'undefined' ) {
+			
+			// add
+			
+			if ( this.parent !== testModule ) {
+				
+				testModule.add( this );
+				
+			}
+			
+			// snap to
+			
+			_ObjectHelper.object_follow_object( this, testModule );
+			
+			// clean testModule's grid
+			
+			if ( typeof testModule.grid !== 'undefined' ) {
+				
+				testModule.grid.clean();
+				
+			}
+			
+			// basics
+			
+			testLayout = testLayout || this.layout;
+			dimensions = this.layout.dimensions();
+			rows = dimensions.rows;
+			cols = dimensions.cols;
+			center = this.get_center_layout();
+			testResults = Matrix.Zero( rows, cols );
+			spreadRecord = testResults.dup();
+			testLayoutModules = testResults.dup();
+			
+			// return recursive test results
+			
+			success = test_spread( testModule, testLayout, testResults, spreadRecord, center.row, center.col, rows, cols, testLayoutModules );
+			
+			// show test results of occupy on modules tested
+			
+			if ( show === true ) {
+				
+				this.each_layout_element( function ( testLayoutModule ) {
+					
+					if ( testLayoutModule instanceof _GridModule.Instance ) {
+						
+						testLayoutModule.show_state( 'occupied', 1 - success );
+						
+					}
+					
+				}, testLayoutModules );
+				
+			}
+			
+			// if successful and should occupy
+			
+			if ( success && occupy === true ) {
+				
+				this.change_module( testModule, testLayoutModules );
+				
+			}
+			
+		}
+		
+		return Boolean( success );
+		
+	}
+	
+	function test_spread ( testModule, testLayout, testResults, spreadRecord, rowIndex, colIndex, numRows, numCols, testLayoutModules ) {
+		
+		var i, l,
+			j, k,
+			success = 1,
+			successNext,
+			connected,
+			moduleNext,
+			index,
+			elements = testLayout.elements,
+			elementsTR = testResults.elements,
+			elementsSR = spreadRecord.elements,
+			element,
+			rowNext,
+			rowArr = Math.max( 0, rowIndex - 1 ),
+			rowMin,
+			rowIndexToMin,
+			rowMax,
+			rowsSq,
+			colNext,
+			colArr = Math.max( 0, colIndex - 1 ),
+			colMin,
+			colIndexToMin,
+			colMax,
+			colsSq;
+		
+		// update spread record
+		
+		elementsSR[ rowArr ][ colArr ] = 1;
+		
+		// test element
+			
+		element = elements[ rowArr ][ colArr ];
+		
+		// if layout element present
+		
+		if ( element === 1 ) {
+			
+			// if testModule is valid
+			
+			if ( testModule instanceof _GridModule.Instance ) {
+				
+				// test success
+				
+				success = 1 - testModule.occupied;
+				
+				// add testModule to layout map
+				
+				testLayoutModules.elements[ rowArr ][ colArr ] = testModule;
+				
+			}
+			// no module where needed
+			else {
+				
+				success = 0;
+				
+			}
+			
+			// store success
+			
+			elementsTR[ rowArr ][ colArr ] = success;
+			
+		}
+		
+		// if testModule is valid
+			
+		if ( testModule instanceof _GridModule.Instance ) {
+			
+			// get square around testModule in layout
+			
+			rowMin = Math.max( 1, rowArr );
+			rowIndexToMin = rowIndex - rowMin;
+			rowMax = Math.min( numRows, rowIndex + 1 );
+			rowsSq = Math.min( numRows, rowMax - rowMin + 1 );
+			colMin = Math.max( 1, colArr );
+			colIndexToMin = colIndex - colMin;
+			colMax = Math.min( numCols, colIndex + 1 );
+			colsSq = Math.min( numCols, colMax - colMin + 1 );
+			
+			// spread to all connected modules
+			// continue even if unsuccessful to record all modules affected by layout
+			
+			connected = testModule.connected;
+			
+			for ( i = 0, l = rowsSq; i < l; i++ ) {
+				
+				for ( j = 0, k = colsSq; j < k; j++ ) {
+					
+					rowNext = rowMin + i;
+					colNext = colMin + j;
+					
+					// get next testModule
+					
+					moduleNext = connected[ ( ( i + ( 1 - rowIndexToMin ) ) * 3 + ( j + ( 1 - colIndexToMin ) ) ) ];
+					
+					// if testModule location not tested yet
+					
+					if ( spreadRecord.e( rowNext, colNext ) !== 1 ) {
+						
+						successNext = test_spread( moduleNext, testLayout, testResults, spreadRecord, rowNext, colNext, numRows, numCols, testLayoutModules );
+						
+						// record next success while successful
+						
+						if ( success ) {
+							success = successNext;
+						}
+						
+					}
+					
+				}
+				
+			}
+			
+		}
+			
+		return success;
+		
+	}
+	
+	/*===================================================
+    
+    update
+    
+    =====================================================*/
+	
+	function update () {
 		
 	}
 	
@@ -240,6 +524,52 @@
     utility
     
     =====================================================*/
+	
+	function each_layout_element ( methods, layout ) {
+		
+		layout = layout || this.layout;
+		
+		var i, il,
+			j, jl,
+			m, ml,
+			elements = layout.elements,
+			row,
+			node,
+			method;
+		
+		// handle parameters
+		
+		methods = main.ensure_array( methods );
+		
+		// for each row
+		
+		for ( i = 0, il = elements.length; i < il; i++ ) {
+			
+			row = elements[ i ];
+			
+			// for each column
+			
+			for ( j = 0, jl = row.length; j < jl; j++ ) {
+				
+				node = row[ j ];
+				
+				// for each node
+				
+				for ( m = 0, ml = methods.length; m < ml; m++ ) {
+					
+					method = methods[ m ];
+					
+					// call method and pass node and row and column indices
+					
+					method.call( this, node, i, j );
+					
+				}
+				
+			}
+			
+		}
+		
+	}
 	
 	function get_center_layout ( layout ) {
 		
