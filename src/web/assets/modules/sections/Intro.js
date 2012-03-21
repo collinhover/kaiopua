@@ -136,7 +136,8 @@
 			
 			_Player.enable();
 			
-			_Player.character.position.set( 1, 2700, 1 );
+			_Player.character.position.set( 35, 1800, 765 );
+			_Player.character.quaternion.set( 0, -1, -0.25, 0 );
 			
 			//_Player.cameraMode = 'freelook';
 			

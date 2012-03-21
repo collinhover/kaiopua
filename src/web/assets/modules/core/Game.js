@@ -56,7 +56,8 @@
 			"assets/modules/core/GUI.js",
 			"assets/modules/utils/MathHelper.js",
             "js/lib/three/Three.js",
-			"js/lib/jquery.transform2d.js",
+			"js/lib/jquery.transform2d.min.js",
+			"js/lib/jquery.tipTip.min.js",
         ],
 		assetsThreeExtras = [
             "js/lib/three/ThreeExtras.js",
@@ -488,10 +489,10 @@
 		
 		// ui
 		
-		m.start.childrenByID.start.callback = function () {
+		m.start.childrenByID.play.callback = function () {
 			start_game();
 		};
-		m.start.childrenByID.start.context = this;
+		m.start.childrenByID.play.context = this;
 		
 		m.main.childrenByID.resume.callback = function () {
 			resume();
@@ -503,17 +504,6 @@
 		};
 		m.main.childrenByID.end.context = this;
 		
-		// fullscreen disabled until allows alphanumeric input
-		
-		b.fullscreenEnter.enabled = false;
-		b.fullscreenExit.enabled = false;
-		
-		b.save.enabled = false;
-		b.load.enabled = false;
-		//m.core.childrenByID.save.enabled = false;
-		//m.start.childrenByID.load.enabled = m.core.childrenByID.load.enabled = false;
-		//m.start.childrenByID.options.enabled = m.main.childrenByID.options.enabled = false;
-		
 		// menus
 		
 		m.start.alignment = 'center';
@@ -524,7 +514,6 @@
 		b.fullscreenEnter.show( _GUI.layers.ui );
 		
 		m.start.show( _GUI.layers.ui );
-		m.start.show_children( m.start );
 		
     }
 	
@@ -1026,7 +1015,7 @@
 		// pause menu
 			
 		_GUI.menus.main.disable();
-		_GUI.menus.main.reset();
+		
 		_GUI.menus.main.hide( true );
 		
 		// show footer menu
@@ -1038,7 +1027,7 @@
         set_section( _Launcher, function () {
 			
 			// show / enable start menu
-			_GUI.menus.start.reset();
+			
 			_GUI.menus.start.show( _GUI.layers.ui );
 			_GUI.menus.start.enable();
 			

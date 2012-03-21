@@ -31,6 +31,7 @@
 	// public
 	
 	_UIElement.generate_dom_element = generate_dom_element;
+	_UIElement.generate_tool_tip = generate_tool_tip;
 	_UIElement.supported_css_property = supported_css_property;
 	_UIElement.supported_css_value = supported_css_value;
 	_UIElement.str_to_camel = str_to_camel;
@@ -69,7 +70,7 @@
 		return strPropertyName;
 		
 	} () );
-	console.log( "_UIElement.cssSpecialCases", _UIElement.cssSpecialCases );
+	
 	// instance
 	
 	_UIElement.Instance = UIElement;
@@ -95,15 +96,16 @@
 	
 	_UIElement.Instance.prototype.show_children = show_children;
 	_UIElement.Instance.prototype.hide_children = hide_children;
-	_UIElement.Instance.prototype.show_hide_children_exchange = show_hide_children_exchange;
-	_UIElement.Instance.prototype.child_showing = child_showing;
-	_UIElement.Instance.prototype.child_hidden = child_hidden;
+	_UIElement.Instance.prototype.copy_children_and_exclude = copy_children_and_exclude;
+	_UIElement.Instance.prototype.get_children_showing = get_children_showing;
+	_UIElement.Instance.prototype.get_children_hidden = get_children_hidden;
 	
 	_UIElement.Instance.prototype.set_pointer_events = set_pointer_events;
 	
 	_UIElement.Instance.prototype.make_fullwindow = make_fullwindow;
 	
 	_UIElement.Instance.prototype.generate_dom_element = generate_dom_element;
+	_UIElement.Instance.prototype.generate_tool_tip = generate_tool_tip;
 	_UIElement.Instance.prototype.apply_css = apply_css;
 	
 	_UIElement.Instance.prototype.generate_theme = generate_theme;
@@ -259,30 +261,7 @@
 			
 			this._hidden = state;
 			
-			// hidden
-			if ( this.hidden === true ) {
-				
-				if ( this.parent instanceof _UIElement.Instance ) {
-					
-					this.parent.child_hidden( this );
-					
-				}
-				
-				this.set_pointer_events( false );
-				
-			}
-			// showing
-			else {
-				
-				if ( this.parent instanceof _UIElement.Instance ) {
-					
-					this.parent.child_showing( this );
-					
-				}
-				
-				this.set_pointer_events( this.pointerEvents );
-				
-			}
+			this.set_pointer_events( state ? false : this.pointerEvents );//( this.hidden === false && this.isVisible === true && ( typeof this.parent === 'undefined' || this.parent.hidden === false ) ) ? this.pointerEvents : false );
 			
 		}
 		
@@ -352,12 +331,18 @@
 		
 		this.apply_css( this.theme.cssmap );
 		
+		// tooltip
+		
+		if ( typeof parameters.tooltip !== 'undefined' ) {
+			
+			this.tooltip = this.generate_tool_tip( parameters.tooltip, this );
+			
+		}
+		
 		// items
 		
 		this.childrenByID = {};
         this.children = [];
-		this.childrenShowing = [];
-		this.childrenHidden = [];
 		this.childrenAlwaysVisible = [];
 		
 		// properties
@@ -493,26 +478,6 @@
 				
 				delete this.childrenByID[ child.id ];
 				
-				// if showing
-				
-				index = this.childrenShowing.indexOf( child );
-				
-				if ( index !== -1 ) {
-					
-					this.childrenShowing.splice( index, 1 );
-					
-				}
-				
-				// if hidden
-				
-				index = this.childrenHidden.indexOf( child );
-				
-				if ( index !== -1 ) {
-					
-					this.childrenHidden.splice( index, 1 );
-					
-				}
-				
 				// if always visible
 				
 				index = this.childrenAlwaysVisible.indexOf( child );
@@ -573,18 +538,7 @@
 				
 			}
 			
-			// shift children to hidden or showing lists
-			
-			if ( this.hidden === true ) {
-				
-				this.parent.child_hidden( this );
-				
-			}
-			else {
-				
-				this.parent.child_showing( this );
-				
-			}
+			//console.log( this, this.id, ' has PARENT', this.parent.id );
 			
 			// get parent dom element
 			
@@ -760,17 +714,19 @@
 		
 		this.theme.stateLast = this.theme.disabled;
 		
+		/*
 		for ( i = 0, l = this.children.length; i < l; i++) {
 			
 			child = this.children[ i ];
 			
 			if ( child.parent === this ) {
-				
+				console.log(this.id, 'disable child visual', child.id );
 				child.disable_visual();
 				
 			}
 			
 		}
+		*/
 		
 	}
 	
@@ -781,7 +737,7 @@
     =====================================================*/
 	
 	function set_position ( x, y ) {
-		if ( this.id === 'close_text' && this.parent && this.parent.id === 'close' ) console.log( this.id, ' text w/h ', this.width, this.height, this.widthHalf, this.heightHalf );
+		
 		// internal trackers for x and y
 		// non-integer values of x/y cause terrible text rendering
 		// around 250x faster than calling jQuery position().top/left
@@ -927,6 +883,9 @@
 		var me = this,
 			index,
 			fadeCallback = function () { if ( typeof callback !== 'undefined' ) { callback.call( callbackContext ); } };
+		//console.log( this.id, 'SHOW');
+		
+		// show
 		
 		time = main.is_number( time ) ? time : ( domElement ? 0 : this.timeShow );
 		
@@ -946,15 +905,19 @@
 			
 			parent = parent || this.parent || this.parentLast;
 			
-			if ( this.isVisible !== true && this.parent !== parent ) {
+			if ( this.parent !== parent ) {
 			
 				this.parent = parent;
+				
+				// show children
+				
+				this.show_children( undefined, undefined, 0 );
 				
 			}
 			
 			// set hidden
 				
-			this.hidden = false;
+			this.hidden = this.hiding = false;
 			
 			// override enabled
 			
@@ -980,7 +943,7 @@
 	function hide ( remove, time, opacity, callback, callbackContext, domElement ) {
 		
 		var me = this;
-		
+		//console.log( this.id, 'HIDE' );
 		time = main.is_number( time ) ? time : ( domElement ? 0 : this.timeHide );
 		
 		opacity = main.is_number( opacity ) ? opacity : 0;
@@ -998,6 +961,10 @@
 			// override enabled
 			
 			this._enabledOverride = false;
+			
+			// hiding
+			
+			this.hiding = true;
 			
 			// hide
 			
@@ -1018,15 +985,7 @@
 	
 	function on_hidden ( hideTarget, callback, callbackContext, remove ) {
 		
-		if ( typeof callback !== 'undefined' ) {
-			
-			callback.call( callbackContext );
-			
-		}
-		
 		if ( hideTarget instanceof _UIElement.Instance ) {
-			
-			hideTarget.hidden = true;
 			
 			if ( remove === true ) {
 				
@@ -1034,7 +993,18 @@
 				
 			}
 			
+			hideTarget.hidden = true;
+			
+			hideTarget.hiding = false;
+			
 		}
+		
+		if ( typeof callback !== 'undefined' ) {
+			
+			callback.call( callbackContext );
+			
+		}
+		
 	}
 	
 	/*===================================================
@@ -1048,39 +1018,22 @@
 		var i, l,
 			child;
 		
-		// make copy of children passed
-		
-		children = ( main.type( children ) === 'array' ? children : this.childrenHidden ).slice( 0 );
-		
-		children = children.concat( this.childrenAlwaysVisible );
-		
-		// exclude
-		
-		if ( main.type( excluding ) === 'array' && excluding.length > 0 ) {
+		if ( this.children.length > 0 ) {
 			
-			for ( i = 0, l = excluding.length; i < l; i++ ) {
+			// make copy of children passed
+			
+			children = this.copy_children_and_exclude( children, excluding );
+			
+			//console.log(this.id, 'SHOW children', children );
+			// show all
+			
+			for ( i = 0, l = children.length; i < l; i++ ) {
 				
-				child = excluding[ i ];
+				child = children[ i ];
 				
-				index = children.indexOf( child );
-				
-				if ( index !== -1 ) {
-					
-					children.splice( index, 1 );
-					
-				}
+				child.show( this, time, opacity, callback, callbackContext );
 				
 			}
-			
-		}
-		console.log(this.id, 'SHOW CHILDREN', children );
-		// show all
-		
-		for ( i = 0, l = children.length; i < l; i++ ) {
-			
-			child = children[ i ];
-			
-			child.show( this, time, opacity, callback, callbackContext );
 			
 		}
 		
@@ -1091,26 +1044,21 @@
 		var i, l,
 			child;
 		
-		// make copy of children passed
-		
-		children = ( main.type( children ) === 'array' ? children : this.childrenShowing ).slice( 0 );
-		
-		// exclude
-		
-		excluding = main.ensure_array( excluding );
-		excluding = excluding.concat( this.childrenAlwaysVisible );
-		
-		if ( excluding.length > 0 ) {
+		if ( this.children.length > 0 ) {
 			
-			for ( i = 0, l = excluding.length; i < l; i++ ) {
+			// make copy of children passed
+			
+			children = this.copy_children_and_exclude( children, this.childrenAlwaysVisible.concat( excluding || [] ) );
+			
+			// hide all
+			//console.log(this.id, 'HIDE children', children );
+			for ( i = 0, l = children.length; i < l; i++ ) {
 				
-				child = excluding[ i ];
+				child = children[ i ];
 				
-				index = children.indexOf( child );
-				
-				if ( index !== -1 ) {
+				if ( child.hidden !== true && child.parent === this ) {
 					
-					children.splice( index, 1 );
+					child.hide( false, time, opacity, callback, callbackContext );
 					
 				}
 				
@@ -1118,86 +1066,80 @@
 			
 		}
 		
-		// hide all
+	}
+	
+	function copy_children_and_exclude ( children, exclude ) {
+		
+		var i, l,
+			child,
+			index,
+			childrenMinusExcluded = [];
+		
+		children = main.ensure_array( children || this.children );
+		
+		exclude = main.ensure_array( exclude );
 		
 		for ( i = 0, l = children.length; i < l; i++ ) {
 			
 			child = children[ i ];
 			
-			if ( child.parent === this ) { 
+			if ( exclude.indexOf( child ) === -1 ) {
 				
-				child.hide( false, time, opacity, callback, callbackContext );
+				childrenMinusExcluded.push( child );
 				
 			}
 			
 		}
 		
-	}
-	
-	function show_hide_children_exchange ( time, opacity, callback, callbackContext ) {
-		
-		var showing = this.childrenShowing.slice( 0 ),
-			hiding = this.childrenHidden.slice( 0 );
-		
-		// hide showing
-		
-		this.hide_children( showing, time, opacity, callback, callbackContext );
-		
-		// show hiding
-		
-		this.show_children( hiding, time, opacity, callback, callbackContext );
+		return childrenMinusExcluded;
 		
 	}
 	
-	function child_showing ( child ) {
+	function get_children_showing ( children ) {
 		
-		var index;
+		var i, l,
+			child,
+			showing = [];
 		
-		child.hiddenLast = child.hidden;
+		children = main.ensure_array( children || this.children );
 		
-		index = this.childrenHidden.indexOf( child );
-		
-		if ( index !== -1 ) {
+		for ( i = 0, l = children.length; i < l; i++ ) {
 			
-			this.childrenHidden.splice( index, 1 );
+			child = children[ i ];
 			
-		}
-		
-		index = this.childrenShowing.indexOf( child );
-		
-		if ( index !== -1 ) {
-			
-			this.childrenShowing.splice( index, 1 );
+			if ( child.hidden === false && child.parent === this ) {
+				
+				showing.push( child );
+				
+			}
 			
 		}
 		
-		this.childrenShowing.push( child );
+		return showing;
 		
 	}
 	
-	function child_hidden ( child ) {
+	function get_children_hidden ( children ) {
 		
-		var index;
+		var i, l,
+			child,
+			hidden = [];
 		
-		child.hiddenLast = child.hidden;
+		children = main.ensure_array( children || this.children );
 		
-		index = this.childrenShowing.indexOf( child );
-		
-		if ( index !== -1 ) {
+		for ( i = 0, l = children.length; i < l; i++ ) {
 			
-			this.childrenShowing.splice( index, 1 );
+			child = children[ i ];
 			
-		}
-		
-		index = this.childrenHidden.indexOf( child );
-		
-		if ( index !== -1 ) {
-			
-			this.childrenHidden.splice( index, 1 );
+			if ( child.hidden === true && child.parent === this ) {
+				
+				hidden.push( child );
+				
+			}
 			
 		}
 		
-		this.childrenHidden.push( child );
+		return hidden;
 		
 	}
 	
@@ -1212,7 +1154,9 @@
 		var i, l,
 			child;
 		
-		if ( state === false ) {
+		// catch state
+		
+		if ( state === false || this.hiding === true || this.hidden === true || this.isVisible === false || ( typeof this.parent !== 'undefined' && ( this.parent.hiding === true || this.parent.hidden === true ) ) ) {
 			
 			// use native pointer-events when available
 			
@@ -1257,7 +1201,7 @@
 			
 			child = this.children[ i ];
 			
-			child.set_pointer_events( ( this.hidden === false && child.hidden === false && child.isVisible === true ) ? child.pointerEvents : false );
+			child.set_pointer_events( child.pointerEvents );
 			
 		}
 		
@@ -1348,6 +1292,73 @@
 		}
 		
 		return domElement;
+		
+	}
+	
+	function generate_tool_tip ( parameters, uielement ) {
+		
+		var tooltip;
+		
+		if ( typeof parameters === 'string' ) {
+			
+			tooltip = {};
+			tooltip.source = tooltip.content = parameters;
+			
+		}
+		else if ( typeof parameters.content === 'string' ) {
+			
+			tooltip = main.extend( parameters, {}, true );
+			tooltip.source = tooltip.content;
+			
+		}
+		
+		if ( typeof tooltip.content !== 'undefined' ) {
+			
+			tooltip.defaultPosition = tooltip.defaultPosition || 'top';
+			tooltip.maxWidth = tooltip.maxWidth || 'auto';
+			tooltip.delay = tooltip.delay || 100;
+			tooltip.contentDisabled = '<br/><p class="disabled">' + ( tooltip.contentDisabled || '(disabled)' ) + '</p>';
+			tooltip.uielement = uielement;
+			
+			// on enter function to check if ui element is enabled/disabled and notify user
+			
+			tooltip.enter = function () {
+				
+				tooltip.content = tooltip.source;
+				
+				if ( tooltip.uielement instanceof _UIElement.Instance && tooltip.uielement.enabledSelf !== true ) {
+					
+					tooltip.content += tooltip.contentDisabled;
+					
+				}
+				
+			};
+			
+			// on click function to check if ui element is hiding/hidden to disable tooltip
+			
+			tooltip.click = function () {
+				
+				tooltip.disable = false;
+				
+				if ( tooltip.uielement instanceof _UIElement.Instance && ( tooltip.uielement.hiding === true || tooltip.uielement.hidden === true || tooltip.uielement.isVisible === false ) ) {
+					
+					tooltip.disable = true;
+					
+				}
+				
+			};
+			
+			// if ui element passed
+			
+			if ( uielement instanceof _UIElement.Instance ) {
+				
+				uielement.domElement.tipTip( tooltip );
+				
+			}
+			
+		}
+		
+		return tooltip;
 		
 	}
 	
@@ -1496,6 +1507,10 @@
 		cssmap[ "position" ] = or[ "position" ] || "absolute";
 		cssmap[ "display" ] = or[ "display" ] || "block";
 		cssmap[ "transform-origin" ] = or[ "transform-origin" ] || "50% 50%";
+		
+		// state last
+		
+		theme.stateLast = {};
 		
 		return theme;
 		

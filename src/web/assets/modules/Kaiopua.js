@@ -894,7 +894,7 @@ var KAIOPUA = (function (main) {
 				// if new asset is not empty
 				
 				if ( assetNew.is_empty() === false ) {
-					console.log('     >>> merging new asset into current asset' );
+					
 					// merge new asset into current
 					
 					asset.merge_asset_self( assetNew );
@@ -904,7 +904,6 @@ var KAIOPUA = (function (main) {
 			}
 			// else replace current empty asset with new asset
 			else {
-				console.log('asset current is empty, replacing with new!' );
 				
 				parent[ assetName ] = asset = assetNew;
 				
@@ -942,7 +941,6 @@ var KAIOPUA = (function (main) {
 		// initialize new asset
 		
 		assetNew = new KaiopuaAsset( path, parameters );
-		console.log('registration of new asset!', assetNew );
 		
 		// asset is usually only useful internally
 		// so return asset data
@@ -958,7 +956,7 @@ var KAIOPUA = (function (main) {
 		asset = asset || main.get_asset( path );
 		
 		if ( asset instanceof KaiopuaAsset ) {
-			console.log('  >>> asset is ready, ', asset.path, asset );
+			
 			// ready and not waiting
 			
 			asset.ready = true;
@@ -1010,7 +1008,6 @@ var KAIOPUA = (function (main) {
 				assetsWaitingFor.splice( indexWaiting, 1 );
 				
 				assetsReady.push( path );
-				console.log( '> an asset is ready! (' + assetsReady.length + ' / ' + requirements.length + ' - ' + path + ' )' );
 				
 				// check if no more to wait for
 				
@@ -1080,11 +1077,6 @@ var KAIOPUA = (function (main) {
 				
 			}
 			
-			if ( waitForAssetsReady === true ) {
-				console.log( 'waiting for '+ requirements.length + ' assets to be ready!' );
-				console.log(requirements);
-			}
-			
 			// find all assets
 			
 			for ( i = 0, l = requirements.length; i < l; i++ ) {
@@ -1124,12 +1116,6 @@ var KAIOPUA = (function (main) {
 						listeningForReadySignal = true;
 						
 						shared.signals.assetReady.add( on_asset_ready );
-						
-					}
-					
-					if ( asset instanceof KaiopuaAsset && asset.ready !== true ) {
-						
-						console.log( '< an asset is not ready, listening for asset ready signal ( ' + path + ' )' );
 						
 					}
 					
@@ -1184,7 +1170,6 @@ var KAIOPUA = (function (main) {
 		parameters = parameters || {};
 		
 		parameters.path = path;
-		console.log('<<<<< new asset: ', path, ' >>>>');
 		
 		assetNew.merge_asset_self( parameters, true );
 		

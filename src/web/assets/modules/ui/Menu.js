@@ -53,25 +53,26 @@
 		_Menu.Instance.prototype.supr = _Button.Instance.prototype;
 		
 		_Menu.Instance.prototype.show = show;
+		_Menu.Instance.prototype.hide = hide;
 		
+		_Menu.Instance.prototype.show_children = show_children;
 		_Menu.Instance.prototype.hide_children = hide_children;
-		_Menu.Instance.prototype.child_showing = child_showing;
-		_Menu.Instance.prototype.child_hidden = child_hidden;
 		_Menu.Instance.prototype.child_arrange_dependent = child_arrange_dependent;
 		_Menu.Instance.prototype.child_arrange_independent = child_arrange_independent;
 		
 		_Menu.Instance.prototype.open = open;
 		_Menu.Instance.prototype.close = close;
-		_Menu.Instance.prototype.reset = reset;
+		_Menu.Instance.prototype.close_self = close_self;
 		_Menu.Instance.prototype.child_opening = child_opening;
 		_Menu.Instance.prototype.child_closing = child_closing;
 		
 		_Menu.Instance.prototype.set_arrangement = set_arrangement;
 		_Menu.Instance.prototype.update_arrangement = update_arrangement;
+		_Menu.Instance.prototype.complete_arrangement = complete_arrangement;
+		_Menu.Instance.prototype.get_children_for_arrangement = get_children_for_arrangement;
+		_Menu.Instance.prototype.arrange_to_child = arrange_to_child;
 		_Menu.Instance.prototype.arrange_line = arrange_line;
 		_Menu.Instance.prototype.arrange_circle = arrange_circle;
-		_Menu.Instance.prototype.align_cascade = align_cascade;
-		_Menu.Instance.prototype.fit_to_child = fit_to_child;
 		
 		_Menu.Instance.prototype.themes = {};
 		_Menu.Instance.prototype.themes.core = theme_core;
@@ -87,7 +88,15 @@
 					button.callback = this.open;
 					button.context = this;
 					
+					if ( this._buttonOpen instanceof _Button.Instance ) {
+						
+						this.remove( this._buttonOpen );
+						
+					}
+					
 					this._buttonOpen = button;
+					
+					this.add( this._buttonOpen );
 					
 					if ( hadButtons === false && this.hasOpenCloseButtons ) {
 						
@@ -111,7 +120,15 @@
 					button.callback = this.close;
 					button.context = this;
 					
+					if ( this._buttonClose instanceof _Button.Instance ) {
+						
+						this.remove( this._buttonClose );
+						
+					}
+					
 					this._buttonClose = button;
+					
+					this.add( this._buttonClose );
 					
 					if ( hadButtons === false && this.hasOpenCloseButtons ) {
 						
@@ -233,7 +250,7 @@
 	
 	/*===================================================
     
-    show
+    show / hide
     
     =====================================================*/
 	
@@ -243,9 +260,21 @@
 		
 		_Menu.Instance.prototype.supr.show.apply( this, arguments );
 		
-		// arrangement
+		if ( this.isOpen ) {
+			
+			this.close( 0 );
+			
+		}
 		
-		this.update_arrangement();
+	}
+	
+	function hide () {
+		
+		// proto
+		
+		_Menu.Instance.prototype.supr.hide.apply( this, arguments );
+		
+		this.close();
 		
 	}
 	
@@ -255,64 +284,55 @@
     
     =====================================================*/
 	
-	function hide_children ( children, excluding ) {
+	function show_children () {
 		
-		var i, l,
-			child,
-			index;
+		// if closed, modify children to only include open button
+		//console.log(this.id, 'menu show children, arguments', arguments );
+		if ( this.hasOpenCloseButtons ) {
+			//console.log('  > modify arguments' );
+			// if closed, only show open button
+			if ( this.isOpen === false ) {
+				
+				arguments[ 0 ] = this.buttonOpen;
+				
+			}
+			// if open, exclude open button from show
+			else {
+				
+				arguments[ 1 ] = [ this.buttonOpen ].concat( arguments[ 1 ] || [] );
+				
+			}
 		
-		excluding = main.ensure_array( excluding );
-		
-		// if closed, modify children to hide and remove open button
-		
-		if ( this.isOpen !== true ) {
-			
-			excluding.push( this.buttonOpen );
-			
 		}
 		
 		// proto
 		
-		_Menu.Instance.prototype.supr.hide_children.call( this, children, excluding );
+		_Menu.Instance.prototype.supr.show_children.apply( this, arguments );
+		
+		this.update_arrangement();
 		
 	}
 	
-	function child_showing ( child ) {
+	function hide_children () {
+		
+		//console.log(this.id, 'menu hide children, arguments', arguments );
+		if ( this.hasOpenCloseButtons ) {
+			
+			// if closed, exclude open button from hide
+			
+			if ( this.isOpen === false ) {
+				
+				arguments[ 1 ] = [ this.buttonOpen ].concat( arguments[ 1 ] || [] );
+				
+			}
+			
+		}
 		
 		// proto
 		
-		_Menu.Instance.prototype.supr.child_showing.apply( this, arguments );
+		_Menu.Instance.prototype.supr.hide_children.apply( this, arguments );
 		
-		// if not open, hide all
-		
-		if ( this.isOpen === false && child !== this.buttonOpen ) {
-			
-			this.close( 0 );
-			
-		}
-		else if ( this.isVisible ) {
-			
-			// set arrangement
-			
-			this.update_arrangement();
-			
-		}
-		
-	}
-	
-	function child_hidden ( child ) {
-		
-		// proto
-		
-		_Menu.Instance.prototype.supr.child_hidden.apply( this, arguments );
-		
-		if ( this.isVisible ) {
-			
-			// set arrangement
-			
-			this.update_arrangement();
-			
-		}
+		this.update_arrangement();
 		
 	}
 	
@@ -349,7 +369,7 @@
 	function open ( time, callback, callbackContext ) {
 		
 		this._isOpen = true;
-		
+		//console.log( this.id, 'OPENING' );
 		if ( this.hasOpenCloseButtons ) {
 			
 			if ( this.parent instanceof _Menu.Instance ) {
@@ -360,7 +380,7 @@
 			
 			this.buttonOpen.hide( true, time, 0, function () {
 				
-				this.show_children( undefined, this.buttonClose, time );
+				this.show_children( undefined, undefined, time );
 				
 				this.buttonClose.show( this, time );
 				
@@ -386,19 +406,47 @@
 		
 	}
 	
-	function close ( time, callback, callbackContext ) {
+	function close ( time, callback, callbackContext, child ) {
+		
+		var i, l,
+			children,
+			subchild;
+		
+		child = child instanceof _UIElement.Instance ? child : this;
+		
+		children = child.children;
+		
+		for ( i = 0, l = children.length; i < l; i++ ) {
+			
+			subchild = children[ i ];
+			
+			this.close( time, undefined, undefined, subchild );
+			
+		}
+		
+		if ( child instanceof _Menu.Instance ) {
+			
+			child.close_self( time, callback, callbackContext );
+			
+		}
+		
+	}
+	
+	function close_self ( time, callback, callbackContext ) {
 		
 		// only close if both open and close buttons are valid
 		
 		if ( this.hasOpenCloseButtons ) {
-			
+			//console.log( this.id, 'CLOSING' );
 			this._isOpen = false;
 			
-			this.hide_children( undefined, this.buttonClose, time );
+			this.hide_children( undefined, undefined, time );
 			
 			this.buttonClose.hide( true, time, 0, function () {
 				
 				this.buttonOpen.show( this, time );
+				
+				this.update_arrangement();
 				
 				if ( this.parent instanceof _Menu.Instance ) {
 					
@@ -423,35 +471,9 @@
 		
 	}
 	
-	function reset ( time, child ) {
-		
-		var i, l,
-			children,
-			subchild;
-		
-		child = child instanceof _UIElement.Instance ? child : this;
-		
-		children = child.children;
-		
-		for ( i = 0, l = children.length; i < l; i++ ) {
-			
-			subchild = children[ i ];
-			
-			this.reset( time, subchild );
-			
-		}
-		
-		if ( child instanceof _Menu.Instance ) {
-			
-			child.close( time );
-			
-		}
-		
-	}
-	
 	function child_opening ( child ) {
-		
-		this.childrenShowingOrder = this.childrenShowing.slice( 0 );
+		//console.log( this.id, ' child, ', child.id, ', OPENING' );
+		this.childrenShowingOrder = this.get_children_showing();
 		
 		this.hide_children( this.childrenShowingOrder, child );
 		
@@ -459,7 +481,13 @@
 	
 	function child_closing ( child ) {
 		
-		this.show_children( this.childrenShowingOrder );
+		if ( this.isOpen && this.childrenShowingOrder ) {
+			//console.log( this.id, ' child, ', child.id, ', CLOSING' );
+			this.show_children( this.childrenShowingOrder );
+			
+			this.childrenShowingOrder = undefined;
+			
+		}
 		
 	}
 	
@@ -491,17 +519,78 @@
 	
 	function update_arrangement () {
 		
-		if ( this.childrenShowing.length > 0 ) {
-			
+		if ( this.get_children_showing().length > 0 ) {
+			//console.log( this.id, 'ARRANGING' );
 			this.set_arrangement( this.arrangement, this.arrangementParameters );
 			
 		}
+		
+	}
+	
+	function get_children_for_arrangement () {
+		
+		var i, l,
+			child,
+			showing = this.get_children_showing(),
+			arranging = [];
+		
+		for ( i = 0, l = showing.length; i < l; i++ ) {
+			
+			child = showing[ i ];
+			
+			// if child is not aligned or independent in menu
+			
+			if ( typeof child.alignment !== 'string' && this.independent.indexOf( child ) === -1 ) {
+				
+				arranging.push( child );
+				
+			}
+			
+		}
+		
+		return arranging;
+	}
+	
+	function complete_arrangement () {
+		
+		var i, l,
+			child;
 		
 		if ( this.parent instanceof _Menu.Instance ) {
 			
 			this.parent.update_arrangement();
 			
 		}
+		
+		this.align();
+		
+		children = this.get_children_showing();
+		
+		for ( i = 0, l = children.length; i < l; i++ ) {
+			
+			child = children[ i ];
+			
+			child.align();
+			
+		}
+		
+	}
+	
+	function arrange_to_child ( child ) {
+		
+		this.width = this.spacingLeft + this.spacingRight;
+		this.height = this.spacingTop + this.spacingBottom;
+		
+		if ( child instanceof _UIElement.Instance ) {
+		
+			this.width += child.outerWidth;
+			this.height += child.outerHeight;
+			
+			child.set_position( child.spacingLeft, child.spacingTop );
+			
+		}
+		
+		this.complete_arrangement();
 		
 	}
 	
@@ -549,33 +638,13 @@
 		degrees = this.arrangementParameters.degrees = parameters.degrees = _MathHelper.degree_between_180( parameters.degrees || this.arrangementParameters.degrees || 0 );
 		circular = this.arrangementParameters.circular = parameters.circular = ( typeof parameters.circular === 'boolean' ? parameters.circular : ( typeof this.arrangementParameters.circular === 'boolean' ? this.arrangementParameters.circular : false ) );
 		childrenPerLine = this.arrangementParameters.childrenPerLine = parameters.childrenPerLine;
-		children = parameters.children;
-		
-		if ( main.type( children ) !== 'array' ) {
-			
-			parameters.children = children = [];
-			
-			for ( i = 0, l = this.childrenShowing.length; i < l; i++ ) {
-				
-				child = this.childrenShowing[ i ];
-				
-				// if child is not aligned or independent in menu
-				
-				if ( typeof child.alignment !== 'string' && this.independent.indexOf( child ) === -1 ) {
-					
-					children.push( child );
-					
-				}
-				
-			}
-			
-		}
+		children = parameters.children = parameters.children || this.get_children_for_arrangement();
 		
 		// if only 1 child, skip arrange and fit to child
 		
 		if ( children.length <= 1 ) {
 			
-			this.fit_to_child( children[ 0 ] );
+			this.arrange_to_child( children[ 0 ] );
 			
 		}
 		else {
@@ -752,7 +821,7 @@
 			// finished
 			else {
 				
-				this.align_cascade();
+				this.complete_arrangement();
 				
 			}
 			
@@ -803,32 +872,11 @@
 		degrees = this.arrangementParameters.degrees = parameters.degrees = main.is_number( parameters.degrees ) ? parameters.degrees : ( main.is_number( this.arrangementParameters.degrees ) ? this.arrangementParameters.degrees : 360 );
 		radius = this.arrangementParameters.radius = parameters.radius = main.is_number( parameters.radius ) ? parameters.radius : this.arrangementParameters.radius;
 		spaceBySize = this.arrangementParameters.spaceBySize = parameters.spaceBySize = typeof parameters.spaceBySize === 'boolean' ? parameters.spaceBySize : this.arrangementParameters.spaceBySize;
-		
-		children = parameters.children;
-		
-		if ( main.type( children ) !== 'array' ) {
-			
-			parameters.children = children = [];
-			
-			for ( i = 0, l = this.childrenShowing.length; i < l; i++ ) {
-				
-				child = this.childrenShowing[ i ];
-				
-				// if child is not aligned or independent in menu
-				
-				if ( typeof child.alignment !== 'string' && this.independent.indexOf( child ) === -1 ) {
-					
-					children.push( child );
-					
-				}
-				
-			}
-			
-		}
+		children = parameters.children = parameters.children || this.get_children_for_arrangement();
 		
 		if ( children.length <= 1 ) {
 			
-			this.fit_to_child( children[ 0 ] );
+			this.arrange_to_child( children[ 0 ] );
 			
 		}
 		else {
@@ -952,44 +1000,9 @@
 			
 			// finished
 			
-			this.align_cascade();
+			this.complete_arrangement();
 			
 		}
-		
-	}
-	
-	function align_cascade () {
-		
-		var i, l,
-			child;
-		
-		this.align();
-		
-		for ( i = 0, l = this.childrenShowing.length; i < l; i++ ) {
-			
-			child = this.childrenShowing[ i ];
-			
-			child.align();
-			
-		}
-		
-	}
-	
-	function fit_to_child ( child ) {
-		
-		this.width = this.spacingLeft + this.spacingRight;
-		this.height = this.spacingTop + this.spacingBottom;
-		
-		if ( child instanceof _UIElement.Instance ) {
-		
-			this.width += child.outerWidth;
-			this.height += child.outerHeight;
-			
-			child.set_position( child.spacingLeft, child.spacingTop );
-			
-		}
-		
-		this.align_cascade();
 		
 	}
 	

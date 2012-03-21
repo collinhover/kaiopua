@@ -209,16 +209,20 @@
 		
 		var b = _GUI.buttons = {};
 		
+		// fullscreen disabled until allows alphanumeric input
+		
 		b.fullscreenEnter = new _Button.Instance( {
 			id: 'fullscreen',
 			image: 'img/icon/fullscreen_32x32.png',
 			imageSize: iconSizeSmall,
-			width: buttonSizeForIconSmall,
+			size: buttonSizeForIconSmall,
+			tooltip: 'Fullscreen',
 			spacing: buttonSpacing,
 			circle: true,
 			callback: fullscreen_enter,
 			context: this,
-			alignment: 'bottomright'
+			alignment: 'bottomright',
+			enabled: false
 		} );
 	
 		b.fullscreenEnter.hide( true, 0 );
@@ -227,12 +231,14 @@
 			id: 'fullscreen',
 			image: 'img/icon/fullscreen_exit_32x32.png',
 			imageSize: iconSizeSmall,
-			width: buttonSizeForIconSmall,
+			size: buttonSizeForIconSmall,
+			tooltip: 'Exit Fullscreen',
 			spacing: buttonSpacing,
 			circle: true,
 			callback: fullscreen_exit,
 			context: this,
-			alignment: 'bottomright'
+			alignment: 'bottomright',
+			enabled: false
 		} );
 	
 		b.fullscreenExit.hide( true, 0 );
@@ -242,8 +248,10 @@
 			image: 'img/icon/save_64x64.png',
 			imageSize: iconSizeMedium,
 			size: buttonSizeForIconMedium,
+			tooltip: 'Save progress',
 			spacing: buttonSpacing,
-			circle: true
+			circle: true,
+			enabled: false
 		} );
 		
 		b.load = new _Button.Instance( {
@@ -251,8 +259,13 @@
 			image: 'img/icon/load_64x64.png',
 			imageSize: iconSizeMedium,
 			size: buttonSizeForIconMedium,
+			tooltip: {
+				content: 'Load a saved game',
+				contentDisabled: '(no save found!)'
+			},
 			spacing: buttonSpacing,
-			circle: true
+			circle: true,
+			enabled: false
 		} );
 		
 	}
@@ -300,8 +313,8 @@
 	
 		m.start.add( 
 			new _Button.Instance( {
-				id: 'start',
-				text: 'Start',
+				id: 'play',
+				text: 'Play!',
 				size: buttonSizeMedium,
 				spacing: buttonSpacing,
 				circle: true,
@@ -315,7 +328,7 @@
 			m.options
 		);
 		
-		m.start.childrenAlwaysVisible.push( m.start.childrenByID.start );
+		m.start.childrenAlwaysVisible.push( m.start.childrenByID.play );
 		
 		m.start.arrange_circle( {
 			radius: buttonSizeMedium + buttonSpacing
@@ -344,15 +357,12 @@
 			} ),
 			new _Button.Instance( {
 				id: 'end',
-				text: 'End<br/>Game',
-				size: buttonSizeSmall,
+				image: 'img/icon/exit_64x64.png',
+				imageSize: iconSizeMedium,
+				size: buttonSizeForIconMedium,
+				tooltip: 'End Game',
 				spacing: buttonSpacing,
-				circle: true,
-				cssmap: {
-					'font-size' : "18px",
-					//'font-family' : "'CoustardRegular', Georgia, serif",
-					'text-align' : 'center'
-				},
+				circle: true
 			} ),
 			m.core
 		);
@@ -374,7 +384,8 @@
 			id: 'open',
 			image: 'img/icon/computer_alt_64x64.png',
 			imageSize: iconSizeMedium,
-			width: buttonSizeForIconMedium,
+			size: buttonSizeForIconMedium,
+			tooltip: 'Core Menu',
 			spacing: buttonSpacing,
 			circle: true
 		} );
@@ -383,7 +394,8 @@
 			id: 'close',
 			image: 'img/icon/undo_64x64.png',
 			imageSize: iconSizeSmall,
-			width: buttonSizeForIconSmall,
+			size: buttonSizeForIconSmall,
+			tooltip: 'Go Back',
 			spacing: buttonSpacing,
 			circle: true
 		} );
@@ -410,6 +422,7 @@
 			image: 'img/icon/cog_64x64.png',
 			imageSize: iconSizeMedium,
 			size: buttonSizeForIconMedium,
+			tooltip: 'Options',
 			spacing: buttonSpacing,
 			circle: true
 		} );
@@ -419,6 +432,7 @@
 			image: 'img/icon/undo_64x64.png',
 			imageSize: iconSizeSmall,
 			width: buttonSizeForIconSmall,
+			tooltip: 'Go Back',
 			spacing: buttonSpacing,
 			circle: true
 		} );
@@ -429,40 +443,50 @@
 				image: 'img/icon/computer_64x64.png',
 				imageSize: iconSizeMedium,
 				size: buttonSizeForIconMedium,
+				tooltip: 'Quality',
 				spacing: buttonSpacing,
-				circle: true
+				circle: true,
+				enabled: false
 			} ),
 			new _Button.Instance( {
 				id: 'keybindings',
 				image: 'img/icon/keyboard_64x64.png',
 				imageSize: iconSizeMedium,
 				size: buttonSizeForIconMedium,
+				tooltip: 'Keybindings',
 				spacing: buttonSpacing,
-				circle: true
+				circle: true,
+				enabled: false
 			} ),
 			new _Button.Instance( {
 				id: 'mouse',
 				image: 'img/icon/mouse_64x64.png',
 				imageSize: iconSizeMedium,
 				size: buttonSizeForIconMedium,
+				tooltip: 'Hand Orientation',
 				spacing: buttonSpacing,
-				circle: true
+				circle: true,
+				enabled: false
 			} ),
 			new _Button.Instance( {
-				id: 'sound',
+				id: 'volume',
 				image: 'img/icon/sound_64x64.png',
 				imageSize: iconSizeMedium,
 				size: buttonSizeForIconMedium,
+				tooltip: 'Volume',
 				spacing: buttonSpacing,
-				circle: true
+				circle: true,
+				enabled: false
 			} ),
 			new _Button.Instance( {
 				id: 'accessibility',
 				image: 'img/icon/accessibility_64x64.png',
 				imageSize: iconSizeMedium,
 				size: buttonSizeForIconMedium,
+				tooltip: 'Accessibility',
 				spacing: buttonSpacing,
-				circle: true
+				circle: true,
+				enabled: false
 			} )
 		);
 	

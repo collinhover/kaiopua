@@ -195,7 +195,7 @@
 		
 		this.domElement.on( 'mouseenter.btn touchenter.btn', function ( e ) { me.enter( e ); } );
 		this.domElement.on( 'mouseleave.btn touchleave.btn', function ( e ) { me.leave( e ); } );
-        this.domElement.on( 'click.btn', function ( e ) { me.trigger( e ); } );
+        this.domElement.on( 'mouseup.btn touchend.btn', function ( e ) { me.trigger( e ); } );
 		
 	}
 	
@@ -216,7 +216,7 @@
 	}
 	
 	function leave ( e ) {
-			
+		
 		this.apply_css( this.theme.stateLast );
 		
 	}
@@ -228,8 +228,6 @@
     =====================================================*/
 	
 	function trigger ( e ) {
-		
-		var me = this;
 		
 		if ( typeof this.callback !== 'undefined' && this.enabled === true && this.hidden !== true && this.isVisible === true ) {
 			
@@ -249,9 +247,11 @@
 	
 	function cooldown () {
 		
+		var me = this;
+		
 		if ( this.timeCooldown > 0 ) {
 			
-			this.disable( false );
+			this.disable();
 			
 			requestTimeout( function () { me.enable(); }, this.timeCooldown );
 			
