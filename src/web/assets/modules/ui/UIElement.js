@@ -20,7 +20,7 @@
     
     =====================================================*/
 	
-	main.asset_register( assetPath, { data: _UIElement });
+	main.asset_register( assetPath, { data: _UIElement } );
 	
 	/*===================================================
     
@@ -79,7 +79,6 @@
 	_UIElement.Instance.prototype.remove = remove;
 	
 	_UIElement.Instance.prototype.append_to = append_to;
-	_UIElement.Instance.prototype.add_do_remove = add_do_remove;
 	
 	_UIElement.Instance.prototype.enable = enable;
 	_UIElement.Instance.prototype.disable = disable;
@@ -93,6 +92,9 @@
 	
 	_UIElement.Instance.prototype.show = show;
 	_UIElement.Instance.prototype.hide = hide;
+	
+	_UIElement.Instance.prototype.pulse = pulse;
+	_UIElement.Instance.prototype.pulse_stop = pulse_stop;
 	
 	_UIElement.Instance.prototype.show_children = show_children;
 	_UIElement.Instance.prototype.hide_children = hide_children;
@@ -118,24 +120,11 @@
 		set : function ( parent ) { this.append_to( parent ); }
 	} );
 	
-	Object.defineProperty( _UIElement.Instance.prototype, 'enabledSelf', { 
-		get : function () { return this._enabled; }
-	} );
-	
-	Object.defineProperty( _UIElement.Instance.prototype, 'enabled', { 
-		get : function () { return ( this._enabledOverride === false ? this._enabledOverride : ( this.enabledSelf !== false && this.parent instanceof _UIElement.Instance ? this.parent.enabled : this.enabledSelf ) ); },
-		set : function ( state ) {
+	Object.defineProperty( _UIElement.Instance.prototype, 'html', { 
+		get : function () { return this.domElement.html(); },
+		set : function ( html ) {
 			
-			if ( state === true ) {
-				
-				this.enable();
-				
-			}
-			else {
-				
-				this.disable();
-				
-			}
+			this.domElement.html( html );
 			
 		}
 	} );
@@ -144,7 +133,7 @@
 		get : function () { return this.domElement.width(); },
 		set : function ( width ) {
 			
-			this.domElement.width( Math.round( width ) );
+			this.domElement.width( main.is_number( width ) ? Math.round( width ) : width );
 			
 		}
 	} );
@@ -153,7 +142,7 @@
 		get : function () { return this.domElement.height(); },
 		set : function ( height ) {
 			
-			this.domElement.height( Math.round( height ) );
+			this.domElement.height( main.is_number( height ) ? Math.round( height ) : height );
 		
 		}
 	} );
@@ -241,6 +230,28 @@
 		}
 		
 	});
+	
+	Object.defineProperty( _UIElement.Instance.prototype, 'enabledSelf', { 
+		get : function () { return this._enabled; }
+	} );
+	
+	Object.defineProperty( _UIElement.Instance.prototype, 'enabled', { 
+		get : function () { return ( this._enabledOverride === false ? this._enabledOverride : ( this.enabledSelf !== false && this.parent instanceof _UIElement.Instance ? this.parent.enabled : this.enabledSelf ) ); },
+		set : function ( state ) {
+			
+			if ( state === true ) {
+				
+				this.enable();
+				
+			}
+			else {
+				
+				this.disable();
+				
+			}
+			
+		}
+	} );
 	
 	Object.defineProperty( _UIElement.Instance.prototype, 'isVisibleSelf', { 
 		get : function () { return this._isVisible; }
@@ -348,7 +359,7 @@
 		// properties
 		
 		this.timeShow = main.is_number( parameters.timeShow ) ? parameters.timeShow : 500;
-        this.timeHide = main.is_number( parameters.timeHide ) ? parameters.timeHide : 250;
+        this.timeHide = main.is_number( parameters.timeHide ) ? parameters.timeHide : 500;
 		
 		this.opacityShow = main.is_number( parameters.opacityShow ) ? parameters.opacityShow : 1;
 		
@@ -612,48 +623,6 @@
 		
 	}
 	
-	function add_do_remove ( callback, context, data ) {
-		
-		var tempadded,
-			callbackResult;
-		
-		// if not on display, add temporarily
-		
-		if ( this.isVisible !== true ) {
-			
-			tempadded = true;
-			
-			$( document.body ).append( this.domElement );
-			
-		}
-		
-		// do callback
-		
-		callbackResult = callback.apply( context, data );
-		
-		// if added temporarily
-		
-		if ( tempadded === true ) {
-			
-			// if had parent, append to
-			
-			if ( this.parent instanceof _UIElement.Instance ) {
-				
-				this.parent.domElement.append( this.domElement );
-				
-			}
-			else if ( typeof this.parent !== 'undefined' ) {
-				
-				$( this.parent ).append( this.domElement );
-				
-			}
-			
-		}
-		
-		return callbackResult;
-		
-	}
-	
 	/*===================================================
     
     enable / disable
@@ -878,18 +847,32 @@
     
     =====================================================*/
 	
-	function show ( parent, time, opacity, callback, callbackContext, domElement ) {
+	function show ( parameters ) {
 		
-		var me = this,
-			index,
-			fadeCallback = function () { if ( typeof callback !== 'undefined' ) { callback.call( callbackContext ); } };
+		var domElement,
+			parent,
+			time,
+			opacity,
+			callback,
+			callbackContext,
+			fadeCallback;
 		//console.log( this.id, 'SHOW');
+		// handle parameters
 		
-		// show
+		parameters = parameters || {};
 		
-		time = main.is_number( time ) ? time : ( domElement ? 0 : this.timeShow );
+		domElement = parameters.domElement;
 		
-		opacity = main.is_number( opacity ) ? opacity : ( domElement ? 1 : this.opacityShow );
+		parent = parameters.parent || this.parent || this.parentLast;
+		
+		time = main.is_number( parameters.time ) ? parameters.time : ( domElement ? 0 : this.timeShow );
+		
+		opacity = main.is_number( parameters.opacity ) ? parameters.opacity : ( domElement ? 1 : this.opacityShow );
+		
+		callback = parameters.callback;
+		callbackContext = parameters.callbackContext;
+		
+		fadeCallback = function () { if ( typeof callback !== 'undefined' ) { callback.call( callbackContext ); } };
 		
 		// if dom element passed
 		
@@ -901,9 +884,7 @@
 		// else use own
 		else {
 			
-			// try appending
-			
-			parent = parent || this.parent || this.parentLast;
+			// set parent
 			
 			if ( this.parent !== parent ) {
 			
@@ -940,13 +921,30 @@
 		
 	}
 	
-	function hide ( remove, time, opacity, callback, callbackContext, domElement ) {
+	function hide ( parameters ) {
 		
-		var me = this;
+		var me = this,
+			domElement,
+			remove,
+			time,
+			opacity,
+			callback,
+			callbackContext;
 		//console.log( this.id, 'HIDE' );
-		time = main.is_number( time ) ? time : ( domElement ? 0 : this.timeHide );
+		// handle parameters
 		
-		opacity = main.is_number( opacity ) ? opacity : 0;
+		parameters = parameters || {};
+		
+		domElement = parameters.domElement;
+		
+		remove = parameters.remove;
+		
+		time = main.is_number( parameters.time ) ? parameters.time : ( domElement ? 0 : this.timeHide );
+		
+		opacity = main.is_number( parameters.opacity ) ? parameters.opacity : 0;
+		
+		callback = parameters.callback;
+		callbackContext = parameters.callbackContext;
 		
 		// if dom element passed
 		
@@ -1007,22 +1005,74 @@
 		
 	}
 	
+	function pulse ( parameters ) {
+		
+		var timeShow,
+			timeHide,
+			opacityShow,
+			opacityHide,
+			callback,
+			callbackContext;
+		
+		// handle parameters
+		
+		parameters = parameters || {};
+		
+		timeShow = main.is_number( parameters.timeShow ) ? parameters.timeShow : ( main.is_number( parameters.time ) ? parameters.time : this.timeShow );
+		timeHide = main.is_number( parameters.timeHide ) ? parameters.timeHide : ( main.is_number( parameters.time ) ? parameters.time : this.timeHide );
+		
+		opacityShow = main.is_number( parameters.opacityShow ) ? parameters.opacityShow : 1;
+		opacityHide = main.is_number( parameters.opacityHide ) ? parameters.opacityHide : 0;
+		
+		this.show( { 
+			parent: parameters.parent,
+			time: timeShow,
+			opacity: opacityShow,
+			callback: function () {
+				this.hide( {
+					remove: false,
+					time: timeHide,
+					opacity: opacityHide,
+					callback: function () {
+						this.pulse( parameters );
+					},
+					callbackContext: this
+				} );
+			},
+			callbackContext: this
+		} );
+		
+	}
+	
+	function pulse_stop () {
+		
+		this.domElement.stop( true );
+		
+	}
+	
 	/*===================================================
     
     show / hide children
     
     =====================================================*/
 	
-	function show_children ( children, excluding, time, opacity, callback, callbackContext ) {
+	function show_children ( parameters ) {
 		
 		var i, l,
+			children,
 			child;
 		
 		if ( this.children.length > 0 ) {
 			
+			// handle parameters
+			
+			parameters = parameters || {};
+			
+			parameters.parent = parameters.parent || this;
+			
 			// make copy of children passed
 			
-			children = this.copy_children_and_exclude( children, excluding );
+			children = this.copy_children_and_exclude( parameters.children, parameters.excluding );
 			
 			//console.log(this.id, 'SHOW children', children );
 			// show all
@@ -1031,7 +1081,7 @@
 				
 				child = children[ i ];
 				
-				child.show( this, time, opacity, callback, callbackContext );
+				child.show( parameters );
 				
 			}
 			
@@ -1039,16 +1089,23 @@
 		
 	}
 	
-	function hide_children ( children, excluding, time, opacity, callback, callbackContext ) {
+	function hide_children ( parameters ) {
 		
 		var i, l,
+			children,
 			child;
 		
 		if ( this.children.length > 0 ) {
 			
+			// handle parameters
+			
+			parameters = parameters || {};
+			
+			parameters.remove = typeof parameters.remove === 'boolean' ? parameters.remove : false;
+			
 			// make copy of children passed
 			
-			children = this.copy_children_and_exclude( children, this.childrenAlwaysVisible.concat( excluding || [] ) );
+			children = this.copy_children_and_exclude( parameters.children, this.childrenAlwaysVisible.concat( parameters.excluding || [] ) );
 			
 			// hide all
 			//console.log(this.id, 'HIDE children', children );
@@ -1058,7 +1115,7 @@
 				
 				if ( child.hidden !== true && child.parent === this ) {
 					
-					child.hide( false, time, opacity, callback, callbackContext );
+					child.hide( parameters );
 					
 				}
 				
@@ -1068,7 +1125,7 @@
 		
 	}
 	
-	function copy_children_and_exclude ( children, exclude ) {
+	function copy_children_and_exclude ( children, excluding ) {
 		
 		var i, l,
 			child,
@@ -1077,13 +1134,13 @@
 		
 		children = main.ensure_array( children || this.children );
 		
-		exclude = main.ensure_array( exclude );
+		excluding = main.ensure_array( excluding );
 		
 		for ( i = 0, l = children.length; i < l; i++ ) {
 			
 			child = children[ i ];
 			
-			if ( exclude.indexOf( child ) === -1 ) {
+			if ( excluding.indexOf( child ) === -1 ) {
 				
 				childrenMinusExcluded.push( child );
 				

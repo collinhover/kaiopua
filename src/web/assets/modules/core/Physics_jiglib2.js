@@ -396,7 +396,7 @@ Physics module, handles physics in game using JigLibJS.
 		
 		rigidBody.mesh = mesh;
 		//rigidBody.collider = collider;
-		rigidBody.rotationGravity = new THREE.Quaternion();
+		rigidBody.quaternion = new THREE.Quaternion();
 		rigidBody.velocityMovement = generate_velocity_tracker( {
 			damping: parameters.movementDamping,
 			relativeToRotation: true
@@ -755,7 +755,7 @@ Physics module, handles physics in game using JigLibJS.
 				
 				rotation = ( mesh.useQuaternion === true ? mesh.quaternion : mesh.matrix );
 				
-				rotationGravity = rigidBody.rotationGravity;
+				quaternion = rigidBody.quaternion;
 				
 				axes = rigidBody.axes;
 				
@@ -841,9 +841,9 @@ Physics module, handles physics in game using JigLibJS.
 						
 						// add to rotation gravity
 						
-						uq1.multiply( upToUpNewQ, rotationGravity );
+						uq1.multiply( upToUpNewQ, quaternion );
 						
-						THREE.Quaternion.nlerp( rotationGravity, uq1, rotationGravity, lerpDelta );
+						THREE.Quaternion.nlerp( quaternion, uq1, quaternion, lerpDelta );
 						
 						// lerp current rotation towards complete rotation
 						

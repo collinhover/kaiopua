@@ -204,6 +204,28 @@ a:hover, a:active {
     text-decoration: underline;
 }
 
+/* text styles 
+-------------------------*/
+
+.note {
+	color: #fcd700;
+}
+
+.title {
+	font-family: 'CoustardRegular', Georgia, serif;
+}
+
+.text_small {
+	font-size: 13px;
+}
+
+.text_large {
+	font-size: 22px;
+}
+
+.text_huge {
+	font-size: 30px;
+}
 
 /* info panel 
 -------------------------*/

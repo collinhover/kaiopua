@@ -1073,7 +1073,7 @@ var KAIOPUA = (function (main) {
 			
 			if ( typeof loaderUIContainer !== 'undefined' ) {
 				
-				_AssetLoader.hide_ui( true );
+				_AssetLoader.hide_ui( { remove: true } );
 				
 			}
 			
@@ -1145,7 +1145,7 @@ var KAIOPUA = (function (main) {
 		
 		if ( typeof loaderUIContainer !== 'undefined' ) {
 			
-			_AssetLoader.show_ui( loaderUIContainer );
+			_AssetLoader.show_ui( { parent: loaderUIContainer } );
 			
 		}
 		

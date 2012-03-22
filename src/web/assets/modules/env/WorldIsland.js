@@ -122,7 +122,7 @@
 			materials: new THREE.MeshLambertMaterial( { color: 0xFFF7E0, ambient: 0xFFF7E0, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading
         });
-		
+		me.parts.head.position.set( 0, 0, 100 );
 		me.parts.body.add( me.parts.head );
 		
 		me.parts.tail = new _Model.Instance({
@@ -182,6 +182,7 @@
 			},
 			materials:  new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
+			center: true
         });
 		
 		me.parts.home.add( me.parts.hill );
@@ -195,6 +196,7 @@
 			},
 			materials:  new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
+			center: true
         });
 		
 		me.parts.home.add( me.parts.steps );	
@@ -207,7 +209,8 @@
 				bodyType: 'mesh'
 			},
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
-			shading: THREE.SmoothShading
+			shading: THREE.SmoothShading,
+			center: true
         });
 		
 		me.parts.home.add( me.parts.hut );
@@ -218,6 +221,7 @@
             geometry: main.get_asset_data("assets/models/Banana_Leaf_Door.js"),
 			materials:  new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
+			center: true,
 			doubleSided: true
         });
 		
@@ -229,9 +233,7 @@
             geometry: main.get_asset_data("assets/models/Surfboard.js"),
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
-			physics: {
-				bodyType: 'box'
-			}
+			center: true
         });
 		
 		me.parts.home.add( me.parts.surfboard );	
@@ -250,7 +252,8 @@
 			shading: THREE.SmoothShading,
 			physics: {
 				bodyType: 'mesh'
-			}
+			},
+			center: true
         });
 		
 		me.parts.volcano.add( me.parts.volcanoLarge );
@@ -263,7 +266,8 @@
 			shading: THREE.SmoothShading,
 			physics: {
 				bodyType: 'mesh'
-			}
+			},
+			center: true
         });
 		
 		me.parts.volcano.add( me.parts.volcanoSmall );
@@ -276,7 +280,8 @@
 			shading: THREE.SmoothShading,
 			physics: {
 				bodyType: 'mesh'
-			}
+			},
+			center: true
         });
 		
 		me.parts.volcano.add( me.parts.volcanoRocks001 );
@@ -287,7 +292,8 @@
 			shading: THREE.SmoothShading,
 			physics: {
 				bodyType: 'mesh'
-			}
+			},
+			center: true
         });
 		
 		me.parts.volcano.add( me.parts.volcanoRocks002 );
@@ -298,7 +304,8 @@
 			shading: THREE.SmoothShading,
 			physics: {
 				bodyType: 'mesh'
-			}
+			},
+			center: true
         });
 		
 		me.parts.volcano.add( me.parts.volcanoRocks003 );
@@ -309,7 +316,8 @@
 			shading: THREE.SmoothShading,
 			physics: {
 				bodyType: 'mesh'
-			}
+			},
+			center: true
         });
 		
 		me.parts.volcano.add( me.parts.volcanoRocks004 );
@@ -320,7 +328,8 @@
 			shading: THREE.SmoothShading,
 			physics: {
 				bodyType: 'mesh'
-			}
+			},
+			center: true
         });
 		
 		me.parts.volcano.add( me.parts.volcanoRocks005 );

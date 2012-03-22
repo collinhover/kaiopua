@@ -76,7 +76,7 @@
 	
 	_MathHelper.rad_to_degree = function ( n ) {
 		
-		return n * Math.PI / 180;
+		return n * 180 / Math.PI;
 		
 	};
 	

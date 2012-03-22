@@ -55,7 +55,34 @@
 		_Button = btn;
 		_Menu = mn;
 		
-		// gui properties
+		// init
+		
+		init_core();
+		
+		init_layers();
+		
+		init_buttons();
+		
+		init_menus();
+		
+		// build
+		
+		build_gui();
+		
+		// functions
+		
+		_GUI.show_group = show_group;
+		_GUI.hide_group = hide_group;
+		
+		_GUI.add_to_group = add_to_group;
+		_GUI.remove_from_group = remove_from_group;
+		_GUI.clean_groups = clean_groups;
+		
+		// properties
+		
+		_GUI.active = [];
+		_GUI.groups = {};
+		_GUI.groupsNames = [];
 		
 		_GUI.fullscreen_api = ( function () {
 			
@@ -111,20 +138,6 @@
 			return fullScreenApi;
 			
 		} () );
-		
-		// init
-		
-		init_core();
-		
-		init_layers();
-		
-		init_buttons();
-		
-		init_menus();
-		
-		// build
-		
-		build_gui();
 		
 	}
 	
@@ -225,7 +238,7 @@
 			enabled: false
 		} );
 	
-		b.fullscreenEnter.hide( true, 0 );
+		b.fullscreenEnter.hide( { remove: true, time: 0 } );
 	
 		b.fullscreenExit = new _Button.Instance( {
 			id: 'fullscreen',
@@ -241,7 +254,7 @@
 			enabled: false
 		} );
 	
-		b.fullscreenExit.hide( true, 0 );
+		b.fullscreenExit.hide( { remove: true, time: 0 } );
 		
 		b.save = new _Button.Instance( {
 			id: 'save',
@@ -309,7 +322,7 @@
 		var m = _GUI.menus,
 			b = _GUI.buttons;
 		
-		m.start.hide( true, 0 );
+		m.start.hide( { remove: true, time: 0 } );
 	
 		m.start.add( 
 			new _Button.Instance( {
@@ -331,6 +344,7 @@
 		m.start.childrenAlwaysVisible.push( m.start.childrenByID.play );
 		
 		m.start.arrange_circle( {
+			degrees: 360,
 			radius: buttonSizeMedium + buttonSpacing
 		} );
 		
@@ -340,7 +354,7 @@
 		
 		var m = _GUI.menus;
 		
-		m.main.hide( true, 0 );
+		m.main.hide( { remove: true, hide: 0 } );
 		
 		m.main.add( 
 			new _Button.Instance( {
@@ -370,6 +384,7 @@
 		m.main.childrenAlwaysVisible.push( m.main.childrenByID.resume );
 	
 		m.main.arrange_circle( {
+			degrees: 360,
 			radius: buttonSizeMedium + buttonSpacing
 		} );
 	
@@ -397,17 +412,20 @@
 			size: buttonSizeForIconSmall,
 			tooltip: 'Go Back',
 			spacing: buttonSpacing,
+			spacingRight: -buttonSizeForIconMedium - buttonSizeForIconSmall - buttonSpacing,
+			alignment: 'rightcenter',
 			circle: true
 		} );
 		
 		m.core.add(
+			m.options,
 			b.load,
-			b.save,
-			m.options
+			b.save
 		);
 		
 		m.core.arrange_circle( {
-			degrees: 180,
+			degreeStart: 0,
+			direction: -1,
 			radius: buttonSizeMedium + buttonSpacing
 		} );
 	
@@ -434,6 +452,8 @@
 			width: buttonSizeForIconSmall,
 			tooltip: 'Go Back',
 			spacing: buttonSpacing,
+			spacingRight: -buttonSizeForIconMedium - buttonSizeForIconSmall - buttonSpacing,
+			alignment: 'rightcenter',
 			circle: true
 		} );
 		
@@ -491,7 +511,8 @@
 		);
 	
 		m.options.arrange_circle( {
-			degreeStart: 360 / m.options.children.length,
+			degreeStart: 0,
+			direction: -1,
 			radius: buttonSizeMedium + buttonSpacing
 		} );
 		
@@ -555,8 +576,11 @@
 		
 		parent = b.fullscreenEnter.parent;
 		
-		b.fullscreenEnter.hide( true, undefined, undefined, function () {
-			b.fullscreenExit.show( parent );
+		b.fullscreenEnter.hide( { 
+			remove: true,
+			callback: function () {
+				b.fullscreenExit.show( { parent: parent } );
+			}
 		} );
 		
 		document.addEventListener( _GUI.fullscreen_api.fullScreenEventName, on_fullscreen_changed );
@@ -585,9 +609,243 @@
 		
 		parent = b.fullscreenExit.parent;
 		
-		b.fullscreenExit.hide( true, undefined, undefined, function () {
-			b.fullscreenEnter.show( parent );
+		b.fullscreenExit.hide( {
+			remove: true, 
+			callback: function () {
+				b.fullscreenEnter.show( { parent: parent } );
+			}
 		} );
+		
+	}
+	
+	/*===================================================
+    
+    ui groups
+    
+    =====================================================*/
+	
+	function show_group ( groupName, parameters ) {
+		
+		var i, l,
+			group,
+			children,
+			parents,
+			child,
+			parent,
+			parametersChild;
+		
+		if ( _GUI.groups.hasOwnProperty( groupName ) ) {
+			
+			group = _GUI.groups[ groupName ];
+			
+			children = group.children;
+			parents = group.parents;
+			
+			for ( i = 0, l = children.length; i < l; i++ ) {
+				
+				child = children[ i ];
+				parent = parents[ i ];
+				
+				parametersChild = main.extend( parameters, {} );
+				parametersChild.parent = parametersChild.parent || parent;
+				
+				child.show( parametersChild );
+				
+			}
+			
+		}
+		
+	}
+	
+	function hide_group ( groupName, parameters ) {
+		
+		var i, l,
+			group,
+			children,
+			child;
+		
+		if ( _GUI.groups.hasOwnProperty( groupName ) ) {
+			
+			group = _GUI.groups[ groupName ];
+			
+			children = group.children;
+			
+			for ( i = 0, l = children.length; i < l; i++ ) {
+				
+				child = children[ i ];
+				
+				child.hide( parameters );
+				
+			}
+			
+		}
+		
+	}
+	
+	function add_to_group ( groupName, childParentPairs ) {
+		
+		var i, l,
+			pair,
+			child,
+			parent,
+			group,
+			index;
+		
+		childParentPairs = main.ensure_array( childParentPairs );
+		
+		for ( i = 0, l = childParentPairs.length; i < l; i++ ) {
+			
+			pair = childParentPairs[ i ];
+			
+			child = pair.child;
+			
+			parent = pair.parent;
+			
+			// add to active list
+			
+			index = _GUI.active.indexOf( child );
+			
+			if ( index === -1 ) {
+				
+				_GUI.active.push( child );
+				
+			}
+			
+			if ( typeof groupName === 'string' ) {
+				
+				// if group does not exist, create
+				
+				if ( _GUI.groups.hasOwnProperty( groupName ) === false ) {
+					
+					_GUI.groupsNames.push( groupName );
+					_GUI.groups[ groupName ] = {
+						children: [],
+						parents: []
+					};
+					
+				}
+				
+				group = _GUI.groups[ groupName ];
+				
+				index = group.children.indexOf( child );
+				
+				if ( index === -1 ) {
+					
+					group.children.push( child );
+					group.parents.push( parent );
+					
+				}
+				
+			}
+			
+		}
+		console.log( 'add_to_group, name', groupName, ' childParentPairs.length', childParentPairs.length, ' _GUI.groups', _GUI.groups );
+	}
+	
+	function remove_from_group ( groupName, uielements ) {
+		
+		var i, l,
+			j, k,
+			uielement,
+			group,
+			index;
+		
+		// search specific group
+		
+		if ( _GUI.groups.hasOwnProperty( groupName ) ) {
+					
+			uielements = main.ensure_array( uielements );
+			
+			for ( i = 0, l = uielements.length; i < l; i++ ) {
+				
+				uielement = uielements[ i ];
+				
+				group = _GUI.groups[ groupName ];
+				
+				index = group.children.indexOf( uielement );
+				
+				// if found, remove from group
+				
+				if ( index !== -1 ) {
+					
+					group.children.splice( index, 1 );
+					group.parents.splice( index, 1 );
+					
+					// if nothing left in group, delete group
+					
+					if ( group.children.length === 0 ) {
+						
+						index = _GUI.groupsNames.indexOf( groupName );
+						
+						if ( index !== -1 ) {
+							
+							_GUI.groupsNames.splice( index, 1 );
+							
+						}
+						
+						delete _GUI.groups[ groupName ];
+						
+					}
+					
+				}
+				
+			}
+			
+		}
+		else {
+			
+			// search for and remove from all groups
+			
+			for ( i = _GUI.groupsNames.length - 1; i >= 0; i-- ) {
+				
+				remove_from_group( uielements, _GUI.groupsNames[ i ] );
+				
+			}
+			
+		}
+		
+	}
+	
+	function clean_groups ( groupsNames, parameters ) {
+		
+		var i, l,
+			groupName,
+			group,
+			uielement;
+		
+		groupsNames = main.ensure_array( groupsNames );
+		
+		// if no group names passed, default to all groups
+		
+		if ( groupsNames.length === 0 ) {
+			
+			groupsNames = _GUI.groupsNames.slice( 0 );
+			
+		}
+		
+		// clean each group
+		
+		for ( i = 0, l = groupsNames.length; i < l; i++ ) {
+			
+			groupName = groupsNames[ i ];
+			
+			if ( _GUI.groups.hasOwnProperty( groupName ) ) {
+				
+				group = _GUI.groups[ groupName ];
+				
+				for ( i = 0, l = group.children.length; i < l; i++ ) {
+					
+					uielement = group.children[ i ];
+					
+					uielement.hide( parameters );
+					
+				}
+				
+				remove_from_group( groupName, group.children );
+				
+			}
+			
+		}
 		
 	}
 	

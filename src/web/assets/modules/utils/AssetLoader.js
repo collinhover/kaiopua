@@ -283,7 +283,7 @@
 		
 		// hide
 		
-		container.hide( false, 0);
+		container.hide( { remove: false, time: 0 } );
 		
 	}
 	

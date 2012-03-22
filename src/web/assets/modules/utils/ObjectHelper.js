@@ -13,6 +13,7 @@
 		_ObjectHelper = {},
 		utilVec31Follow,
 		utilVec32Follow,
+		utilVec31Dimensions,
 		utilVec31Offset,
 		utilVec31OffsetRot,
 		utilVec31Axis,
@@ -37,6 +38,8 @@
 	_ObjectHelper.extract_parents_from_objects = extract_parents_from_objects;
 	
 	_ObjectHelper.object_apply_matrix = object_apply_matrix;
+	
+	_ObjectHelper.dimensions = dimensions;
 	
 	_ObjectHelper.center_offset = center_offset;
 	_ObjectHelper.object_center = object_center;
@@ -63,6 +66,7 @@
 		
 		utilVec31Follow = new THREE.Vector3();
 		utilVec32Follow = new THREE.Vector3();
+		utilVec31Dimensions = new THREE.Vector3();
 		utilVec31Offset = new THREE.Vector3();
 		utilVec31OffsetRot = new THREE.Vector3();
 		utilVec31Axis = new THREE.Vector3();
@@ -212,6 +216,46 @@
 			object.boundRadius = geometry.boundingSphere.radius;
 			
 		}
+		
+	}
+	
+	function dimensions ( object, ignoreScale ) {
+		
+		var mesh = object instanceof THREE.Mesh ? object : false,
+			geometry = mesh ? mesh.geometry : object,
+			dimensions = utilVec31Dimensions,
+			bbox;
+		
+		// if needs calculation
+		
+		if ( typeof geometry.boundingBox !== 'undefined' ) {
+			geometry.computeBoundingBox();
+		}
+		
+		bbox = geometry.boundingBox;
+		
+		if ( bbox ) {
+			
+			// get original dimensions
+			
+			dimensions.set( bbox.max.x - bbox.min.x, bbox.max.y - bbox.min.y, bbox.max.z - bbox.min.z );
+			
+			// scale to mesh's scale
+			
+			if ( ignoreScale !== true && mesh ) {
+				
+				dimensions.multiplySelf( mesh.scale );
+				
+			}
+			
+		}
+		else {
+			
+			dimensions.set( 0, 0, 0 );
+			
+		}
+		
+		return dimensions;
 		
 	}
 	
