@@ -246,6 +246,7 @@
 		// header
 		header = new _UIElement.Instance({
 			elementType: 'header',
+			classes: 'text_large title_alt',
 			width: barWidth,
 			html: loadingHeaderBase,
 			cssmap: {

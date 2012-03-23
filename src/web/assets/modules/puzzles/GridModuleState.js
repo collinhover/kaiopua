@@ -110,8 +110,8 @@
 		}
 		
 		this._properties[ activeLevel ] = {
-			color: parameters[ 'color' + activeLevel ] || parameters.color || 0xffffff,
-			ambient: parameters[ 'ambient' + activeLevel ] || parameters.ambient || 0xffffff,
+			color: parameters[ 'color' + activeLevel ] || parameters.color || new THREE.Color(),//0xffffff,
+			ambient: parameters[ 'ambient' + activeLevel ] || parameters.ambient || new THREE.Color(),//0xffffff,
 			transparent: parameters[ 'transparent' + activeLevel ] || parameters.transparent || false,
 			opacity: parameters[ 'opacity' + activeLevel ] || parameters.opacity || 1
 		};
@@ -144,9 +144,9 @@
 		
 		if ( material instanceof THREE.Material ) {
 			
-			material.color.setHex( p.color );
+			material.color.copy( p.color );
 			
-			material.ambient.setHex( p.ambient );
+			material.ambient.copy( p.ambient );
 			
 			material.transparent = p.transparent;
 			

@@ -74,7 +74,7 @@
             "assets/modules/sections/Launcher.js",
             "assets/modules/env/WaterLauncher.js",
             "assets/modules/env/SkyLauncher.js",
-            "assets/textures/cloud256.png",
+            "assets/textures/cloud_256.png",
             "assets/textures/light_ray.png",
 			"assets/textures/skybox_launcher_xz.jpg",
 			"assets/textures/skybox_launcher_posy.jpg",
@@ -1062,8 +1062,14 @@
 				_GUI.transitioner.show( { parent: _GUI.layers.overlayAll } );
 				
 			}
+			
+			// signal
             
             shared.signals.paused.dispatch();
+			
+			// render once to ensure user is not surprised when resuming
+			
+			render();
             
         }
 		
@@ -1202,7 +1208,7 @@
         
 		// pause game
 		
-        pause();
+        pause( true );
 		
 		// check error handler state
 		

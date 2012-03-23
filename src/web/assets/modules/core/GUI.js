@@ -13,17 +13,7 @@
 		_GUI = {},
 		_UIElement,
 		_Button,
-		_Menu,
-		buttonSizeLarge = 300,
-		buttonSizeMedium = 160,
-		buttonSizeSmall = 100,
-		buttonSizeForIconLarge = 100,
-		buttonSizeForIconMedium = 60,
-		buttonSizeForIconSmall = 40,
-		iconSizeLarge = 64,
-		iconSizeMedium = 32,
-		iconSizeSmall = 16,
-		buttonSpacing = 10;
+		_Menu;
 	
 	/*===================================================
     
@@ -55,6 +45,23 @@
 		_Button = btn;
 		_Menu = mn;
 		
+		// properties
+		_GUI.sizes = {};
+		_GUI.sizes.buttonLarge = 300;
+		_GUI.sizes.buttonMedium = 160;
+		_GUI.sizes.buttonSmall = 100;
+		_GUI.sizes.iconLargeContainer = 100;
+		_GUI.sizes.iconMediumContainer = 60;
+		_GUI.sizes.iconSmallContainer = 40;
+		_GUI.sizes.iconLarge = 64;
+		_GUI.sizes.iconMedium = 32;
+		_GUI.sizes.iconSmall = 16;
+		_GUI.sizes.buttonSpacing = 10;
+		
+		_GUI.active = [];
+		_GUI.groups = {};
+		_GUI.groupsNames = [];
+		
 		// init
 		
 		init_core();
@@ -77,12 +84,6 @@
 		_GUI.add_to_group = add_to_group;
 		_GUI.remove_from_group = remove_from_group;
 		_GUI.clean_groups = clean_groups;
-		
-		// properties
-		
-		_GUI.active = [];
-		_GUI.groups = {};
-		_GUI.groupsNames = [];
 		
 		_GUI.fullscreen_api = ( function () {
 			
@@ -226,27 +227,27 @@
 		
 		b.fullscreenEnter = new _Button.Instance( {
 			id: 'fullscreen',
-			image: 'img/icon/fullscreen_32x32.png',
-			imageSize: iconSizeSmall,
-			size: buttonSizeForIconSmall,
+			image: shared.pathToIcons + 'fullscreen_32.png',
+			imageSize: _GUI.sizes.iconSmall,
+			size: _GUI.sizes.iconSmallContainer,
 			tooltip: 'Fullscreen',
-			spacing: buttonSpacing,
+			spacing: _GUI.sizes.buttonSpacing,
 			circle: true,
 			callback: fullscreen_enter,
 			context: this,
 			alignment: 'bottomright',
 			enabled: false
 		} );
-	
+		
 		b.fullscreenEnter.hide( { remove: true, time: 0 } );
 	
 		b.fullscreenExit = new _Button.Instance( {
 			id: 'fullscreen',
-			image: 'img/icon/fullscreen_exit_32x32.png',
-			imageSize: iconSizeSmall,
-			size: buttonSizeForIconSmall,
+			image: shared.pathToIcons + 'fullscreen_exit_32.png',
+			imageSize: _GUI.sizes.iconSmall,
+			size: _GUI.sizes.iconSmallContainer,
 			tooltip: 'Exit Fullscreen',
-			spacing: buttonSpacing,
+			spacing: _GUI.sizes.buttonSpacing,
 			circle: true,
 			callback: fullscreen_exit,
 			context: this,
@@ -258,25 +259,25 @@
 		
 		b.save = new _Button.Instance( {
 			id: 'save',
-			image: 'img/icon/save_64x64.png',
-			imageSize: iconSizeMedium,
-			size: buttonSizeForIconMedium,
+			image: shared.pathToIcons + 'save_64.png',
+			imageSize: _GUI.sizes.iconMedium,
+			size: _GUI.sizes.iconMediumContainer,
 			tooltip: 'Save progress',
-			spacing: buttonSpacing,
+			spacing: _GUI.sizes.buttonSpacing,
 			circle: true,
 			enabled: false
 		} );
 		
 		b.load = new _Button.Instance( {
 			id: 'load',
-			image: 'img/icon/load_64x64.png',
-			imageSize: iconSizeMedium,
-			size: buttonSizeForIconMedium,
+			image: shared.pathToIcons + 'load_64.png',
+			imageSize: _GUI.sizes.iconMedium,
+			size: _GUI.sizes.iconMediumContainer,
 			tooltip: {
 				content: 'Load a saved game',
 				contentDisabled: '(no save found!)'
 			},
-			spacing: buttonSpacing,
+			spacing: _GUI.sizes.buttonSpacing,
 			circle: true,
 			enabled: false
 		} );
@@ -328,8 +329,9 @@
 			new _Button.Instance( {
 				id: 'play',
 				text: 'Play!',
-				size: buttonSizeMedium,
-				spacing: buttonSpacing,
+				theme: 'white',
+				size: _GUI.sizes.buttonMedium,
+				spacing: _GUI.sizes.buttonSpacing,
 				circle: true,
 				cssmap: {
 					'font-size' : "30px",
@@ -345,7 +347,7 @@
 		
 		m.start.arrange_circle( {
 			degrees: 360,
-			radius: buttonSizeMedium + buttonSpacing
+			radius: _GUI.sizes.buttonMedium + _GUI.sizes.buttonSpacing
 		} );
 		
 	}
@@ -360,8 +362,9 @@
 			new _Button.Instance( {
 				id: 'resume',
 				text: 'Resume',
-				width: buttonSizeMedium,
-				spacing: buttonSpacing,
+				theme: 'white',
+				width: _GUI.sizes.buttonMedium,
+				spacing: _GUI.sizes.buttonSpacing,
 				circle: true,
 				cssmap: {
 					'font-size' : "30px",
@@ -371,11 +374,12 @@
 			} ),
 			new _Button.Instance( {
 				id: 'end',
-				image: 'img/icon/exit_64x64.png',
-				imageSize: iconSizeMedium,
-				size: buttonSizeForIconMedium,
+				theme: 'white',
+				image: shared.pathToIcons + 'exit_64.png',
+				imageSize: _GUI.sizes.iconMedium,
+				size: _GUI.sizes.iconMediumContainer,
 				tooltip: 'End Game',
-				spacing: buttonSpacing,
+				spacing: _GUI.sizes.buttonSpacing,
 				circle: true
 			} ),
 			m.core
@@ -385,7 +389,7 @@
 	
 		m.main.arrange_circle( {
 			degrees: 360,
-			radius: buttonSizeMedium + buttonSpacing
+			radius: _GUI.sizes.buttonMedium + _GUI.sizes.buttonSpacing
 		} );
 	
 	}
@@ -397,22 +401,22 @@
 		
 		m.core.buttonOpen = new _Button.Instance( {
 			id: 'open',
-			image: 'img/icon/computer_alt_64x64.png',
-			imageSize: iconSizeMedium,
-			size: buttonSizeForIconMedium,
+			image: shared.pathToIcons + 'computer_alt_64.png',
+			imageSize: _GUI.sizes.iconMedium,
+			size: _GUI.sizes.iconMediumContainer,
 			tooltip: 'Core Menu',
-			spacing: buttonSpacing,
+			spacing: _GUI.sizes.buttonSpacing,
 			circle: true
 		} );
 		
 		m.core.buttonClose = new _Button.Instance( {
 			id: 'close',
-			image: 'img/icon/undo_64x64.png',
-			imageSize: iconSizeSmall,
-			size: buttonSizeForIconSmall,
+			image: shared.pathToIcons + 'undo_64.png',
+			imageSize: _GUI.sizes.iconSmall,
+			size: _GUI.sizes.iconSmallContainer,
 			tooltip: 'Go Back',
-			spacing: buttonSpacing,
-			spacingRight: -buttonSizeForIconMedium - buttonSizeForIconSmall - buttonSpacing,
+			spacing: _GUI.sizes.buttonSpacing,
+			spacingRight: -_GUI.sizes.iconMediumContainer - _GUI.sizes.iconSmallContainer - _GUI.sizes.buttonSpacing,
 			alignment: 'rightcenter',
 			circle: true
 		} );
@@ -426,7 +430,7 @@
 		m.core.arrange_circle( {
 			degreeStart: 0,
 			direction: -1,
-			radius: buttonSizeMedium + buttonSpacing
+			radius: _GUI.sizes.buttonMedium + _GUI.sizes.buttonSpacing
 		} );
 	
 	}
@@ -437,22 +441,22 @@
 		
 		m.options.buttonOpen = new _Button.Instance( {
 			id: 'open',
-			image: 'img/icon/cog_64x64.png',
-			imageSize: iconSizeMedium,
-			size: buttonSizeForIconMedium,
+			image: shared.pathToIcons + 'cog_64.png',
+			imageSize: _GUI.sizes.iconMedium,
+			size: _GUI.sizes.iconMediumContainer,
 			tooltip: 'Options',
-			spacing: buttonSpacing,
+			spacing: _GUI.sizes.buttonSpacing,
 			circle: true
 		} );
 		
 		m.options.buttonClose = new _Button.Instance( {
 			id: 'close',
-			image: 'img/icon/undo_64x64.png',
-			imageSize: iconSizeSmall,
-			width: buttonSizeForIconSmall,
+			image: shared.pathToIcons + 'undo_64.png',
+			imageSize: _GUI.sizes.iconSmall,
+			width: _GUI.sizes.iconSmallContainer,
 			tooltip: 'Go Back',
-			spacing: buttonSpacing,
-			spacingRight: -buttonSizeForIconMedium - buttonSizeForIconSmall - buttonSpacing,
+			spacing: _GUI.sizes.buttonSpacing,
+			spacingRight: -_GUI.sizes.iconMediumContainer - _GUI.sizes.iconSmallContainer - _GUI.sizes.buttonSpacing,
 			alignment: 'rightcenter',
 			circle: true
 		} );
@@ -460,51 +464,56 @@
 		m.options.add(
 			new _Button.Instance( {
 				id: 'quality',
-				image: 'img/icon/computer_64x64.png',
-				imageSize: iconSizeMedium,
-				size: buttonSizeForIconMedium,
+				theme: 'white',
+				image: shared.pathToIcons + 'computer_64.png',
+				imageSize: _GUI.sizes.iconMedium,
+				size: _GUI.sizes.iconMediumContainer,
 				tooltip: 'Quality',
-				spacing: buttonSpacing,
+				spacing: _GUI.sizes.buttonSpacing,
 				circle: true,
 				enabled: false
 			} ),
 			new _Button.Instance( {
 				id: 'keybindings',
-				image: 'img/icon/keyboard_64x64.png',
-				imageSize: iconSizeMedium,
-				size: buttonSizeForIconMedium,
+				theme: 'white',
+				image: shared.pathToIcons + 'keyboard_64.png',
+				imageSize: _GUI.sizes.iconMedium,
+				size: _GUI.sizes.iconMediumContainer,
 				tooltip: 'Keybindings',
-				spacing: buttonSpacing,
+				spacing: _GUI.sizes.buttonSpacing,
 				circle: true,
 				enabled: false
 			} ),
 			new _Button.Instance( {
 				id: 'mouse',
-				image: 'img/icon/mouse_64x64.png',
-				imageSize: iconSizeMedium,
-				size: buttonSizeForIconMedium,
+				theme: 'white',
+				image: shared.pathToIcons + 'mouse_64.png',
+				imageSize: _GUI.sizes.iconMedium,
+				size: _GUI.sizes.iconMediumContainer,
 				tooltip: 'Hand Orientation',
-				spacing: buttonSpacing,
+				spacing: _GUI.sizes.buttonSpacing,
 				circle: true,
 				enabled: false
 			} ),
 			new _Button.Instance( {
 				id: 'volume',
-				image: 'img/icon/sound_64x64.png',
-				imageSize: iconSizeMedium,
-				size: buttonSizeForIconMedium,
+				theme: 'white',
+				image: shared.pathToIcons + 'sound_64.png',
+				imageSize: _GUI.sizes.iconMedium,
+				size: _GUI.sizes.iconMediumContainer,
 				tooltip: 'Volume',
-				spacing: buttonSpacing,
+				spacing: _GUI.sizes.buttonSpacing,
 				circle: true,
 				enabled: false
 			} ),
 			new _Button.Instance( {
 				id: 'accessibility',
-				image: 'img/icon/accessibility_64x64.png',
-				imageSize: iconSizeMedium,
-				size: buttonSizeForIconMedium,
+				theme: 'white',
+				image: shared.pathToIcons + 'accessibility_64.png',
+				imageSize: _GUI.sizes.iconMedium,
+				size: _GUI.sizes.iconMediumContainer,
 				tooltip: 'Accessibility',
-				spacing: buttonSpacing,
+				spacing: _GUI.sizes.buttonSpacing,
 				circle: true,
 				enabled: false
 			} )
@@ -513,7 +522,7 @@
 		m.options.arrange_circle( {
 			degreeStart: 0,
 			direction: -1,
-			radius: buttonSizeMedium + buttonSpacing
+			radius: _GUI.sizes.buttonMedium + _GUI.sizes.buttonSpacing
 		} );
 		
 	}
@@ -739,7 +748,7 @@
 			}
 			
 		}
-		console.log( 'add_to_group, name', groupName, ' childParentPairs.length', childParentPairs.length, ' _GUI.groups', _GUI.groups );
+		
 	}
 	
 	function remove_from_group ( groupName, uielements ) {

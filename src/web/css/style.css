@@ -207,12 +207,16 @@ a:hover, a:active {
 /* text styles 
 -------------------------*/
 
-.note {
-	color: #fcd700;
+.highlight {
+    color: #fcd700;
 }
 
 .title {
 	font-family: 'CoustardRegular', Georgia, serif;
+}
+
+.title_alt {
+	font-family: Georgia, serif;
 }
 
 .text_small {
@@ -253,7 +257,6 @@ a:hover, a:active {
 
 .info_panel header {
     text-align: center;
-    font: 22px Georgia, serif;
     color: #ffffff;
 }
 
@@ -267,11 +270,12 @@ a:hover, a:active {
 
 .error {
     width: 540px; 
-    height: 275px;
+    height: 315px;
     position: absolute; 
     left: 50%; 
     top: 50%;
     margin: -197px 0 0 -270px;
+	pointer-events: auto;
 }
 .error a, .error a:visited {
     color: #fcd700;
@@ -281,7 +285,6 @@ a:hover, a:active {
 }
 .error header {
     padding: 20px 20px 5px 20px;
-    font: 22px Georgia, serif;
 }
 .error_explanation {
     padding: 10px 20px 20px 20px;
@@ -290,10 +293,6 @@ a:hover, a:active {
 .nerdtalk {
 	font-size: 13px;
     padding: 0px 20px 20px 20px;
-}
-
-.highlight {
-    color: #fcd700;
 }
 
 .browsers {
@@ -314,21 +313,21 @@ a:hover, a:active {
 }
 
 .chrome {
-    background-image:url(../img/browsers_chrome.png);
+    background-image:url(../assets/icons/browsers_chrome.png);
     top:18px;
     left:0px;
     padding-top:95px;
 }
 
 .firefox {
-    background-image:url(../img/browsers_firefox.png);
+    background-image:url(../assets/icons/browsers_firefox.png);
     top:16px;
     left:165px;
     padding-top:95px;
 }
 
 .safari {
-    background-image:url(../img/browsers_safari.png);
+    background-image:url(../assets/icons/browsers_safari.png);
     top:14px;
     left:330px;
     padding-top:95px;
@@ -339,7 +338,7 @@ a:hover, a:active {
 -------------------------*/
 .sticky_footer {
 	position: relative; 
-    width: 520px;
+    width: 522px;
     height: 130px;
 	margin: 0 auto;
 	margin-top: -130px;

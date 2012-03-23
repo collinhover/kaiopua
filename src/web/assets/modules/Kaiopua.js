@@ -45,6 +45,11 @@ var KAIOPUA = (function (main) {
         shared.screenWidth = $(window).width();
         shared.screenHeight = $(window).height();
         shared.originLink = window.location.pathname.toString();
+		shared.pathToAssets = 'assets/';
+		shared.pathToModules = shared.pathToAssets + 'modules/';
+		shared.pathToModels = shared.pathToAssets + 'models/';
+		shared.pathToIcons = shared.pathToAssets + 'icons/';
+		shared.pathToTextures = shared.pathToAssets + 'textures/';
         
         shared.frameRateMax = 60;
         shared.frameRateMin = 20;

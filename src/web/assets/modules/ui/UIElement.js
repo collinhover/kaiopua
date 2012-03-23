@@ -104,8 +104,12 @@
 	
 	_UIElement.Instance.prototype.set_pointer_events = set_pointer_events;
 	
-	_UIElement.Instance.prototype.make_fullwindow = make_fullwindow;
+	_UIElement.Instance.prototype.update_form = update_form;
+	_UIElement.Instance.prototype.form_circle = form_circle;
+	_UIElement.Instance.prototype.form_rectangle = form_rectangle;
+	_UIElement.Instance.prototype.form_fullwindow = form_fullwindow;
 	
+	_UIElement.Instance.prototype.change_dom_element = change_dom_element;
 	_UIElement.Instance.prototype.generate_dom_element = generate_dom_element;
 	_UIElement.Instance.prototype.generate_tool_tip = generate_tool_tip;
 	_UIElement.Instance.prototype.apply_css = apply_css;
@@ -114,6 +118,12 @@
 	
 	_UIElement.Instance.prototype.themes = {};
 	_UIElement.Instance.prototype.themes.core = theme_core;
+	_UIElement.Instance.prototype.themes.white = theme_white;
+	
+	Object.defineProperty( _UIElement.Instance.prototype, 'domElement', { 
+		get : function () { return this._domElement; },
+		set : function () { this.change_dom_element.apply( this, arguments ); }
+	} );
 	
 	Object.defineProperty( _UIElement.Instance.prototype, 'parent', { 
 		get : function () { return this._parent; },
@@ -408,12 +418,24 @@
 			
 		}
 		
-		// form
+		// form, default to rectangle
 		
 		if ( parameters.fullwindow === true ) {
 			
-			this.make_fullwindow();
+			this.form_fullwindow();
 		
+		}
+		
+		if ( parameters.circle === true ) {
+			
+			this.form_circle();
+		
+		}
+		
+		if ( parameters.rectangle === true ) {
+			
+			this.form_rectangle();
+			
 		}
 		
 		// alignment
@@ -996,6 +1018,15 @@
 			hideTarget.hiding = false;
 			
 		}
+		else {
+			
+			if ( remove === true ) {
+				
+				hideTarget.detach();
+				
+			}
+			
+		}
 		
 		if ( typeof callback !== 'undefined' ) {
 			
@@ -1018,6 +1049,10 @@
 		
 		parameters = parameters || {};
 		
+		parameters.iterations = main.is_number( parameters.iterations ) ? parameters.iterations : -1;
+		parameters.count = main.is_number( parameters.count ) ? parameters.count : 0;
+		parameters.count++;
+		
 		timeShow = main.is_number( parameters.timeShow ) ? parameters.timeShow : ( main.is_number( parameters.time ) ? parameters.time : this.timeShow );
 		timeHide = main.is_number( parameters.timeHide ) ? parameters.timeHide : ( main.is_number( parameters.time ) ? parameters.time : this.timeHide );
 		
@@ -1034,7 +1069,13 @@
 					time: timeHide,
 					opacity: opacityHide,
 					callback: function () {
-						this.pulse( parameters );
+						
+						if ( parameters.iterations === -1 || parameters.count < parameters.iterations ) {
+							
+							this.pulse( parameters );
+							
+						}
+						
 					},
 					callbackContext: this
 				} );
@@ -1291,13 +1332,72 @@
     
     =====================================================*/
 	
-	function make_fullwindow () {
+	function update_form () {
+		
+		if ( this.form === 'circle' ) {
+			
+			this.form_circle();
+			
+		}
+		
+	}
+	
+	function form_circle () {
+		
+		// if width set explicitly
+		
+		if ( this.width !== 0 ) {
+			
+			this.form = 'circle';
+			
+			var width = this.width,
+				height = this.height,
+				max = Math.max( width, height ),
+				maxHalf = max * 0.5;
+			
+			// match width/height
+			
+			this.width = this.height = max;
+			
+			// set radius to half
+			
+			this.apply_css( "border-radius", maxHalf + "px" );
+			
+		}
+		
+	}
+	
+	function form_rectangle () {
+		
+		this.form = 'rectangle';
+		
+		// if either dimension is set when the other is not
+		
+		if ( this.width !== 0 && this.height === 0 ) {
+			
+			this.height = this.width;
+			
+		}
+		if ( this.width === 0 && this.height !== 0 ) {
+			
+			this.width = this.height;
+			
+		}
+		
+		// set radius to base
+		
+		this.apply_css( "border-radius", 0 );
+		
+	}
+	
+	function form_fullwindow () {
+		
+		this.form = 'fullwindow';
 		
 		this.apply_css( {
 			"min-height": "100%",
 			"width": "100%",
 			"height": "100%",
-			"position": "fixed",
 			"top": "0px",
 			"left": "0px",
 			"overflow": "hidden"
@@ -1311,10 +1411,65 @@
     
     =====================================================*/
 	
+	function change_dom_element ( replacement, parameters ) {
+		
+		var current = this.domElement;
+		
+		// handle parameters
+		
+		parameters = parameters || {};
+		
+		// if current exists, hide and remove
+		
+		if ( typeof current !== 'undefined' ) {
+			
+			this.hide( { domElement: current, remove: true, time: ( this.hidden ? 0 : parameters.timeHide ) } );
+			
+		}
+		
+		// replace
+		
+		this._domElement = $( replacement );
+		
+		// parent
+		
+		if ( typeof this.parent !== 'undefined' ) {
+			
+			if ( this.parent instanceof _UIElement.Instance ) {
+				
+				this.parent.domElement.append( this.domElement );
+				
+			}
+			else {
+				
+				$( this.parent ).append( this.domElement );
+				
+			}
+			
+		}
+		
+		// if this is showing
+		
+		if ( this.hiding !== true && this.hidden === false ) {
+			
+			this.hide( { domElement: this.domElement, time: 0 } );
+			
+			this.show( { domElement: this.domElement, time: parameters.timeShow } );
+			
+			this.align();
+			
+		}
+		
+		return current;
+		
+	}
+	
 	function generate_dom_element ( parameters ) {
 		
-		var elementType,
-			domElement;
+		var me = this,
+			elementType,
+			domElement,
+			imgElement;
 		
 		// handle parameters
         
@@ -1324,9 +1479,33 @@
 		
 		elementType = parameters.elementType || 'div';
 		
-		// element
+		// dom element
 		
-		domElement = $( document.createElement( elementType ) );
+		domElement = document.createElement( elementType );
+		
+		// special cases
+		
+		// image
+		
+		if ( elementType === 'img' && typeof parameters.src === 'string' ) {
+			
+			/*
+			main.asset_require( parameters.src, function ( img ) {
+				
+				main.extend( img, domElement );
+				me.change_dom_element( img );
+				
+			} );
+			*/
+			domElement.onload = parameters.onload;
+			domElement.crossOrigin = '';
+			domElement.src = parameters.src;
+			
+		}
+		
+		// convert to jQuery
+		
+		domElement = $( domElement );
 		
 		// id
 		
@@ -1568,6 +1747,46 @@
 		// state last
 		
 		theme.stateLast = {};
+		
+		return theme;
+		
+	}
+	
+	function theme_white ( overrides ) {
+		
+		var theme = this.themes.core( overrides ),
+			cssmap,
+			enabled,
+			disabled,
+			or;
+		
+		// cssmap
+		
+		or = overrides.cssmap || {};
+		
+		cssmap = theme.cssmap = theme.cssmap || {};
+		
+		cssmap[ "box-shadow" ] = or[ "box-shadow" ] || "-2px 2px 10px rgba(0, 0, 0, 0.15)";
+		
+		// enabled state
+		
+		or = overrides.enabled || {};
+		
+		enabled = theme.enabled = theme.enabled || {};
+		
+		enabled[ "color" ] = or[ "color" ] || "#333333";
+		enabled[ "background-color" ] = or[ "background-color" ] || "#eeeeee";
+		//enabled[ "background-image" ] = or[ "background-image" ] || "linear-gradient(top, #eeeeee 30%, #cccccc 100%)";
+		
+		// disabled state
+		
+		or = overrides.disabled || {};
+		
+		disabled = theme.disabled = theme.disabled || {};
+		
+		disabled[ "color" ] = or[ "color" ] || "#777777";
+		disabled[ "background-color" ] = or[ "background-color" ] || "#cccccc";
+		//disabled[ "background-image" ] = or[ "background-image" ] || "linear-gradient(top, #cccccc 30%, #aaaaaa 100%)";
 		
 		return theme;
 		

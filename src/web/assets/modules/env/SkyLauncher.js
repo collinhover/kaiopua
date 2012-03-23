@@ -32,7 +32,7 @@
         cloudPlaneScaleStart = 6, 
         cloudPlaneScaleEnd = 4,
         cloudPlaneTextureLoading = false,
-        cloudPlaneTexturePath = "assets/textures/cloud256.png",
+        cloudPlaneTexturePath = "assets/textures/cloud_256.png",
         cloudPlaneTexture,
 		cloudFadeOutTime = 1000,
 		cloudFadeInTime = 1000,

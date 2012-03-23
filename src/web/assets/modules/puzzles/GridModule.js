@@ -41,7 +41,14 @@
 		console.log("internal grid module", _GridModule);
 		_Model = m;
 		_GridModuleState = gms;
-	
+		
+		// properties
+		
+		_GridModule.colors = {};
+		_GridModule.colors.base = new THREE.Color( 0xe6b266 );
+		_GridModule.colors.vacant = new THREE.Color( 0x0ccd6f );
+		_GridModule.colors.occupied = new THREE.Color( 0xff2830 );
+		
 		// instance
 		
 		_GridModule.Instance = GridModule;
@@ -172,8 +179,8 @@
 		this.states.base = new _GridModuleState.Instance( {
 			active: 1,
 			dynamic: false,
-			color: 0xe6b266,
-			ambient: 0xe6b266
+			color: _GridModule.colors.base,
+			ambient: _GridModule.colors.base
 		} );
 		this.states.water = new _GridModuleState.Instance( {
 			priority: 1,
@@ -182,10 +189,10 @@
 		} );
 		this.states.occupied = new _GridModuleState.Instance( {
 			constant: false,
-			color0: 0x0ccd6f,
-			ambient0: 0x0ccd6f,
-			color1: 0xff2830,
-			ambient1: 0xff2830
+			color0: _GridModule.colors.vacant,
+			ambient0: _GridModule.colors.vacant,
+			color1: _GridModule.colors.occupied,
+			ambient1: _GridModule.colors.occupied
 		} );
 		
 		// set to base state

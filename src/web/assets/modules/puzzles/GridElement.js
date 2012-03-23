@@ -48,6 +48,8 @@
 		_ObjectHelper = oh;
 		_MathHelper = mh;
 		
+		// instance
+		
 		_GridElement.Instance = GridElement;
 		_GridElement.Instance.prototype = new _Model.Instance();
 		_GridElement.Instance.prototype.constructor = _GridElement.Instance;
@@ -79,7 +81,7 @@
 		parameters = parameters || {};
 		
 		parameters.geometry = new THREE.CubeGeometry( 50, 100, 50 );
-		parameters.materials = new THREE.MeshNormalMaterial();
+		parameters.materials = new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } );
 		
 		// prototype constructor
 		
@@ -141,11 +143,11 @@
 				[ 0, 0, 0, 0, 0 ]
 			] );
 			*/
-			layout = $M( [
+			/*layout = $M( [
 				[ Math.round( Math.random() ), Math.round( Math.random() ), Math.round( Math.random() ) ],
 				[ Math.round( Math.random() ), Math.round( Math.random() ), Math.round( Math.random() ) ],
 				[ Math.round( Math.random() ), Math.round( Math.random() ), Math.round( Math.random() ) ]
-			] );
+			] );*/
 			
 		}
 		
@@ -247,7 +249,7 @@
 			this.module = moduleNew;
 			
 			this.layoutModules = layoutModulesNew;
-			console.log('module and layoutModules?', this.module, ' and ', this.layoutModules );
+			
 			// if new module and layouts are valid
 			
 			if ( this.module instanceof _GridModule.Instance && typeof this.layoutModules !== 'undefined' ) {
@@ -298,21 +300,24 @@
 			
 		if ( this.testModule !== testModule ) {
 			
-			// remove self from previous
+			// remove self from current parent
 			
 			if ( typeof this.parent !== 'undefined' ) {
+				
+				// if has module, add this to it
 				
 				if ( this.module instanceof _GridModule.Instance ) {
 					
 					this.module.add( this );
 					
 				}
+				// otherwise just remove 
 				else {
 					
 					this.parent.remove( this );
 					
 				}
-			
+				
 			}
 			
 			// store as test

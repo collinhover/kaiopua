@@ -122,7 +122,7 @@
 			materials: new THREE.MeshLambertMaterial( { color: 0xFFF7E0, ambient: 0xFFF7E0, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading
         });
-		me.parts.head.position.set( 0, 0, 100 );
+		
 		me.parts.body.add( me.parts.head );
 		
 		me.parts.tail = new _Model.Instance({

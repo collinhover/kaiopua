@@ -190,11 +190,13 @@
 	}
 	
 	function character_on_safety_net () {
-		console.log('character_on_safety_net');
+		
 		_Messenger.show_message( { 
-			title: "<img src='img/icon/alertcircle_64x64.png'><br/><p>Well, this is embarrassing.</p>",
+			image: shared.pathToIcons + 'alertcircle_64.png',
+			title: "Well, this is embarrassing!",
 			body: "Our physics broke, but we'll do our best to drop you off at your last safe location.",
-			active: true
+			active: true,
+			transitionerOpacity: 1
 		} );
 		
 	}
