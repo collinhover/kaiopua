@@ -81,7 +81,8 @@
 	main.asset_register( assetPath, { 
 		data: _AssetLoader,
 		requirements: "assets/modules/ui/UIElement.js",
-		callbacksOnReqs: init_ui
+		callbacksOnReqs: init_ui,
+		wait: true
 	} );
 	
 	/*===================================================
