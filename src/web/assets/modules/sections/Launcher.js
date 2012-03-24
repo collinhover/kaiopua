@@ -117,14 +117,14 @@
 		
 		ambientLight = new THREE.AmbientLight( 0xeeeeee );
 		
-		//lightSky = new THREE.DirectionalLight( 0xffffff, 1 );
-		//lightSky.position = new THREE.Vector3(-1, 1, -1).normalize();
+		lightSky = new THREE.DirectionalLight( 0xffffff, 1 );
+		lightSky.position = new THREE.Vector3(-1,0.5, 0).normalize();
 		
-		lightSky = new THREE.PointLight( 0xffffcc, 0.75, 40000 );
-		lightSky.position.set( 0, 3000, 2000 );
+		//lightSky = new THREE.PointLight( 0xffffcc, 0.75, 40000 );
+		//lightSky.position.set( 0, 3000, 2000 );
 		
-		lightWater = new THREE.PointLight( 0xffffcc, 0.25, 20000 );
-		lightWater.position.set( 0, -6000, 0 );
+		//lightWater = new THREE.PointLight( 0xffffcc, 0.25, 20000 );
+		//lightWater.position.set( 0, -6000, 0 );
 		
 		// skybox
 		
@@ -147,7 +147,7 @@
 		
 		// set items to add on show
 		
-		addOnShow.push( ambientLight, lightSky, lightWater, water.environment, _Sky.environment );
+		addOnShow.push( ambientLight, lightSky, water.environment, _Sky.environment );
 		
 		addBGOnShow.push( skybox );
 		

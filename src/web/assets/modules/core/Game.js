@@ -89,7 +89,6 @@
 			"assets/modules/core/Messenger.js",
 			"assets/modules/ui/Button.js",
 			"assets/modules/ui/Menu.js",
-			"assets/modules/ui/MenuDynamic.js",
 			"assets/modules/ui/Inventory.js",
 			"assets/modules/utils/ObjectMaker.js",
 			"assets/modules/utils/ObjectHelper.js",
@@ -98,6 +97,7 @@
 			"assets/modules/env/World.js",
 			"assets/modules/env/WorldIsland.js",
 			"assets/modules/env/Water.js",
+			"assets/modules/env/Sky.js",
 			"assets/modules/puzzles/Puzzles.js",
 			"assets/modules/puzzles/Grid.js",
 			"assets/modules/puzzles/GridModule.js",
@@ -324,7 +324,7 @@
         shared.signals.update = new signals.Signal();
 		
 		// renderer
-        renderer = new THREE.WebGLRenderer( { antialias: true, clearColor: 0x000000, clearAlpha: 0, maxLights: 8 } );
+        renderer = new THREE.WebGLRenderer( { antialias: false, clearColor: 0x000000, clearAlpha: 0, maxLights: 4 } );
         renderer.setSize( shared.screenWidth, shared.screenHeight );
         renderer.autoClear = false;
 		

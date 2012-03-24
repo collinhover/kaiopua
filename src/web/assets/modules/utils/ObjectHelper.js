@@ -13,6 +13,8 @@
 		_ObjectHelper = {},
 		utilVec31Follow,
 		utilVec32Follow,
+		utilVec31Bounds,
+		utilVec32Bounds,
 		utilVec31Dimensions,
 		utilVec31Offset,
 		utilVec31OffsetRot,
@@ -25,6 +27,7 @@
 		utilQ1CenterRot,
 		utilQ2CenterRot,
 		utilMat41Follow,
+		utilMat41Bounds,
 		utilMat41Center,
 		utilMat41CenterRot;
     
@@ -38,6 +41,7 @@
 	_ObjectHelper.extract_parents_from_objects = extract_parents_from_objects;
 	
 	_ObjectHelper.object_apply_matrix = object_apply_matrix;
+	_ObjectHelper.object_push_bounds = object_push_bounds;
 	
 	_ObjectHelper.dimensions = dimensions;
 	
@@ -66,6 +70,8 @@
 		
 		utilVec31Follow = new THREE.Vector3();
 		utilVec32Follow = new THREE.Vector3();
+		utilVec31Bounds = new THREE.Vector3();
+		utilVec32Bounds = new THREE.Vector3();
 		utilVec31Dimensions = new THREE.Vector3();
 		utilVec31Offset = new THREE.Vector3();
 		utilVec31OffsetRot = new THREE.Vector3();
@@ -78,6 +84,7 @@
 		utilQ1CenterRot = new THREE.Quaternion();
 		utilQ2CenterRot = new THREE.Quaternion();
 		utilMat41Follow = new THREE.Matrix4();
+		utilMat41Bounds = new THREE.Matrix4();
 		utilMat41Center = new THREE.Matrix4();
 		utilMat41CenterRot = new THREE.Matrix4();
 		
@@ -111,7 +118,7 @@
 		var i, l,
 			children;
 		
-		cascade = cascade || [];
+		cascade = main.ensure_array( cascade );
 			
 		if ( typeof object !== 'undefined' ) {
 			
@@ -256,6 +263,75 @@
 		}
 		
 		return dimensions;
+		
+	}
+	
+	/*===================================================
+    
+    bounds
+    
+    =====================================================*/
+	
+	function object_push_bounds ( object, bounds ) {
+		
+		var geometry = object instanceof THREE.Mesh ? object.geometry : object,
+			objectWorldMatrix = object instanceof THREE.Mesh ? object.matrixWorld : utilMat41Bounds,
+			objectBounds,
+			objectMin = utilVec31Bounds,
+			objectMax = utilVec32Bounds,
+			min = bounds.min,
+			max = bounds.max;
+		
+		if ( !geometry.boundingBox ) {
+			
+			geometry.computeBoundingBox();
+			
+		}
+		
+		objectBounds = geometry.boundingBox;
+		objectMin.copy( objectBounds.min );
+		objectMax.copy( objectBounds.max );
+		
+		objectWorldMatrix.multiplyVector3( objectMin );
+		objectWorldMatrix.multiplyVector3( objectMax );
+		
+		if ( objectMin.x < min.x ) {
+			
+			min.x = objectMin.x;
+			
+		}
+		
+		if ( objectMax.x > max.x ) {
+			
+			max.x = objectMax.x;
+			
+		}
+		
+		if ( objectMin.y < min.y ) {
+			
+			min.y = objectMin.y;
+			
+		}
+		
+		if ( objectMax.y > max.y ) {
+			
+			max.y = objectMax.y;
+			
+		}
+		
+		if ( objectMin.z < min.z ) {
+			
+			min.z = objectMin.z;
+			
+		}
+		
+		if ( objectMax.z > max.z ) {
+			
+			max.z = objectMax.z;
+			
+		}
+		
+		return bounds;
 		
 	}
 	

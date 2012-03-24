@@ -17,7 +17,8 @@
 		_Physics,
 		_Field,
 		_ObjectMaker,
-		_Water;
+		_Water,
+		_Sky;
 	
 	/*===================================================
     
@@ -34,7 +35,8 @@
 			"assets/modules/core/Physics.js",
 			"assets/modules/farming/Field.js",
 			"assets/modules/utils/ObjectMaker.js",
-			"assets/modules/env/Water.js"
+			"assets/modules/env/Water.js",
+			"assets/modules/env/Sky.js",
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -46,7 +48,7 @@
     
     =====================================================*/
 	
-	function init_internal ( g, world, m, physics, f, om, w ) {
+	function init_internal ( g, world, m, physics, f, om, w, sky ) {
 		console.log('internal world island');
 		
 		// assets
@@ -58,6 +60,7 @@
 		_Field = f;
 		_ObjectMaker = om;
 		_Water = w;
+		_Sky = sky;
 		
 		_WorldIsland.Instance = WorldIsland;
 		_WorldIsland.Instance.prototype = new _World.Instance();
@@ -142,7 +145,11 @@
 		
 		me.add( me.parts.waterRing );
 		
-		// sky
+		/*===================================================
+		
+		sky
+		
+		=====================================================*/
 		
 		// sun/moon
 		
@@ -167,7 +174,19 @@
 		
 		me.parts.sunmoon.add( me.parts.sunmoonLight );
 		
-		// home
+		// sky
+		
+		me.parts.sky = new _Sky.Instance( {
+			world: me.parts.body
+		} );
+		
+		me.add( me.parts.sky );
+		
+		/*===================================================
+		
+		home
+		
+		=====================================================*/
 		
 		me.parts.home = new _Model.Instance();
 		
@@ -238,7 +257,11 @@
 		
 		me.parts.home.add( me.parts.surfboard );	
 		
-		// volcano
+		/*===================================================
+		
+		volcano
+		
+		=====================================================*/
 		
 		me.parts.volcano = new _Model.Instance();
 		
@@ -334,7 +357,11 @@
 		
 		me.parts.volcano.add( me.parts.volcanoRocks005 );
 		
-		// trees
+		/*===================================================
+		
+		trees
+		
+		=====================================================*/
 		
 		me.parts.trees = new _Model.Instance();
 		

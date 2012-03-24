@@ -112,7 +112,7 @@
 		
 		// system
 		
-		system = THREE.Collisions;
+		system = new THREE.CollisionSystem();
 		set_world_gravity_source( new THREE.Vector3( 0, 0, 0 ) );
 		set_world_gravity_magnitude( new THREE.Vector3( 0, -1, 0 ) );
 		
@@ -141,271 +141,6 @@
 		utilVec31Pull = new THREE.Vector3();
 		utilVec32Pull = new THREE.Vector3();
 		utilVec33Pull = new THREE.Vector3();
-		
-		// three collision fixes
-		
-		add_three_collision_fixes();
-		
-	}
-	
-	/*===================================================
-    
-    collision fixes
-    
-    =====================================================*/
-	
-	function add_three_collision_fixes () {
-		
-		var utilMat1RayLocal = new THREE.Matrix4(),
-			utilVec31RayLocal = new THREE.Vector3(),
-			utilVec31RayBox = new THREE.Vector3(),
-			utilVec32RayBox = new THREE.Vector3();
-		
-		// localize ray to collider
-		
-		THREE.CollisionSystem.prototype.makeRayLocal = function( ray, m, i ) {
-			
-			var scale,
-				mMat,
-				mCopy;
-
-			var rt = THREE.CollisionSystem.__r;
-			rt.origin.copy( ray.origin );
-			rt.direction.copy( ray.direction );
-			
-			if ( m instanceof THREE.Mesh ) {
-				
-				scale = m.scale,
-				mMat = m.matrixWorld,
-				mCopy = utilMat1RayLocal;
-				
-				// get copy of m world matrix without scale applied
-				// matrix with scale does not seem to invert correctly
-				
-				mCopy.extractPosition( mMat );
-				mCopy.extractRotation( mMat, scale );
-				
-				// invert copy
-				
-				var mt = THREE.CollisionSystem.__m;
-				mt.getInverse( mCopy );
-				
-				mt.multiplyVector3( rt.origin );
-				mt.rotateAxis( rt.direction );
-				
-				rt.direction.normalize();
-				
-			}
-
-			return rt;
-
-		};
-		
-		// ray mesh
-		
-		THREE.CollisionSystem.prototype.rayMesh = function( r, me ) {
-			
-			var i, l,
-				p0 = new THREE.Vector3(),
-				p1 = new THREE.Vector3(),
-				p2 = new THREE.Vector3(),
-				p3 = new THREE.Vector3(),
-				mesh = me.mesh,
-				scale = mesh.scale,
-				geometry = mesh.geometry,
-				vertices = geometry.vertices,
-				rt = this.makeRayLocal( r, mesh );
-			
-			var d = Number.MAX_VALUE;
-			var nearestface;
-			
-			for( i = 0, l = me.numFaces; i < l; i ++ ) {
-				
-				var face = geometry.faces[ i ];
-				
-				p0.copy( vertices[ face.a ].position ).multiplySelf( scale );
-				p1.copy( vertices[ face.b ].position ).multiplySelf( scale );
-				p2.copy( vertices[ face.c ].position ).multiplySelf( scale );
-				
-				if ( face instanceof THREE.Face4 ) {
-					
-					p3.copy( vertices[ face.d ].position ).multiplySelf( scale );
-					
-					var nd = this.rayTriangle( rt, p0, p1, p3, d, this.collisionNormal, mesh );
-					
-					if( nd < d ) {
-						
-						d = nd;
-						nearestface = i;
-						me.normal.copy( this.collisionNormal );
-						me.normal.normalize();
-						
-					}
-					
-					nd = this.rayTriangle( rt, p1, p2, p3, d, this.collisionNormal, mesh );
-					
-					if( nd < d ) {
-						
-						d = nd;
-						nearestface = i;
-						me.normal.copy( this.collisionNormal );
-						me.normal.normalize();
-						
-					}
-					
-				}
-				else {
-					
-					var nd = this.rayTriangle( rt, p0, p1, p2, d, this.collisionNormal, mesh );
-					
-					if( nd < d ) {
-						
-						d = nd;
-						nearestface = i;
-						me.normal.copy( this.collisionNormal );
-						me.normal.normalize();
-						
-					}
-					
-				}
-				
-			}
-			
-			return {dist: d, faceIndex: nearestface};
-			
-		};
-		
-		// ray box
-		
-		THREE.CollisionSystem.prototype.rayBox = function( ray, ab ) {
-			
-			var mesh = ab.mesh,
-				rt = this.makeRayLocal( ray, mesh ),
-				abMin = utilVec31RayBox.copy( ab.min ),
-				abMax = utilVec32RayBox.copy( ab.max ),
-				origin = rt.origin,
-				direction = rt.direction,
-				scale;
-			
-			//rt.origin.copy( ray.origin );
-			//rt.direction.copy( ray.direction );
-			
-			if ( ab.dynamic && typeof mesh !== 'undefined' ) {
-				
-				// scale
-				
-				scale = mesh.scale;
-				
-				abMin.multiplySelf( scale );
-				abMax.multiplySelf( scale );
-				
-			}
-			
-			var xt = 0, yt = 0, zt = 0;
-			var xn = 0, yn = 0, zn = 0;
-			var ins = true;
-			
-			if( origin.x < abMin.x ) {
-				
-				xt = abMin.x - origin.x;
-				xt /= direction.x;
-				ins = false;
-				xn = -1;
-				
-			} else if( origin.x > abMax.x ) {
-				
-				xt = abMax.x - origin.x;
-				xt /= direction.x;
-				ins = false;
-				xn = 1;
-				
-			}
-			
-			if( origin.y < abMin.y ) {
-				
-				yt = abMin.y - origin.y;
-				yt /= direction.y;
-				ins = false;
-				yn = -1;
-				
-			} else if( origin.y > abMax.y ) {
-				
-				yt = abMax.y - origin.y;
-				yt /= direction.y;
-				ins = false;
-				yn = 1;
-				
-			}
-			
-			if( origin.z < abMin.z ) {
-				
-				zt = abMin.z - origin.z;
-				zt /= direction.z;
-				ins = false;
-				zn = -1;
-				
-			} else if( origin.z > abMax.z ) {
-				
-				zt = abMax.z - origin.z;
-				zt /= direction.z;
-				ins = false;
-				zn = 1;
-				
-			}
-			
-			if( ins ) return -1;
-			
-			var which = 0;
-			var t = xt;
-			
-			if( yt > t ) {
-				
-				which = 1;
-				t = yt;
-				
-			}
-			
-			if ( zt > t ) {
-				
-				which = 2;
-				t = zt;
-				
-			}
-			
-			switch( which ) {
-				
-				case 0:
-					
-					var y = origin.y + direction.y * t;
-					if ( y < abMin.y || y > abMax.y ) return Number.MAX_VALUE;
-					var z = origin.z + direction.z * t;
-					if ( z < abMin.z || z > abMax.z ) return Number.MAX_VALUE;
-					ab.normal.set( xn, 0, 0 );
-					break;
-					
-				case 1:
-					
-					var x = origin.x + direction.x * t;
-					if ( x < abMin.x || x > abMax.x ) return Number.MAX_VALUE;
-					var z = origin.z + direction.z * t;
-					if ( z < abMin.z || z > abMax.z ) return Number.MAX_VALUE;
-					ab.normal.set( 0, yn, 0) ;
-					break;
-					
-				case 2:
-					
-					var x = origin.x + direction.x * t;
-					if ( x < abMin.x || x > abMax.x ) return Number.MAX_VALUE;
-					var y = origin.y + direction.y * t;
-					if ( y < abMin.y || y > abMax.y ) return Number.MAX_VALUE;
-					ab.normal.set( 0, 0, zn );
-					break;
-					
-			}
-			
-			return t;
-			
-		};
 		
 	}
 	
@@ -1077,14 +812,18 @@
     
     =====================================================*/
 	
-	function pull_to_source ( mesh, source, velocity, offset, rigidBody ) {
+	function pull_to_source ( mesh, source, objectsToIntersect, velocity, offset, rigidBody ) {
 		
-		var position,
+		var i, l,
+			position,
 			difference = utilVec31Pull,
 			direction = utilVec32Pull,
 			shift = utilVec33Pull,
-			collision,
-			collisionDistance;
+			object,
+			rigidBody,
+			colliders,
+			intersection,
+			intersectionDistance;
 		
 		// handle parameters
 		
@@ -1110,31 +849,69 @@
 		
 		direction.copy( difference ).normalize();
 		
+		// if objects to intersect was passed
+		
+		if ( main.is_array( objectsToIntersect ) ) {
+			
+			// extract colliders from objects
+			
+			colliders = [];
+			
+			for ( i = 0, l = objectsToIntersect.length; i < l; i++ ) {
+				
+				object = objectsToIntersect[ i ];
+				
+				if( object instanceof THREE.Collider ) {
+					
+					colliders.push( object );
+					
+				}
+				else if ( typeof object.collider !== 'undefined' ) {
+					
+					colliders.push( object.collider );
+					
+				}
+				else if ( typeof object.rigidBody !== 'undefined' ) {
+					
+					colliders.push( object.rigidBody.collider );
+					
+				}
+				else if ( typeof object.physics !== 'undefined' ) {
+					
+					colliders.push( object.physics.rigidBody.collider );
+					
+				}
+				
+			}
+			
+		}
+		
 		// cast ray from mesh to source
 		
-		collision = raycast_in_direction( position, direction /*, offset, mesh */ );
+		intersection = raycast_in_direction( position, direction, undefined, undefined, colliders );
 		console.log('!!! pulling to source');
 		console.log('position: ', position.x, position.y, position.z);
 		console.log('direction: ', direction.x, direction.y, direction.z);
-		console.log(collision);
-		// if collision found
+		console.log( 'objectsToIntersect', objectsToIntersect, 'colliders', colliders);
+		console.log(intersection);
+		// if intersection found
 		
-		if ( typeof collision !== 'undefined' ) {
+		if ( typeof intersection !== 'undefined' ) {
 			
 			// get distance
 			
-			collisionDistance = collision.distance;
-			console.log('>>>> collision found at distance ' + collisionDistance );
+			intersectionDistance = intersection.distance;
+			console.log('>>>> intersection found at distance ' + intersectionDistance );
 		}
 		else {
 			
-			collisionDistance = difference.length();
+			intersectionDistance = difference.length();
 			
 		}
 		
 		// multiply direction by distance
 			
-		shift.copy( direction ).multiplyScalar( collisionDistance );
+		shift.copy( direction ).multiplyScalar( intersectionDistance );
 		console.log('shift: ', shift.x, shift.y, shift.z);
 		// add shift to position
 		
@@ -1572,7 +1349,7 @@
     
     =====================================================*/
 	
-	function raycast_in_direction ( origin, direction, offset, mesh ) {
+	function raycast_in_direction ( origin, direction, offset, mesh, colliders ) {
 		
 		var i, l,
 			ray = utilRay1Casting,
@@ -1595,9 +1372,9 @@
 			
 		}
 		
-		// ray cast all
+		// ray cast colliders, defaults to all in system
 		
-		intersections = system.rayCastAll( ray );
+		intersections = system.rayCastAll( ray, colliders );
 		
 		// find nearest intersection
 		
