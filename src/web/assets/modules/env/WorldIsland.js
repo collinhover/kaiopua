@@ -177,7 +177,12 @@
 		// sky
 		
 		me.parts.sky = new _Sky.Instance( {
-			world: me.parts.body
+			world: me.parts.body,
+			numClouds: 20,
+			cloudDistanceFromSurfaceMin: me.parts.sunmoon.position.length() - 2000,
+			cloudDistanceFromSurfaceMax: me.parts.sunmoon.position.length() + 500,
+			yThetaMin: Math.PI * 0.2,
+			yThetaMax: Math.PI * 0.8
 		} );
 		
 		me.add( me.parts.sky );

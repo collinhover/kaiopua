@@ -86,7 +86,7 @@
 		parameters.movement.moveSpeedBack = 2;
 		parameters.movement.moveRunThreshold = parameters.movement.moveSpeed;
 		parameters.movement.rotateSpeed = 0.019;
-		parameters.movement.jumpSpeedStart = 8;
+		parameters.movement.jumpSpeedStart = 30;//8;
 		parameters.movement.jumpSpeedEnd = 0;
 		parameters.movement.jumpTimeMax = 100;
 		parameters.movement.jumpAnimationTime = 1500;
@@ -94,7 +94,7 @@
 		// prototype constructor
 		
 		_Character.Instance.call( this, parameters );
-	
+		
 		// init actions map
 		
 		this.actions = {};

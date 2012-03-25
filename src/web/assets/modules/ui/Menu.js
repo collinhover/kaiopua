@@ -302,7 +302,6 @@
 			
 			parameters = parameters || {};
 			
-			//console.log('  > modify arguments' );
 			// if closed, only show open button
 			if ( this.isOpen === false ) {
 				
@@ -391,7 +390,7 @@
 			
 			if ( this.parent instanceof _Menu.Instance ) {
 				
-				this.parent.child_opening( this );
+				this.parent.child_opening( this, time );
 				
 			}
 			
@@ -475,7 +474,7 @@
 					
 					if ( this.parent instanceof _Menu.Instance ) {
 						
-						this.parent.child_closing( this );
+						this.parent.child_closing( this, time );
 						
 					}
 					
@@ -498,21 +497,25 @@
 		
 	}
 	
-	function child_opening ( child ) {
+	function child_opening ( child, time ) {
 		//console.log( this.id, ' child, ', child.id, ', OPENING' );
+		this.childOpen = child;
+		
 		this.childrenShowingOrder = this.get_children_showing();
 		
-		this.hide_children( { children: this.childrenShowingOrder, excluding: child } );
+		this.hide_children( { children: this.childrenShowingOrder, excluding: child, time: time } );
 		
 	}
 	
-	function child_closing ( child ) {
+	function child_closing ( child, time ) {
 		
-		if ( this.isOpen && this.childrenShowingOrder ) {
+		if ( this.isOpen && this.childOpen === child && this.childrenShowingOrder ) {
 			//console.log( this.id, ' child, ', child.id, ', CLOSING' );
-			this.show_children( { children: this.childrenShowingOrder } );
+			this.show_children( { children: this.childrenShowingOrder, time: time } );
 			
 			this.childrenShowingOrder = undefined;
+			
+			this.childOpen = undefined;
 			
 		}
 		
@@ -547,7 +550,7 @@
 	function update_arrangement () {
 		
 		if ( this.get_children_showing().length > 0 ) {
-			//console.log( this.id, 'ARRANGING' );
+			
 			this.set_arrangement( this.arrangement, this.arrangementParameters );
 			
 		}
@@ -865,6 +868,7 @@
 			direction,
 			radius,
 			spaceBySize,
+			forceShape,
 			children,
 			radians,
 			thetaStart,
@@ -903,9 +907,10 @@
 		direction = this.arrangementParameters.direction = parameters.direction = main.is_number( parameters.direction ) ? parameters.direction : ( main.is_number( this.arrangementParameters.direction ) ? this.arrangementParameters.direction : 1 );
 		radius = this.arrangementParameters.radius = parameters.radius = main.is_number( parameters.radius ) ? parameters.radius : this.arrangementParameters.radius;
 		spaceBySize = this.arrangementParameters.spaceBySize = parameters.spaceBySize = typeof parameters.spaceBySize === 'boolean' ? parameters.spaceBySize : this.arrangementParameters.spaceBySize;
+		forceShapeOnOpen = this.arrangementParameters.forceShapeOnOpen = parameters.forceShapeOnOpen = typeof parameters.forceShapeOnOpen === 'boolean' ? parameters.forceShapeOnOpen : this.arrangementParameters.forceShapeOnOpen;
 		children = parameters.children = parameters.children || this.get_children_for_arrangement();
 		
-		if ( children.length <= 1 ) {
+		if ( children.length <= 1 && ( forceShapeOnOpen !== true || ( this.isOpen !== true && this.buttonClose.hidden === true ) ) ) {
 			
 			this.arrange_to_child( children[ 0 ] );
 			

@@ -48,6 +48,7 @@
 		
 		_Button.Instance.prototype.enter = enter;
 		_Button.Instance.prototype.leave = leave;
+		_Button.Instance.prototype.active = active;
 		_Button.Instance.prototype.trigger = trigger;
 		_Button.Instance.prototype.cooldown = cooldown;
 		
@@ -165,6 +166,7 @@
 		
 		this.domElement.on( 'mouseenter.btn touchenter.btn', function ( e ) { me.enter( e ); } );
 		this.domElement.on( 'mouseleave.btn touchleave.btn', function ( e ) { me.leave( e ); } );
+		this.domElement.on( 'mousedown touchstart', function ( e ) { me.active( e ) } );
         this.domElement.on( 'mouseup.btn touchend.btn', function ( e ) { me.trigger( e ); } );
 		
 	}
@@ -197,15 +199,27 @@
     
     =====================================================*/
 	
+	function active ( e ) {
+		
+		if ( e && this.bubble === false ) {
+			
+			e.preventDefault();
+			e.stopPropagation();
+			return false;
+			
+		}
+		
+	}
+	
 	function trigger ( e ) {
 		
 		if ( typeof this.callback !== 'undefined' && this.enabled === true && this.hidden !== true && this.isVisible === true ) {
 			
-			this.callback.apply( this.context, this.data );
+			this.callback.apply( this.context || window, this.data );
 			
 		}
 		
-		if ( this.bubble === false ) {
+		if ( e && this.bubble === false ) {
 			
 			e.preventDefault();
 			e.stopPropagation();

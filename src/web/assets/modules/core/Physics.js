@@ -30,6 +30,8 @@
 		utilVec31Update,
 		utilVec32Update,
 		utilVec33Update,
+		utilVec34Update,
+		utilVec35Update,
 		utilVec31Velocity,
 		utilVec31Offset,
 		utilQ4Offset,
@@ -129,6 +131,8 @@
 		utilVec31Update = new THREE.Vector3();
 		utilVec32Update = new THREE.Vector3();
 		utilVec33Update = new THREE.Vector3();
+		utilVec34Update = new THREE.Vector3();
+		utilVec35Update = new THREE.Vector3();
 		
 		utilVec31Offset = new THREE.Vector3();
 		utilQ4Offset = new THREE.Quaternion();
@@ -812,7 +816,7 @@
     
     =====================================================*/
 	
-	function pull_to_source ( mesh, source, objectsToIntersect, velocity, offset, rigidBody ) {
+	function pull_to_source ( mesh, source, objectsToIntersect, distanceFrom, velocity, rigidBody ) {
 		
 		var i, l,
 			position,
@@ -889,11 +893,7 @@
 		// cast ray from mesh to source
 		
 		intersection = raycast_in_direction( position, direction, undefined, undefined, colliders );
-		console.log('!!! pulling to source');
-		console.log('position: ', position.x, position.y, position.z);
-		console.log('direction: ', direction.x, direction.y, direction.z);
-		console.log( 'objectsToIntersect', objectsToIntersect, 'colliders', colliders);
-		console.log(intersection);
+		
 		// if intersection found
 		
 		if ( typeof intersection !== 'undefined' ) {
@@ -901,7 +901,7 @@
 			// get distance
 			
 			intersectionDistance = intersection.distance;
-			console.log('>>>> intersection found at distance ' + intersectionDistance );
+			
 		}
 		else {
 			
@@ -909,10 +909,18 @@
 			
 		}
 		
+		// if distance from needed
+		
+		if ( main.is_number( distanceFrom ) ) {
+			
+			intersectionDistance -= distanceFrom;
+			
+		}
+		
 		// multiply direction by distance
 			
 		shift.copy( direction ).multiplyScalar( intersectionDistance );
-		console.log('shift: ', shift.x, shift.y, shift.z);
+		
 		// add shift to position
 		
 		position.addSelf( shift );
@@ -1064,7 +1072,10 @@
 			gravMag = utilVec32Update,
 			gravUp = utilVec33Update,
 			velocityGravity,
-			velocityMovement;
+			velocityGravityForceUpDir = utilVec34Update,
+			velocityGravityForceUpDirRot = utilVec35Update,
+			velocityMovement,
+			safetynet;
 		
 		// handle rotation and check velocity
 		
@@ -1075,6 +1086,8 @@
 			mesh = link.mesh;
 			
 			rigidBody = link.rigidBody;
+			
+			safetynet = link.safetynet;
 			
 			// is dynamic
 			
@@ -1108,111 +1121,102 @@
 				
 				velocityGravity.relativeRotation = gravUp;
 				
+				velocityGravityForceUpDir.copy( velocityGravity.force ).negate().normalize();
+				
+				velocityGravityForceUpDirRot = rotate_vector3_relative_to( velocityGravity.relativeRotation, velocityGravityForceUpDir, velocityGravityForceUpDirRot );
+				
 				// gravity velocity
 				
 				handle_velocity( link, velocityGravity );
 				
 				// post physics
 				
-				handle_post( link, timeDelta );
-				
-			}
-			
-		}
-		
-	}
-	
-	/*===================================================
-    
-    post
-    
-    =====================================================*/
-	
-	function handle_post ( link, timeDelta ) {
-		
-		var mesh = link.mesh,
-			rigidBody = link.rigidBody,
-			velocityGravity = rigidBody.velocityGravity,
-			velocityMovement = rigidBody.velocityMovement,
-			safetynet = link.safetynet;
-		
-		// if link is not safe
-		if ( link.safe === false ) {
-			
-			// rescue link and set back to last safe
-			
-			mesh.position.copy( safetynet.position );
-			
-			if ( mesh.useQuaternion === true ) {
-				
-				mesh.quaternion.copy( safetynet.quaternion );
-				
-			}
-			else {
-				
-				mesh.matrix.setRotationFromQuaternion( safetynet.quaternion );
-				
-			}
-			
-			velocityGravity.force.set( 0, 0, 0 );
-			velocityMovement.force.set( 0, 0, 0 );
-			
-			velocityGravity.timeWithoutIntersection = 0;
-			
-			link.safe = true;
-			
-			// safety net end
-				
-			link.safetynetend.dispatch();
-			
-			shared.signals.physicssafetynetend.dispatch( link );
-			
-		}		
-		// if velocity gravity has no intersection
-		else if ( !velocityGravity.intersection ) {
-			
-			velocityGravity.timeWithoutIntersection += timeDelta;
-			
-			// without intersection for time above threshold
-			if ( velocityGravity.timeWithoutIntersection > _Physics.timeWithoutIntersectionThreshold ) {
-				
-				// set link to unsafe, but do not reset to safe position immediately
-				// wait until next update to allow dispatched signals to be handled first
-				
-				link.safe = false;
-				
-				// safety net start
-				
-				if ( link.safetynetstart ) {
+				// if link is not safe
+				if ( link.safe === false ) {
 					
-					link.safetynetstart.dispatch();
+					// rescue link and set back to last safe
+					
+					mesh.position.copy( safetynet.position );
+					
+					if ( mesh.useQuaternion === true ) {
+						
+						mesh.quaternion.copy( safetynet.quaternion );
+						
+					}
+					else {
+						
+						mesh.matrix.setRotationFromQuaternion( safetynet.quaternion );
+						
+					}
+					
+					velocityGravity.force.set( 0, 0, 0 );
+					velocityMovement.force.set( 0, 0, 0 );
+					
+					velocityGravity.timeWithoutIntersection = 0;
+					
+					link.safe = true;
+					
+					// safety net end
+						
+					link.safetynetend.dispatch();
+					
+					shared.signals.physicssafetynetend.dispatch( link );
+					
+				}		
+				// if velocity gravity force is moving towards source
+				else if ( velocityGravityForceUpDirRot.equals( gravUp ) ) {
+					
+					// if no intersection
+					if ( !velocityGravity.intersection ) {
+						
+						velocityGravity.timeWithoutIntersection += timeDelta;
+						
+						// without intersection for time above threshold
+						if ( velocityGravity.timeWithoutIntersection > _Physics.timeWithoutIntersectionThreshold ) {
+							
+							// set link to unsafe, but do not reset to safe position immediately
+							// wait until next update to allow dispatched signals to be handled first
+							
+							link.safe = false;
+							
+							// safety net start
+							
+							if ( link.safetynetstart ) {
+								
+								link.safetynetstart.dispatch();
+								
+							}
+							
+							shared.signals.physicssafetynetstart.dispatch( link );
+							
+						}
+						
+					}
+					// link is safe
+					else {
+						
+						velocityGravity.timeWithoutIntersection = 0;
+						
+						link.safe = true;
+						
+						// copy last safe position and rotation into rigidBody
+						
+						safetynet.position.copy( mesh.position );
+						
+						if ( mesh.useQuaternion === true ) {
+							
+							safetynet.quaternion.copy( mesh.quaternion );
+							
+						}
+						else {
+							
+							safetynet.quaternion.setFromRotationMatrix( mesh.matrix );
+							
+						}
+						
+					}
 					
 				}
-				
-				shared.signals.physicssafetynetstart.dispatch( link );
-				
-			}
-			
-		}
-		// link is safe
-		else {
-			
-			velocityGravity.timeWithoutIntersection = 0;
-			
-			link.safe = true;
-			
-			// copy last safe position and rotation into rigidBody
-			
-			safetynet.position.copy( mesh.position );
-			
-			if ( mesh.useQuaternion === true ) {
-				
-				safetynet.quaternion.copy( mesh.quaternion );
-				
-			}
-			else {
-				
-				safetynet.quaternion.setFromRotationMatrix( mesh.matrix );
 				
 			}
 			

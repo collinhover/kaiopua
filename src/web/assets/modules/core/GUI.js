@@ -62,21 +62,9 @@
 		_GUI.groups = {};
 		_GUI.groupsNames = [];
 		
-		// init
-		
-		init_core();
-		
-		init_layers();
-		
-		init_buttons();
-		
-		init_menus();
-		
-		// build
-		
-		build_gui();
-		
 		// functions
+		
+		_GUI.generate_button_close = generate_button_close;
 		
 		_GUI.show_group = show_group;
 		_GUI.hide_group = hide_group;
@@ -139,6 +127,44 @@
 			return fullScreenApi;
 			
 		} () );
+		
+		// init
+		
+		init_core();
+		
+		init_layers();
+		
+		init_buttons();
+		
+		init_menus();
+		
+		// build
+		
+		build_gui();
+		
+	}
+	
+	/*===================================================
+    
+    close button
+    
+    =====================================================*/
+	
+	function generate_button_close () {
+		
+		var button = new _Button.Instance( {
+			id: 'close',
+			image: shared.pathToIcons + 'undo_64.png',
+			imageSize: _GUI.sizes.iconSmall,
+			width: _GUI.sizes.iconSmallContainer,
+			tooltip: 'Go Back',
+			spacing: _GUI.sizes.buttonSpacing,
+			spacingRight: -_GUI.sizes.iconMediumContainer - _GUI.sizes.iconSmallContainer - _GUI.sizes.buttonSpacing,
+			alignment: 'rightcenter',
+			circle: true
+		} );
+		
+		return button;
 		
 	}
 	
@@ -226,7 +252,7 @@
 		// fullscreen disabled until allows alphanumeric input
 		
 		b.fullscreenEnter = new _Button.Instance( {
-			id: 'fullscreen',
+			id: 'fullscreenEnter',
 			image: shared.pathToIcons + 'fullscreen_32.png',
 			imageSize: _GUI.sizes.iconSmall,
 			size: _GUI.sizes.iconSmallContainer,
@@ -242,7 +268,7 @@
 		b.fullscreenEnter.hide( { remove: true, time: 0 } );
 	
 		b.fullscreenExit = new _Button.Instance( {
-			id: 'fullscreen',
+			id: 'fullscreenExit',
 			image: shared.pathToIcons + 'fullscreen_exit_32.png',
 			imageSize: _GUI.sizes.iconSmall,
 			size: _GUI.sizes.iconSmallContainer,
@@ -256,6 +282,17 @@
 		} );
 	
 		b.fullscreenExit.hide( { remove: true, time: 0 } );
+		
+		
+		b.end = new _Button.Instance( {
+			id: 'end',
+			image: shared.pathToIcons + 'confirm_64.png',
+			imageSize: _GUI.sizes.iconMedium,
+			size: _GUI.sizes.iconMediumContainer,
+			tooltip: 'Really Quit?',
+			spacing: _GUI.sizes.buttonSpacing,
+			circle: true
+		} );
 		
 		b.save = new _Button.Instance( {
 			id: 'save',
@@ -277,6 +314,49 @@
 				content: 'Load a saved game',
 				contentDisabled: '(no save found!)'
 			},
+			spacing: _GUI.sizes.buttonSpacing,
+			circle: true,
+			enabled: false
+		} );
+		
+		b.mainMenu = new _Button.Instance( {
+			id: 'mainMenu',
+			image: shared.pathToIcons + 'computer_alt_64.png',
+			imageSize: _GUI.sizes.iconMedium,
+			size: _GUI.sizes.iconMediumContainer,
+			tooltip: 'Main Menu',
+			spacing: _GUI.sizes.buttonSpacing,
+			circle: true
+		} );
+	
+		b.companionMenu = new _Button.Instance( {
+			id: 'companionMenu',
+			image: shared.pathToIcons + 'companion_64.png',
+			imageSize: _GUI.sizes.iconMedium,
+			size: _GUI.sizes.iconMediumContainer,
+			tooltip: 'Companions!',
+			spacing: _GUI.sizes.buttonSpacing,
+			circle: true,
+			enabled: false
+		} );
+		
+		b.houseMenu = new _Button.Instance( {
+			id: 'houseMenu',
+			image: shared.pathToIcons + 'home_64.png',
+			imageSize: _GUI.sizes.iconMedium,
+			size: _GUI.sizes.iconMediumContainer,
+			tooltip: 'House Parts',
+			spacing: _GUI.sizes.buttonSpacing,
+			circle: true,
+			enabled: false
+		} );
+		
+		b.map = new _Button.Instance( {
+			id: 'map',
+			image: shared.pathToIcons + 'map_64.png',
+			imageSize: _GUI.sizes.iconMedium,
+			size: _GUI.sizes.iconMediumContainer,
+			tooltip: 'Map',
 			spacing: _GUI.sizes.buttonSpacing,
 			circle: true,
 			enabled: false
@@ -304,13 +384,17 @@
             id: 'main'
         } );
 		
-		m.core = new _Menu.Instance( {
-            id: 'core'
-        } );
-		
 		m.options = new _Menu.Instance( {
             id: 'options'
         } );
+		
+		m.navigation = new _Menu.Instance( {
+			id: 'navigation'
+		} );
+		
+		m.end = new _Menu.Instance( {
+			id: 'end'
+		} );
 		
 		m.footer = new _UIElement.Instance( { 
 			domElement: shared.html.footerMenu
@@ -354,7 +438,8 @@
 	
 	function build_main_menu () {
 		
-		var m = _GUI.menus;
+		var m = _GUI.menus,
+			b = _GUI.buttons;
 		
 		m.main.hide( { remove: true, hide: 0 } );
 		
@@ -362,7 +447,6 @@
 			new _Button.Instance( {
 				id: 'resume',
 				text: 'Resume',
-				theme: 'white',
 				width: _GUI.sizes.buttonMedium,
 				spacing: _GUI.sizes.buttonSpacing,
 				circle: true,
@@ -372,21 +456,14 @@
 				},
 				alignment: 'center'
 			} ),
-			new _Button.Instance( {
-				id: 'end',
-				theme: 'white',
-				image: shared.pathToIcons + 'exit_64.png',
-				imageSize: _GUI.sizes.iconMedium,
-				size: _GUI.sizes.iconMediumContainer,
-				tooltip: 'End Game',
-				spacing: _GUI.sizes.buttonSpacing,
-				circle: true
-			} ),
-			m.core
+			b.save,
+			b.load,
+			m.options,
+			m.end
 		);
 		
 		m.main.childrenAlwaysVisible.push( m.main.childrenByID.resume );
-	
+		
 		m.main.arrange_circle( {
 			degrees: 360,
 			radius: _GUI.sizes.buttonMedium + _GUI.sizes.buttonSpacing
@@ -394,45 +471,22 @@
 	
 	}
 	
-	function build_core_menu () {
+	function build_navigation_menu () {
 		
 		var m = _GUI.menus,
 			b = _GUI.buttons;
 		
-		m.core.buttonOpen = new _Button.Instance( {
-			id: 'open',
-			image: shared.pathToIcons + 'computer_alt_64.png',
-			imageSize: _GUI.sizes.iconMedium,
-			size: _GUI.sizes.iconMediumContainer,
-			tooltip: 'Core Menu',
-			spacing: _GUI.sizes.buttonSpacing,
-			circle: true
-		} );
+		m.navigation.hide( { remove: true, hide: 0 } );
 		
-		m.core.buttonClose = new _Button.Instance( {
-			id: 'close',
-			image: shared.pathToIcons + 'undo_64.png',
-			imageSize: _GUI.sizes.iconSmall,
-			size: _GUI.sizes.iconSmallContainer,
-			tooltip: 'Go Back',
-			spacing: _GUI.sizes.buttonSpacing,
-			spacingRight: -_GUI.sizes.iconMediumContainer - _GUI.sizes.iconSmallContainer - _GUI.sizes.buttonSpacing,
-			alignment: 'rightcenter',
-			circle: true
-		} );
-		
-		m.core.add(
-			m.options,
-			b.load,
-			b.save
+		m.navigation.add(
+			b.companionMenu,
+			b.houseMenu,
+			b.map,
+			b.mainMenu
 		);
 		
-		m.core.arrange_circle( {
-			degreeStart: 0,
-			direction: -1,
-			radius: _GUI.sizes.buttonMedium + _GUI.sizes.buttonSpacing
-		} );
-	
+		m.navigation.arrange_line();
+		
 	}
 	
 	function build_options_menu () {
@@ -449,17 +503,7 @@
 			circle: true
 		} );
 		
-		m.options.buttonClose = new _Button.Instance( {
-			id: 'close',
-			image: shared.pathToIcons + 'undo_64.png',
-			imageSize: _GUI.sizes.iconSmall,
-			width: _GUI.sizes.iconSmallContainer,
-			tooltip: 'Go Back',
-			spacing: _GUI.sizes.buttonSpacing,
-			spacingRight: -_GUI.sizes.iconMediumContainer - _GUI.sizes.iconSmallContainer - _GUI.sizes.buttonSpacing,
-			alignment: 'rightcenter',
-			circle: true
-		} );
+		m.options.buttonClose = _GUI.generate_button_close();
 		
 		m.options.add(
 			new _Button.Instance( {
@@ -527,6 +571,33 @@
 		
 	}
 	
+	function build_end_menu () {
+		
+		var m = _GUI.menus,
+			b = _GUI.buttons;
+		
+		m.end.buttonOpen = new _Button.Instance( {
+			id: 'open',
+			image: shared.pathToIcons + 'exit_64.png',
+			imageSize: _GUI.sizes.iconMedium,
+			size: _GUI.sizes.iconMediumContainer,
+			tooltip: 'End Game',
+			spacing: _GUI.sizes.buttonSpacing,
+			circle: true
+		} );
+		
+		m.end.buttonClose = _GUI.generate_button_close();
+		
+		m.end.add( b.end );
+		
+		m.end.arrange_circle( {
+			degreeStart: 0,
+			radius: _GUI.sizes.buttonMedium + _GUI.sizes.buttonSpacing,
+			forceShapeOnOpen: true
+		} );
+	
+	}
+	
 	function build_footer_menu () {
 		
 		var m = _GUI.menus;
@@ -555,9 +626,11 @@
 		
 		build_start_menu();
 		
-		build_core_menu();
+		build_navigation_menu();
 		
 		build_options_menu();
+		
+		build_end_menu();
 		
 		build_main_menu();
 		

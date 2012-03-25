@@ -500,19 +500,27 @@
 		};
 		m.main.childrenByID.resume.context = this;
 		
-		m.main.childrenByID.end.callback = function () {
+		b.end.callback = function () {
 			stop_game();
 		};
-		m.main.childrenByID.end.context = this;
+		b.end.context = this;
+		
+		b.mainMenu.callback = function () {
+			_Game.pause();
+		};
+		b.mainMenu.context = this;
 		
 		// menus
 		
 		m.start.alignment = 'center';
 		m.main.alignment = 'center';
 		
+		m.navigation.spacingBottom = 20;
+		m.navigation.alignment = 'bottomcenter';
+		
 		// setup ui groups
 		
-		_GUI.add_to_group( 'constant', { child: b.fullscreenEnter, parent: _GUI.layers.ui } );
+		_GUI.add_to_group( 'constant', [ { child: b.fullscreenEnter, parent: _GUI.layers.ui } ] );
 		
 		_GUI.add_to_group( 'start', [
 			{ child: m.start, parent: _GUI.layers.ui },
@@ -522,6 +530,10 @@
 		_GUI.add_to_group( 'pause', [
 			{ child: m.main, parent: _GUI.layers.ui },
 			{ child: m.footer, parent: _GUI.container }
+		] );
+		
+		_GUI.add_to_group( 'ingame', [
+			{ child: m.navigation, parent: _GUI.layers.ui }
 		] );
 		
 		// show initial groups
@@ -1006,7 +1018,11 @@
         
 		// set intro section
 		
-        set_section( _Intro );
+        set_section( _Intro, function () {
+			
+			_GUI.show_group( 'ingame' );
+			
+		} );
 		
 		// set started
 		
@@ -1052,6 +1068,7 @@
 				
 				if ( preventDefault !== true ) {
 					
+					_GUI.hide_group( 'ingame', { remove: true } );
 					_GUI.show_group( 'pause' );
 					
 				}
@@ -1082,6 +1099,7 @@
 			if ( started === true ) {
 				
 				_GUI.hide_group( 'pause', { remove: true } );
+				_GUI.show_group( 'ingame' );
 				
 			}
 			

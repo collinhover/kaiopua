@@ -1093,7 +1093,7 @@
 				
 				// show children
 				
-				this.show_children( undefined, undefined, 0 );
+				this.show_children( { time: 0 } );
 				
 			}
 			
@@ -1964,7 +1964,7 @@
 		disabled = theme.disabled = theme.disabled || {};
 		
 		disabled[ "color" ] = or[ "color" ] || "#777777";
-		disabled[ "background-color" ] = or[ "background-color" ] || "#cccccc";
+		disabled[ "background-color" ] = or[ "background-color" ] || "#bbbbbb";
 		//disabled[ "background-image" ] = or[ "background-image" ] || "linear-gradient(top, #cccccc 30%, #aaaaaa 100%)";
 		
 		return theme;
