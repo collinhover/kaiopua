@@ -250,6 +250,7 @@
 		_UIElement.Instance.prototype.pulse = pulse;
 		_UIElement.Instance.prototype.pulse_stop = pulse_stop;
 		
+		_UIElement.Instance.prototype.sort_children_by_order = sort_children_by_order;
 		_UIElement.Instance.prototype.show_children = show_children;
 		_UIElement.Instance.prototype.hide_children = hide_children;
 		_UIElement.Instance.prototype.copy_children_and_exclude = copy_children_and_exclude;
@@ -516,8 +517,9 @@
 		
 		// items
 		
+		this.children = [];
+		this.childrenOrder = {};
 		this.childrenByID = {};
-        this.children = [];
 		this.childrenAlwaysVisible = [];
 		
 		// properties
@@ -615,18 +617,24 @@
 	function add () {
 		
 		var i, l,
-			children,
+			argument,
 			child;
 		
-		children = arguments;
+		// run through arguments passed
 		
-		for ( i = 0, l = children.length; i < l; i++ ) {
+		for ( i = 0, l = arguments.length; i < l; i++ ) {
 			
-			child = children[ i ];
+			argument = arguments[ i ];
 			
-			if ( child instanceof _UIElement.Instance && this.children.indexOf( child ) === -1 ) {
+			// if is valid child
+			
+			if ( argument instanceof _UIElement.Instance && this.children.indexOf( argument ) === -1 ) {
+				
+				child = argument;
 				
 				this.children.push( child );
+				
+				this.childrenOrder[ child.id ] = -1;
 				
 				this.childrenByID[ child.id ] = child;
 				
@@ -637,8 +645,18 @@
 				}
 				
 			}
+			// else if is number, assume is order for previous child
+			if ( i > 0 && main.is_number( argument ) ) {
+				
+				this.childrenOrder[ child.id ] = argument;
+				
+			}
 			
 		}
+		
+		// sort children
+		
+		this.sort_children_by_order();
 		
 	}
 	
@@ -663,27 +681,33 @@
 				
 				this.children.splice( index, 1 );
 				
-				delete this.childrenByID[ child.id ];
+			}
+			
+			delete this.childrenOrder[ child.id ];
+			
+			delete this.childrenByID[ child.id ];
+			
+			// if always visible
+			
+			index = this.childrenAlwaysVisible.indexOf( child );
+			
+			if ( index !== -1 ) {
 				
-				// if always visible
+				this.childrenAlwaysVisible.splice( index, 1 );
 				
-				index = this.childrenAlwaysVisible.indexOf( child );
+			}
+			
+			if ( child.parent === this ) {
 				
-				if ( index !== -1 ) {
-					
-					this.childrenAlwaysVisible.splice( index, 1 );
-					
-				}
-				
-				if ( child.parent === this ) {
-					
-					child.parent = child.parentLast;// undefined;
-					
-				}
+				child.parent = child.parentLast;
 				
 			}
 			
 		}
+		
+		// sort children
+		
+		this.sort_children_by_order();
 		
 	}
 	
@@ -1276,6 +1300,34 @@
     
     =====================================================*/
 	
+	function sort_children_by_order ( children ) {
+		
+		var me = this,
+			childrenOrder = this.childrenOrder,
+			ordera, orderb;
+		
+		children = children || this.children;
+		
+		children.sort( function ( a, b ) {
+			
+			ordera = childrenOrder[ a.id ];
+			orderb = childrenOrder[ b.id ];
+			
+			if ( ordera === -1 ) {
+				ordera = children.length;
+			}
+			if ( orderb === -1 ) {
+				orderb = children.length;
+			}
+			
+			return ordera - orderb;
+			
+		} );
+		
+		return children;
+		
+	}
+	
 	function show_children ( parameters ) {
 		
 		var i, l,
@@ -1293,6 +1345,10 @@
 			// make copy of children passed
 			
 			children = this.copy_children_and_exclude( parameters.children, parameters.excluding );
+			
+			// sort children
+			
+			children = this.sort_children_by_order( children );
 			
 			//console.log(this.id, 'SHOW children', children );
 			// show all

@@ -15,7 +15,8 @@
 		_GridModule,
 		_UIElement,
 		_GUI,
-		_ObjectHelper;
+		_ObjectHelper,
+		plantGeometryBase;
 	
 	/*===================================================
     
@@ -30,7 +31,8 @@
 			"assets/modules/puzzles/GridModule.js",
 			"assets/modules/ui/UIElement.js",
 			"assets/modules/core/GUI.js",
-			"assets/modules/utils/ObjectHelper.js"
+			"assets/modules/utils/ObjectHelper.js",
+			"assets/models/Taro_Plant_Single.js"//"assets/models/Taro_Plant_Double.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -42,7 +44,7 @@
     
     =====================================================*/
 	
-	function init_internal( ge, gm, uie, gui, oh ) {
+	function init_internal( ge, gm, uie, gui, oh, plant ) {
 		console.log('internal plant', _Plant);
 		
 		_GridElement = ge;
@@ -50,6 +52,7 @@
 		_UIElement = uie;
 		_GUI = gui;
 		_ObjectHelper = oh;
+		plantGeometryBase = plant;
 		
 		// properties
 		
@@ -57,7 +60,7 @@
 		_Plant.timeHide = 125;
 		_Plant.opacityBase = 0.75;
 		_Plant.opacityVacant = 0.9;
-		_Plant.opacityOccupied = 0.5;
+		_Plant.opacityOccupied = 0.9;
 		
 		// instance
 		
@@ -91,6 +94,20 @@
 		// handle parameters
 		
 		parameters = parameters || {};
+		
+		if ( typeof parameters.geometry === 'undefined' ) {
+			
+			parameters.geometry = plantGeometryBase;
+			
+			/*parameters.layout = [
+				[ 0, 0, 0 ],
+				[ 1, 1, 0 ],
+				[ 0, 0, 0 ]
+			];*/
+			parameters.layout = [ [ 1 ] ];
+		}
+		
+		parameters.materials = parameters.materials || new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } );
 		
 		// prototype constructor
 		
@@ -249,9 +266,8 @@
 			
 			this.material.color.copy( _GridModule.colors.vacant );
 			this.material.ambient.copy( _GridModule.colors.vacant );
-			this.material.vertexColors = false;
 			this.material.transparent = true;
-			this.material.opacity = 0.5;
+			this.material.opacity = _Plant.opacityVacant;
 			
 			this.seed.apply_css( 'background-color', _GridModule.colors.vacant.getContextStyle() );
 			
@@ -263,9 +279,8 @@
 			
 			this.material.color.copy( _GridModule.colors.occupied );
 			this.material.ambient.copy( _GridModule.colors.occupied );
-			this.material.vertexColors = false;
 			this.material.transparent = true;
-			this.material.opacity = 0.5;
+			this.material.opacity = _Plant.opacityOccupied;
 			
 			this.seed.apply_css( 'background-color', _GridModule.colors.occupied.getContextStyle() );
 			

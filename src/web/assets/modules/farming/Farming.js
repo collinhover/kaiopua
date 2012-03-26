@@ -154,10 +154,12 @@
 		m.farming.arrange_circle( {
 			degreesAutoFit: true,
 			degreeStart: 0,
-			radius: _GUI.sizes.buttonMedium + _GUI.sizes.buttonSpacing
+			direction: -1,
+			radius: _GUI.sizes.buttonMedium + _GUI.sizes.buttonSpacing,
+			forceShapeOnOpen: true
 		} );
 		
-		m.main.add( m.farming );
+		m.main.add( m.farming, 0 );
 		
 		// navigation
 		
@@ -179,7 +181,7 @@
 			context: this
 		} );
 		
-		m.navigation.add( b.farmingMenu );
+		m.navigation.add( b.farmingMenu, 0 );
 		
 	}
 	

@@ -482,7 +482,7 @@
 			b.companionMenu,
 			b.houseMenu,
 			b.map,
-			b.mainMenu
+			b.mainMenu, 9999
 		);
 		
 		m.navigation.arrange_line();
