@@ -16,8 +16,8 @@
         errorHash = 'error=',
         errorTypes = {
             general: {
-                header: "Oops! That wasn't supposed to happen!",
-                explanation: "Something broke and we're very sorry, but <span class='highlight'>any progress you've made has been saved, so all you need to do is reload the page!</span>"
+                header: "Well, that was embarrasing.",
+                explanation: "We're very sorry about the error, but any progress you've made has been saved. <a href='" + shared.originLink + "'>All you need to do is reload the page.</a>"
             },
             webgl_browser: {
                 header: "Oops! We need WebGL!",
@@ -29,7 +29,7 @@
                 explanation: "Although your browser seems to support WebGL, it appears as if your computer does not. For more information visit the <a href='http://get.webgl.org/troubleshooting/' target='_blank'>WebGL troubleshooting</a> page."
             },
             fourohfour: {
-                header: "Oops! Not found!",
+                header: "We can't seem to find that page.",
                 explanation: "Sorry, but the page you were trying to view does not exist. This is probably the result of either a mistyped address or an out-of-date link."
             },
             forbidden: {
@@ -193,6 +193,7 @@
     
         // header
         header = document.createElement('header');
+		$(header).addClass( 'title_alt text_huge' );
         $(header).html(errorTypes[errorType].header);
         
         // explanation

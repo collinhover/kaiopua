@@ -12,6 +12,7 @@
 		assetPath = "assets/modules/farming/Planting.js",
 		_Planting = {},
 		_Game,
+		_GUI,
 		_Puzzles,
 		_GridModule,
 		_Plant,
@@ -29,6 +30,7 @@
 		data: _Planting,
 		requirements: [
 			"assets/modules/core/Game.js",
+			"assets/modules/core/GUI.js",
 			"assets/modules/puzzles/Puzzles.js",
 			"assets/modules/puzzles/GridModule.js",
 			"assets/modules/farming/Plant.js",
@@ -45,10 +47,11 @@
     
     =====================================================*/
 	
-	function init_internal ( g, pzl, gm, pl, oh, mh ) {
+	function init_internal ( g, gui, pzl, gm, pl, oh, mh ) {
 		console.log('internal planting', _Planting);
 		
 		_Game = g;
+		_GUI = gui;
 		_Puzzles = pzl;
 		_GridModule = gm;
 		_Plant = pl;
@@ -304,6 +307,15 @@
 		console.log(' > PLANTING: update planting!');
 		var targetObject;
 		
+		// if has plant, update seed position
+		
+		if ( this.plant instanceof _Plant.Instance ) {
+			
+			this.plant.seed.x = this.mouse.x - this.plant.seed.outerWidthHalf;
+			this.plant.seed.y = this.mouse.y - this.plant.seed.outerHeightHalf;
+			
+		}
+		
 		// if rotating
 		
 		if ( skipRotate !== true && this.rotating === true ) {
@@ -353,9 +365,11 @@
 			
 			plantSuccessful = this.plant.occupy_module( this.module );
 			
+			// stop on success, else continue
+			
 			if ( plantSuccessful ) {
-				
 				console.log(' > PLANTING: plant added!', this.plant);
+				this.stop();
 				
 			}
 			else {
@@ -365,10 +379,13 @@
 			}
 			
 		}
-		
-		// stop planting
-		
-		this.stop();
+		else {
+			
+			// stop planting
+			
+			this.stop();
+			
+		}
 		
 	}
 	
@@ -383,13 +400,13 @@
 		
 		this.rotate_plant( false );
 		
-		// clear module / field
-		
-		this.change_module();
-		
 		// clear plant
 		
 		this.change_plant();
+		
+		// clear module / field
+		
+		this.change_module();
 		
 		// stop
 			
@@ -450,7 +467,11 @@
 		
 		// test module
 		
-		this.plant.test_occupy_module( module, true );
+		if ( this.plant instanceof _Plant.Instance ) {
+			
+			this.plant.test_occupy_module( module, true );
+			
+		}
 		
 	}
 	
@@ -466,15 +487,19 @@
 			
 			if ( this.plant instanceof _Plant.Instance ) {
 				
-				// clear test occupy
+				// clear last test
 				
 				this.plant.test_occupy_module();
 				
-				// store or remove from all plants list
+				// find if in all plants list
 				
 				index = _Planting.allPlants.indexOf( this.plant );
+				
+				// if planted
 					
 				if ( this.plant.planted === true ) {
+					
+					// store in all plants list
 					
 					if ( index === -1 ) {
 						
@@ -483,11 +508,29 @@
 					}
 					
 				}
-				else if ( index !== -1 ) {
+				else {
 					
-					_Planting.allPlants.splice( index, 1 );
+					// ensure plant is uprooted
+					
+					this.plant.uproot();
+					
+					// remove from all plants list
+					
+					if ( index !== -1 ) {
+						
+						_Planting.allPlants.splice( index, 1 );
+						
+					}
 					
 				}
+				
+				// hide seed
+				
+				this.plant.seed.hide( { remove: true } );
+				
+				// cursor
+				
+				_GUI.container.apply_css( 'cursor', 'auto' );
 				
 			}
 			
@@ -509,6 +552,14 @@
 					this.plant.uproot();
 					
 				}
+				
+				// show seed
+				
+				this.plant.seed.show( { parent: _GUI.layers.ui } );
+				
+				// cursor
+				
+				_GUI.container.apply_css( 'cursor', 'pointer' );
 				
 			}
 			

@@ -46,17 +46,15 @@
 		_Button.Instance.prototype.constructor = _Button.Instance;
 		_Button.Instance.prototype.supr = _UIElement.Instance.prototype;
 		
-		_Button.Instance.prototype.update_form = update_form;
-		_Button.Instance.prototype.form_circle = form_circle;
-		_Button.Instance.prototype.form_rectangle = form_rectangle;
-		
 		_Button.Instance.prototype.enter = enter;
 		_Button.Instance.prototype.leave = leave;
+		_Button.Instance.prototype.active = active;
 		_Button.Instance.prototype.trigger = trigger;
 		_Button.Instance.prototype.cooldown = cooldown;
 		
 		_Button.Instance.prototype.themes = {};
 		_Button.Instance.prototype.themes.core = theme_core;
+		_Button.Instance.prototype.themes.white = theme_white;
 		
 	}
 	
@@ -74,6 +72,8 @@
 		// handle parameters
 		
 		parameters = parameters || {};
+		
+		parameters.theme = parameters.theme || 'white';
 		
 		// prototype constructor
 		
@@ -99,34 +99,18 @@
 			this.image = parameters.image;
 			
 		}
-		else {
-			
-			if ( typeof parameters.image === 'string' ) {
+		else if ( typeof parameters.image === 'string' ) {
 				
-				imgDomElement = new Image();
-				imgDomElement.crossOrigin = '';
-				imgDomElement.src = parameters.image;
-				imgDomElement.onload = function () {
+			this.image = new _UIElement.Instance( {
+				id: this.id + '_image',
+				elementType: 'img',
+				src: parameters.image,
+				imgLoadCallback: function () {
 					me.image.align_once( me.image.alignment || 'center' );
-				}
-				
-			}
-			else if ( main.is_image( parameters.image ) ) {
-				
-				imgDomElement = parameters.image;
-				
-			}
-			
-			if ( typeof imgDomElement !== 'undefined' ) {
-				
-				this.image = new _UIElement.Instance( {
-					id: this.id + '_image',
-					domElement: imgDomElement,
-					width: main.is_number( parameters.imageWidth ) ? parameters.imageWidth : parameters.imageSize,
-					height: main.is_number( parameters.imageHeight ) ? parameters.imageHeight : parameters.imageSize
-				} );
-			
-			}
+				},
+				width: main.is_number( parameters.imageWidth ) ? parameters.imageWidth : parameters.imageSize,
+				height: main.is_number( parameters.imageHeight ) ? parameters.imageHeight : parameters.imageSize
+			} );
 			
 		}
 		
@@ -168,7 +152,7 @@
 		
 		// bubble
 		
-		this.bubble = ( typeof parameters.bubble === 'boolean' ? parameters.bubble : true );
+		this.bubble = ( typeof parameters.bubble === 'boolean' ? parameters.bubble : false );
 		
 		// cooldown
 		
@@ -178,23 +162,11 @@
 		
 		this.parent = undefined;
 		
-		// form, default to rectangle
-		
-		if ( parameters.circle === true ) {
-			
-			this.form_circle();
-		
-		}
-		else {
-			
-			this.form_rectangle();
-			
-		}
-		
 		// events
 		
 		this.domElement.on( 'mouseenter.btn touchenter.btn', function ( e ) { me.enter( e ); } );
 		this.domElement.on( 'mouseleave.btn touchleave.btn', function ( e ) { me.leave( e ); } );
+		this.domElement.on( 'mousedown touchstart', function ( e ) { me.active( e ) } );
         this.domElement.on( 'mouseup.btn touchend.btn', function ( e ) { me.trigger( e ); } );
 		
 	}
@@ -227,15 +199,27 @@
     
     =====================================================*/
 	
+	function active ( e ) {
+		
+		if ( e && this.bubble === false ) {
+			
+			e.preventDefault();
+			e.stopPropagation();
+			return false;
+			
+		}
+		
+	}
+	
 	function trigger ( e ) {
 		
 		if ( typeof this.callback !== 'undefined' && this.enabled === true && this.hidden !== true && this.isVisible === true ) {
 			
-			this.callback.apply( this.context, this.data );
+			this.callback.apply( this.context || window, this.data );
 			
 		}
 		
-		if ( this.bubble === false ) {
+		if ( e && this.bubble === false ) {
 			
 			e.preventDefault();
 			e.stopPropagation();
@@ -256,70 +240,6 @@
 			requestTimeout( function () { me.enable(); }, this.timeCooldown );
 			
 		}
-		
-	}
-	
-	/*===================================================
-    
-    form
-    
-    =====================================================*/
-	
-	function update_form () {
-		
-		if ( this.form === 'circle' ) {
-			
-			this.form_circle();
-			
-		}
-		
-	}
-	
-	function form_circle () {
-		
-		// if width set explicitly
-		
-		if ( this.width !== 0 ) {
-			
-			this.form = 'circle';
-			
-			var width = this.width,
-				height = this.height,
-				max = Math.max( width, height ),
-				maxHalf = max * 0.5;
-			
-			// match width/height
-			
-			this.width = this.height = max;
-			
-			// set radius to half
-			
-			this.apply_css( "border-radius", maxHalf + "px" );
-			
-		}
-		
-	}
-	
-	function form_rectangle () {
-		
-		this.form = 'rectangle';
-		
-		// if either dimension is set when the other is not
-		
-		if ( this.width !== 0 && this.height === 0 ) {
-			
-			this.height = this.width;
-			
-		}
-		if ( this.width === 0 && this.height !== 0 ) {
-			
-			this.width = this.height;
-			
-		}
-		
-		// set radius to base
-		
-		this.apply_css( "border-radius", 0 );
 		
 	}
 	
@@ -350,7 +270,6 @@
 		
 		cssmap[ "font-size" ] = or[ "font-size" ] || "24px";
 		cssmap[ "font-family" ] = or[ "font-family" ] || "'OpenSansRegular', Helmet, Freesans, sans-serif";
-		cssmap[ "box-shadow" ] = or[ "box-shadow" ] || "-2px 2px 10px rgba(0, 0, 0, 0.15)";
 		
 		// enabled state
 		
@@ -359,9 +278,6 @@
 		enabled = theme.enabled = theme.enabled || {};
 		
 		enabled[ "cursor" ] = or[ "cursor" ] || "pointer";
-		enabled[ "color" ] = or[ "color" ] || "#333333";
-		enabled[ "background-color" ] = or[ "background-color" ] || "#eeeeee";
-		//enabled[ "background-image" ] = or[ "background-image" ] || "linear-gradient(top, #eeeeee 30%, #cccccc 100%)";
 		
 		// disabled state
 		
@@ -370,9 +286,6 @@
 		disabled = theme.disabled = theme.disabled || {};
 		
 		disabled[ "cursor" ] = or[ "cursor" ] || "default";
-		disabled[ "color" ] = or[ "color" ] || "#777777";
-		disabled[ "background-color" ] = or[ "background-color" ] || "#cccccc";
-		//disabled[ "background-image" ] = or[ "background-image" ] || "linear-gradient(top, #cccccc 30%, #aaaaaa 100%)";
 		
 		// enter state
 		
@@ -381,8 +294,26 @@
 		enter = theme.enter = theme.enter || {};
 		
 		enter[ "color" ] = or[ "color" ] || "#222222";
+		
+		return theme;
+		
+	}
+	
+	function theme_white ( overrides ) {
+		
+		var supr = _Button.Instance.prototype.supr,
+			theme = ( supr.themes[ 'white' ] || supr.themes.core ).call( this, overrides ),
+			enter,
+			leave,
+			or;
+		
+		// enter state
+		
+		or = overrides.enter || {};
+		
+		enter = theme.enter = theme.enter || {};
+		
 		enter[ "background-color" ] = or[ "background-color" ] || "#ffffff";
-		//enter[ "background-image" ] = or[ "background-image" ] || "linear-gradient(top, #ffffff 30%, #dddddd 100%)";
 		
 		return theme;
 		

@@ -11,11 +11,24 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/utils/ObjectHelper.js",
 		_ObjectHelper = {},
+		_MathHelper,
 		utilVec31Follow,
 		utilVec32Follow,
+		utilVec31Bounds,
+		utilVec32Bounds,
+		utilVec31Dimensions,
+		utilVec31Axis,
 		utilVec31Offset,
 		utilVec31OffsetRot,
-		utilVec31Axis,
+		utilVec32OffsetRot,
+		utilVec33OffsetRot,
+		utilVec34OffsetRot,
+		utilVec35OffsetRot,
+		utilVec36OffsetRot,
+		utilVec37OffsetRot,
+		utilVec38OffsetRot,
+		utilVec39OffsetRot,
+		utilVec41OffsetRot,
 		utilQ1Follow,
 		utilQ2Follow,
 		utilQ3Follow,
@@ -24,6 +37,7 @@
 		utilQ1CenterRot,
 		utilQ2CenterRot,
 		utilMat41Follow,
+		utilMat41Bounds,
 		utilMat41Center,
 		utilMat41CenterRot;
     
@@ -37,6 +51,9 @@
 	_ObjectHelper.extract_parents_from_objects = extract_parents_from_objects;
 	
 	_ObjectHelper.object_apply_matrix = object_apply_matrix;
+	_ObjectHelper.object_push_bounds = object_push_bounds;
+	
+	_ObjectHelper.dimensions = dimensions;
 	
 	_ObjectHelper.center_offset = center_offset;
 	_ObjectHelper.object_center = object_center;
@@ -47,7 +64,14 @@
 	
 	_ObjectHelper.object_follow_object = object_follow_object;
 	
-	main.asset_register( assetPath, { data: _ObjectHelper } );
+	main.asset_register( assetPath, {
+		data: _ObjectHelper,
+		requirements: [
+			"assets/modules/utils/MathHelper.js"
+		],
+		callbacksOnReqs: init_internal,
+		wait: true
+	} );
 	
 	/*===================================================
     
@@ -55,17 +79,29 @@
     
     =====================================================*/
 	
-	init_internal();
-	
-	function init_internal () {
+	function init_internal ( mh ) {
 		console.log('internal object helper');
+		_MathHelper = mh;
+		
 		// utility
 		
 		utilVec31Follow = new THREE.Vector3();
 		utilVec32Follow = new THREE.Vector3();
+		utilVec31Bounds = new THREE.Vector3();
+		utilVec32Bounds = new THREE.Vector3();
+		utilVec31Dimensions = new THREE.Vector3();
+		utilVec31Axis = new THREE.Vector3();
 		utilVec31Offset = new THREE.Vector3();
 		utilVec31OffsetRot = new THREE.Vector3();
-		utilVec31Axis = new THREE.Vector3();
+		utilVec32OffsetRot = new THREE.Vector3();
+		utilVec33OffsetRot = new THREE.Vector3();
+		utilVec34OffsetRot = new THREE.Vector3();
+		utilVec35OffsetRot = new THREE.Vector3();
+		utilVec36OffsetRot = new THREE.Vector3();
+		utilVec37OffsetRot = new THREE.Vector3();
+		utilVec38OffsetRot = new THREE.Vector3();
+		utilVec39OffsetRot = new THREE.Vector3();
+		utilVec41OffsetRot = new THREE.Vector4();
 		utilQ1Follow = new THREE.Quaternion();
 		utilQ2Follow = new THREE.Quaternion();
 		utilQ3Follow = new THREE.Quaternion();
@@ -74,6 +110,7 @@
 		utilQ1CenterRot = new THREE.Quaternion();
 		utilQ2CenterRot = new THREE.Quaternion();
 		utilMat41Follow = new THREE.Matrix4();
+		utilMat41Bounds = new THREE.Matrix4();
 		utilMat41Center = new THREE.Matrix4();
 		utilMat41CenterRot = new THREE.Matrix4();
 		
@@ -107,7 +144,7 @@
 		var i, l,
 			children;
 		
-		cascade = cascade || [];
+		cascade = main.ensure_array( cascade );
 			
 		if ( typeof object !== 'undefined' ) {
 			
@@ -215,6 +252,115 @@
 		
 	}
 	
+	function dimensions ( object, ignoreScale ) {
+		
+		var mesh = object instanceof THREE.Mesh ? object : false,
+			geometry = mesh ? mesh.geometry : object,
+			dimensions = utilVec31Dimensions,
+			bbox;
+		
+		// if needs calculation
+		
+		if ( typeof geometry.boundingBox !== 'undefined' ) {
+			geometry.computeBoundingBox();
+		}
+		
+		bbox = geometry.boundingBox;
+		
+		if ( bbox ) {
+			
+			// get original dimensions
+			
+			dimensions.set( bbox.max.x - bbox.min.x, bbox.max.y - bbox.min.y, bbox.max.z - bbox.min.z );
+			
+			// scale to mesh's scale
+			
+			if ( ignoreScale !== true && mesh ) {
+				
+				dimensions.multiplySelf( mesh.scale );
+				
+			}
+			
+		}
+		else {
+			
+			dimensions.set( 0, 0, 0 );
+			
+		}
+		
+		return dimensions;
+		
+	}
+	
+	/*===================================================
+    
+    bounds
+    
+    =====================================================*/
+	
+	function object_push_bounds ( object, bounds ) {
+		
+		var geometry = object instanceof THREE.Mesh ? object.geometry : object,
+			objectWorldMatrix = object instanceof THREE.Mesh ? object.matrixWorld : utilMat41Bounds,
+			objectBounds,
+			objectMin = utilVec31Bounds,
+			objectMax = utilVec32Bounds,
+			min = bounds.min,
+			max = bounds.max;
+		
+		if ( !geometry.boundingBox ) {
+			
+			geometry.computeBoundingBox();
+			
+		}
+		
+		objectBounds = geometry.boundingBox;
+		objectMin.copy( objectBounds.min );
+		objectMax.copy( objectBounds.max );
+		
+		objectWorldMatrix.multiplyVector3( objectMin );
+		objectWorldMatrix.multiplyVector3( objectMax );
+		
+		if ( objectMin.x < min.x ) {
+			
+			min.x = objectMin.x;
+			
+		}
+		
+		if ( objectMax.x > max.x ) {
+			
+			max.x = objectMax.x;
+			
+		}
+		
+		if ( objectMin.y < min.y ) {
+			
+			min.y = objectMin.y;
+			
+		}
+		
+		if ( objectMax.y > max.y ) {
+			
+			max.y = objectMax.y;
+			
+		}
+		
+		if ( objectMin.z < min.z ) {
+			
+			min.z = objectMin.z;
+			
+		}
+		
+		if ( objectMax.z > max.z ) {
+			
+			max.z = objectMax.z;
+			
+		}
+		
+		return bounds;
+		
+	}
+	
 	/*===================================================
     
     center offset
@@ -286,7 +432,7 @@
 		
 		// find dist between current axis up and average of normals
 		
-		dist = Math.max( -1, Math.min( 1, axisFrom.dot( axisTo ) ) );
+		dist = _MathHelper.clamp( axisFrom.dot( axisTo ), -1, 1 );
 		
 		// if up axes are not same
 		
@@ -326,9 +472,20 @@
 		var i, l,
 			geometry = object instanceof THREE.Mesh ? object.geometry : object,
 			faces = geometry.faces,
+			vertices = geometry.vertices,
 			face,
-			normal,
-			normalAvg = utilVec31OffsetRot.set( 0, 0, 0 ),
+			vpa, vpb, vpc, vpd,
+			nvpa = utilVec31OffsetRot,
+			nvpb = utilVec32OffsetRot,
+			nvpc = utilVec33OffsetRot,
+			nvpd = utilVec34OffsetRot,
+			len = Math.sqrt( 1 / 2 ),
+			expectedPosA = utilVec35OffsetRot.set( len, -len, 0 ), // ( -len, len, 0 )
+			expectedPosB = utilVec36OffsetRot.set( len, len, 0 ), // ( -len, -len, 0 )
+			expectedPosC = utilVec37OffsetRot.set( -len, len, 0 ), // ( len, -len, 0 )
+			expectedPosD = utilVec38OffsetRot.set( -len, -len, 0 ), // ( len, len, 0 )
+			v4VEAvg = utilVec41OffsetRot.set( 0, 0, 0, 0 ),
+			normalAvg = utilVec39OffsetRot.set( 0, 0, 0 ),
 			ca = shared.cardinalAxes,
 			offset;
 		
@@ -338,15 +495,36 @@
 			
 			face = faces[ i ];
 			
-			normal = face.normal;
+			normalAvg.addSelf( face.normal );
 			
-			normalAvg.addSelf( normal );
+			vpa = vertices[ face.a ].position;
+			vpb = vertices[ face.b ].position;
+			vpc = vertices[ face.c ].position;
+			
+			nvpa.copy( vpa ).normalize();
+			nvpb.copy( vpb ).normalize();
+			nvpc.copy( vpc ).normalize();
+			
+			v4VEAvg.addSelf( q_to_axis( nvpa, expectedPosA ) );
+			v4VEAvg.addSelf( q_to_axis( nvpb, expectedPosB ) );
+			v4VEAvg.addSelf( q_to_axis( nvpc, expectedPosC ) );
+			
+			if ( face instanceof THREE.Face4 ) {
+				
+				vpd = vertices[ face.d ].position;
+				
+				nvpd.copy( vpd ).normalize();
+				v4VEAvg.addSelf( q_to_axis( nvpd, expectedPosD ) );
+				
+			}
 			
 		}
 		
-		// find average of normals
+		// find averages
 		
-		normalAvg.divideScalar( faces.length );
+		normalAvg.normalize();
+		
+		v4VEAvg.normalize();
 		
 		// handle axes
 		// use physics axis if available, or default to global up
@@ -358,6 +536,39 @@
 		
 		offset = q_to_axis( axisUp, normalAvg, axisForward );
 		
+		// rotate offset to re-orient faces as square (not diamond)
+		// TODO: seems to tilt slightly off the more this rotates
+		offset.multiplySelf( v4VEAvg );
+		/*
+		var vectors = _MathHelper.get_orthonormal_vectors( normalAvg.clone() ),
+			xlg = new THREE.Geometry(),
+			ylg = new THREE.Geometry(),
+			zlg = new THREE.Geometry(),
+			xline,
+			yline,
+			zline;
+		
+		offset.multiplyVector3( vectors.v1 );
+		offset.multiplyVector3( vectors.v2 );
+		offset.multiplyVector3( vectors.v3 );
+		
+		xlg.vertices.push( new THREE.Vertex( new THREE.Vector3() ) );
+		xlg.vertices.push( new THREE.Vertex( vectors.v3.multiplyScalar( 100 ) ) );
+		
+		ylg.vertices.push( new THREE.Vertex( new THREE.Vector3() ) );
+		ylg.vertices.push( new THREE.Vertex( vectors.v1.multiplyScalar( 100 ) ) );
+		
+		zlg.vertices.push( new THREE.Vertex( new THREE.Vector3() ) );
+		zlg.vertices.push( new THREE.Vertex( vectors.v2.multiplyScalar( 100 ) ) );
+		
+		xline = new THREE.Line( xlg, new THREE.LineBasicMaterial( { color: 0xFF0000, linewidth: 8 } ), THREE.LinePieces ),
+		yline = new THREE.Line( ylg, new THREE.LineBasicMaterial( { color: 0x00FF00, linewidth: 8 } ), THREE.LinePieces ),
+		zline = new THREE.Line( zlg, new THREE.LineBasicMaterial( { color: 0x0000FF, linewidth: 8 } ), THREE.LinePieces );
+		
+		object.add( xline );
+		object.add( yline );
+		object.add( zline );
+		*/
 		return offset;
 		
 	}
@@ -495,13 +706,17 @@
 				
 			}
 			
-			leaderQWorld.multiplyVector3( followerOffsetPos );
+			if ( follower.parent !== leader ) {
+				
+				leaderQWorld.multiplyVector3( followerOffsetPos );
+				
+			}
 			
 		}
 		
 		// if parents are not the same
 		
-		if ( follower.parent instanceof THREE.Object3D && follower.parent !== leader.parent ) {
+		if ( follower.parent instanceof THREE.Object3D && follower.parent !== leader && follower.parent !== leader.parent ) {
 			
 			// get inverse position and rotation
 			
@@ -535,7 +750,11 @@
 		
 		// position
 		
-		followerP.addSelf( leaderPWorld );
+		if ( follower.parent !== leader ) {
+			
+			followerP.addSelf( leaderPWorld );
+			
+		}
 		
 		if ( skipOffsetPos !== true ) {
 			
@@ -545,7 +764,11 @@
 		
 		// rotation
 		
-		followerQ.multiplySelf( leaderQWorld );
+		if ( follower.parent !== leader ) {
+			
+			followerQ.multiplySelf( leaderQWorld );
+			
+		}
 		
 		if ( skipOffsetRot !== true ) {
 			

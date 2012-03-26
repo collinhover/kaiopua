@@ -17,7 +17,8 @@
 		_Physics,
 		_Field,
 		_ObjectMaker,
-		_Water;
+		_Water,
+		_Sky;
 	
 	/*===================================================
     
@@ -34,7 +35,8 @@
 			"assets/modules/core/Physics.js",
 			"assets/modules/farming/Field.js",
 			"assets/modules/utils/ObjectMaker.js",
-			"assets/modules/env/Water.js"
+			"assets/modules/env/Water.js",
+			"assets/modules/env/Sky.js",
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -46,7 +48,7 @@
     
     =====================================================*/
 	
-	function init_internal ( g, world, m, physics, f, om, w ) {
+	function init_internal ( g, world, m, physics, f, om, w, sky ) {
 		console.log('internal world island');
 		
 		// assets
@@ -58,6 +60,7 @@
 		_Field = f;
 		_ObjectMaker = om;
 		_Water = w;
+		_Sky = sky;
 		
 		_WorldIsland.Instance = WorldIsland;
 		_WorldIsland.Instance.prototype = new _World.Instance();
@@ -122,7 +125,7 @@
 			materials: new THREE.MeshLambertMaterial( { color: 0xFFF7E0, ambient: 0xFFF7E0, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading
         });
-		
+		me.parts.head.position.set( 0, 0, 20 );
 		me.parts.body.add( me.parts.head );
 		
 		me.parts.tail = new _Model.Instance({
@@ -142,7 +145,11 @@
 		
 		me.add( me.parts.waterRing );
 		
-		// sky
+		/*===================================================
+		
+		sky
+		
+		=====================================================*/
 		
 		// sun/moon
 		
@@ -167,7 +174,24 @@
 		
 		me.parts.sunmoon.add( me.parts.sunmoonLight );
 		
-		// home
+		// sky
+		
+		me.parts.sky = new _Sky.Instance( {
+			world: me.parts.body,
+			numClouds: 20,
+			cloudDistanceFromSurfaceMin: me.parts.sunmoon.position.length() - 2000,
+			cloudDistanceFromSurfaceMax: me.parts.sunmoon.position.length() + 500,
+			yThetaMin: Math.PI * 0.2,
+			yThetaMax: Math.PI * 0.8
+		} );
+		
+		me.add( me.parts.sky );
+		
+		/*===================================================
+		
+		home
+		
+		=====================================================*/
 		
 		me.parts.home = new _Model.Instance();
 		
@@ -182,6 +206,7 @@
 			},
 			materials:  new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
+			center: true
         });
 		
 		me.parts.home.add( me.parts.hill );
@@ -195,6 +220,7 @@
 			},
 			materials:  new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
+			center: true
         });
 		
 		me.parts.home.add( me.parts.steps );	
@@ -207,7 +233,8 @@
 				bodyType: 'mesh'
 			},
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
-			shading: THREE.SmoothShading
+			shading: THREE.SmoothShading,
+			center: true
         });
 		
 		me.parts.home.add( me.parts.hut );
@@ -218,6 +245,7 @@
             geometry: main.get_asset_data("assets/models/Banana_Leaf_Door.js"),
 			materials:  new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
+			center: true,
 			doubleSided: true
         });
 		
@@ -229,14 +257,16 @@
             geometry: main.get_asset_data("assets/models/Surfboard.js"),
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading,
-			physics: {
-				bodyType: 'box'
-			}
+			center: true
         });
 		
 		me.parts.home.add( me.parts.surfboard );	
 		
-		// volcano
+		/*===================================================
+		
+		volcano
+		
+		=====================================================*/
 		
 		me.parts.volcano = new _Model.Instance();
 		
@@ -250,7 +280,8 @@
 			shading: THREE.SmoothShading,
 			physics: {
 				bodyType: 'mesh'
-			}
+			},
+			center: true
         });
 		
 		me.parts.volcano.add( me.parts.volcanoLarge );
@@ -263,7 +294,8 @@
 			shading: THREE.SmoothShading,
 			physics: {
 				bodyType: 'mesh'
-			}
+			},
+			center: true
         });
 		
 		me.parts.volcano.add( me.parts.volcanoSmall );
@@ -276,7 +308,8 @@
 			shading: THREE.SmoothShading,
 			physics: {
 				bodyType: 'mesh'
-			}
+			},
+			center: true
         });
 		
 		me.parts.volcano.add( me.parts.volcanoRocks001 );
@@ -287,7 +320,8 @@
 			shading: THREE.SmoothShading,
 			physics: {
 				bodyType: 'mesh'
-			}
+			},
+			center: true
         });
 		
 		me.parts.volcano.add( me.parts.volcanoRocks002 );
@@ -298,7 +332,8 @@
 			shading: THREE.SmoothShading,
 			physics: {
 				bodyType: 'mesh'
-			}
+			},
+			center: true
         });
 		
 		me.parts.volcano.add( me.parts.volcanoRocks003 );
@@ -309,7 +344,8 @@
 			shading: THREE.SmoothShading,
 			physics: {
 				bodyType: 'mesh'
-			}
+			},
+			center: true
         });
 		
 		me.parts.volcano.add( me.parts.volcanoRocks004 );
@@ -320,12 +356,17 @@
 			shading: THREE.SmoothShading,
 			physics: {
 				bodyType: 'mesh'
-			}
+			},
+			center: true
         });
 		
 		me.parts.volcano.add( me.parts.volcanoRocks005 );
 		
-		// trees
+		/*===================================================
+		
+		trees
+		
+		=====================================================*/
 		
 		me.parts.trees = new _Model.Instance();
 		

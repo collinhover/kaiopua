@@ -48,6 +48,7 @@
 			wavesAmplitude,
 			wavesFrequency,
 			wavesColor,
+			wavesAmbient,
 			wavesSize,
 			wavesVertsNum,
 			vvAmpMax,
@@ -81,6 +82,7 @@
 		wavesInfo = this.waves.info = {};
 		wavesInfo.time = 0;
 		wavesColor = parameters.wavesColor || 0x0bdafa;
+		wavesAmbient = parameters.wavesAmbient || 0x3492D4;
 		wavesSize = parameters.wavesSize || 10000;
 		wavesInfo.vertsW = wavesVertsW = parameters.wavesVertsW || 50;
 		wavesInfo.vertsH = wavesVertsH = parameters.wavesVertsH || 50;
@@ -132,11 +134,11 @@
         
         // waves material
 		
-		wavesMaterial = new THREE.MeshPhongMaterial( { 
-			ambient: wavesColor, 
+		wavesMaterial = new THREE.MeshLambertMaterial( { 
+			ambient: wavesAmbient, 
 			color: wavesColor,
-			specular: 0x00daff, 
-			shininess: 10, 
+			//specular: 0x00daff, 
+			//shininess: 10, 
 			shading: THREE.SmoothShading,
 			transparent: true,
 			opacity: 0.8

@@ -20,252 +20,428 @@
     
     =====================================================*/
 	
-	main.asset_register( assetPath, { data: _UIElement });
+	main.asset_register( assetPath, { 
+		data: _UIElement,
+		requirements: [
+			"js/lib/jquery.transform2d.min.js",
+			"js/lib/jquery.tipTip.min.js"
+		],
+		callbacksOnReqs: init_internal,
+		wait: true
+	} );
 	
 	/*===================================================
     
     internal init
     
     =====================================================*/
+	
+	function init_internal () {
+		console.log('internal ui element', _UIElement);
+		// public
 		
-	// public
-	
-	_UIElement.generate_dom_element = generate_dom_element;
-	_UIElement.generate_tool_tip = generate_tool_tip;
-	_UIElement.supported_css_property = supported_css_property;
-	_UIElement.supported_css_value = supported_css_value;
-	_UIElement.str_to_camel = str_to_camel;
-	_UIElement.str_from_camel = str_from_camel;
-	
-	// css special cases
-	
-	_UIElement.cssSpecialCases = {};
-	
-	_UIElement.cssSpecialCases.pointerEvents = _UIElement.supported_css_property( 'pointer-events' );
-	_UIElement.cssSpecialCases.lineargradient = ( function () {
+		_UIElement.generate_dom_element = generate_dom_element;
+		_UIElement.generate_tool_tip = generate_tool_tip;
+		_UIElement.supported_css_property = supported_css_property;
+		_UIElement.supported_css_value = supported_css_value;
+		_UIElement.str_to_camel = str_to_camel;
+		_UIElement.str_from_camel = str_from_camel;
 		
-		// get correct linear gradient value name
+		// css special cases
 		
-		var test = document.createElement('div'),
-			prefixes = ' -webkit- -moz- -o- -ms- -khtml- '.split(' '),
-			strBGImg = 'background-image:',
-			strLinGrad = 'linear-gradient',
-			strGradVal = '(left top,#9f9, white);',
-			strStyle,
-			index,
-			strPropertyName = strLinGrad;
+		_UIElement.cssSpecialCases = {};
+		
+		_UIElement.cssSpecialCases.transform = _UIElement.supported_css_property( 'transform' );
+		_UIElement.cssSpecialCases.transformOrigin = _UIElement.supported_css_property( 'transform-origin' );
+		_UIElement.cssSpecialCases.pointerEvents = _UIElement.supported_css_property( 'pointer-events' );
+		_UIElement.cssSpecialCases.lineargradient = ( function () {
+			
+			// get correct linear gradient value name
+			
+			var test = document.createElement('div'),
+				prefixes = ' -webkit- -moz- -o- -ms- -khtml- '.split(' '),
+				strBGImg = 'background-image:',
+				strLinGrad = 'linear-gradient',
+				strGradVal = '(left top,#9f9, white);',
+				strStyle,
+				index,
+				strPropertyName = strLinGrad;
 
-		test.style.cssText = (strBGImg + prefixes.join( ( strLinGrad + strGradVal ) + strBGImg ) ).slice( 0, -strBGImg.length );
-		
-		strStyle = test.style.backgroundImage.toString();
-		
-		index = strStyle.indexOf( strLinGrad );
-		
-		if ( index !== -1 ) {
+			test.style.cssText = (strBGImg + prefixes.join( ( strLinGrad + strGradVal ) + strBGImg ) ).slice( 0, -strBGImg.length );
 			
-			strPropertyName = strStyle.substr( 0, index + strLinGrad.length );
+			strStyle = test.style.backgroundImage.toString();
 			
-		}
-		
-		return strPropertyName;
-		
-	} () );
-	
-	// instance
-	
-	_UIElement.Instance = UIElement;
-	
-	_UIElement.Instance.prototype.add = add;
-	_UIElement.Instance.prototype.remove = remove;
-	
-	_UIElement.Instance.prototype.append_to = append_to;
-	_UIElement.Instance.prototype.add_do_remove = add_do_remove;
-	
-	_UIElement.Instance.prototype.enable = enable;
-	_UIElement.Instance.prototype.disable = disable;
-	
-	_UIElement.Instance.prototype.enable_visual = enable_visual;
-	_UIElement.Instance.prototype.disable_visual = disable_visual;
-	
-	_UIElement.Instance.prototype.set_position = set_position;
-	_UIElement.Instance.prototype.align = align;
-	_UIElement.Instance.prototype.align_once = align_once;
-	
-	_UIElement.Instance.prototype.show = show;
-	_UIElement.Instance.prototype.hide = hide;
-	
-	_UIElement.Instance.prototype.show_children = show_children;
-	_UIElement.Instance.prototype.hide_children = hide_children;
-	_UIElement.Instance.prototype.copy_children_and_exclude = copy_children_and_exclude;
-	_UIElement.Instance.prototype.get_children_showing = get_children_showing;
-	_UIElement.Instance.prototype.get_children_hidden = get_children_hidden;
-	
-	_UIElement.Instance.prototype.set_pointer_events = set_pointer_events;
-	
-	_UIElement.Instance.prototype.make_fullwindow = make_fullwindow;
-	
-	_UIElement.Instance.prototype.generate_dom_element = generate_dom_element;
-	_UIElement.Instance.prototype.generate_tool_tip = generate_tool_tip;
-	_UIElement.Instance.prototype.apply_css = apply_css;
-	
-	_UIElement.Instance.prototype.generate_theme = generate_theme;
-	
-	_UIElement.Instance.prototype.themes = {};
-	_UIElement.Instance.prototype.themes.core = theme_core;
-	
-	Object.defineProperty( _UIElement.Instance.prototype, 'parent', { 
-		get : function () { return this._parent; },
-		set : function ( parent ) { this.append_to( parent ); }
-	} );
-	
-	Object.defineProperty( _UIElement.Instance.prototype, 'enabledSelf', { 
-		get : function () { return this._enabled; }
-	} );
-	
-	Object.defineProperty( _UIElement.Instance.prototype, 'enabled', { 
-		get : function () { return ( this._enabledOverride === false ? this._enabledOverride : ( this.enabledSelf !== false && this.parent instanceof _UIElement.Instance ? this.parent.enabled : this.enabledSelf ) ); },
-		set : function ( state ) {
+			index = strStyle.indexOf( strLinGrad );
 			
-			if ( state === true ) {
+			if ( index !== -1 ) {
 				
-				this.enable();
+				strPropertyName = strStyle.substr( 0, index + strLinGrad.length );
+				
+			}
+			
+			return strPropertyName;
+			
+		} () );
+		
+		// firefox <12 css3 transform bug, see https://bugzilla.mozilla.org/show_bug.cgi?id=591718, fixed as of Jan 2012
+		
+		_UIElement.transformCSSUpdateMissing = ( function () {
+			
+			var domElement = $( document.createElement('div') ),
+				leftExpected = 100,
+				topExpected = 100,
+				bodyOffset,
+				offset,
+				leftActual,
+				topActual,
+				result;
+			
+			// try transform
+			
+			domElement.css( {
+				'width': '100px',
+				'height': '100px',
+				'position': 'absolute',
+				'transform': 'translate(' + leftExpected + 'px, ' + topExpected + 'px)'
+			} );
+			
+			$( document.body ).prepend( domElement );
+			
+			offset = domElement.position();
+			leftActual = offset.left;
+			topActual = offset.top;
+			
+			result = ( leftActual === leftExpected && topActual === topExpected );
+			
+			domElement.detach();
+			
+			return result;
+
+		} () );
+		
+		// fix for firefox <12 css3 transform bug
+		
+		_UIElement.matrix_from_css_str = function ( str ) {
+			
+			var strArr = str.match(/matrix\(([^\)]+)\)/i)[1].split(','),
+				mat = new Matrix.create( [
+					[ +strArr[0], +strArr[2], parseFloat( strArr[4] ) ],
+					[ +strArr[1], +strArr[3], parseFloat( strArr[5] ) ],
+					[ 0, 0, 1 ]
+				] );
+		
+			return mat;
+			
+		};
+		
+		_UIElement.transformIdentityMatrix = _UIElement.matrix_from_css_str( 'matrix(1,0,0,1,0,0)' );
+		
+		_UIElement.translate_matrix_2d = function ( mat, tx, ty ) {
+			
+			var elements = mat.elements;
+			
+			elements[ 0 ][ 2 ] += tx;
+			elements[ 1 ][ 2 ] += ty;
+			
+			return mat;
+		};
+		
+		_UIElement.get_local_transformation_matrix = function ( domElement ) {
+			
+			var element = domElement instanceof jQuery ? domElement[ 0 ] : domElement,
+				transformProp = _UIElement.cssSpecialCases.transform,
+				originProp = _UIElement.cssSpecialCases.transformOrigin,
+				style = window.getComputedStyle( element, null ),
+				transformStyle = style[ transformProp ],
+				originStyle = style[ originProp ],
+				transformMatrix = ( transformStyle ? _UIElement.matrix_from_css_str( transformStyle ) : _UIElement.transformIdentityMatrix.dup() ),
+				originMatrix,
+				result;
+			
+			// finding element's local transformation matrix based on the transform style
+			
+			// Firefox gives 50% 50% when there is no transform!? and pixels (50px 30px) otherwise
+			if ( !originStyle || originStyle.indexOf('%') !== -1 ) {
+				
+				originStyle = [ 0, 0 ];
 				
 			}
 			else {
 				
-				this.disable();
+				originStyle = originStyle.replace(/px/gi, '').split(' ');
 				
 			}
 			
-		}
-	} );
-	
-	Object.defineProperty( _UIElement.Instance.prototype, 'width', { 
-		get : function () { return this.domElement.width(); },
-		set : function ( width ) {
+			originMatrix = _UIElement.matrix_from_css_str( 'matrix(1,0,0,1,' + originStyle[ 0 ] + ',' + originStyle[ 1 ] + ')' );
 			
-			this.domElement.width( Math.round( width ) );
+			result = originMatrix.multiply( transformMatrix ).multiply( originMatrix.inverse() );
 			
-		}
-	} );
-
-	Object.defineProperty( _UIElement.Instance.prototype, 'height', { 
-		get : function () { return this.domElement.height(); },
-		set : function ( height ) {
+			return _UIElement.translate_matrix_2d( result, -window.pageXOffset, -window.pageYOffset );
 			
-			this.domElement.height( Math.round( height ) );
+		};
 		
-		}
-	} );
-	
-	Object.defineProperty( _UIElement.Instance.prototype, 'widthHalf', { 
-		get : function () { return this.width * 0.5; }
-	} );
-
-	Object.defineProperty( _UIElement.Instance.prototype, 'heightHalf', { 
-		get : function () { return this.height * 0.5; }
-	} );
-	
-	Object.defineProperty( _UIElement.Instance.prototype, 'outerWidth', { 
-		get : function () { return this.width + this.spacingLeft + this.spacingRight; }
-	} );
-
-	Object.defineProperty( _UIElement.Instance.prototype, 'outerHeight', { 
-		get : function () { return this.height + this.spacingTop + this.spacingBottom; }
-	} );
-	
-	Object.defineProperty( _UIElement.Instance.prototype, 'outerWidthHalf', { 
-		get : function () { return this.outerWidth * 0.5; }
-	} );
-
-	Object.defineProperty( _UIElement.Instance.prototype, 'outerHeightHalf', { 
-		get : function () { return this.outerHeight * 0.5; }
-	} );
-	
-	Object.defineProperty( _UIElement.Instance.prototype, 'x', { 
-		get : function () { return this._x; },
-		set : function ( x ) { 
+		_UIElement.transform_css_update = function ( uielement ) {
 			
-			this.set_position( x, this._y );
-		
-		}
-	} );
-	
-	Object.defineProperty( _UIElement.Instance.prototype, 'y', { 
-		get : function () { return this._y; },
-		set : function ( y ) { 
+			var domElement,
+				width,
+				height,
+				transformationMatrix,
+				topleft,
+				topright,
+				bottomleft,
+				bottomright,
+				bbox;
 			
-			this.set_position( this._x, y );
-		
-		}
-	} );
-	
-	Object.defineProperty( _UIElement.Instance.prototype, 'alignment', { 
-		get : function () { return this._alignment; },
-		set : function ( location ) {
+			// if update needed
 			
-			if ( typeof location === 'string' ) {
+			if ( _UIElement.transformCSSUpdateMissing !== true && uielement instanceof _UIElement.Instance ) {
 				
-				this._alignment = location.toLowerCase();
+				domElement = uielement.domElement;
+				width = uielement.width;
+				height = uielement.height;
 				
-				shared.signals.windowresized.add( this.align, this );
+				// get correct transformation matrix
 				
-				this.align();
+				transformationMatrix = _UIElement.get_local_transformation_matrix( domElement );
+				
+				// get bounding box
+				
+				topleft = transformationMatrix.multiply( Vector.create( [ 0, 0, 1 ] ) ).elements;
+				topright = transformationMatrix.multiply( Vector.create( [ width, 0, 1 ] ) ).elements;
+				bottomleft = transformationMatrix.multiply( Vector.create( [ 0, height, 1 ] ) ).elements;
+				bottomright = transformationMatrix.multiply( Vector.create( [ width, height, 1 ] ) ).elements;
+				
+				bbox = {
+					'transform': 'none',
+					'left': Math.min( topleft[ 0 ], topright[ 0 ], bottomleft[ 0 ], bottomright[ 0 ] ) + 'px',
+					'top': Math.min( topleft[ 1 ], topright[ 1 ], bottomleft[ 1 ], bottomright[ 1 ] ) + 'px'
+				}
+				
+				// update css
+				
+				domElement.css( bbox );
 				
 			}
-			else {
+
+		};
+		
+		// instance
+		
+		_UIElement.Instance = UIElement;
+		
+		_UIElement.Instance.prototype.add = add;
+		_UIElement.Instance.prototype.remove = remove;
+		
+		_UIElement.Instance.prototype.append_to = append_to;
+		
+		_UIElement.Instance.prototype.enable = enable;
+		_UIElement.Instance.prototype.disable = disable;
+		
+		_UIElement.Instance.prototype.enable_visual = enable_visual;
+		_UIElement.Instance.prototype.disable_visual = disable_visual;
+		
+		_UIElement.Instance.prototype.set_position = set_position;
+		_UIElement.Instance.prototype.align = align;
+		_UIElement.Instance.prototype.align_once = align_once;
+		
+		_UIElement.Instance.prototype.show = show;
+		_UIElement.Instance.prototype.hide = hide;
+		
+		_UIElement.Instance.prototype.pulse = pulse;
+		_UIElement.Instance.prototype.pulse_stop = pulse_stop;
+		
+		_UIElement.Instance.prototype.sort_children_by_order = sort_children_by_order;
+		_UIElement.Instance.prototype.show_children = show_children;
+		_UIElement.Instance.prototype.hide_children = hide_children;
+		_UIElement.Instance.prototype.copy_children_and_exclude = copy_children_and_exclude;
+		_UIElement.Instance.prototype.get_children_showing = get_children_showing;
+		_UIElement.Instance.prototype.get_children_hidden = get_children_hidden;
+		
+		_UIElement.Instance.prototype.set_pointer_events = set_pointer_events;
+		
+		_UIElement.Instance.prototype.update_form = update_form;
+		_UIElement.Instance.prototype.form_circle = form_circle;
+		_UIElement.Instance.prototype.form_rectangle = form_rectangle;
+		_UIElement.Instance.prototype.form_fullwindow = form_fullwindow;
+		
+		_UIElement.Instance.prototype.change_dom_element = change_dom_element;
+		_UIElement.Instance.prototype.generate_dom_element = generate_dom_element;
+		_UIElement.Instance.prototype.generate_tool_tip = generate_tool_tip;
+		_UIElement.Instance.prototype.apply_css = apply_css;
+		
+		_UIElement.Instance.prototype.generate_theme = generate_theme;
+		
+		_UIElement.Instance.prototype.themes = {};
+		_UIElement.Instance.prototype.themes.core = theme_core;
+		_UIElement.Instance.prototype.themes.white = theme_white;
+		
+		Object.defineProperty( _UIElement.Instance.prototype, 'domElement', { 
+			get : function () { return this._domElement; },
+			set : function () { this.change_dom_element.apply( this, arguments ); }
+		} );
+		
+		Object.defineProperty( _UIElement.Instance.prototype, 'parent', { 
+			get : function () { return this._parent; },
+			set : function ( parent ) { this.append_to( parent ); }
+		} );
+		
+		Object.defineProperty( _UIElement.Instance.prototype, 'html', { 
+			get : function () { return this.domElement.html(); },
+			set : function ( html ) {
 				
-				this._alignment = false;
-				
-				shared.signals.windowresized.remove( this.align, this );
+				this.domElement.html( html );
 				
 			}
-			
-		}
-	} );
-	
-	Object.defineProperty( _UIElement.Instance.prototype, 'pointerEvents', { 
-		get : function () { return this._pointerEvents; },
-		set : function ( state ) {
-			
-			var me = this;
-			
-			if ( typeof state === 'boolean' && ( this.hasOwnProperty( '_pointerEvents' ) !== true || this.pointerEvents !== state ) ) {
+		} );
+		
+		Object.defineProperty( _UIElement.Instance.prototype, 'width', { 
+			get : function () { return this.domElement.width(); },
+			set : function ( width ) {
 				
-				this._pointerEvents = state;
-				
-				this.set_pointer_events( this._pointerEvents );
+				this.domElement.width( main.is_number( width ) ? Math.round( width ) : width );
 				
 			}
+		} );
+
+		Object.defineProperty( _UIElement.Instance.prototype, 'height', { 
+			get : function () { return this.domElement.height(); },
+			set : function ( height ) {
+				
+				this.domElement.height( main.is_number( height ) ? Math.round( height ) : height );
 			
-		}
+			}
+		} );
 		
-	});
-	
-	Object.defineProperty( _UIElement.Instance.prototype, 'isVisibleSelf', { 
-		get : function () { return this._isVisible; }
-	} );
-	
-	Object.defineProperty( _UIElement.Instance.prototype, 'isVisible', { 
-		get : function () { return ( this._isVisible !== false && this.parent instanceof _UIElement.Instance ? this.parent.isVisible : this._isVisible ); },
-		set : function ( state ) {
-			
-			this._isVisible = state;
-			
-		}
-	} );
-	
-	Object.defineProperty( _UIElement.Instance.prototype, 'hidden', { 
-		get : function () { return this._hidden; },
-		set : function ( state ) {
-			
-			this._hidden = state;
-			
-			this.set_pointer_events( state ? false : this.pointerEvents );//( this.hidden === false && this.isVisible === true && ( typeof this.parent === 'undefined' || this.parent.hidden === false ) ) ? this.pointerEvents : false );
-			
-		}
+		Object.defineProperty( _UIElement.Instance.prototype, 'widthHalf', { 
+			get : function () { return this.width * 0.5; }
+		} );
+
+		Object.defineProperty( _UIElement.Instance.prototype, 'heightHalf', { 
+			get : function () { return this.height * 0.5; }
+		} );
 		
-	});
+		Object.defineProperty( _UIElement.Instance.prototype, 'outerWidth', { 
+			get : function () { return this.width + this.spacingLeft + this.spacingRight; }
+		} );
+
+		Object.defineProperty( _UIElement.Instance.prototype, 'outerHeight', { 
+			get : function () { return this.height + this.spacingTop + this.spacingBottom; }
+		} );
+		
+		Object.defineProperty( _UIElement.Instance.prototype, 'outerWidthHalf', { 
+			get : function () { return this.outerWidth * 0.5; }
+		} );
+
+		Object.defineProperty( _UIElement.Instance.prototype, 'outerHeightHalf', { 
+			get : function () { return this.outerHeight * 0.5; }
+		} );
+		
+		Object.defineProperty( _UIElement.Instance.prototype, 'x', { 
+			get : function () { return this._x; },
+			set : function ( x ) { 
+				
+				this.set_position( x, this._y );
+			
+			}
+		} );
+		
+		Object.defineProperty( _UIElement.Instance.prototype, 'y', { 
+			get : function () { return this._y; },
+			set : function ( y ) { 
+				
+				this.set_position( this._x, y );
+			
+			}
+		} );
+		
+		Object.defineProperty( _UIElement.Instance.prototype, 'alignment', { 
+			get : function () { return this._alignment; },
+			set : function ( location ) {
+				
+				if ( typeof location === 'string' ) {
+					
+					this._alignment = location.toLowerCase();
+					
+					shared.signals.windowresized.add( this.align, this );
+					
+					this.align();
+					
+				}
+				else {
+					
+					this._alignment = false;
+					
+					shared.signals.windowresized.remove( this.align, this );
+					
+				}
+				
+			}
+		} );
+		
+		Object.defineProperty( _UIElement.Instance.prototype, 'pointerEvents', { 
+			get : function () { return this._pointerEvents; },
+			set : function ( state ) {
+				
+				var me = this;
+				
+				if ( typeof state === 'boolean' && ( this.hasOwnProperty( '_pointerEvents' ) !== true || this.pointerEvents !== state ) ) {
+					
+					this._pointerEvents = state;
+					
+					this.set_pointer_events( this._pointerEvents );
+					
+				}
+				
+			}
+		} );
+		
+		Object.defineProperty( _UIElement.Instance.prototype, 'enabledSelf', { 
+			get : function () { return this._enabled; }
+		} );
+		
+		Object.defineProperty( _UIElement.Instance.prototype, 'enabled', { 
+			get : function () { return ( this._enabledOverride === false ? this._enabledOverride : ( this.enabledSelf !== false && this.parent instanceof _UIElement.Instance ? this.parent.enabled : this.enabledSelf ) ); },
+			set : function ( state ) {
+				
+				if ( state === true ) {
+					
+					this.enable();
+					
+				}
+				else {
+					
+					this.disable();
+					
+				}
+				
+			}
+		} );
+		
+		Object.defineProperty( _UIElement.Instance.prototype, 'isVisibleSelf', { 
+			get : function () { return this._isVisible; }
+		} );
+		
+		Object.defineProperty( _UIElement.Instance.prototype, 'isVisible', { 
+			get : function () { return ( this._isVisible !== false && this.parent instanceof _UIElement.Instance ? this.parent.isVisible : this._isVisible ); },
+			set : function ( state ) {
+				
+				this._isVisible = state;
+				
+			}
+		} );
+		
+		Object.defineProperty( _UIElement.Instance.prototype, 'hidden', { 
+			get : function () { return this._hidden; },
+			set : function ( state ) {
+				
+				this._hidden = state;
+				
+				this.set_pointer_events( state ? false : this.pointerEvents );
+				
+			}
+		} );
+		
+	}
 	
 	/*===================================================
     
@@ -341,14 +517,15 @@
 		
 		// items
 		
+		this.children = [];
+		this.childrenOrder = {};
 		this.childrenByID = {};
-        this.children = [];
 		this.childrenAlwaysVisible = [];
 		
 		// properties
 		
 		this.timeShow = main.is_number( parameters.timeShow ) ? parameters.timeShow : 500;
-        this.timeHide = main.is_number( parameters.timeHide ) ? parameters.timeHide : 250;
+        this.timeHide = main.is_number( parameters.timeHide ) ? parameters.timeHide : 500;
 		
 		this.opacityShow = main.is_number( parameters.opacityShow ) ? parameters.opacityShow : 1;
 		
@@ -397,12 +574,24 @@
 			
 		}
 		
-		// form
+		// form, default to rectangle
 		
 		if ( parameters.fullwindow === true ) {
 			
-			this.make_fullwindow();
+			this.form_fullwindow();
 		
+		}
+		
+		if ( parameters.circle === true ) {
+			
+			this.form_circle();
+		
+		}
+		
+		if ( parameters.rectangle === true ) {
+			
+			this.form_rectangle();
+			
 		}
 		
 		// alignment
@@ -428,18 +617,24 @@
 	function add () {
 		
 		var i, l,
-			children,
+			argument,
 			child;
 		
-		children = arguments;
+		// run through arguments passed
 		
-		for ( i = 0, l = children.length; i < l; i++ ) {
+		for ( i = 0, l = arguments.length; i < l; i++ ) {
 			
-			child = children[ i ];
+			argument = arguments[ i ];
 			
-			if ( child instanceof _UIElement.Instance && this.children.indexOf( child ) === -1 ) {
+			// if is valid child
+			
+			if ( argument instanceof _UIElement.Instance && this.children.indexOf( argument ) === -1 ) {
+				
+				child = argument;
 				
 				this.children.push( child );
+				
+				this.childrenOrder[ child.id ] = -1;
 				
 				this.childrenByID[ child.id ] = child;
 				
@@ -450,8 +645,18 @@
 				}
 				
 			}
+			// else if is number, assume is order for previous child
+			if ( i > 0 && main.is_number( argument ) ) {
+				
+				this.childrenOrder[ child.id ] = argument;
+				
+			}
 			
 		}
+		
+		// sort children
+		
+		this.sort_children_by_order();
 		
 	}
 	
@@ -476,27 +681,33 @@
 				
 				this.children.splice( index, 1 );
 				
-				delete this.childrenByID[ child.id ];
+			}
+			
+			delete this.childrenOrder[ child.id ];
+			
+			delete this.childrenByID[ child.id ];
+			
+			// if always visible
+			
+			index = this.childrenAlwaysVisible.indexOf( child );
+			
+			if ( index !== -1 ) {
 				
-				// if always visible
+				this.childrenAlwaysVisible.splice( index, 1 );
 				
-				index = this.childrenAlwaysVisible.indexOf( child );
+			}
+			
+			if ( child.parent === this ) {
 				
-				if ( index !== -1 ) {
-					
-					this.childrenAlwaysVisible.splice( index, 1 );
-					
-				}
-				
-				if ( child.parent === this ) {
-					
-					child.parent = child.parentLast;// undefined;
-					
-				}
+				child.parent = child.parentLast;
 				
 			}
 			
 		}
+		
+		// sort children
+		
+		this.sort_children_by_order();
 		
 	}
 	
@@ -612,48 +823,6 @@
 		
 	}
 	
-	function add_do_remove ( callback, context, data ) {
-		
-		var tempadded,
-			callbackResult;
-		
-		// if not on display, add temporarily
-		
-		if ( this.isVisible !== true ) {
-			
-			tempadded = true;
-			
-			$( document.body ).append( this.domElement );
-			
-		}
-		
-		// do callback
-		
-		callbackResult = callback.apply( context, data );
-		
-		// if added temporarily
-		
-		if ( tempadded === true ) {
-			
-			// if had parent, append to
-			
-			if ( this.parent instanceof _UIElement.Instance ) {
-				
-				this.parent.domElement.append( this.domElement );
-				
-			}
-			else if ( typeof this.parent !== 'undefined' ) {
-				
-				$( this.parent ).append( this.domElement );
-				
-			}
-			
-		}
-		
-		return callbackResult;
-		
-	}
-	
 	/*===================================================
     
     enable / disable
@@ -738,6 +907,8 @@
 	
 	function set_position ( x, y ) {
 		
+		var transformValue;
+		
 		// internal trackers for x and y
 		// non-integer values of x/y cause terrible text rendering
 		// around 250x faster than calling jQuery position().top/left
@@ -745,12 +916,35 @@
 		this._x = Math.round( x );
 		this._y = Math.round( y );
 		
-		// transform
-		// use direct manipulation of dom element css due to repeated application
-		// apply_css ensures correct css property/value for user's browser, but is 3x slower
+		// if css transform supported
 		
-		this.domElement.css( 'transform', 'translate(' + this._x + 'px, ' + this._y + 'px )' );
-		//this.apply_css( 'transform', 'translate(' + x + 'px, ' + y + 'px )' );
+		if ( _UIElement.cssSpecialCases.transform ) {
+			// set transform value
+			
+			transformValue = 'translate(' + this._x + 'px, ' + this._y + 'px )';
+			
+			// use direct manipulation of dom element css due to repeated application
+			// apply_css ensures correct css property/value for user's browser, but is 3x slower
+			
+			this.domElement.css( 'transform', transformValue );
+			//this.apply_css( 'transform', transformValue );
+			
+			// ensure update css from transform
+			
+			_UIElement.transform_css_update( this );
+			
+		}
+		// else use left/top
+		else {
+			
+			if ( this._x !== x ) {
+				this.domElement.css( 'left', this._x + 'px' );
+			}
+			if ( this._y !== y ) {
+				this.domElement.css( 'top', this._y + 'px' );
+			}
+			
+		}
 		
 	}
 	
@@ -878,18 +1072,32 @@
     
     =====================================================*/
 	
-	function show ( parent, time, opacity, callback, callbackContext, domElement ) {
+	function show ( parameters ) {
 		
-		var me = this,
-			index,
-			fadeCallback = function () { if ( typeof callback !== 'undefined' ) { callback.call( callbackContext ); } };
+		var domElement,
+			parent,
+			time,
+			opacity,
+			callback,
+			callbackContext,
+			fadeCallback;
 		//console.log( this.id, 'SHOW');
+		// handle parameters
 		
-		// show
+		parameters = parameters || {};
 		
-		time = main.is_number( time ) ? time : ( domElement ? 0 : this.timeShow );
+		domElement = parameters.domElement;
 		
-		opacity = main.is_number( opacity ) ? opacity : ( domElement ? 1 : this.opacityShow );
+		parent = parameters.parent || this.parent || this.parentLast;
+		
+		time = main.is_number( parameters.time ) ? parameters.time : ( domElement ? 0 : this.timeShow );
+		
+		opacity = main.is_number( parameters.opacity ) ? parameters.opacity : ( domElement ? 1 : this.opacityShow );
+		
+		callback = parameters.callback;
+		callbackContext = parameters.callbackContext;
+		
+		fadeCallback = function () { if ( typeof callback !== 'undefined' ) { callback.call( callbackContext ); } };
 		
 		// if dom element passed
 		
@@ -901,9 +1109,7 @@
 		// else use own
 		else {
 			
-			// try appending
-			
-			parent = parent || this.parent || this.parentLast;
+			// set parent
 			
 			if ( this.parent !== parent ) {
 			
@@ -911,7 +1117,7 @@
 				
 				// show children
 				
-				this.show_children( undefined, undefined, 0 );
+				this.show_children( { time: 0 } );
 				
 			}
 			
@@ -940,13 +1146,30 @@
 		
 	}
 	
-	function hide ( remove, time, opacity, callback, callbackContext, domElement ) {
+	function hide ( parameters ) {
 		
-		var me = this;
+		var me = this,
+			domElement,
+			remove,
+			time,
+			opacity,
+			callback,
+			callbackContext;
 		//console.log( this.id, 'HIDE' );
-		time = main.is_number( time ) ? time : ( domElement ? 0 : this.timeHide );
+		// handle parameters
 		
-		opacity = main.is_number( opacity ) ? opacity : 0;
+		parameters = parameters || {};
+		
+		domElement = parameters.domElement;
+		
+		remove = parameters.remove;
+		
+		time = main.is_number( parameters.time ) ? parameters.time : ( domElement ? 0 : this.timeHide );
+		
+		opacity = main.is_number( parameters.opacity ) ? parameters.opacity : 0;
+		
+		callback = parameters.callback;
+		callbackContext = parameters.callbackContext;
 		
 		// if dom element passed
 		
@@ -998,6 +1221,15 @@
 			hideTarget.hiding = false;
 			
 		}
+		else {
+			
+			if ( remove === true ) {
+				
+				hideTarget.detach();
+				
+			}
+			
+		}
 		
 		if ( typeof callback !== 'undefined' ) {
 			
@@ -1007,22 +1239,116 @@
 		
 	}
 	
+	function pulse ( parameters ) {
+		
+		var timeShow,
+			timeHide,
+			opacityShow,
+			opacityHide,
+			callback,
+			callbackContext;
+		
+		// handle parameters
+		
+		parameters = parameters || {};
+		
+		parameters.iterations = main.is_number( parameters.iterations ) ? parameters.iterations : -1;
+		parameters.count = main.is_number( parameters.count ) ? parameters.count : 0;
+		parameters.count++;
+		
+		timeShow = main.is_number( parameters.timeShow ) ? parameters.timeShow : ( main.is_number( parameters.time ) ? parameters.time : this.timeShow );
+		timeHide = main.is_number( parameters.timeHide ) ? parameters.timeHide : ( main.is_number( parameters.time ) ? parameters.time : this.timeHide );
+		
+		opacityShow = main.is_number( parameters.opacityShow ) ? parameters.opacityShow : 1;
+		opacityHide = main.is_number( parameters.opacityHide ) ? parameters.opacityHide : 0;
+		
+		this.show( { 
+			parent: parameters.parent,
+			time: timeShow,
+			opacity: opacityShow,
+			callback: function () {
+				this.hide( {
+					remove: false,
+					time: timeHide,
+					opacity: opacityHide,
+					callback: function () {
+						
+						if ( parameters.iterations === -1 || parameters.count < parameters.iterations ) {
+							
+							this.pulse( parameters );
+							
+						}
+						
+					},
+					callbackContext: this
+				} );
+			},
+			callbackContext: this
+		} );
+		
+	}
+	
+	function pulse_stop () {
+		
+		this.domElement.stop( true );
+		
+	}
+	
 	/*===================================================
     
     show / hide children
     
     =====================================================*/
 	
-	function show_children ( children, excluding, time, opacity, callback, callbackContext ) {
+	function sort_children_by_order ( children ) {
+		
+		var me = this,
+			childrenOrder = this.childrenOrder,
+			ordera, orderb;
+		
+		children = children || this.children;
+		
+		children.sort( function ( a, b ) {
+			
+			ordera = childrenOrder[ a.id ];
+			orderb = childrenOrder[ b.id ];
+			
+			if ( ordera === -1 ) {
+				ordera = children.length;
+			}
+			if ( orderb === -1 ) {
+				orderb = children.length;
+			}
+			
+			return ordera - orderb;
+			
+		} );
+		
+		return children;
+		
+	}
+	
+	function show_children ( parameters ) {
 		
 		var i, l,
+			children,
 			child;
 		
 		if ( this.children.length > 0 ) {
 			
+			// handle parameters
+			
+			parameters = parameters || {};
+			
+			parameters.parent = parameters.parent || this;
+			
 			// make copy of children passed
 			
-			children = this.copy_children_and_exclude( children, excluding );
+			children = this.copy_children_and_exclude( parameters.children, parameters.excluding );
+			
+			// sort children
+			
+			children = this.sort_children_by_order( children );
 			
 			//console.log(this.id, 'SHOW children', children );
 			// show all
@@ -1031,7 +1357,7 @@
 				
 				child = children[ i ];
 				
-				child.show( this, time, opacity, callback, callbackContext );
+				child.show( parameters );
 				
 			}
 			
@@ -1039,16 +1365,23 @@
 		
 	}
 	
-	function hide_children ( children, excluding, time, opacity, callback, callbackContext ) {
+	function hide_children ( parameters ) {
 		
 		var i, l,
+			children,
 			child;
 		
 		if ( this.children.length > 0 ) {
 			
+			// handle parameters
+			
+			parameters = parameters || {};
+			
+			parameters.remove = typeof parameters.remove === 'boolean' ? parameters.remove : false;
+			
 			// make copy of children passed
 			
-			children = this.copy_children_and_exclude( children, this.childrenAlwaysVisible.concat( excluding || [] ) );
+			children = this.copy_children_and_exclude( parameters.children, this.childrenAlwaysVisible.concat( parameters.excluding || [] ) );
 			
 			// hide all
 			//console.log(this.id, 'HIDE children', children );
@@ -1058,7 +1391,7 @@
 				
 				if ( child.hidden !== true && child.parent === this ) {
 					
-					child.hide( false, time, opacity, callback, callbackContext );
+					child.hide( parameters );
 					
 				}
 				
@@ -1068,7 +1401,7 @@
 		
 	}
 	
-	function copy_children_and_exclude ( children, exclude ) {
+	function copy_children_and_exclude ( children, excluding ) {
 		
 		var i, l,
 			child,
@@ -1077,13 +1410,13 @@
 		
 		children = main.ensure_array( children || this.children );
 		
-		exclude = main.ensure_array( exclude );
+		excluding = main.ensure_array( excluding );
 		
 		for ( i = 0, l = children.length; i < l; i++ ) {
 			
 			child = children[ i ];
 			
-			if ( exclude.indexOf( child ) === -1 ) {
+			if ( excluding.indexOf( child ) === -1 ) {
 				
 				childrenMinusExcluded.push( child );
 				
@@ -1234,13 +1567,72 @@
     
     =====================================================*/
 	
-	function make_fullwindow () {
+	function update_form () {
+		
+		if ( this.form === 'circle' ) {
+			
+			this.form_circle();
+			
+		}
+		
+	}
+	
+	function form_circle () {
+		
+		// if width set explicitly
+		
+		if ( this.width !== 0 ) {
+			
+			this.form = 'circle';
+			
+			var width = this.width,
+				height = this.height,
+				max = Math.max( width, height ),
+				maxHalf = max * 0.5;
+			
+			// match width/height
+			
+			this.width = this.height = max;
+			
+			// set radius to half
+			
+			this.apply_css( "border-radius", maxHalf + "px" );
+			
+		}
+		
+	}
+	
+	function form_rectangle () {
+		
+		this.form = 'rectangle';
+		
+		// if either dimension is set when the other is not
+		
+		if ( this.width !== 0 && this.height === 0 ) {
+			
+			this.height = this.width;
+			
+		}
+		if ( this.width === 0 && this.height !== 0 ) {
+			
+			this.width = this.height;
+			
+		}
+		
+		// set radius to base
+		
+		this.apply_css( "border-radius", 0 );
+		
+	}
+	
+	function form_fullwindow () {
+		
+		this.form = 'fullwindow';
 		
 		this.apply_css( {
 			"min-height": "100%",
 			"width": "100%",
 			"height": "100%",
-			"position": "fixed",
 			"top": "0px",
 			"left": "0px",
 			"overflow": "hidden"
@@ -1254,10 +1646,65 @@
     
     =====================================================*/
 	
+	function change_dom_element ( replacement, parameters ) {
+		
+		var current = this.domElement;
+		
+		// handle parameters
+		
+		parameters = parameters || {};
+		
+		// if current exists, hide and remove
+		
+		if ( typeof current !== 'undefined' ) {
+			
+			this.hide( { domElement: current, remove: true, time: ( this.hidden ? 0 : parameters.timeHide ) } );
+			
+		}
+		
+		// replace
+		
+		this._domElement = $( replacement );
+		
+		// parent
+		
+		if ( typeof this.parent !== 'undefined' ) {
+			
+			if ( this.parent instanceof _UIElement.Instance ) {
+				
+				this.parent.domElement.append( this.domElement );
+				
+			}
+			else {
+				
+				$( this.parent ).append( this.domElement );
+				
+			}
+			
+		}
+		
+		// if this is showing
+		
+		if ( this.hiding !== true && this.hidden === false ) {
+			
+			this.hide( { domElement: this.domElement, time: 0 } );
+			
+			this.show( { domElement: this.domElement, time: parameters.timeShow } );
+			
+			this.align();
+			
+		}
+		
+		return current;
+		
+	}
+	
 	function generate_dom_element ( parameters ) {
 		
-		var elementType,
-			domElement;
+		var me = this,
+			elementType,
+			domElement,
+			imgElement;
 		
 		// handle parameters
         
@@ -1267,9 +1714,33 @@
 		
 		elementType = parameters.elementType || 'div';
 		
-		// element
+		// dom element
 		
-		domElement = $( document.createElement( elementType ) );
+		domElement = document.createElement( elementType );
+		
+		// special cases
+		
+		// image
+		
+		if ( elementType === 'img' && typeof parameters.src === 'string' ) {
+			
+			/*
+			main.asset_require( parameters.src, function ( img ) {
+				
+				main.extend( img, domElement );
+				me.change_dom_element( img );
+				
+			} );
+			*/
+			domElement.onload = parameters.onload;
+			domElement.crossOrigin = '';
+			domElement.src = parameters.src;
+			
+		}
+		
+		// convert to jQuery
+		
+		domElement = $( domElement );
 		
 		// id
 		
@@ -1414,7 +1885,7 @@
 		
 		if ( typeof propertyPrefixed === 'string' ) {
 			
-			propertySupported = _UIElement.str_from_camel( propertyPrefixed );
+			propertySupported = propertyPrefixed;//_UIElement.str_from_camel( propertyPrefixed );
 			
 		}
 		
@@ -1511,6 +1982,46 @@
 		// state last
 		
 		theme.stateLast = {};
+		
+		return theme;
+		
+	}
+	
+	function theme_white ( overrides ) {
+		
+		var theme = this.themes.core( overrides ),
+			cssmap,
+			enabled,
+			disabled,
+			or;
+		
+		// cssmap
+		
+		or = overrides.cssmap || {};
+		
+		cssmap = theme.cssmap = theme.cssmap || {};
+		
+		cssmap[ "box-shadow" ] = or[ "box-shadow" ] || "-2px 2px 10px rgba(0, 0, 0, 0.15)";
+		
+		// enabled state
+		
+		or = overrides.enabled || {};
+		
+		enabled = theme.enabled = theme.enabled || {};
+		
+		enabled[ "color" ] = or[ "color" ] || "#333333";
+		enabled[ "background-color" ] = or[ "background-color" ] || "#eeeeee";
+		//enabled[ "background-image" ] = or[ "background-image" ] || "linear-gradient(top, #eeeeee 30%, #cccccc 100%)";
+		
+		// disabled state
+		
+		or = overrides.disabled || {};
+		
+		disabled = theme.disabled = theme.disabled || {};
+		
+		disabled[ "color" ] = or[ "color" ] || "#777777";
+		disabled[ "background-color" ] = or[ "background-color" ] || "#bbbbbb";
+		//disabled[ "background-image" ] = or[ "background-image" ] || "linear-gradient(top, #cccccc 30%, #aaaaaa 100%)";
 		
 		return theme;
 		

@@ -13,6 +13,7 @@
         _Player = {},
 		_Game,
 		_CameraControls,
+		_Messenger,
 		_Hero,
 		_Physics,
 		_World,
@@ -80,6 +81,7 @@
 		requirements: [
 			"assets/modules/core/Game.js",
 			"assets/modules/core/CameraControls.js",
+			"assets/modules/core/Messenger.js",
 			"assets/modules/characters/Hero.js",
 			"assets/modules/core/Physics.js",
 			"assets/modules/env/World.js",
@@ -96,7 +98,7 @@
     
     =====================================================*/
 	
-	function init_internal ( g, cc, h, physx, w, oh, mh ) {
+	function init_internal ( g, cc, msg, h, physx, w, oh, mh ) {
 		console.log('internal player');
 		
 		if ( ready !== true ) {
@@ -105,6 +107,7 @@
 			
 			_Game = g;
 			_CameraControls = cc;
+			_Messenger = msg;
 			_Hero = h;
 			_Physics = physx;
 			_World = w;
@@ -172,9 +175,29 @@
 		
 		characterLight = new THREE.PointLight( 0xfeb41c, 0.8, 400 );
 		
-		characterLight.position.set( -20, 25, 60 );//-30, -20, 5 );
+		characterLight.position.set( -20, 25, 60 );
 		
 		character.add( characterLight );
+		
+		// add handler for physics safety net
+		
+		if ( character.physics ) {
+			
+			character.physics.safetynetstart.add( character_on_safety_net, this );
+			
+		}
+		
+	}
+	
+	function character_on_safety_net () {
+		
+		_Messenger.show_message( { 
+			image: shared.pathToIcons + 'alertcircle_64.png',
+			title: "Well, this is embarrassing!",
+			body: "Our physics broke, but we'll do our best to drop you off at your last safe location.",
+			active: true,
+			transitionerOpacity: 1
+		} );
 		
 	}
 	

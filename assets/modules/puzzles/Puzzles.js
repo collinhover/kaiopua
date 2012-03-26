@@ -82,6 +82,7 @@
 		_Puzzles.Instance = Puzzle;
 		_Puzzles.Instance.prototype = new _Model.Instance();
 		_Puzzles.Instance.prototype.constructor = _Puzzles.Instance;
+		_Puzzles.Instance.prototype.complete = complete;
 		
 		Object.defineProperty( _Puzzles.Instance.prototype, 'occupants', { 
 			get: function () {
@@ -146,6 +147,24 @@
 			allPuzzles.push( this );
 			
 			_Puzzles._dirtyPuzzles = true;
+			
+		}
+		
+	}
+	
+	/*===================================================
+	
+	complete
+	
+	=====================================================*/
+	
+	function complete () {
+		
+		// if grid is full
+		
+		if ( this.grid.full ) {
+			
+			
 			
 		}
 		

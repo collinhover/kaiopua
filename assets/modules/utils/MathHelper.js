@@ -76,7 +76,106 @@
 	
 	_MathHelper.rad_to_degree = function ( n ) {
 		
-		return n * Math.PI / 180;
+		return n * 180 / Math.PI;
+		
+	};
+	
+	_MathHelper.get_orthonormal_vectors = function ( v1 ) {
+		
+		// returns 2 orthographic ( perpendicular ) vectors to the first
+		
+		var i,
+			min = 0,
+			minAxis,
+			v1absx = Math.abs( v1.x ),
+			v1absy = Math.abs( v1.y ),
+			v1absz = Math.abs( v1.z ),
+			v2 = new THREE.Vector3(),
+			v3 = new THREE.Vector3();
+		
+		// use Gram-Schmidt orthogonalisation to find first perpendicular vector
+		
+		min = Math.min( v1absx, v1absy, v1absz );
+		
+		// min is x
+		if ( min === v1absx ) {
+			
+			minAxis = 'x';
+			
+		}
+		// min is y
+		else if ( min === v1absy ) {
+			
+			minAxis = 'y';
+			
+		}
+		// min is z
+		else {
+			
+			minAxis = 'z';
+			
+		}
+		
+		v2[ minAxis ] = 1;
+		v2.x -= v1[ minAxis ] * v1.x;
+		v2.y -= v1[ minAxis ] * v1.y;
+		v2.z -= v1[ minAxis ] * v1.z;
+		
+		v3.cross( v1, v2 );
+		
+		console.log( 'v1', v1, 'v2', v2, 'v3', v3 );
+		
+		return { v1: v1, v2: v2, v3: v3 };
+		
+	};
+	
+	_MathHelper.get_rotation_to_normal = function ( normal, normalAxis ) {
+		
+		// returns a 4x4 matrix that defines a rotation to a normal
+		
+		var vectors = _MathHelper.get_orthonormal_vectors( normal ),
+			v1 = vectors.v1,
+			v2 = vectors.v2,
+			v3 = vectors.v3,
+			matrix;
+		
+		// normal on the x axis
+		if ( normalAxis === 'x' ) {
+			
+			matrix = new THREE.Matrix4(
+				v1.x, v2.x, v3.x, 0,
+				v1.y, v2.y, v3.y, 0,
+				v1.z, v2.z, v3.z, 0,
+				0, 0, 0, 1
+			);
+			
+		}
+		// normal on the z axis
+		else if ( normalAxis === 'z' ) {
+			
+			matrix = new THREE.Matrix4(
+				v2.x, v3.x, v1.x, 0,
+				v2.y, v3.y, v1.y, 0,
+				v2.z, v3.z, v1.z, 0,
+				0, 0, 0, 1
+			);
+			
+		}
+		// normal is on the y axis
+		else {
+			
+			matrix = new THREE.Matrix4(
+				v2.x, v1.x, v3.x, 0,
+				v2.y, v1.y, v3.y, 0,
+				v2.z, v1.z, v3.z, 0,
+				0, 0, 0, 1
+			);
+			
+		}
+		
+		console.log( 'matrix', matrix, ' decomposed rot', matrix.decompose()[1] );
+		
+		return matrix;
 		
 	};
 	

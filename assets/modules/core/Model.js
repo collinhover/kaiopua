@@ -40,7 +40,6 @@
 		_Model.Instance = Model;
 		_Model.Instance.prototype = new THREE.Mesh();
 		_Model.Instance.prototype.constructor = _Model.Instance;
-		_Model.Instance.prototype.compute_dimensions = compute_dimensions;
 		
 		// catch parent changes and add / remove physics automatically
 		
@@ -302,10 +301,6 @@
 			
 		}
 		
-		// compute dimensions
-		
-		this.compute_dimensions();
-		
 		// physics
 		
 		if ( parameters.hasOwnProperty( 'physics' ) ) {
@@ -317,59 +312,6 @@
 		// id
 		
 		this.id = parameters.id || this.id;
-		
-	}
-	
-	/*===================================================
-	
-	utility
-	
-	=====================================================*/
-	
-	function compute_dimensions ( ignoreScale ) {
-		
-		var g = this.geometry,
-			d,
-			bbox;
-		
-		// if needs dimensions
-		
-		if ( this.hasOwnProperty( 'dimensions' ) && this.dimensions instanceof THREE.Vector3 ) {
-			
-			d = this.dimensions;
-			
-		}
-		else {
-			
-			d = this.dimensions = new THREE.Vector3();
-			
-		}
-		
-		// if needs calculation
-		
-		if ( typeof g.boundingBox !== 'undefined' ) {
-			g.computeBoundingBox();
-		}
-		
-		bbox = g.boundingBox;
-		
-		if ( bbox ) {
-			
-			// get original dimensions
-			
-			d.set( bbox.max.x - bbox.min.x, bbox.max.y - bbox.min.y, bbox.max.z - bbox.min.z );
-			
-			// scale to mesh's scale
-			
-			if ( ignoreScale !== true ) {
-				
-				d.multiplySelf( this.scale );
-				
-			}
-			
-		}
-		
-		return d;
 		
 	}
 	

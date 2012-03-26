@@ -85,8 +85,12 @@
 				
 				if ( button instanceof _Button.Instance ) {
 					
-					button.callback = this.open;
-					button.context = this;
+					if ( typeof button.callback !== 'function' ) {
+						
+						button.callback = this.open;
+						button.context = this;
+						
+					}
 					
 					if ( this._buttonOpen instanceof _Button.Instance ) {
 						
@@ -117,8 +121,12 @@
 				
 				if ( button instanceof _Button.Instance ) {
 					
-					button.callback = this.close;
-					button.context = this;
+					if ( typeof button.callback !== 'function' ) {
+						
+						button.callback = this.close;
+						button.context = this;
+						
+					}
 					
 					if ( this._buttonClose instanceof _Button.Instance ) {
 						
@@ -284,22 +292,26 @@
     
     =====================================================*/
 	
-	function show_children () {
+	function show_children ( parameters ) {
 		
 		// if closed, modify children to only include open button
 		//console.log(this.id, 'menu show children, arguments', arguments );
 		if ( this.hasOpenCloseButtons ) {
-			//console.log('  > modify arguments' );
+			
+			// handle parameters
+			
+			parameters = parameters || {};
+			
 			// if closed, only show open button
 			if ( this.isOpen === false ) {
 				
-				arguments[ 0 ] = this.buttonOpen;
+				parameters.children = this.buttonOpen;
 				
 			}
 			// if open, exclude open button from show
 			else {
 				
-				arguments[ 1 ] = [ this.buttonOpen ].concat( arguments[ 1 ] || [] );
+				parameters.excluding = [ this.buttonOpen ].concat( parameters.excluding || [] );
 				
 			}
 		
@@ -307,22 +319,26 @@
 		
 		// proto
 		
-		_Menu.Instance.prototype.supr.show_children.apply( this, arguments );
+		_Menu.Instance.prototype.supr.show_children.call( this, parameters );
 		
 		this.update_arrangement();
 		
 	}
 	
-	function hide_children () {
+	function hide_children ( parameters ) {
 		
 		//console.log(this.id, 'menu hide children, arguments', arguments );
 		if ( this.hasOpenCloseButtons ) {
+			
+			// handle parameters
+			
+			parameters = parameters || {};
 			
 			// if closed, exclude open button from hide
 			
 			if ( this.isOpen === false ) {
 				
-				arguments[ 1 ] = [ this.buttonOpen ].concat( arguments[ 1 ] || [] );
+				parameters.excluding = [ this.buttonOpen ].concat( parameters.excluding || [] );
 				
 			}
 			
@@ -330,7 +346,7 @@
 		
 		// proto
 		
-		_Menu.Instance.prototype.supr.hide_children.apply( this, arguments );
+		_Menu.Instance.prototype.supr.hide_children.call( this, parameters );
 		
 		this.update_arrangement();
 		
@@ -374,33 +390,38 @@
 			
 			if ( this.parent instanceof _Menu.Instance ) {
 				
-				this.parent.child_opening( this );
+				this.parent.child_opening( this, time );
 				
 			}
 			
-			this.buttonOpen.hide( true, time, 0, function () {
-				
-				this.show_children( undefined, undefined, time );
-				
-				this.buttonClose.show( this, time );
-				
-				if ( typeof callback === 'function' ) {
+			this.buttonOpen.hide( {
+				remove: true, 
+				time: time,
+				callback: function () {
 					
-					if ( typeof callbackContext !== 'undefined' ) {
-						callback.call( callbackContext );
-					}
-					else {
-						callback();
-					}
+					this.show_children( { time: time } );
 					
-				}
+					this.buttonClose.show( { parent: this, time: time } );
+					
+					if ( typeof callback === 'function' ) {
+						
+						if ( typeof callbackContext !== 'undefined' ) {
+							callback.call( callbackContext );
+						}
+						else {
+							callback();
+						}
+						
+					}
 				
-			}, this );
+				},
+				callbackContext: this
+			} );
 			
 		}
 		else {
 			
-			this.show_children( undefined, undefined, time );
+			this.show_children( { time: time } );
 			
 		}
 		
@@ -440,52 +461,61 @@
 			//console.log( this.id, 'CLOSING' );
 			this._isOpen = false;
 			
-			this.hide_children( undefined, undefined, time );
+			this.hide_children( { time: time } );
 			
-			this.buttonClose.hide( true, time, 0, function () {
-				
-				this.buttonOpen.show( this, time );
-				
-				this.update_arrangement();
-				
-				if ( this.parent instanceof _Menu.Instance ) {
+			this.buttonClose.hide( {
+				remove: true, 
+				time: time,
+				callback: function () {
 					
-					this.parent.child_closing( this );
+					this.buttonOpen.show( { parent: this, time: time } );
 					
-				}
-				
-				if ( typeof callback === 'function' ) {
+					this.update_arrangement();
 					
-					if ( typeof callbackContext !== 'undefined' ) {
-						callback.call( callbackContext );
-					}
-					else {
-						callback();
+					if ( this.parent instanceof _Menu.Instance ) {
+						
+						this.parent.child_closing( this, time );
+						
 					}
 					
-				}
-				
-			}, this );
+					if ( typeof callback === 'function' ) {
+						
+						if ( typeof callbackContext !== 'undefined' ) {
+							callback.call( callbackContext );
+						}
+						else {
+							callback();
+						}
+						
+					}
+					
+				},
+				callbackContext: this
+			} );
 			
 		}
 		
 	}
 	
-	function child_opening ( child ) {
+	function child_opening ( child, time ) {
 		//console.log( this.id, ' child, ', child.id, ', OPENING' );
+		this.childOpen = child;
+		
 		this.childrenShowingOrder = this.get_children_showing();
 		
-		this.hide_children( this.childrenShowingOrder, child );
+		this.hide_children( { children: this.childrenShowingOrder, excluding: child, time: time } );
 		
 	}
 	
-	function child_closing ( child ) {
+	function child_closing ( child, time ) {
 		
-		if ( this.isOpen && this.childrenShowingOrder ) {
+		if ( this.isOpen && this.childOpen === child && this.childrenShowingOrder ) {
 			//console.log( this.id, ' child, ', child.id, ', CLOSING' );
-			this.show_children( this.childrenShowingOrder );
+			this.show_children( { children: this.childrenShowingOrder, time: time } );
 			
 			this.childrenShowingOrder = undefined;
+			
+			this.childOpen = undefined;
 			
 		}
 		
@@ -520,7 +550,7 @@
 	function update_arrangement () {
 		
 		if ( this.get_children_showing().length > 0 ) {
-			//console.log( this.id, 'ARRANGING' );
+			
 			this.set_arrangement( this.arrangement, this.arrangementParameters );
 			
 		}
@@ -834,8 +864,11 @@
 		var i, l,
 			degreeStart,
 			degrees,
+			degreesAutoFit = false,
+			direction,
 			radius,
 			spaceBySize,
+			forceShape,
 			children,
 			radians,
 			thetaStart,
@@ -869,12 +902,15 @@
 		parameters = parameters || {};
 		
 		degreeStart = this.arrangementParameters.degreeStart = parameters.degreeStart = main.is_number( parameters.degreeStart ) ? parameters.degreeStart : ( main.is_number( this.arrangementParameters.degreeStart ) ? this.arrangementParameters.degreeStart : 180 );
-		degrees = this.arrangementParameters.degrees = parameters.degrees = main.is_number( parameters.degrees ) ? parameters.degrees : ( main.is_number( this.arrangementParameters.degrees ) ? this.arrangementParameters.degrees : 360 );
+		degrees = this.arrangementParameters.degrees = parameters.degrees = main.is_number( parameters.degrees ) ? parameters.degrees : this.arrangementParameters.degrees;
+		degreesAutoFit = this.arrangementParameters.degreesAutoFit = parameters.degreesAutoFit = typeof parameters.degreesAutoFit === 'boolean' ? parameters.degreesAutoFit : ( typeof this.arrangementParameters.degreesAutoFit === 'boolean' ? this.arrangementParameters.degreesAutoFit : false );
+		direction = this.arrangementParameters.direction = parameters.direction = main.is_number( parameters.direction ) ? parameters.direction : ( main.is_number( this.arrangementParameters.direction ) ? this.arrangementParameters.direction : 1 );
 		radius = this.arrangementParameters.radius = parameters.radius = main.is_number( parameters.radius ) ? parameters.radius : this.arrangementParameters.radius;
 		spaceBySize = this.arrangementParameters.spaceBySize = parameters.spaceBySize = typeof parameters.spaceBySize === 'boolean' ? parameters.spaceBySize : this.arrangementParameters.spaceBySize;
+		forceShapeOnOpen = this.arrangementParameters.forceShapeOnOpen = parameters.forceShapeOnOpen = typeof parameters.forceShapeOnOpen === 'boolean' ? parameters.forceShapeOnOpen : this.arrangementParameters.forceShapeOnOpen;
 		children = parameters.children = parameters.children || this.get_children_for_arrangement();
 		
-		if ( children.length <= 1 ) {
+		if ( children.length <= 1 && ( forceShapeOnOpen !== true || ( this.isOpen !== true && this.buttonClose.hidden === true ) ) ) {
 			
 			this.arrange_to_child( children[ 0 ] );
 			
@@ -885,15 +921,55 @@
 			
 			thetaStart = _MathHelper.degree_to_rad( degreeStart % 360 );
 			
+			// if degrees not passed
+			
+			if ( main.is_number( degrees ) !== true || degrees === 0 ) {
+				
+				// if radius passed, determine exact degrees to fit all children
+				
+				if ( degreesAutoFit && radius >= 0 ) {
+					
+					radians = 0;
+					
+					for ( i = 0, l = children.length; i < l; i++ ) {
+						
+						child = children[ i ];
+						
+						radians += 2 * Math.asin( Math.max( child.outerWidth, child.outerHeight ) / ( 2 * radius ) );
+						
+					}
+					
+					degrees = _MathHelper.rad_to_degree( radians );
+					
+					// if children would go around more than once
+					// clamp to once and zero radius to auto-fit of radius
+					
+					if ( Math.abs( degrees ) > 360 ) {
+						
+						degrees = 360;
+						radius = 0;
+						
+					}
+					
+				}
+				// else default to 360
+				else {
+					
+					degrees = 360;
+					
+				}
+				
+			}
+			
 			// add an additional subtending angle to degrees, up to +/- 360, to ensure children end at expected degrees
 			
-			degrees = _MathHelper.clamp( degrees + ( degrees / Math.max( children.length - 1, 1 ) ), -360, 360 );
+			degrees = _MathHelper.clamp( degrees + ( degreesAutoFit ? 0 : ( degrees / Math.max( children.length - 1, 1 ) ) ), -360, 360 );
 			
-			radians = _MathHelper.degree_to_rad( degrees );
+			radians = _MathHelper.degree_to_rad( degrees ) * direction;
 			
 			// if radius not passed, determine exact to fit all children
 			
-			if ( main.is_number( radius ) !== true ) {
+			if ( main.is_number( radius ) !== true || radius <= 0 ) {
 				
 				radiansPer = radians / children.length;
 				

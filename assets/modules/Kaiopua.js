@@ -28,6 +28,47 @@ var KAIOPUA = (function (main) {
 	
 	/*===================================================
     
+	compatibility
+    
+    =====================================================*/
+	
+	// array indexOf
+	
+	if (!Array.prototype.indexOf) {
+		Array.prototype.indexOf = function (searchElement /*, fromIndex */ ) {
+			"use strict";
+			if (this == null) {
+				throw new TypeError();
+			}
+			var t = Object(this);
+			var len = t.length >>> 0;
+			if (len === 0) {
+				return -1;
+			}
+			var n = 0;
+			if (arguments.length > 0) {
+				n = Number(arguments[1]);
+				if (n != n) { // shortcut for verifying if it's NaN
+					n = 0;
+				} else if (n != 0 && n != Infinity && n != -Infinity) {
+					n = (n > 0 || -1) * Math.floor(Math.abs(n));
+				}
+			}
+			if (n >= len) {
+				return -1;
+			}
+			var k = n >= 0 ? n : Math.max(len - Math.abs(n), 0);
+			for (; k < len; k++) {
+				if (k in t && t[k] === searchElement) {
+					return k;
+				}
+			}
+			return -1;
+		}
+	}
+	
+	/*===================================================
+    
     internal init
     
     =====================================================*/
@@ -45,6 +86,11 @@ var KAIOPUA = (function (main) {
         shared.screenWidth = $(window).width();
         shared.screenHeight = $(window).height();
         shared.originLink = window.location.pathname.toString();
+		shared.pathToAssets = 'assets/';
+		shared.pathToModules = shared.pathToAssets + 'modules/';
+		shared.pathToModels = shared.pathToAssets + 'models/';
+		shared.pathToIcons = shared.pathToAssets + 'icons/';
+		shared.pathToTextures = shared.pathToAssets + 'textures/';
         
         shared.frameRateMax = 60;
         shared.frameRateMin = 20;
@@ -1073,7 +1119,7 @@ var KAIOPUA = (function (main) {
 			
 			if ( typeof loaderUIContainer !== 'undefined' ) {
 				
-				_AssetLoader.hide_ui( true );
+				_AssetLoader.hide_ui( { remove: true } );
 				
 			}
 			
@@ -1145,7 +1191,7 @@ var KAIOPUA = (function (main) {
 		
 		if ( typeof loaderUIContainer !== 'undefined' ) {
 			
-			_AssetLoader.show_ui( loaderUIContainer );
+			_AssetLoader.show_ui( { parent: loaderUIContainer } );
 			
 		}
 		

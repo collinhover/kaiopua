@@ -11,6 +11,7 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/core/Physics.js",
 		_Physics = {},
+		_ObjectHelper,
 		_MathHelper,
 		ready = false,
 		system,
@@ -29,6 +30,8 @@
 		utilVec31Update,
 		utilVec32Update,
 		utilVec33Update,
+		utilVec34Update,
+		utilVec35Update,
 		utilVec31Velocity,
 		utilVec31Offset,
 		utilQ4Offset,
@@ -44,35 +47,10 @@
     
     =====================================================*/
 	
-	_Physics.translate = translate;
-	_Physics.add = add;
-	_Physics.remove = remove;
-	_Physics.start = start;
-	_Physics.stop = stop;
-	_Physics.update = update;
-	
-	_Physics.rotate_relative_to_source = rotate_relative_to_source;
-	_Physics.pull_to_source = pull_to_source;
-	
-	// getters and setters
-	
-	Object.defineProperty(_Physics, 'worldGravitySource', { 
-		get : function () { return worldGravitySource; },
-		set : set_world_gravity_source
-	});
-	
-	Object.defineProperty(_Physics, 'worldGravityMagnitude', { 
-		get : function () { return worldGravityMagnitude; },
-		set : set_world_gravity_magnitude
-	});
-	
-	Object.defineProperty(_Physics, 'system', { 
-		get : function () { return system; }
-	});
-	
 	main.asset_register( assetPath, { 
 		data: _Physics,
 		requirements: [
+			"assets/modules/utils/ObjectHelper.js",
 			"assets/modules/utils/MathHelper.js"
 		],
 		callbacksOnReqs: init_internal,
@@ -85,18 +63,50 @@
     
     =====================================================*/
 	
-	function init_internal ( mh ) {
+	function init_internal ( oh, mh ) {
 		console.log('internal physics');
 		
-		if ( ready !== true ) {
-			
-			_MathHelper = mh;
-			
-			init_system();
-			
-			ready = true;
-			
-		}
+		_ObjectHelper = oh;
+		_MathHelper = mh;
+		
+		// functions
+		
+		_Physics.translate = translate;
+		_Physics.add = add;
+		_Physics.remove = remove;
+		_Physics.start = start;
+		_Physics.stop = stop;
+		_Physics.update = update;
+		
+		_Physics.rotate_relative_to_source = rotate_relative_to_source;
+		_Physics.pull_to_source = pull_to_source;
+		
+		// signals
+		
+		shared.signals.physicssafetynetstart = new signals.Signal();
+		shared.signals.physicssafetynetend = new signals.Signal();
+		
+		// properties
+		
+		_Physics.timeWithoutIntersectionThreshold = 500;
+		
+		Object.defineProperty(_Physics, 'worldGravitySource', { 
+			get : function () { return worldGravitySource; },
+			set : set_world_gravity_source
+		});
+		
+		Object.defineProperty(_Physics, 'worldGravityMagnitude', { 
+			get : function () { return worldGravityMagnitude; },
+			set : set_world_gravity_magnitude
+		});
+		
+		Object.defineProperty(_Physics, 'system', { 
+			get : function () { return system; }
+		});
+		
+		// init
+		
+		init_system();
 		
 	}
 	
@@ -104,7 +114,7 @@
 		
 		// system
 		
-		system = THREE.Collisions;
+		system = new THREE.CollisionSystem();
 		set_world_gravity_source( new THREE.Vector3( 0, 0, 0 ) );
 		set_world_gravity_magnitude( new THREE.Vector3( 0, -1, 0 ) );
 		
@@ -121,6 +131,8 @@
 		utilVec31Update = new THREE.Vector3();
 		utilVec32Update = new THREE.Vector3();
 		utilVec33Update = new THREE.Vector3();
+		utilVec34Update = new THREE.Vector3();
+		utilVec35Update = new THREE.Vector3();
 		
 		utilVec31Offset = new THREE.Vector3();
 		utilQ4Offset = new THREE.Quaternion();
@@ -133,271 +145,6 @@
 		utilVec31Pull = new THREE.Vector3();
 		utilVec32Pull = new THREE.Vector3();
 		utilVec33Pull = new THREE.Vector3();
-		
-		// three collision fixes
-		
-		add_three_collision_fixes();
-		
-	}
-	
-	/*===================================================
-    
-    collision fixes
-    
-    =====================================================*/
-	
-	function add_three_collision_fixes () {
-		
-		var utilMat1RayLocal = new THREE.Matrix4(),
-			utilVec31RayLocal = new THREE.Vector3(),
-			utilVec31RayBox = new THREE.Vector3(),
-			utilVec32RayBox = new THREE.Vector3();
-		
-		// localize ray to collider
-		
-		THREE.CollisionSystem.prototype.makeRayLocal = function( ray, m, i ) {
-			
-			var scale,
-				mMat,
-				mCopy;
-
-			var rt = THREE.CollisionSystem.__r;
-			rt.origin.copy( ray.origin );
-			rt.direction.copy( ray.direction );
-			
-			if ( m instanceof THREE.Mesh ) {
-				
-				scale = m.scale,
-				mMat = m.matrixWorld,
-				mCopy = utilMat1RayLocal;
-				
-				// get copy of m world matrix without scale applied
-				// matrix with scale does not seem to invert correctly
-				
-				mCopy.extractPosition( mMat );
-				mCopy.extractRotation( mMat, scale );
-				
-				// invert copy
-				
-				var mt = THREE.CollisionSystem.__m;
-				mt.getInverse( mCopy );
-				
-				mt.multiplyVector3( rt.origin );
-				mt.rotateAxis( rt.direction );
-				
-				rt.direction.normalize();
-				
-			}
-
-			return rt;
-
-		};
-		
-		// ray mesh
-		
-		THREE.CollisionSystem.prototype.rayMesh = function( r, me ) {
-			
-			var i, l,
-				p0 = new THREE.Vector3(),
-				p1 = new THREE.Vector3(),
-				p2 = new THREE.Vector3(),
-				p3 = new THREE.Vector3(),
-				mesh = me.mesh,
-				scale = mesh.scale,
-				geometry = mesh.geometry,
-				vertices = geometry.vertices,
-				rt = this.makeRayLocal( r, mesh );
-			
-			var d = Number.MAX_VALUE;
-			var nearestface;
-			
-			for( i = 0, l = me.numFaces; i < l; i ++ ) {
-				
-				var face = geometry.faces[ i ];
-				
-				p0.copy( vertices[ face.a ].position ).multiplySelf( scale );
-				p1.copy( vertices[ face.b ].position ).multiplySelf( scale );
-				p2.copy( vertices[ face.c ].position ).multiplySelf( scale );
-				
-				if ( face instanceof THREE.Face4 ) {
-					
-					p3.copy( vertices[ face.d ].position ).multiplySelf( scale );
-					
-					var nd = this.rayTriangle( rt, p0, p1, p3, d, this.collisionNormal, mesh );
-					
-					if( nd < d ) {
-						
-						d = nd;
-						nearestface = i;
-						me.normal.copy( this.collisionNormal );
-						me.normal.normalize();
-						
-					}
-					
-					nd = this.rayTriangle( rt, p1, p2, p3, d, this.collisionNormal, mesh );
-					
-					if( nd < d ) {
-						
-						d = nd;
-						nearestface = i;
-						me.normal.copy( this.collisionNormal );
-						me.normal.normalize();
-						
-					}
-					
-				}
-				else {
-					
-					var nd = this.rayTriangle( rt, p0, p1, p2, d, this.collisionNormal, mesh );
-					
-					if( nd < d ) {
-						
-						d = nd;
-						nearestface = i;
-						me.normal.copy( this.collisionNormal );
-						me.normal.normalize();
-						
-					}
-					
-				}
-				
-			}
-			
-			return {dist: d, faceIndex: nearestface};
-			
-		};
-		
-		// ray box
-		
-		THREE.CollisionSystem.prototype.rayBox = function( ray, ab ) {
-			
-			var mesh = ab.mesh,
-				rt = this.makeRayLocal( ray, mesh ),
-				abMin = utilVec31RayBox.copy( ab.min ),
-				abMax = utilVec32RayBox.copy( ab.max ),
-				origin = rt.origin,
-				direction = rt.direction,
-				scale;
-			
-			//rt.origin.copy( ray.origin );
-			//rt.direction.copy( ray.direction );
-			
-			if ( ab.dynamic && typeof mesh !== 'undefined' ) {
-				
-				// scale
-				
-				scale = mesh.scale;
-				
-				abMin.multiplySelf( scale );
-				abMax.multiplySelf( scale );
-				
-			}
-			
-			var xt = 0, yt = 0, zt = 0;
-			var xn = 0, yn = 0, zn = 0;
-			var ins = true;
-			
-			if( origin.x < abMin.x ) {
-				
-				xt = abMin.x - origin.x;
-				xt /= direction.x;
-				ins = false;
-				xn = -1;
-				
-			} else if( origin.x > abMax.x ) {
-				
-				xt = abMax.x - origin.x;
-				xt /= direction.x;
-				ins = false;
-				xn = 1;
-				
-			}
-			
-			if( origin.y < abMin.y ) {
-				
-				yt = abMin.y - origin.y;
-				yt /= direction.y;
-				ins = false;
-				yn = -1;
-				
-			} else if( origin.y > abMax.y ) {
-				
-				yt = abMax.y - origin.y;
-				yt /= direction.y;
-				ins = false;
-				yn = 1;
-				
-			}
-			
-			if( origin.z < abMin.z ) {
-				
-				zt = abMin.z - origin.z;
-				zt /= direction.z;
-				ins = false;
-				zn = -1;
-				
-			} else if( origin.z > abMax.z ) {
-				
-				zt = abMax.z - origin.z;
-				zt /= direction.z;
-				ins = false;
-				zn = 1;
-				
-			}
-			
-			if( ins ) return -1;
-			
-			var which = 0;
-			var t = xt;
-			
-			if( yt > t ) {
-				
-				which = 1;
-				t = yt;
-				
-			}
-			
-			if ( zt > t ) {
-				
-				which = 2;
-				t = zt;
-				
-			}
-			
-			switch( which ) {
-				
-				case 0:
-					
-					var y = origin.y + direction.y * t;
-					if ( y < abMin.y || y > abMax.y ) return Number.MAX_VALUE;
-					var z = origin.z + direction.z * t;
-					if ( z < abMin.z || z > abMax.z ) return Number.MAX_VALUE;
-					ab.normal.set( xn, 0, 0 );
-					break;
-					
-				case 1:
-					
-					var x = origin.x + direction.x * t;
-					if ( x < abMin.x || x > abMax.x ) return Number.MAX_VALUE;
-					var z = origin.z + direction.z * t;
-					if ( z < abMin.z || z > abMax.z ) return Number.MAX_VALUE;
-					ab.normal.set( 0, yn, 0) ;
-					break;
-					
-				case 2:
-					
-					var x = origin.x + direction.x * t;
-					if ( x < abMin.x || x > abMax.x ) return Number.MAX_VALUE;
-					var y = origin.y + direction.y * t;
-					if ( y < abMin.y || y > abMax.y ) return Number.MAX_VALUE;
-					ab.normal.set( 0, 0, zn );
-					break;
-					
-			}
-			
-			return t;
-			
-		};
 		
 	}
 	
@@ -493,7 +240,7 @@
 			
 			// model bounding box
 			
-			bboxDimensions = dimensions_from_bounding_box_scaled( mesh );
+			bboxDimensions = _ObjectHelper.dimensions( mesh );
 			
 			if ( needWidth === true ) {
 				
@@ -583,7 +330,6 @@
 				collider: collider,
 				dynamic: dynamic,
 				mass: mass,
-				rotationGravity: new THREE.Quaternion(),
 				velocityMovement: generate_velocity_tracker( { 
 					damping: parameters.movementDamping,
 					offset: parameters.movementOffset,
@@ -598,7 +344,14 @@
 					forward: shared.cardinalAxes.forward.clone(),
 					right: shared.cardinalAxes.right.clone()
 				}
-			}
+			},
+			safe: true,
+			safetynet: {
+				position: new THREE.Vector3(),
+				quaternion: new THREE.Quaternion(),
+			},
+			safetynetstart: new signals.Signal(),
+			safetynetend: new signals.Signal()
 		};
 		
 		return link;
@@ -753,6 +506,8 @@
 		velocity.offset = parameters.offset && parameters.offset instanceof THREE.Vector3 ? parameters.offset : new THREE.Vector3();
 		velocity.relativeRotation = parameters.relativeRotation;
 		velocity.moving = false;
+		velocity.intersection = false;
+		velocity.timeWithoutIntersection = 0;
 		
 		return velocity;
 	}
@@ -762,27 +517,6 @@
     dimensions and bounds
     
     =====================================================*/
-	
-	function dimensions_from_bounding_box_scaled ( mesh ) {
-		var geometry = mesh.geometry,
-			scale = mesh.scale,
-			bbox,
-			dimensions;
-		
-		// if needs calculation
-		
-		if ( !geometry.boundingBox ) {
-			geometry.computeBoundingBox();
-		}
-		
-		bbox = geometry.boundingBox;
-		
-		// get original dimensions and scale to mesh's scale
-		
-		dimensions = new THREE.Vector3( bbox.max.x - bbox.min.x, bbox.max.y - bbox.min.y, bbox.max.z - bbox.min.z ).multiplySelf( scale );
-		
-		return dimensions;
-	}
 	
 	function dimensions_from_collider ( rigidBody ) {
 		var collider = rigidBody.collider,
@@ -826,33 +560,6 @@
 		
 	}
 	
-	function center_offset_from_bounding_box ( mesh ) {
-		
-		var geometry = mesh.geometry,
-			bbox,
-			centerOffset = new THREE.Vector3();
-		
-		// if needs calculation
-		
-		if ( !geometry.boundingBox ) {
-			geometry.computeBoundingBox();
-		}
-		
-		bbox = geometry.boundingBox;
-		
-		if ( bbox ) {
-			
-			// get mesh's center offset
-			
-			//centerOffset = new THREE.Vector3( bbox.x[0] + (bbox.x[1] - bbox.x[0]) * 0.5, bbox.y[0] + (bbox.y[1] - bbox.y[0]) * 0.5, bbox.z[0] + (bbox.z[1] - bbox.z[0]) * 0.5 );
-			centerOffset.set( bbox.max.x - bbox.min.x, bbox.max.y - bbox.min.y, bbox.max.z - bbox.min.z ).multiplyScalar( 0.5 ).addSelf( bbox.min );
-			
-		}
-		
-		return centerOffset;
-		
-	}
-	
 	function offset_by_length_in_local_direction ( mesh, localDirection, length ) {
 		
 		var offset = new THREE.Vector3( length, length, length ),
@@ -893,7 +600,7 @@
 		
 		// add center offset
 		
-		offset.addSelf( center_offset_from_bounding_box( mesh ) );
+		offset.subSelf( _ObjectHelper.center_offset( mesh ) );
 		
 		// get local direction
 		// seems like extra unnecessary work
@@ -1080,14 +787,13 @@
 			
 			if ( typeof rigidBody !== 'undefined' ) {
 				
-				// add to rotation gravity
+				/*
+				quaternion = rigidBody.quaternion;
 				
-				rotationGravity = rigidBody.rotationGravity;
+				uq1.multiply( qToNew, quaternion );
 				
-				uq1.multiply( qToNew, rotationGravity );
-				
-				THREE.Quaternion.nlerp( rotationGravity, uq1, rotationGravity, lerpDelta );
-				
+				THREE.Quaternion.nlerp( quaternion, uq1, quaternion, lerpDelta );
+				*/
 				// find new axes based on new rotation
 				
 				axes = rigidBody.axes;
@@ -1110,14 +816,18 @@
     
     =====================================================*/
 	
-	function pull_to_source ( mesh, source, velocity, offset, rigidBody ) {
+	function pull_to_source ( mesh, source, objectsToIntersect, distanceFrom, velocity, rigidBody ) {
 		
-		var position,
+		var i, l,
+			position,
 			difference = utilVec31Pull,
 			direction = utilVec32Pull,
 			shift = utilVec33Pull,
-			collision,
-			collisionDistance;
+			object,
+			rigidBody,
+			colliders,
+			intersection,
+			intersectionDistance;
 		
 		// handle parameters
 		
@@ -1143,32 +853,74 @@
 		
 		direction.copy( difference ).normalize();
 		
+		// if objects to intersect was passed
+		
+		if ( main.is_array( objectsToIntersect ) ) {
+			
+			// extract colliders from objects
+			
+			colliders = [];
+			
+			for ( i = 0, l = objectsToIntersect.length; i < l; i++ ) {
+				
+				object = objectsToIntersect[ i ];
+				
+				if( object instanceof THREE.Collider ) {
+					
+					colliders.push( object );
+					
+				}
+				else if ( typeof object.collider !== 'undefined' ) {
+					
+					colliders.push( object.collider );
+					
+				}
+				else if ( typeof object.rigidBody !== 'undefined' ) {
+					
+					colliders.push( object.rigidBody.collider );
+					
+				}
+				else if ( typeof object.physics !== 'undefined' ) {
+					
+					colliders.push( object.physics.rigidBody.collider );
+					
+				}
+				
+			}
+			
+		}
+		
 		// cast ray from mesh to source
 		
-		collision = raycast_in_direction( position, direction /*, offset, mesh */ );
-		console.log('!!! pulling to source');
-		console.log('position: ', position.x, position.y, position.z);
-		console.log('direction: ', direction.x, direction.y, direction.z);
-		console.log(collision);
-		// if collision found
+		intersection = raycast_in_direction( position, direction, undefined, undefined, colliders );
 		
-		if ( typeof collision !== 'undefined' ) {
+		// if intersection found
+		
+		if ( typeof intersection !== 'undefined' ) {
 			
 			// get distance
 			
-			collisionDistance = collision.distance;
-			console.log('>>>> collision found at distance ' + collisionDistance );
+			intersectionDistance = intersection.distance;
+			
 		}
 		else {
 			
-			collisionDistance = difference.length();
+			intersectionDistance = difference.length();
+			
+		}
+		
+		// if distance from needed
+		
+		if ( main.is_number( distanceFrom ) ) {
+			
+			intersectionDistance -= distanceFrom;
 			
 		}
 		
 		// multiply direction by distance
 			
-		shift.copy( direction ).multiplyScalar( collisionDistance );
-		console.log('shift: ', shift.x, shift.y, shift.z);
+		shift.copy( direction ).multiplyScalar( intersectionDistance );
+		
 		// add shift to position
 		
 		position.addSelf( shift );
@@ -1226,7 +978,7 @@
 		
 		// get bounding box offset
 		
-		boundingOffset = offset_from_dimensions_in_direction( mesh, velocityForceRotated, dimensions_from_collider_scaled( rigidBody, mesh ) );//dimensions_from_bounding_box_scaled( mesh ) );
+		boundingOffset = offset_from_dimensions_in_direction( mesh, velocityForceRotated, dimensions_from_collider_scaled( rigidBody, mesh ) );//_ObjectHelper.dimensions( mesh ) );
 		
 		boundingOffsetLength = boundingOffset.length();
 		
@@ -1320,7 +1072,10 @@
 			gravMag = utilVec32Update,
 			gravUp = utilVec33Update,
 			velocityGravity,
-			velocityMovement;
+			velocityGravityForceUpDir = utilVec34Update,
+			velocityGravityForceUpDirRot = utilVec35Update,
+			velocityMovement,
+			safetynet;
 		
 		// handle rotation and check velocity
 		
@@ -1331,6 +1086,8 @@
 			mesh = link.mesh;
 			
 			rigidBody = link.rigidBody;
+			
+			safetynet = link.safetynet;
 			
 			// is dynamic
 			
@@ -1364,9 +1121,102 @@
 				
 				velocityGravity.relativeRotation = gravUp;
 				
+				velocityGravityForceUpDir.copy( velocityGravity.force ).negate().normalize();
+				
+				velocityGravityForceUpDirRot = rotate_vector3_relative_to( velocityGravity.relativeRotation, velocityGravityForceUpDir, velocityGravityForceUpDirRot );
+				
 				// gravity velocity
 				
 				handle_velocity( link, velocityGravity );
+				
+				// post physics
+				
+				// if link is not safe
+				if ( link.safe === false ) {
+					
+					// rescue link and set back to last safe
+					
+					mesh.position.copy( safetynet.position );
+					
+					if ( mesh.useQuaternion === true ) {
+						
+						mesh.quaternion.copy( safetynet.quaternion );
+						
+					}
+					else {
+						
+						mesh.matrix.setRotationFromQuaternion( safetynet.quaternion );
+						
+					}
+					
+					velocityGravity.force.set( 0, 0, 0 );
+					velocityMovement.force.set( 0, 0, 0 );
+					
+					velocityGravity.timeWithoutIntersection = 0;
+					
+					link.safe = true;
+					
+					// safety net end
+						
+					link.safetynetend.dispatch();
+					
+					shared.signals.physicssafetynetend.dispatch( link );
+					
+				}		
+				// if velocity gravity force is moving towards source
+				else if ( velocityGravityForceUpDirRot.equals( gravUp ) ) {
+					
+					// if no intersection
+					if ( !velocityGravity.intersection ) {
+						
+						velocityGravity.timeWithoutIntersection += timeDelta;
+						
+						// without intersection for time above threshold
+						if ( velocityGravity.timeWithoutIntersection > _Physics.timeWithoutIntersectionThreshold ) {
+							
+							// set link to unsafe, but do not reset to safe position immediately
+							// wait until next update to allow dispatched signals to be handled first
+							
+							link.safe = false;
+							
+							// safety net start
+							
+							if ( link.safetynetstart ) {
+								
+								link.safetynetstart.dispatch();
+								
+							}
+							
+							shared.signals.physicssafetynetstart.dispatch( link );
+							
+						}
+						
+					}
+					// link is safe
+					else {
+						
+						velocityGravity.timeWithoutIntersection = 0;
+						
+						link.safe = true;
+						
+						// copy last safe position and rotation into rigidBody
+						
+						safetynet.position.copy( mesh.position );
+						
+						if ( mesh.useQuaternion === true ) {
+							
+							safetynet.quaternion.copy( mesh.quaternion );
+							
+						}
+						else {
+							
+							safetynet.quaternion.setFromRotationMatrix( mesh.matrix );
+							
+						}
+						
+					}
+					
+				}
 				
 			}
 			
@@ -1380,7 +1230,7 @@
     
     =====================================================*/
 	
-	function handle_velocity ( link, velocity, offset ) {
+	function handle_velocity ( link, velocity ) {
 		
 		var rigidBody = link.rigidBody,
 			mesh = link.mesh,
@@ -1397,8 +1247,8 @@
 			relativeRotation = velocity.relativeRotation,
 			boundingOffset,
 			boundingOffsetLength,
-			collision,
-			collisionDist;
+			intersection,
+			intersectionDist;
 		
 		if ( rigidBody.dynamic !== true || velocityForce.isZero() === true ) {
 			
@@ -1431,17 +1281,9 @@
 		
 		// get bounding box offset
 		
-		boundingOffset = offset_from_dimensions_in_direction( mesh, velocityForceRotated, dimensions_from_collider_scaled( rigidBody, mesh ) );//dimensions_from_bounding_box_scaled( mesh ) );
+		boundingOffset = offset_from_dimensions_in_direction( mesh, velocityForceRotated, dimensions_from_collider_scaled( rigidBody, mesh ) );//_ObjectHelper.dimensions( mesh ) );
 		
 		boundingOffsetLength = boundingOffset.length();
-		
-		// override offset
-		
-		if ( typeof offset !== 'undefined' ) {
-		
-			velocityOffset = offset;
-			
-		}
 		
 		// rotate offset if needed
 		
@@ -1451,21 +1293,23 @@
 			
 		}
 		
-		// get collision
+		// get intersection
 		
-		collision = raycast_in_direction( position, velocityForceRotated, velocityOffset, mesh );
+		intersection = raycast_in_direction( position, velocityForceRotated, velocityOffset, mesh );
 		
-		// modify velocity based on collision distances to avoid passing through or into objects
+		// modify velocity based on intersection distances to avoid passing through or into objects
 		
-		if ( collision ) {
+		if ( intersection ) {
 			
-			collisionDist = collision.distance;
+			velocity.intersection = intersection;
 			
-			// set the rotated velocity to be no more than collision distance
+			intersectionDist = intersection.distance;
 			
-			if ( collisionDist - velocityForceRotatedLength <= boundingOffsetLength ) {
+			// set the rotated velocity to be no more than intersection distance
+			
+			if ( intersectionDist - velocityForceRotatedLength <= boundingOffsetLength ) {
 				
-				velocityForceScalar = ( collisionDist - boundingOffsetLength ) / velocityForceRotatedLength;
+				velocityForceScalar = ( intersectionDist - boundingOffsetLength ) / velocityForceRotatedLength;
 				
 				velocityForceRotated.multiplyScalar( velocityForceScalar );
 				
@@ -1477,6 +1321,11 @@
 				
 			}
 			
+		}
+		else {
+			
+			velocity.intersection = false;
+		
 		}
 		
 		// add velocity to position
@@ -1493,9 +1342,9 @@
 			velocityForce.multiplyScalar( 0 );
 		}
 		
-		// return collision
+		// return intersection
 		
-		return collision;
+		return intersection;
 	}
 	
 	/*===================================================
@@ -1504,15 +1353,15 @@
     
     =====================================================*/
 	
-	function raycast_in_direction ( origin, direction, offset, mesh ) {
+	function raycast_in_direction ( origin, direction, offset, mesh, colliders ) {
 		
 		var i, l,
 			ray = utilRay1Casting,
-			collisions = [],
-			collisionPotential,
-			collisionMeshRecast,
-			collisionDistance = Number.MAX_VALUE,
-			collision;
+			intersections = [],
+			intersectionPotential,
+			intersectionMeshRecast,
+			intersectionDistance = Number.MAX_VALUE,
+			intersection;
 		
 		// set ray
 		
@@ -1527,21 +1376,21 @@
 			
 		}
 		
-		// ray cast all
+		// ray cast colliders, defaults to all in system
 		
-		collisions = system.rayCastAll( ray );
+		intersections = system.rayCastAll( ray, colliders );
 		
-		// find nearest collision
+		// find nearest intersection
 		
-		if ( typeof collisions !== 'undefined' ) {
+		if ( typeof intersections !== 'undefined' ) {
 			
-			for ( i = 0, l = collisions.length; i < l; i ++ ) {
+			for ( i = 0, l = intersections.length; i < l; i ++ ) {
 				
-				collisionPotential = collisions[ i ];
+				intersectionPotential = intersections[ i ];
 				
 				// if is collider for this object, skip
 				
-				if ( collisionPotential.mesh === mesh ) {
+				if ( intersectionPotential.mesh === mesh ) {
 					
 					continue;
 					
@@ -1550,67 +1399,35 @@
 				// cast ray again if collider is mesh
 				// initial ray cast was to mesh collider's dynamic box
 				
-				if ( collisionPotential instanceof THREE.MeshCollider ) {
+				if ( intersectionPotential instanceof THREE.MeshCollider ) {
 					
-					collisionMeshRecast = system.rayMesh( ray, collisionPotential );
+					intersectionMeshRecast = system.rayMesh( ray, intersectionPotential );
 					
-					if ( collisionMeshRecast.dist < Number.MAX_VALUE ) {
-						collisionPotential.distance = collisionMeshRecast.dist;
-						collisionPotential.faceIndex = collisionMeshRecast.faceIndex;
+					if ( intersectionMeshRecast.dist < Number.MAX_VALUE ) {
+						intersectionPotential.distance = intersectionMeshRecast.dist;
+						intersectionPotential.faceIndex = intersectionMeshRecast.faceIndex;
 					}
 					else {
-						collisionPotential.distance = Number.MAX_VALUE;
+						intersectionPotential.distance = Number.MAX_VALUE;
 					}
 					
 				}
 				
 				// if distance is less than last ( last starts at number max value )
-				// store as collision
+				// store as intersection
 				
-				if ( collisionPotential.distance < collisionDistance ) {
+				if ( intersectionPotential.distance < intersectionDistance ) {
 					
-					collisionDistance = collisionPotential.distance;
-					collision = collisionPotential;
-					
-				}
-				
-			}
-			
-		}
-		
-		/*
-		// ray casting individual objects
-		
-		for ( i = 0, l = system.colliders.length; i < l; i ++ ) {
-			
-			var collider = system.colliders[ i ];
-			var cmesh = collider.mesh;
-			
-			if ( cmesh === mesh ) {
-				continue;
-			}
-			
-			var intersects = ray.intersectObject( cmesh );
-			//console.log(intersects.length);
-			var j, k;
-			
-			for ( j = 0, k = intersects.length; j < k; j ++ ) {
-				
-				var intersect = intersects[ j ];
-				//console.log(' > dist', intersect.distance, ' vs ', collisionDistance);
-				if ( intersect.distance < collisionDistance ) {
-					
-					collisionDistance = intersect.distance;
-					collision = intersect;
+					intersectionDistance = intersectionPotential.distance;
+					intersection = intersectionPotential;
 					
 				}
 				
 			}
 			
 		}
-		*/
 		
-		return collision;
+		return intersection;
 		
 	}
 	

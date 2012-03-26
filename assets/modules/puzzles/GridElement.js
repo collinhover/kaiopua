@@ -48,6 +48,8 @@
 		_ObjectHelper = oh;
 		_MathHelper = mh;
 		
+		// instance
+		
 		_GridElement.Instance = GridElement;
 		_GridElement.Instance.prototype = new _Model.Instance();
 		_GridElement.Instance.prototype.constructor = _GridElement.Instance;
@@ -62,7 +64,8 @@
 		_GridElement.Instance.prototype.occupy_module = occupy_module;
 		_GridElement.Instance.prototype.test_occupy_module = test_occupy_module;
 		_GridElement.Instance.prototype.each_layout_element = _GridElement.each_layout_element = each_layout_element;
-		_GridElement.Instance.prototype.get_center_layout = get_center_layout;
+		_GridElement.Instance.prototype.get_layout_center_location = get_layout_center_location;
+		_GridElement.Instance.prototype.get_layout_center_offset = get_layout_center_offset;
 		
 	}
 	
@@ -78,8 +81,8 @@
 		
 		parameters = parameters || {};
 		
-		parameters.geometry = new THREE.CubeGeometry( 50, 100, 50 );
-		parameters.materials = new THREE.MeshNormalMaterial();
+		parameters.geometry = parameters.geometry || new THREE.CubeGeometry( 50, 100, 50 );
+		parameters.materials = parameters.materials || new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } );
 		
 		// prototype constructor
 		
@@ -92,7 +95,6 @@
 		// modules layout
 		
 		this.layoutModules = this.layout.dup();
-		
 	}
 	
 	/*===================================================
@@ -141,11 +143,11 @@
 				[ 0, 0, 0, 0, 0 ]
 			] );
 			*/
-			layout = $M( [
+			/*layout = $M( [
 				[ Math.round( Math.random() ), Math.round( Math.random() ), Math.round( Math.random() ) ],
 				[ Math.round( Math.random() ), Math.round( Math.random() ), Math.round( Math.random() ) ],
 				[ Math.round( Math.random() ), Math.round( Math.random() ), Math.round( Math.random() ) ]
-			] );
+			] );*/
 			
 		}
 		
@@ -247,7 +249,7 @@
 			this.module = moduleNew;
 			
 			this.layoutModules = layoutModulesNew;
-			console.log('module and layoutModules?', this.module, ' and ', this.layoutModules );
+			
 			// if new module and layouts are valid
 			
 			if ( this.module instanceof _GridModule.Instance && typeof this.layoutModules !== 'undefined' ) {
@@ -292,27 +294,36 @@
 			center,
 			testResults,
 			spreadRecord,
-			testLayoutModules;
+			testLayoutModules,
+			moduleDimensions,
+			modulesWidthTotal = 0,
+			modulesDepthTotal = 0,
+			modulesCount = 0,
+			avgModuleWidth,
+			avgModuleDepth;
 		
 		// change test modules
 			
 		if ( this.testModule !== testModule ) {
 			
-			// remove self from previous
+			// remove self from current parent
 			
 			if ( typeof this.parent !== 'undefined' ) {
+				
+				// if has module, add this to it
 				
 				if ( this.module instanceof _GridModule.Instance ) {
 					
 					this.module.add( this );
 					
 				}
+				// otherwise just remove 
 				else {
 					
 					this.parent.remove( this );
 					
 				}
-			
+				
 			}
 			
 			// store as test
@@ -325,17 +336,13 @@
 		
 		if ( typeof testModule !== 'undefined' ) {
 			
-			// add
+			// add to test module
 			
 			if ( this.parent !== testModule ) {
 				
 				testModule.add( this );
 				
 			}
-			
-			// snap to
-			
-			_ObjectHelper.object_follow_object( this, testModule );
 			
 			// clean testModule's grid
 			
@@ -351,7 +358,7 @@
 			dimensions = this.layout.dimensions();
 			rows = dimensions.rows;
 			cols = dimensions.cols;
-			center = this.get_center_layout();
+			center = this.get_layout_center_location();
 			testResults = Matrix.Zero( rows, cols );
 			spreadRecord = testResults.dup();
 			testLayoutModules = testResults.dup();
@@ -370,9 +377,40 @@
 						
 						testLayoutModule.show_state( 'occupied', 1 - success );
 						
+						moduleDimensions = _ObjectHelper.dimensions( testLayoutModule );
+						console.log( 'TESTED MODULE' );
+						console.log( 'moduleDimensions', moduleDimensions.x.toFixed(3), moduleDimensions.y.toFixed(3), moduleDimensions.z.toFixed(3) );
+						console.log( 'module Q', testLayoutModule.quaternion.x.toFixed(3), testLayoutModule.quaternion.y.toFixed(3), testLayoutModule.quaternion.z.toFixed(3), testLayoutModule.quaternion.w.toFixed(3) );
+						var mqworld = new THREE.Quaternion().setFromRotationMatrix( testLayoutModule.matrixWorld );
+						console.log( 'module Q world', mqworld.x.toFixed(3), mqworld.y.toFixed(3), mqworld.z.toFixed(3), mqworld.w.toFixed(3) );
+						modulesWidthTotal += moduleDimensions.x;
+						modulesDepthTotal += moduleDimensions.z;
+						modulesCount++;
+						
 					}
 					
 				}, testLayoutModules );
+				
+				// offset self
+				// based on size of modules tested
+				// and the center offset of own layout
+				
+				// average module size
+				
+				avgModuleWidth = modulesWidthTotal / modulesCount;
+				avgModuleDepth = modulesDepthTotal / modulesCount;
+				
+				// center offset of layout
+				
+				var layoutCenterOffset = this.get_layout_center_offset();
+				
+				console.log( 'avgModuleWidth', avgModuleWidth, 'avgModuleDepth', avgModuleDepth );
+				console.log(' get_layout_center_offset: ', layoutCenterOffset.row.toFixed(3), layoutCenterOffset.col.toFixed(3) );
+				
+				//this.position.x += avgModuleWidth * ( layoutCenterOffset.row - 1 );
+				//this.position.z += avgModuleDepth * ( layoutCenterOffset.col - 1 );
+				console.log( ' new pos ', this.position.x.toFixed(2), this.position.y.toFixed(2), this.position.z.toFixed(2) );
+				console.log( ' new Q ', this.quaternion.x.toFixed(3), this.quaternion.y.toFixed(3), this.quaternion.z.toFixed(3), this.quaternion.w.toFixed(3) );
 				
 			}
 			
@@ -571,7 +609,7 @@
 		
 	}
 	
-	function get_center_layout ( layout ) {
+	function get_layout_center_location ( layout ) {
 		
 		layout = layout || this.layout;
 		
@@ -580,6 +618,30 @@
 			centerCol = Math.ceil( dimensions.cols * 0.5 );
 		
 		return { row: centerRow, col: centerCol };
+		
+	}
+	
+	function get_layout_center_offset ( layout ) {
+		
+		layout = layout || this.layout;
+		
+		var numNodes = 0,
+			iTotal = 0,
+			jTotal = 0;
+		
+		this.each_layout_element( function ( node, i, j ) {
+			
+			if ( node > 0 ) {
+				
+				iTotal += i;
+				jTotal += j;
+				numNodes++;
+				
+			}
+			
+		}, layout );
+		
+		return { row: iTotal / numNodes, col: jTotal / numNodes };
 		
 	}
 	

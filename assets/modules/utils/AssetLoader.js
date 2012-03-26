@@ -81,7 +81,8 @@
 	main.asset_register( assetPath, { 
 		data: _AssetLoader,
 		requirements: "assets/modules/ui/UIElement.js",
-		callbacksOnReqs: init_ui
+		callbacksOnReqs: init_ui,
+		wait: true
 	} );
 	
 	/*===================================================
@@ -246,6 +247,7 @@
 		// header
 		header = new _UIElement.Instance({
 			elementType: 'header',
+			classes: 'text_large title_alt',
 			width: barWidth,
 			html: loadingHeaderBase,
 			cssmap: {
@@ -283,7 +285,7 @@
 		
 		// hide
 		
-		container.hide( false, 0);
+		container.hide( { remove: false, time: 0 } );
 		
 	}
 	

@@ -74,7 +74,7 @@
             "assets/modules/sections/Launcher.js",
             "assets/modules/env/WaterLauncher.js",
             "assets/modules/env/SkyLauncher.js",
-            "assets/textures/cloud256.png",
+            "assets/textures/cloud_256.png",
             "assets/textures/light_ray.png",
 			"assets/textures/skybox_launcher_xz.jpg",
 			"assets/textures/skybox_launcher_posy.jpg",
@@ -86,9 +86,9 @@
 			"assets/modules/core/Player.js",
 			"assets/modules/core/Model.js",
 			"assets/modules/core/CameraControls.js",
+			"assets/modules/core/Messenger.js",
 			"assets/modules/ui/Button.js",
 			"assets/modules/ui/Menu.js",
-			"assets/modules/ui/MenuDynamic.js",
 			"assets/modules/ui/Inventory.js",
 			"assets/modules/utils/ObjectMaker.js",
 			"assets/modules/utils/ObjectHelper.js",
@@ -97,6 +97,7 @@
 			"assets/modules/env/World.js",
 			"assets/modules/env/WorldIsland.js",
 			"assets/modules/env/Water.js",
+			"assets/modules/env/Sky.js",
 			"assets/modules/puzzles/Puzzles.js",
 			"assets/modules/puzzles/Grid.js",
 			"assets/modules/puzzles/GridModule.js",
@@ -127,7 +128,8 @@
 			{ path: "assets/models/Palm_Trees.js", type: 'model' },
 			{ path: "assets/models/Kukui_Tree.js", type: 'model' },
 			{ path: "assets/models/Kukui_Trees.js", type: 'model' },
-			{ path: "assets/models/Taro_Plant_001.js", type: 'model' },
+			{ path: "assets/models/Taro_Plant_Single.js", type: 'model' },
+			{ path: "assets/models/Taro_Plant_Double.js", type: 'model' },
 			{ path: "assets/models/Volcano_Large.js", type: 'model' },
 			{ path: "assets/models/Volcano_Small.js", type: 'model' },
 			{ path: "assets/models/Volcano_Rocks_001.js", type: 'model' },
@@ -323,7 +325,7 @@
         shared.signals.update = new signals.Signal();
 		
 		// renderer
-        renderer = new THREE.WebGLRenderer( { antialias: true, clearColor: 0x000000, clearAlpha: 0, maxLights: 8 } );
+        renderer = new THREE.WebGLRenderer( { antialias: false, clearColor: 0x000000, clearAlpha: 0, maxLights: 4 } );
         renderer.setSize( shared.screenWidth, shared.screenHeight );
         renderer.autoClear = false;
 		
@@ -499,21 +501,46 @@
 		};
 		m.main.childrenByID.resume.context = this;
 		
-		m.main.childrenByID.end.callback = function () {
+		b.end.callback = function () {
 			stop_game();
 		};
-		m.main.childrenByID.end.context = this;
+		b.end.context = this;
+		
+		b.mainMenu.callback = function () {
+			_Game.pause();
+		};
+		b.mainMenu.context = this;
 		
 		// menus
 		
 		m.start.alignment = 'center';
 		m.main.alignment = 'center';
 		
-		// show ui
+		m.navigation.spacingBottom = 20;
+		m.navigation.alignment = 'bottomcenter';
 		
-		b.fullscreenEnter.show( _GUI.layers.ui );
+		// setup ui groups
 		
-		m.start.show( _GUI.layers.ui );
+		_GUI.add_to_group( 'constant', [ { child: b.fullscreenEnter, parent: _GUI.layers.ui } ] );
+		
+		_GUI.add_to_group( 'start', [
+			{ child: m.start, parent: _GUI.layers.ui },
+			{ child: m.footer, parent: _GUI.container }
+		] );
+		
+		_GUI.add_to_group( 'pause', [
+			{ child: m.main, parent: _GUI.layers.ui },
+			{ child: m.footer, parent: _GUI.container }
+		] );
+		
+		_GUI.add_to_group( 'ingame', [
+			{ child: m.navigation, parent: _GUI.layers.ui }
+		] );
+		
+		// show initial groups
+		
+		_GUI.show_group( 'constant' );
+		_GUI.show_group( 'start' );
 		
     }
 	
@@ -928,7 +955,7 @@
             
             previousSection.hide();
             
-			_GUI.transitioner.show( _GUI.layers.overlayAll, undefined, 1 );
+			_GUI.transitioner.show( { parent: _GUI.layers.overlayAll, opacity: 1 } );
             
         }
 		
@@ -986,19 +1013,17 @@
 		_Physics = main.get_asset_data( 'assets/modules/core/Physics.js' );
 		_Intro = main.get_asset_data( 'assets/modules/sections/Intro.js' );
 		
-		// hide footer menu
+		// ui
 		
-		_GUI.menus.footer.hide( true );
-		
-        // start menu
-		
-        _GUI.menus.start.disable();
-		
-        _GUI.menus.start.hide( true );
+		_GUI.hide_group( 'start', { remove: true } );
         
 		// set intro section
 		
-        set_section( _Intro );
+        set_section( _Intro, function () {
+			
+			_GUI.show_group( 'ingame' );
+			
+		} );
 		
 		// set started
 		
@@ -1008,57 +1033,61 @@
 	
 	function stop_game () {
 		
-		// set started
-		
 		started = false;
 		
-		// pause menu
-			
-		_GUI.menus.main.disable();
-		
-		_GUI.menus.main.hide( true );
-		
-		// show footer menu
-		
-		_GUI.menus.footer.show();
+		_GUI.hide_group( 'pause', { remove: true } );
 		
 		// set launcher section
 		
         set_section( _Launcher, function () {
-			
-			// show / enable start menu
-			
-			_GUI.menus.start.show( _GUI.layers.ui );
-			_GUI.menus.start.enable();
+		
+			_GUI.show_group( 'start' );
 			
 		});
 		
 	}
+	
+	/*===================================================
     
-    function pause () {
+    pause / resume
+    
+    =====================================================*/
+    
+    function pause ( preventDefault ) {
+		
+		// set state
 		
         if (paused === false) {
             
             paused = true;
 			
+			// handle ui
+			
 			if ( started === true ) {
 				
-				_GUI.transitioner.show( _GUI.layers.overlayDisplay );
+				_GUI.transitioner.show( { parent: _GUI.layers.overlayDisplay } );
 				
-				_GUI.menus.main.show( _GUI.layers.ui );
-				
-				_GUI.menus.main.enable();
-				
-				_GUI.menus.footer.show();
+				if ( preventDefault !== true ) {
+					
+					_GUI.hide_group( 'ingame', { remove: true } );
+					_GUI.show_group( 'pause' );
+					
+				}
 				
 			}
 			else {
 				
-				_GUI.transitioner.show( _GUI.layers.overlayAll );
+				_GUI.transitioner.show( { parent: _GUI.layers.overlayAll } );
 				
 			}
+			
+			// signal
             
             shared.signals.paused.dispatch();
+			
+			// render once to ensure user is not surprised when resuming
+			
+			render();
             
         }
 		
@@ -1070,15 +1099,12 @@
 			
 			if ( started === true ) {
 				
-				_GUI.menus.main.disable();
-				
-				_GUI.menus.main.hide( true );
-				
-				_GUI.menus.footer.hide( true );
+				_GUI.hide_group( 'pause', { remove: true } );
+				_GUI.show_group( 'ingame' );
 				
 			}
 			
-			_GUI.transitioner.hide( true, undefined, 0 );
+			_GUI.transitioner.hide( { remove: true } );
 			
 			paused = false;
 			
@@ -1086,6 +1112,12 @@
             
         }
     }
+	
+	/*===================================================
+    
+    animate / render
+    
+    =====================================================*/
     
     function animate () {
     
@@ -1195,7 +1227,7 @@
         
 		// pause game
 		
-        pause();
+        pause( true );
 		
 		// check error handler state
 		

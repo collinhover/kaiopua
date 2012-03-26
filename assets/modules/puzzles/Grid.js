@@ -13,6 +13,7 @@
 		_Grid = {},
 		_Model,
 		_GridModule,
+		_GridElement,
 		_ObjectHelper,
 		_MathHelper,
 		idStateMaterialBase = 'base',
@@ -34,6 +35,7 @@
 		requirements: [
 			"assets/modules/core/Model.js",
 			"assets/modules/puzzles/GridModule.js",
+			"assets/modules/puzzles/GridElement.js",
 			"assets/modules/utils/ObjectHelper.js",
 			"assets/modules/utils/MathHelper.js"
 		],
@@ -47,11 +49,12 @@
 	
 	=====================================================*/
 	
-	function init_internal ( m, gu, oh, mh ) {
+	function init_internal ( m, gm, ge, oh, mh ) {
 		console.log("internal grid", _Grid);
 		
 		_Model = m;
-		_GridModule = gu;
+		_GridModule = gm;
+		_GridElement = ge;
 		_ObjectHelper = oh;
 		_MathHelper = mh;
 		
@@ -67,6 +70,7 @@
 		_Grid.Instance = Grid;
 		_Grid.Instance.prototype = new _Model.Instance();
 		_Grid.Instance.prototype.constructor = _Grid.Instance;
+		_Grid.Instance.prototype.each_module = each_module;
 		_Grid.Instance.prototype.modify_modules = modify_modules;
 		_Grid.Instance.prototype.add_modules = add_modules;
 		_Grid.Instance.prototype.add_module = add_module;
@@ -74,7 +78,6 @@
 		_Grid.Instance.prototype.remove_module = remove_module;
 		_Grid.Instance.prototype.get_modules_with_vertices = get_modules_with_vertices;
 		_Grid.Instance.prototype.clean = clean;
-		_Grid.Instance.prototype.each_module = each_module;
 		
 		// get / set
 		
@@ -83,6 +86,33 @@
 			set: function ( puzzle ) {
 				
 				this._puzzle = puzzle;
+				
+			}
+		});
+		
+		Object.defineProperty( _Grid.Instance.prototype, 'full', { 
+			get : function () {
+				
+				var i, l,
+					full = true,
+					module;
+				
+				// for each module
+				
+				for ( i = 0, l = this.modules.length; i < l; i++ ) {
+					
+					module = this.modules[ i ];
+					
+					if ( !( module.occupant instanceof _GridElement.Instance ) ) {
+						
+						full = false;
+						break;
+						
+					}
+					
+				}
+				
+				return full;
 				
 			}
 		});
@@ -214,6 +244,47 @@
 	modules
 	
 	=====================================================*/
+	
+	function each_module( methods, modulesExcluding ) {
+		
+		var i, l,
+			j, k,
+			module,
+			method;
+		
+		// handle parameters
+		
+		methods = main.ensure_array( methods );
+		
+		modulesExcluding = main.ensure_array( modulesExcluding );
+		
+		// for each module
+		
+		for ( i = 0, l = this.modules.length; i < l; i++ ) {
+			
+			module = this.modules[ i ];
+			
+			// if not to be excluded
+			
+			if ( modulesExcluding.indexOf( module ) === -1 ) {
+				
+				// for each method
+				
+				for ( j = 0, k = methods.length; j < k; j++ ) {
+					
+					method = methods[ j ];
+					
+					// call method in context of module
+					
+					method.call( module );
+					
+				}
+				
+			}
+			
+		}
+		
+	}
 	
 	function modify_modules ( modules, remove ) {
 		
@@ -515,47 +586,6 @@
 			}, modulesExcluding );
 			
 			this._dirtyModules = false;
-			
-		}
-		
-	}
-	
-	function each_module( methods, modulesExcluding ) {
-		
-		var i, l,
-			j, k,
-			module,
-			method;
-		
-		// handle parameters
-		
-		methods = main.ensure_array( methods );
-		
-		modulesExcluding = main.ensure_array( modulesExcluding );
-		
-		// for each module
-		
-		for ( i = 0, l = this.modules.length; i < l; i++ ) {
-			
-			module = this.modules[ i ];
-			
-			// if not to be excluded
-			
-			if ( modulesExcluding.indexOf( module ) === -1 ) {
-				
-				// for each method
-				
-				for ( j = 0, k = methods.length; j < k; j++ ) {
-					
-					method = methods[ j ];
-					
-					// call method in context of module
-					
-					method.call( module );
-					
-				}
-				
-			}
 			
 		}
 		

@@ -11,7 +11,7 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/ui/Inventory.js",
 		_Inventory = {},
-		_MenuDynamic;
+		_Menu;
 	
 	/*===================================================
     
@@ -22,7 +22,7 @@
 	main.asset_register( assetPath, { 
 		data: _Inventory,
 		requirements: [
-			"assets/modules/ui/MenuDynamic.js"
+			"assets/modules/ui/Menu.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -34,13 +34,13 @@
     
     =====================================================*/
 	
-	function init_internal ( md ) {
+	function init_internal ( m ) {
 		console.log('internal inventory', _Inventory);
 		
-		_MenuDynamic = md;
+		_Menu = m;
 		
 		_Inventory.Instance = Inventory;
-		_Inventory.Instance.prototype = new _MenuDynamic.Instance();
+		_Inventory.Instance.prototype = new _Menu.Instance();
 		_Inventory.Instance.prototype.constructor = _Inventory.Instance;
 		
 	}
@@ -59,7 +59,7 @@
 		
 		// prototype constructor
 		
-		_MenuDynamic.Instance.call( this, parameters );
+		_Menu.Instance.call( this, parameters );
 		
 	}
 	
