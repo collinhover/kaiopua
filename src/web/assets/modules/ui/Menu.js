@@ -204,6 +204,8 @@
 		
 		this.independent = [];
 		
+		this.openAlone = typeof parameters.openAlone === 'boolean' ? parameters.openAlone : true;
+		
 		// remove button events from self
 		
 		this.domElement.off( '.btn' );
@@ -270,7 +272,7 @@
 		
 		if ( this.isOpen ) {
 			
-			this.close( 0 );
+			this.close( { time: 0 } );
 			
 		}
 		
@@ -427,38 +429,40 @@
 		
 	}
 	
-	function close ( time, callback, callbackContext, child ) {
+	function close ( parameters, child ) {
 		
 		var i, l,
 			children,
 			subchild;
 		
+		parameters = parameters || {};
+		
 		child = child instanceof _UIElement.Instance ? child : this;
 		
-		children = child.children;
+		children = this.copy_children_and_exclude( child.children, parameters.excluding );
 		
 		for ( i = 0, l = children.length; i < l; i++ ) {
 			
 			subchild = children[ i ];
 			
-			this.close( time, undefined, undefined, subchild );
+			this.close( parameters, subchild );
 			
 		}
 		
 		if ( child instanceof _Menu.Instance ) {
 			
-			child.close_self( time, callback, callbackContext );
+			child.close_self( parameters.time );
 			
 		}
 		
 	}
 	
-	function close_self ( time, callback, callbackContext ) {
+	function close_self ( time ) {
 		
 		// only close if both open and close buttons are valid
 		
 		if ( this.hasOpenCloseButtons ) {
-			//console.log( this.id, 'CLOSING' );
+			console.log( this.id, 'CLOSING' );
 			this._isOpen = false;
 			
 			this.hide_children( { time: time } );
@@ -478,17 +482,6 @@
 						
 					}
 					
-					if ( typeof callback === 'function' ) {
-						
-						if ( typeof callbackContext !== 'undefined' ) {
-							callback.call( callbackContext );
-						}
-						else {
-							callback();
-						}
-						
-					}
-					
 				},
 				callbackContext: this
 			} );
@@ -498,19 +491,28 @@
 	}
 	
 	function child_opening ( child, time ) {
-		//console.log( this.id, ' child, ', child.id, ', OPENING' );
+		
 		this.childOpen = child;
 		
-		this.childrenShowingOrder = this.get_children_showing();
-		
-		this.hide_children( { children: this.childrenShowingOrder, excluding: child, time: time } );
+		if ( child.openAlone ) {
+			console.log( this.id, ' child, ', child.id, ', OPENING solo' );
+			this.childrenShowingOrder = this.get_children_showing();
+			
+			this.hide_children( { excluding: child, time: time } );
+			
+		}
+		else {
+			console.log( this.id, ' child, ', child.id, ', OPENING with others' );
+			this.close( { excluding: child, time: time } );
+			
+		}
 		
 	}
 	
 	function child_closing ( child, time ) {
 		
 		if ( this.isOpen && this.childOpen === child && this.childrenShowingOrder ) {
-			//console.log( this.id, ' child, ', child.id, ', CLOSING' );
+			console.log( this.id, ' child, ', child.id, ', CLOSING' );
 			this.show_children( { children: this.childrenShowingOrder, time: time } );
 			
 			this.childrenShowingOrder = undefined;

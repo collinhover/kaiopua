@@ -9,7 +9,7 @@
 (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/core/Messenger.js",
+		assetPath = "assets/modules/ui/Messenger.js",
 		_Messenger = {},
 		_UIElement,
 		_Game,
@@ -27,7 +27,7 @@
 		requirements: [
 			"assets/modules/ui/UIElement.js",
 			"assets/modules/core/Game.js",
-			"assets/modules/core/GUI.js"
+			"assets/modules/ui/GUI.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true

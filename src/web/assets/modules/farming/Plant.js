@@ -30,7 +30,7 @@
 			"assets/modules/puzzles/GridElement.js",
 			"assets/modules/puzzles/GridModule.js",
 			"assets/modules/ui/UIElement.js",
-			"assets/modules/core/GUI.js",
+			"assets/modules/ui/GUI.js",
 			"assets/modules/utils/ObjectHelper.js",
 			"assets/models/Taro_Plant_Single.js"//"assets/models/Taro_Plant_Double.js"
 		],

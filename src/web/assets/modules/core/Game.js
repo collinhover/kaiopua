@@ -53,7 +53,7 @@
 			"assets/modules/ui/UIElement.js",
 			"assets/modules/ui/Button.js",
 			"assets/modules/ui/Menu.js",
-			"assets/modules/core/GUI.js",
+			"assets/modules/ui/GUI.js",
 			"assets/modules/utils/MathHelper.js",
             "js/lib/three/Three.js",
 			"js/lib/jquery.transform2d.min.js",
@@ -86,7 +86,7 @@
 			"assets/modules/core/Player.js",
 			"assets/modules/core/Model.js",
 			"assets/modules/core/CameraControls.js",
-			"assets/modules/core/Messenger.js",
+			"assets/modules/ui/Messenger.js",
 			"assets/modules/ui/Button.js",
 			"assets/modules/ui/Menu.js",
 			"assets/modules/ui/Inventory.js",
@@ -98,7 +98,7 @@
 			"assets/modules/env/WorldIsland.js",
 			"assets/modules/env/Water.js",
 			"assets/modules/env/Sky.js",
-			"assets/modules/puzzles/Puzzles.js",
+			"assets/modules/puzzles/Puzzle.js",
 			"assets/modules/puzzles/Grid.js",
 			"assets/modules/puzzles/GridModule.js",
 			"assets/modules/puzzles/GridModuleState.js",
@@ -302,7 +302,7 @@
 		// utility
 		
 		_UIElement = main.get_asset_data( "assets/modules/ui/UIElement.js" );
-		_GUI = main.get_asset_data( "assets/modules/core/GUI.js" );
+		_GUI = main.get_asset_data( "assets/modules/ui/GUI.js" );
 		_MathHelper = main.get_asset_data( "assets/modules/utils/MathHelper.js" );
 		
 		utilProjector1Selection = new THREE.Projector();

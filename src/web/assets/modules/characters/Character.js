@@ -352,6 +352,7 @@
 			moveVec = move.vector,
 			moveSpeed = move.speed * timeDeltaMod,
 			moveSpeedBack = move.speedBack * timeDeltaMod,
+			moveSpeedRatio = Math.min( 1, ( moveSpeedBack / moveSpeed ) * 2 ),
 			jumpSpeedStart,
 			jumpSpeedEnd,
 			jumpTimeTotal,
@@ -399,27 +400,62 @@
 			
 			// properties
 			
-			jumpTimeTotal = jump.timeTotal;
-			jumpTimeMax = jump.timeMax;
-			jumpTimeAfterNotGroundedMax = jump.timeAfterNotGroundedMax;
-			jumpStartDelay = jump.startDelay;
-			
 			velocityMovement = rigidBody.velocityMovement;
 			velocityMovementForce = velocityMovement.force;
 			velocityGravity = rigidBody.velocityGravity;
 			velocityGravityForce = velocityGravity.force;
 			
+			jumpTimeTotal = jump.timeTotal;
+			jumpTimeMax = jump.timeMax;
+			jumpTimeAfterNotGroundedMax = jump.timeAfterNotGroundedMax;
+			jumpStartDelay = jump.startDelay;
+			jumpSpeedStart = jump.speedStart * timeDeltaMod;
+			jumpSpeedEnd = jump.speedEnd * timeDeltaMod;
+			
+			// movement basics
+			
+			moveVec.copy( moveDir );
+			moveVec.x *= moveSpeed;
+			moveVec.y *= moveSpeed;
+			
+			if ( moveDir.z < 0 ) {
+				
+				moveVec.z *= moveSpeedBack;
+				
+				jumpSpeedStart *= moveSpeedRatio;
+				jumpSpeedEnd *= moveSpeedRatio;
+				
+			}
+			else if ( jump.active === true ) {
+				
+				moveVec.z *= jumpSpeedStart;
+				
+			}
+			else {
+				
+				moveVec.z *= moveSpeed;
+				
+			}
+			
 			// handle jumping
 			
 			state.groundedLast = state.grounded;
 			
-			state.grounded = !velocityGravity.moving;
+			state.grounded = Boolean( velocityGravity.collision );
 			
 			jump.timeAfterNotGrounded += timeDelta;
 			
-			// do jump
+			// if falling but not jumping
+			
+			if ( jump.active === false && jump.timeAfterNotGrounded >= jumpTimeAfterNotGroundedMax && state.grounded === false ) {
 				
-			if ( state.up !== 0 && ( state.grounded === true || jump.timeAfterNotGrounded < jumpTimeAfterNotGroundedMax ) && jump.ready === true ) {
+				jump.ready = false;
+				
+				this.morph_cycle( timeDelta, 'jump', jump.animationTime, true );
+				
+			}
+			// do jump
+			else if ( state.up !== 0 && ( state.grounded === true || jump.timeAfterNotGrounded < jumpTimeAfterNotGroundedMax ) && jump.ready === true ) {
 				
 				jump.timeTotal = 0;
 				
@@ -427,10 +463,10 @@
 				
 				jump.ready = false;
 				
-			}
-			else if ( jump.ready === false && jump.timeTotal < jumpTimeMax ) {
-				
 				jump.active = true;
+				
+			}
+			else if ( jump.active === true && jump.timeTotal < jumpTimeMax ) {
 				
 				// count delay
 				
@@ -447,8 +483,6 @@
 					// properties
 					
 					jumpTimeRatio = jumpTimeTotal / jumpTimeMax;
-					jumpSpeedStart = jump.speedStart * timeDeltaMod;
-					jumpSpeedEnd = jump.speedEnd * timeDeltaMod;
 					
 					// update time total
 					
@@ -473,7 +507,7 @@
 			}
 			else {
 				
-				if ( state.grounded === true && state.groundedLast !== state.grounded ) {
+				if ( state.grounded === true && jump.active !== false ) {
 					
 					jump.active = false;
 					
@@ -499,20 +533,6 @@
 			
 			// add move vec to rigidBody movement
 			
-			moveVec.copy( moveDir );
-			moveVec.x *= moveSpeed;
-			moveVec.y *= moveSpeed;
-			if ( moveDir.z < 0 ) {
-				
-				moveVec.z *= moveSpeedBack;
-				
-			}
-			else {
-				
-				moveVec.z *= moveSpeed;
-				
-			}
-			
 			velocityMovementForce.addSelf( moveVec );
 			
 			// moving backwards?
@@ -534,7 +554,7 @@
 			
 			// walk/run/idle
 			
-			if ( jump.ready === true || ( state.grounded === true && jump.active === false ) ) {
+			if ( jump.active === false && state.grounded === true ) {
 				
 				// walk / run cycles
 				

@@ -81,7 +81,7 @@
 		requirements: [
 			"assets/modules/core/Game.js",
 			"assets/modules/core/CameraControls.js",
-			"assets/modules/core/Messenger.js",
+			"assets/modules/ui/Messenger.js",
 			"assets/modules/characters/Hero.js",
 			"assets/modules/core/Physics.js",
 			"assets/modules/env/World.js",

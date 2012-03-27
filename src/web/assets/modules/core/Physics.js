@@ -1319,12 +1319,15 @@
 				
 				velocity.moving = false;
 				
+				velocity.collision = intersection;
+				
 			}
 			
 		}
 		else {
 			
 			velocity.intersection = false;
+			velocity.collision = false;
 		
 		}
 		

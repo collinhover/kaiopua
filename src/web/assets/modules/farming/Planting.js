@@ -13,7 +13,7 @@
 		_Planting = {},
 		_Game,
 		_GUI,
-		_Puzzles,
+		_Puzzle,
 		_GridModule,
 		_Plant,
 		_ObjectHelper,
@@ -30,8 +30,8 @@
 		data: _Planting,
 		requirements: [
 			"assets/modules/core/Game.js",
-			"assets/modules/core/GUI.js",
-			"assets/modules/puzzles/Puzzles.js",
+			"assets/modules/ui/GUI.js",
+			"assets/modules/puzzles/Puzzle.js",
 			"assets/modules/puzzles/GridModule.js",
 			"assets/modules/farming/Plant.js",
 			"assets/modules/utils/ObjectHelper.js",
@@ -52,7 +52,7 @@
 		
 		_Game = g;
 		_GUI = gui;
-		_Puzzles = pzl;
+		_Puzzle = pzl;
 		_GridModule = gm;
 		_Plant = pl;
 		_ObjectHelper = oh;
@@ -150,7 +150,7 @@
 			}
 			else {
 				
-				plantingObjects = plantingObjects.concat( _Puzzles.allModules );
+				plantingObjects = plantingObjects.concat( _Puzzle.allModules );
 				
 			}
 			

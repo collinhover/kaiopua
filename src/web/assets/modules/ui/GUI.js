@@ -9,7 +9,7 @@
 (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/core/GUI.js",
+		assetPath = "assets/modules/ui/GUI.js",
 		_GUI = {},
 		_UIElement,
 		_Button,
@@ -64,6 +64,7 @@
 		
 		// functions
 		
+		_GUI.generate_button_back = generate_button_back;
 		_GUI.generate_button_close = generate_button_close;
 		
 		_GUI.show_group = show_group;
@@ -146,11 +147,11 @@
 	
 	/*===================================================
     
-    close button
+    close / back
     
     =====================================================*/
 	
-	function generate_button_close () {
+	function generate_button_back () {
 		
 		var button = new _Button.Instance( {
 			id: 'close',
@@ -161,6 +162,22 @@
 			spacing: _GUI.sizes.buttonSpacing,
 			spacingRight: -_GUI.sizes.iconMediumContainer - _GUI.sizes.iconSmallContainer - _GUI.sizes.buttonSpacing,
 			alignment: 'rightcenter',
+			circle: true
+		} );
+		
+		return button;
+		
+	}
+	
+	function generate_button_close () {
+		
+		var button = new _Button.Instance( {
+			id: 'close',
+			image: shared.pathToIcons + 'undo_64.png',
+			imageSize: _GUI.sizes.iconMedium,
+			width: _GUI.sizes.iconMediumContainer,
+			tooltip: 'Close',
+			spacing: _GUI.sizes.buttonSpacing,
 			circle: true
 		} );
 		
@@ -353,7 +370,7 @@
 		
 		b.map = new _Button.Instance( {
 			id: 'map',
-			image: shared.pathToIcons + 'map_64.png',
+			image: shared.pathToIcons + 'whale_64.png',
 			imageSize: _GUI.sizes.iconMedium,
 			size: _GUI.sizes.iconMediumContainer,
 			tooltip: 'Map',
@@ -503,7 +520,7 @@
 			circle: true
 		} );
 		
-		m.options.buttonClose = _GUI.generate_button_close();
+		m.options.buttonClose = _GUI.generate_button_back();
 		
 		m.options.add(
 			new _Button.Instance( {
@@ -586,7 +603,7 @@
 			circle: true
 		} );
 		
-		m.end.buttonClose = _GUI.generate_button_close();
+		m.end.buttonClose = _GUI.generate_button_back();
 		
 		m.end.add( b.end );
 		

@@ -12,7 +12,7 @@
 		assetPath = "assets/modules/farming/Farming.js",
 		_Farming = {},
 		_Game,
-		_Puzzles,
+		_Puzzle,
 		_Planting,
 		_Field,
 		_GUI,
@@ -29,10 +29,10 @@
 		data: _Farming,
 		requirements: [
 			"assets/modules/core/Game.js",
-			"assets/modules/puzzles/Puzzles.js",
+			"assets/modules/puzzles/Puzzle.js",
 			"assets/modules/farming/Planting.js",
 			"assets/modules/farming/Field.js",
-			"assets/modules/core/GUI.js",
+			"assets/modules/ui/GUI.js",
 			"assets/modules/ui/Button.js",
 			"assets/modules/ui/Menu.js"
 		],
@@ -50,7 +50,7 @@
 		console.log('internal farming', _Farming);
 		
 		_Game = g;
-		_Puzzles = pzl;
+		_Puzzle = pzl;
 		_Planting = pl;
 		_Field = f;
 		_GUI = gui;
@@ -103,7 +103,8 @@
 		// menu
 		
 		this.menu = m.farming = new _Menu.Instance( {
-            id: 'farming'
+            id: 'farming',
+			openAlone: false
         } );
 		
 		m.farming.buttonOpen = new _Button.Instance( {
@@ -151,37 +152,11 @@
 			} )
 		);
 		
-		m.farming.arrange_circle( {
-			degreesAutoFit: true,
-			degreeStart: 0,
-			direction: -1,
-			radius: _GUI.sizes.buttonMedium + _GUI.sizes.buttonSpacing,
-			forceShapeOnOpen: true
+		m.farming.arrange_line( {
+			childrenPerLine: 5
 		} );
 		
-		m.main.add( m.farming, 0 );
-		
-		// navigation
-		
-		this.buttonNavigation = b.farmingMenu = new _Button.Instance( {
-			id: 'farmingMenu',
-			image: shared.pathToIcons + 'farming_64.png',
-			imageSize: _GUI.sizes.iconMedium,
-			size: _GUI.sizes.iconMediumContainer,
-			tooltip: 'Farming',
-			spacing: _GUI.sizes.buttonSpacing,
-			circle: true,
-			callback: function () {
-				
-				_Game.pause();
-				
-				m.farming.open( 0 );
-				
-			},
-			context: this
-		} );
-		
-		m.navigation.add( b.farmingMenu, 0 );
+		m.navigation.add( m.farming, 0 );
 		
 	}
 	

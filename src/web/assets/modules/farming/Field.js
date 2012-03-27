@@ -11,7 +11,7 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/farming/Field.js",
 		_Field = {},
-		_Puzzles;
+		_Puzzle;
 	
 	/*===================================================
     
@@ -22,7 +22,7 @@
 	main.asset_register( assetPath, { 
 		data: _Field,
 		requirements: [
-			"assets/modules/puzzles/Puzzles.js"
+			"assets/modules/puzzles/Puzzle.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -37,19 +37,19 @@
 	function init_internal ( pzl ) {
 		console.log('internal field', _Field);
 		
-		_Puzzles = pzl;
+		_Puzzle = pzl;
 		
 		_Field.Instance = Field;
-		_Field.Instance.prototype = new _Puzzles.Instance();
+		_Field.Instance.prototype = new _Puzzle.Instance();
 		_Field.Instance.prototype.constructor = _Field.Instance;
-		_Field.Instance.prototype.supr = _Puzzles.Instance.prototype;
+		_Field.Instance.prototype.supr = _Puzzle.Instance.prototype;
 		
 		Object.defineProperty( _Field.Instance.prototype, 'plants', { 
 			get: function () {
 				
 				// prototype call
 				
-				return this.occupants;
+				return this.elements;
 			
 			}
 		});
@@ -70,7 +70,7 @@
 		
 		// prototype constructor
 		
-		_Puzzles.Instance.call( this, parameters );
+		_Puzzle.Instance.call( this, parameters );
 		
 	}
 	
