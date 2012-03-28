@@ -154,7 +154,7 @@
 		
 		// bubble
 		
-		this.bubble = ( typeof parameters.bubble === 'boolean' ? parameters.bubble : false );
+		this.bubble = ( typeof parameters.bubble === 'boolean' ? parameters.bubble : true );
 		
 		// cooldown
 		

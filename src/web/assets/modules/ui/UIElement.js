@@ -1691,7 +1691,7 @@
     
     =====================================================*/
 	
-	function set_pointer_events ( state ) {
+	function set_pointer_events ( state, override ) {
 		
 		var i, l,
 			child;
@@ -1743,7 +1743,7 @@
 			
 			child = this.children[ i ];
 			
-			child.set_pointer_events( child.pointerEvents );
+			child.set_pointer_events( state === false && override === true ? state : child.pointerEvents, override );
 			
 		}
 		

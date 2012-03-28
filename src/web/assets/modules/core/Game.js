@@ -186,6 +186,7 @@
 	_Game.get_object_under_mouse = get_object_under_mouse;
 	
 	_Game.is_stop_parameter = is_stop_parameter;
+	_Game.is_event_in_game = is_event_in_game;
 	
 	// getters and setters
 	
@@ -1231,6 +1232,20 @@
 	function is_stop_parameter ( parameters ) {
 		
 		return parameters === false || ( typeof parameters !== 'undefined' && parameters.stop === true );
+		
+	}
+	
+	function is_event_in_game ( e ) {
+		
+		var result = false;
+		
+		if ( _GUI && _GUI.layers.display instanceof _UIElement.Instance ) {
+			
+			result = _GUI.layers.display.domElement.find( e.target ).length > 0;
+			
+		}
+		
+		return result;
 		
 	}
 	

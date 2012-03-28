@@ -373,6 +373,10 @@
 			
 			this.started = true;
 			
+			// dim ui to focus on planting
+					
+			_GUI.layers.ui.hide( { opacity: 0.25, callback: function () { _GUI.layers.ui.set_pointer_events( false, true ); } } );
+			
 			// start updating planting
 			
 			this.update();
@@ -487,6 +491,11 @@
 		// clear module / field
 		
 		this.change_module();
+		
+		// return ui to normal state
+		
+		_GUI.layers.ui.show();
+		_GUI.layers.ui.set_pointer_events( false );
 		
 		// stop
 			
@@ -680,13 +689,13 @@
 	=====================================================*/
 	
 	function start_rotate_plant () {
-		console.log(' > PLANTING: rotation START ');
+		
 		var position = utilVec31Rotate,
 			projector = utilProjector1Rotate,
 			r;
 		
 		if ( this.rotating !== true && this.module instanceof _GridModule.Instance ) {
-			
+			console.log(' > PLANTING: rotation START ');
 			// rotate start
 				
 			this.rotating = true;
@@ -760,7 +769,7 @@
 				
 				if ( r.rotated !== true ) {
 					
-					// clear seed temporarily
+					// hide seed temporarily
 					
 					this.plant.seed.hide( { remove: true, time: 0 } );
 					
@@ -769,10 +778,6 @@
 					this.plant.rotator.show( { parent: _GUI.layers.uiPriority } );
 					
 					this.plant.rotator.set_position( r.x0 - this.plant.rotator.widthHalf, r.y0 - this.plant.rotator.heightHalf );
-					
-					// dim ui to focus on rotation
-					
-					_GUI.layers.ui.hide( { opacity: 0.25 } );
 					
 				}
 				
@@ -787,18 +792,19 @@
 	}
 	
 	function stop_rotate_plant () {
-		console.log(' > PLANTING: rotation STOP ');
 		
-		this.plant.seed.show( { parent: _GUI.layers.uiPriority } );
+		
+		if ( this.rotating !== false ) {
+			console.log(' > PLANTING: rotation STOP ');
+			this.plant.seed.show( { parent: _GUI.layers.uiPriority } );
+				
+			this.plant.rotator.hide( { remove: true } );
+				
+			this.rotating = false;
 			
-		this.plant.rotator.hide( { remove: true } );
-		
-		_GUI.layers.ui.show();
+			this.plant.rotate_reset();
 			
-		this.rotating = false;
-		
-		this.plant.rotate_reset();
-		
+		}
 		
 	}
 	
