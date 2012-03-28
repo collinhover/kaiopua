@@ -159,10 +159,11 @@
 			imageSize: _GUI.sizes.iconSmall,
 			width: _GUI.sizes.iconSmallContainer,
 			tooltip: 'Go Back',
-			spacing: _GUI.sizes.buttonSpacing,
-			spacingRight: -_GUI.sizes.iconMediumContainer - _GUI.sizes.iconSmallContainer - _GUI.sizes.buttonSpacing,
+			spacingRight: _GUI.sizes.iconMediumContainer * 0.5 + _GUI.sizes.buttonSpacing,
 			alignment: 'rightcenter',
-			circle: true
+			alignmentOutside: true,
+			circle: true,
+			theme: 'red'
 		} );
 		
 		return button;
@@ -173,12 +174,14 @@
 		
 		var button = new _Button.Instance( {
 			id: 'close',
-			image: shared.pathToIcons + 'undo_64.png',
-			imageSize: _GUI.sizes.iconMedium,
-			width: _GUI.sizes.iconMediumContainer,
-			tooltip: 'Close',
-			spacing: _GUI.sizes.buttonSpacing,
-			circle: true
+			image: shared.pathToIcons + 'close_64.png',
+			imageSize: _GUI.sizes.iconSmall,
+			width: _GUI.sizes.iconSmallContainer,
+			spacing: 0,
+			alignment: 'righttop',
+			alignmentOutside: true,
+			circle: true,
+			theme: 'red'
 		} );
 		
 		return button;
@@ -232,6 +235,12 @@
 		
 		l.ui = new _UIElement.Instance( {
 			id: 'layer_ui',
+			pointerEvents: false,
+			fullwindow: true
+        } );
+		
+		l.uiPriority = new _UIElement.Instance( {
+			id: 'layer_uiPriority',
 			pointerEvents: false,
 			fullwindow: true
         } );
@@ -655,7 +664,7 @@
 		
 		// layers
 		
-		c.add( l.display, l.overlayDisplay, l.ui, l.overlayAll, l.errors, m.footer );
+		c.add( l.display, l.overlayDisplay, l.ui, l.uiPriority, l.overlayAll, l.errors, m.footer );
 		
 	}
 	

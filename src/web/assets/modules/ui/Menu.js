@@ -176,6 +176,54 @@
 			set : function ( type ) { this.set_arrangement( type ); }
 		} );
 		
+		Object.defineProperty( _Menu.Instance.prototype, 'alignmentOpen', { 
+			get : function () { return this._alignmentOpen; },
+			set : function ( location ) {
+				
+				if ( typeof location === 'string' ) {
+					
+					this._alignmentOpen = location.toLowerCase();
+					
+				}
+				else {
+					
+					this._alignmentOpen = false;
+					
+				}
+				
+				if ( this.isOpen ) {
+					
+					this.alignment = this._alignmentOpen;
+					
+				}
+				
+			}
+		} );
+		
+		Object.defineProperty( _Menu.Instance.prototype, 'alignmentClosed', { 
+			get : function () { return this._alignmentClosed; },
+			set : function ( location ) {
+				
+				if ( typeof location === 'string' ) {
+					
+					this._alignmentClosed = location.toLowerCase();
+					
+				}
+				else {
+					
+					this._alignmentClosed = false;
+					
+				}
+				
+				if ( this.isOpen !== true ) {
+					
+					this.alignment = this._alignmentClosed;
+					
+				}
+				
+			}
+		} );
+		
 	}
 	
 	/*===================================================
@@ -237,6 +285,11 @@
 			this.buttonClose = new _Button.Instance( parameters.buttonClose );
 			
 		}
+		
+		// alignment open/close
+		
+		this.alignmentOpen = typeof parameters.alignmentOpen === 'boolean' ? parameters.alignmentOpen : false;
+		this.alignmentClosed = typeof parameters.alignmentClosed === 'boolean' ? parameters.alignmentClosed : false;
 		
 		// if no close or open buttons, open automatically
 		
@@ -386,44 +439,84 @@
 	
 	function open ( time, callback, callbackContext ) {
 		
-		this._isOpen = true;
-		//console.log( this.id, 'OPENING' );
-		if ( this.hasOpenCloseButtons ) {
+		if ( this.isOpen !== true ) {
 			
-			if ( this.parent instanceof _Menu.Instance ) {
+			this._isOpen = true;
+			//console.log( this.id, 'OPENING' );
+			if ( this.hasOpenCloseButtons ) {
 				
-				this.parent.child_opening( this, time );
+				this.alignment = this.alignmentOpen;
+				
+				if ( this.parent instanceof _Menu.Instance ) {
+					
+					this.parent.child_opening( this, time );
+					
+				}
+				
+				if ( this.openAlone ) {
+					
+					open_alone( this, time, callback, callbackContext );
+					
+				}
+				else {
+					
+					open_with_others( this, time, callback, callbackContext );
+					
+				}
+				
+			}
+			else {
+				
+				this.show_children( { time: time } );
 				
 			}
 			
-			this.buttonOpen.hide( {
-				remove: true, 
-				time: time,
-				callback: function () {
-					
-					this.show_children( { time: time } );
-					
-					this.buttonClose.show( { parent: this, time: time } );
-					
-					if ( typeof callback === 'function' ) {
-						
-						if ( typeof callbackContext !== 'undefined' ) {
-							callback.call( callbackContext );
-						}
-						else {
-							callback();
-						}
-						
-					}
-				
-				},
-				callbackContext: this
-			} );
-			
 		}
-		else {
+		
+	}
+	
+	function open_alone ( menu, time, callback, callbackContext ) {
+		
+		menu.buttonOpen.hide( {
+			remove: true, 
+			time: time,
+			callback: function () {
+				
+				menu.show_children( { time: time } );
+				
+				menu.buttonClose.show( { parent: menu, time: time } );
+				
+				if ( typeof callback === 'function' ) {
+					
+					if ( typeof callbackContext !== 'undefined' ) {
+						callback.call( callbackContext );
+					}
+					else {
+						callback();
+					}
+					
+				}
 			
-			this.show_children( { time: time } );
+			},
+			callbackContext: menu
+		} );
+		
+	}
+	
+	function open_with_others ( menu, time, callback, callbackContext ) {
+		
+		menu.show_children( { time: time, excluding: menu.buttonClose } );
+		
+		menu.buttonClose.show( { time: time } );
+		
+		if ( typeof callback === 'function' ) {
+			
+			if ( typeof callbackContext !== 'undefined' ) {
+				callback.call( callbackContext );
+			}
+			else {
+				callback();
+			}
 			
 		}
 		
@@ -462,7 +555,7 @@
 		// only close if both open and close buttons are valid
 		
 		if ( this.hasOpenCloseButtons ) {
-			console.log( this.id, 'CLOSING' );
+			//console.log( this.id, 'CLOSING' );
 			this._isOpen = false;
 			
 			this.hide_children( { time: time } );
@@ -473,6 +566,8 @@
 				callback: function () {
 					
 					this.buttonOpen.show( { parent: this, time: time } );
+					
+					this.alignment = this.alignmentClosed;
 					
 					this.update_arrangement();
 					
@@ -495,15 +590,16 @@
 		this.childOpen = child;
 		
 		if ( child.openAlone ) {
-			console.log( this.id, ' child, ', child.id, ', OPENING solo' );
-			this.childrenShowingOrder = this.get_children_showing();
+			//console.log( this.id, ' child, ', child.id, ', OPENING solo' );
 			
 			this.hide_children( { excluding: child, time: time } );
 			
 		}
 		else {
-			console.log( this.id, ' child, ', child.id, ', OPENING with others' );
+			//console.log( this.id, ' child, ', child.id, ', OPENING with others, order?', this.get_child_order( child ) );
 			this.close( { excluding: child, time: time } );
+			
+			this.add( child.buttonOpen, this.childrenOrder[ child.id ], child.buttonClose, 9999 );
 			
 		}
 		
@@ -511,13 +607,20 @@
 	
 	function child_closing ( child, time ) {
 		
-		if ( this.isOpen && this.childOpen === child && this.childrenShowingOrder ) {
-			console.log( this.id, ' child, ', child.id, ', CLOSING' );
-			this.show_children( { children: this.childrenShowingOrder, time: time } );
-			
-			this.childrenShowingOrder = undefined;
-			
-			this.childOpen = undefined;
+		if ( this.isOpen && this.childOpen === child ) {
+			//console.log( this.id, ' child, ', child.id, ', CLOSING' );
+			if ( child.openAlone ) {
+				
+				this.show_children( { time: time } );
+				
+				this.childOpen = undefined;
+				
+			}
+			else {
+				
+				this.remove( child.buttonOpen, child.buttonClose );
+				
+			}
 			
 		}
 		
@@ -669,7 +772,7 @@
 		
 		degrees = this.arrangementParameters.degrees = parameters.degrees = _MathHelper.degree_between_180( parameters.degrees || this.arrangementParameters.degrees || 0 );
 		circular = this.arrangementParameters.circular = parameters.circular = ( typeof parameters.circular === 'boolean' ? parameters.circular : ( typeof this.arrangementParameters.circular === 'boolean' ? this.arrangementParameters.circular : false ) );
-		childrenPerLine = this.arrangementParameters.childrenPerLine = parameters.childrenPerLine;
+		childrenPerLine = this.arrangementParameters.childrenPerLine = parameters.childrenPerLine = ( main.is_number( parameters.childrenPerLine ) ? parameters.childrenPerLine : this.arrangementParameters.childrenPerLine );
 		children = parameters.children = parameters.children || this.get_children_for_arrangement();
 		
 		// if only 1 child, skip arrange and fit to child

@@ -98,15 +98,11 @@
 		// init actions map
 		
 		this.actions = {};
-
-		// farming
-		
-		this.farming = new _Farming.Instance( this );
 		
 		// add to actions
 		
-		this.add_action( this.farming.plant, [ '002', 'plant' ], this.farming );
-		this.add_action( this.farming.planting.rotate_plant, [ '001', 'rotate_plant' ], this.farming.planting );
+		this.add_action( plant, [ '002', 'plant' ], this );
+		this.add_action( rotate_plant, [ '001', 'rotate_plant' ], this );
 		
 	}
 	
@@ -193,6 +189,28 @@
 		}
 		
 		return acting;
+		
+	}
+	
+	/*===================================================
+	
+	farming
+	
+	=====================================================*/
+	
+	function plant ( parameters ) {
+		
+		return _Farming.plant( this, parameters );
+		
+	}
+	
+	function rotate_plant ( parameters ) {
+		
+		parameters = parameters || {};
+		
+		parameters.rotate = true;
+		
+		return plant.call( this, parameters );
 		
 	}
     

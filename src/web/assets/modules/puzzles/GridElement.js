@@ -14,7 +14,9 @@
 		_Model,
 		_GridModule,
 		_ObjectHelper,
-		_MathHelper;
+		_MathHelper,
+		rotationAxis,
+		utilQ1Rotate;
 	
 	/*===================================================
     
@@ -48,6 +50,14 @@
 		_ObjectHelper = oh;
 		_MathHelper = mh;
 		
+		// utils
+		
+		utilQ1Rotate = new THREE.Quaternion();
+		
+		// properties
+		
+		rotationAxis = new THREE.Vector3( 0, 1, 0 );
+		
 		// instance
 		
 		_GridElement.Instance = GridElement;
@@ -55,6 +65,7 @@
 		_GridElement.Instance.prototype.constructor = _GridElement.Instance;
 		
 		_GridElement.Instance.prototype.rotate = rotate;
+		_GridElement.Instance.prototype.rotate_reset = rotate_reset;
 		_GridElement.Instance.prototype.rotate_layout = rotate_layout;
 		
 		_GridElement.Instance.prototype.change_module = change_module;
@@ -64,6 +75,8 @@
 		_GridElement.Instance.prototype.occupy_module = occupy_module;
 		_GridElement.Instance.prototype.test_occupy_module = test_occupy_module;
 		_GridElement.Instance.prototype.each_layout_element = _GridElement.each_layout_element = each_layout_element;
+		
+		_GridElement.Instance.prototype.get_layout_node_total = get_layout_node_total
 		_GridElement.Instance.prototype.get_layout_center_location = get_layout_center_location;
 		_GridElement.Instance.prototype.get_layout_center_offset = get_layout_center_offset;
 		
@@ -87,6 +100,10 @@
 		// prototype constructor
 		
 		_Model.Instance.call( this, parameters );
+		
+		// properties
+		
+		this.rotationAngle = this.rotationAngleLayout = 0;
 		
 		// layout
 		
@@ -165,20 +182,57 @@
     
     =====================================================*/
 	
-	function rotate ( degrees, testModule ) {
+	function rotate ( radians, testModule ) {
 		
-		this.rotate_layout( degrees, testModule );
+		var q = utilQ1Rotate,
+			angle;
+		
+		// add degrees
+		
+		this.rotationAngle = ( this.rotationAngle + radians ) % ( Math.PI * 2 );
+		
+		// rotate self
+		// modify degrees based on cardinal right axis
+		
+		angle = shared.cardinalAxes.right.x * radians;
+		q.setFromAxisAngle( rotationAxis, angle );
+		
+		this.quaternion.multiplySelf( q );
+		
+		// rotate layout
+		
+		this.rotate_layout( this.rotationAngle, testModule );
 		
 	}
 	
-	function rotate_layout ( degrees, testModule ) {
+	function rotate_reset () {
 		
-		var layoutRotated,
+		var angle;
+		
+		// if is not a 1x1 layout
+		// snap self back to last layout rotation angle
+		
+		if ( this.get_layout_node_total() > 1 ) {
+			
+			this.rotationAngle = this.rotationAngleLayout;
+			
+			angle = shared.cardinalAxes.right.x * this.rotationAngle;
+			
+			this.quaternion.setFromAxisAngle( rotationAxis, angle );
+			
+		}
+		
+	}
+	
+	function rotate_layout ( angle, testModule ) {
+		
+		var angleDelta = angle - this.rotationAngleLayout,
+			layoutRotated,
 			safeRotation = true;
 		
-		// rotate layout by degrees
+		// rotate layout by angleDelta
 		
-		layoutRotated = _MathHelper.rotate_matrix2d_90( this.layout, degrees );
+		layoutRotated = _MathHelper.rotate_matrix2d_90( this.layout, angleDelta );
 		
 		// if layout was rotated
 		
@@ -197,6 +251,8 @@
 			// if rotation is safe or only testing
 			
 			if ( safeRotation || testModule !== this.module ) {
+				
+				this.rotationAngleLayout = angle;
 				
 				this.layout = layoutRotated;
 				
@@ -609,6 +665,26 @@
 		
 	}
 	
+	function get_layout_node_total ( layout ) {
+		
+		layout = layout || this.layout;
+		
+		var nodeTotal = 0;
+		
+		this.each_layout_element( function ( node ) {
+			
+			if ( node > 0 ) {
+				
+				nodeTotal += node;
+				
+			}
+			
+		}, layout );
+		
+		return nodeTotal;
+		
+	}
+	
 	function get_layout_center_location ( layout ) {
 		
 		layout = layout || this.layout;
@@ -625,7 +701,7 @@
 		
 		layout = layout || this.layout;
 		
-		var numNodes = 0,
+		var nodeTotal = 0,
 			iTotal = 0,
 			jTotal = 0;
 		
@@ -635,13 +711,13 @@
 				
 				iTotal += i;
 				jTotal += j;
-				numNodes++;
+				nodeTotal++;
 				
 			}
 			
 		}, layout );
 		
-		return { row: iTotal / numNodes, col: jTotal / numNodes };
+		return { row: iTotal / nodeTotal, col: jTotal / nodeTotal };
 		
 	}
 	

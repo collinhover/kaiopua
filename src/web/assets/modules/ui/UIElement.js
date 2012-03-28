@@ -251,6 +251,7 @@
 		_UIElement.Instance.prototype.pulse_stop = pulse_stop;
 		
 		_UIElement.Instance.prototype.sort_children_by_order = sort_children_by_order;
+		_UIElement.Instance.prototype.get_child_order = get_child_order;
 		_UIElement.Instance.prototype.show_children = show_children;
 		_UIElement.Instance.prototype.hide_children = hide_children;
 		_UIElement.Instance.prototype.copy_children_and_exclude = copy_children_and_exclude;
@@ -274,6 +275,8 @@
 		_UIElement.Instance.prototype.themes = {};
 		_UIElement.Instance.prototype.themes.core = theme_core;
 		_UIElement.Instance.prototype.themes.white = theme_white;
+		_UIElement.Instance.prototype.themes.green = theme_green;
+		_UIElement.Instance.prototype.themes.red = theme_red;
 		
 		Object.defineProperty( _UIElement.Instance.prototype, 'domElement', { 
 			get : function () { return this._domElement; },
@@ -362,7 +365,11 @@
 					
 					this._alignment = location.toLowerCase();
 					
-					shared.signals.windowresized.add( this.align, this );
+					if ( this.alignmentGuide instanceof _UIElement.Instance !== true ) {
+						
+						shared.signals.windowresized.add( this.align, this );
+						
+					}
 					
 					this.align();
 					
@@ -371,7 +378,29 @@
 					
 					this._alignment = false;
 					
-					shared.signals.windowresized.remove( this.align, this );
+					if ( this.alignmentGuide instanceof _UIElement.Instance !== true ) {
+						
+						shared.signals.windowresized.remove( this.align, this );
+						
+					}
+					
+				}
+				
+			}
+		} );
+		
+		Object.defineProperty( _UIElement.Instance.prototype, 'alignmentGuide', { 
+			get : function () { return this._alignmentGuide; },
+			set : function ( uielement ) {
+				
+				if ( uielement instanceof _UIElement.Instance && uielement !== this ) {
+					
+					this._alignmentGuide = uielement;
+					
+				}
+				else {
+					
+					this._alignmentGuide = false;
 					
 				}
 				
@@ -598,6 +627,10 @@
 		
 		this.alignment = parameters.alignment || false;
 		
+		this.alignmentGuide = parameters.alignmentGuide || false;
+		
+		this.alignmentOutside = typeof parameters.alignmentOutside === 'boolean' ? parameters.alignmentOutside : false;
+		
 		// if dom element already has parent, set as parent
 		
 		if ( this.isVisible ) {
@@ -628,19 +661,23 @@
 			
 			// if is valid child
 			
-			if ( argument instanceof _UIElement.Instance && this.children.indexOf( argument ) === -1 ) {
+			if ( argument instanceof _UIElement.Instance ) {
 				
 				child = argument;
 				
-				this.children.push( child );
+				if ( this.children.indexOf( child ) === -1 ) {
 				
-				this.childrenOrder[ child.id ] = -1;
-				
-				this.childrenByID[ child.id ] = child;
-				
-				if ( child.parent !== this ) {
+					this.children.push( child );
 					
-					child.parent = this;
+					this.childrenOrder[ child.id ] = -1;
+					
+					this.childrenByID[ child.id ] = child;
+					
+					if ( child.parent !== this ) {
+						
+						child.parent = this;
+						
+					}
 					
 				}
 				
@@ -674,7 +711,7 @@
 		for ( i = 0, l = children.length; i < l; i ++) {
 			
 			child = children[ i ];
-			
+			//console.log(this.id, 'removing', child.id );
 			index = this.children.indexOf( child );
 			
 			if ( index !== -1 ) {
@@ -950,7 +987,9 @@
 	
 	function align () {
 		
-		var parent,
+		var alignment,
+			parent,
+			x, y,
 			w, h;
 		
 		// if has alignment
@@ -961,9 +1000,22 @@
 			
 			if ( this.isVisible ) {
 				
-				// get basic width and height of parent
+				alignment = this.alignment;
 				
-				parent = this.domElement.parent();
+				// if has align to
+				
+				if ( this.alignmentGuide instanceof _UIElement.Instance ) {
+					
+					parent = this.alignmentGuide.domElement;
+					
+				}
+				else {
+				
+					parent = this.domElement.parent();
+					
+				}
+				
+				// get basic width and height of parent
 				
 				if ( parent.length ) {
 					
@@ -978,59 +1030,208 @@
 					
 				}
 				
-				// align by type
+				if ( alignment === 'center' ) {
+					
+					x = w * 0.5 - this.widthHalf;
+					y = h * 0.5 - this.heightHalf;
+					
+				}
+				else if ( alignment === 'lefttop' ) {
+					
+					x = this.spacingLeft;
+					
+					if ( this.alignmentOutside === true ) {
+						
+						y = -this.height - this.spacingTop;
+						
+					}
+					else {
+						
+						y = this.spacingTop;
+						
+					}
+					
+				}
+				else if ( alignment === 'righttop' ) {
+					
+					x = w - this.width - this.spacingRight;
+					
+					if ( this.alignmentOutside === true ) {
+						
+						y = -this.height - this.spacingTop;
+						
+					}
+					else {
+						
+						y = this.spacingTop;
+						
+					}
+					
+				}
+				else if ( alignment === 'leftbottom' ) {
+					
+					x = this.spacingLeft;
+					
+					if ( this.alignmentOutside === true ) {
+						
+						y = h + this.spacingBottom;
+						
+					}
+					else {
+						
+						y = h - this.height - this.spacingBottom;
+						
+					}
+					
+				}
+				else if ( alignment === 'rightbottom' ) {
+					
+					x = w - this.width - this.spacingRight;
+					
+					if ( this.alignmentOutside === true ) {
+						
+						y = h + this.spacingBottom;
+						
+					}
+					else {
+						
+						y = h - this.height - this.spacingBottom;
+						
+					}
+					
+				}
+				else if ( alignment === 'bottomcenter' ) {
+					
+					x = w * 0.5 - this.widthHalf;
+					
+					if ( this.alignmentOutside === true ) {
+						
+						y = h + this.spacingBottom;
+						
+					}
+					else {
+						
+						y = h - this.height - this.spacingBottom;
+						
+					}
+					
+				}
+				else if ( alignment === 'topcenter' ) {
+					
+					x = w * 0.5 - this.widthHalf;
+					
+					if ( this.alignmentOutside === true ) {
+						
+						y = -this.height - this.spacingTop;
+						
+					}
+					else {
+						
+						y = this.spacingTop;
+						
+					}
+					
+				}
+				else if ( alignment === 'leftcenter' ) {
+					
+					if ( this.alignmentOutside === true ) {
+						
+						x = -this.width - this.spacingLeft;
+						
+					}
+					else {
+					
+						x = this.spacingLeft;
+						
+					}
+					
+					y = h * 0.5 - this.heightHalf;
+					
+				}
+				else if ( alignment === 'rightcenter' ) {
+					
+					if ( this.alignmentOutside === true ) {
+						
+						x = w + this.spacingRight;
+						
+					}
+					else {
+					
+						x = w - this.width - this.spacingRight;
+						
+					}
+					
+					y = h * 0.5 - this.heightHalf;
+					
+				}
+				else if ( alignment === 'bottomright' ) {
+					
+					y = h - this.height - this.spacingBottom;
+					
+					if ( this.alignmentOutside === true ) {
+						
+						x = w + this.spacingRight;
+						
+					}
+					else {
+					
+						x = w - this.width - this.spacingRight;
+						
+					}
+					
+				}
+				else if ( alignment === 'bottomleft' ) {
+					
+					y = h - this.height - this.spacingBottom;
+					
+					if ( this.alignmentOutside === true ) {
+						
+						x = -this.width - this.spacingLeft;;
+						
+					}
+					else {
+						
+						x = this.spacingLeft;
+						
+					}
+					
+				}
+				else if ( alignment === 'topright' ) {
+					
+					y = this.spacingTop;
+					
+					if ( this.alignmentOutside === true ) {
+						
+						x = w + this.spacingRight;
+						
+					}
+					else {
+						
+						x = w - this.width - this.spacingRight;
+						
+					}
+					
+				}
+				else if ( alignment === 'topleft' ) {
+					
+					y = this.spacingTop;
+					
+					if ( this.alignmentOutside === true ) {
+						
+						x = -this.width - this.spacingLeft;
+						
+					}
+					else {
+						
+						x = this.spacingLeft;
+						
+					}
+					
+				}
 				
-				if ( this.alignment === 'center' ) {
-					
-					this.set_position( w * 0.5 - this.widthHalf, h * 0.5 - this.heightHalf );
-					
-				}
-				else if ( this.alignment === 'bottomcenter' ) {
-					
-					this.set_position( w * 0.5 - this.widthHalf, h - this.height - this.spacingBottom );
-					
-				}
-				else if ( this.alignment === 'topcenter' ) {
-					
-					this.set_position( w * 0.5 - this.widthHalf, this.spacingTop );
-					
-				}
-				else if ( this.alignment === 'leftcenter' ) {
-					
-					this.set_position( this.spacingLeft, h * 0.5 - this.heightHalf );
-					
-				}
-				else if ( this.alignment === 'rightcenter' ) {
-					
-					this.set_position( w - this.width - this.spacingRight, h * 0.5 - this.heightHalf );
-					
-				}
-				else if ( this.alignment === 'bottomright' ) {
-					
-					this.set_position( w - this.width - this.spacingRight, h - this.height - this.spacingBottom );
-					
-				}
-				else if ( this.alignment === 'bottomleft' ) {
-					
-					this.set_position( this.spacingLeft, h - this.height - this.spacingBottom );
-					
-				}
-				else if ( this.alignment === 'topright' ) {
-					
-					this.set_position( w - this.width - this.spacingRight, this.spacingTop );
-					
-				}
-				else if ( this.alignment === 'topleft' ) {
-					
-					this.set_position( this.spacingLeft, this.spacingTop );
-					
-				}
-				// invalid type
-				else {
-					
-					this.alignment = false;
-					
-				}
+				// position
+				
+				this.set_position( x, y );
 				
 			}
 			else {
@@ -1325,6 +1526,14 @@
 		} );
 		
 		return children;
+		
+	}
+	
+	function get_child_order ( child ) {
+		
+		var order = this.childrenOrder[ child.id ];
+		
+		return main.is_number( order ) ? order : -1;
 		
 	}
 	
@@ -1989,7 +2198,7 @@
 	
 	function theme_white ( overrides ) {
 		
-		var theme = this.themes.core( overrides ),
+		var theme = this.themes.core.call( this, overrides ),
 			cssmap,
 			enabled,
 			disabled,
@@ -2022,6 +2231,60 @@
 		disabled[ "color" ] = or[ "color" ] || "#777777";
 		disabled[ "background-color" ] = or[ "background-color" ] || "#bbbbbb";
 		//disabled[ "background-image" ] = or[ "background-image" ] || "linear-gradient(top, #cccccc 30%, #aaaaaa 100%)";
+		
+		return theme;
+		
+	}
+	
+	function theme_green ( overrides ) {
+		
+		var theme = this.themes.white.call( this, overrides ),
+			enabled,
+			disabled,
+			or;
+		
+		// enabled state
+		
+		or = overrides.enabled || {};
+		
+		enabled = theme.enabled = theme.enabled || {};
+		
+		enabled[ "background-color" ] = or[ "background-color" ] || "#5FEDA6";
+		
+		// disabled state
+		
+		or = overrides.disabled || {};
+		
+		disabled = theme.disabled = theme.disabled || {};
+		
+		disabled[ "background-color" ] = or[ "background-color" ] || "#48B57F";
+		
+		return theme;
+		
+	}
+	
+	function theme_red ( overrides ) {
+		
+		var theme = this.themes.white.call( this, overrides ),
+			enabled,
+			disabled,
+			or;
+		
+		// enabled state
+		
+		or = overrides.enabled || {};
+		
+		enabled = theme.enabled = theme.enabled || {};
+		
+		enabled[ "background-color" ] = or[ "background-color" ] || "#ED8181";
+		
+		// disabled state
+		
+		or = overrides.disabled || {};
+		
+		disabled = theme.disabled = theme.disabled || {};
+		
+		disabled[ "background-color" ] = or[ "background-color" ] || "#BA6565";
 		
 		return theme;
 		

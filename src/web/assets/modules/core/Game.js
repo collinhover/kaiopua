@@ -128,8 +128,11 @@
 			{ path: "assets/models/Palm_Trees.js", type: 'model' },
 			{ path: "assets/models/Kukui_Tree.js", type: 'model' },
 			{ path: "assets/models/Kukui_Trees.js", type: 'model' },
-			{ path: "assets/models/Taro_Plant_Single.js", type: 'model' },
+			{ path: "assets/models/Taro_Plant.js", type: 'model' },
 			{ path: "assets/models/Taro_Plant_Double.js", type: 'model' },
+			{ path: "assets/models/Rock.js", type: 'model' },
+			{ path: "assets/models/Rock_Purple.js", type: 'model' },
+			{ path: "assets/models/Rock_Blue.js", type: 'model' },
 			{ path: "assets/models/Volcano_Large.js", type: 'model' },
 			{ path: "assets/models/Volcano_Small.js", type: 'model' },
 			{ path: "assets/models/Volcano_Rocks_001.js", type: 'model' },
@@ -1069,7 +1072,7 @@
 				
 				if ( preventDefault !== true ) {
 					
-					_GUI.hide_group( 'ingame', { remove: true } );
+					_GUI.hide_group( 'ingame', { remove: true, time: 0 } );
 					_GUI.show_group( 'pause' );
 					
 				}
@@ -1080,6 +1083,10 @@
 				_GUI.transitioner.show( { parent: _GUI.layers.overlayAll } );
 				
 			}
+			
+			// add listener for click on transitioner
+			
+			_GUI.transitioner.domElement.on( 'mouseup.resume touchend.resume', resume );
 			
 			// signal
             
@@ -1097,9 +1104,13 @@
 		
         if ( paused === true && _ErrorHandler.errorState !== true ) {
 			
+			// add listener for click on transitioner
+			
+			_GUI.transitioner.domElement.off( '.resume' );
+			
 			if ( started === true ) {
 				
-				_GUI.hide_group( 'pause', { remove: true } );
+				_GUI.hide_group( 'pause', { remove: true, time: 0 } );
 				_GUI.show_group( 'ingame' );
 				
 			}
