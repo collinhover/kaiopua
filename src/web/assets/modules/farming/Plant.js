@@ -17,7 +17,8 @@
 		_Button,
 		_GUI,
 		_ObjectHelper,
-		plantGeometryBase;
+		plantGeometryBase,
+		utilVec31Grow;
 	
 	/*===================================================
     
@@ -57,13 +58,18 @@
 		_ObjectHelper = oh;
 		plantGeometryBase = plant;
 		
+		utilVec31Grow = new THREE.Vector3();
+		
 		// properties
 		
+		_Plant.timeGrow = 500;
 		_Plant.timeShow = 125;
 		_Plant.timeHide = 125;
-		_Plant.opacityBase = 0.75;
-		_Plant.opacityVacant = 0.9;
-		_Plant.opacityOccupied = 0.9;
+		_Plant.opacitySeed = 0.75;
+		_Plant.opacityVacant = 0.5;
+		_Plant.opacityVacantSeed = 0.9;
+		_Plant.opacityOccupied = 0.5;
+		_Plant.opacityOccupiedSeed = 0.9;
 		_Plant.opacityRotator = 0.85;
 		
 		// instance
@@ -115,6 +121,8 @@
 		_GridElement.Instance.call( this, parameters );
 		
 		// properties
+		
+		this.timeGrow = main.is_number( parameters.timeGrow ) ? parameters.timeGrow : _Plant.timeGrow;
 		
 		this.planted = false;
 		
@@ -195,10 +203,7 @@
 	
 	function change_seed( parameters ) {
 		
-		var parentPrevious = false,
-			parametersImage,
-			parametersUnsuccessful,
-			seedImgSrc;
+		var parentPrevious = false;
 		
 		// if exists, hide/clear
 		
@@ -224,44 +229,19 @@
 			parameters = parameters || {};
 			
 			parameters.id = parameters.id || 'plant_seed';
-			parameters.theme = parameters.theme || 'white';
+			parameters.image = parameters.image || shared.pathToIcons + 'plant_64.png';
+			parameters.imageSize = main.is_number( parameters.imageSize ) ? parameters.imageSize : _GUI.sizes.iconMedium;
 			parameters.width = main.is_number( parameters.width ) ? parameters.width : _GUI.sizes.iconMediumContainer;
 			parameters.height = main.is_number( parameters.height ) ? parameters.height : _GUI.sizes.iconMediumContainer;
 			parameters.timeShow = main.is_number( parameters.timeShow ) ? parameters.timeShow : _Plant.timeShow;
 			parameters.timeHide = main.is_number( parameters.timeHide ) ? parameters.timeHide : _Plant.timeHide;
-			parameters.opacityShow = main.is_number( parameters.opacityShow ) ? parameters.opacityShow : _Plant.opacityBase;
+			parameters.opacityShow = main.is_number( parameters.opacityShow ) ? parameters.opacityShow : _Plant.opacitySeed;
 			parameters.pointerEvents = false;
 			parameters.circle = true;
 			
-			parametersImage = parameters.image || {};
-			
-			if ( typeof parametersImage === 'string' ) {
-				
-				seedImgSrc = parametersImage;
-				
-				parametersImage = {};
-				
-			}
-			
-			parametersImage.id = parameters.id + '_image';
-			parametersImage.elementType = 'img';
-			parametersImage.src = parametersImage.src || seedImgSrc || shared.pathToIcons + 'plant_64.png';
-			parametersImage.width = main.is_number( parametersImage.width ) ? parametersImage.width : _GUI.sizes.iconMedium;
-			parametersImage.height = main.is_number( parametersImage.height ) ? parametersImage.height : _GUI.sizes.iconMedium;
-			parametersImage.pointerEvents = false;
-			
-			// container
-			
-			this.seed = new _UIElement.Instance( parameters );
+			this.seed = new _Button.Instance( parameters );
 			
 			this.seed.hide( { time: 0 } );
-		
-			// image
-		
-			this.seedImage = new _UIElement.Instance( parametersImage );
-			this.seedImage.align_once( 'center' );
-			
-			this.seedImage.show( { parent: this.seed, time: 0 } );
 			
 			if ( parentPrevious ) {
 				
@@ -341,7 +321,7 @@
 			
 			this.seed.apply_css( 'background-color', _GridModule.colors.vacant.getContextStyle() );
 			
-			this.seed.show( { opacity: _Plant.opacityVacant } );
+			this.seed.show( { opacity: _Plant.opacityVacantSeed } );
 			
 		}
 		// unsuccessful, but tested on an actual module
@@ -354,7 +334,7 @@
 			
 			this.seed.apply_css( 'background-color', _GridModule.colors.occupied.getContextStyle() );
 			
-			this.seed.show( { opacity: _Plant.opacityOccupied } );
+			this.seed.show( { opacity: _Plant.opacityOccupiedSeed } );
 			
 		}
 		// unsuccessful, no module
@@ -364,7 +344,7 @@
 			
 			this.seed.apply_css( this.seed.theme.stateLast );
 			
-			this.seed.show( { opacity: _Plant.opacityBase } );
+			this.seed.show( { opacity: _Plant.opacitySeed } );
 				
 		}
 		
@@ -379,8 +359,18 @@
     =====================================================*/
 	
 	function grow () {
+		console.log('plant grow!');
+		// set scale to 0
 		
-		// TODO: grow
+		this.scale.set( 0, 0, 0 );
+		
+		// tween scale to 1
+		
+		this.tween_properties( {
+			time: this.timeGrow,
+			easing: TWEEN.Easing.Back.EaseOut,
+			scale: utilVec31Grow.set( 1, 1, 1 )
+		} );
 		
 	}
 	

@@ -56,8 +56,9 @@
 			"assets/modules/ui/GUI.js",
 			"assets/modules/utils/MathHelper.js",
             "js/lib/three/Three.js",
+			"js/lib/Tween.js",
 			"js/lib/jquery.transform2d.min.js",
-			"js/lib/jquery.tipTip.min.js",
+			"js/lib/jquery.tipTip.min.js"
         ],
 		assetsThreeExtras = [
             "js/lib/three/ThreeExtras.js",
@@ -327,6 +328,11 @@
         shared.signals.paused = new signals.Signal();
         shared.signals.resumed = new signals.Signal();
         shared.signals.update = new signals.Signal();
+		
+		// tween update
+		// wrap because update signal passes time delta, and tween update needs time
+		
+		shared.signals.update.add( function () { TWEEN.update(); } );
 		
 		// renderer
         renderer = new THREE.WebGLRenderer( { antialias: false, clearColor: 0x000000, clearAlpha: 0, maxLights: 4 } );

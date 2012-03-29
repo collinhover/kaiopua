@@ -25,7 +25,8 @@
 		requirements: [
 			"assets/modules/core/Physics.js",
 			"assets/modules/utils/ObjectHelper.js",
-			"assets/modules/utils/MathHelper.js"
+			"assets/modules/utils/MathHelper.js",
+			"js/lib/Tween.js"
 		], 
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -37,9 +38,12 @@
 		_ObjectHelper = oh;
 		_MathHelper = mh;
 		
+		// instance
+		
 		_Model.Instance = Model;
 		_Model.Instance.prototype = new THREE.Mesh();
 		_Model.Instance.prototype.constructor = _Model.Instance;
+		_Model.Instance.prototype.tween_properties = tween_properties;
 		
 		// catch parent changes and add / remove physics automatically
 		
@@ -313,6 +317,135 @@
 		
 		this.id = parameters.id || this.id;
 		
+	}
+	
+	/*===================================================
+	
+	tweening
+	
+	=====================================================*/
+	
+	function tween_properties ( parameters ) {
+		
+		var me = this,
+			time,
+			easing,
+			position = this.position,
+			quaternion = this.quaternion,
+			scale = this.scale,
+			positionTo,
+			quaternionTo,
+			scaleTo;
+		
+		if ( main.type( parameters ) === 'object' && main.is_number( parameters.time ) ) {
+			
+			// reusable tween
+			
+			if ( this.tween instanceof TWEEN.Tween !== true ) {
+				
+				this.tweenValues = {};
+				
+				this.tween = new TWEEN.Tween( this.tweenValues )
+					.onUpdate( function () {
+						
+						if ( me.tweening.position === true ) {
+							
+							me.position.set( me.tweenValues.px, me.tweenValues.py, me.tweenValues.pz );
+							
+						}
+						
+						if ( me.tweening.quaternion === true ) {
+							
+							me.quaternion.set( me.tweenValues.qx, me.tweenValues.qy, me.tweenValues.qz, me.tweenValues.qw );
+							
+						}
+						
+						if ( me.tweening.scale === true ) {
+							
+							me.scale.set( me.tweenValues.sx, me.tweenValues.sy, me.tweenValues.sz );
+							
+						}
+						
+					} );
+					/*.onComplete( function () {
+						
+						console.log(' tween complete ');
+					
+					} );*/
+				
+			}
+			
+			// properties
+			
+			time = parameters.time;
+			easing = parameters.easing || TWEEN.Easing.Quadratic.EaseInOut;
+			positionTo = parameters.position;
+			quaternionTo = parameters.quaternion;
+			scaleTo = parameters.scale;
+			
+			this.tweening = {};
+			this.tweenTo = {};
+			
+			// position
+			
+			if ( positionTo instanceof THREE.Vector3 ) {
+				
+				// init values
+				
+				this.tweenValues.px = position.x;
+				this.tweenValues.py = position.y;
+				this.tweenValues.pz = position.z;
+				
+				this.tweenTo.px = positionTo.x;
+				this.tweenTo.py = positionTo.y;
+				this.tweenTo.pz = positionTo.z;
+				
+				this.tweening.position = true;
+				
+			}
+			
+			// rotation
+			
+			if ( quaternionTo instanceof THREE.Quaternion ) {
+				
+				// init values
+				
+				this.tweenValues.qx = quaternion.x;
+				this.tweenValues.qy = quaternion.y;
+				this.tweenValues.qz = quaternion.z;
+				this.tweenValues.qw = quaternion.w;
+				
+				this.tweenTo.qx = quaternionTo.x;
+				this.tweenTo.qy = quaternionTo.y;
+				this.tweenTo.qz = quaternionTo.z;
+				this.tweenTo.qw = quaternionTo.w;
+				
+				this.tweening.quaternion = true;
+				
+			}
+			
+			// scale
+			
+			if ( scaleTo instanceof THREE.Vector3 ) {
+				
+				// init values
+				
+				this.tweenValues.sx = scale.x;
+				this.tweenValues.sy = scale.y;
+				this.tweenValues.sz = scale.z;
+				
+				this.tweenTo.sx = scaleTo.x;
+				this.tweenTo.sy = scaleTo.y;
+				this.tweenTo.sz = scaleTo.z;
+				
+				this.tweening.scale = true;
+				
+			}
+			
+			this.tween.to( this.tweenTo, time ).easing( easing ).start();
+			
+		}
+
 	}
 	
 	/*===================================================
