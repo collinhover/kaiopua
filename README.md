@@ -3,7 +3,7 @@
 
 ####Web-native science fiction puzzle game
 
-[Paper](https://github.com/collinhover/kaiopua/blob/master/PAPER.md) - [Game Plan v6](https://github.com/collinhover/kaiopua/blob/master/plans/README.md "Game Plan v6") - [Game Website](http://collinhover.github.com/kaiopua) (placeholder) - [TODO List](https://github.com/collinhover/kaiopua/blob/master/TODO.md)
+[Explanation](https://github.com/downloads/collinhover/kaiopua/kaiopua_book_core_web.pdf) - [Game Plan v6](https://github.com/collinhover/kaiopua/blob/master/plans/README.md "Game Plan v6") - [Game Website](http://collinhover.github.com/kaiopua) (placeholder) - [TODO List](https://github.com/collinhover/kaiopua/blob/master/TODO.md)
 
 The aim of the project is to create an epistemic game to teach players how to think more like a creative professional in design. Tangentially, also about Hawaii! As noted by epistemicgames.org:
 
@@ -48,12 +48,11 @@ WebGL
 
 ####Libraries
 
-ThreeJS  
-jQuery  
-SignalsJS  
-Modernizr  
 HTML5-Reset  
-(+ development: DAT-GUI, StatsJS, LoggerJS)  
+Modernizr  
+SignalsJS  
+jQuery  
+ThreeJS  
 
 ---
   
