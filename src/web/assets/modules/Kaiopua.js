@@ -341,6 +341,34 @@ var KAIOPUA = (function (main) {
 		
 	};
 	
+	main.index_of_object_with_property_value = function ( array, property, value ) {
+		
+		var i, l,
+			index = -1,
+			object;
+		
+		if ( main.type( array ) === 'array' ) {
+			
+			for ( i = 0, l = array.length; i < l; i++ ) {
+				
+				object = array[ i ];
+				
+				if ( value === object[ property ] ) {
+					
+					index = i;
+					
+					break;
+					
+				}
+				
+			}
+			
+		}
+		
+		return index;
+		
+	}
+	
 	main.ensure_array = function ( target ) {
 		
 		target = target || [];

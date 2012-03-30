@@ -91,6 +91,7 @@
 		// functions
 		
 		_Farming.plant = plant;
+		_Farming.is_character_planting = is_character_planting;
 		
 		// ui
 		
@@ -224,7 +225,6 @@
 		var i, l,
 			farmer,
 			planting,
-			result = false,
 			index = -1;
 		
 		// if character passed
@@ -233,19 +233,7 @@
 			
 			// if character on farmer list
 			
-			for ( i = 0, l = farmers.length; i < l; i++ ) {
-				
-				farmer = farmers[ i ];
-				
-				if ( character === farmer.character ) {
-					
-					index = i;
-					
-					break;
-					
-				}
-				
-			}
+			index = main.index_of_object_with_property_value( farmers, 'character', character );
 			
 			// create new farmer
 			
@@ -272,7 +260,52 @@
 			
 			// step planting cycle
 			
-			result = planting.step( parameters );
+			planting.step( parameters );
+			
+		}
+		
+	}
+	
+	function is_character_planting ( character, property ) {
+		
+		var i, l,
+			farmer,
+			planting,
+			result = false,
+			index = -1;
+		
+		// if character passed
+		
+		if ( character instanceof _Character.Instance ) {
+			
+			// if character on farmer list
+			
+			index = main.index_of_object_with_property_value( farmers, 'character', character );
+			
+			// if character on farmer list
+			
+			if ( index !== -1 ) {
+				
+				farmer = farmers[ index ];
+				
+				// get planting
+				
+				planting = farmer.planting;
+				
+				// check planting cycle
+				
+				if ( planting.hasOwnProperty( property ) ) {
+					
+					result = planting[ property ];
+					
+				}
+				else {
+					
+					result = planting.started || planting.rotating;
+					
+				}
+				
+			}
 			
 		}
 		

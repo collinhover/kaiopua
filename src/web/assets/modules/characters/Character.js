@@ -60,6 +60,9 @@
 		_Character.Instance.prototype.rotate_by_delta = rotate_by_delta;
 		_Character.Instance.prototype.morph_cycle = morph_cycle;
 		_Character.Instance.prototype.action = action;
+		_Character.Instance.prototype.add_action = add_action;
+		_Character.Instance.prototype.stop_action = stop_action;
+		_Character.Instance.prototype.get_is_performing_action = get_is_performing_action;
 		_Character.Instance.prototype.show = show;
 		_Character.Instance.prototype.hide = hide;
 		_Character.Instance.prototype.update = update;
@@ -190,7 +193,8 @@
 		
 		me.id = parameters.id || characterIDBase;
 		
-		me.acting = false;
+		me.actions = {};
+		me.actionsNames = [];
 		
 		me.showing = false;
 		
@@ -208,13 +212,128 @@
 	
 	/*===================================================
 	
-	action
+	actions
 	
 	=====================================================*/
 	
-	function action () {
+	function action ( actionName, parameters ) {
 		
-		return this.acting;
+		var action;
+		
+		// if action type is in actions map, do it
+		if ( this.actions.hasOwnProperty( actionName ) ) {
+			
+			action = this.actions[ actionName ];
+			
+			if ( typeof action.callback === 'function' ) {
+				
+				action.callback.call( action.context, parameters );
+				
+			}
+			
+		}
+		
+	}
+	
+	function add_action () {
+		
+		var i, l,
+			j, k,
+			parameters,
+			actionsNames,
+			actionName;
+		
+		for ( i = 0, l = arguments.length; i < l; i++ ) {
+			
+			parameters = arguments[ i ];
+			
+			if ( main.type( parameters ) === 'object' ) {
+				
+				actionsNames = main.ensure_array( parameters.actionsNames );
+				
+				// for each action name
+				
+				for ( j = 0, k = actionsNames.length; j < k; j++ ) {
+					
+					actionName = actionsNames[ j ];
+					
+					// add to actions map
+					
+					this.actions[ actionName ] = {
+						callback: parameters.callback,
+						context: parameters.context || this,
+						activeCheck: parameters.activeCheck,
+						activeCheckContext: parameters.activeCheckContext || this
+					};
+					
+					// store name
+					
+					if ( this.actionsNames.indexOf( actionName ) === -1 ) {
+						
+						this.actionsNames.push( actionName );
+						
+					}
+				
+				}
+				
+			}
+			
+		}
+		
+	}
+	
+	function get_is_performing_action ( actionsNames ) {
+		
+		var i, l,
+			actionName,
+			action,
+			acting = false;
+		
+		actionsNames = typeof actionsNames !== 'undefined' ? main.ensure_array( actionsNames ) : this.actionsNames;
+		
+		for ( i = 0, l = actionsNames.length; i < l; i++ ) {
+			
+			actionName = actionsNames[ i ];
+			
+			action = this.actions[ actionName ];
+			
+			if ( typeof action.activeCheck === 'function' && action.activeCheck.call( action.activeCheckContext ) === true ) {
+				
+				acting = true;
+				
+				break;
+				
+			}
+			
+		}
+		
+		return acting;
+		
+	}
+	
+	function stop_action ( actionsNames ) {
+		
+		var i, l,
+			actionName,
+			action;
+		
+		// trigger stop for all actions that are active
+		
+		actionsNames = typeof actionsNames !== 'undefined' ? main.ensure_array( actionsNames ) : this.actionsNames;
+		
+		for ( i = 0, l = actionsNames.length; i < l; i++ ) {
+			
+			actionName = actionsNames[ i ];
+			
+			action = this.actions[ actionName ];
+			
+			if ( typeof action.activeCheck === 'function' && action.activeCheck.call( action.activeCheckContext ) === true ) {
+				
+				this.action( actionName, { stop: true } );
+				
+			}
+				
+		}
 		
 	}
 	

@@ -227,13 +227,13 @@
 		
 		if ( parameters.rotate === true ) {
 			
-			return this.step_rotate( parameters );
+			this.step_rotate( parameters );
 			
 		}
 		// else step placement
 		else {
 			
-			return this.step_placement( parameters );
+			this.step_placement( parameters );
 			
 		}
 		
@@ -241,8 +241,12 @@
 	
 	function step_rotate ( parameters ) {
 		
+		// handle parameters
+		
+		parameters = parameters || {};
+		
 		console.log(' > PLANTING: rotation step');
-		if ( _Game.is_stop_parameter( parameters ) ) {
+		if ( parameters.stop === true ) {
 			
 			// stop
 			
@@ -257,17 +261,20 @@
 			
 		}
 		
-		return this.rotating;
-		
 	}
 	
 	function step_placement ( parameters ) {
 		
 		var wasRotated;
-		console.log(' > PLANTING: placement step');
-		if ( _Game.is_stop_parameter( parameters ) ) {
+		
+		// handle parameters
+		
+		parameters = parameters || {};
+		
+		console.log(' > PLANTING: placement step, parameters', parameters, ' + is stop? ', parameters.stop );
+		if ( parameters.stop === true ) {
 			
-			planting.stop();
+			this.stop();
 			
 		}
 		else {
@@ -282,7 +289,7 @@
 				
 				// stop rotating
 				
-				this.step_rotate( false );
+				this.step_rotate( { stop: true } );
 				
 			}
 			
@@ -313,8 +320,6 @@
 			}
 			
 		}
-		
-		return this.started;
 		
 	}
 	
@@ -480,9 +485,13 @@
 		
 		shared.signals.mousemoved.remove( this.update, this );
 		
+		// stop
+			
+		this.started = false;
+		
 		// stop rotating
 		
-		this.step_rotate( false );
+		this.step_rotate( { stop: true } );
 		
 		// clear plant
 		
@@ -496,10 +505,6 @@
 		
 		_GUI.layers.ui.show();
 		_GUI.layers.ui.set_pointer_events( false );
-		
-		// stop
-			
-		this.started = false;
 		
 	}
 	

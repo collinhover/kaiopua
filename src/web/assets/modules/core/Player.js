@@ -226,11 +226,11 @@
 				
 				// modify character action if started
 				
-				var acting = character.action( '001', { event: e, stop: !enabled } );
+				character.action( '001', { event: e, stop: !enabled } );
 				
 				// start rotating camera if character is not acting
 				
-				if ( acting !== true ) {
+				if ( character.get_is_performing_action( '001' ) !== true ) {
 					
 					cameraControls.rotate( e );
 					
@@ -259,7 +259,21 @@
 		};
 		map[ 'mouseright' ] = {
 			keydown: function ( e ) { cameraControls.rotate( e ); },
-			keyup: function ( e ) { cameraControls.rotate( e, true ); }
+			keyup: function ( e ) { 
+				
+				// stop camera rotate
+				
+				var rotated = cameraControls.rotate( e, true );
+				
+				// stop character action if camera was not just rotated
+				
+				if ( rotated !== true ) {
+					
+					character.action( '001', { event: e, stop: true } );
+					character.action( '002', { event: e, stop: true } );
+					
+				}
+			}
 		};
 		map[ 'mousewheel' ] = {
 			keyup: function ( e ) { cameraControls.zoom( e ); }
@@ -777,17 +791,17 @@
 	
 	function disable () {
 		
+		enabled = false;
+		
 		// clear keys
 		
 		clear_keys_active();
 		
 		// clear character actions
 		
-		character.acting = false;
+		character.stop_action();
 		
-		// disable and pause updating
-		
-		enabled = false;
+		// pause updating
 		
 		shared.signals.update.remove( update );
 		
