@@ -130,7 +130,7 @@
 		
 		Object.defineProperty( _GridModule.Instance.prototype, 'occupant', { 
 			get: function () { return this._occupant; },
-			set: set_occupant
+			set: function ( occupant ) { this.set_occupant( occupant ); }
 		});
 		
 		Object.defineProperty( _GridModule.Instance.prototype, 'occupied', { 
@@ -164,6 +164,11 @@
 		// store grid reference
 		
 		this.grid = parameters.grid;
+		
+		// signals
+		
+		this.stateChanged = new signals.Signal();
+		this.occupiedStateChanged = new signals.Signal();
 		
 		// states
 		
@@ -278,6 +283,10 @@
 		// recalculate state showing
 		
 		this.show_state();
+		
+		// signal
+		
+		this.stateChanged.dispatch( this );
 		
 	}
 	
@@ -405,6 +414,10 @@
 		// set occupied state
 		
 		this.change_state( 'occupied', ( typeof this.occupant !== 'undefined' ) );
+		
+		// signal
+		console.log('module occupied state change');
+		this.occupiedStateChanged.dispatch( this );
 		
 	}
 	

@@ -55,6 +55,8 @@
 		_Button.Instance.prototype.themes = {};
 		_Button.Instance.prototype.themes.core = theme_core;
 		_Button.Instance.prototype.themes.white = theme_white;
+		_Button.Instance.prototype.themes.green = theme_green;
+		_Button.Instance.prototype.themes.red = theme_red;
 		
 	}
 	
@@ -152,7 +154,7 @@
 		
 		// bubble
 		
-		this.bubble = ( typeof parameters.bubble === 'boolean' ? parameters.bubble : false );
+		this.bubble = ( typeof parameters.bubble === 'boolean' ? parameters.bubble : true );
 		
 		// cooldown
 		
@@ -215,7 +217,7 @@
 		
 		if ( typeof this.callback !== 'undefined' && this.enabled === true && this.hidden !== true && this.isVisible === true ) {
 			
-			this.callback.apply( this.context || window, this.data );
+			this.callback.apply( this.context || window, main.ensure_array( this.data ) );
 			
 		}
 		
@@ -304,7 +306,6 @@
 		var supr = _Button.Instance.prototype.supr,
 			theme = ( supr.themes[ 'white' ] || supr.themes.core ).call( this, overrides ),
 			enter,
-			leave,
 			or;
 		
 		// enter state
@@ -314,6 +315,44 @@
 		enter = theme.enter = theme.enter || {};
 		
 		enter[ "background-color" ] = or[ "background-color" ] || "#ffffff";
+		
+		return theme;
+		
+	}
+	
+	function theme_green ( overrides ) {
+		
+		var supr = _Button.Instance.prototype.supr,
+			theme = ( supr.themes[ 'green' ] || supr.themes.core ).call( this, overrides ),
+			enter,
+			or;
+		
+		// enter state
+		
+		or = overrides.enter || {};
+		
+		enter = theme.enter = theme.enter || {};
+		
+		enter[ "background-color" ] = or[ "background-color" ] || "#66FFB2";
+		
+		return theme;
+		
+	}
+	
+	function theme_red ( overrides ) {
+		
+		var supr = _Button.Instance.prototype.supr,
+			theme = ( supr.themes[ 'red' ] || supr.themes.core ).call( this, overrides ),
+			enter,
+			or;
+		
+		// enter state
+		
+		or = overrides.enter || {};
+		
+		enter = theme.enter = theme.enter || {};
+		
+		enter[ "background-color" ] = or[ "background-color" ] || "#FF8A8A";
 		
 		return theme;
 		

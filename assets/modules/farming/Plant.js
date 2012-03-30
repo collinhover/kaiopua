@@ -14,9 +14,11 @@
 		_GridElement,
 		_GridModule,
 		_UIElement,
+		_Button,
 		_GUI,
 		_ObjectHelper,
-		plantGeometryBase;
+		plantGeometryBase,
+		utilVec31Grow;
 	
 	/*===================================================
     
@@ -30,9 +32,10 @@
 			"assets/modules/puzzles/GridElement.js",
 			"assets/modules/puzzles/GridModule.js",
 			"assets/modules/ui/UIElement.js",
-			"assets/modules/core/GUI.js",
+			"assets/modules/ui/Button.js",
+			"assets/modules/ui/GUI.js",
 			"assets/modules/utils/ObjectHelper.js",
-			"assets/models/Taro_Plant_Single.js"//"assets/models/Taro_Plant_Double.js"
+			{ path: "assets/models/Taro_Plant.js", type: 'model' }
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -44,23 +47,30 @@
     
     =====================================================*/
 	
-	function init_internal( ge, gm, uie, gui, oh, plant ) {
+	function init_internal( ge, gm, uie, btn, gui, oh, plant ) {
 		console.log('internal plant', _Plant);
 		
 		_GridElement = ge;
 		_GridModule = gm;
 		_UIElement = uie;
+		_Button = btn;
 		_GUI = gui;
 		_ObjectHelper = oh;
 		plantGeometryBase = plant;
 		
+		utilVec31Grow = new THREE.Vector3();
+		
 		// properties
 		
+		_Plant.timeGrow = 500;
 		_Plant.timeShow = 125;
 		_Plant.timeHide = 125;
-		_Plant.opacityBase = 0.75;
-		_Plant.opacityVacant = 0.9;
-		_Plant.opacityOccupied = 0.9;
+		_Plant.opacitySeed = 0.75;
+		_Plant.opacityVacant = 0.5;
+		_Plant.opacityVacantSeed = 0.9;
+		_Plant.opacityOccupied = 0.5;
+		_Plant.opacityOccupiedSeed = 0.9;
+		_Plant.opacityRotator = 0.85;
 		
 		// instance
 		
@@ -71,8 +81,9 @@
 		
 		_Plant.Instance.prototype.reset_material = reset_material;
 		
-		_Plant.Instance.prototype.change_module = change_module;
+		_Plant.Instance.prototype.change_rotator = change_rotator;
 		_Plant.Instance.prototype.change_seed = change_seed;
+		_Plant.Instance.prototype.change_module = change_module;
 		
 		_Plant.Instance.prototype.test_occupy_module = test_occupy_module;
 		
@@ -99,12 +110,8 @@
 			
 			parameters.geometry = plantGeometryBase;
 			
-			/*parameters.layout = [
-				[ 0, 0, 0 ],
-				[ 1, 1, 0 ],
-				[ 0, 0, 0 ]
-			];*/
 			parameters.layout = [ [ 1 ] ];
+			
 		}
 		
 		parameters.materials = parameters.materials || new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } );
@@ -115,6 +122,8 @@
 		
 		// properties
 		
+		this.timeGrow = main.is_number( parameters.timeGrow ) ? parameters.timeGrow : _Plant.timeGrow;
+		
 		this.planted = false;
 		
 		this.materialBase = new THREE.MeshLambertMaterial();
@@ -124,21 +133,65 @@
 		
 		this.change_seed( parameters.seed );
 		
+		this.change_rotator( parameters.rotator );
+		
 	}
 	
 	/*===================================================
     
-    material
+    seed
     
     =====================================================*/
 	
-	function reset_material () {
+	function change_rotator ( parameters ) {
 		
-		this.material.color.copy( this.materialBase.color );
-		this.material.ambient.copy( this.materialBase.ambient );
-		this.material.vertexColors = this.materialBase.vertexColors;
-		this.material.transparent = false;
-		this.material.opacity = 1;
+		var parentPrevious = false;
+		
+		// if exists, hide/clear
+		
+		if ( this.rotator instanceof _UIElement.Instance ) {
+			
+			parentPrevious = this.rotator.parent;
+			
+			this.rotator.hide( { remove: true, time: 0 } );
+			
+		}
+		
+		// if is uielement
+		if ( parameters instanceof _UIElement.Instance ) {
+		
+			this.rotator = parameters;
+			
+		}
+		// else create uielement
+		else {
+			
+			// handle parameters
+			
+			parameters = parameters || {};
+			
+			parameters.id = parameters.id || 'plant_rotator';
+			parameters.image = parameters.image || shared.pathToIcons + 'rotate_64.png';
+			parameters.imageSize = main.is_number( parameters.imageSize ) ? parameters.imageSize : _GUI.sizes.iconLarge;
+			parameters.width = main.is_number( parameters.width ) ? parameters.width : _GUI.sizes.iconLargeContainer;
+			parameters.height = main.is_number( parameters.height ) ? parameters.height : _GUI.sizes.iconLargeContainer;
+			parameters.timeShow = main.is_number( parameters.timeShow ) ? parameters.timeShow : _Plant.timeShow;
+			parameters.timeHide = main.is_number( parameters.timeHide ) ? parameters.timeHide : _Plant.timeHide;
+			parameters.opacityShow = main.is_number( parameters.opacityShow ) ? parameters.opacityShow : _Plant.opacityRotator;
+			parameters.pointerEvents = false;
+			parameters.circle = true;
+			
+			this.rotator = new _Button.Instance( parameters );
+			
+			this.rotator.hide( { time: 0 } );
+			
+			if ( parentPrevious ) {
+				
+				this.rotator.show( { parent: parentPrevious } );
+				
+			}
+			
+		}
 		
 	}
 	
@@ -150,15 +203,15 @@
 	
 	function change_seed( parameters ) {
 		
-		var parametersImage,
-			parametersUnsuccessful,
-			seedImgSrc;
+		var parentPrevious = false;
 		
 		// if exists, hide/clear
 		
 		if ( this.seed instanceof _UIElement.Instance ) {
 			
-			this.seed.hide( { remove: true } );
+			parentPrevious = this.seed.parent;
+			
+			this.seed.hide( { remove: true, time: 0 } );
 			
 		}
 		
@@ -176,46 +229,43 @@
 			parameters = parameters || {};
 			
 			parameters.id = parameters.id || 'plant_seed';
-			parameters.theme = parameters.theme || 'white';
+			parameters.image = parameters.image || shared.pathToIcons + 'plant_64.png';
+			parameters.imageSize = main.is_number( parameters.imageSize ) ? parameters.imageSize : _GUI.sizes.iconMedium;
 			parameters.width = main.is_number( parameters.width ) ? parameters.width : _GUI.sizes.iconMediumContainer;
 			parameters.height = main.is_number( parameters.height ) ? parameters.height : _GUI.sizes.iconMediumContainer;
 			parameters.timeShow = main.is_number( parameters.timeShow ) ? parameters.timeShow : _Plant.timeShow;
 			parameters.timeHide = main.is_number( parameters.timeHide ) ? parameters.timeHide : _Plant.timeHide;
-			parameters.opacityShow = main.is_number( parameters.opacityShow ) ? parameters.opacityShow : _Plant.opacityBase;
+			parameters.opacityShow = main.is_number( parameters.opacityShow ) ? parameters.opacityShow : _Plant.opacitySeed;
 			parameters.pointerEvents = false;
 			parameters.circle = true;
 			
-			parametersImage = parameters.image || {};
+			this.seed = new _Button.Instance( parameters );
 			
-			if ( typeof parametersImage === 'string' ) {
+			this.seed.hide( { time: 0 } );
+			
+			if ( parentPrevious ) {
 				
-				seedImgSrc = parametersImage;
-				
-				parametersImage = {};
+				this.seed.show( { parent: parentPrevious } );
 				
 			}
 			
-			parametersImage.id = parameters.id + '_image';
-			parametersImage.elementType = 'img';
-			parametersImage.src = parametersImage.src || seedImgSrc || shared.pathToIcons + 'plant_64.png';
-			parametersImage.width = main.is_number( parametersImage.width ) ? parametersImage.width : _GUI.sizes.iconMedium;
-			parametersImage.height = main.is_number( parametersImage.height ) ? parametersImage.height : _GUI.sizes.iconMedium;
-			parametersImage.pointerEvents = false;
-			
-			// container
-			
-			this.seed = new _UIElement.Instance( parameters );
-			
-			this.seed.hide( { time: 0 } );
-		
-			// image
-		
-			this.seedImage = new _UIElement.Instance( parametersImage );
-			this.seedImage.align_once( 'center' );
-			
-			this.seedImage.show( { parent: this.seed, time: 0 } );
-			
 		}
+		
+	}
+	
+	/*===================================================
+    
+    material
+    
+    =====================================================*/
+	
+	function reset_material () {
+		
+		this.material.color.copy( this.materialBase.color );
+		this.material.ambient.copy( this.materialBase.ambient );
+		this.material.vertexColors = this.materialBase.vertexColors;
+		this.material.transparent = false;
+		this.material.opacity = 1;
 		
 	}
 	
@@ -271,7 +321,7 @@
 			
 			this.seed.apply_css( 'background-color', _GridModule.colors.vacant.getContextStyle() );
 			
-			this.seed.show( { opacity: _Plant.opacityVacant } );
+			this.seed.show( { opacity: _Plant.opacityVacantSeed } );
 			
 		}
 		// unsuccessful, but tested on an actual module
@@ -284,7 +334,7 @@
 			
 			this.seed.apply_css( 'background-color', _GridModule.colors.occupied.getContextStyle() );
 			
-			this.seed.show( { opacity: _Plant.opacityOccupied } );
+			this.seed.show( { opacity: _Plant.opacityOccupiedSeed } );
 			
 		}
 		// unsuccessful, no module
@@ -294,7 +344,7 @@
 			
 			this.seed.apply_css( this.seed.theme.stateLast );
 			
-			this.seed.show( { opacity: _Plant.opacityBase } );
+			this.seed.show( { opacity: _Plant.opacitySeed } );
 				
 		}
 		
@@ -309,8 +359,18 @@
     =====================================================*/
 	
 	function grow () {
+		console.log('plant grow!');
+		// set scale to 0
 		
-		// TODO: grow
+		this.scale.set( 0, 0, 0 );
+		
+		// tween scale to 1
+		
+		this.tween_properties( {
+			time: this.timeGrow,
+			easing: TWEEN.Easing.Back.EaseOut,
+			scale: utilVec31Grow.set( 1, 1, 1 )
+		} );
 		
 	}
 	

@@ -13,10 +13,10 @@
         _Player = {},
 		_Game,
 		_CameraControls,
-		_Messenger,
 		_Hero,
 		_Physics,
 		_World,
+		_Messenger,
 		_ObjectHelper,
 		_MathHelper,
 		ready = false,
@@ -81,10 +81,10 @@
 		requirements: [
 			"assets/modules/core/Game.js",
 			"assets/modules/core/CameraControls.js",
-			"assets/modules/core/Messenger.js",
 			"assets/modules/characters/Hero.js",
 			"assets/modules/core/Physics.js",
 			"assets/modules/env/World.js",
+			"assets/modules/ui/Messenger.js",
 			"assets/modules/utils/ObjectHelper.js",
 			"assets/modules/utils/MathHelper.js"
 		],
@@ -98,7 +98,7 @@
     
     =====================================================*/
 	
-	function init_internal ( g, cc, msg, h, physx, w, oh, mh ) {
+	function init_internal ( g, cc, h, physx, w, msg, oh, mh ) {
 		console.log('internal player');
 		
 		if ( ready !== true ) {
@@ -107,10 +107,10 @@
 			
 			_Game = g;
 			_CameraControls = cc;
-			_Messenger = msg;
 			_Hero = h;
 			_Physics = physx;
 			_World = w;
+			_Messenger = msg;
 			_ObjectHelper = oh;
 			_MathHelper = mh;
 			
@@ -226,11 +226,11 @@
 				
 				// modify character action if started
 				
-				var acting = character.action( '001', { event: e, stop: !enabled } );
+				character.action( '001', { event: e, stop: !enabled } );
 				
 				// start rotating camera if character is not acting
 				
-				if ( acting !== true ) {
+				if ( character.get_is_performing_action( '001' ) !== true ) {
 					
 					cameraControls.rotate( e );
 					
@@ -259,7 +259,21 @@
 		};
 		map[ 'mouseright' ] = {
 			keydown: function ( e ) { cameraControls.rotate( e ); },
-			keyup: function ( e ) { cameraControls.rotate( e, true ); }
+			keyup: function ( e ) { 
+				
+				// stop camera rotate
+				
+				var rotated = cameraControls.rotate( e, true );
+				
+				// stop character action if camera was not just rotated
+				
+				if ( rotated !== true ) {
+					
+					character.action( '001', { event: e, stop: true } );
+					character.action( '002', { event: e, stop: true } );
+					
+				}
+			}
 		};
 		map[ 'mousewheel' ] = {
 			keyup: function ( e ) { cameraControls.zoom( e ); }
@@ -423,31 +437,36 @@
 	
 	function on_mouse_pressed ( e ) {
 		
-		var button,
+		var i, l,
+			button,
 			type,
 			arguments = [];
 		
-		// handle button
-		
-		switch ( e.button ) {
+		if ( e && _Game.is_event_in_game( e ) === true ) {
 			
-			case 2: button = 'mouseright'; break;
-			case 1: button = 'mousemiddle'; break;
-			case 0: button = 'mouseleft'; break;
+			// handle button
+			
+			switch ( e.button ) {
+				
+				case 2: button = 'mouseright'; break;
+				case 1: button = 'mousemiddle'; break;
+				case 0: button = 'mouseleft'; break;
+				
+			}
+			
+			// handle type
+			
+			switch ( e.type ) {
+				
+				case 'mousedown': case 'touchstart': type = 'keydown'; break;
+				case 'mouseup': case 'touchend': type = 'keyup'; break;
+				case 'mousewheel': button = 'mousewheel'; type = 'keyup'; break;
+				
+			}
+			
+			trigger_key( button, type, e );
 			
 		}
-		
-		// handle type
-		
-		switch ( e.type ) {
-			
-			case 'mousedown': case 'touchstart': type = 'keydown'; break;
-			case 'mouseup': case 'touchend': type = 'keyup'; break;
-			case 'mousewheel': button = 'mousewheel'; type = 'keyup'; break;
-			
-		}
-		
-		trigger_key( button, type, e );
 		
 	}
 	
@@ -772,17 +791,17 @@
 	
 	function disable () {
 		
+		enabled = false;
+		
 		// clear keys
 		
 		clear_keys_active();
 		
 		// clear character actions
 		
-		character.acting = false;
+		character.stop_action();
 		
-		// disable and pause updating
-		
-		enabled = false;
+		// pause updating
 		
 		shared.signals.update.remove( update );
 		

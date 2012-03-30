@@ -338,7 +338,7 @@ a:hover, a:active {
 -------------------------*/
 .sticky_footer {
 	position: relative; 
-    width: 522px;
+    width: 650px;
     height: 130px;
 	margin: 0 auto;
 	margin-top: -130px;
@@ -366,6 +366,7 @@ footer nav {
     width: 100%;
 	min-width: 100%;
 	padding-top: 10px;
+	padding-bottom: 10px;
     margin: 0 auto;
     font-size: 18px;
 }
@@ -377,28 +378,28 @@ footer nav span {
     margin: 14px 10px 0 10px;
 }
 
-footer .clouda {
-	width: 16px;
-	height: 16px;
-	margin-left: -38px;
-	margin-right: -35px;
-	margin-top: 12px;
+footer #logo_icona {
+	width: 48px;
+	height: 48px;
+	margin-left: -30px;
+	margin-right: -5px;
+	margin-top: -4px;
 }
 
-footer .cloudb {
-	width: 24px;
-	height: 24px;
-	margin-left: -65px;
-	margin-right: -24px;
-	margin-top: -5px;
-}
-
-footer .cloudc {
-	width: 16px;
-	height: 16px;
+footer #logo_iconb {
+	width: 48px;
+	height: 48px;
 	margin-left: -20px;
-	margin-right: -35px;
-	margin-top: 6px;
+	margin-right: -32px;
+	margin-top: -9px;
+}
+
+footer #logo_iconc {
+	width: 32px;
+	height: 32px;
+	margin-left: -16px;
+	margin-right: -32px;
+	margin-top: 7px;
 }
 
 footer nav .icon {

@@ -134,7 +134,7 @@
 		pPos.offsetBase.set( 0, 50, 300 );
 		pPos.offset.copy( pPos.offsetBase );
 		pPos.offsetMin.set( 0, 0, -25 );
-		pPos.offsetMax.set( 0, 50, 1000 );
+		pPos.offsetMax.set( 0, 50, 1200 );
 		pPos.offsetSnap.copy( pPos.offset );
 		pPos.offsetSnapToMinDist.set( 0, 0, firstPersonDist );
 		pPos.deltaMin.set( -80, -80, -80 );

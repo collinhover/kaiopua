@@ -12,12 +12,15 @@
 		assetPath = "assets/modules/farming/Farming.js",
 		_Farming = {},
 		_Game,
-		_Puzzles,
+		_Puzzle,
 		_Planting,
 		_Field,
+		_Character,
+		_Player,
 		_GUI,
 		_Button,
-		_Menu;
+		_Menu,
+		farmers = [];
 	
 	/*===================================================
     
@@ -29,12 +32,10 @@
 		data: _Farming,
 		requirements: [
 			"assets/modules/core/Game.js",
-			"assets/modules/puzzles/Puzzles.js",
+			"assets/modules/puzzles/Puzzle.js",
 			"assets/modules/farming/Planting.js",
 			"assets/modules/farming/Field.js",
-			"assets/modules/core/GUI.js",
-			"assets/modules/ui/Button.js",
-			"assets/modules/ui/Menu.js"
+			"assets/modules/characters/Character.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -46,47 +47,63 @@
     
     =====================================================*/
 	
-	function init_internal( g, pzl, pl, f, gui, btn, mn ) {
+	function init_internal( g, pzl, pl, f, c ) {
 		console.log('internal farming', _Farming);
 		
 		_Game = g;
-		_Puzzles = pzl;
+		_Puzzle = pzl;
 		_Planting = pl;
 		_Field = f;
-		_GUI = gui;
-		_Button = btn;
-		_Menu = mn;
+		_Character = c;
 		
-		_Farming.Instance = Farming;
+		// properties
 		
-		_Farming.Instance.prototype.plant = plant;
+		_Farming.plantParameters = {};
 		
-		_Farming.Instance.prototype.change_field = change_field;
+		Object.defineProperty( _Farming.plantParameters, 'rock', { 
+			get: function () {
+				
+				return {
+					seed: {
+						image: shared.pathToIcons + 'rock_64.png'
+					},
+					geometry: "assets/models/Rock.js",
+					layout: [ [ 1 ] ]
+				};
+			
+			}
+		});
 		
-	}
-	
-	/*===================================================
-    
-    farming
-    
-    =====================================================*/
-	
-	function Farming ( character ) {
+		Object.defineProperty( _Farming.plantParameters, 'taro', { 
+			get: function () {
+				
+				return {
+					seed: {
+						image: shared.pathToIcons + 'taro_64.png'
+					},
+					geometry: "assets/models/Taro_Plant.js",
+					layout: [ [ 1 ] ]
+				};
+			
+			}
+		});
 		
-		var planting;
+		// functions
 		
-		// store character ref
+		_Farming.plant = plant;
+		_Farming.is_character_planting = is_character_planting;
 		
-		this.character = character;
+		// ui
 		
-		// init farming ui
-		
-		init_farming_ui();
-		
-		// planting
-		
-		this.planting = new _Planting.Instance( this );
-		
+		main.asset_require( [
+				"assets/modules/core/Player.js",
+				"assets/modules/ui/GUI.js",
+				"assets/modules/ui/Button.js",
+				"assets/modules/ui/Menu.js"
+			],
+			init_farming_ui,
+			true
+		);
 	}
 	
 	/*===================================================
@@ -95,15 +112,23 @@
 	
 	=====================================================*/
 	
-	function init_farming_ui() {
+	function init_farming_ui( p, gui, btn, mn ) {
+		console.log('internal farming ui');
+		var b, m;
 		
-		var b = _GUI.buttons,
-			m = _GUI.menus;
+		_Player = p;
+		_GUI = gui;
+		_Button = btn;
+		_Menu = mn;
+		
+		b = _GUI.buttons;
+		m = _GUI.menus;
 		
 		// menu
 		
 		this.menu = m.farming = new _Menu.Instance( {
-            id: 'farming'
+            id: 'farming',
+			openAlone: false
         } );
 		
 		m.farming.buttonOpen = new _Button.Instance( {
@@ -117,71 +142,75 @@
 		} );
 		
 		m.farming.buttonClose = _GUI.generate_button_close();
+		m.farming.buttonClose.alignment = 'topleft';
+		m.farming.buttonClose.alignmentGuide = m.farming.buttonOpen;
+		m.farming.buttonClose.spacingLeft = -m.farming.buttonClose.width;
 		
-		m.farming.add( 
+		m.farming.add(
 			new _Button.Instance( {
-				id: 'plant_001',
-				image: shared.pathToIcons + 'plant_64.png',
+				id: 'rock',
+				image: shared.pathToIcons + 'rock_64.png',
 				imageSize: _GUI.sizes.iconMedium,
 				size: _GUI.sizes.iconMediumContainer,
-				tooltip: 'plant_001',
+				tooltip: 'Rock',
 				spacing: _GUI.sizes.buttonSpacing,
 				circle: true,
-				enabled: false
+				theme: 'green',
+				callback: plant_from_ui,
+				context: _Farming,
+				data: 'rock'
 			} ),
 			new _Button.Instance( {
-				id: 'plant_002',
-				image: shared.pathToIcons + 'plant_64.png',
+				id: 'taro',
+				image: shared.pathToIcons + 'taro_64.png',
 				imageSize: _GUI.sizes.iconMedium,
 				size: _GUI.sizes.iconMediumContainer,
-				tooltip: 'plant_002',
+				tooltip: 'Taro',
 				spacing: _GUI.sizes.buttonSpacing,
 				circle: true,
-				enabled: false
+				theme: 'green',
+				callback: plant_from_ui,
+				context: _Farming,
+				data: 'taro'
 			} ),
 			new _Button.Instance( {
-				id: 'plant_003',
-				image: shared.pathToIcons + 'plant_64.png',
+				id: 'tarodouble',
+				image: shared.pathToIcons + 'taro_double_64.png',
 				imageSize: _GUI.sizes.iconMedium,
 				size: _GUI.sizes.iconMediumContainer,
-				tooltip: 'plant_003',
+				tooltip: 'Two-headed Taro',
 				spacing: _GUI.sizes.buttonSpacing,
 				circle: true,
-				enabled: false
+				theme: 'green'
+			} ),
+			new _Button.Instance( {
+				id: 'tarotriple',
+				image: shared.pathToIcons + 'taro_triple_64.png',
+				imageSize: _GUI.sizes.iconMedium,
+				size: _GUI.sizes.iconMediumContainer,
+				tooltip: 'Triple Taro',
+				spacing: _GUI.sizes.buttonSpacing,
+				circle: true,
+				theme: 'green'
 			} )
 		);
 		
-		m.farming.arrange_circle( {
-			degreesAutoFit: true,
-			degreeStart: 0,
-			direction: -1,
-			radius: _GUI.sizes.buttonMedium + _GUI.sizes.buttonSpacing,
-			forceShapeOnOpen: true
+		m.farming.arrange_line( {
+			childrenPerLine: 5
 		} );
 		
-		m.main.add( m.farming, 0 );
+		m.farming.alignmentOpen = 'lefttop';
+		m.farming.alignmentClosed = false;
+		m.farming.alignmentGuide = m.farming.buttonOpen;
+		m.farming.alignmentOutside = true;
 		
-		// navigation
+		m.navigation.add( m.farming, 0 );
 		
-		this.buttonNavigation = b.farmingMenu = new _Button.Instance( {
-			id: 'farmingMenu',
-			image: shared.pathToIcons + 'farming_64.png',
-			imageSize: _GUI.sizes.iconMedium,
-			size: _GUI.sizes.iconMediumContainer,
-			tooltip: 'Farming',
-			spacing: _GUI.sizes.buttonSpacing,
-			circle: true,
-			callback: function () {
-				
-				_Game.pause();
-				
-				m.farming.open( 0 );
-				
-			},
-			context: this
-		} );
+	}
+	
+	function plant_from_ui ( plantType ) {
 		
-		m.navigation.add( b.farmingMenu, 0 );
+		plant( _Player.character, { plant: _Farming.plantParameters[ plantType ] } );
 		
 	}
 	
@@ -191,58 +220,96 @@
 	
 	=====================================================*/
 	
-	function plant ( parameters ) {
+	function plant ( character, parameters ) {
 		
-		// handle parameters
+		var i, l,
+			farmer,
+			planting,
+			index = -1;
 		
-		if ( _Game.is_stop_parameter( parameters ) ) {
-			
-			// stop planting cycle
-			
-			this.planting.stop();
-			
-		}
-		else {
-			
-			// store mouse
-			
-			this.planting.mouse = main.get_mouse( this.planting.event );
-			
-			// step planting cycle
-			
-			this.planting.step();
-			
-		}
+		// if character passed
 		
-		return this.planting.started;
-		
-	}
-	
-	/*===================================================
-	
-	fields
-	
-	=====================================================*/
-	
-	function change_field ( field ) {
-		
-		// if new field
-		
-		if ( this.field !== field ) {
+		if ( character instanceof _Character.Instance ) {
 			
-			// clear previous field grid
+			// if character on farmer list
 			
-			if ( this.field instanceof _Field.Instance ) {
+			index = main.index_of_object_with_property_value( farmers, 'character', character );
+			
+			// create new farmer
+			
+			if ( index === -1 ) {
 				
-				this.field.grid.clean();
+				farmer = {
+					character: character,
+					planting: new _Planting.Instance( character )
+				};
+				
+				farmers.push( farmer );
+				
+			}
+			// or use existing
+			else {
+				
+				farmer = farmers[ index ];
 				
 			}
 			
-			// store new field
+			// get planting
 			
-			this.field = field;
+			planting = farmer.planting;
+			
+			// step planting cycle
+			
+			planting.step( parameters );
 			
 		}
+		
+	}
+	
+	function is_character_planting ( character, property ) {
+		
+		var i, l,
+			farmer,
+			planting,
+			result = false,
+			index = -1;
+		
+		// if character passed
+		
+		if ( character instanceof _Character.Instance ) {
+			
+			// if character on farmer list
+			
+			index = main.index_of_object_with_property_value( farmers, 'character', character );
+			
+			// if character on farmer list
+			
+			if ( index !== -1 ) {
+				
+				farmer = farmers[ index ];
+				
+				// get planting
+				
+				planting = farmer.planting;
+				
+				// check planting cycle
+				
+				if ( planting.hasOwnProperty( property ) ) {
+					
+					result = planting[ property ];
+					
+				}
+				else {
+					
+					result = planting.started || planting.rotating;
+					
+				}
+				
+			}
+			
+		}
+		
+		return result;
 		
 	}
 	

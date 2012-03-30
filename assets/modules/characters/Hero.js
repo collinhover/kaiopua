@@ -48,13 +48,6 @@
 		_Hero.Instance = Hero;
 		_Hero.Instance.prototype = new _Character.Instance();
 		_Hero.Instance.prototype.constructor = _Hero.Instance;
-		_Hero.Instance.prototype.action = action;
-		_Hero.Instance.prototype.add_action = add_action;
-		
-		Object.defineProperty( _Hero.Instance.prototype, 'acting', { 
-			get: is_acting,
-			set: is_acting
-		});
 		
 	}
 	
@@ -65,6 +58,8 @@
     =====================================================*/
 	
 	function Hero ( parameters ) {
+		
+		var me = this;
 		
 		// handle parameters
 		
@@ -86,7 +81,7 @@
 		parameters.movement.moveSpeedBack = 2;
 		parameters.movement.moveRunThreshold = parameters.movement.moveSpeed;
 		parameters.movement.rotateSpeed = 0.019;
-		parameters.movement.jumpSpeedStart = 30;//8;
+		parameters.movement.jumpSpeedStart = 8;
 		parameters.movement.jumpSpeedEnd = 0;
 		parameters.movement.jumpTimeMax = 100;
 		parameters.movement.jumpAnimationTime = 1500;
@@ -95,106 +90,65 @@
 		
 		_Character.Instance.call( this, parameters );
 		
-		// init actions map
-		
-		this.actions = {};
-
-		// farming
-		
-		this.farming = new _Farming.Instance( this );
-		
 		// add to actions
 		
-		this.add_action( this.farming.plant, [ '002', 'plant' ], this.farming );
-		this.add_action( this.farming.planting.rotate_plant, [ '001', 'rotate_plant' ], this.farming.planting );
+		this.add_action( { 
+			callback: rotate_plant,
+			context: this,
+			activeCheck: is_planting_rotating,
+			activeCheckContext: this,
+			actionsNames: [ '001', 'rotate_plant' ]
+		} );
+		
+		this.add_action( { 
+			callback: plant,
+			context: this,
+			activeCheck: is_planting,
+			activeCheckContext: this,
+			actionsNames: [ '002', 'plant' ]
+		} );
 		
 	}
 	
 	/*===================================================
 	
-	actions
+	farming
 	
 	=====================================================*/
 	
-	function action ( actionName, parameters ) {
+	function plant ( parameters ) {
 		
-		var actionInfo;
-		
-		// if action type is in actions map, do it
-		if ( this.actions.hasOwnProperty( actionName ) ) {
-			
-			actionInfo = this.actions[ actionName ];
-			
-			actionInfo.active = actionInfo.action.call( actionInfo.context, parameters );
-			
-			return actionInfo.active;
-			
-		}
-		// clear all actions
-		else {
-			
-			this.acting = false;
-			
-		}
+		return _Farming.plant( this, parameters );
 		
 	}
 	
-	function add_action ( actionCallback, actionNames, context ) {
+	function rotate_plant ( parameters ) {
 		
-		var i, l,
-			actionName;
+		parameters = parameters || {};
 		
-		actionNames = main.ensure_array( actionNames );
+		parameters.rotate = true;
 		
-		for ( i = 0, l = actionNames.length; i < l; i++ ) {
-			
-			actionName = actionNames[ i ];
-			
-			// add to actions map
-			
-			this.actions[ actionName ] = {
-				action: actionCallback,
-				context: context || this
-			};
-		
-		}
+		return plant.call( this, parameters );
 		
 	}
 	
-	function is_acting ( continueActing ) {
+	function is_planting () {
 		
-		var actionName,
-			actionInfo,
-			acting = false;
-		
-		// trigger stop for all actions that are active
-		
-		for ( actionName in this.actions ) {
-			
-			actionInfo = this.actions[ actionName ];
-			
-			if ( actionInfo.active === true ) {
-				
-				if ( continueActing === false ) {
-					
-					this.action( actionName, false );
-					
-				}
-				else {
-					
-					acting = true;
-					
-					break;
-					
-				}
-				
-			}
-			
-		}
-		
-		return acting;
+		return _Farming.is_character_planting( this, 'planting' );
 		
 	}
+	
+	function is_planting_rotating () {
+		
+		return _Farming.is_character_planting( this, 'rotating' );
+		
+	}
+	
+	/*===================================================
+	
+	scale
+	
+	=====================================================*/
     
 	/*
 	// OLD SCALE ACTION

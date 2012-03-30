@@ -77,6 +77,7 @@
 		_Grid.Instance.prototype.remove_modules = remove_modules;
 		_Grid.Instance.prototype.remove_module = remove_module;
 		_Grid.Instance.prototype.get_modules_with_vertices = get_modules_with_vertices;
+		_Grid.Instance.prototype.module_occupation_changed = module_occupation_changed;
 		_Grid.Instance.prototype.clean = clean;
 		
 		// get / set
@@ -90,7 +91,7 @@
 			}
 		});
 		
-		Object.defineProperty( _Grid.Instance.prototype, 'full', { 
+		Object.defineProperty( _Grid.Instance.prototype, 'isFull', { 
 			get : function () {
 				
 				var i, l,
@@ -113,6 +114,35 @@
 				}
 				
 				return full;
+				
+			}
+		});
+		
+		Object.defineProperty( _Grid.Instance.prototype, 'elements', { 
+			get : function () {
+				
+				var i, l,
+					module,
+					element,
+					elements = [];
+				
+				// find all elements occupying grid
+				
+				for ( i = 0, l = this.modules.length; i < l; i++ ) {
+					
+					module = this.modules[ i ];
+					
+					element = module.occupant;
+					
+					if ( element instanceof _GridElement.Instance && elements.indexOf( element ) === -1 ) {
+						
+						elements.push( element );
+						
+					}
+					
+				}
+				
+				return elements;
 				
 			}
 		});
@@ -154,6 +184,10 @@
 		// store puzzle reference
 		
 		this.puzzle = parameters.puzzle;
+		
+		// signal
+		
+		this.stateChanged = new signals.Signal();
 		
 		// init modules
 		
@@ -232,6 +266,10 @@
 				module = this.modules[ i ];
 				
 				module.grid = this;
+				
+				// listen for signal
+				
+				module.occupiedStateChanged.add( this.module_occupation_changed, this );
 				
 			}
 			
@@ -564,6 +602,18 @@
 		}
 		
 		return modulesMatching;
+		
+	}
+	
+	/*===================================================
+	
+	change
+	
+	=====================================================*/
+	
+	function module_occupation_changed ( module ) {
+		console.log('grid state change');
+		this.stateChanged.dispatch( this );
 		
 	}
 	

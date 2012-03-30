@@ -13,12 +13,14 @@
 		_Planting = {},
 		_Game,
 		_GUI,
-		_Puzzles,
+		_Puzzle,
 		_GridModule,
 		_Plant,
 		_ObjectHelper,
 		_MathHelper,
-		allPlants;
+		allPlants,
+		utilVec31Rotate,
+		utilProjector1Rotate;
 	
 	/*===================================================
     
@@ -30,8 +32,8 @@
 		data: _Planting,
 		requirements: [
 			"assets/modules/core/Game.js",
-			"assets/modules/core/GUI.js",
-			"assets/modules/puzzles/Puzzles.js",
+			"assets/modules/ui/GUI.js",
+			"assets/modules/puzzles/Puzzle.js",
 			"assets/modules/puzzles/GridModule.js",
 			"assets/modules/farming/Plant.js",
 			"assets/modules/utils/ObjectHelper.js",
@@ -52,11 +54,16 @@
 		
 		_Game = g;
 		_GUI = gui;
-		_Puzzles = pzl;
+		_Puzzle = pzl;
 		_GridModule = gm;
 		_Plant = pl;
 		_ObjectHelper = oh;
 		_MathHelper = mh;
+		
+		utilVec31Rotate = new THREE.Vector3();
+		utilProjector1Rotate = new THREE.Projector();
+		
+		// properties
 		
 		allPlants = [];
 		
@@ -64,12 +71,19 @@
 			get: function () { return allPlants; }
 		});
 		
+		_Planting.rotationSpeed = 0.05;
+		_Planting.rotationDistanceMin = 10;
+		_Planting.rotationStartThreshold = Math.PI * 0.1;
+		_Planting.rotationDirChangeThreshold = 5;
+		
 		// instance
 		
 		_Planting.Instance = Planting;
 		
 		_Planting.Instance.prototype.reset = reset;
 		_Planting.Instance.prototype.step = step;
+		_Planting.Instance.prototype.step_rotate = step_rotate;
+		_Planting.Instance.prototype.step_placement = step_placement;
 		
 		_Planting.Instance.prototype.setup = setup;
 		_Planting.Instance.prototype.start = start;
@@ -79,12 +93,13 @@
 		
 		_Planting.Instance.prototype.get_planting_object_under_mouse = get_planting_object_under_mouse;
 		
+		_Planting.Instance.prototype.change_field = change_field;
 		_Planting.Instance.prototype.change_module = change_module;
 		_Planting.Instance.prototype.change_plant = change_plant;
 		
-		_Planting.Instance.prototype.rotate_plant = rotate_plant;
-		_Planting.Instance.prototype.reset_rotate_plant = reset_rotate_plant;
+		_Planting.Instance.prototype.start_rotate_plant = start_rotate_plant;
 		_Planting.Instance.prototype.update_rotate_plant = update_rotate_plant;
+		_Planting.Instance.prototype.stop_rotate_plant = stop_rotate_plant;
 		
 	}
 	
@@ -94,11 +109,18 @@
     
     =====================================================*/
 	
-	function Planting ( farming ) {
+	function Planting ( character ) {
 		
-		// store farming reference
+		// store character reference
 		
-		this.farming = farming;
+		this.character = character;
+		
+		// properties
+		
+		this.rotationSpeed = _Planting.rotationSpeed;
+		this.rotationDistanceMin = _Planting.rotationDistanceMin;
+		this.rotationStartThreshold = _Planting.rotationStartThreshold;
+		this.rotationDirChangeThreshold = _Planting.rotationDirChangeThreshold;
 		
 		// reset
 		
@@ -143,14 +165,14 @@
 		
 		if ( parameters.modules !== false ) {
 			
-			if ( parameters.field === true && typeof this.farming.field !== 'undefined' ) {
+			if ( parameters.field === true && typeof this.field !== 'undefined' ) {
 				
-				plantingObjects = plantingObjects.concat( this.farming.field.grid.modules );
+				plantingObjects = plantingObjects.concat( this.field.grid.modules );
 				
 			}
 			else {
 				
-				plantingObjects = plantingObjects.concat( _Puzzles.allModules );
+				plantingObjects = plantingObjects.concat( _Puzzle.allModules );
 				
 			}
 			
@@ -158,15 +180,15 @@
 		
 		if ( parameters.character === true ) {
 			
-			plantingObjects.push( this.farming.character );
+			plantingObjects.push( this.character );
 			
 		}
 		
 		if ( parameters.plants === true ) {
 			
-			if ( parameters.field === true && typeof this.farming.field !== 'undefined' ) {
+			if ( parameters.field === true && typeof this.field !== 'undefined' ) {
 				
-				plantingObjects = plantingObjects.concat( this.farming.field.plants );
+				plantingObjects = plantingObjects.concat( this.field.plants );
 				
 			}
 			else {
@@ -191,45 +213,109 @@
 	
 	=====================================================*/
 	
-	function step () {
+	function step ( parameters ) {
+		console.log(' > PLANTING: STEP');
+		// handle parameters
 		
-		var wasRotated;
+		parameters = parameters || {};
 		
-		// if is rotating
+		// store mouse
+				
+		this.mouse = main.get_mouse( parameters.event );
 		
-		if ( this.rotating === true ) {
+		// if step rotate
+		
+		if ( parameters.rotate === true ) {
 			
-			// record if rotated
+			this.step_rotate( parameters );
 			
-			wasRotated = this.rotation.rotated;
+		}
+		// else step placement
+		else {
 			
-			// stop rotating
-			
-			this.rotate_plant( false );
+			this.step_placement( parameters );
 			
 		}
 		
-		// if was not just rotated
+	}
+	
+	function step_rotate ( parameters ) {
 		
-		if ( wasRotated !== true ) {
+		// handle parameters
+		
+		parameters = parameters || {};
+		
+		console.log(' > PLANTING: rotation step');
+		if ( parameters.stop === true ) {
 			
-			// steps
+			// stop
 			
-			// if has plant
+			this.stop_rotate_plant();
 			
-			if ( this.plant instanceof _Plant.Instance ) {
+		}
+		else if ( this.started === true ) {
+			
+			// start
+			
+			this.start_rotate_plant();
+			
+		}
+		
+	}
+	
+	function step_placement ( parameters ) {
+		
+		var wasRotated;
+		
+		// handle parameters
+		
+		parameters = parameters || {};
+		
+		console.log(' > PLANTING: placement step, parameters', parameters, ' + is stop? ', parameters.stop );
+		if ( parameters.stop === true ) {
+			
+			this.stop();
+			
+		}
+		else {
+			
+			// if is rotating
+			
+			if ( this.rotating === true ) {
 				
-				console.log(' > PLANTING: step has plant: ', this.plant);
+				// record if rotated
 				
-				this.complete();
+				wasRotated = this.rotation.rotated;
+				
+				// stop rotating
+				
+				this.step_rotate( { stop: true } );
 				
 			}
-			// if needs plant
-			else {
+			
+			// if was not just rotated
+			
+			if ( wasRotated !== true ) {
 				
-				console.log(' > PLANTING: step no plant yet!');
+				// steps
 				
-				this.setup();
+				// if has plant
+				
+				if ( this.plant instanceof _Plant.Instance ) {
+					
+					console.log(' > PLANTING: step has plant: ', this.plant);
+					
+					this.complete();
+					
+				}
+				// if needs plant
+				else {
+					
+					console.log(' > PLANTING: step no plant yet!');
+					
+					this.setup( parameters );
+					
+				}
 				
 			}
 			
@@ -243,40 +329,39 @@
 	
 	=====================================================*/
 	
-	function setup () {
+	function setup ( parameters ) {
 		
 		var targetObject;
 		
-		// find if any planting objects under mouse
+		// if passed plant to use
 		
-		targetObject = this.get_planting_object_under_mouse( { modules: false, character: true, plants: true } );
+		if ( parameters && parameters.plant ) {
+			
+			if ( parameters.plant instanceof _Plant.Instance ) {
+				
+				targetObject = parameters.plant;
+				
+			}
+			else {
+				
+				targetObject = new _Plant.Instance( parameters.plant );
+				
+			}
 		
-		// if is character
-		
-		if ( targetObject === this.farming.character ) {
+		}
+		// else if any plants under mouse
+		else {
 			
-			// set plant
-			// TODO: open menu with plant choice
-			
-			var plantTest = new _Plant.Instance();
-			
-			this.change_plant( plantTest );
-			
-			// start planting
-			
-			this.start();
+			targetObject = this.get_planting_object_under_mouse( { modules: false, character: false, plants: true } );
 			
 		}
+		
 		// if is a plant
-		else if ( targetObject instanceof _Plant.Instance ) {
+		if ( targetObject instanceof _Plant.Instance ) {
 			
 			// use plant
 			
 			this.change_plant( targetObject );
-			
-			// start planting
-			
-			this.start();
 			
 		}
 		
@@ -292,6 +377,10 @@
 			// set started
 			
 			this.started = true;
+			
+			// dim ui to focus on planting
+					
+			_GUI.layers.ui.hide( { opacity: 0.25, callback: function () { _GUI.layers.ui.set_pointer_events( false, true ); } } );
 			
 			// start updating planting
 			
@@ -345,7 +434,7 @@
 		
 		// find if any planting objects under mouse
 				
-		targetObject = this.get_planting_object_under_mouse( { modules: true, character: true } );
+		targetObject = this.get_planting_object_under_mouse( { modules: true } );
 		
 		// if target is valid
 		
@@ -396,9 +485,13 @@
 		
 		shared.signals.mousemoved.remove( this.update, this );
 		
+		// stop
+			
+		this.started = false;
+		
 		// stop rotating
 		
-		this.rotate_plant( false );
+		this.step_rotate( { stop: true } );
 		
 		// clear plant
 		
@@ -408,9 +501,10 @@
 		
 		this.change_module();
 		
-		// stop
-			
-		this.started = false;
+		// return ui to normal state
+		
+		_GUI.layers.ui.show();
+		_GUI.layers.ui.set_pointer_events( false );
 		
 	}
 	
@@ -419,6 +513,28 @@
 	planting changes
 	
 	=====================================================*/
+	
+	function change_field ( field ) {
+		
+		// if new field
+		
+		if ( this.field !== field ) {
+			
+			// clear previous field grid
+			
+			if ( this.field instanceof _Field.Instance ) {
+				
+				this.field.grid.clean();
+				
+			}
+			
+			// store new field
+			
+			this.field = field;
+			
+		}
+		
+	}
 	
 	function change_module ( target ) {
 		
@@ -461,7 +577,7 @@
 			
 			// change field
 			
-			this.farming.change_field( field );
+			this.change_field( field );
 			
 		}
 		
@@ -526,7 +642,7 @@
 				
 				// hide seed
 				
-				this.plant.seed.hide( { remove: true } );
+				this.plant.seed.hide( { remove: true, time: 0 } );
 				
 				// cursor
 				
@@ -555,11 +671,15 @@
 				
 				// show seed
 				
-				this.plant.seed.show( { parent: _GUI.layers.ui } );
+				this.plant.seed.show( { parent: _GUI.layers.uiPriority } );
 				
 				// cursor
 				
 				_GUI.container.apply_css( 'cursor', 'pointer' );
+				
+				// start planting
+			
+				this.start();
 				
 			}
 			
@@ -573,54 +693,31 @@
 	
 	=====================================================*/
 	
-	function rotate_plant ( parameters ) {
+	function start_rotate_plant () {
 		
-		var pr;
+		var position = utilVec31Rotate,
+			projector = utilProjector1Rotate,
+			r;
 		
-		if ( _Game.is_stop_parameter( parameters ) ) {
-			console.log(' > PLANTING: rotation STOP ');
-			// rotate stop
-			
-			this.rotating = false;
-			
-		}
-		else if ( this.started === true && this.rotating !== true && this.module instanceof _GridModule.Instance ) {
+		if ( this.rotating !== true && this.module instanceof _GridModule.Instance ) {
 			console.log(' > PLANTING: rotation START ');
-			// init rotation info
-			
-			pr = this.rotation = {};
-			pr.startThreshold = 10;
-			pr.dirChangeThreshold = 15;
-			
-			// reset
-			
-			this.reset_rotate_plant( true );
-			
 			// rotate start
-			
+				
 			this.rotating = true;
 			
-		}
-		
-		return this.rotating;
-		
-	}
-	
-	function reset_rotate_plant ( all ) {
-		console.log(' > PLANTING: rotation TOTALS RESET ');
-		var pr = this.rotation;
-		
-		// counters
-		
-		//pr.x.total = pr.totaly = 0;
-		
-		pr.dirx = pr.diry = pr.dcx = pr.dcy = pr.tx = pr.ty = 0;
-		
-		// all others
-		
-		if ( all === true ) {
+			// init rotation info
 			
-			pr.rotated = false;
+			r = this.rotation = {};
+			
+			position.copy( this.plant.matrixWorld.getPosition() );
+			position = projector.projectVector( position, _Game.camera );
+			
+			r.x0 = ( ( position.x + 1 ) * shared.screenWidth ) * 0.5;
+			r.y0 = ( ( -position.y + 1 ) * shared.screenHeight ) * 0.5;
+			
+			r.angleTotal = 0;
+			r.x1 = r.x2 = r.y1 = r.y2 = undefined;
+			r.rotated = false;
 			
 		}
 		
@@ -629,67 +726,88 @@
 	function update_rotate_plant () {
 		
 		var plant = this.plant,
-			pr = this.rotation,
+			r = this.rotation,
 			mouse = this.mouse,
-			rotation,
-			rotationAbs,
-			resetTotals,
-			dirx,
-			diry;
+			mx = mouse.x,
+			my = mouse.y,
+			mDist = Math.sqrt( Math.pow( mouse.x - r.x0, 2 ) + Math.pow( mouse.y - r.y0, 2 ) ),
+			ax, ay, bx, by,
+			angleA, angleB, radians;
 		
-		// handle direction
+		// keep track of last 2 locations
 		
-		dirx = _MathHelper.sign( mouse.dx );
-		//diry = _MathHelper.sign( mouse.dy );
+		r.x2 = r.x1;
+		r.x1 = mouse.x;
 		
-		// if x direction has changed
+		r.y2 = r.y1;
+		r.y1 = mouse.y;
 		
-		if ( pr.dirx !== 0 && pr.dirx !== dirx ) {//|| pr.diry !== diry ) {
+		// if has 3 numbers to work with, and mouse is at least minimum distance from rotation point
+		
+		if ( main.is_number( r.x2 ) && mDist >= this.rotationDistanceMin ) {
 			
-			// increase direction change counters
+			// handle direction
 			
-			pr.dcx += Math.abs( mouse.dx );
-			//pr.dcy += Math.abs( mouse.dy );
+			ax = r.x0 - r.x1;
+			ay = r.y0 - r.y1;
+			bx = r.x0 - r.x2;
+			by = r.y0 - r.y2;
+			
+			angleA = Math.atan2( ay, ax );
+			angleB = Math.atan2( by, bx );
+			
+			radians = angleA - angleB;
+			
+			// totals
+			
+			r.angleTotal += radians;
+			
+			// if rotation above threshold
+			
+			if ( r.rotated === true || Math.abs( r.angleTotal ) >= this.rotationStartThreshold ) {
+				
+				// rotate plant
+				
+				plant.rotate( radians, this.module );
+				
+				// if rotator needed
+				
+				if ( r.rotated !== true ) {
+					
+					// hide seed temporarily
+					
+					this.plant.seed.hide( { remove: true, time: 0 } );
+					
+					// rotator
+					
+					this.plant.rotator.show( { parent: _GUI.layers.uiPriority } );
+					
+					this.plant.rotator.set_position( r.x0 - this.plant.rotator.widthHalf, r.y0 - this.plant.rotator.heightHalf );
+					
+				}
+				
+				// set rotated
+				
+				r.rotated = true;
+				
+			}
 			
 		}
-		else {
-			
-			// store new direction
 		
-			pr.dirx = dirx;
-			//pr.diry = diry;
-			
-			// add delta x/y to totals
-			
-			pr.tx += mouse.dx;
-			pr.ty += mouse.dy;
-			
-		}
+	}
+	
+	function stop_rotate_plant () {
 		
-		// set rotation from totals
 		
-		rotation = pr.tx + ( Math.abs( pr.ty ) * _MathHelper.sign( pr.tx ) );
-		rotationAbs = Math.abs( rotation );
-		
-		// if rotation above threshold
-		
-		if ( rotationAbs >= pr.startThreshold ) {
+		if ( this.rotating !== false ) {
+			console.log(' > PLANTING: rotation STOP ');
+			this.plant.seed.show( { parent: _GUI.layers.uiPriority } );
+				
+			this.plant.rotator.hide( { remove: true } );
+				
+			this.rotating = false;
 			
-			// set rotated
-			
-			pr.rotated = true;
-			
-			// rotate plant
-			
-			plant.rotate( rotation, this.module );
-			
-		}
-		
-		// if direction change counters are over threshold, reset totals
-			
-		if ( rotationAbs >= 90 || pr.dcx/* + pr.dcy */ >= pr.dirChangeThreshold ) {
-			
-			this.reset_rotate_plant();
+			this.plant.rotate_reset();
 			
 		}
 		
