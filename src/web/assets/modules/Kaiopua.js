@@ -23,7 +23,7 @@ var KAIOPUA = (function (main) {
         ],
         setupList = [
 			"assets/modules/core/Game.js",
-			"assets/modules/utils/Dev.js"
+			//"assets/modules/utils/Dev.js"
         ];
 	
 	/*===================================================

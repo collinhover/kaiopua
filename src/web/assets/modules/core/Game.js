@@ -531,8 +531,6 @@
 		
 		// setup ui groups
 		
-		_GUI.add_to_group( 'constant', [ { child: b.fullscreenEnter, parent: _GUI.layers.ui } ] );
-		
 		_GUI.add_to_group( 'start', [
 			{ child: m.start, parent: _GUI.layers.ui },
 			{ child: m.footer, parent: _GUI.container }
@@ -546,6 +544,8 @@
 		_GUI.add_to_group( 'ingame', [
 			{ child: m.navigation, parent: _GUI.layers.ui }
 		] );
+		
+		_GUI.add_to_group( 'constant', [ { child: b.fullscreenEnter, parent: _GUI.layers.ui } ] );
 		
 		// show initial groups
 		
