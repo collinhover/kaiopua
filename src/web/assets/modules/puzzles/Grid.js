@@ -267,10 +267,6 @@
 				
 				module.grid = this;
 				
-				// listen for signal
-				
-				module.occupiedStateChanged.add( this.module_occupation_changed, this );
-				
 			}
 			
 		}
@@ -612,8 +608,8 @@
 	=====================================================*/
 	
 	function module_occupation_changed ( module ) {
-		console.log('grid state change');
-		this.stateChanged.dispatch( this );
+		
+		this.stateChanged.dispatch( this, module );
 		
 	}
 	

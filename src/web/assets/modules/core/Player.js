@@ -521,9 +521,10 @@
 			
 			kbInfo = keybindings[ keyName ];
 			
-			if ( kbInfo.active === true ) {
+			if ( kbInfo.active === true && kbInfo.hasOwnProperty( 'keyup' ) ) {
 				
-				trigger_key( keyName, 'keyup' );
+				kbInfo.active = false;
+				kbInfo[ 'keyup' ].call( this );
 				
 			}
 			
@@ -790,6 +791,8 @@
 	}
 	
 	function disable () {
+		
+		// set enabled state
 		
 		enabled = false;
 		

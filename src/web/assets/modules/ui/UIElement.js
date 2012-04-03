@@ -742,9 +742,18 @@
 			
 		}
 		
-		// sort children
-		
-		this.sort_children_by_order();
+		if ( children === this.children ) {
+			
+			this.domElement.empty();
+			
+		}
+		else {
+			
+			// sort children
+			
+			this.sort_children_by_order();
+			
+		}
 		
 	}
 	
@@ -1957,7 +1966,7 @@
 		
 		// html
 		
-		if ( typeof parameters.html === 'string' ) {
+		if ( typeof parameters.html !== 'undefined' ) {
 			
 			domElement.html( parameters.html );
 			

@@ -251,6 +251,12 @@
 			fullwindow: true
         } );
 		
+		l.overlayUI = new _UIElement.Instance( {
+			id: 'layer_overlayUI',
+			pointerEvents: false,
+			fullwindow: true
+        } );
+		
 		l.overlayAll = new _UIElement.Instance( {
 			id: 'layer_overlayAll',
 			pointerEvents: false,
@@ -664,7 +670,7 @@
 		
 		// layers
 		
-		c.add( l.display, l.overlayDisplay, l.ui, l.uiPriority, l.overlayAll, l.errors, m.footer );
+		c.add( l.display, l.overlayDisplay, l.ui, l.overlayUI, l.uiPriority, l.overlayAll, l.errors, m.footer );
 		
 	}
 	

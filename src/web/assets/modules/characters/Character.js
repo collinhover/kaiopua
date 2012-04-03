@@ -560,7 +560,7 @@
 			
 			state.groundedLast = state.grounded;
 			
-			state.grounded = Boolean( velocityGravity.collision );
+			state.grounded = Boolean( velocityGravity.collision ) && !velocityGravity.moving;
 			
 			jump.timeAfterNotGrounded += timeDelta;
 			

@@ -536,7 +536,7 @@
 		] );
 		
 		_GUI.add_to_group( 'pause', [
-			{ child: m.main, parent: _GUI.layers.ui },
+			{ child: m.main, parent: _GUI.layers.uiPriority },
 			{ child: m.footer, parent: _GUI.container }
 		] );
 		
@@ -1044,6 +1044,7 @@
 		
 		started = false;
 		
+		_GUI.hide_group( 'ingame', { remove: true } );
 		_GUI.hide_group( 'pause', { remove: true } );
 		
 		// set launcher section
@@ -1074,11 +1075,10 @@
 			
 			if ( started === true ) {
 				
-				_GUI.transitioner.show( { parent: _GUI.layers.overlayDisplay } );
+				_GUI.transitioner.show( { parent: _GUI.layers.overlayUI } );
 				
 				if ( preventDefault !== true ) {
 					
-					_GUI.hide_group( 'ingame', { remove: true, time: 0 } );
 					_GUI.show_group( 'pause' );
 					
 				}
@@ -1117,7 +1117,6 @@
 			if ( started === true ) {
 				
 				_GUI.hide_group( 'pause', { remove: true, time: 0 } );
-				_GUI.show_group( 'ingame' );
 				
 			}
 			
