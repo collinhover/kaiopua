@@ -62,6 +62,8 @@
 	_ObjectHelper.rotation_offset = rotation_offset;
 	_ObjectHelper.object_center_rotation = object_center_rotation;
 	
+	_ObjectHelper.sort_vertices = sort_vertices;
+	
 	_ObjectHelper.object_follow_object = object_follow_object;
 	
 	main.asset_register( assetPath, {
@@ -531,7 +533,7 @@
 		
 		axisUp = axisUp || ( ( typeof object.physics !== 'undefined' ) ? object.physics.axes.up : ca.up );
 		axisForward = axisForward || ( ( typeof object.physics !== 'undefined' ) ? object.physics.axes.forward : ca.forward );
-			
+		
 		// find quaternion to go from average of normals to current axis up 
 		
 		offset = q_to_axis( axisUp, normalAvg, axisForward );
@@ -610,6 +612,127 @@
 			}
 			
 		}
+		
+	}
+	
+	/*===================================================
+    
+    vertex sorting
+    
+    =====================================================*/
+	
+	function sort_vertices ( object ) {
+		
+		var i, l,
+			geometry = object instanceof THREE.Mesh ? object.geometry : object,
+			faces = geometry.faces,
+			vertices = geometry.vertices,
+			ia, ib, ic, id,
+			va, vb, vc, vd,
+			pa, pb, pc, pd,
+			npa = new THREE.Vector3(),
+			npb = new THREE.Vector3(),
+			npc = new THREE.Vector3(),
+			npd = new THREE.Vector3(),
+			len = Math.sqrt( 1 / 2 ),
+			expectedPosA = new THREE.Vector3().set( len, -len, 0 ),
+			expectedPosB = new THREE.Vector3().set( len, len, 0 ),
+			expectedPosC = new THREE.Vector3().set( -len, len, 0 ),
+			expectedPosD = new THREE.Vector3().set( -len, -len, 0 ),
+			newA, newB, newC, newD,
+			centroid = new THREE.Vector3(),
+			face;
+		
+		// for all faces
+		
+		for ( i = 0, l = faces.length; i < l; i++ ) {
+			
+			face = faces[ i ];
+			console.log( 'face centroid', face.centroid );
+			
+			ia = face.a;
+			ib = face.b;
+			ic = face.c;
+			
+			va = vertices[ ia ];
+			vb = vertices[ ib ];
+			vc = vertices[ ic ];
+			
+			pa = va.position;
+			pb = vb.position;
+			pc = vc.position;
+					
+			npa.copy( pa ).normalize();
+			npb.copy( pb ).normalize();
+			npc.copy( pc ).normalize();
+			
+			if ( face instanceof THREE.Face4 ) {
+				
+				id = face.d;
+				vd = vertices[ id ];
+				pd = vd.position;
+				npd.copy( pd ).normalize();
+				
+				newA = get_vector_with_least_distance_to_source( expectedPosA, npa, npb, npc, npd );
+				newB = get_vector_with_least_distance_to_source( expectedPosB, npa, npb, npc, npd );
+				newC = get_vector_with_least_distance_to_source( expectedPosC, npa, npb, npc, npd );
+				newD = get_vector_with_least_distance_to_source( expectedPosD, npa, npb, npc, npd );
+				
+				console.log( 'vertex with least dist to A = ', newA === npa ? 'a' : newA === npb ? 'b' : newA === npc ? 'c' : 'd' );
+				console.log( 'vertex with least dist to B = ', newB === npa ? 'a' : newB === npb ? 'b' : newB === npc ? 'c' : 'd' );
+				console.log( 'vertex with least dist to C = ', newC === npa ? 'a' : newC === npb ? 'b' : newC === npc ? 'c' : 'd' );
+				console.log( 'vertex with least dist to D = ', newD === npa ? 'a' : newD === npb ? 'b' : newD === npc ? 'c' : 'd' );
+				
+			}
+			else {
+				
+				newA = get_vector_with_least_distance_to_source( expectedPosA, npa, npb, npc );
+				newB = get_vector_with_least_distance_to_source( expectedPosB, npa, npb, npc );
+				newC = get_vector_with_least_distance_to_source( expectedPosC, npa, npb, npc );
+				
+			}
+			
+		}
+		
+	}
+	
+	function get_vector_with_least_distance_to_source ( source, centroid ) {
+		
+		var i, l,
+			source = arguments[ 0 ],
+			dist,
+			angle,
+			angleMin = Number.MAX_VALUE,
+			vector3,
+			result;
+		
+		if ( source instanceof THREE.Vector3 ) {
+			
+			for ( i = 1, l = arguments.length; i < l; i++ ) {
+				
+				vector3 = arguments[ i ];
+				
+				if ( vector3 instanceof THREE.Vector3 ) {
+					
+					dist = _MathHelper.clamp( vector3.dot( source ), -1, 1 );
+					
+					angle = Math.acos( dist );
+					
+					if ( Math.abs( angle ) < angleMin ) {
+						
+						angleMin = angle;
+						
+						result = vector3;
+						
+					}
+					console.log( 'vert', i, ' dist to source', dist.toFixed(3), ' angle', angle.toFixed(3), 'angleMin? ', angleMin.toFixed(3) );
+				}
+				
+			}
+			
+		}
+		
+		return result;
 		
 	}
 	

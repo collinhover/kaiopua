@@ -107,6 +107,7 @@
 			"assets/modules/farming/Farming.js",
 			"assets/modules/farming/Planting.js",
 			"assets/modules/farming/Field.js",
+			"assets/modules/farming/Dirt.js",
 			"assets/modules/farming/Plant.js",
 			"assets/modules/sections/Intro.js",
             { path: "assets/models/Whale_Head.js", type: 'model' },
@@ -142,13 +143,15 @@
 			{ path: "assets/models/Volcano_Rocks_004.js", type: 'model' },
 			{ path: "assets/models/Volcano_Rocks_005.js", type: 'model' },
 			{ path: "assets/models/Field_Tutorial.js", type: 'model' },
+			{ path: "assets/models/Field_Tutorial_Grid.js", type: 'model' },
 			"assets/textures/skybox_world_posx.jpg",
             "assets/textures/skybox_world_negx.jpg",
 			"assets/textures/skybox_world_posy.jpg",
             "assets/textures/skybox_world_negy.jpg",
 			"assets/textures/skybox_world_posz.jpg",
             "assets/textures/skybox_world_negz.jpg",
-            "assets/textures/waves_512.png"
+            "assets/textures/waves_512.png",
+            "assets/textures/dirt_128.jpg"
         ],
 		loadingHeader = 'Hold on, we need some stuff from Hawaii...',
 		loadingTips = [

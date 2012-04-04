@@ -13,8 +13,6 @@
 		_Puzzle = {},
 		_Model,
 		_Grid,
-		_UIElement,
-		_Messenger,
 		puzzleID = 'Puzzle',
 		puzzleCount = 0,
 		allPuzzles,
@@ -31,9 +29,7 @@
 		data: _Puzzle,
 		requirements: [
 			"assets/modules/core/Model.js",
-			"assets/modules/puzzles/Grid.js",
-			"assets/modules/ui/UIElement.js",
-			"assets/modules/ui/Messenger.js"
+			"assets/modules/puzzles/Grid.js"
 		], 
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -45,12 +41,10 @@
 	
 	=====================================================*/
 	
-	function init_internal ( m, g, uie, msg ) {
+	function init_internal ( m, g ) {
 		console.log('internal puzzles', _Puzzle);
 		_Model = m;
 		_Grid = g;
-		_UIElement = uie;
-		_Messenger = msg;
 		
 		// properties
 		
@@ -117,9 +111,7 @@
 	
 	function Puzzle ( parameters ) {
 		
-		var solved = false,
-			numElementsMin,
-			rewards;
+		var solved = false;
 		
 		puzzleCount++;
 		
@@ -137,8 +129,6 @@
 		// properties
 		
 		this.id = typeof parameters.id === 'string' ? parameters.id : puzzleID + puzzleCount;
-		rewards = parameters.rewards;
-		numElementsMin = parameters.numElementsMin;
 		
 		// init grid
 		
@@ -164,18 +154,9 @@
 		
 		this.solve = function () {
 			
-			var elements,
-				numElementsBase = this.grid.modules.length,
-				numElementsUsed,
-				numElementsDiff,
-				numElementsToMin,
-				score,
-				scorePct,
-				scoreStatus;
-			
 			// if grid is full
-			console.log('puzzle solve?');
-			if ( solved !== true && this.grid.isFull === true ) {
+			
+			if ( solved !== true ){//&& this.grid.isFull === true ) {
 				
 				// set solved
 				
@@ -188,52 +169,6 @@
 					allPuzzlesSolved.push( this );
 					
 				}
-				
-				// get elements filling grid
-				
-				elements = this.grid.elements;
-				
-				numElementsUsed = elements.length;
-				
-				// compare num elements used to base num required
-				
-				numElementsDiff = numElementsBase - numElementsUsed;
-				
-				numElementsMin = main.is_number( numElementsMin ) && numElementsMin <= numElementsDiff ? numElementsMin : numElementsDiff;
-				
-				numElementsToMin = Math.max( 0, numElementsUsed - numElementsMin );
-				
-				score = Math.max( 1, 1 - numElementsToMin / ( numElementsBase - numElementsMin ) );
-				
-				scorePct = score * 100 + "%";
-				
-				scoreStatus = _Puzzle.scoreStatus[ Math.floor( ( _Puzzle.scoreStatus.length - 1 ) * score ) ];
-				
-				// send message notifying user of score
-				
-				var scoreHTML = "<div id='score'><ul><li class='counter'><div class='counter_inner'><img src='assets/icons/character_rev_64.png' class='image'></div><p class='label'>" + scoreStatus + "</p></li><li class='counter'><div class='counter_inner'><p class='count text_huge'>" + numElementsBase + "</p><p class='label'>total spaces</p></div></li>";
-				
-				if ( numElementsToMin > 0 ) {
-					
-					scoreHTML += "<li class='counter'><div class='counter_inner'><p class='label'>you used</p><p class='count text_huge'>" + numElementsUsed + "</p><p class='label'>elements</p></div></li>";
-					scoreHTML += "<li class='counter'><div class='counter_inner'><p class='label'>we bet you can do it with only</p><p class='count text_huge count_highlight'>" + numElementsMin + "</p><p class='label'>elements</p></div></li>";
-					
-				}
-				else {
-					
-					scoreHTML += "<li class='counter'><div class='counter_inner'><p class='label'>you solved it with only</p><p class='count text_huge count_highlight'>" + numElementsUsed + "</p><p class='label'>elements</p></div></li>";
-					
-				}
-				
-				scoreHTML += "<li class='counter'><div class='counter_inner'><p class='count text_huge'>" + scorePct + "</p><p class='label'>score</p></div></li></ul></div>";
-				
-				_Messenger.show_message( { 
-					head: scoreHTML,
-					title: "Hurrah! You solved the " + this.id + " puzzle!",
-					body: "The tiki spirits left you these things for solving the puzzle:",
-					active: true,
-					transitionerOpacity: 0.9
-				} );
 				
 			}
 			

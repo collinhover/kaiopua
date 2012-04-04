@@ -402,8 +402,10 @@
 		
 		me.parts.fieldTutorial = new _Field.Instance( {
 			id: 'Tutorial',
+			geometry: main.get_asset_data("assets/models/Field_Tutorial.js"),
+			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors, reflectivity: 0 } ),
 			grid: {
-				modulesGeometry: main.get_asset_data("assets/models/Field_Tutorial.js")
+				modulesGeometry: main.get_asset_data("assets/models/Field_Tutorial_Grid.js")
 			}
 		});
 		

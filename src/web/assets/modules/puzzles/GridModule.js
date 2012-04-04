@@ -13,6 +13,7 @@
 		_GridModule = {},
 		_Model,
 		_GridModuleState,
+		_ObjectHelper,
 		states;
 	
 	/*===================================================
@@ -26,6 +27,7 @@
 		requirements: [
 			"assets/modules/core/Model.js",
 			"assets/modules/puzzles/GridModuleState.js",
+			"assets/modules/utils/ObjectHelper.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -37,10 +39,11 @@
 	
 	=====================================================*/
 	
-	function init_internal ( m, gms ) {
+	function init_internal ( m, gms, oh ) {
 		console.log("internal grid module", _GridModule);
 		_Model = m;
 		_GridModuleState = gms;
+		_ObjectHelper = oh;
 		
 		// properties
 		
@@ -151,7 +154,7 @@
 		
 		parameters = parameters || {};
 		
-		parameters.materials = new THREE.MeshLambertMaterial();
+		parameters.materials = parameters.materials || new THREE.MeshLambertMaterial();
 		
 		parameters.center = true;
 		
@@ -160,6 +163,23 @@
 		// prototype constructor
 		
 		_Model.Instance.call( this, parameters );
+		
+		if ( this.geometry.vertices.length > 0 ) {
+			
+			//_ObjectHelper.sort_vertices( this );
+			
+			/*
+			var face = this.geometry.faces[ 0 ];
+			
+			var temp = this.geometry.vertices[ 0 ];
+			this.geometry.vertices[ 0 ] = this.geometry.vertices[ 1 ];
+			this.geometry.vertices[ 1 ] = temp;
+			this.geometry.vertices[ face.a ].position.addScalar( 50 );
+			
+			var tindex = face.a;
+			this.geometry.faces[ 0 ].a = this.geometry.faces[ 0 ].b;
+			this.geometry.faces[ 0 ].b = tindex;*/
+		}
 		
 		// store grid reference
 		
@@ -211,6 +231,8 @@
 		var states = this.states,
 			statesList = states.list;
 		
+		this.set_dirty();
+		
 		// reset active for each state in states list
 		
 		this.change_state( statesList, false );
@@ -230,6 +252,7 @@
 	function set_dirty () {
 		
 		this._dirtyStates = true;
+		this._dirtyConnected = true;
 		
 		if ( typeof this.grid !== 'undefined' ) {
 			
@@ -416,7 +439,7 @@
 		this.change_state( 'occupied', ( typeof this.occupant !== 'undefined' ) );
 		
 		// signal
-		console.log('module occupied state change');
+		
 		this.occupiedStateChanged.dispatch( this );
 		
 	}

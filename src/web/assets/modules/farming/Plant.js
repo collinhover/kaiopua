@@ -113,13 +113,20 @@
 			parameters.layout = [ [ 1 ] ];
 			
 		}
+		/*
+		parameters.layout = $M( [
+				[ Math.round( Math.random() ), Math.round( Math.random() ), Math.round( Math.random() ) ],
+				[ Math.round( Math.random() ), Math.round( Math.random() ), Math.round( Math.random() ) ],
+				[ Math.round( Math.random() ), Math.round( Math.random() ), Math.round( Math.random() ) ]
+			] );
+		*/
 		
 		parameters.materials = parameters.materials || new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } );
 		
 		// prototype constructor
 		
 		_GridElement.Instance.call( this, parameters );
-		
+		console.log(' new plant with geometry', this );
 		// properties
 		
 		this.timeGrow = main.is_number( parameters.timeGrow ) ? parameters.timeGrow : _Plant.timeGrow;
