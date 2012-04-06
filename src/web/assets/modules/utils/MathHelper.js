@@ -123,8 +123,6 @@
 		
 		v3.cross( v1, v2 );
 		
-		console.log( 'v1', v1, 'v2', v2, 'v3', v3 );
-		
 		return { v1: v1, v2: v2, v3: v3 };
 		
 	};

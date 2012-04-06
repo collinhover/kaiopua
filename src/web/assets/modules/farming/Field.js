@@ -134,6 +134,12 @@
 				
 				score = Math.max( 1, 1 - numElementsToMin / ( numElementsBase - numElementsMin ) );
 				
+				if ( isNaN( score ) ) {
+					
+					score = 0;
+					
+				}
+				
 				scorePct = score * 100 + "%";
 				
 				scoreStatus = _Puzzle.scoreStatus[ Math.floor( ( _Puzzle.scoreStatus.length - 1 ) * score ) ];

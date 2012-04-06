@@ -301,7 +301,7 @@
 		
 		if ( parameters.centerRotation === true ) {
 			
-			_ObjectHelper.object_center_rotation( this );
+			_ObjectHelper.center_rotation( this );
 			
 		}
 		

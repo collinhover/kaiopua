@@ -269,6 +269,8 @@
 					
 				}
 				
+				// add module vertex uvs (for just single face)
+				
 				moduleGeometry.faceVertexUvs[ 0 ][ 0 ] = moduleVertexUvs;
 				
 				// extras for face4

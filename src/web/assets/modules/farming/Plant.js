@@ -35,7 +35,7 @@
 			"assets/modules/ui/Button.js",
 			"assets/modules/ui/GUI.js",
 			"assets/modules/utils/ObjectHelper.js",
-			{ path: "assets/models/Taro_Plant.js", type: 'model' }
+			{ path: "assets/models/Taro_Plant_001.js", type: 'model' }
 		],
 		callbacksOnReqs: init_internal,
 		wait: true

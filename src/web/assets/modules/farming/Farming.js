@@ -79,10 +79,46 @@
 				
 				return {
 					seed: {
-						image: shared.pathToIcons + 'taro_64.png'
+						image: shared.pathToIcons + 'taro_001_64.png'
 					},
-					geometry: "assets/models/Taro_Plant.js",
+					geometry: "assets/models/Taro_Plant_001.js",
 					layout: [ [ 1 ] ]
+				};
+			
+			}
+		});
+		
+		Object.defineProperty( _Farming.plantParameters, 'taro002', { 
+			get: function () {
+				
+				return {
+					seed: {
+						image: shared.pathToIcons + 'taro_002_64.png'
+					},
+					geometry: "assets/models/Taro_Plant_002.js",
+					layout: [
+						[ 0, 1, 0 ],
+						[ 0, 1, 1 ],
+						[ 0, 0, 0 ]
+					]
+				};
+			
+			}
+		});
+		
+		Object.defineProperty( _Farming.plantParameters, 'taro003', { 
+			get: function () {
+				
+				return {
+					seed: {
+						image: shared.pathToIcons + 'taro_003_64.png'
+					},
+					geometry: "assets/models/Taro_Plant_003.js",
+					layout: [
+						[ 0, 1, 0 ],
+						[ 1, 1, 1 ],
+						[ 0, 0, 0 ]
+					]
 				};
 			
 			}
@@ -162,7 +198,7 @@
 			} ),
 			new _Button.Instance( {
 				id: 'taro',
-				image: shared.pathToIcons + 'taro_64.png',
+				image: shared.pathToIcons + 'taro_001_64.png',
 				imageSize: _GUI.sizes.iconMedium,
 				size: _GUI.sizes.iconMediumContainer,
 				tooltip: 'Taro',
@@ -174,24 +210,30 @@
 				data: 'taro'
 			} ),
 			new _Button.Instance( {
-				id: 'tarodouble',
-				image: shared.pathToIcons + 'taro_double_64.png',
+				id: 'taro002',
+				image: shared.pathToIcons + 'taro_002_64.png',
 				imageSize: _GUI.sizes.iconMedium,
 				size: _GUI.sizes.iconMediumContainer,
 				tooltip: 'Two-headed Taro',
 				spacing: _GUI.sizes.buttonSpacing,
 				circle: true,
-				theme: 'green'
+				theme: 'green',
+				callback: plant_from_ui,
+				context: _Farming,
+				data: 'taro002'
 			} ),
 			new _Button.Instance( {
-				id: 'tarotriple',
-				image: shared.pathToIcons + 'taro_triple_64.png',
+				id: 'taro003',
+				image: shared.pathToIcons + 'taro_003_64.png',
 				imageSize: _GUI.sizes.iconMedium,
 				size: _GUI.sizes.iconMediumContainer,
 				tooltip: 'Triple Taro',
 				spacing: _GUI.sizes.buttonSpacing,
 				circle: true,
-				theme: 'green'
+				theme: 'green',
+				callback: plant_from_ui,
+				context: _Farming,
+				data: 'taro003'
 			} )
 		);
 		

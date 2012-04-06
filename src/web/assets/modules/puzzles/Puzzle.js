@@ -156,7 +156,7 @@
 			
 			// if grid is full
 			
-			if ( solved !== true ){//&& this.grid.isFull === true ) {
+			if ( solved !== true && this.grid.isFull === true ) {
 				
 				// set solved
 				

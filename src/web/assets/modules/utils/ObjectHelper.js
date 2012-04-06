@@ -20,26 +20,23 @@
 		utilVec31Axis,
 		utilVec31Offset,
 		utilVec31OffsetRot,
-		utilVec32OffsetRot,
-		utilVec33OffsetRot,
-		utilVec34OffsetRot,
-		utilVec35OffsetRot,
-		utilVec36OffsetRot,
-		utilVec37OffsetRot,
-		utilVec38OffsetRot,
-		utilVec39OffsetRot,
-		utilVec41OffsetRot,
+		utilVec31Normalize,
+		utilVec32Normalize,
+		utilVec33Normalize,
+		utilVec34Normalize,
+		utilVec41Normalize,
 		utilQ1Follow,
 		utilQ2Follow,
 		utilQ3Follow,
 		utilQ4Follow,
 		utilQ1Axis,
-		utilQ1CenterRot,
-		utilQ2CenterRot,
+		utilQ1ApplyQ,
+		utilQ2ApplyQ,
+		utilQ1Normalize,
 		utilMat41Follow,
 		utilMat41Bounds,
 		utilMat41Center,
-		utilMat41CenterRot;
+		utilMat41ApplyQ;
     
     /*===================================================
     
@@ -50,19 +47,21 @@
 	_ObjectHelper.extract_children_from_objects = extract_children_from_objects;
 	_ObjectHelper.extract_parents_from_objects = extract_parents_from_objects;
 	
-	_ObjectHelper.object_apply_matrix = object_apply_matrix;
-	_ObjectHelper.object_push_bounds = object_push_bounds;
+	_ObjectHelper.apply_matrix = apply_matrix;
+	_ObjectHelper.apply_quaternion = apply_quaternion;
 	
 	_ObjectHelper.dimensions = dimensions;
+	
+	_ObjectHelper.push_bounds = push_bounds;
 	
 	_ObjectHelper.center_offset = center_offset;
 	_ObjectHelper.object_center = object_center;
 	
 	_ObjectHelper.q_to_axis = q_to_axis;
 	_ObjectHelper.rotation_offset = rotation_offset;
-	_ObjectHelper.object_center_rotation = object_center_rotation;
+	_ObjectHelper.center_rotation = center_rotation;
 	
-	_ObjectHelper.sort_vertices = sort_vertices;
+	_ObjectHelper.normalize_faces = normalize_faces
 	
 	_ObjectHelper.object_follow_object = object_follow_object;
 	
@@ -83,6 +82,16 @@
 	
 	function init_internal ( mh ) {
 		console.log('internal object helper');
+		var len = Math.sqrt( 1 / 2 ),
+			ca = shared.cardinalAxes,
+			right = ca.right,
+			forward = ca.forward;
+			
+		_ObjectHelper.expectedVertPosA = new THREE.Vector3( right.x * len, 0, forward.z * -len ),//( right.x * len, 0, -len ),
+		_ObjectHelper.expectedVertPosB = new THREE.Vector3( right.x * len, 0, forward.z * len ),//( right.x * len, 0, len ),
+		_ObjectHelper.expectedVertPosC = new THREE.Vector3( right.x * -len, 0, forward.z * len ),//( right.x * -len, 0, len ),
+		_ObjectHelper.expectedVertPosD = new THREE.Vector3( right.x * -len, 0, forward.z * -len );//( right.x * -len, 0, -len );
+		
 		_MathHelper = mh;
 		
 		// utility
@@ -95,26 +104,23 @@
 		utilVec31Axis = new THREE.Vector3();
 		utilVec31Offset = new THREE.Vector3();
 		utilVec31OffsetRot = new THREE.Vector3();
-		utilVec32OffsetRot = new THREE.Vector3();
-		utilVec33OffsetRot = new THREE.Vector3();
-		utilVec34OffsetRot = new THREE.Vector3();
-		utilVec35OffsetRot = new THREE.Vector3();
-		utilVec36OffsetRot = new THREE.Vector3();
-		utilVec37OffsetRot = new THREE.Vector3();
-		utilVec38OffsetRot = new THREE.Vector3();
-		utilVec39OffsetRot = new THREE.Vector3();
-		utilVec41OffsetRot = new THREE.Vector4();
+		utilVec31Normalize = new THREE.Vector3();
+		utilVec32Normalize = new THREE.Vector3();
+		utilVec33Normalize = new THREE.Vector3();
+		utilVec34Normalize = new THREE.Vector3();
+		utilVec41Normalize = new THREE.Vector4();
 		utilQ1Follow = new THREE.Quaternion();
 		utilQ2Follow = new THREE.Quaternion();
 		utilQ3Follow = new THREE.Quaternion();
 		utilQ4Follow = new THREE.Quaternion();
 		utilQ1Axis = new THREE.Quaternion();
-		utilQ1CenterRot = new THREE.Quaternion();
-		utilQ2CenterRot = new THREE.Quaternion();
+		utilQ1ApplyQ = new THREE.Quaternion();
+		utilQ2ApplyQ = new THREE.Quaternion();
+		utilQ1Normalize = new THREE.Quaternion();
 		utilMat41Follow = new THREE.Matrix4();
 		utilMat41Bounds = new THREE.Matrix4();
 		utilMat41Center = new THREE.Matrix4();
-		utilMat41CenterRot = new THREE.Matrix4();
+		utilMat41ApplyQ = new THREE.Matrix4();
 		
 	}
 	
@@ -202,11 +208,11 @@
 	
 	/*===================================================
     
-    apply matrix
+    apply
     
     =====================================================*/
 	
-	function object_apply_matrix ( object, matrix ) {
+	function apply_matrix ( object, matrix ) {
 		
 		var i, l,
 			j, k,
@@ -254,6 +260,51 @@
 		
 	}
 	
+	function apply_quaternion ( object, quaternion, invisible ) {
+		
+		var matrix = utilMat41ApplyQ.setRotationFromQuaternion( quaternion ),
+			objectMatQ = utilQ1ApplyQ;
+			objectNewQ = utilQ2ApplyQ;
+		
+		// apply matrix to object
+		
+		apply_matrix( object, matrix );
+		
+		// additional adjustments if object is mesh
+		
+		if ( invisible === true && object instanceof THREE.Mesh ) {
+			
+			if ( object.useQuaternion === true ) {
+				
+				// quaternion rotations
+				
+				objectNewQ.multiply( quaternion.inverse(), object.quaternion );
+				
+				object.quaternion.copy( objectNewQ );
+			
+			}
+			else {
+				
+				// matrix rotations
+				
+				objectMatQ.setFromRotationMatrix( object.matrix );
+				
+				objectNewQ.multiply( quaternion.inverse(), objectMatQ );
+				
+				object.matrix.setRotationFromQuaternion( objectNewQ );
+				
+			}
+			
+		}
+		
+	}
+	
+	/*===================================================
+    
+    dimensions
+    
+    =====================================================*/
+	
 	function dimensions ( object, ignoreScale ) {
 		
 		var mesh = object instanceof THREE.Mesh ? object : false,
@@ -300,7 +351,7 @@
     
     =====================================================*/
 	
-	function object_push_bounds ( object, bounds ) {
+	function push_bounds ( object, bounds ) {
 		
 		var geometry = object instanceof THREE.Mesh ? object.geometry : object,
 			objectWorldMatrix = object instanceof THREE.Mesh ? object.matrixWorld : utilMat41Bounds,
@@ -396,7 +447,7 @@
 		
 		// apply offset
 		
-		object_apply_matrix( object, offsetMat4 );
+		apply_matrix( object, offsetMat4 );
 		
 		// additional adjustments if object is mesh
 		
@@ -476,18 +527,7 @@
 			faces = geometry.faces,
 			vertices = geometry.vertices,
 			face,
-			vpa, vpb, vpc, vpd,
-			nvpa = utilVec31OffsetRot,
-			nvpb = utilVec32OffsetRot,
-			nvpc = utilVec33OffsetRot,
-			nvpd = utilVec34OffsetRot,
-			len = Math.sqrt( 1 / 2 ),
-			expectedPosA = utilVec35OffsetRot.set( len, -len, 0 ), // ( -len, len, 0 )
-			expectedPosB = utilVec36OffsetRot.set( len, len, 0 ), // ( -len, -len, 0 )
-			expectedPosC = utilVec37OffsetRot.set( -len, len, 0 ), // ( len, -len, 0 )
-			expectedPosD = utilVec38OffsetRot.set( -len, -len, 0 ), // ( len, len, 0 )
-			v4VEAvg = utilVec41OffsetRot.set( 0, 0, 0, 0 ),
-			normalAvg = utilVec39OffsetRot.set( 0, 0, 0 ),
+			normalAvg = utilVec31OffsetRot.set( 0, 0, 0 ),
 			ca = shared.cardinalAxes,
 			offset;
 		
@@ -499,34 +539,11 @@
 			
 			normalAvg.addSelf( face.normal );
 			
-			vpa = vertices[ face.a ].position;
-			vpb = vertices[ face.b ].position;
-			vpc = vertices[ face.c ].position;
-			
-			nvpa.copy( vpa ).normalize();
-			nvpb.copy( vpb ).normalize();
-			nvpc.copy( vpc ).normalize();
-			
-			v4VEAvg.addSelf( q_to_axis( nvpa, expectedPosA ) );
-			v4VEAvg.addSelf( q_to_axis( nvpb, expectedPosB ) );
-			v4VEAvg.addSelf( q_to_axis( nvpc, expectedPosC ) );
-			
-			if ( face instanceof THREE.Face4 ) {
-				
-				vpd = vertices[ face.d ].position;
-				
-				nvpd.copy( vpd ).normalize();
-				v4VEAvg.addSelf( q_to_axis( nvpd, expectedPosD ) );
-				
-			}
-			
 		}
 		
-		// find averages
+		// find average
 		
 		normalAvg.normalize();
-		
-		v4VEAvg.normalize();
 		
 		// handle axes
 		// use physics axis if available, or default to global up
@@ -538,9 +555,399 @@
 		
 		offset = q_to_axis( axisUp, normalAvg, axisForward );
 		
-		// rotate offset to re-orient faces as square (not diamond)
-		// TODO: seems to tilt slightly off the more this rotates
-		offset.multiplySelf( v4VEAvg );
+		return offset;
+		
+	}
+	
+	function center_rotation ( object ) {
+		
+		apply_quaternion( object, rotation_offset( object ), true );
+		
+	}
+	
+	/*===================================================
+    
+    face normalization
+    
+    =====================================================*/
+	
+	function normalize_faces ( object ) {
+		
+		// face must lie along xz axis with normal in y direction
+		// TODO: account for faces with other orientations
+		
+		// sort object vertices
+		
+		sort_vertices ( object );
+		
+		// correct vertex rotation
+		
+		correct_for_vertex_rotation( object );
+		
+	}
+	
+	function sort_vertices ( object ) {
+		
+		var i, l,
+			geometry = object instanceof THREE.Mesh ? object.geometry : object,
+			faces = geometry.faces,
+			vertices = geometry.vertices,
+			faceVertexUvsList = geometry.faceVertexUvs[ 0 ],
+			faceVertexUvs,
+			face,
+			epa = _ObjectHelper.expectedVertPosA,
+			epb = _ObjectHelper.expectedVertPosB,
+			epc = _ObjectHelper.expectedVertPosC,
+			epd = _ObjectHelper.expectedVertPosD,
+			ia, ib, ic, id,
+			va, vb, vc, vd,
+			pa, pb, pc, pd,
+			npa = utilVec31Normalize,
+			npb = utilVec32Normalize,
+			npc = utilVec33Normalize,
+			npd = utilVec34Normalize,
+			cpa, cpb, cpc, cpd,
+			uva, uvb, uvc, uvd,
+			faceVertexOrder,
+			axis = new THREE.Vector3( 0, 1, 0 ),
+			angle = 0,
+			sortRotOffset = utilQ1Normalize;
+		
+		// for all faces
+		
+		for ( i = 0, l = faces.length; i < l; i++ ) {
+			
+			face = faces[ i ];
+			
+			faceVertexOrder = [ 'a', 'b', 'c', 'd' ];
+			
+			ia = face.a;
+			ib = face.b;
+			ic = face.c;
+			
+			va = vertices[ ia ];
+			vb = vertices[ ib ];
+			vc = vertices[ ic ];
+			
+			pa = va.position;
+			pb = vb.position;
+			pc = vc.position;
+					
+			npa.copy( pa ).normalize();
+			npb.copy( pb ).normalize();
+			npc.copy( pc ).normalize();
+			
+			faceVertexUvs = faceVertexUvsList[ i ];
+			
+			uva = faceVertexUvs[ 0 ];
+			uvb = faceVertexUvs[ 1 ];
+			uvc = faceVertexUvs[ 2 ];
+			
+			if ( face instanceof THREE.Face4 ) {
+				
+				id = face.d;
+				vd = vertices[ id ];
+				pd = vd.position;
+				npd.copy( pd ).normalize();
+				uvd = faceVertexUvs[ 3 ];
+				
+				cpa = get_vector_with_least_distance_to_source( epa, npa, npb, npc, npd );
+				cpb = get_vector_with_least_distance_to_source( epb, npa, npb, npc, npd );
+				cpc = get_vector_with_least_distance_to_source( epc, npa, npb, npc, npd );
+				cpd = get_vector_with_least_distance_to_source( epd, npa, npb, npc, npd );
+				
+				// new vertex a
+				
+				if ( cpa === npb ) {
+					
+					//vertices[ ia ] = vb;
+					face.a = ib;
+					//faceVertexUvs[ 0 ] = uvb;
+					faceVertexOrder[ 0 ] = 'b';
+					
+				}
+				else if ( cpa === npc ) {
+					
+					//vertices[ ia ] = vc;
+					face.a = ic;
+					//faceVertexUvs[ 0 ] = uvc;
+					faceVertexOrder[ 0 ] = 'c';
+					
+				}
+				else if ( cpa ===  npd ) {
+					
+					//vertices[ ia ] = vd;
+					face.a = id;
+					//faceVertexUvs[ 0 ] = uvd;
+					faceVertexOrder[ 0 ] = 'd';
+					
+				}
+				
+				// new vertex b
+				
+				if ( cpb === npa ) {
+					
+					//vertices[ ib ] = va;
+					face.b = ia;
+					//faceVertexUvs[ 1 ] = uva;
+					faceVertexOrder[ 1 ] = 'a';
+					
+				}
+				else if ( cpb === npc ) {
+					
+					//vertices[ ib ] = vc;
+					face.b = ic;
+					//faceVertexUvs[ 1 ] = uvc;
+					faceVertexOrder[ 1 ] = 'c';
+					
+				}
+				else if ( cpb ===  npd ) {
+					
+					//vertices[ ib ] = vd;
+					face.b = id;
+					//faceVertexUvs[ 1 ] = uvd;
+					faceVertexOrder[ 1 ] = 'd';
+					
+				}
+				
+				// new vertex c
+				
+				if ( cpc === npa ) {
+					
+					//vertices[ ic ] = va;
+					face.c = ia;
+					//faceVertexUvs[ 2 ] = uva;
+					faceVertexOrder[ 2 ] = 'a';
+					
+				}
+				else if ( cpc === npb ) {
+					
+					//vertices[ ic ] = vb;
+					face.c = ib;
+					//faceVertexUvs[ 2 ] = uvb;
+					faceVertexOrder[ 2 ] = 'b';
+					
+				}
+				else if ( cpc ===  npd ) {
+					
+					//vertices[ ic ] = vd;
+					face.c = id;
+					//faceVertexUvs[ 2 ] = uvd;
+					faceVertexOrder[ 2 ] = 'd';
+					
+				}
+				
+				// new vertex d
+				
+				if ( cpd === npa ) {
+					
+					//vertices[ id ] = va;
+					face.d = ia;
+					//faceVertexUvs[ 3 ] = uva;
+					faceVertexOrder[ 3 ] = 'a';
+					
+				}
+				else if ( cpd === npb ) {
+					
+					//vertices[ id ] = vb;
+					face.d = ib;
+					//faceVertexUvs[ 3 ] = uvb;
+					faceVertexOrder[ 3 ] = 'b';
+					
+				}
+				else if ( cpd ===  npc ) {
+					
+					//vertices[ id ] = vc;
+					face.d = ic;
+					//faceVertexUvs[ 3 ] = uvc;
+					faceVertexOrder[ 3 ] = 'c';
+					
+				}
+				
+				if ( faceVertexOrder[ 0 ] === 'd' ) {
+					angle += Math.PI * 0.5;
+				}
+				else if ( faceVertexOrder[ 0 ] === 'c' ) {
+					angle += Math.PI;
+				}
+				else if ( faceVertexOrder[ 0 ] === 'b' ) {
+					angle -= Math.PI * 0.5;
+				}
+				//console.log( 'vertex order', faceVertexOrder );
+				
+			}
+			else {
+				
+				// TODO: enable for Face3
+				
+			}
+			
+		}
+		
+		// modify object to account for sorting
+		/*
+		angle = angle / Math.max( 1, faces.length );
+		console.log(' angle after sorting vertices ', angle, ' + degrees:', _MathHelper.rad_to_degree( angle ) );
+		if ( angle !== 0 ) {
+			
+			var objectQ = object.quaternion,
+				currentAxis = new THREE.Vector3( objectQ.x / Math.sqrt( 1 - objectQ.w * objectQ.w), objectQ.y / Math.sqrt( 1 - objectQ.w * objectQ.w ), objectQ.z / Math.sqrt( 1 - objectQ.w * objectQ.w ) ),
+				vectors = _MathHelper.get_orthonormal_vectors( currentAxis );
+				
+			console.log(' current axis ', currentAxis, ' + vectors ', vectors.v2, vectors.v3 );
+			sortRotOffset.setFromAxisAngle( currentAxis, angle );
+			
+			apply_quaternion( object, sortRotOffset, true );
+			
+		}
+		*/
+	}
+	
+	function get_vector_with_least_distance_to_source ( source, centroid ) {
+		
+		var i, l,
+			source = arguments[ 0 ],
+			dist,
+			angle,
+			angleMin = Number.MAX_VALUE,
+			vector3,
+			result;
+		
+		if ( source instanceof THREE.Vector3 ) {
+			//console.log(' source', source.x.toFixed(4), source.y.toFixed(4), source.z.toFixed(4) );
+			for ( i = 1, l = arguments.length; i < l; i++ ) {
+				
+				vector3 = arguments[ i ];
+				
+				if ( vector3 instanceof THREE.Vector3 ) {
+					//console.log(' > vector3', vector3.x.toFixed(4), vector3.y.toFixed(4), vector3.z.toFixed(4) );
+					dist = _MathHelper.clamp( vector3.dot( source ), -1, 1 );
+					
+					angle = Math.acos( dist );
+					
+					if ( Math.abs( angle ) < angleMin ) {
+						
+						angleMin = angle;
+						
+						result = vector3;
+						
+					}
+					//console.log( ' > vert', i, ' dist to source', dist.toFixed(3), ' angle', angle.toFixed(3), 'angleMin? ', angleMin.toFixed(3) );
+				}
+				
+			}
+			
+		}
+		
+		return result;
+		
+	}
+	
+	function correct_for_vertex_rotation ( object ) {
+		
+		var i, l,
+			geometry = object instanceof THREE.Mesh ? object.geometry : object,
+			faces = geometry.faces,
+			vertices = geometry.vertices,
+			face,
+			epa = _ObjectHelper.expectedVertPosA,
+			epb = _ObjectHelper.expectedVertPosB,
+			epc = _ObjectHelper.expectedVertPosC,
+			epd = _ObjectHelper.expectedVertPosD,
+			vpa, vpb, vpc, vpd,
+			npa = utilVec31Normalize,
+			npb = utilVec32Normalize,
+			npc = utilVec33Normalize,
+			npd = utilVec34Normalize,
+			vrotAvgVec4 = utilVec41Normalize.set( 0, 0, 0, 0 ),
+			vrotAvg = utilQ1Normalize,
+			ca = shared.cardinalAxes,
+			dist,
+			angle = 0;
+		
+		// for all face normals
+		
+		for ( i = 0, l = faces.length; i < l; i++ ) {
+			
+			face = faces[ i ];
+			
+			vpa = vertices[ face.a ].position;
+			vpb = vertices[ face.b ].position;
+			vpc = vertices[ face.c ].position;
+			
+			npa.copy( vpa ).normalize();
+			npb.copy( vpb ).normalize();
+			npc.copy( vpc ).normalize();
+			
+			dist = _MathHelper.clamp( npa.dot( epa ), -1, 1 );
+			angle += Math.acos( dist );
+			dist = _MathHelper.clamp( npb.dot( epb ), -1, 1 );
+			angle += Math.acos( dist );
+			dist = _MathHelper.clamp( npc.dot( epc ), -1, 1 );
+			angle += Math.acos( dist );
+			
+			//vrotAvgVec4.addSelf( q_to_axis( npa, epa ) );
+			//vrotAvgVec4.addSelf( q_to_axis( npb, epb ) );
+			//vrotAvgVec4.addSelf( q_to_axis( npc, epc ) );
+			
+			if ( face instanceof THREE.Face4 ) {
+				
+				vpd = vertices[ face.d ].position;
+				
+				npd.copy( vpd ).normalize();
+				
+				dist = _MathHelper.clamp( npd.dot( epd ), -1, 1 );
+				angle += Math.acos( dist );
+				//vrotAvgVec4.addSelf( q_to_axis( npd, epd ) );
+				
+			}
+			
+			/*
+			console.log(' epa', epa.x.toFixed(4), epa.y.toFixed(4), epa.z.toFixed(4) );
+			console.log(' > npa', npa.x.toFixed(4), npa.y.toFixed(4), npa.z.toFixed(4) );
+			console.log(' epb', epb.x.toFixed(4), epb.y.toFixed(4), epb.z.toFixed(4) );
+			console.log(' > npb', npb.x.toFixed(4), npb.y.toFixed(4), npb.z.toFixed(4) );
+			console.log(' epc', epc.x.toFixed(4), epc.y.toFixed(4), epc.z.toFixed(4) );
+			console.log(' > npc', npc.x.toFixed(4), npc.y.toFixed(4), npc.z.toFixed(4) );
+			console.log(' epd', epd.x.toFixed(4), epd.y.toFixed(4), epd.z.toFixed(4) );
+			console.log(' > npd', npd.x.toFixed(4), npd.y.toFixed(4), npd.z.toFixed(4) );
+			*/
+			
+		}
+		/*
+		// find average
+		
+		vrotAvgVec4.normalize();
+		
+		// apply
+		
+		vrotAvg.copy( vrotAvgVec4 );
+		
+		apply_quaternion( object, vrotAvg, true );
+		*/
+	
+		// normalize angle
+		
+		angle = angle / Math.max( 1, vertices.length );
+		
+		var objectQ = object.quaternion,
+			vrotAvgMat4 = new THREE.Matrix4(),
+			currentAxis = new THREE.Vector3( objectQ.x / Math.sqrt( 1 - objectQ.w * objectQ.w), objectQ.y / Math.sqrt( 1 - objectQ.w * objectQ.w ), objectQ.z / Math.sqrt( 1 - objectQ.w * objectQ.w ) ),
+			vectors = _MathHelper.get_orthonormal_vectors( currentAxis );
+			
+		console.log(' angle ', angle, ' current axis ', currentAxis, ' + vectors ', vectors.v2, vectors.v3 );
+		vrotAvg.setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), angle );
+		
+		vrotAvgMat4.setRotationFromQuaternion( vrotAvg );
+		
+		// apply matrix to object
+		
+		apply_matrix( object, vrotAvgMat4 );
+		
+		objectQ.multiplySelf( vrotAvg.inverse() );
+		
+		//apply_quaternion( object, vrotAvg, true );
+		
 		/*
 		var vectors = _MathHelper.get_orthonormal_vectors( normalAvg.clone() ),
 			xlg = new THREE.Geometry(),
@@ -571,168 +978,6 @@
 		object.add( yline );
 		object.add( zline );
 		*/
-		return offset;
-		
-	}
-	
-	function object_center_rotation ( object ) {
-		
-		var offset = rotation_offset( object ),
-			offsetMat4 = utilMat41CenterRot.setRotationFromQuaternion( offset ),
-			objectMatQ = utilQ1CenterRot;
-			objectNewQ = utilQ2CenterRot;
-		
-		// apply offset to object
-		
-		object_apply_matrix( object, offsetMat4 );
-		
-		// additional adjustments if object is mesh
-		
-		if ( object instanceof THREE.Mesh ) {
-			
-			if ( object.useQuaternion === true ) {
-				
-				// quaternion rotations
-				
-				objectNewQ.multiply( offset.inverse(), object.quaternion );
-				
-				object.quaternion.copy( objectNewQ );
-			
-			}
-			else {
-				
-				// matrix rotations
-				
-				objectMatQ.setFromRotationMatrix( object.matrix );
-				
-				objectNewQ.multiply( offset.inverse(), objectMatQ );
-				
-				object.matrix.setRotationFromQuaternion( objectNewQ );
-				
-			}
-			
-		}
-		
-	}
-	
-	/*===================================================
-    
-    vertex sorting
-    
-    =====================================================*/
-	
-	function sort_vertices ( object ) {
-		
-		var i, l,
-			geometry = object instanceof THREE.Mesh ? object.geometry : object,
-			faces = geometry.faces,
-			vertices = geometry.vertices,
-			ia, ib, ic, id,
-			va, vb, vc, vd,
-			pa, pb, pc, pd,
-			npa = new THREE.Vector3(),
-			npb = new THREE.Vector3(),
-			npc = new THREE.Vector3(),
-			npd = new THREE.Vector3(),
-			len = Math.sqrt( 1 / 2 ),
-			expectedPosA = new THREE.Vector3().set( len, -len, 0 ),
-			expectedPosB = new THREE.Vector3().set( len, len, 0 ),
-			expectedPosC = new THREE.Vector3().set( -len, len, 0 ),
-			expectedPosD = new THREE.Vector3().set( -len, -len, 0 ),
-			newA, newB, newC, newD,
-			centroid = new THREE.Vector3(),
-			face;
-		
-		// for all faces
-		
-		for ( i = 0, l = faces.length; i < l; i++ ) {
-			
-			face = faces[ i ];
-			console.log( 'face centroid', face.centroid );
-			
-			ia = face.a;
-			ib = face.b;
-			ic = face.c;
-			
-			va = vertices[ ia ];
-			vb = vertices[ ib ];
-			vc = vertices[ ic ];
-			
-			pa = va.position;
-			pb = vb.position;
-			pc = vc.position;
-					
-			npa.copy( pa ).normalize();
-			npb.copy( pb ).normalize();
-			npc.copy( pc ).normalize();
-			
-			if ( face instanceof THREE.Face4 ) {
-				
-				id = face.d;
-				vd = vertices[ id ];
-				pd = vd.position;
-				npd.copy( pd ).normalize();
-				
-				newA = get_vector_with_least_distance_to_source( expectedPosA, npa, npb, npc, npd );
-				newB = get_vector_with_least_distance_to_source( expectedPosB, npa, npb, npc, npd );
-				newC = get_vector_with_least_distance_to_source( expectedPosC, npa, npb, npc, npd );
-				newD = get_vector_with_least_distance_to_source( expectedPosD, npa, npb, npc, npd );
-				
-				console.log( 'vertex with least dist to A = ', newA === npa ? 'a' : newA === npb ? 'b' : newA === npc ? 'c' : 'd' );
-				console.log( 'vertex with least dist to B = ', newB === npa ? 'a' : newB === npb ? 'b' : newB === npc ? 'c' : 'd' );
-				console.log( 'vertex with least dist to C = ', newC === npa ? 'a' : newC === npb ? 'b' : newC === npc ? 'c' : 'd' );
-				console.log( 'vertex with least dist to D = ', newD === npa ? 'a' : newD === npb ? 'b' : newD === npc ? 'c' : 'd' );
-				
-			}
-			else {
-				
-				newA = get_vector_with_least_distance_to_source( expectedPosA, npa, npb, npc );
-				newB = get_vector_with_least_distance_to_source( expectedPosB, npa, npb, npc );
-				newC = get_vector_with_least_distance_to_source( expectedPosC, npa, npb, npc );
-				
-			}
-			
-		}
-		
-	}
-	
-	function get_vector_with_least_distance_to_source ( source, centroid ) {
-		
-		var i, l,
-			source = arguments[ 0 ],
-			dist,
-			angle,
-			angleMin = Number.MAX_VALUE,
-			vector3,
-			result;
-		
-		if ( source instanceof THREE.Vector3 ) {
-			
-			for ( i = 1, l = arguments.length; i < l; i++ ) {
-				
-				vector3 = arguments[ i ];
-				
-				if ( vector3 instanceof THREE.Vector3 ) {
-					
-					dist = _MathHelper.clamp( vector3.dot( source ), -1, 1 );
-					
-					angle = Math.acos( dist );
-					
-					if ( Math.abs( angle ) < angleMin ) {
-						
-						angleMin = angle;
-						
-						result = vector3;
-						
-					}
-					console.log( 'vert', i, ' dist to source', dist.toFixed(3), ' angle', angle.toFixed(3), 'angleMin? ', angleMin.toFixed(3) );
-				}
-				
-			}
-			
-		}
-		
-		return result;
 		
 	}
 	

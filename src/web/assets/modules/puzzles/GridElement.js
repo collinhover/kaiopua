@@ -215,9 +215,9 @@
 		if ( this.get_layout_node_total() > 1 ) {
 			
 			this.rotationAngle = this.rotationAngleLayout;
-			
+			console.log( ' this.rotationAngle ', this.rotationAngle);
 			angle = shared.cardinalAxes.right.x * this.rotationAngle;
-			
+			console.log( ' angle ', angle);
 			this.quaternion.setFromAxisAngle( rotationAxis, angle );
 			
 		}
@@ -232,7 +232,7 @@
 		
 		// rotate layout by angleDelta
 		
-		layoutRotated = _MathHelper.rotate_matrix2d_90( this.layout, angleDelta );
+		layoutRotated = _MathHelper.rotate_matrix2d_90( this.layout, _MathHelper.rad_to_degree( angleDelta ) );
 		
 		// if layout was rotated
 		

@@ -166,7 +166,7 @@
 		
 		if ( this.geometry.vertices.length > 0 ) {
 			
-			//_ObjectHelper.sort_vertices( this );
+			_ObjectHelper.normalize_faces( this );
 			
 			/*
 			var face = this.geometry.faces[ 0 ];
