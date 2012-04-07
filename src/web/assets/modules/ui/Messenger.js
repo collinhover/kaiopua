@@ -191,10 +191,6 @@
 			priority = typeof parameters.priority === 'boolean' ? parameters.priority : false;
 			active = true;
 			
-			// clear container
-			
-			container.remove();
-			
 			// head
 			
 			if ( typeof pHead !== 'undefined' ) {
@@ -331,10 +327,15 @@
 		_Messenger.container.hide( { 
 			remove: true,
 			callback: function () {
+				
 				_Messenger.container.remove();
+				
 				if ( typeof callback === 'function' ) { 
+					
 					callback.call( _Messenger );
-				} 
+					
+				}
+				
 			}
 		} );
 		

@@ -36,7 +36,8 @@
 		  	exit: function(){},
 			click: function () {}
 	  	};
-	 	var opts = options;
+		
+		var opts = options;
 		opts.activation = opts.activation || defaults.activation;
 		opts.keepAlive = ( typeof opts.keepAlive === 'boolean' ) ? opts.keepAlive : defaults.keepAlive;
 		opts.maxWidth = opts.maxWidth || defaults.maxWidth;
@@ -64,6 +65,7 @@
 		}
 		
 		return this.each(function(){
+			
 			var org_elem = $(this);
 			if(!opts.content){
 				opts.content = org_elem.attr(opts.attribute);
@@ -116,7 +118,7 @@
 				function active_tiptip(){
 					opts.enter.call(this);
 					tiptip_content.html(opts.content);
-					tiptip_holder.hide().removeAttr("class").css("margin","0");
+					tiptip_holder.hide().removeAttr("class").css("margin","0").width( 'auto' );
 					tiptip_arrow.removeAttr("style");
 					
 					if ( opts.maxWidth !== 'auto' && tiptip_holder.width() > opts.maxWidth ) {

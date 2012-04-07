@@ -19,8 +19,6 @@
 		_GUI,
 		_Messenger,
 		_UIElement,
-		_Menu,
-		_Button,
 		_Launcher,
 		_Intro,
         renderer, 
@@ -53,10 +51,7 @@
 		],
         assetsBasic = [
 			"assets/modules/ui/UIElement.js",
-			"assets/modules/ui/Button.js",
-			"assets/modules/ui/Menu.js",
 			"assets/modules/ui/GUI.js",
-			"assets/modules/ui/Messenger.js",
 			"assets/modules/utils/MathHelper.js",
             "js/lib/three/Three.js",
 			"js/lib/Tween.js",
@@ -93,6 +88,7 @@
 			"assets/modules/ui/Button.js",
 			"assets/modules/ui/Menu.js",
 			"assets/modules/ui/Inventory.js",
+			"assets/modules/ui/Messenger.js",
 			"assets/modules/utils/ObjectMaker.js",
 			"assets/modules/utils/ObjectHelper.js",
 			"assets/modules/characters/Character.js",
@@ -313,7 +309,6 @@
 		
 		_UIElement = main.get_asset_data( "assets/modules/ui/UIElement.js" );
 		_GUI = main.get_asset_data( "assets/modules/ui/GUI.js" );
-		_Messenger = main.get_asset_data( "assets/modules/ui/Messenger.js" );
 		_MathHelper = main.get_asset_data( "assets/modules/utils/MathHelper.js" );
 		
 		utilProjector1Selection = new THREE.Projector();
@@ -483,7 +478,7 @@
 	function init_launcher ( l ) {
 		
 		_Launcher = l;
-		console.log('init launcher', _Launcher);
+		
 		set_section( _Launcher );
 		
 	}
@@ -496,67 +491,75 @@
 	
     function init_game () {
 		
-		var m = _GUI.menus,
-			b = _GUI.buttons;
-		
 		// assets
 		
 		_ObjectHelper = main.get_asset_data( "assets/modules/utils/ObjectHelper.js" );
-		_Button = main.get_asset_data( 'assets/modules/ui/Button.js' );
-		_Menu = main.get_asset_data( 'assets/modules/ui/Menu.js' );
+		_Messenger = main.get_asset_data( "assets/modules/ui/Messenger.js" );
 		
-		// ui
+		// build gui, and on complete init game ui
 		
-		m.start.childrenByID.play.callback = function () {
-			start_game();
-		};
-		m.start.childrenByID.play.context = this;
-		
-		m.main.childrenByID.resume.callback = function () {
-			resume();
-		};
-		m.main.childrenByID.resume.context = this;
-		
-		b.end.callback = function () {
-			stop_game();
-		};
-		b.end.context = this;
-		
-		b.mainMenu.callback = function () {
-			_Game.pause();
-		};
-		b.mainMenu.context = this;
-		
-		// menus
-		
-		m.start.alignment = 'center';
-		m.main.alignment = 'center';
-		
-		m.navigation.spacingBottom = 20;
-		m.navigation.alignment = 'bottomcenter';
-		
-		// setup ui groups
-		
-		_GUI.add_to_group( 'start', [
-			{ child: m.start, parent: _GUI.layers.ui },
-			{ child: m.footer, parent: _GUI.container }
-		] );
-		
-		_GUI.add_to_group( 'pause', [
-			{ child: m.main, parent: _GUI.layers.uiPriority },
-			{ child: m.footer, parent: _GUI.container }
-		] );
-		
-		_GUI.add_to_group( 'ingame', [
-			{ child: m.navigation, parent: _GUI.layers.ui }
-		] );
-		
-		_GUI.add_to_group( 'constant', [ { child: b.fullscreenEnter, parent: _GUI.layers.ui } ] );
-		
-		// show initial groups
-		
-		_GUI.show_group( 'constant' );
-		_GUI.show_group( 'start' );
+		_GUI.build( function () {
+			
+			var l, m, b;
+			
+			// ui
+			
+			l = _GUI.layers;
+			m = _GUI.menus;
+			b = _GUI.buttons;
+			
+			m.start.childrenByID.play.callback = function () {
+				start_game();
+			};
+			m.start.childrenByID.play.context = this;
+			
+			m.main.childrenByID.resume.callback = function () {
+				resume();
+			};
+			m.main.childrenByID.resume.context = this;
+			
+			b.end.callback = function () {
+				stop_game();
+			};
+			b.end.context = this;
+			
+			b.mainMenu.callback = function () {
+				_Game.pause();
+			};
+			b.mainMenu.context = this;
+			
+			// menus
+			
+			m.start.alignment = 'center';
+			m.main.alignment = 'center';
+			
+			m.navigation.spacingBottom = 20;
+			m.navigation.alignment = 'bottomcenter';
+			
+			// setup ui groups
+			
+			_GUI.add_to_group( 'start', [
+				{ child: m.start, parent: l.ui },
+				{ child: m.footer, parent: _GUI.container }
+			] );
+			
+			_GUI.add_to_group( 'pause', [
+				{ child: m.main, parent: l.uiPriority },
+				{ child: m.footer, parent: _GUI.container }
+			] );
+			
+			_GUI.add_to_group( 'ingame', [
+				{ child: m.navigation, parent: l.ui }
+			] );
+			
+			_GUI.add_to_group( 'constant', [ { child: b.fullscreenEnter, parent: l.ui } ] );
+			
+			// show initial groups
+			
+			_GUI.show_group( 'constant' );
+			_GUI.show_group( 'start' );
+			
+		} );
 		
     }
 	
@@ -1052,7 +1055,7 @@
 				} );
 				
 				_Messenger.show_message( {
-					title: "And here's how to play:",
+					title: "Here's how to play:",
 					body: _GUI.messages.controls,
 					priority: true,
 					transitionerOpacity: 0.9
@@ -1138,7 +1141,7 @@
 		
         if ( paused === true && _ErrorHandler.errorState !== true ) {
 			
-			// add listener for click on transitioner
+			// ui
 			
 			_GUI.transitioner.domElement.off( '.resume' );
 			

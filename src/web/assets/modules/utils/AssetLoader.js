@@ -53,10 +53,6 @@
 	
 	=====================================================*/
 	
-	_AssetLoader.init_ui = init_ui;
-	_AssetLoader.hide_ui = hide_ui;
-	_AssetLoader.show_ui = show_ui;
-	_AssetLoader.clear_ui_progress = clear_ui_progress;
 	_AssetLoader.load = load_list;
 	
 	_AssetLoader.add_loaded_locations = add_loaded_locations;
@@ -286,6 +282,12 @@
 		// hide
 		
 		container.hide( { remove: false, time: 0 } );
+		
+		// ui functions
+		
+		_AssetLoader.hide_ui = hide_ui;
+		_AssetLoader.show_ui = show_ui;
+		_AssetLoader.clear_ui_progress = clear_ui_progress;
 		
 	}
 	
