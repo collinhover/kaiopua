@@ -139,6 +139,8 @@
 		
 		init_menus();
 		
+		init_messages();
+		
 		// build
 		
 		build_gui();
@@ -638,6 +640,124 @@
 		m.footer.height = m.footer.domElement.height();
 		m.footer.domElement.removeClass( 'sticky_footer' );
 		m.footer.alignment = 'bottomcenter';
+		
+	}
+	
+	function init_messages () {
+		
+		_GUI.messages = {};
+		
+		// controls
+		
+		_GUI.messages.controls = "";
+		_GUI.messages.controls += "<div class='grid info_panel'><ul>";
+		_GUI.messages.controls += "<li class='grid_compartment'><div class='grid_cell_inner'><img src='assets/icons/keyboard_rev_64.png'></div><p>move</p></li>";
+		_GUI.messages.controls += "<li><div class='grid_cell_inner'><img src='assets/icons/key_arrows_rev_64.png'></div><p>run</p></li>";
+		_GUI.messages.controls += "<li><div class='grid_cell_inner'><img src='assets/icons/key_wasd_rev_64.png'></div><p>run</p></li>";
+		_GUI.messages.controls += "<li><div class='grid_cell_inner'><img src='assets/icons/key_space_rev_64.png'></div><p>jump</p></li>";
+		_GUI.messages.controls += "</ul><ul>";
+		_GUI.messages.controls += "<li class='grid_compartment'><div class='grid_cell_inner'><img src='assets/icons/mouse_rev_64.png'></div><p>interact</p></li>";
+		_GUI.messages.controls += "<li><div class='grid_cell_inner'><img src='assets/icons/mouse_left_rev_64.png'></div><p>select</p></li>";
+		_GUI.messages.controls += "<li><div class='grid_cell_inner'><img src='assets/icons/mouse_left_rev_64.png'></div><p>plant</p></li>";
+		_GUI.messages.controls += "<li><div class='grid_cell_inner'><img src='assets/icons/mouse_left_drag_rev_64.png'></div><p>rotate plant</p></li>";
+		_GUI.messages.controls += "<li><div class='grid_cell_inner'><img src='assets/icons/mouse_right_drag_rev_64.png'></div><p>rotate camera</p></li>";
+		_GUI.messages.controls += "<li><div class='grid_cell_inner'><img src='assets/icons/mouse_middle_rev_64.png'></div><p>zoom</p></li>";
+		_GUI.messages.controls += "</ul></div>";
+		
+		// gameplay
+		/*
+		_GUI.messages.gameplay = "";
+		_GUI.messages.gameplay += "<p><span class='highlight'>We're still in development</span>, but we hope you enjoy what we have so far. Here's what you can do:</p><br/>";
+		_GUI.messages.gameplay += "<div class='grid'><ul>";
+		_GUI.messages.gameplay += "<li><div class='grid_cell_inner grid_cell_inner_circle'><img src='assets/textures/dirt_128.jpg'></div><p>find</p></li>";
+		_GUI.messages.gameplay += "<li><div class='grid_cell_inner grid_cell_inner_circle'><img src='assets/icons/game_steps_choose_plant_128.jpg'></div><p>choose</p></li>";
+		_GUI.messages.gameplay += "<li><div class='grid_cell_inner grid_cell_inner_circle'><img src='assets/icons/game_steps_design_128.jpg'></div><p>design</p></li>";
+		_GUI.messages.gameplay += "<li><div class='grid_cell_inner grid_cell_inner_circle'><img src='assets/icons/game_steps_grow_128.jpg'></div><p>grow!</p></li>";
+		_GUI.messages.gameplay += "<li><div class='grid_cell_inner grid_cell_inner_circle'><img src='assets/icons/game_steps_explore_128.jpg'></div><p>explore</p></li>";
+		_GUI.messages.gameplay += "</ul></div>";
+		*/
+		
+		_GUI.messages.gameplay = [];
+		
+		var gpMessage = new _UIElement.Instance( { 
+			id: 'gameplay_message',
+			elementType: 'p',
+			html: "<span class='highlight'>We're still in development</span>, but we hope you enjoy what we have so far. Here's what you can do:<br/>",
+			cssmap: {
+				'position' : 'relative'
+			}
+		} );
+		_GUI.messages.gameplay.push( gpMessage );
+		
+		var gpGrid = new _UIElement.Instance( { 
+			id: 'gameplay_grid',
+			classes: 'grid',
+			cssmap: {
+				'position' : 'relative'
+			}
+		} );
+		_GUI.messages.gameplay.push( gpGrid );
+		
+		var gpGridLine1 = new _UIElement.Instance( {
+			elementType: 'ul',
+			cssmap: {
+				'position' : 'relative'
+			}
+		} );
+		gpGrid.add( gpGridLine1 );
+		
+		function make_message_grid_element ( id, parent, innerClasses, imgClasses, imgSrc, tooltipMessage ) {
+			
+			var gpCell = new _UIElement.Instance( { 
+				id: id,
+				elementType: 'li',
+				cssmap: {
+					'position' : 'relative'
+				}
+			} );
+			parent.add( gpCell );
+			
+			var gpCellInner = new _UIElement.Instance( {
+				elementType: 'div',
+				classes: innerClasses,
+				cssmap: {
+					'position' : 'relative'
+				}
+			} );
+			gpCell.add( gpCellInner );
+			
+			var gpCellImg = new _UIElement.Instance( {
+				elementType: 'img',
+				classes: imgClasses,
+				src: imgSrc,
+				tooltip: {
+					content: tooltipMessage,
+					//maxWidth: 200 // TODO: fix tooltip to account for each individual maxWidth, currently all use same
+				},
+				cssmap: {
+					'position' : 'relative'
+				}
+			} );
+			gpCellInner.add( gpCellImg );
+			
+			var gpCellMessage = new _UIElement.Instance( {
+				elementType: 'p',
+				html: id,
+				cssmap: {
+					'position' : 'relative'
+				}
+			} );
+			gpCell.add( gpCellMessage );
+			
+		}
+		
+		// grid elements
+		
+		make_message_grid_element( 'find', gpGridLine1, 'grid_cell_inner', 'grid_cell_inner_circle', shared.pathToTextures + 'dirt_128.jpg', 'Fields are puzzles' );
+		make_message_grid_element( 'choose', gpGridLine1, 'grid_cell_inner', 'grid_cell_inner_circle', shared.pathToIcons + 'game_steps_choose_plant_128.jpg', 'Solve fields by using plants' );
+		make_message_grid_element( 'design', gpGridLine1, 'grid_cell_inner', 'grid_cell_inner_circle', shared.pathToIcons + 'game_steps_design_128.jpg', 'The less plants you need, the better' );
+		make_message_grid_element( 'grow', gpGridLine1, 'grid_cell_inner', 'grid_cell_inner_circle', shared.pathToIcons + 'game_steps_grow_128.jpg', 'The better the design, the better the reward' );
+		make_message_grid_element( 'explore', gpGridLine1, 'grid_cell_inner', 'grid_cell_inner_circle', shared.pathToIcons + 'game_steps_explore_128.jpg', 'Its a moon sized space whale!' );
 		
 	}
 	

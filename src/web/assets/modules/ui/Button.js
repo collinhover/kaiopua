@@ -270,6 +270,7 @@
 		
 		cssmap = theme.cssmap = theme.cssmap || {};
 		
+		cssmap[ "display" ] = or[ "display" ] || "block";
 		cssmap[ "font-size" ] = or[ "font-size" ] || "24px";
 		cssmap[ "font-family" ] = or[ "font-family" ] || "'OpenSansRegular', Helmet, Freesans, sans-serif";
 		

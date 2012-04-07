@@ -708,10 +708,10 @@
 		
 		children = ( arguments.length > 0 ? arguments : this.children );
 		
-		for ( i = 0, l = children.length; i < l; i ++) {
+		for ( i = children.length - 1, l = 0; i >= l; i-- ) {
 			
 			child = children[ i ];
-			//console.log(this.id, 'removing', child.id );
+			
 			index = this.children.indexOf( child );
 			
 			if ( index !== -1 ) {
@@ -736,7 +736,7 @@
 			
 			if ( child.parent === this ) {
 				
-				child.parent = child.parentLast;
+				child.parent = undefined;
 				
 			}
 			
@@ -844,12 +844,12 @@
 		else {
 			
 			// if last parent was ui element
-		
+			
 			if ( this.parentLast instanceof _UIElement.Instance ) {
 				
 				// if was on parent child list
 				
-				if ( this.parentLast.children.indexOf( this ) === -1 ) {
+				if ( this.parentLast.children.indexOf( this ) !== -1 ) {
 					
 					this.parentLast.remove( this );
 					
@@ -928,20 +928,6 @@
 		this.apply_css( this.theme.disabled );
 		
 		this.theme.stateLast = this.theme.disabled;
-		
-		/*
-		for ( i = 0, l = this.children.length; i < l; i++) {
-			
-			child = this.children[ i ];
-			
-			if ( child.parent === this ) {
-				console.log(this.id, 'disable child visual', child.id );
-				child.disable_visual();
-				
-			}
-			
-		}
-		*/
 		
 	}
 	
@@ -1289,7 +1275,7 @@
 			time,
 			opacity,
 			callback,
-			callbackContext,
+			context,
 			fadeCallback;
 		//console.log( this.id, 'SHOW');
 		// handle parameters
@@ -1305,9 +1291,9 @@
 		opacity = main.is_number( parameters.opacity ) ? parameters.opacity : ( domElement ? 1 : this.opacityShow );
 		
 		callback = parameters.callback;
-		callbackContext = parameters.callbackContext;
+		context = parameters.context;
 		
-		fadeCallback = function () { if ( typeof callback !== 'undefined' ) { callback.call( callbackContext ); } };
+		fadeCallback = function () { if ( typeof callback !== 'undefined' ) { callback.call( context ); } };
 		
 		// if dom element passed
 		
@@ -1322,7 +1308,7 @@
 			// set parent
 			
 			if ( this.parent !== parent ) {
-			
+				
 				this.parent = parent;
 				
 				// show children
@@ -1364,7 +1350,7 @@
 			time,
 			opacity,
 			callback,
-			callbackContext;
+			context;
 		//console.log( this.id, 'HIDE' );
 		// handle parameters
 		
@@ -1379,13 +1365,13 @@
 		opacity = main.is_number( parameters.opacity ) ? parameters.opacity : 0;
 		
 		callback = parameters.callback;
-		callbackContext = parameters.callbackContext;
+		context = parameters.context;
 		
 		// if dom element passed
 		
 		if ( domElement ) {
 			
-			domElement.stop( true ).fadeTo( time, opacity, function () { on_hidden( domElement, callback, callbackContext, remove ); } );
+			domElement.stop( true ).fadeTo( time, opacity, function () { on_hidden( domElement, callback, context, remove ); } );
 			
 		}
 		// else use own
@@ -1403,12 +1389,12 @@
 			
 			if ( this.domElement.css( 'opacity' ) !== opacity ) {
 				
-				this.domElement.stop( true ).fadeTo( time, opacity, function () { on_hidden( me, callback, callbackContext, remove ); } );
+				this.domElement.stop( true ).fadeTo( time, opacity, function () { on_hidden( me, callback, context, remove ); } );
 				
 			}
 			else {
 				
-				on_hidden( this, callback, callbackContext, remove );
+				on_hidden( this, callback, context, remove );
 				
 			}
 			
@@ -1416,7 +1402,7 @@
 		
 	}
 	
-	function on_hidden ( hideTarget, callback, callbackContext, remove ) {
+	function on_hidden ( hideTarget, callback, context, remove ) {
 		
 		if ( hideTarget instanceof _UIElement.Instance ) {
 			
@@ -1443,7 +1429,7 @@
 		
 		if ( typeof callback !== 'undefined' ) {
 			
-			callback.call( callbackContext );
+			callback.call( context );
 			
 		}
 		
@@ -1456,7 +1442,7 @@
 			opacityShow,
 			opacityHide,
 			callback,
-			callbackContext;
+			context;
 		
 		// handle parameters
 		
@@ -1490,10 +1476,10 @@
 						}
 						
 					},
-					callbackContext: this
+					context: this
 				} );
 			},
-			callbackContext: this
+			context: this
 		} );
 		
 	}
@@ -1568,7 +1554,6 @@
 			
 			children = this.sort_children_by_order( children );
 			
-			//console.log(this.id, 'SHOW children', children );
 			// show all
 			
 			for ( i = 0, l = children.length; i < l; i++ ) {
@@ -1848,6 +1833,7 @@
 		this.form = 'fullwindow';
 		
 		this.apply_css( {
+			"position": "absolute",
 			"min-height": "100%",
 			"width": "100%",
 			"height": "100%",
@@ -1942,15 +1928,6 @@
 		
 		if ( elementType === 'img' && typeof parameters.src === 'string' ) {
 			
-			/*
-			main.asset_require( parameters.src, function ( img ) {
-				
-				main.extend( img, domElement );
-				me.change_dom_element( img );
-				
-			} );
-			*/
-			domElement.onload = parameters.onload;
 			domElement.crossOrigin = '';
 			domElement.src = parameters.src;
 			
@@ -2004,7 +1981,7 @@
 		if ( typeof tooltip.content !== 'undefined' ) {
 			
 			tooltip.defaultPosition = tooltip.defaultPosition || 'top';
-			tooltip.maxWidth = tooltip.maxWidth || 'auto';
+			tooltip.maxWidth = main.is_number( tooltip.maxWidth ) ? tooltip.maxWidth : 'auto';
 			tooltip.delay = tooltip.delay || 100;
 			tooltip.contentDisabled = '<br/><p class="disabled">' + ( tooltip.contentDisabled || '(disabled)' ) + '</p>';
 			tooltip.uielement = uielement;
@@ -2194,7 +2171,7 @@
 		cssmap = theme.cssmap = theme.cssmap || {};
 		
 		cssmap[ "position" ] = or[ "position" ] || "absolute";
-		cssmap[ "display" ] = or[ "display" ] || "block";
+		//cssmap[ "display" ] = or[ "display" ] || "block";
 		cssmap[ "transform-origin" ] = or[ "transform-origin" ] || "50% 50%";
 		
 		// state last

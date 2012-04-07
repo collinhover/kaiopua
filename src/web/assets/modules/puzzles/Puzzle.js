@@ -48,8 +48,6 @@
 		
 		// properties
 		
-		_Puzzle.scoreStatus = ['okay', 'great', 'perfect'];
-		
 		allPuzzles = [];
 		allPuzzlesSolved = [];
 		
@@ -156,7 +154,7 @@
 			
 			// if grid is full
 			
-			if ( solved !== true && this.grid.isFull === true ) {
+			if ( solved !== true ) {//&& this.grid.isFull === true ) {
 				
 				// set solved
 				

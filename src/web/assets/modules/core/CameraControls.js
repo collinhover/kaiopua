@@ -185,15 +185,10 @@
 	
 	function rotate ( e, end ) {
 		
-		var rotated = false,
-			mouse;
+		var mouse;
 		
 		// end rotation
 		if ( end === true ) {
-			
-			// if rotated
-			
-			rotated = this.rotatedRecently;
 			
 			// reset
 			
@@ -201,7 +196,7 @@
 			
 			this.settingsRotation.mouse = undefined;
 			
-			this.rotatedRecently = false;
+			this.rotating = false;
 			
 		}
 		// start rotation
@@ -215,15 +210,13 @@
 			
 			this.settingsRotation.deltaTotal.set( 0, 0, 0 );
 			this.settingsRotation.delta.set( 0, 0, 0 );
-			this.rotatedRecently = false;
+			this.rotating = false;
 			
 			// update
 			
 			shared.signals.mousemoved.add( rotate_update, this );
 			
 		}
-		
-		return rotated;
 		
 	}
 	
@@ -255,7 +248,7 @@
 			
 			if ( rotDeltaTotal.length() > rotateRecordedThreshold ) {
 				
-				this.rotatedRecently = true;
+				this.rotating = true;
 				
 			}
 			

@@ -17,6 +17,7 @@
 		_ObjectHelper,
 		_Physics,
 		_GUI,
+		_Messenger,
 		_UIElement,
 		_Menu,
 		_Button,
@@ -45,6 +46,7 @@
 		utilRay1Selection,
 		utilVec31Selection,
 		sectionChangePauseTime = 500,
+		introMessageDelayTime = 2000,
 		dependencies = [
 			"assets/modules/utils/AssetLoader.js",
             "assets/modules/utils/ErrorHandler.js",
@@ -54,6 +56,7 @@
 			"assets/modules/ui/Button.js",
 			"assets/modules/ui/Menu.js",
 			"assets/modules/ui/GUI.js",
+			"assets/modules/ui/Messenger.js",
 			"assets/modules/utils/MathHelper.js",
             "js/lib/three/Three.js",
 			"js/lib/Tween.js",
@@ -87,7 +90,6 @@
 			"assets/modules/core/Player.js",
 			"assets/modules/core/Model.js",
 			"assets/modules/core/CameraControls.js",
-			"assets/modules/ui/Messenger.js",
 			"assets/modules/ui/Button.js",
 			"assets/modules/ui/Menu.js",
 			"assets/modules/ui/Inventory.js",
@@ -311,6 +313,7 @@
 		
 		_UIElement = main.get_asset_data( "assets/modules/ui/UIElement.js" );
 		_GUI = main.get_asset_data( "assets/modules/ui/GUI.js" );
+		_Messenger = main.get_asset_data( "assets/modules/ui/Messenger.js" );
 		_MathHelper = main.get_asset_data( "assets/modules/utils/MathHelper.js" );
 		
 		utilProjector1Selection = new THREE.Projector();
@@ -1036,6 +1039,27 @@
 			
 			_GUI.show_group( 'ingame' );
 			
+			// show intro messages
+			
+			window.requestTimeout( function () {
+				
+				_Messenger.show_message( { 
+					image: shared.pathToIcons + "character_rev_64.png",
+					title: "Hey, welcome to Kai 'Opua!",
+					body: _GUI.messages.gameplay,
+					priority: true,
+					transitionerOpacity: 0.9
+				} );
+				
+				_Messenger.show_message( {
+					title: "And here's how to play:",
+					body: _GUI.messages.controls,
+					priority: true,
+					transitionerOpacity: 0.9
+				} );
+				
+			}, introMessageDelayTime );
+			
 		} );
 		
 		// set started
@@ -1085,6 +1109,10 @@
 					
 					_GUI.show_group( 'pause' );
 					
+					// add listener for click on transitioner
+					
+					_GUI.transitioner.domElement.on( 'mouseup.resume touchend.resume', resume );
+					
 				}
 				
 			}
@@ -1093,10 +1121,6 @@
 				_GUI.transitioner.show( { parent: _GUI.layers.overlayAll } );
 				
 			}
-			
-			// add listener for click on transitioner
-			
-			_GUI.transitioner.domElement.on( 'mouseup.resume touchend.resume', resume );
 			
 			// signal
             

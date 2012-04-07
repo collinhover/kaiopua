@@ -13,7 +13,8 @@
 		_Field = {},
 		_Puzzle,
 		_Dirt,
-		_Messenger;
+		_Messenger,
+		_MathHelper;
 	
 	/*===================================================
     
@@ -26,7 +27,8 @@
 		requirements: [
 			"assets/modules/puzzles/Puzzle.js",
 			"assets/modules/farming/Dirt.js",
-			"assets/modules/ui/Messenger.js"
+			"assets/modules/ui/Messenger.js",
+			"assets/modules/utils/MathHelper.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -38,12 +40,29 @@
     
     =====================================================*/
 	
-	function init_internal ( pzl, dirt, msg ) {
+	function init_internal ( pzl, dirt, msg, mh ) {
 		console.log('internal field', _Field);
 		
 		_Puzzle = pzl;
 		_Dirt = dirt;
 		_Messenger = msg;
+		_MathHelper = mh;
+		
+		// properties
+		
+		_Field.scoreStatus = [ 
+			'uh oh...',
+			'good',
+			'perfect'
+		];
+		
+		_Field.scoreIcon = [
+			shared.pathToIcons + 'face_okay_rev_64.png', 
+			shared.pathToIcons + 'face_smile_rev_64.png', 
+			shared.pathToIcons + 'face_laugh_rev_64.png'
+		];
+		
+		// instance
 		
 		_Field.Instance = Field;
 		_Field.Instance.prototype = new _Puzzle.Instance();
@@ -108,7 +127,8 @@
 				numElementsToMin,
 				score,
 				scorePct,
-				scoreStatus;
+				scoreStatus,
+				scoreIcon;
 				
 			// try solve puzzle
 			
@@ -128,11 +148,11 @@
 				
 				numElementsDiff = numElementsBase - numElementsUsed;
 				
-				numElementsMin = main.is_number( numElementsMin ) && numElementsMin <= numElementsDiff ? numElementsMin : numElementsDiff;
+				numElementsMin = main.is_number( numElementsMin ) ? numElementsMin : numElementsBase;
 				
 				numElementsToMin = Math.max( 0, numElementsUsed - numElementsMin );
 				
-				score = Math.max( 1, 1 - numElementsToMin / ( numElementsBase - numElementsMin ) );
+				score = Math.min( 1, 1 - numElementsToMin / ( numElementsBase - numElementsMin ) );
 				
 				if ( isNaN( score ) ) {
 					
@@ -140,33 +160,37 @@
 					
 				}
 				
+				score = _MathHelper.round( score, 3 );
+				
 				scorePct = score * 100 + "%";
 				
-				scoreStatus = _Puzzle.scoreStatus[ Math.floor( ( _Puzzle.scoreStatus.length - 1 ) * score ) ];
+				scoreStatus = _Field.scoreStatus[ Math.floor( ( _Field.scoreStatus.length - 1 ) * score ) ];
+				
+				scoreIcon = _Field.scoreIcon[ Math.floor( ( _Field.scoreIcon.length - 1 ) * score ) ];
 				
 				// send message notifying user of score
 				
-				var scoreHTML = "<div id='score'><ul><li class='counter'><div class='counter_inner'><img src='assets/icons/character_rev_64.png' class='image'></div><p class='label'>" + scoreStatus + "</p></li><li class='counter'><div class='counter_inner'><p class='count text_huge'>" + numElementsBase + "</p><p class='label'>total spaces</p></div></li>";
+				var scoreHTML = "<div class='grid'><ul><li class='grid_compartment score_counter'><div class='grid_cell_inner'><img src='" + scoreIcon + "' class='image'></div><p class='score_label'>" + scoreStatus + "</p></li><li class='grid_compartment score_counter'><div class='grid_cell_inner'><p class='score_count text_huge'>" + numElementsBase + "</p><p class='score_label'>total spaces</p></div></li>";
 				
 				if ( numElementsToMin > 0 ) {
 					
-					scoreHTML += "<li class='counter'><div class='counter_inner'><p class='label'>you used</p><p class='count text_huge'>" + numElementsUsed + "</p><p class='label'>plants</p></div></li>";
-					scoreHTML += "<li class='counter'><div class='counter_inner'><p class='label'>we bet you can do it with only</p><p class='count text_huge count_highlight'>" + numElementsMin + "</p><p class='label'>plants</p></div></li>";
+					scoreHTML += "<li class='grid_compartment score_counter'><div class='grid_cell_inner'><p class='score_label'>you used</p><p class='score_count text_huge'>" + numElementsUsed + "</p><p class='score_label'>plants</p></div></li>";
+					scoreHTML += "<li class='grid_compartment score_counter'><div class='grid_cell_inner'><p class='score_label'>we bet you can do it with only</p><p class='score_count text_huge score_count_highlight'>" + numElementsMin + "</p><p class='score_label'>plants</p></div></li>";
 					
 				}
 				else {
 					
-					scoreHTML += "<li class='counter'><div class='counter_inner'><p class='label'>you solved it with only</p><p class='count text_huge count_highlight'>" + numElementsUsed + "</p><p class='label'>plants</p></div></li>";
+					scoreHTML += "<li class='grid_compartment score_counter'><div class='grid_cell_inner'><p class='score_label'>you solved it with only</p><p class='score_count text_huge score_count_highlight'>" + numElementsUsed + "</p><p class='score_label'>plants</p></div></li>";
 					
 				}
 				
-				scoreHTML += "<li class='counter'><div class='counter_inner'><p class='count text_huge'>" + scorePct + "</p><p class='label'>score</p></div></li></ul></div>";
+				scoreHTML += "<li class='grid_compartment score_counter'><div class='grid_cell_inner'><p class='score_count text_huge'>" + scorePct + "</p><p class='score_label'>score</p></div></li></ul></div>";
 				
 				_Messenger.show_message( { 
 					head: scoreHTML,
 					title: "Hurrah! You solved the " + this.id + " puzzle!",
 					body: "The tiki spirits favor you with gifts!",
-					active: true,
+					priority: true,
 					transitionerOpacity: 0.9
 				} );
 				

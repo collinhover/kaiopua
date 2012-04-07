@@ -406,7 +406,8 @@
 			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors, reflectivity: 0 } ),
 			grid: {
 				modulesGeometry: main.get_asset_data("assets/models/Field_Tutorial_Grid.js")
-			}
+			},
+			numElementsMin: 25
 		});
 		
 		me.parts.body.add( me.parts.fieldTutorial );

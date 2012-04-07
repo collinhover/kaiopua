@@ -231,67 +231,86 @@ a:hover, a:active {
 	font-size: 30px;
 }
 
-/* score
+/* grid
 -------------------------*/
 
-#score {
+.grid {
 	display: table;
 	border-spacing: 10px;
 	margin: 0 auto;
+	padding: 5px;
 	color: #eeeeee;
 }
-#score ul {
+
+.grid ul {
 	display: table-row;
 }
 
-#score .counter {
+.grid li {
 	display: table-cell;
-	vertical-align: bottom;
 	padding: 10px;
+	text-align: center;
+}
+
+.grid_compartment {
 	border: 1px #dddddd solid; 
 	-moz-border-radius: 5px;
     -webkit-border-radius: 5px;
     border-radius: 5px;
-	text-align: center;
 }
 
-#score .counter_inner {
+.grid_cell_inner {
 	width: 100px;
 	margin: 0 auto;
 }
 
-#score .count {
+.grid_cell_inner_circle {
+	width: 100px;
+	height: 100px;
+	-moz-border-radius: 50px;
+    -webkit-border-radius: 50px;
+    border-radius: 50px;
+	overflow: hidden;
+}
+
+.grid p {
+	margin: 5px 0;
+}
+
+.grid img {
+	margin: 0 auto;
+}
+
+/* score
+-------------------------*/
+
+.score_counter {
+	vertical-align: bottom;
+}
+
+.score_count {
 	font-family: Georgia, serif;
 	font-size: 32px;
 }
 
-#score .count_over {
-	
-}
-
-#score .count_under {
+.score_count_under {
 	color: #aaaaaa;
 	font-size: 20px;
 }
 
-#score .count_highlight {
+.score_count_highlight {
 	color: #fcd700;
 }
 
-#score .label {
-	margin: 5px 0;
+.score_label {
 	color: #aaaaaa;
 	font-size: 13px;
 }
 
-#score .divider {
+.score_divider {
 	width: 75%;
 	border: 1px #aaaaaa dotted;
 	margin: 5px auto;
-}
-
-#score .image {
-	margin: 0 auto;
 }
 
 /* info panel 

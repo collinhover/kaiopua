@@ -14,6 +14,8 @@
 		_UIElement,
 		_Game,
 		_GUI,
+		queue = [],
+		priority = false,
 		active = false;
 	
 	/*===================================================
@@ -58,7 +60,8 @@
 		
 		_Messenger.container = new _UIElement.Instance( {
 			id: 'messenger',
-			alignment: 'center'
+			alignment: 'center',
+			pointerEvents: false
 		} );
 		
 		_Messenger.head = new _UIElement.Instance( {
@@ -73,8 +76,10 @@
 			id: 'image',
 			elementType: 'img',
 			cssmap: {
-				'position' : 'relative'
-			}
+				'position' : 'relative',
+				'display' : 'block'
+			},
+			alignment: 'center'
 		} );
 	
 		_Messenger.title = new _UIElement.Instance( {
@@ -110,8 +115,6 @@
 			}
 		} );
 		
-		_Messenger.confirm.hide( { time: 0 } );
-		
 		// functions
 		
 		_Messenger.show_message = show_message;
@@ -127,6 +130,41 @@
 	
 	function show_message ( parameters ) {
 		
+		// add message into queue
+		
+		queue.push( parameters );
+		
+		// if only 1 message, show immediately
+		
+		if ( queue.length == 1 ) {
+			
+			step_message_queue();
+			
+		}
+		
+	}
+	
+	function step_message_queue () {
+		
+		// if game paused
+		
+		if ( active !== true && _Game.paused === true ) {
+			
+			shared.signals.resumed.addOnce( step_message_queue );
+			
+		}
+		else {
+			
+			// hide current and show next
+			
+			hide_current_message( show_next_message );
+			
+		}
+		
+	}
+	
+	function show_next_message () {
+		
 		var container = _Messenger.container,
 			head = _Messenger.head,
 			image = _Messenger.image,
@@ -138,137 +176,128 @@
 			pBody,
 			callback;
 		
-		// hide current message
+		// if message in queue
 		
-		_Messenger.hide_message();
-		
-		// handle parameters
-		
-		parameters = parameters || {};
-		
-		pHead = parameters.head;
-		pImage = parameters.image;
-		pTitle = parameters.title;
-		pBody = parameters.body;
-		active = parameters.active || false;
-		
-		// head
-		
-		if ( typeof pHead !== 'undefined' ) {
+		if ( queue.length > 0 ) {
 			
-			head = update_message_element( head, pHead );
+			// handle parameters
 			
-			head.show( { parent: container } );
+			parameters = queue.shift() || {};
 			
-		}
-		else {
+			pHead = parameters.head;
+			pImage = parameters.image;
+			pTitle = parameters.title;
+			pBody = parameters.body;
+			priority = typeof parameters.priority === 'boolean' ? parameters.priority : false;
+			active = true;
 			
-			head.hide( { remove: true, time: 0 } );
+			// clear container
 			
-		}
-		
-		// image
-		
-		if ( typeof pImage === 'string' ) {
+			container.remove();
 			
-			imageElement.src = pImage;
-			imageElement.onload = function () {
-				image.align_once( image.alignment );
+			// head
+			
+			if ( typeof pHead !== 'undefined' ) {
+				
+				head = _Messenger.head = update_message_element( head, pHead );
+				
+				head.show( { parent: container, time: 0 } );
+				
 			}
 			
-			image.width = main.is_number( parameters.imageWidth ) ? parameters.imageWidth : ( main.is_number( parameters.imageSize ) ? parameters.imageSize : 'auto' );
-			image.height = main.is_number( parameters.imageHeight ) ? parameters.imageHeight : ( main.is_number( parameters.imageSize ) ? parameters.imageSize : 'auto' );
+			// image
 			
-			image.show( { parent: head } );
+			if ( typeof pImage === 'string' ) {
+				
+				imageElement.src = pImage;
+				
+				image.width = main.is_number( parameters.imageWidth ) ? parameters.imageWidth : ( main.is_number( parameters.imageSize ) ? parameters.imageSize : 'auto' );
+				image.height = main.is_number( parameters.imageHeight ) ? parameters.imageHeight : ( main.is_number( parameters.imageSize ) ? parameters.imageSize : 'auto' );
+				
+				image.align_once( image.alignment );
+				
+				image.show( { parent: head, time: 0 } );
+				
+				head.show( { parent: container, time: 0 } );
+				
+			}
 			
-			head.show( { parent: container } );
+			// title
 			
-		}
-		else {
+			if ( typeof pTitle !== 'undefined' ) {
+				
+				title = _Messenger.title = update_message_element( title, pTitle );
+				
+				title.show( { parent: container, time: 0 } );
+				
+			}
 			
-			image.hide( { remove: true, time: 0 } );
+			// body
 			
-		}
-		
-		// title
-		
-		if ( typeof pTitle !== 'undefined' ) {
+			if ( typeof pBody !== 'undefined' ) {
+				
+				body = _Messenger.body = update_message_element( body, pBody );
+				
+				body.show( { parent: container, time: 0 } );
+				
+			}
 			
-			title = update_message_element( title, pTitle );
+			// if priority message
 			
-			title.show( { parent: container } );
+			if ( priority === true ) {
+				
+				_Game.pause( true );
+				
+				_GUI.transitioner.show( { opacity: parameters.transitionerOpacity } );
+				
+				_Messenger.confirm.show( { parent: container, time: 0 } );
 			
-		}
-		else {
+				callback = priority_message_callback;
+				
+			}
+			else {
+				
+				_Game.resume();
+				
+				callback = passive_message_callback;
+				
+			}
 			
-			title.hide( { remove: true, time: 0 } );
+			// ui
 			
-		}
-		
-		// body
-		
-		if ( typeof pBody !== 'undefined' ) {
+			container.width = 'auto';
+			container.height = 'auto';
 			
-			body = update_message_element( body, pBody );
+			container.show( { parent: _GUI.layers.uiPriority, callback: callback, context: this } );
 			
-			body.show( { parent: container } );
+			// set width/height
 			
-		}
-		else {
+			if ( _Messenger.widthPctMax > 0 && container.width > shared.screenWidth * _Messenger.widthPctMax ) {
+				
+				container.width = Math.round( _Messenger.widthPctMax * 100 ) + '%';
+				
+			}
+			if ( _Messenger.heightPctMax > 0 && container.height > shared.screenHeight * _Messenger.heightPctMax ) {
+				
+				container.height = Math.round( _Messenger.heightPctMax * 100 ) + '%';
+				
+			}
 			
-			body.hide( { remove: true, time: 0 } );
+			// align
 			
-		}
-		
-		// if active message
-		
-		if ( active === true ) {
-			
-			_Game.pause( true );
-			
-			_GUI.transitioner.show( { opacity: parameters.transitionerOpacity } );
-		
-			callback = active_message_callback;
-			
-		}
-		else {
-			
-			callback = passive_message_callback;
-			
-		}
-		
-		// ui
-		
-		container.width = 'auto';
-		container.height = 'auto';
-		
-		container.show( { parent: _GUI.layers.uiPriority, callback: callback, callbackContext: this } );
-		
-		// set width/height
-		if ( title.width < body.width ) {
-			
-			container.width = title.width;
-			
-		}
-		
-		if ( _Messenger.widthPctMax > 0 && container.width > shared.screenWidth * _Messenger.widthPctMax ) {
-			
-			container.width = _Messenger.widthPctMax * 100 + '%';
-			
-		}
-		if ( _Messenger.heightPctMax > 0 && container.height > shared.screenHeight * _Messenger.heightPctMax ) {
-			
-			container.height = _Messenger.heightPctMax * 100 + '%';
+			container.align();
 			
 		}
-		
-		// align
-		
-		container.align();
 		
 	}
 	
 	function hide_message () {
+		
+		step_message_queue();
+		
+	}
+	
+	function hide_current_message ( callback ) {
 		
 		// signals
 		
@@ -283,51 +312,72 @@
 			
 		}
 		
-		// was active message
+		// was priority message
 		
-		if ( active === true ) {
+		if ( priority === true ) {
 			
-			active = false;
+			priority = false;
 			
-			_Game.resume();
+			if ( queue.length === 0 ) {
+				
+				_Game.resume();
+				
+			}
 			
 		}
 		
-		// confirm
-		
-		_Messenger.confirm.hide( { remove: true } );
-		
 		// container
 		
-		_Messenger.container.hide( { remove: true } );
+		_Messenger.container.hide( { 
+			remove: true,
+			callback: function () {
+				_Messenger.container.remove();
+				if ( typeof callback === 'function' ) { 
+					callback.call( _Messenger );
+				} 
+			}
+		} );
+		
+		active = false;
 		
 	}
 	
 	function update_message_element ( element, parameters ) {
 		
-		if ( typeof parameters === 'string' ) {
+		var type;
+		
+		// hide/remove previous
+		
+		element.remove();
+		
+		element.hide( { remove: true, time: 0 } );
+		
+		// handle parameters
+		
+		if ( parameters instanceof _UIElement.Instance ) {
+			
+			element = parameters;
+			
+		}
+		else if ( typeof parameters === 'string' ) {
 			
 			element.html = parameters;
 			
 		}
-		else if ( main.type( parameters ) === 'array' ) {
-			
-			element.remove();
-			
-			element.add.apply( element, parameters );
-			
-		}
 		else {
 			
-			// hide/remove previous
+			type = main.type( parameters );
 			
-			element.hide( { remove: true } );
-			
-			// create new
-			
-			parameters.id = 'title';
-			
-			element = new _UIElement.Instance( parameters );
+			if ( type === 'array' ) {
+				
+				element.add.apply( element, parameters );
+				
+			}
+			else if ( type === 'object' ) {
+				
+				element = new _UIElement.Instance( parameters );
+				
+			}
 			
 		}
 		
@@ -337,11 +387,11 @@
 	
 	/*===================================================
     
-    active
+    priority
     
     =====================================================*/
 	
-	function active_message_callback () {
+	function priority_message_callback () {
 		
 		_Messenger.confirm.pulse( { 
 			parent: _Messenger.container,

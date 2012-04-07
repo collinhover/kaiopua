@@ -757,6 +757,7 @@ var KAIOPUA = (function (main) {
     }
 
     function on_key_up( e ) {
+		
         shared.signals.keyup.dispatch( e );
         
         /*
