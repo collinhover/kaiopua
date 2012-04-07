@@ -87,10 +87,10 @@
 			right = ca.right,
 			forward = ca.forward;
 			
-		_ObjectHelper.expectedVertPosA = new THREE.Vector3( right.x * len, 0, forward.z * -len ),//( right.x * len, 0, -len ),
-		_ObjectHelper.expectedVertPosB = new THREE.Vector3( right.x * len, 0, forward.z * len ),//( right.x * len, 0, len ),
-		_ObjectHelper.expectedVertPosC = new THREE.Vector3( right.x * -len, 0, forward.z * len ),//( right.x * -len, 0, len ),
-		_ObjectHelper.expectedVertPosD = new THREE.Vector3( right.x * -len, 0, forward.z * -len );//( right.x * -len, 0, -len );
+		_ObjectHelper.expectedVertPosA = new THREE.Vector3( right.x * -len, 0, forward.z * len ),//( right.x * len, 0, forward.z * -len ),
+		_ObjectHelper.expectedVertPosB = new THREE.Vector3( right.x * -len, 0, forward.z * -len ),//( right.x * len, 0, forward.z * len ),
+		_ObjectHelper.expectedVertPosC = new THREE.Vector3( right.x * len, 0, forward.z * -len ),//( right.x * -len, 0, forward.z * len ),
+		_ObjectHelper.expectedVertPosD = new THREE.Vector3( right.x * len, 0, forward.z * len );//( right.x * -len, 0, forward.z * -len );
 		
 		_MathHelper = mh;
 		
@@ -260,10 +260,10 @@
 		
 	}
 	
-	function apply_quaternion ( object, quaternion, invisible ) {
+	function apply_quaternion ( object, quaternion, invisible, reverse ) {
 		
 		var matrix = utilMat41ApplyQ.setRotationFromQuaternion( quaternion ),
-			objectMatQ = utilQ1ApplyQ;
+			objectQ = utilQ1ApplyQ;
 			objectNewQ = utilQ2ApplyQ;
 		
 		// apply matrix to object
@@ -274,22 +274,40 @@
 		
 		if ( invisible === true && object instanceof THREE.Mesh ) {
 			
+			// get object quaternion
+			
 			if ( object.useQuaternion === true ) {
 				
-				// quaternion rotations
+				objectQ = object.quaternion;
 				
-				objectNewQ.multiply( quaternion.inverse(), object.quaternion );
+			}
+			else {
+				
+				objectQ.setFromRotationMatrix( object.matrix );
+				
+			}
+			
+			// multiply
+			
+			if ( reverse === true ) {
+				
+				objectNewQ.multiply( objectQ, quaternion.inverse() );
+				
+			}
+			else {
+				
+				objectNewQ.multiply( quaternion.inverse(), objectQ );
+				
+			}
+			
+			// apply
+			
+			if ( object.useQuaternion === true ) {
 				
 				object.quaternion.copy( objectNewQ );
 			
 			}
 			else {
-				
-				// matrix rotations
-				
-				objectMatQ.setFromRotationMatrix( object.matrix );
-				
-				objectNewQ.multiply( quaternion.inverse(), objectMatQ );
 				
 				object.matrix.setRotationFromQuaternion( objectNewQ );
 				
@@ -938,13 +956,15 @@
 		console.log(' angle ', angle, ' current axis ', currentAxis, ' + vectors ', vectors.v2, vectors.v3 );
 		vrotAvg.setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), angle );
 		
-		vrotAvgMat4.setRotationFromQuaternion( vrotAvg );
+		apply_quaternion( object, vrotAvg, true, true );
+		
+		//vrotAvgMat4.setRotationFromQuaternion( vrotAvg );
 		
 		// apply matrix to object
 		
-		apply_matrix( object, vrotAvgMat4 );
+		//apply_matrix( object, vrotAvgMat4 );
 		
-		objectQ.multiplySelf( vrotAvg.inverse() );
+		//objectQ.multiplySelf( vrotAvg.inverse() );
 		
 		//apply_quaternion( object, vrotAvg, true );
 		

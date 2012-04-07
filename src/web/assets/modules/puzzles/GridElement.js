@@ -215,9 +215,9 @@
 		if ( this.get_layout_node_total() > 1 ) {
 			
 			this.rotationAngle = this.rotationAngleLayout;
-			console.log( ' this.rotationAngle ', this.rotationAngle);
+			
 			angle = shared.cardinalAxes.right.x * this.rotationAngle;
-			console.log( ' angle ', angle);
+			
 			this.quaternion.setFromAxisAngle( rotationAxis, angle );
 			
 		}
@@ -226,7 +226,7 @@
 	
 	function rotate_layout ( angle, testModule ) {
 		
-		var angleDelta = angle - this.rotationAngleLayout,
+		var angleDelta = _MathHelper.shortest_rotation_between_angles( this.rotationAngleLayout, angle ),
 			layoutRotated,
 			safeRotation = true;
 		
@@ -252,7 +252,7 @@
 			
 			if ( safeRotation || testModule !== this.module ) {
 				
-				this.rotationAngleLayout = angle;
+				this.rotationAngleLayout += ( Math.PI * 0.5 ) * _MathHelper.round_towards_zero( angleDelta / ( Math.PI * 0.5 ) );
 				
 				this.layout = layoutRotated;
 				

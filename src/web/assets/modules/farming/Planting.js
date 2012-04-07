@@ -773,7 +773,7 @@
 			angleA = Math.atan2( ay, ax );
 			angleB = Math.atan2( by, bx );
 			
-			radians = angleA - angleB;
+			radians = _MathHelper.shortest_rotation_between_angles( angleB, angleA );
 			
 			// totals
 			

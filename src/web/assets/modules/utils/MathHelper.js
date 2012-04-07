@@ -68,6 +68,24 @@
 		
 	};
 	
+	_MathHelper.rad_between_PI = function ( n ) {
+		
+		var twopi = ( Math.PI * 2 );
+		
+		n = n % twopi;
+		
+		return ( n > Math.PI ) ? n - twopi : ( n < -Math.PI ) ? n + twopi : n;
+		
+	};
+	
+	_MathHelper.shortest_rotation_between_angles = function ( a1, a2 ) {
+		
+		var rot = a2 - a1;
+		
+		return ( rot > Math.PI ) ? rot - ( Math.PI * 2 ) : ( rot < -Math.PI ) ? rot + ( Math.PI * 2 ) : rot;
+		
+	};
+	
 	_MathHelper.degree_to_rad = function ( n ) {
 		
 		return n / 180 * Math.PI;
@@ -187,7 +205,7 @@
 		turns = _MathHelper.round_towards_zero( ( degrees % 360 ) / 90 );
 			
 		degrees = 90 * turns;
-		
+		console.log( 'rotate matrix, turns: ', turns, ' + degrees ', degrees );
 		// rotate matrix2d
 		
 		if ( turns !== 0 ) {
