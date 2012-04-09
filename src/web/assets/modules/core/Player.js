@@ -464,7 +464,7 @@
 				
 				case 'mousedown': case 'touchstart': type = 'keydown'; break;
 				case 'mouseup': case 'touchend': type = 'keyup'; break;
-				case 'mousewheel': button = 'mousewheel'; type = 'keyup'; break;
+				case 'mousewheel': case 'DOMMouseScroll' : button = 'mousewheel'; type = 'keyup'; break;
 				
 			}
 			

@@ -16,6 +16,7 @@
 		_Model,
 		_Physics,
 		_Field,
+		_Farming,
 		_ObjectMaker,
 		_Water,
 		_Sky;
@@ -33,10 +34,9 @@
 			"assets/modules/env/World.js",
 			"assets/modules/core/Model.js",
 			"assets/modules/core/Physics.js",
-			"assets/modules/farming/Field.js",
 			"assets/modules/utils/ObjectMaker.js",
 			"assets/modules/env/Water.js",
-			"assets/modules/env/Sky.js",
+			"assets/modules/env/Sky.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -48,7 +48,7 @@
     
     =====================================================*/
 	
-	function init_internal ( g, world, m, physics, f, om, w, sky ) {
+	function init_internal ( g, world, m, physics, om, w, sky ) {
 		console.log('internal world island');
 		
 		// assets
@@ -57,7 +57,6 @@
 		_World = world;
 		_Model = m;
 		_Physics = physics;
-		_Field = f;
 		_ObjectMaker = om;
 		_Water = w;
 		_Sky = sky;
@@ -394,23 +393,55 @@
 		
 		/*===================================================
 		
-		puzzles
+		fields
 		
 		=====================================================*/
 		
-		// puzzles
+		main.asset_require( [
+				"assets/modules/farming/Field.js",
+				"assets/modules/farming/Farming.js"
+			],
+			init_fields,
+			true
+		);
 		
-		me.parts.fieldTutorial = new _Field.Instance( {
-			id: 'Tutorial',
-			geometry: main.get_asset_data("assets/models/Field_Tutorial.js"),
-			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors, reflectivity: 0 } ),
-			grid: {
-				modulesGeometry: main.get_asset_data("assets/models/Field_Tutorial_Grid.js")
-			},
-			numElementsMin: 25
-		});
-		
-		me.parts.body.add( me.parts.fieldTutorial );
+		function init_fields ( fld, frm ) {
+			
+			_Field = fld;
+			_Farming = frm;
+			
+			// tutorial
+			
+			me.parts.fieldTutorial = new _Field.Instance( {
+				id: 'Tutorial',
+				geometry: main.get_asset_data("assets/models/Field_Tutorial.js"),
+				materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors, reflectivity: 0 } ),
+				grid: {
+					modulesGeometry: main.get_asset_data("assets/models/Field_Tutorial_Grid.js")
+				},
+				numElementsMin: 12,
+				rewards: [
+					{
+						image: shared.pathToIcons + 'plant_rev_64.png',
+						label: 'New Plant!',
+						callback: _Farming.give_plants,
+						context: _Farming,
+						data: 'taro_003'
+					},
+					false,
+					{
+						image: shared.pathToIcons + 'plant_rev_64.png',
+						label: 'New Plant!',
+						callback: _Farming.give_plants,
+						context: _Farming,
+						data: 'rock'
+					}
+				]
+			});
+			
+			me.parts.body.add( me.parts.fieldTutorial );
+			
+		}
 		
 		// functions
 		

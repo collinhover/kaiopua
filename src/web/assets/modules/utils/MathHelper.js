@@ -189,8 +189,6 @@
 			
 		}
 		
-		console.log( 'matrix', matrix, ' decomposed rot', matrix.decompose()[1] );
-		
 		return matrix;
 		
 	};
@@ -205,7 +203,7 @@
 		turns = _MathHelper.round_towards_zero( ( degrees % 360 ) / 90 );
 			
 		degrees = 90 * turns;
-		console.log( 'rotate matrix, turns: ', turns, ' + degrees ', degrees );
+		
 		// rotate matrix2d
 		
 		if ( turns !== 0 ) {

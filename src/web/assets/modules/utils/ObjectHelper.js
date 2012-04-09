@@ -877,7 +877,6 @@
 			npb = utilVec32Normalize,
 			npc = utilVec33Normalize,
 			npd = utilVec34Normalize,
-			vrotAvgVec4 = utilVec41Normalize.set( 0, 0, 0, 0 ),
 			vrotAvg = utilQ1Normalize,
 			ca = shared.cardinalAxes,
 			dist,
@@ -904,10 +903,6 @@
 			dist = _MathHelper.clamp( npc.dot( epc ), -1, 1 );
 			angle += Math.acos( dist );
 			
-			//vrotAvgVec4.addSelf( q_to_axis( npa, epa ) );
-			//vrotAvgVec4.addSelf( q_to_axis( npb, epb ) );
-			//vrotAvgVec4.addSelf( q_to_axis( npc, epc ) );
-			
 			if ( face instanceof THREE.Face4 ) {
 				
 				vpd = vertices[ face.d ].position;
@@ -916,57 +911,20 @@
 				
 				dist = _MathHelper.clamp( npd.dot( epd ), -1, 1 );
 				angle += Math.acos( dist );
-				//vrotAvgVec4.addSelf( q_to_axis( npd, epd ) );
 				
 			}
 			
-			/*
-			console.log(' epa', epa.x.toFixed(4), epa.y.toFixed(4), epa.z.toFixed(4) );
-			console.log(' > npa', npa.x.toFixed(4), npa.y.toFixed(4), npa.z.toFixed(4) );
-			console.log(' epb', epb.x.toFixed(4), epb.y.toFixed(4), epb.z.toFixed(4) );
-			console.log(' > npb', npb.x.toFixed(4), npb.y.toFixed(4), npb.z.toFixed(4) );
-			console.log(' epc', epc.x.toFixed(4), epc.y.toFixed(4), epc.z.toFixed(4) );
-			console.log(' > npc', npc.x.toFixed(4), npc.y.toFixed(4), npc.z.toFixed(4) );
-			console.log(' epd', epd.x.toFixed(4), epd.y.toFixed(4), epd.z.toFixed(4) );
-			console.log(' > npd', npd.x.toFixed(4), npd.y.toFixed(4), npd.z.toFixed(4) );
-			*/
-			
 		}
-		/*
-		// find average
-		
-		vrotAvgVec4.normalize();
-		
-		// apply
-		
-		vrotAvg.copy( vrotAvgVec4 );
-		
-		apply_quaternion( object, vrotAvg, true );
-		*/
 	
 		// normalize angle
 		
 		angle = angle / Math.max( 1, vertices.length );
 		
-		var objectQ = object.quaternion,
-			vrotAvgMat4 = new THREE.Matrix4(),
-			currentAxis = new THREE.Vector3( objectQ.x / Math.sqrt( 1 - objectQ.w * objectQ.w), objectQ.y / Math.sqrt( 1 - objectQ.w * objectQ.w ), objectQ.z / Math.sqrt( 1 - objectQ.w * objectQ.w ) ),
-			vectors = _MathHelper.get_orthonormal_vectors( currentAxis );
-			
-		console.log(' angle ', angle, ' current axis ', currentAxis, ' + vectors ', vectors.v2, vectors.v3 );
-		vrotAvg.setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), angle );
+		// apply
+		
+		vrotAvg.setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), angle - Math.PI * 0.5 );
 		
 		apply_quaternion( object, vrotAvg, true, true );
-		
-		//vrotAvgMat4.setRotationFromQuaternion( vrotAvg );
-		
-		// apply matrix to object
-		
-		//apply_matrix( object, vrotAvgMat4 );
-		
-		//objectQ.multiplySelf( vrotAvg.inverse() );
-		
-		//apply_quaternion( object, vrotAvg, true );
 		
 		/*
 		var vectors = _MathHelper.get_orthonormal_vectors( normalAvg.clone() ),

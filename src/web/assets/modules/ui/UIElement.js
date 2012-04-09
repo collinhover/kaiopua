@@ -38,7 +38,19 @@
 	
 	function init_internal () {
 		console.log('internal ui element', _UIElement);
-		// public
+		// properties
+		
+		_UIElement.timeShow = 500;
+		_UIElement.timeHide = 500;
+		
+		_UIElement.sizes = {};
+		_UIElement.sizes.iconLargeContainer = 100;
+		_UIElement.sizes.iconMediumContainer = 60;
+		_UIElement.sizes.iconSmallContainer = 32;
+		_UIElement.sizes.iconLarge = 64;
+		_UIElement.sizes.iconMedium = 32;
+		_UIElement.sizes.iconSmall = 16;
+		_UIElement.sizes.spacing = 10;
 		
 		_UIElement.generate_dom_element = generate_dom_element;
 		_UIElement.generate_tool_tip = generate_tool_tip;
@@ -365,11 +377,7 @@
 					
 					this._alignment = location.toLowerCase();
 					
-					if ( this.alignmentGuide instanceof _UIElement.Instance !== true ) {
-						
-						shared.signals.windowresized.add( this.align, this );
-						
-					}
+					shared.signals.windowresized.add( this.align, this );
 					
 					this.align();
 					
@@ -378,11 +386,7 @@
 					
 					this._alignment = false;
 					
-					if ( this.alignmentGuide instanceof _UIElement.Instance !== true ) {
-						
-						shared.signals.windowresized.remove( this.align, this );
-						
-					}
+					shared.signals.windowresized.remove( this.align, this );
 					
 				}
 				
@@ -411,13 +415,70 @@
 			get : function () { return this._pointerEvents; },
 			set : function ( state ) {
 				
-				var me = this;
-				
 				if ( typeof state === 'boolean' && ( this.hasOwnProperty( '_pointerEvents' ) !== true || this.pointerEvents !== state ) ) {
 					
 					this._pointerEvents = state;
 					
 					this.set_pointer_events( this._pointerEvents );
+					
+				}
+				
+			}
+		} );
+		
+		Object.defineProperty( _UIElement.Instance.prototype, 'indicator', { 
+			get : function () { return this._indicator; },
+			set : function ( state ) {
+				
+				var me = this;
+				
+				// show indicator
+				
+				if ( state === true ) {
+					
+					// if needs indicator
+					
+					if ( this._indicator instanceof _UIElement.Instance === false  ) {
+						
+						var indicatorImage = new _UIElement.Instance( {
+							elementType: 'img',
+							src: shared.pathToIcons + 'alertcircle_64.png',
+							size: _UIElement.sizes.iconSmall,
+							pointerEvents: false
+						} );
+						indicatorImage.align_once( 'center' );
+						
+						this._indicator = new _UIElement.Instance( {
+							id: 'indicator',
+							size: _UIElement.sizes.iconSmallContainer,
+							circle: true,
+							theme: 'white',
+							pointerEvents: false,
+							alignment: 'topleft',
+							alignmentGuide: this,
+							spacingTop: -_UIElement.sizes.iconSmallContainer * 0.25,
+							spacingLeft: -_UIElement.sizes.iconSmallContainer * 0.25
+						} );
+						
+						this._indicator.add( indicatorImage );
+						
+					}
+					
+					this._indicator.pulse( { parent: this } );
+					
+					this.domElement.on( 'mouseenter.indicator touchenter.indicator mousedown.indicator touchstart.indicator mouseup.indicator touchend.indicator', function () { me.indicator = false } );
+					
+				}
+				// default to off
+				else {
+					
+					if ( this._indicator instanceof _UIElement.Instance ) {
+						
+						this.domElement.off( '.indicator' );
+						
+						this._indicator.hide( { remove: true, time: 0 } );
+						
+					}
 					
 				}
 				
@@ -553,8 +614,8 @@
 		
 		// properties
 		
-		this.timeShow = main.is_number( parameters.timeShow ) ? parameters.timeShow : 500;
-        this.timeHide = main.is_number( parameters.timeHide ) ? parameters.timeHide : 500;
+		this.timeShow = main.is_number( parameters.timeShow ) ? parameters.timeShow : _UIElement.timeShow;
+        this.timeHide = main.is_number( parameters.timeHide ) ? parameters.timeHide : _UIElement.timeHide;
 		
 		this.opacityShow = main.is_number( parameters.opacityShow ) ? parameters.opacityShow : 1;
 		
@@ -678,6 +739,15 @@
 						child.parent = this;
 						
 					}
+					
+				}
+				
+				// if child adding after this already showing
+				// and child is not hidden + never been shown
+				
+				if ( this.isVisible === true && child.hidden === false && child.hasOwnProperty( 'showing' ) === false ) {
+					
+					child.show( { time: 0 } );
 					
 				}
 				
@@ -1239,22 +1309,26 @@
 		
 	}
 	
-	function align_once ( alignment ) {
+	function align_once ( alignment, outside, guide ) {
 		
 		if ( this.isVisible ) {
 			
+			// align
+			
+			this.alignmentOutside = outside;
+			this.alignmentGuide = guide;
 			this.alignment = alignment;
 			
-			this.alignment = false;
+			// reset
+			
+			this.alignmentOutside = this.alignmentGuide = this.alignment = false;
 			
 		}
 		else {
 			
 			this.signalOnVisible.addOnce( function () {
 				
-				this.alignment = alignment;
-				
-				this.alignment = false;
+				this.align_once( alignment, outside, guide );
 				
 			}, this );
 			
@@ -1270,13 +1344,13 @@
 	
 	function show ( parameters ) {
 		
-		var domElement,
+		var me = this,
+			domElement,
 			parent,
 			time,
 			opacity,
 			callback,
-			context,
-			fadeCallback;
+			context;
 		//console.log( this.id, 'SHOW');
 		// handle parameters
 		
@@ -1293,13 +1367,11 @@
 		callback = parameters.callback;
 		context = parameters.context;
 		
-		fadeCallback = function () { if ( typeof callback !== 'undefined' ) { callback.call( context ); } };
-		
 		// if dom element passed
 		
 		if ( domElement ) {
 			
-			domElement.stop( true ).fadeTo( time, opacity, fadeCallback );
+			domElement.stop( true ).fadeTo( time, opacity, function () { on_show( domElement, callback, context ) } );
 			
 		}
 		// else use own
@@ -1317,7 +1389,9 @@
 				
 			}
 			
-			// set hidden
+			// showing
+			
+			this.showing = true;
 				
 			this.hidden = this.hiding = false;
 			
@@ -1329,14 +1403,30 @@
 			
 			if ( this.domElement.css( 'opacity' ) !== opacity ) {
 				
-				this.domElement.stop( true ).fadeTo( time, opacity, fadeCallback );
+				this.domElement.stop( true ).fadeTo( time, opacity, function () { on_show( me, callback, context ) } );
 				
 			}
 			else {
 				
-				fadeCallback();
+				on_show( me, callback, context );
 				
 			}
+			
+		}
+		
+	}
+	
+	function on_show ( target, callback, context ) {
+		
+		if ( target instanceof _UIElement.Instance ) {
+			
+			target.showing = false;
+			
+		}
+		
+		if ( typeof callback !== 'undefined' ) {
+			
+			callback.call( context );
 			
 		}
 		
@@ -1383,6 +1473,8 @@
 			
 			// hiding
 			
+			this.showing = false;
+			
 			this.hiding = true;
 			
 			// hide
@@ -1402,26 +1494,26 @@
 		
 	}
 	
-	function on_hidden ( hideTarget, callback, context, remove ) {
+	function on_hidden ( target, callback, context, remove ) {
 		
-		if ( hideTarget instanceof _UIElement.Instance ) {
+		if ( target instanceof _UIElement.Instance ) {
 			
 			if ( remove === true ) {
 				
-				hideTarget.parent = undefined;
+				target.parent = undefined;
 				
 			}
 			
-			hideTarget.hidden = true;
+			target.hidden = true;
 			
-			hideTarget.hiding = false;
+			target.hiding = false;
 			
 		}
 		else {
 			
 			if ( remove === true ) {
 				
-				hideTarget.detach();
+				target.detach();
 				
 			}
 			

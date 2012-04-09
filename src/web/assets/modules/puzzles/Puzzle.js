@@ -152,13 +152,13 @@
 		
 		this.solve = function () {
 			
-			// if grid is full
+			// set solved
 			
-			if ( solved !== true ) {//&& this.grid.isFull === true ) {
-				
-				// set solved
-				
-				solved = true;
+			solved = this.grid.isFull;
+			
+			// if solved
+			
+			if ( solved === true ) {
 				
 				// add to list
 				

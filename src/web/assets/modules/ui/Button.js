@@ -39,6 +39,13 @@
 		
 		_UIElement = uie;
 		
+		// properties
+		
+		_Button.sizes = {};
+		_Button.sizes.buttonLarge = 300;
+		_Button.sizes.buttonMedium = 160;
+		_Button.sizes.buttonSmall = 100;
+		
 		// instance
 		
 		_Button.Instance = Button;

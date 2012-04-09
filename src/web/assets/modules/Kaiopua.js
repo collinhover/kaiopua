@@ -97,6 +97,7 @@ var KAIOPUA = (function (main) {
         shared.time = new Date().getTime();
         shared.timeLast = shared.time;
         shared.timeDeltaExpected = 1000 / 60;
+		shared.mouseWheelSpeed = 120;
 		
 		shared.multitouch = false;
         
@@ -143,7 +144,7 @@ var KAIOPUA = (function (main) {
         $(document).on( 'mousemove touchmove', on_mouse_move );
 		$(document).on( 'mouseenter touchenter', on_mouse_enter );
 		$(document).on( 'mouseleave touchleave', on_mouse_leave );
-        $(document).on( 'mousewheel', on_mouse_wheel );
+        $(document).on( 'mousewheel DOMMouseScroll', on_mouse_wheel );
 		$(shared.html.gameContainer).on( 'contextmenu', on_game_context_menu );
         
         $(document).on( 'keydown', on_key_down );
@@ -666,6 +667,14 @@ var KAIOPUA = (function (main) {
     }
     
     function on_mouse_wheel( e ) {
+		
+		var eo = e.originalEvent || e;
+		
+		// normalize scroll across browsers
+		// simple implementation, removes acceleration
+		
+		e.wheelDelta = eo.wheelDelta = ( ( eo.detail < 0 || eo.wheelDelta > 0 ) ? 1 : -1 ) * shared.mouseWheelSpeed;
+		
         shared.signals.mousewheel.dispatch( e );
         
         e.preventDefault();
@@ -729,7 +738,7 @@ var KAIOPUA = (function (main) {
 				mouse.x = x;
 				mouse.y = y;
 				
-				eCopy = $.extend( {}, e );
+				eCopy = main.extend( e, {} );
 				
 				eCopy.identifier = i;
 				

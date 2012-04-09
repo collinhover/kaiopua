@@ -52,6 +52,8 @@
 		_Menu.Instance.prototype.constructor = _Menu.Instance;
 		_Menu.Instance.prototype.supr = _Button.Instance.prototype;
 		
+		_Menu.Instance.prototype.add = add;
+		
 		_Menu.Instance.prototype.show = show;
 		_Menu.Instance.prototype.hide = hide;
 		
@@ -309,6 +311,22 @@
 		
 		this.arrangement = parameters.arrangement || 'line';
         
+	}
+	
+	/*===================================================
+    
+	add
+    
+    =====================================================*/
+	
+	function add () {
+		
+		// proto
+		
+		_Menu.Instance.prototype.supr.add.apply( this, arguments );
+		
+		this.update_arrangement();
+		
 	}
 	
 	/*===================================================
@@ -654,7 +672,7 @@
 	
 	function update_arrangement () {
 		
-		if ( this.get_children_showing().length > 0 ) {
+		if ( this.isVisible && this.get_children_showing().length > 0 ) {
 			
 			this.set_arrangement( this.arrangement, this.arrangementParameters );
 			

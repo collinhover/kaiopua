@@ -328,7 +328,6 @@
 	function tween_properties ( parameters ) {
 		
 		var me = this,
-			tween,
 			time,
 			easing,
 			position = this.position,
