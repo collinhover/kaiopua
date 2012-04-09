@@ -163,8 +163,12 @@
 			face,
 			faceCopy,
 			vertices,
-			verticesFromFace,
+			faceUvs,
+			faceVertexUvs,
+			faceVerticesUvs,
 			moduleGeometry,
+			moduleVertexUvs,
+			moduleInstance,
 			module;
 		
 		// handle parameters
@@ -212,8 +216,9 @@
 			// create new module for each face
 			
 			faces = this.modulesGeometry.faces;
-			
 			vertices = this.modulesGeometry.vertices;
+			faceUvs = this.modulesGeometry.faceUvs[ 0 ];
+			faceVertexUvs = this.modulesGeometry.faceVertexUvs[ 0 ];
 			
 			for ( i = 0, l = faces.length; i < l; i++ ) {
 				
@@ -239,6 +244,35 @@
 				
 				moduleGeometry.faces.push( faceCopy );
 				
+				// UVs
+				
+				if ( faceUvs.length > i ) {
+					
+					moduleGeometry.faceUvs[ 0 ].push( faceUvs[ i ].clone() );
+					
+				}
+				
+				moduleVertexUvs = [];
+				
+				// if should clone uvs
+				
+				if ( parameters.modulesCloneUvs === true && faceVertexUvs.length > i ) {
+					
+					moduleVertexUvs.push( faceVertexUvs[ i ][ 0 ].clone(), faceVertexUvs[ i ][ 1 ].clone(), faceVertexUvs[ i ][ 2 ].clone() );
+					
+				}
+				else {
+					
+					moduleVertexUvs[ 0 ] = new THREE.UV( 0, 0 );
+					moduleVertexUvs[ 1 ] = new THREE.UV( 0, 1 );
+					moduleVertexUvs[ 2 ] = new THREE.UV( 1, 1 );
+					
+				}
+				
+				// add module vertex uvs (for just single face)
+				
+				moduleGeometry.faceVertexUvs[ 0 ][ 0 ] = moduleVertexUvs;
+				
 				// extras for face4
 				
 				if ( face instanceof THREE.Face4 ) {
@@ -247,11 +281,24 @@
 					
 					faceCopy.d = 3;
 					
+					if ( parameters.modulesCloneUvs === true && faceVertexUvs.length > i ) {
+						
+						moduleVertexUvs.push( faceVertexUvs[ i ][ 3 ].clone() );
+						
+					}
+					else {
+						
+						moduleVertexUvs[ 3 ] = new THREE.UV( 1, 0 );
+						
+					}
+					
 				}
 				
 				// init
 				
-				module = new _GridModule.Instance( { geometry: moduleGeometry } );
+				moduleInstance = typeof parameters.moduleInstance !== 'undefined' && parameters.moduleInstance.prototype instanceof _GridModule.Instance ? parameters.moduleInstance : _GridModule.Instance;
+				
+				module = new moduleInstance( { geometry: moduleGeometry } );
 				
 				// store
 				
@@ -266,10 +313,6 @@
 				module = this.modules[ i ];
 				
 				module.grid = this;
-				
-				// listen for signal
-				
-				module.occupiedStateChanged.add( this.module_occupation_changed, this );
 				
 			}
 			
@@ -612,8 +655,8 @@
 	=====================================================*/
 	
 	function module_occupation_changed ( module ) {
-		console.log('grid state change');
-		this.stateChanged.dispatch( this );
+		
+		this.stateChanged.dispatch( this, module );
 		
 	}
 	

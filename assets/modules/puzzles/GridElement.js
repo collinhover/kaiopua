@@ -226,13 +226,13 @@
 	
 	function rotate_layout ( angle, testModule ) {
 		
-		var angleDelta = angle - this.rotationAngleLayout,
+		var angleDelta = _MathHelper.shortest_rotation_between_angles( this.rotationAngleLayout, angle ),
 			layoutRotated,
 			safeRotation = true;
 		
 		// rotate layout by angleDelta
 		
-		layoutRotated = _MathHelper.rotate_matrix2d_90( this.layout, angleDelta );
+		layoutRotated = _MathHelper.rotate_matrix2d_90( this.layout, _MathHelper.rad_to_degree( angleDelta ) );
 		
 		// if layout was rotated
 		
@@ -252,7 +252,7 @@
 			
 			if ( safeRotation || testModule !== this.module ) {
 				
-				this.rotationAngleLayout = angle;
+				this.rotationAngleLayout += ( Math.PI * 0.5 ) * _MathHelper.round_towards_zero( angleDelta / ( Math.PI * 0.5 ) );
 				
 				this.layout = layoutRotated;
 				

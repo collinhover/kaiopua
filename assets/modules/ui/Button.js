@@ -39,6 +39,13 @@
 		
 		_UIElement = uie;
 		
+		// properties
+		
+		_Button.sizes = {};
+		_Button.sizes.buttonLarge = 300;
+		_Button.sizes.buttonMedium = 160;
+		_Button.sizes.buttonSmall = 100;
+		
 		// instance
 		
 		_Button.Instance = Button;
@@ -270,6 +277,7 @@
 		
 		cssmap = theme.cssmap = theme.cssmap || {};
 		
+		cssmap[ "display" ] = or[ "display" ] || "block";
 		cssmap[ "font-size" ] = or[ "font-size" ] || "24px";
 		cssmap[ "font-family" ] = or[ "font-family" ] || "'OpenSansRegular', Helmet, Freesans, sans-serif";
 		

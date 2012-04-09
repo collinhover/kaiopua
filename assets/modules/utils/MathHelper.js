@@ -68,6 +68,24 @@
 		
 	};
 	
+	_MathHelper.rad_between_PI = function ( n ) {
+		
+		var twopi = ( Math.PI * 2 );
+		
+		n = n % twopi;
+		
+		return ( n > Math.PI ) ? n - twopi : ( n < -Math.PI ) ? n + twopi : n;
+		
+	};
+	
+	_MathHelper.shortest_rotation_between_angles = function ( a1, a2 ) {
+		
+		var rot = a2 - a1;
+		
+		return ( rot > Math.PI ) ? rot - ( Math.PI * 2 ) : ( rot < -Math.PI ) ? rot + ( Math.PI * 2 ) : rot;
+		
+	};
+	
 	_MathHelper.degree_to_rad = function ( n ) {
 		
 		return n / 180 * Math.PI;
@@ -123,8 +141,6 @@
 		
 		v3.cross( v1, v2 );
 		
-		console.log( 'v1', v1, 'v2', v2, 'v3', v3 );
-		
 		return { v1: v1, v2: v2, v3: v3 };
 		
 	};
@@ -172,8 +188,6 @@
 			);
 			
 		}
-		
-		console.log( 'matrix', matrix, ' decomposed rot', matrix.decompose()[1] );
 		
 		return matrix;
 		

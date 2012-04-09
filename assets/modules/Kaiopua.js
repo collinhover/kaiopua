@@ -97,9 +97,14 @@ var KAIOPUA = (function (main) {
         shared.time = new Date().getTime();
         shared.timeLast = shared.time;
         shared.timeDeltaExpected = 1000 / 60;
+		shared.mouseWheelSpeed = 120;
 		
 		shared.multitouch = false;
-        
+		
+        shared.galleryMode = false;
+		shared.timeLastInteraction = 0;
+		shared.timeLastInteractionMax = 300000;
+		
         shared.html = {
             footerMenu: $('#footer_menu'),
             gameContainer: $('#game'),
@@ -143,7 +148,7 @@ var KAIOPUA = (function (main) {
         $(document).on( 'mousemove touchmove', on_mouse_move );
 		$(document).on( 'mouseenter touchenter', on_mouse_enter );
 		$(document).on( 'mouseleave touchleave', on_mouse_leave );
-        $(document).on( 'mousewheel', on_mouse_wheel );
+        $(document).on( 'mousewheel DOMMouseScroll', on_mouse_wheel );
 		$(shared.html.gameContainer).on( 'contextmenu', on_game_context_menu );
         
         $(document).on( 'keydown', on_key_down );
@@ -155,6 +160,10 @@ var KAIOPUA = (function (main) {
         $(window).on( 'resize', on_window_resize );
 		
 		window.onerror = on_error;
+		
+		// start updating
+		
+		
 		
 		// asset loader and setup
 		
@@ -554,6 +563,8 @@ var KAIOPUA = (function (main) {
 			shared.signals.mousedown.dispatch( e );
 			
 		}
+		
+		shared.timeLastInteraction = 0;
         
         e.preventDefault();
         e.stopPropagation();
@@ -577,6 +588,8 @@ var KAIOPUA = (function (main) {
 			shared.signals.mouseup.dispatch( e );
         
 		}
+		
+		shared.timeLastInteraction = 0;
 		
         e.preventDefault();
         e.stopPropagation();
@@ -609,6 +622,8 @@ var KAIOPUA = (function (main) {
 			shared.signals.mousemoved.dispatch( e );
 			
 		}
+		
+		shared.timeLastInteraction = 0;
         
         e.preventDefault();
         e.stopPropagation();
@@ -666,7 +681,17 @@ var KAIOPUA = (function (main) {
     }
     
     function on_mouse_wheel( e ) {
+		
+		var eo = e.originalEvent || e;
+		
+		// normalize scroll across browsers
+		// simple implementation, removes acceleration
+		
+		e.wheelDelta = eo.wheelDelta = ( ( eo.detail < 0 || eo.wheelDelta > 0 ) ? 1 : -1 ) * shared.mouseWheelSpeed;
+		
         shared.signals.mousewheel.dispatch( e );
+		
+		shared.timeLastInteraction = 0;
         
         e.preventDefault();
         e.stopPropagation();
@@ -729,7 +754,7 @@ var KAIOPUA = (function (main) {
 				mouse.x = x;
 				mouse.y = y;
 				
-				eCopy = $.extend( {}, e );
+				eCopy = main.extend( e, {} );
 				
 				eCopy.identifier = i;
 				
@@ -739,15 +764,21 @@ var KAIOPUA = (function (main) {
 			
 			lastGamma = gamma;
 			lastBeta = beta;
+			
+			shared.timeLastInteraction = 0;
             
             e.preventDefault();
             e.stopPropagation();
             return false;
         }
+		
     }
 
     function on_key_down( e ) {
+		
         shared.signals.keydown.dispatch( e );
+		
+		shared.timeLastInteraction = 0;
         
         /*
         e.preventDefault();
@@ -757,7 +788,10 @@ var KAIOPUA = (function (main) {
     }
 
     function on_key_up( e ) {
+		
         shared.signals.keyup.dispatch( e );
+		
+		shared.timeLastInteraction = 0;
         
         /*
         e.preventDefault();

@@ -13,6 +13,7 @@
 		_Planting = {},
 		_Game,
 		_GUI,
+		_Grid,
 		_Puzzle,
 		_GridModule,
 		_Plant,
@@ -34,6 +35,7 @@
 			"assets/modules/core/Game.js",
 			"assets/modules/ui/GUI.js",
 			"assets/modules/puzzles/Puzzle.js",
+			"assets/modules/puzzles/Grid.js",
 			"assets/modules/puzzles/GridModule.js",
 			"assets/modules/farming/Plant.js",
 			"assets/modules/utils/ObjectHelper.js",
@@ -49,12 +51,13 @@
     
     =====================================================*/
 	
-	function init_internal ( g, gui, pzl, gm, pl, oh, mh ) {
+	function init_internal ( g, gui, pzl, gr, gm, pl, oh, mh ) {
 		console.log('internal planting', _Planting);
 		
 		_Game = g;
 		_GUI = gui;
 		_Puzzle = pzl;
+		_Grid = gr;
 		_GridModule = gm;
 		_Plant = pl;
 		_ObjectHelper = oh;
@@ -480,6 +483,7 @@
 	
 	function stop () {
 		console.log('stop PLANTING!');
+		var field = this.field;
 		
 		// stop updating
 		
@@ -506,6 +510,15 @@
 		_GUI.layers.ui.show();
 		_GUI.layers.ui.set_pointer_events( false );
 		
+		// trigger field to check if solved
+		// deferring until after planting process clean
+		
+		if ( field instanceof _Puzzle.Instance ) {
+			
+			field.solve();
+			
+		}
+		
 	}
 	
 	/*===================================================
@@ -522,7 +535,7 @@
 			
 			// clear previous field grid
 			
-			if ( this.field instanceof _Field.Instance ) {
+			if ( this.field instanceof _Puzzle.Instance ) {
 				
 				this.field.grid.clean();
 				
@@ -565,11 +578,15 @@
 				
 				// get grid
 				
-				grid = module.grid;
+				if ( module.grid instanceof _Grid.Instance ) {
+					
+					grid = module.grid;
+					
+				}
 				
 				// get field
 				
-				field = module.puzzle;
+				field = grid.puzzle;
 				
 				console.log(' > PLANTING: intersected module is', module, ', with ', module.connectedList.length, ' connected modules', module.connected );
 				
@@ -756,7 +773,7 @@
 			angleA = Math.atan2( ay, ax );
 			angleB = Math.atan2( by, bx );
 			
-			radians = angleA - angleB;
+			radians = _MathHelper.shortest_rotation_between_angles( angleB, angleA );
 			
 			// totals
 			

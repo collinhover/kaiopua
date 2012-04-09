@@ -151,7 +151,7 @@ button {width: auto; overflow: visible;}
 
 /* new Linux- and Windows-friendly sans-serif font stack: http://mky.be/fontstack */
 body {
-	font-size: 15px;
+	font-size: 16px;
 	font-family:'OpenSansRegular', Helmet, Freesans, sans-serif;
 }
 
@@ -220,7 +220,7 @@ a:hover, a:active {
 }
 
 .text_small {
-	font-size: 13px;
+	font-size: 14px;
 }
 
 .text_large {
@@ -229,6 +229,88 @@ a:hover, a:active {
 
 .text_huge {
 	font-size: 30px;
+}
+
+/* grid
+-------------------------*/
+
+.grid {
+	display: table;
+	border-spacing: 10px;
+	margin: 0 auto;
+	padding: 5px;
+	color: #eeeeee;
+}
+
+.grid ul {
+	display: table-row;
+}
+
+.grid li {
+	display: table-cell;
+	padding: 10px;
+	text-align: center;
+}
+
+.grid_compartment {
+	border: 1px #dddddd solid; 
+	-moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border-radius: 5px;
+}
+
+.grid_cell_inner {
+	width: 100px;
+	margin: 0 auto;
+}
+
+.grid_cell_inner_circle {
+	width: 100px;
+	height: 100px;
+	-moz-border-radius: 50px;
+    -webkit-border-radius: 50px;
+    border-radius: 50px;
+	overflow: hidden;
+}
+
+.grid p {
+	margin: 5px 0;
+}
+
+.grid img {
+	margin: 0 auto;
+}
+
+/* score
+-------------------------*/
+
+.score_counter {
+	vertical-align: bottom;
+}
+
+.score_count {
+	font-family: Georgia, serif;
+	font-size: 32px;
+}
+
+.score_count_under {
+	color: #aaaaaa;
+	font-size: 20px;
+}
+
+.score_count_highlight {
+	color: #fcd700;
+}
+
+.score_label {
+	color: #aaaaaa;
+	font-size: 13px;
+}
+
+.score_divider {
+	width: 75%;
+	border: 1px #aaaaaa dotted;
+	margin: 5px auto;
 }
 
 /* info panel 

@@ -17,9 +17,8 @@
 		_ObjectHelper,
 		_Physics,
 		_GUI,
+		_Messenger,
 		_UIElement,
-		_Menu,
-		_Button,
 		_Launcher,
 		_Intro,
         renderer, 
@@ -45,14 +44,13 @@
 		utilRay1Selection,
 		utilVec31Selection,
 		sectionChangePauseTime = 500,
+		introMessageDelayTime = 2000,
 		dependencies = [
 			"assets/modules/utils/AssetLoader.js",
             "assets/modules/utils/ErrorHandler.js",
 		],
         assetsBasic = [
 			"assets/modules/ui/UIElement.js",
-			"assets/modules/ui/Button.js",
-			"assets/modules/ui/Menu.js",
 			"assets/modules/ui/GUI.js",
 			"assets/modules/utils/MathHelper.js",
             "js/lib/three/Three.js",
@@ -87,10 +85,10 @@
 			"assets/modules/core/Player.js",
 			"assets/modules/core/Model.js",
 			"assets/modules/core/CameraControls.js",
-			"assets/modules/ui/Messenger.js",
 			"assets/modules/ui/Button.js",
 			"assets/modules/ui/Menu.js",
 			"assets/modules/ui/Inventory.js",
+			"assets/modules/ui/Messenger.js",
 			"assets/modules/utils/ObjectMaker.js",
 			"assets/modules/utils/ObjectHelper.js",
 			"assets/modules/characters/Character.js",
@@ -107,6 +105,7 @@
 			"assets/modules/farming/Farming.js",
 			"assets/modules/farming/Planting.js",
 			"assets/modules/farming/Field.js",
+			"assets/modules/farming/Dirt.js",
 			"assets/modules/farming/Plant.js",
 			"assets/modules/sections/Intro.js",
             { path: "assets/models/Whale_Head.js", type: 'model' },
@@ -129,8 +128,9 @@
 			{ path: "assets/models/Palm_Trees.js", type: 'model' },
 			{ path: "assets/models/Kukui_Tree.js", type: 'model' },
 			{ path: "assets/models/Kukui_Trees.js", type: 'model' },
-			{ path: "assets/models/Taro_Plant.js", type: 'model' },
-			{ path: "assets/models/Taro_Plant_Double.js", type: 'model' },
+			{ path: "assets/models/Taro_Plant_001.js", type: 'model' },
+			{ path: "assets/models/Taro_Plant_002.js", type: 'model' },
+			{ path: "assets/models/Taro_Plant_003.js", type: 'model' },
 			{ path: "assets/models/Rock.js", type: 'model' },
 			{ path: "assets/models/Rock_Purple.js", type: 'model' },
 			{ path: "assets/models/Rock_Blue.js", type: 'model' },
@@ -142,13 +142,15 @@
 			{ path: "assets/models/Volcano_Rocks_004.js", type: 'model' },
 			{ path: "assets/models/Volcano_Rocks_005.js", type: 'model' },
 			{ path: "assets/models/Field_Tutorial.js", type: 'model' },
+			{ path: "assets/models/Field_Tutorial_Grid.js", type: 'model' },
 			"assets/textures/skybox_world_posx.jpg",
             "assets/textures/skybox_world_negx.jpg",
 			"assets/textures/skybox_world_posy.jpg",
             "assets/textures/skybox_world_negy.jpg",
 			"assets/textures/skybox_world_posz.jpg",
             "assets/textures/skybox_world_negz.jpg",
-            "assets/textures/waves_512.png"
+            "assets/textures/waves_512.png",
+            "assets/textures/dirt_128.jpg"
         ],
 		loadingHeader = 'Hold on, we need some stuff from Hawaii...',
 		loadingTips = [
@@ -476,7 +478,7 @@
 	function init_launcher ( l ) {
 		
 		_Launcher = l;
-		console.log('init launcher', _Launcher);
+		
 		set_section( _Launcher );
 		
 	}
@@ -489,67 +491,75 @@
 	
     function init_game () {
 		
-		var m = _GUI.menus,
-			b = _GUI.buttons;
-		
 		// assets
 		
 		_ObjectHelper = main.get_asset_data( "assets/modules/utils/ObjectHelper.js" );
-		_Button = main.get_asset_data( 'assets/modules/ui/Button.js' );
-		_Menu = main.get_asset_data( 'assets/modules/ui/Menu.js' );
+		_Messenger = main.get_asset_data( "assets/modules/ui/Messenger.js" );
 		
-		// ui
+		// build gui, and on complete init game ui
 		
-		m.start.childrenByID.play.callback = function () {
-			start_game();
-		};
-		m.start.childrenByID.play.context = this;
-		
-		m.main.childrenByID.resume.callback = function () {
-			resume();
-		};
-		m.main.childrenByID.resume.context = this;
-		
-		b.end.callback = function () {
-			stop_game();
-		};
-		b.end.context = this;
-		
-		b.mainMenu.callback = function () {
-			_Game.pause();
-		};
-		b.mainMenu.context = this;
-		
-		// menus
-		
-		m.start.alignment = 'center';
-		m.main.alignment = 'center';
-		
-		m.navigation.spacingBottom = 20;
-		m.navigation.alignment = 'bottomcenter';
-		
-		// setup ui groups
-		
-		_GUI.add_to_group( 'start', [
-			{ child: m.start, parent: _GUI.layers.ui },
-			{ child: m.footer, parent: _GUI.container }
-		] );
-		
-		_GUI.add_to_group( 'pause', [
-			{ child: m.main, parent: _GUI.layers.ui },
-			{ child: m.footer, parent: _GUI.container }
-		] );
-		
-		_GUI.add_to_group( 'ingame', [
-			{ child: m.navigation, parent: _GUI.layers.ui }
-		] );
-		
-		_GUI.add_to_group( 'constant', [ { child: b.fullscreenEnter, parent: _GUI.layers.ui } ] );
-		
-		// show initial groups
-		
-		_GUI.show_group( 'constant' );
-		_GUI.show_group( 'start' );
+		_GUI.build( function () {
+			
+			var l, m, b;
+			
+			// ui
+			
+			l = _GUI.layers;
+			m = _GUI.menus;
+			b = _GUI.buttons;
+			
+			m.start.childrenByID.play.callback = function () {
+				start_game();
+			};
+			m.start.childrenByID.play.context = this;
+			
+			m.main.childrenByID.resume.callback = function () {
+				resume();
+			};
+			m.main.childrenByID.resume.context = this;
+			
+			b.end.callback = function () {
+				stop_game();
+			};
+			b.end.context = this;
+			
+			b.mainMenu.callback = function () {
+				_Game.pause();
+			};
+			b.mainMenu.context = this;
+			
+			// menus
+			
+			m.start.alignment = 'center';
+			m.main.alignment = 'center';
+			
+			m.navigation.spacingBottom = 20;
+			m.navigation.alignment = 'bottomcenter';
+			
+			// setup ui groups
+			
+			_GUI.add_to_group( 'start', [
+				{ child: m.start, parent: l.ui },
+				{ child: m.footer, parent: _GUI.container }
+			] );
+			
+			_GUI.add_to_group( 'pause', [
+				{ child: m.main, parent: l.uiPriority },
+				{ child: m.footer, parent: _GUI.container }
+			] );
+			
+			_GUI.add_to_group( 'ingame', [
+				{ child: m.navigation, parent: l.ui }
+			] );
+			
+			_GUI.add_to_group( 'constant', [ { child: b.fullscreenEnter, parent: l.ui } ] );
+			
+			// show initial groups
+			
+			_GUI.show_group( 'constant' );
+			_GUI.show_group( 'start' );
+			
+		} );
 		
     }
 	
@@ -1032,6 +1042,27 @@
 			
 			_GUI.show_group( 'ingame' );
 			
+			// show intro messages
+			
+			window.requestTimeout( function () {
+				
+				_Messenger.show_message( { 
+					image: shared.pathToIcons + "character_rev_64.png",
+					title: "Hey, welcome to Kai 'Opua!",
+					body: _GUI.messages.gameplay,
+					priority: true,
+					transitionerOpacity: 0.9
+				} );
+				
+				_Messenger.show_message( {
+					title: "Here's how to play:",
+					body: _GUI.messages.controls,
+					priority: true,
+					transitionerOpacity: 0.9
+				} );
+				
+			}, introMessageDelayTime );
+			
 		} );
 		
 		// set started
@@ -1044,7 +1075,14 @@
 		
 		started = false;
 		
+		_GUI.hide_group( 'ingame', { remove: true } );
 		_GUI.hide_group( 'pause', { remove: true } );
+		
+		if ( _Messenger && _Messenger.active === true ) {
+			
+			_Messenger.hide_message( true );
+			
+		}
 		
 		// set launcher section
 		
@@ -1074,12 +1112,15 @@
 			
 			if ( started === true ) {
 				
-				_GUI.transitioner.show( { parent: _GUI.layers.overlayDisplay } );
+				_GUI.transitioner.show( { parent: _GUI.layers.overlayUI } );
 				
 				if ( preventDefault !== true ) {
 					
-					_GUI.hide_group( 'ingame', { remove: true, time: 0 } );
 					_GUI.show_group( 'pause' );
+					
+					// add listener for click on transitioner
+					
+					_GUI.transitioner.domElement.on( 'mouseup.resume touchend.resume', resume );
 					
 				}
 				
@@ -1089,10 +1130,6 @@
 				_GUI.transitioner.show( { parent: _GUI.layers.overlayAll } );
 				
 			}
-			
-			// add listener for click on transitioner
-			
-			_GUI.transitioner.domElement.on( 'mouseup.resume touchend.resume', resume );
 			
 			// signal
             
@@ -1110,14 +1147,13 @@
 		
         if ( paused === true && _ErrorHandler.errorState !== true ) {
 			
-			// add listener for click on transitioner
+			// ui
 			
 			_GUI.transitioner.domElement.off( '.resume' );
 			
 			if ( started === true ) {
 				
 				_GUI.hide_group( 'pause', { remove: true, time: 0 } );
-				_GUI.show_group( 'ingame' );
 				
 			}
 			
@@ -1141,7 +1177,7 @@
     	var timeDelta,
 			timeDeltaMod;
         
-        requestAnimationFrame( animate );
+        window.requestAnimationFrame( animate );
 		
 		// handle time
 		
@@ -1160,6 +1196,10 @@
 			timeDeltaMod = 1;
 			
 		}
+		
+		// update time since last interaction
+		
+		shared.timeLastInteraction += timeDelta;
 		
 		// update
 		
@@ -1185,6 +1225,14 @@
 			
 		}
 		
+		// handle gallery mode
+		
+		if ( shared.galleryMode === true && started === true && shared.timeLastInteraction >= shared.timeLastInteractionMax ) {
+			
+			stop_game();
+			
+		}
+			
     }
 	
 	function render() {

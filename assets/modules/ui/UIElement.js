@@ -38,7 +38,19 @@
 	
 	function init_internal () {
 		console.log('internal ui element', _UIElement);
-		// public
+		// properties
+		
+		_UIElement.timeShow = 500;
+		_UIElement.timeHide = 500;
+		
+		_UIElement.sizes = {};
+		_UIElement.sizes.iconLargeContainer = 100;
+		_UIElement.sizes.iconMediumContainer = 60;
+		_UIElement.sizes.iconSmallContainer = 32;
+		_UIElement.sizes.iconLarge = 64;
+		_UIElement.sizes.iconMedium = 32;
+		_UIElement.sizes.iconSmall = 16;
+		_UIElement.sizes.spacing = 10;
 		
 		_UIElement.generate_dom_element = generate_dom_element;
 		_UIElement.generate_tool_tip = generate_tool_tip;
@@ -365,11 +377,7 @@
 					
 					this._alignment = location.toLowerCase();
 					
-					if ( this.alignmentGuide instanceof _UIElement.Instance !== true ) {
-						
-						shared.signals.windowresized.add( this.align, this );
-						
-					}
+					shared.signals.windowresized.add( this.align, this );
 					
 					this.align();
 					
@@ -378,11 +386,7 @@
 					
 					this._alignment = false;
 					
-					if ( this.alignmentGuide instanceof _UIElement.Instance !== true ) {
-						
-						shared.signals.windowresized.remove( this.align, this );
-						
-					}
+					shared.signals.windowresized.remove( this.align, this );
 					
 				}
 				
@@ -411,13 +415,70 @@
 			get : function () { return this._pointerEvents; },
 			set : function ( state ) {
 				
-				var me = this;
-				
 				if ( typeof state === 'boolean' && ( this.hasOwnProperty( '_pointerEvents' ) !== true || this.pointerEvents !== state ) ) {
 					
 					this._pointerEvents = state;
 					
 					this.set_pointer_events( this._pointerEvents );
+					
+				}
+				
+			}
+		} );
+		
+		Object.defineProperty( _UIElement.Instance.prototype, 'indicator', { 
+			get : function () { return this._indicator; },
+			set : function ( state ) {
+				
+				var me = this;
+				
+				// show indicator
+				
+				if ( state === true ) {
+					
+					// if needs indicator
+					
+					if ( this._indicator instanceof _UIElement.Instance === false  ) {
+						
+						var indicatorImage = new _UIElement.Instance( {
+							elementType: 'img',
+							src: shared.pathToIcons + 'alertcircle_64.png',
+							size: _UIElement.sizes.iconSmall,
+							pointerEvents: false
+						} );
+						indicatorImage.align_once( 'center' );
+						
+						this._indicator = new _UIElement.Instance( {
+							id: 'indicator',
+							size: _UIElement.sizes.iconSmallContainer,
+							circle: true,
+							theme: 'white',
+							pointerEvents: false,
+							alignment: 'topleft',
+							alignmentGuide: this,
+							spacingTop: -_UIElement.sizes.iconSmallContainer * 0.25,
+							spacingLeft: -_UIElement.sizes.iconSmallContainer * 0.25
+						} );
+						
+						this._indicator.add( indicatorImage );
+						
+					}
+					
+					this._indicator.pulse( { parent: this } );
+					
+					this.domElement.on( 'mouseenter.indicator touchenter.indicator mousedown.indicator touchstart.indicator mouseup.indicator touchend.indicator', function () { me.indicator = false } );
+					
+				}
+				// default to off
+				else {
+					
+					if ( this._indicator instanceof _UIElement.Instance ) {
+						
+						this.domElement.off( '.indicator' );
+						
+						this._indicator.hide( { remove: true, time: 0 } );
+						
+					}
 					
 				}
 				
@@ -553,8 +614,8 @@
 		
 		// properties
 		
-		this.timeShow = main.is_number( parameters.timeShow ) ? parameters.timeShow : 500;
-        this.timeHide = main.is_number( parameters.timeHide ) ? parameters.timeHide : 500;
+		this.timeShow = main.is_number( parameters.timeShow ) ? parameters.timeShow : _UIElement.timeShow;
+        this.timeHide = main.is_number( parameters.timeHide ) ? parameters.timeHide : _UIElement.timeHide;
 		
 		this.opacityShow = main.is_number( parameters.opacityShow ) ? parameters.opacityShow : 1;
 		
@@ -681,6 +742,15 @@
 					
 				}
 				
+				// if child adding after this already showing
+				// and child is not hidden + never been shown
+				
+				if ( this.isVisible === true && child.hidden === false && child.hasOwnProperty( 'showing' ) === false ) {
+					
+					child.show( { time: 0 } );
+					
+				}
+				
 			}
 			// else if is number, assume is order for previous child
 			if ( i > 0 && main.is_number( argument ) ) {
@@ -708,10 +778,10 @@
 		
 		children = ( arguments.length > 0 ? arguments : this.children );
 		
-		for ( i = 0, l = children.length; i < l; i ++) {
+		for ( i = children.length - 1, l = 0; i >= l; i-- ) {
 			
 			child = children[ i ];
-			//console.log(this.id, 'removing', child.id );
+			
 			index = this.children.indexOf( child );
 			
 			if ( index !== -1 ) {
@@ -736,15 +806,24 @@
 			
 			if ( child.parent === this ) {
 				
-				child.parent = child.parentLast;
+				child.parent = undefined;
 				
 			}
 			
 		}
 		
-		// sort children
-		
-		this.sort_children_by_order();
+		if ( children === this.children ) {
+			
+			this.domElement.empty();
+			
+		}
+		else {
+			
+			// sort children
+			
+			this.sort_children_by_order();
+			
+		}
 		
 	}
 	
@@ -835,12 +914,12 @@
 		else {
 			
 			// if last parent was ui element
-		
+			
 			if ( this.parentLast instanceof _UIElement.Instance ) {
 				
 				// if was on parent child list
 				
-				if ( this.parentLast.children.indexOf( this ) === -1 ) {
+				if ( this.parentLast.children.indexOf( this ) !== -1 ) {
 					
 					this.parentLast.remove( this );
 					
@@ -919,20 +998,6 @@
 		this.apply_css( this.theme.disabled );
 		
 		this.theme.stateLast = this.theme.disabled;
-		
-		/*
-		for ( i = 0, l = this.children.length; i < l; i++) {
-			
-			child = this.children[ i ];
-			
-			if ( child.parent === this ) {
-				console.log(this.id, 'disable child visual', child.id );
-				child.disable_visual();
-				
-			}
-			
-		}
-		*/
 		
 	}
 	
@@ -1244,22 +1309,26 @@
 		
 	}
 	
-	function align_once ( alignment ) {
+	function align_once ( alignment, outside, guide ) {
 		
 		if ( this.isVisible ) {
 			
+			// align
+			
+			this.alignmentOutside = outside;
+			this.alignmentGuide = guide;
 			this.alignment = alignment;
 			
-			this.alignment = false;
+			// reset
+			
+			this.alignmentOutside = this.alignmentGuide = this.alignment = false;
 			
 		}
 		else {
 			
 			this.signalOnVisible.addOnce( function () {
 				
-				this.alignment = alignment;
-				
-				this.alignment = false;
+				this.align_once( alignment, outside, guide );
 				
 			}, this );
 			
@@ -1275,13 +1344,13 @@
 	
 	function show ( parameters ) {
 		
-		var domElement,
+		var me = this,
+			domElement,
 			parent,
 			time,
 			opacity,
 			callback,
-			callbackContext,
-			fadeCallback;
+			context;
 		//console.log( this.id, 'SHOW');
 		// handle parameters
 		
@@ -1296,15 +1365,13 @@
 		opacity = main.is_number( parameters.opacity ) ? parameters.opacity : ( domElement ? 1 : this.opacityShow );
 		
 		callback = parameters.callback;
-		callbackContext = parameters.callbackContext;
-		
-		fadeCallback = function () { if ( typeof callback !== 'undefined' ) { callback.call( callbackContext ); } };
+		context = parameters.context;
 		
 		// if dom element passed
 		
 		if ( domElement ) {
 			
-			domElement.stop( true ).fadeTo( time, opacity, fadeCallback );
+			domElement.stop( true ).fadeTo( time, opacity, function () { on_show( domElement, callback, context ) } );
 			
 		}
 		// else use own
@@ -1313,7 +1380,7 @@
 			// set parent
 			
 			if ( this.parent !== parent ) {
-			
+				
 				this.parent = parent;
 				
 				// show children
@@ -1322,7 +1389,9 @@
 				
 			}
 			
-			// set hidden
+			// showing
+			
+			this.showing = true;
 				
 			this.hidden = this.hiding = false;
 			
@@ -1334,14 +1403,30 @@
 			
 			if ( this.domElement.css( 'opacity' ) !== opacity ) {
 				
-				this.domElement.stop( true ).fadeTo( time, opacity, fadeCallback );
+				this.domElement.stop( true ).fadeTo( time, opacity, function () { on_show( me, callback, context ) } );
 				
 			}
 			else {
 				
-				fadeCallback();
+				on_show( me, callback, context );
 				
 			}
+			
+		}
+		
+	}
+	
+	function on_show ( target, callback, context ) {
+		
+		if ( target instanceof _UIElement.Instance ) {
+			
+			target.showing = false;
+			
+		}
+		
+		if ( typeof callback !== 'undefined' ) {
+			
+			callback.call( context );
 			
 		}
 		
@@ -1355,7 +1440,7 @@
 			time,
 			opacity,
 			callback,
-			callbackContext;
+			context;
 		//console.log( this.id, 'HIDE' );
 		// handle parameters
 		
@@ -1370,13 +1455,13 @@
 		opacity = main.is_number( parameters.opacity ) ? parameters.opacity : 0;
 		
 		callback = parameters.callback;
-		callbackContext = parameters.callbackContext;
+		context = parameters.context;
 		
 		// if dom element passed
 		
 		if ( domElement ) {
 			
-			domElement.stop( true ).fadeTo( time, opacity, function () { on_hidden( domElement, callback, callbackContext, remove ); } );
+			domElement.stop( true ).fadeTo( time, opacity, function () { on_hidden( domElement, callback, context, remove ); } );
 			
 		}
 		// else use own
@@ -1388,18 +1473,20 @@
 			
 			// hiding
 			
+			this.showing = false;
+			
 			this.hiding = true;
 			
 			// hide
 			
 			if ( this.domElement.css( 'opacity' ) !== opacity ) {
 				
-				this.domElement.stop( true ).fadeTo( time, opacity, function () { on_hidden( me, callback, callbackContext, remove ); } );
+				this.domElement.stop( true ).fadeTo( time, opacity, function () { on_hidden( me, callback, context, remove ); } );
 				
 			}
 			else {
 				
-				on_hidden( this, callback, callbackContext, remove );
+				on_hidden( this, callback, context, remove );
 				
 			}
 			
@@ -1407,26 +1494,26 @@
 		
 	}
 	
-	function on_hidden ( hideTarget, callback, callbackContext, remove ) {
+	function on_hidden ( target, callback, context, remove ) {
 		
-		if ( hideTarget instanceof _UIElement.Instance ) {
+		if ( target instanceof _UIElement.Instance ) {
 			
 			if ( remove === true ) {
 				
-				hideTarget.parent = undefined;
+				target.parent = undefined;
 				
 			}
 			
-			hideTarget.hidden = true;
+			target.hidden = true;
 			
-			hideTarget.hiding = false;
+			target.hiding = false;
 			
 		}
 		else {
 			
 			if ( remove === true ) {
 				
-				hideTarget.detach();
+				target.detach();
 				
 			}
 			
@@ -1434,7 +1521,7 @@
 		
 		if ( typeof callback !== 'undefined' ) {
 			
-			callback.call( callbackContext );
+			callback.call( context );
 			
 		}
 		
@@ -1447,7 +1534,7 @@
 			opacityShow,
 			opacityHide,
 			callback,
-			callbackContext;
+			context;
 		
 		// handle parameters
 		
@@ -1481,10 +1568,10 @@
 						}
 						
 					},
-					callbackContext: this
+					context: this
 				} );
 			},
-			callbackContext: this
+			context: this
 		} );
 		
 	}
@@ -1559,7 +1646,6 @@
 			
 			children = this.sort_children_by_order( children );
 			
-			//console.log(this.id, 'SHOW children', children );
 			// show all
 			
 			for ( i = 0, l = children.length; i < l; i++ ) {
@@ -1839,6 +1925,7 @@
 		this.form = 'fullwindow';
 		
 		this.apply_css( {
+			"position": "absolute",
 			"min-height": "100%",
 			"width": "100%",
 			"height": "100%",
@@ -1933,15 +2020,6 @@
 		
 		if ( elementType === 'img' && typeof parameters.src === 'string' ) {
 			
-			/*
-			main.asset_require( parameters.src, function ( img ) {
-				
-				main.extend( img, domElement );
-				me.change_dom_element( img );
-				
-			} );
-			*/
-			domElement.onload = parameters.onload;
 			domElement.crossOrigin = '';
 			domElement.src = parameters.src;
 			
@@ -1957,7 +2035,7 @@
 		
 		// html
 		
-		if ( typeof parameters.html === 'string' ) {
+		if ( typeof parameters.html !== 'undefined' ) {
 			
 			domElement.html( parameters.html );
 			
@@ -1995,7 +2073,7 @@
 		if ( typeof tooltip.content !== 'undefined' ) {
 			
 			tooltip.defaultPosition = tooltip.defaultPosition || 'top';
-			tooltip.maxWidth = tooltip.maxWidth || 'auto';
+			tooltip.maxWidth = main.is_number( tooltip.maxWidth ) ? tooltip.maxWidth : 'auto';
 			tooltip.delay = tooltip.delay || 100;
 			tooltip.contentDisabled = '<br/><p class="disabled">' + ( tooltip.contentDisabled || '(disabled)' ) + '</p>';
 			tooltip.uielement = uielement;
@@ -2185,7 +2263,7 @@
 		cssmap = theme.cssmap = theme.cssmap || {};
 		
 		cssmap[ "position" ] = or[ "position" ] || "absolute";
-		cssmap[ "display" ] = or[ "display" ] || "block";
+		//cssmap[ "display" ] = or[ "display" ] || "block";
 		cssmap[ "transform-origin" ] = or[ "transform-origin" ] || "50% 50%";
 		
 		// state last

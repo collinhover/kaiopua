@@ -301,7 +301,7 @@
 		
 		if ( parameters.centerRotation === true ) {
 			
-			_ObjectHelper.object_center_rotation( this );
+			_ObjectHelper.center_rotation( this );
 			
 		}
 		
@@ -339,39 +339,11 @@
 		
 		if ( main.type( parameters ) === 'object' && main.is_number( parameters.time ) ) {
 			
-			// reusable tween
+			// if tweening already, stop
 			
-			if ( this.tween instanceof TWEEN.Tween !== true ) {
+			if ( this.tween instanceof TWEEN.Tween ) {
 				
-				this.tweenValues = {};
-				
-				this.tween = new TWEEN.Tween( this.tweenValues )
-					.onUpdate( function () {
-						
-						if ( me.tweening.position === true ) {
-							
-							me.position.set( me.tweenValues.px, me.tweenValues.py, me.tweenValues.pz );
-							
-						}
-						
-						if ( me.tweening.quaternion === true ) {
-							
-							me.quaternion.set( me.tweenValues.qx, me.tweenValues.qy, me.tweenValues.qz, me.tweenValues.qw );
-							
-						}
-						
-						if ( me.tweening.scale === true ) {
-							
-							me.scale.set( me.tweenValues.sx, me.tweenValues.sy, me.tweenValues.sz );
-							
-						}
-						
-					} );
-					/*.onComplete( function () {
-						
-						console.log(' tween complete ');
-					
-					} );*/
+				this.tween.stop();
 				
 			}
 			
@@ -384,6 +356,7 @@
 			scaleTo = parameters.scale;
 			
 			this.tweening = {};
+			this.tweenValues = {};
 			this.tweenTo = {};
 			
 			// position
@@ -442,8 +415,42 @@
 				
 			}
 			
-			this.tween.to( this.tweenTo, time ).easing( easing ).start();
+			// init tween
 			
+			this.tween = new TWEEN.Tween( this.tweenValues )
+				.to( this.tweenTo, time )
+				.easing( easing )
+				.onUpdate( function () {
+					
+					if ( me.tweening.position === true ) {
+						
+						me.position.set( me.tweenValues.px, me.tweenValues.py, me.tweenValues.pz );
+						
+					}
+					
+					if ( me.tweening.quaternion === true ) {
+						
+						me.quaternion.set( me.tweenValues.qx, me.tweenValues.qy, me.tweenValues.qz, me.tweenValues.qw );
+						
+					}
+					
+					if ( me.tweening.scale === true ) {
+						
+						me.scale.set( me.tweenValues.sx, me.tweenValues.sy, me.tweenValues.sz );
+						
+					}
+					
+				} )
+				.onComplete( function () {
+					
+					delete me.tweening;
+					delete me.tweenValues;
+					delete me.tweenTo
+					delete me.tween;
+				
+				} )
+				.start();
+				
 		}
 
 	}

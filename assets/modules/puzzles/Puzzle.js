@@ -13,7 +13,6 @@
 		_Puzzle = {},
 		_Model,
 		_Grid,
-		_Messenger,
 		puzzleID = 'Puzzle',
 		puzzleCount = 0,
 		allPuzzles,
@@ -30,8 +29,7 @@
 		data: _Puzzle,
 		requirements: [
 			"assets/modules/core/Model.js",
-			"assets/modules/puzzles/Grid.js",
-			"assets/modules/ui/Messenger.js"
+			"assets/modules/puzzles/Grid.js"
 		], 
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -43,13 +41,12 @@
 	
 	=====================================================*/
 	
-	function init_internal ( m, g, msg ) {
+	function init_internal ( m, g ) {
 		console.log('internal puzzles', _Puzzle);
 		_Model = m;
 		_Grid = g;
-		_Messenger = msg;
 		
-		// puzzles / modules list
+		// properties
 		
 		allPuzzles = [];
 		allPuzzlesSolved = [];
@@ -112,9 +109,7 @@
 	
 	function Puzzle ( parameters ) {
 		
-		var solved = false,
-			numElementsMin,
-			rewards;
+		var solved = false;
 		
 		puzzleCount++;
 		
@@ -132,8 +127,6 @@
 		// properties
 		
 		this.id = typeof parameters.id === 'string' ? parameters.id : puzzleID + puzzleCount;
-		rewards = parameters.rewards;
-		numElementsMin = parameters.numElementsMin;
 		
 		// init grid
 		
@@ -159,18 +152,13 @@
 		
 		this.solve = function () {
 			
-			var elements,
-				numElementsBase = this.grid.modules.length,
-				numElementsUsed,
-				numElementsDiff;
+			// set solved
 			
-			// if grid is full
-			console.log('puzzle solve?');
-			if ( solved !== true && this.grid.isFull === true ) {
-				
-				// set solved
-				
-				solved = true;
+			solved = this.grid.isFull;
+			
+			// if solved
+			
+			if ( solved === true ) {
 				
 				// add to list
 				
@@ -180,34 +168,9 @@
 					
 				}
 				
-				// get elements filling grid
-				
-				elements = this.grid.elements;
-				
-				numElementsUsed = elements.length;
-				
-				// compare num elements used to base num required
-				
-				numElementsDiff = numElementsBase - numElementsUsed;
-				
-				numElementsMin = main.is_number( numElementsMin ) && numElementsMin <= numElementsDiff ? numElementsMin : numElementsDiff;
-				
-				// send message notifying user of score
-				
-				_Messenger.show_message( { 
-					//image: shared.pathToIcons + 'alertcircle_64.png',
-					title: "Hurrah! You solved the " + this.id + " puzzle!",
-					body: "Looks like you only needed " + numElementsUsed + " out of " + numElementsBase + " elements! You beat the baseline score by " + numElementsDiff + " and are " + ( numElementsMin - numElementsDiff ) + " away from a perfect score!",
-					active: true
-				} );
-				
 			}
 			
 		};
-		
-		// signal
-		
-		this.grid.stateChanged.add( this.solve, this );
 		
 		// add to global list
 		

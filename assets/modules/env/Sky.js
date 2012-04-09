@@ -190,7 +190,7 @@
 					
 					child = children[ i ];
 					
-					this.bounds = _ObjectHelper.object_push_bounds( child, this.bounds );
+					this.bounds = _ObjectHelper.push_bounds( child, this.bounds );
 					
 				}
 				

@@ -35,7 +35,7 @@
 			"assets/modules/ui/Button.js",
 			"assets/modules/ui/GUI.js",
 			"assets/modules/utils/ObjectHelper.js",
-			{ path: "assets/models/Taro_Plant.js", type: 'model' }
+			{ path: "assets/models/Taro_Plant_001.js", type: 'model' }
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -70,7 +70,7 @@
 		_Plant.opacityVacantSeed = 0.9;
 		_Plant.opacityOccupied = 0.5;
 		_Plant.opacityOccupiedSeed = 0.9;
-		_Plant.opacityRotator = 0.85;
+		_Plant.opacityRotator = 0.5;
 		
 		// instance
 		
@@ -113,13 +113,20 @@
 			parameters.layout = [ [ 1 ] ];
 			
 		}
+		/*
+		parameters.layout = $M( [
+				[ Math.round( Math.random() ), Math.round( Math.random() ), Math.round( Math.random() ) ],
+				[ Math.round( Math.random() ), Math.round( Math.random() ), Math.round( Math.random() ) ],
+				[ Math.round( Math.random() ), Math.round( Math.random() ), Math.round( Math.random() ) ]
+			] );
+		*/
 		
 		parameters.materials = parameters.materials || new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } );
 		
 		// prototype constructor
 		
 		_GridElement.Instance.call( this, parameters );
-		
+		console.log(' new plant with geometry', this );
 		// properties
 		
 		this.timeGrow = main.is_number( parameters.timeGrow ) ? parameters.timeGrow : _Plant.timeGrow;
@@ -172,9 +179,9 @@
 			
 			parameters.id = parameters.id || 'plant_rotator';
 			parameters.image = parameters.image || shared.pathToIcons + 'rotate_64.png';
-			parameters.imageSize = main.is_number( parameters.imageSize ) ? parameters.imageSize : _GUI.sizes.iconLarge;
-			parameters.width = main.is_number( parameters.width ) ? parameters.width : _GUI.sizes.iconLargeContainer;
-			parameters.height = main.is_number( parameters.height ) ? parameters.height : _GUI.sizes.iconLargeContainer;
+			parameters.imageSize = main.is_number( parameters.imageSize ) ? parameters.imageSize : _UIElement.sizes.iconLarge;
+			parameters.width = main.is_number( parameters.width ) ? parameters.width : _UIElement.sizes.iconLargeContainer;
+			parameters.height = main.is_number( parameters.height ) ? parameters.height : _UIElement.sizes.iconLargeContainer;
 			parameters.timeShow = main.is_number( parameters.timeShow ) ? parameters.timeShow : _Plant.timeShow;
 			parameters.timeHide = main.is_number( parameters.timeHide ) ? parameters.timeHide : _Plant.timeHide;
 			parameters.opacityShow = main.is_number( parameters.opacityShow ) ? parameters.opacityShow : _Plant.opacityRotator;
@@ -230,9 +237,9 @@
 			
 			parameters.id = parameters.id || 'plant_seed';
 			parameters.image = parameters.image || shared.pathToIcons + 'plant_64.png';
-			parameters.imageSize = main.is_number( parameters.imageSize ) ? parameters.imageSize : _GUI.sizes.iconMedium;
-			parameters.width = main.is_number( parameters.width ) ? parameters.width : _GUI.sizes.iconMediumContainer;
-			parameters.height = main.is_number( parameters.height ) ? parameters.height : _GUI.sizes.iconMediumContainer;
+			parameters.imageSize = main.is_number( parameters.imageSize ) ? parameters.imageSize : _UIElement.sizes.iconMedium;
+			parameters.width = main.is_number( parameters.width ) ? parameters.width : _UIElement.sizes.iconMediumContainer;
+			parameters.height = main.is_number( parameters.height ) ? parameters.height : _UIElement.sizes.iconMediumContainer;
 			parameters.timeShow = main.is_number( parameters.timeShow ) ? parameters.timeShow : _Plant.timeShow;
 			parameters.timeHide = main.is_number( parameters.timeHide ) ? parameters.timeHide : _Plant.timeHide;
 			parameters.opacityShow = main.is_number( parameters.opacityShow ) ? parameters.opacityShow : _Plant.opacitySeed;

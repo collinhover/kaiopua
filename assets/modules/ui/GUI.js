@@ -13,7 +13,8 @@
 		_GUI = {},
 		_UIElement,
 		_Button,
-		_Menu;
+		_Menu,
+		ready = false;
 	
 	/*===================================================
     
@@ -24,9 +25,7 @@
 	main.asset_register( assetPath, { 
 		data: _GUI,
 		requirements: [
-			"assets/modules/ui/UIElement.js",
-			"assets/modules/ui/Button.js",
-			"assets/modules/ui/Menu.js"
+			"assets/modules/ui/UIElement.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -38,31 +37,25 @@
     
     =====================================================*/
 	
-	function init_internal ( uie, btn, mn ) {
+	function init_internal ( uie ) {
 		console.log('internal gui', _GUI);
 		
 		_UIElement = uie;
-		_Button = btn;
-		_Menu = mn;
 		
 		// properties
-		_GUI.sizes = {};
-		_GUI.sizes.buttonLarge = 300;
-		_GUI.sizes.buttonMedium = 160;
-		_GUI.sizes.buttonSmall = 100;
-		_GUI.sizes.iconLargeContainer = 100;
-		_GUI.sizes.iconMediumContainer = 60;
-		_GUI.sizes.iconSmallContainer = 40;
-		_GUI.sizes.iconLarge = 64;
-		_GUI.sizes.iconMedium = 32;
-		_GUI.sizes.iconSmall = 16;
-		_GUI.sizes.buttonSpacing = 10;
+		
+		_GUI.layers = {};
+		_GUI.buttons = {};
+		_GUI.menus = {};
+		_GUI.messages = {};
 		
 		_GUI.active = [];
 		_GUI.groups = {};
 		_GUI.groupsNames = [];
 		
 		// functions
+		
+		_GUI.build = build;
 		
 		_GUI.generate_button_back = generate_button_back;
 		_GUI.generate_button_close = generate_button_close;
@@ -133,59 +126,6 @@
 		
 		init_core();
 		
-		init_layers();
-		
-		init_buttons();
-		
-		init_menus();
-		
-		// build
-		
-		build_gui();
-		
-	}
-	
-	/*===================================================
-    
-    close / back
-    
-    =====================================================*/
-	
-	function generate_button_back () {
-		
-		var button = new _Button.Instance( {
-			id: 'close',
-			image: shared.pathToIcons + 'undo_64.png',
-			imageSize: _GUI.sizes.iconSmall,
-			width: _GUI.sizes.iconSmallContainer,
-			tooltip: 'Go Back',
-			spacingRight: _GUI.sizes.iconMediumContainer * 0.5 + _GUI.sizes.buttonSpacing,
-			alignment: 'rightcenter',
-			alignmentOutside: true,
-			circle: true,
-			theme: 'red'
-		} );
-		
-		return button;
-		
-	}
-	
-	function generate_button_close () {
-		
-		var button = new _Button.Instance( {
-			id: 'close',
-			image: shared.pathToIcons + 'close_64.png',
-			imageSize: _GUI.sizes.iconSmall,
-			width: _GUI.sizes.iconSmallContainer,
-			spacing: 0,
-			alignment: 'righttop',
-			alignmentOutside: true,
-			circle: true,
-			theme: 'red'
-		} );
-		
-		return button;
-		
 	}
 	
 	/*===================================================
@@ -195,6 +135,9 @@
     =====================================================*/
 	
 	function init_core () {
+		
+		var l = _GUI.layers,
+			m = _GUI.menus;
 		
 		// container
 		
@@ -216,17 +159,18 @@
 			opacityShow: 0.75
         } );
 		
-	}
-	
-	/*===================================================
-    
-    layers
-    
-    =====================================================*/
-	
-	function init_layers() {
+		// footer
 		
-		var l = _GUI.layers = {};
+		m.footer = new _UIElement.Instance( { 
+			domElement: shared.html.footerMenu
+		} );
+		
+		m.footer.width = m.footer.domElement.width();
+		m.footer.height = m.footer.domElement.height();
+		m.footer.domElement.removeClass( 'sticky_footer' );
+		m.footer.alignment = 'bottomcenter';
+		
+		// layers
 		
 		l.display = new _UIElement.Instance( {
 			id: 'layer_display',
@@ -251,6 +195,12 @@
 			fullwindow: true
         } );
 		
+		l.overlayUI = new _UIElement.Instance( {
+			id: 'layer_overlayUI',
+			pointerEvents: false,
+			fullwindow: true
+        } );
+		
 		l.overlayAll = new _UIElement.Instance( {
 			id: 'layer_overlayAll',
 			pointerEvents: false,
@@ -263,6 +213,58 @@
 			fullwindow: true
 		} );
 		
+		// build core structure
+		
+		_GUI.container.add( l.display, l.overlayDisplay, l.ui, l.overlayUI, l.uiPriority, l.overlayAll, l.errors, _GUI.menus.footer );
+		
+	}
+	
+	/*===================================================
+    
+    build
+    
+    =====================================================*/
+	
+	function build ( callback ) {
+		
+		if ( ready !== true ) {
+			
+			ready = true;
+			
+			main.asset_require( [
+				"assets/modules/ui/Button.js",
+				"assets/modules/ui/Menu.js"
+			], [ build_basics, callback ] );
+			
+		}
+		
+	}
+	
+	function build_basics ( btn, mn) {
+		
+		_Button = btn;
+		_Menu = mn;
+		
+		// init
+		
+		init_buttons();
+		
+		init_menus();
+		
+		init_messages();
+		
+		// menus
+		
+		build_start_menu();
+		
+		build_navigation_menu();
+		
+		build_options_menu();
+		
+		build_end_menu();
+		
+		build_main_menu();
+		
 	}
 	
 	/*===================================================
@@ -273,17 +275,17 @@
 	
 	function init_buttons() {
 		
-		var b = _GUI.buttons = {};
+		var b = _GUI.buttons;
 		
 		// fullscreen disabled until allows alphanumeric input
 		
 		b.fullscreenEnter = new _Button.Instance( {
 			id: 'fullscreenEnter',
 			image: shared.pathToIcons + 'fullscreen_32.png',
-			imageSize: _GUI.sizes.iconSmall,
-			size: _GUI.sizes.iconSmallContainer,
+			imageSize: _UIElement.sizes.iconSmall,
+			size: _UIElement.sizes.iconSmallContainer,
 			tooltip: 'Fullscreen',
-			spacing: _GUI.sizes.buttonSpacing,
+			spacing: _UIElement.sizes.spacing,
 			circle: true,
 			callback: fullscreen_enter,
 			context: this,
@@ -296,10 +298,10 @@
 		b.fullscreenExit = new _Button.Instance( {
 			id: 'fullscreenExit',
 			image: shared.pathToIcons + 'fullscreen_exit_32.png',
-			imageSize: _GUI.sizes.iconSmall,
-			size: _GUI.sizes.iconSmallContainer,
+			imageSize: _UIElement.sizes.iconSmall,
+			size: _UIElement.sizes.iconSmallContainer,
 			tooltip: 'Exit Fullscreen',
-			spacing: _GUI.sizes.buttonSpacing,
+			spacing: _UIElement.sizes.spacing,
 			circle: true,
 			callback: fullscreen_exit,
 			context: this,
@@ -313,20 +315,20 @@
 		b.end = new _Button.Instance( {
 			id: 'end',
 			image: shared.pathToIcons + 'confirm_64.png',
-			imageSize: _GUI.sizes.iconMedium,
-			size: _GUI.sizes.iconMediumContainer,
+			imageSize: _UIElement.sizes.iconMedium,
+			size: _UIElement.sizes.iconMediumContainer,
 			tooltip: 'Really Quit?',
-			spacing: _GUI.sizes.buttonSpacing,
+			spacing: _UIElement.sizes.spacing,
 			circle: true
 		} );
 		
 		b.save = new _Button.Instance( {
 			id: 'save',
 			image: shared.pathToIcons + 'save_64.png',
-			imageSize: _GUI.sizes.iconMedium,
-			size: _GUI.sizes.iconMediumContainer,
+			imageSize: _UIElement.sizes.iconMedium,
+			size: _UIElement.sizes.iconMediumContainer,
 			tooltip: 'Save progress',
-			spacing: _GUI.sizes.buttonSpacing,
+			spacing: _UIElement.sizes.spacing,
 			circle: true,
 			enabled: false
 		} );
@@ -334,13 +336,13 @@
 		b.load = new _Button.Instance( {
 			id: 'load',
 			image: shared.pathToIcons + 'load_64.png',
-			imageSize: _GUI.sizes.iconMedium,
-			size: _GUI.sizes.iconMediumContainer,
+			imageSize: _UIElement.sizes.iconMedium,
+			size: _UIElement.sizes.iconMediumContainer,
 			tooltip: {
 				content: 'Load a saved game',
 				contentDisabled: '(no save found!)'
 			},
-			spacing: _GUI.sizes.buttonSpacing,
+			spacing: _UIElement.sizes.spacing,
 			circle: true,
 			enabled: false
 		} );
@@ -348,20 +350,20 @@
 		b.mainMenu = new _Button.Instance( {
 			id: 'mainMenu',
 			image: shared.pathToIcons + 'computer_alt_64.png',
-			imageSize: _GUI.sizes.iconMedium,
-			size: _GUI.sizes.iconMediumContainer,
+			imageSize: _UIElement.sizes.iconMedium,
+			size: _UIElement.sizes.iconMediumContainer,
 			tooltip: 'Main Menu',
-			spacing: _GUI.sizes.buttonSpacing,
+			spacing: _UIElement.sizes.spacing,
 			circle: true
 		} );
 	
 		b.companionMenu = new _Button.Instance( {
 			id: 'companionMenu',
 			image: shared.pathToIcons + 'companion_64.png',
-			imageSize: _GUI.sizes.iconMedium,
-			size: _GUI.sizes.iconMediumContainer,
+			imageSize: _UIElement.sizes.iconMedium,
+			size: _UIElement.sizes.iconMediumContainer,
 			tooltip: 'Companions!',
-			spacing: _GUI.sizes.buttonSpacing,
+			spacing: _UIElement.sizes.spacing,
 			circle: true,
 			enabled: false
 		} );
@@ -369,10 +371,10 @@
 		b.houseMenu = new _Button.Instance( {
 			id: 'houseMenu',
 			image: shared.pathToIcons + 'home_64.png',
-			imageSize: _GUI.sizes.iconMedium,
-			size: _GUI.sizes.iconMediumContainer,
+			imageSize: _UIElement.sizes.iconMedium,
+			size: _UIElement.sizes.iconMediumContainer,
 			tooltip: 'House Parts',
-			spacing: _GUI.sizes.buttonSpacing,
+			spacing: _UIElement.sizes.spacing,
 			circle: true,
 			enabled: false
 		} );
@@ -380,13 +382,50 @@
 		b.map = new _Button.Instance( {
 			id: 'map',
 			image: shared.pathToIcons + 'whale_64.png',
-			imageSize: _GUI.sizes.iconMedium,
-			size: _GUI.sizes.iconMediumContainer,
+			imageSize: _UIElement.sizes.iconMedium,
+			size: _UIElement.sizes.iconMediumContainer,
 			tooltip: 'Map',
-			spacing: _GUI.sizes.buttonSpacing,
+			spacing: _UIElement.sizes.spacing,
 			circle: true,
 			enabled: false
 		} );
+		
+	}
+	
+	function generate_button_back () {
+		
+		var button = new _Button.Instance( {
+			id: 'close',
+			image: shared.pathToIcons + 'undo_64.png',
+			imageSize: _UIElement.sizes.iconSmall,
+			width: _UIElement.sizes.iconSmallContainer,
+			tooltip: 'Go Back',
+			spacingRight: _UIElement.sizes.iconMediumContainer * 0.5 + _UIElement.sizes.spacing,
+			alignment: 'rightcenter',
+			alignmentOutside: true,
+			circle: true,
+			theme: 'white'
+		} );
+		
+		return button;
+		
+	}
+	
+	function generate_button_close () {
+		
+		var button = new _Button.Instance( {
+			id: 'close',
+			image: shared.pathToIcons + 'close_64.png',
+			imageSize: _UIElement.sizes.iconSmall,
+			width: _UIElement.sizes.iconSmallContainer,
+			spacing: 0,
+			alignment: 'righttop',
+			alignmentOutside: true,
+			circle: true,
+			theme: 'red'
+		} );
+		
+		return button;
 		
 	}
 	
@@ -398,7 +437,7 @@
 	
 	function init_menus() {
 		
-		var m = _GUI.menus = {};
+		var m = _GUI.menus;
 		
 		// init
 		
@@ -422,10 +461,6 @@
 			id: 'end'
 		} );
 		
-		m.footer = new _UIElement.Instance( { 
-			domElement: shared.html.footerMenu
-		} );
-		
 	}
 	
 	function build_start_menu () {
@@ -440,8 +475,8 @@
 				id: 'play',
 				text: 'Play!',
 				theme: 'white',
-				size: _GUI.sizes.buttonMedium,
-				spacing: _GUI.sizes.buttonSpacing,
+				size: _Button.sizes.buttonMedium,
+				spacing: _UIElement.sizes.spacing,
 				circle: true,
 				cssmap: {
 					'font-size' : "30px",
@@ -457,7 +492,7 @@
 		
 		m.start.arrange_circle( {
 			degrees: 360,
-			radius: _GUI.sizes.buttonMedium + _GUI.sizes.buttonSpacing
+			radius: _Button.sizes.buttonMedium + _UIElement.sizes.spacing
 		} );
 		
 	}
@@ -473,8 +508,8 @@
 			new _Button.Instance( {
 				id: 'resume',
 				text: 'Resume',
-				width: _GUI.sizes.buttonMedium,
-				spacing: _GUI.sizes.buttonSpacing,
+				width: _Button.sizes.buttonMedium,
+				spacing: _UIElement.sizes.spacing,
 				circle: true,
 				cssmap: {
 					'font-size' : "30px",
@@ -492,7 +527,7 @@
 		
 		m.main.arrange_circle( {
 			degrees: 360,
-			radius: _GUI.sizes.buttonMedium + _GUI.sizes.buttonSpacing
+			radius: _Button.sizes.buttonMedium + _UIElement.sizes.spacing
 		} );
 	
 	}
@@ -522,10 +557,10 @@
 		m.options.buttonOpen = new _Button.Instance( {
 			id: 'open',
 			image: shared.pathToIcons + 'cog_64.png',
-			imageSize: _GUI.sizes.iconMedium,
-			size: _GUI.sizes.iconMediumContainer,
+			imageSize: _UIElement.sizes.iconMedium,
+			size: _UIElement.sizes.iconMediumContainer,
 			tooltip: 'Options',
-			spacing: _GUI.sizes.buttonSpacing,
+			spacing: _UIElement.sizes.spacing,
 			circle: true
 		} );
 		
@@ -536,10 +571,10 @@
 				id: 'quality',
 				theme: 'white',
 				image: shared.pathToIcons + 'computer_64.png',
-				imageSize: _GUI.sizes.iconMedium,
-				size: _GUI.sizes.iconMediumContainer,
+				imageSize: _UIElement.sizes.iconMedium,
+				size: _UIElement.sizes.iconMediumContainer,
 				tooltip: 'Quality',
-				spacing: _GUI.sizes.buttonSpacing,
+				spacing: _UIElement.sizes.spacing,
 				circle: true,
 				enabled: false
 			} ),
@@ -547,10 +582,10 @@
 				id: 'keybindings',
 				theme: 'white',
 				image: shared.pathToIcons + 'keyboard_64.png',
-				imageSize: _GUI.sizes.iconMedium,
-				size: _GUI.sizes.iconMediumContainer,
+				imageSize: _UIElement.sizes.iconMedium,
+				size: _UIElement.sizes.iconMediumContainer,
 				tooltip: 'Keybindings',
-				spacing: _GUI.sizes.buttonSpacing,
+				spacing: _UIElement.sizes.spacing,
 				circle: true,
 				enabled: false
 			} ),
@@ -558,10 +593,10 @@
 				id: 'mouse',
 				theme: 'white',
 				image: shared.pathToIcons + 'mouse_64.png',
-				imageSize: _GUI.sizes.iconMedium,
-				size: _GUI.sizes.iconMediumContainer,
+				imageSize: _UIElement.sizes.iconMedium,
+				size: _UIElement.sizes.iconMediumContainer,
 				tooltip: 'Hand Orientation',
-				spacing: _GUI.sizes.buttonSpacing,
+				spacing: _UIElement.sizes.spacing,
 				circle: true,
 				enabled: false
 			} ),
@@ -569,10 +604,10 @@
 				id: 'volume',
 				theme: 'white',
 				image: shared.pathToIcons + 'sound_64.png',
-				imageSize: _GUI.sizes.iconMedium,
-				size: _GUI.sizes.iconMediumContainer,
+				imageSize: _UIElement.sizes.iconMedium,
+				size: _UIElement.sizes.iconMediumContainer,
 				tooltip: 'Volume',
-				spacing: _GUI.sizes.buttonSpacing,
+				spacing: _UIElement.sizes.spacing,
 				circle: true,
 				enabled: false
 			} ),
@@ -580,10 +615,10 @@
 				id: 'accessibility',
 				theme: 'white',
 				image: shared.pathToIcons + 'accessibility_64.png',
-				imageSize: _GUI.sizes.iconMedium,
-				size: _GUI.sizes.iconMediumContainer,
+				imageSize: _UIElement.sizes.iconMedium,
+				size: _UIElement.sizes.iconMediumContainer,
 				tooltip: 'Accessibility',
-				spacing: _GUI.sizes.buttonSpacing,
+				spacing: _UIElement.sizes.spacing,
 				circle: true,
 				enabled: false
 			} )
@@ -592,7 +627,7 @@
 		m.options.arrange_circle( {
 			degreeStart: 0,
 			direction: -1,
-			radius: _GUI.sizes.buttonMedium + _GUI.sizes.buttonSpacing
+			radius: _Button.sizes.buttonMedium + _UIElement.sizes.spacing
 		} );
 		
 	}
@@ -605,10 +640,10 @@
 		m.end.buttonOpen = new _Button.Instance( {
 			id: 'open',
 			image: shared.pathToIcons + 'exit_64.png',
-			imageSize: _GUI.sizes.iconMedium,
-			size: _GUI.sizes.iconMediumContainer,
+			imageSize: _UIElement.sizes.iconMedium,
+			size: _UIElement.sizes.iconMediumContainer,
 			tooltip: 'End Game',
-			spacing: _GUI.sizes.buttonSpacing,
+			spacing: _UIElement.sizes.spacing,
 			circle: true
 		} );
 		
@@ -618,53 +653,178 @@
 		
 		m.end.arrange_circle( {
 			degreeStart: 0,
-			radius: _GUI.sizes.buttonMedium + _GUI.sizes.buttonSpacing,
+			radius: _Button.sizes.buttonMedium + _UIElement.sizes.spacing,
 			forceShapeOnOpen: true
 		} );
 	
 	}
 	
-	function build_footer_menu () {
+	function init_messages () {
 		
-		var m = _GUI.menus;
+		var msg = _GUI.messages;
 		
-		m.footer.width = m.footer.domElement.width();
-		m.footer.height = m.footer.domElement.height();
-		m.footer.domElement.removeClass( 'sticky_footer' );
-		m.footer.alignment = 'bottomcenter';
+		// grid elements
 		
-	}
-	
-	/*===================================================
-    
-    build
-    
-    =====================================================*/
-	
-	function build_gui() {
+		function make_message_grid_element ( id, cellClasses, parent, innerClasses, imgSrc, imgClasses, tooltipMessage ) {
+			
+			// cell
+			
+			var gpCell = new _UIElement.Instance( { 
+				id: id,
+				elementType: 'li',
+				classes: cellClasses,
+				cssmap: {
+					'position' : 'relative'
+				}
+			} );
+			parent.add( gpCell );
+			
+			// inner cell
+			
+			var gpCellInner = new _UIElement.Instance( {
+				elementType: 'div',
+				classes: innerClasses,
+				cssmap: {
+					'position' : 'relative'
+				}
+			} );
+			gpCell.add( gpCellInner );
+			
+			// image
+			
+			if ( typeof imgSrc === 'string' ) {
+				
+				var gpCellImg = new _UIElement.Instance( {
+					elementType: 'img',
+					classes: imgClasses,
+					src: imgSrc,
+					tooltip: tooltipMessage,
+					cssmap: {
+						'position' : 'relative'
+					}
+				} );
+				
+				gpCellInner.add( gpCellImg );
+				
+			}
+			
+			// message
+			
+			var gpCellMessage = new _UIElement.Instance( {
+				elementType: 'p',
+				html: id,
+				cssmap: {
+					'position' : 'relative'
+				}
+			} );
+			gpCell.add( gpCellMessage );
+			
+		}
 		
-		var l = _GUI.layers,
-			b = _GUI.buttons,
-			m = _GUI.menus,
-			c = _GUI.container;
+		// controls
+		/*
+		_GUI.messages.controls = "";
+		_GUI.messages.controls += "<div class='grid info_panel'><ul>";
+		_GUI.messages.controls += "<li class='grid_compartment'><div class='grid_cell_inner'><img src='assets/icons/keyboard_rev_64.png'></div><p>move</p></li>";
+		_GUI.messages.controls += "<li><div class='grid_cell_inner'><img src='assets/icons/key_arrows_rev_64.png'></div><p>run</p></li>";
+		_GUI.messages.controls += "<li><div class='grid_cell_inner'><img src='assets/icons/key_wasd_rev_64.png'></div><p>run</p></li>";
+		_GUI.messages.controls += "<li><div class='grid_cell_inner'><img src='assets/icons/key_space_rev_64.png'></div><p>jump</p></li>";
+		_GUI.messages.controls += "</ul><ul>";
+		_GUI.messages.controls += "<li class='grid_compartment'><div class='grid_cell_inner'><img src='assets/icons/mouse_rev_64.png'></div><p>interact</p></li>";
+		_GUI.messages.controls += "<li><div class='grid_cell_inner'><img src='assets/icons/mouse_left_rev_64.png'></div><p>select</p></li>";
+		_GUI.messages.controls += "<li><div class='grid_cell_inner'><img src='assets/icons/mouse_left_rev_64.png'></div><p>plant</p></li>";
+		_GUI.messages.controls += "<li><div class='grid_cell_inner'><img src='assets/icons/mouse_left_drag_rev_64.png'></div><p>rotate plant</p></li>";
+		_GUI.messages.controls += "<li><div class='grid_cell_inner'><img src='assets/icons/mouse_right_drag_rev_64.png'></div><p>rotate camera</p></li>";
+		_GUI.messages.controls += "<li><div class='grid_cell_inner'><img src='assets/icons/mouse_middle_rev_64.png'></div><p>zoom</p></li>";
+		_GUI.messages.controls += "</ul></div>";
+		*/
+		msg.controls = [];
 		
-		// menus
+		var gridControls = new _UIElement.Instance( { 
+			id: 'grid_controls',
+			classes: 'grid info_panel',
+			cssmap: {
+				'position' : 'relative'
+			}
+		} );
+		_GUI.messages.controls.push( gridControls );
 		
-		build_start_menu();
+		var cRow1 = new _UIElement.Instance( {
+			elementType: 'ul',
+			cssmap: {
+				'position' : 'relative'
+			}
+		} );
 		
-		build_navigation_menu();
+		var cRow2 = new _UIElement.Instance( {
+			elementType: 'ul',
+			cssmap: {
+				'position' : 'relative'
+			}
+		} );
 		
-		build_options_menu();
+		gridControls.add( cRow1 );
+		gridControls.add( cRow2 );
 		
-		build_end_menu();
+		make_message_grid_element( 'move', 'grid_compartment', cRow1, 'grid_cell_inner', shared.pathToIcons + 'keyboard_rev_64.png' );
+		make_message_grid_element( 'run', '', cRow1, 'grid_cell_inner', shared.pathToIcons + 'key_arrows_rev_64.png' );
+		make_message_grid_element( 'run', '', cRow1, 'grid_cell_inner', shared.pathToIcons + 'key_wasd_rev_64.png' );
+		make_message_grid_element( 'jump', '', cRow1, 'grid_cell_inner', shared.pathToIcons + 'key_space_rev_64.png' );
 		
-		build_main_menu();
+		make_message_grid_element( 'interact', 'grid_compartment', cRow2, 'grid_cell_inner', shared.pathToIcons + 'mouse_rev_64.png' );
+		make_message_grid_element( 'select', '', cRow2, 'grid_cell_inner', shared.pathToIcons + 'mouse_left_rev_64.png' );
+		make_message_grid_element( 'plant', '', cRow2, 'grid_cell_inner', shared.pathToIcons + 'mouse_left_rev_64.png' );
+		make_message_grid_element( 'rotate plant', '', cRow2, 'grid_cell_inner', shared.pathToIcons + 'mouse_left_drag_rev_64.png' );
+		make_message_grid_element( 'rotate camera', '', cRow2, 'grid_cell_inner', shared.pathToIcons + 'mouse_right_drag_rev_64.png' );
+		make_message_grid_element( 'zoom', '', cRow2, 'grid_cell_inner', shared.pathToIcons + 'mouse_middle_rev_64.png' );
 		
-		build_footer_menu();
+		// gameplay
+		/*
+		_GUI.messages.gameplay = "";
+		_GUI.messages.gameplay += "<p><span class='highlight'>We're still in development</span>, but we hope you enjoy what we have so far. Here's what you can do:</p><br/>";
+		_GUI.messages.gameplay += "<div class='grid'><ul>";
+		_GUI.messages.gameplay += "<li><div class='grid_cell_inner grid_cell_inner_circle'><img src='assets/textures/dirt_128.jpg'></div><p>find</p></li>";
+		_GUI.messages.gameplay += "<li><div class='grid_cell_inner grid_cell_inner_circle'><img src='assets/icons/game_steps_choose_plant_128.jpg'></div><p>choose</p></li>";
+		_GUI.messages.gameplay += "<li><div class='grid_cell_inner grid_cell_inner_circle'><img src='assets/icons/game_steps_design_128.jpg'></div><p>design</p></li>";
+		_GUI.messages.gameplay += "<li><div class='grid_cell_inner grid_cell_inner_circle'><img src='assets/icons/game_steps_grow_128.jpg'></div><p>grow!</p></li>";
+		_GUI.messages.gameplay += "<li><div class='grid_cell_inner grid_cell_inner_circle'><img src='assets/icons/game_steps_explore_128.jpg'></div><p>explore</p></li>";
+		_GUI.messages.gameplay += "</ul></div>";
+		*/
 		
-		// layers
+		msg.gameplay = [];
 		
-		c.add( l.display, l.overlayDisplay, l.ui, l.uiPriority, l.overlayAll, l.errors, m.footer );
+		var introGameplay = new _UIElement.Instance( { 
+			id: 'intro_gameplay',
+			elementType: 'p',
+			html: "<span class='highlight'>We're still in development</span>, but we hope you enjoy what we have so far. Here's what you can do:<br/>",
+			cssmap: {
+				'position' : 'relative'
+			}
+		} );
+		_GUI.messages.gameplay.push( introGameplay );
+		
+		var gridGameplay = new _UIElement.Instance( { 
+			id: 'grid_gameplay',
+			classes: 'grid',
+			cssmap: {
+				'position' : 'relative'
+			}
+		} );
+		_GUI.messages.gameplay.push( gridGameplay );
+		
+		var gpRow1 = new _UIElement.Instance( {
+			elementType: 'ul',
+			cssmap: {
+				'position' : 'relative'
+			}
+		} );
+		gridGameplay.add( gpRow1 );
+		
+		make_message_grid_element( 'find', '', gpRow1, 'grid_cell_inner', shared.pathToTextures + 'dirt_128.jpg', 'grid_cell_inner_circle', 'Fields are puzzles' );
+		make_message_grid_element( 'choose', '', gpRow1, 'grid_cell_inner', shared.pathToIcons + 'game_steps_choose_plant_128.jpg', 'grid_cell_inner_circle', 'Solve fields by using plants' );
+		make_message_grid_element( 'design', '', gpRow1, 'grid_cell_inner', shared.pathToIcons + 'game_steps_design_128.jpg', 'grid_cell_inner_circle', 'The less plants you need, the better' );
+		make_message_grid_element( 'grow', '', gpRow1, 'grid_cell_inner', shared.pathToIcons + 'game_steps_grow_128.jpg', 'grid_cell_inner_circle', 'The better the design, the better the reward' );
+		make_message_grid_element( 'explore', '', gpRow1, 'grid_cell_inner', shared.pathToIcons + 'game_steps_explore_128.jpg', 'grid_cell_inner_circle', "You're on a moon sized space whale!" );
 		
 	}
 	

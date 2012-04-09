@@ -52,6 +52,8 @@
 		_Menu.Instance.prototype.constructor = _Menu.Instance;
 		_Menu.Instance.prototype.supr = _Button.Instance.prototype;
 		
+		_Menu.Instance.prototype.add = add;
+		
 		_Menu.Instance.prototype.show = show;
 		_Menu.Instance.prototype.hide = hide;
 		
@@ -313,6 +315,22 @@
 	
 	/*===================================================
     
+	add
+    
+    =====================================================*/
+	
+	function add () {
+		
+		// proto
+		
+		_Menu.Instance.prototype.supr.add.apply( this, arguments );
+		
+		this.update_arrangement();
+		
+	}
+	
+	/*===================================================
+    
     show / hide
     
     =====================================================*/
@@ -437,7 +455,7 @@
     
     =====================================================*/
 	
-	function open ( time, callback, callbackContext ) {
+	function open ( time, callback, context ) {
 		
 		if ( this.isOpen !== true ) {
 			
@@ -455,12 +473,12 @@
 				
 				if ( this.openAlone ) {
 					
-					open_alone( this, time, callback, callbackContext );
+					open_alone( this, time, callback, context );
 					
 				}
 				else {
 					
-					open_with_others( this, time, callback, callbackContext );
+					open_with_others( this, time, callback, context );
 					
 				}
 				
@@ -475,7 +493,7 @@
 		
 	}
 	
-	function open_alone ( menu, time, callback, callbackContext ) {
+	function open_alone ( menu, time, callback, context ) {
 		
 		menu.buttonOpen.hide( {
 			remove: true, 
@@ -488,8 +506,8 @@
 				
 				if ( typeof callback === 'function' ) {
 					
-					if ( typeof callbackContext !== 'undefined' ) {
-						callback.call( callbackContext );
+					if ( typeof context !== 'undefined' ) {
+						callback.call( context );
 					}
 					else {
 						callback();
@@ -498,12 +516,12 @@
 				}
 			
 			},
-			callbackContext: menu
+			context: menu
 		} );
 		
 	}
 	
-	function open_with_others ( menu, time, callback, callbackContext ) {
+	function open_with_others ( menu, time, callback, context ) {
 		
 		menu.show_children( { time: time, excluding: menu.buttonClose } );
 		
@@ -511,8 +529,8 @@
 		
 		if ( typeof callback === 'function' ) {
 			
-			if ( typeof callbackContext !== 'undefined' ) {
-				callback.call( callbackContext );
+			if ( typeof context !== 'undefined' ) {
+				callback.call( context );
 			}
 			else {
 				callback();
@@ -578,7 +596,7 @@
 					}
 					
 				},
-				callbackContext: this
+				context: this
 			} );
 			
 		}
@@ -654,7 +672,7 @@
 	
 	function update_arrangement () {
 		
-		if ( this.get_children_showing().length > 0 ) {
+		if ( this.isVisible && this.get_children_showing().length > 0 ) {
 			
 			this.set_arrangement( this.arrangement, this.arrangementParameters );
 			

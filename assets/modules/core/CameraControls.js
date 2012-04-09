@@ -122,7 +122,7 @@
 		this.settingsPosition = pPos = new PropertySettings();
 		
 		pRot.base.setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), Math.PI );
-		pRot.offsetBase.set( 25, 0, 0 );
+		pRot.offsetBase.set( 50, 0, 0 );//( 25, 0, 0 );
 		pRot.offset.copy( pRot.offsetBase );
 		pRot.offsetMin.set( -75, -360, 0 );
 		pRot.offsetMax.set( 75, 360, 0 );
@@ -131,7 +131,7 @@
 		pRot.deltaSpeedMax = pRot.deltaSpeedMin = 0.1;
 		pRot.baseRevertSpeed = 0.05;
 		
-		pPos.offsetBase.set( 0, 50, 300 );
+		pPos.offsetBase.set( 0, 50, 550 );//( 0, 50, 300 );
 		pPos.offset.copy( pPos.offsetBase );
 		pPos.offsetMin.set( 0, 0, -25 );
 		pPos.offsetMax.set( 0, 50, 1200 );
@@ -185,15 +185,10 @@
 	
 	function rotate ( e, end ) {
 		
-		var rotated = false,
-			mouse;
+		var mouse;
 		
 		// end rotation
 		if ( end === true ) {
-			
-			// if rotated
-			
-			rotated = this.rotatedRecently;
 			
 			// reset
 			
@@ -201,7 +196,7 @@
 			
 			this.settingsRotation.mouse = undefined;
 			
-			this.rotatedRecently = false;
+			this.rotating = false;
 			
 		}
 		// start rotation
@@ -215,15 +210,13 @@
 			
 			this.settingsRotation.deltaTotal.set( 0, 0, 0 );
 			this.settingsRotation.delta.set( 0, 0, 0 );
-			this.rotatedRecently = false;
+			this.rotating = false;
 			
 			// update
 			
 			shared.signals.mousemoved.add( rotate_update, this );
 			
 		}
-		
-		return rotated;
 		
 	}
 	
@@ -255,7 +248,7 @@
 			
 			if ( rotDeltaTotal.length() > rotateRecordedThreshold ) {
 				
-				this.rotatedRecently = true;
+				this.rotating = true;
 				
 			}
 			
@@ -283,6 +276,8 @@
 			posDeltaSpeed,
 			posOffsetZMinMaxDist = posOffsetMax.z - posOffsetMin.z,
 			posOffsetPctToMin = (posOffset.z - posOffsetMin.z) / posOffsetZMinMaxDist;
+		
+		// set new zoom
 		
 		posDeltaSpeed = pPos.deltaSpeedMin * ( 1 - posOffsetPctToMin ) + pPos.deltaSpeedMax * posOffsetPctToMin;
 		
@@ -349,18 +344,8 @@
 		
 		// normalize rotation (between 180 and -180)
 		
-		if ( rotOffset.x > 180 ) {
-			rotOffset.x -= 360;
-		}
-		else if ( rotOffset.x < -180 ) {
-			rotOffset.x += 360;
-		}
-		if ( rotOffset.y > 180 ) {
-			rotOffset.y -= 360;
-		}
-		else if ( rotOffset.y < -180 ) {
-			rotOffset.y += 360;
-		}
+		rotOffset.x = _MathHelper.degree_between_180( rotOffset.x );
+		rotOffset.y = _MathHelper.degree_between_180( rotOffset.y );
 		
 		// check if should switch between third and first
 		

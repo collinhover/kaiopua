@@ -195,7 +195,7 @@
 			image: shared.pathToIcons + 'alertcircle_64.png',
 			title: "Well, this is embarrassing!",
 			body: "Our physics broke, but we'll do our best to drop you off at your last safe location.",
-			active: true,
+			priority: true,
 			transitionerOpacity: 1
 		} );
 		
@@ -239,9 +239,11 @@
 			},
 			keyup: function ( e ) {
 				
+				var rotated = cameraControls.rotating;
+				
 				// stop camera rotate
 				
-				var rotated = cameraControls.rotate( e, true );
+				cameraControls.rotate( e, true );
 				
 				// start character action if camera was not just rotated
 				
@@ -259,11 +261,13 @@
 		};
 		map[ 'mouseright' ] = {
 			keydown: function ( e ) { cameraControls.rotate( e ); },
-			keyup: function ( e ) { 
+			keyup: function ( e ) {
+				
+				var rotated = cameraControls.rotating;
 				
 				// stop camera rotate
 				
-				var rotated = cameraControls.rotate( e, true );
+				cameraControls.rotate( e, true );
 				
 				// stop character action if camera was not just rotated
 				
@@ -442,7 +446,7 @@
 			type,
 			arguments = [];
 		
-		if ( e && _Game.is_event_in_game( e ) === true ) {
+		if ( e && ( _Game.is_event_in_game( e ) === true || cameraControls.rotating ) ) {
 			
 			// handle button
 			
@@ -460,7 +464,7 @@
 				
 				case 'mousedown': case 'touchstart': type = 'keydown'; break;
 				case 'mouseup': case 'touchend': type = 'keyup'; break;
-				case 'mousewheel': button = 'mousewheel'; type = 'keyup'; break;
+				case 'mousewheel': case 'DOMMouseScroll' : button = 'mousewheel'; type = 'keyup'; break;
 				
 			}
 			
@@ -521,9 +525,10 @@
 			
 			kbInfo = keybindings[ keyName ];
 			
-			if ( kbInfo.active === true ) {
+			if ( kbInfo.active === true && kbInfo.hasOwnProperty( 'keyup' ) ) {
 				
-				trigger_key( keyName, 'keyup' );
+				kbInfo.active = false;
+				kbInfo[ 'keyup' ].call( this );
 				
 			}
 			
@@ -790,6 +795,8 @@
 	}
 	
 	function disable () {
+		
+		// set enabled state
 		
 		enabled = false;
 		
