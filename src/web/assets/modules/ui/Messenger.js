@@ -58,6 +58,8 @@
 		_Messenger.pulseOpacityShow = 1;
 		_Messenger.pulseOpacityHide = 0.2;
 		
+		// core
+		
 		_Messenger.container = new _UIElement.Instance( {
 			id: 'messenger',
 			alignment: 'center',
@@ -119,6 +121,10 @@
 		
 		_Messenger.show_message = show_message;
 		_Messenger.hide_message = hide_message;
+		
+		Object.defineProperty( _Messenger, 'active', { 
+			get : function () { return active; }
+		} );
 		
 	}
 	
@@ -287,7 +293,13 @@
 		
 	}
 	
-	function hide_message () {
+	function hide_message ( clearQueue ) {
+		
+		if ( clearQueue === true ) {
+			
+			queue = [];
+			
+		}
 		
 		step_message_queue();
 		

@@ -100,7 +100,11 @@ var KAIOPUA = (function (main) {
 		shared.mouseWheelSpeed = 120;
 		
 		shared.multitouch = false;
-        
+		
+        shared.galleryMode = false;
+		shared.timeLastInteraction = 0;
+		shared.timeLastInteractionMax = 300000;
+		
         shared.html = {
             footerMenu: $('#footer_menu'),
             gameContainer: $('#game'),
@@ -156,6 +160,10 @@ var KAIOPUA = (function (main) {
         $(window).on( 'resize', on_window_resize );
 		
 		window.onerror = on_error;
+		
+		// start updating
+		
+		
 		
 		// asset loader and setup
 		
@@ -555,6 +563,8 @@ var KAIOPUA = (function (main) {
 			shared.signals.mousedown.dispatch( e );
 			
 		}
+		
+		shared.timeLastInteraction = 0;
         
         e.preventDefault();
         e.stopPropagation();
@@ -578,6 +588,8 @@ var KAIOPUA = (function (main) {
 			shared.signals.mouseup.dispatch( e );
         
 		}
+		
+		shared.timeLastInteraction = 0;
 		
         e.preventDefault();
         e.stopPropagation();
@@ -610,6 +622,8 @@ var KAIOPUA = (function (main) {
 			shared.signals.mousemoved.dispatch( e );
 			
 		}
+		
+		shared.timeLastInteraction = 0;
         
         e.preventDefault();
         e.stopPropagation();
@@ -676,6 +690,8 @@ var KAIOPUA = (function (main) {
 		e.wheelDelta = eo.wheelDelta = ( ( eo.detail < 0 || eo.wheelDelta > 0 ) ? 1 : -1 ) * shared.mouseWheelSpeed;
 		
         shared.signals.mousewheel.dispatch( e );
+		
+		shared.timeLastInteraction = 0;
         
         e.preventDefault();
         e.stopPropagation();
@@ -748,15 +764,21 @@ var KAIOPUA = (function (main) {
 			
 			lastGamma = gamma;
 			lastBeta = beta;
+			
+			shared.timeLastInteraction = 0;
             
             e.preventDefault();
             e.stopPropagation();
             return false;
         }
+		
     }
 
     function on_key_down( e ) {
+		
         shared.signals.keydown.dispatch( e );
+		
+		shared.timeLastInteraction = 0;
         
         /*
         e.preventDefault();
@@ -768,6 +790,8 @@ var KAIOPUA = (function (main) {
     function on_key_up( e ) {
 		
         shared.signals.keyup.dispatch( e );
+		
+		shared.timeLastInteraction = 0;
         
         /*
         e.preventDefault();

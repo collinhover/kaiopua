@@ -1078,6 +1078,12 @@
 		_GUI.hide_group( 'ingame', { remove: true } );
 		_GUI.hide_group( 'pause', { remove: true } );
 		
+		if ( _Messenger && _Messenger.active === true ) {
+			
+			_Messenger.hide_message( true );
+			
+		}
+		
 		// set launcher section
 		
         set_section( _Launcher, function () {
@@ -1171,7 +1177,7 @@
     	var timeDelta,
 			timeDeltaMod;
         
-        requestAnimationFrame( animate );
+        window.requestAnimationFrame( animate );
 		
 		// handle time
 		
@@ -1190,6 +1196,10 @@
 			timeDeltaMod = 1;
 			
 		}
+		
+		// update time since last interaction
+		
+		shared.timeLastInteraction += timeDelta;
 		
 		// update
 		
@@ -1215,6 +1225,14 @@
 			
 		}
 		
+		// handle gallery mode
+		
+		if ( shared.galleryMode === true && started === true && shared.timeLastInteraction >= shared.timeLastInteractionMax ) {
+			
+			stop_game();
+			
+		}
+			
     }
 	
 	function render() {
