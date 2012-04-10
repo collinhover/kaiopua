@@ -79,6 +79,7 @@
 		_Grid.Instance.prototype.get_modules_with_vertices = get_modules_with_vertices;
 		_Grid.Instance.prototype.module_occupation_changed = module_occupation_changed;
 		_Grid.Instance.prototype.clean = clean;
+		_Grid.Instance.prototype.reset = reset;
 		
 		// get / set
 		
@@ -95,7 +96,7 @@
 			get : function () {
 				
 				var i, l,
-					full = true,
+					full = this.modules.length > 0 ? true : false,
 					module;
 				
 				// for each module
@@ -315,6 +316,10 @@
 				module.grid = this;
 				
 			}
+			
+			// reset grid
+			
+			this.reset();
 			
 		}
 		
@@ -681,6 +686,31 @@
 			this._dirtyModules = false;
 			
 		}
+		
+	}
+	
+	function reset () {
+		
+		// for each module
+		
+		this.each_module( function () {
+			
+			if ( this.occupant instanceof _GridElement.Instance ) {
+				
+				this.occupant.change_module();
+				
+			}
+			else if ( typeof this.occupant !== 'undefined' ) {
+				
+				this.occupant = undefined;
+				
+			}
+			
+		} );
+		
+		// clean
+		
+		this.clean( undefined, true );
 		
 	}
 	

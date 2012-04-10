@@ -14,7 +14,7 @@
 		_UIElement,
 		_Game,
 		_GUI,
-		queue = [],
+		queue,
 		priority = false,
 		active = false;
 	
@@ -121,10 +121,35 @@
 		
 		_Messenger.show_message = show_message;
 		_Messenger.hide_message = hide_message;
+		_Messenger.reset = reset;
 		
 		Object.defineProperty( _Messenger, 'active', { 
 			get : function () { return active; }
 		} );
+		
+		// reset
+		
+		shared.signals.gamestop.add( reset, _Messenger );
+		
+		reset();
+		
+	}
+	
+	/*===================================================
+    
+    reset
+    
+    =====================================================*/
+	
+	function reset () {
+		
+		// clear queue
+		
+		queue = [];
+		
+		// hide current
+		
+		hide_current_message();
 		
 	}
 	
@@ -163,7 +188,7 @@
 			
 			// hide current and show next
 			
-			hide_current_message( show_next_message );
+			hide_current_message( { callback: show_next_message } );
 			
 		}
 		
@@ -293,19 +318,17 @@
 		
 	}
 	
-	function hide_message ( clearQueue ) {
-		
-		if ( clearQueue === true ) {
-			
-			queue = [];
-			
-		}
+	function hide_message () {
 		
 		step_message_queue();
 		
 	}
 	
-	function hide_current_message ( callback ) {
+	function hide_current_message ( parameters ) {
+		
+		// handle parameters
+		
+		parameters = parameters || {};
 		
 		// signals
 		
@@ -340,11 +363,17 @@
 			remove: true,
 			callback: function () {
 				
+				// clear all elements
+				
+				_Messenger.head.remove();
+				_Messenger.image.remove();
+				_Messenger.title.remove();
+				_Messenger.body.remove();
 				_Messenger.container.remove();
 				
-				if ( typeof callback === 'function' ) { 
+				if ( typeof parameters.callback === 'function' ) { 
 					
-					callback.call( _Messenger );
+					parameters.callback.apply( parameters.context, parameters.data );
 					
 				}
 				

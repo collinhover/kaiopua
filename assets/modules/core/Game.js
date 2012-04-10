@@ -329,6 +329,8 @@
         shared.signals.paused = new signals.Signal();
         shared.signals.resumed = new signals.Signal();
         shared.signals.update = new signals.Signal();
+		shared.signals.gamestart = new signals.Signal();
+		shared.signals.gamestop = new signals.Signal();
 		
 		// tween update
 		// wrap because update signal passes time delta, and tween update needs time
@@ -1065,6 +1067,10 @@
 			
 		} );
 		
+		// signal
+		
+		shared.signals.gamestart.dispatch();
+		
 		// set started
 		
 		started = true;
@@ -1078,11 +1084,9 @@
 		_GUI.hide_group( 'ingame', { remove: true } );
 		_GUI.hide_group( 'pause', { remove: true } );
 		
-		if ( _Messenger && _Messenger.active === true ) {
-			
-			_Messenger.hide_message( true );
-			
-		}
+		// signal
+		
+		shared.signals.gamestop.dispatch();
 		
 		// set launcher section
 		

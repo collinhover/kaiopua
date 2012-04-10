@@ -430,7 +430,15 @@
 	
 	function set_occupant ( occupant ) {
 		
-		// store
+		// if current
+		
+		if ( typeof this._occupant !== 'undefined' && this._occupant.parent === this ) {
+			
+			this.remove( this._occupant );
+			
+		}
+		
+		// store new
 		
 		this._occupant = occupant;
 		
