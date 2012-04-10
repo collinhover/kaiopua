@@ -172,6 +172,30 @@
 			
 		};
 		
+		/*===================================================
+		
+		reset
+		
+		=====================================================*/
+		
+		this.reset = function () {
+			
+			// grid
+			
+			this.grid.reset();
+			
+			// solve
+			
+			this.solve();
+			
+		}
+		
+		// reset self
+		
+		this.reset();
+		
+		shared.signals.gamestop.add( this.reset, this );
+		
 		// add to global list
 		
 		if ( this.grid.modules.length > 0 ) {

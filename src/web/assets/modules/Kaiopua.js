@@ -145,12 +145,13 @@ var KAIOPUA = (function (main) {
 		
         $(document).on( 'mousedown touchstart', on_mouse_down );
         $(document).on( 'mouseup touchend', on_mouse_up );
+		$(document).on( 'click', on_mouse_click );
         $(document).on( 'mousemove touchmove', on_mouse_move );
 		$(document).on( 'mouseenter touchenter', on_mouse_enter );
 		$(document).on( 'mouseleave touchleave', on_mouse_leave );
         $(document).on( 'mousewheel DOMMouseScroll', on_mouse_wheel );
 		$(shared.html.gameContainer).on( 'contextmenu', on_game_context_menu );
-        
+		
         $(document).on( 'keydown', on_key_down );
         $(document).on( 'keyup', on_key_up );
     
@@ -595,6 +596,18 @@ var KAIOPUA = (function (main) {
         e.stopPropagation();
         return false;
     }
+	
+	function on_mouse_click ( e ) {
+		
+		if ( shared.galleryMode === true ) {
+			
+			e.preventDefault();
+			e.stopPropagation();
+			return false;
+			
+		}
+		
+	}
     
     function on_mouse_move( e ) {
 		

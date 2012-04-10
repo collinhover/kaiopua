@@ -107,6 +107,7 @@
 		
 		var pGrid,
 			solvePuzzle,
+			resetPuzzle,
 			numElementsMin;
 		
 		// handle parameters
@@ -124,10 +125,6 @@
 		
 		numElementsMin = parameters.numElementsMin;
 		
-		this.scoreMap = generate_score_map( parameters.scores );
-		
-		add_rewards_to_scores( this.scoreMap, parameters.rewards );
-		console.log('score map!', this.scoreMap );
 		/*===================================================
 		
 		solved override
@@ -356,6 +353,35 @@
 			}
 			
 		};
+		
+		/*===================================================
+		
+		reset
+		
+		=====================================================*/
+		
+		resetPuzzle = this.reset;
+		
+		this.reset = function () {
+			
+			// reset puzzle
+			
+			resetPuzzle.call( this );
+			
+			// create score map
+			
+			this.scoreMap = generate_score_map( parameters.scores );
+			
+			add_rewards_to_scores( this.scoreMap, parameters.rewards );
+			
+		}
+		
+		// reset
+		
+		this.reset();
+		
+		shared.signals.gamestop.remove( resetPuzzle, this );
+		shared.signals.gamestop.add( this.reset, this );
 		
 	}
 	

@@ -132,10 +132,12 @@
 		
 		// functions
 		
+		_Farming.reset = reset;
 		_Farming.plant = plant;
 		_Farming.get_farmer_by_character = get_farmer_by_character;
 		_Farming.is_character_planting = is_character_planting;
 		_Farming.give_plants = give_plants;
+		_Farming.remove_plants = remove_plants;
 		
 		Object.defineProperty( _Farming, 'plantTypesBase', { 
 			get: function () {
@@ -144,6 +146,12 @@
 			
 			}
 		} );
+		
+		// reset
+		
+		_Farming.reset();
+		
+		shared.signals.gamestop.add( _Farming.reset, _Farming );
 		
 		// ui
 		
@@ -157,6 +165,70 @@
 			init_farming_ui,
 			true
 		);
+	}
+	
+	/*===================================================
+	
+	reset
+	
+	=====================================================*/
+	
+	function reset () {
+		
+		var i, l,
+			j, k,
+			character,
+			index,
+			farmer,
+			plants,
+			plantsToRemove;
+		
+		// for each farmer
+		
+		for ( i = 0, l = farmers.length; i < l; i++ ) {
+			
+			// get farmer
+			
+			character = character instanceof _Character.Instance ? character : _Player.character;
+			
+			index = main.index_of_object_with_property_value( farmers, 'character', character );
+			
+			if ( index !== -1 ) {
+				
+				farmer = farmers[ index ];
+				
+				// reset planting
+				
+				farmer.planting.reset();
+				
+				// handle plants
+				
+				plants = farmer.plants || [];
+				
+				// copy farmer plants
+				
+				plantsToRemove = plants.slice( 0 );
+				
+				// remove all non-starter plants
+				
+				for ( j = 0, k = _Farming.plantTypesBase.length; j < k; j++ ) {
+					
+					index = plantsToRemove.indexOf( _Farming.plantTypesBase[ j ] );
+					
+					if ( index !== -1 ) {
+						
+						plantsToRemove.splice( index, 1 );
+						
+					}
+					
+				}
+				
+				remove_plants( plantsToRemove, character );
+				
+			}
+			
+		}
+		
 	}
 	
 	/*===================================================
@@ -247,6 +319,16 @@
 			
 			if ( _Farming.plantParameters.hasOwnProperty( plantType ) ) {
 				
+				// if exists, remove
+				
+				if ( _Farming.menu.childrenByID.hasOwnProperty( plantType ) ) {
+					
+					remove_plant_from_ui( plantType );
+					
+				}
+				
+				// create new
+				
 				plantParameters = _Farming.plantParameters[ plantType ];
 				
 				button = new _Button.Instance( {
@@ -284,6 +366,52 @@
 			if ( plantsWaitingForUI.indexOf( plantType ) === -1 ) {
 				
 				plantsWaitingForUI.push( plantType );
+				
+			}
+			
+		}
+		
+	}
+	
+	function remove_plant_from_ui ( plantType ) {
+		
+		var b,
+			m,
+			index,
+			plantButton,
+			type,
+			image,
+			tooltip,
+			button;
+		
+		// is ui ready
+		
+		if ( typeof _Farming.menu !== 'undefined' ) {
+			
+			b = _GUI.buttons;
+			m = _GUI.menus;
+			
+			// if plant in menu
+			
+			if ( _Farming.menu.childrenByID.hasOwnProperty( plantType ) ) {
+				
+				plantButton = _Farming.menu.childrenByID[ plantType ];
+				
+				plantButton.indicator = false;
+				
+				plantButton.hide( { remove: true, time: 0 } );
+				
+			}
+			
+		}
+		// else if on waiting list
+		else if ( main.type( plantsWaitingForUI ) === 'array' && plantsWaitingForUI.length > 0 ) {
+			
+			index = plantsWaitingForUI.indexOf( plantType );
+			
+			if ( index !== -1 ) {
+				
+				plantsWaitingForUI.splice( index, 1 );
 				
 			}
 			
@@ -340,17 +468,32 @@
 		
 		if ( character instanceof _Character.Instance ) {
 			
-			farmer = {
-				character: character,
-				planting: new _Planting.Instance( character ),
-				plants: []
-			};
+			// if character on farmer list
 			
-			farmers.push( farmer );
+			index = main.index_of_object_with_property_value( farmers, 'character', character );
 			
-			// give starter plants
+			// if found, use existing
 			
-			give_plants( _Farming.plantTypesBase, character );
+			if ( index === -1 ) {
+				
+				farmer = {
+					character: character,
+					planting: new _Planting.Instance( character ),
+					plants: []
+				};
+				
+				farmers.push( farmer );
+				
+				// give starter plants
+				
+				give_plants( _Farming.plantTypesBase, character );
+				
+			}
+			else {
+				
+				farmer = farmers[ index ];
+				
+			}
 			
 		}
 		
@@ -477,6 +620,58 @@
 							add_plant_to_ui( plantType );
 							
 						}
+						
+					}
+					
+				}
+				
+			}
+			
+		}
+		
+	}
+	
+	function remove_plants ( plantTypes, character ) {
+		
+		var i, l,
+			plantType,
+			index,
+			farmer,
+			plants;
+		
+		plantTypes = main.ensure_array( plantTypes );
+		
+		// get farmer
+		
+		character = character instanceof _Character.Instance ? character : _Player.character;
+		
+		index = main.index_of_object_with_property_value( farmers, 'character', character );
+		
+		if ( index !== -1 ) {
+			
+			farmer = farmers[ index ];
+			
+			plants = farmer.plants = farmer.plants || [];
+			
+			// for each plant type
+			
+			for ( i = 0, l = plantTypes.length; i < l; i++ ) {
+				
+				plantType = plantTypes[ i ];
+					
+				// if has type
+				
+				index = plants.indexOf( plantType );
+				
+				if ( index !== -1 ) {
+					
+					plants.splice( index, 1 );
+					
+					// if is player
+					
+					if ( character === _Player.character ) {
+						
+						remove_plant_from_ui( plantType );
 						
 					}
 					

@@ -19,7 +19,6 @@
 		_Plant,
 		_ObjectHelper,
 		_MathHelper,
-		allPlants,
 		utilVec31Rotate,
 		utilProjector1Rotate;
 	
@@ -67,12 +66,6 @@
 		utilProjector1Rotate = new THREE.Projector();
 		
 		// properties
-		
-		allPlants = [];
-		
-		Object.defineProperty( _Planting, 'allPlants', { 
-			get: function () { return allPlants; }
-		});
 		
 		_Planting.rotationSpeed = 0.05;
 		_Planting.rotationDistanceMin = 10;
@@ -139,9 +132,13 @@
 	
 	function reset () {
 		
-		this.started = false;
-		this.rotating = false;
-		this.module = undefined;
+		// all plants list
+		
+		this.allPlants = [];
+		
+		// stop planting
+		
+		this.stop();
 		
 	}
 	
@@ -196,7 +193,7 @@
 			}
 			else {
 				
-				plantingObjects = plantingObjects.concat( _Planting.allPlants );
+				plantingObjects = plantingObjects.concat( this.allPlants );
 				
 			}
 			
@@ -483,6 +480,9 @@
 	
 	function stop () {
 		console.log('stop PLANTING!');
+		
+		// store field for solve check after stop complete
+		
 		var field = this.field;
 		
 		// stop updating
@@ -511,7 +511,6 @@
 		_GUI.layers.ui.set_pointer_events( false );
 		
 		// trigger field to check if solved
-		// deferring until after planting process clean
 		
 		if ( field instanceof _Puzzle.Instance ) {
 			
@@ -626,7 +625,7 @@
 				
 				// find if in all plants list
 				
-				index = _Planting.allPlants.indexOf( this.plant );
+				index = this.allPlants.indexOf( this.plant );
 				
 				// if planted
 					
@@ -636,7 +635,7 @@
 					
 					if ( index === -1 ) {
 						
-						_Planting.allPlants.push( this.plant );
+						this.allPlants.push( this.plant );
 						
 					}
 					
@@ -651,7 +650,7 @@
 					
 					if ( index !== -1 ) {
 						
-						_Planting.allPlants.splice( index, 1 );
+						this.allPlants.splice( index, 1 );
 						
 					}
 					
@@ -814,19 +813,18 @@
 	}
 	
 	function stop_rotate_plant () {
-		
-		
-		if ( this.rotating !== false ) {
-			console.log(' > PLANTING: rotation STOP ');
+		console.log(' > PLANTING: rotation STOP ');
+		if ( this.plant instanceof _Plant.Instance ) {
+			
 			this.plant.seed.show( { parent: _GUI.layers.uiPriority } );
 				
 			this.plant.rotator.hide( { remove: true } );
-				
-			this.rotating = false;
 			
 			this.plant.rotate_reset();
-			
+		
 		}
+		
+		this.rotating = false;
 		
 	}
 	
