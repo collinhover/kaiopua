@@ -742,7 +742,7 @@
 		
 		var gridControls = new _UIElement.Instance( { 
 			id: 'grid_controls',
-			classes: 'grid info_panel',
+			classes: 'grid info_panel align_center',
 			cssmap: {
 				'position' : 'relative'
 			}
@@ -796,7 +796,7 @@
 		var introGameplay = new _UIElement.Instance( { 
 			id: 'intro_gameplay',
 			elementType: 'p',
-			html: "<span class='highlight'>We're still in development</span>, but we hope you enjoy what we have so far. Here's what you can do:<br/>",
+			html: "<span class='highlight'>We're still in development</span>, but we hope you enjoy what we have so far. Here's what you can do:<br/><br/>",
 			cssmap: {
 				'position' : 'relative'
 			}
@@ -805,7 +805,7 @@
 		
 		var gridGameplay = new _UIElement.Instance( { 
 			id: 'grid_gameplay',
-			classes: 'grid',
+			classes: 'grid align_center',
 			cssmap: {
 				'position' : 'relative'
 			}
@@ -820,11 +820,11 @@
 		} );
 		gridGameplay.add( gpRow1 );
 		
-		make_message_grid_element( 'find', '', gpRow1, 'grid_cell_inner', shared.pathToTextures + 'dirt_128.jpg', 'grid_cell_inner_circle', 'Fields are puzzles' );
-		make_message_grid_element( 'choose', '', gpRow1, 'grid_cell_inner', shared.pathToIcons + 'game_steps_choose_plant_128.jpg', 'grid_cell_inner_circle', 'Solve fields by using plants' );
-		make_message_grid_element( 'design', '', gpRow1, 'grid_cell_inner', shared.pathToIcons + 'game_steps_design_128.jpg', 'grid_cell_inner_circle', 'The less plants you need, the better' );
-		make_message_grid_element( 'grow', '', gpRow1, 'grid_cell_inner', shared.pathToIcons + 'game_steps_grow_128.jpg', 'grid_cell_inner_circle', 'The better the design, the better the reward' );
-		make_message_grid_element( 'explore', '', gpRow1, 'grid_cell_inner', shared.pathToIcons + 'game_steps_explore_128.jpg', 'grid_cell_inner_circle', "You're on a moon sized space whale!" );
+		make_message_grid_element( 'find', '', gpRow1, 'grid_cell_inner', shared.pathToTextures + 'dirt_128.jpg', 'grid_cell_inner_circle', 'Fields are puzzles', true );
+		make_message_grid_element( 'choose', '', gpRow1, 'grid_cell_inner', shared.pathToIcons + 'game_steps_choose_plant_128.jpg', 'grid_cell_inner_circle', 'Solve fields by using plants', true );
+		make_message_grid_element( 'design', '', gpRow1, 'grid_cell_inner', shared.pathToIcons + 'game_steps_design_128.jpg', 'grid_cell_inner_circle', 'The less plants you need, the better', true );
+		make_message_grid_element( 'grow', '', gpRow1, 'grid_cell_inner', shared.pathToIcons + 'game_steps_grow_128.jpg', 'grid_cell_inner_circle', 'The better the design, the better the reward', true );
+		make_message_grid_element( 'explore', '', gpRow1, 'grid_cell_inner', shared.pathToIcons + 'game_steps_explore_128.jpg', 'grid_cell_inner_circle', "You're on a moon sized space whale!", true );
 		
 	}
 	

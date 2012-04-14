@@ -1149,7 +1149,7 @@
     
     function resume () {
 		
-        if ( paused === true && _ErrorHandler.errorState !== true ) {
+        if ( paused === true && _ErrorHandler.errorState !== true && ( typeof _Messenger === 'undefined' || _Messenger.active !== true ) ) {
 			
 			// ui
 			

@@ -27,7 +27,6 @@
 		keybindings,
 		keybindingsDefault,
 		character,
-		characterLight,
 		following = [],
 		selecting;
 	
@@ -170,14 +169,6 @@
 		// create character
 		
 		character = new _Hero.Instance();
-		
-		// init light to follow character
-		
-		characterLight = new THREE.PointLight( 0xfeb41c, 0.8, 400 );
-		
-		characterLight.position.set( -20, 25, 60 );
-		
-		character.add( characterLight );
 		
 		// add handler for physics safety net
 		

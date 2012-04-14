@@ -121,7 +121,7 @@
 			physics: {
 				bodyType: 'mesh'
 			},
-			materials: new THREE.MeshLambertMaterial( { color: 0xFFF7E0, ambient: 0xFFF7E0, vertexColors: THREE.VertexColors } ),
+			materials: new THREE.MeshLambertMaterial( { color: 0xFFFFFF, ambient: 0xFFFFFF, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading
         });
 		
@@ -132,7 +132,7 @@
 			physics: {
 				bodyType: 'mesh'
 			},
-			materials: new THREE.MeshLambertMaterial( { color: 0xFFF7E0, ambient: 0xFFF7E0, vertexColors: THREE.VertexColors } ),
+			materials: new THREE.MeshLambertMaterial( { color: 0xFFFFFF, ambient: 0xFFFFFF, vertexColors: THREE.VertexColors } ),
 			shading: THREE.SmoothShading
         });
 		
@@ -419,7 +419,7 @@
 				grid: {
 					modulesGeometry: main.get_asset_data("assets/models/Field_Tutorial_Grid.js")
 				},
-				numElementsMin: 12,
+				numElementsMin: 10,
 				rewards: [
 					{
 						image: shared.pathToIcons + 'plant_rev_64.png',
