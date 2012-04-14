@@ -110,8 +110,8 @@
 		}
 		
 		this._properties[ activeLevel ] = {
-			color: parameters[ 'color' + activeLevel ] || parameters.color || new THREE.Color(),//0xffffff,
-			ambient: parameters[ 'ambient' + activeLevel ] || parameters.ambient || new THREE.Color(),//0xffffff,
+			color: parameters[ 'color' + activeLevel ] || parameters.color || new THREE.Color(),
+			ambient: parameters[ 'ambient' + activeLevel ] || parameters.ambient || new THREE.Color(),
 			transparent: parameters[ 'transparent' + activeLevel ] || parameters.transparent || false,
 			opacity: parameters[ 'opacity' + activeLevel ] || parameters.opacity || 1
 		};

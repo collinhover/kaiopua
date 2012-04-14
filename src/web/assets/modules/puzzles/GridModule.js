@@ -48,7 +48,8 @@
 		// properties
 		
 		_GridModule.colors = {};
-		_GridModule.colors.base = new THREE.Color( 0xe6b266 );
+		_GridModule.colors.base = new THREE.Color( 0xffffff );
+		_GridModule.colors.baseOccupied = new THREE.Color( 0xe6b266 );
 		_GridModule.colors.vacant = new THREE.Color( 0x0ccd6f );
 		_GridModule.colors.occupied = new THREE.Color( 0xff2830 );
 		
@@ -160,26 +161,11 @@
 		
 		parameters.centerRotation = true;
 		
+		parameters.normalizeFaces = true;
+		
 		// prototype constructor
 		
 		_Model.Instance.call( this, parameters );
-		
-		if ( this.geometry.vertices.length > 0 ) {
-			
-			_ObjectHelper.normalize_faces( this );
-			
-			/*
-			var face = this.geometry.faces[ 0 ];
-			
-			var temp = this.geometry.vertices[ 0 ];
-			this.geometry.vertices[ 0 ] = this.geometry.vertices[ 1 ];
-			this.geometry.vertices[ 1 ] = temp;
-			this.geometry.vertices[ face.a ].position.addScalar( 50 );
-			
-			var tindex = face.a;
-			this.geometry.faces[ 0 ].a = this.geometry.faces[ 0 ].b;
-			this.geometry.faces[ 0 ].b = tindex;*/
-		}
 		
 		// store grid reference
 		
@@ -202,15 +188,10 @@
 		this.states.overdraw = false;
 		
 		this.states.base = new _GridModuleState.Instance( {
-			active: 1,
-			dynamic: false,
-			color: _GridModule.colors.base,
-			ambient: _GridModule.colors.base
-		} );
-		this.states.water = new _GridModuleState.Instance( {
-			priority: 1,
-			color: 0x17DAF8,
-			ambient: 0x17DAF8
+			color0: _GridModule.colors.base,
+			ambient0: _GridModule.colors.base,
+			color1: _GridModule.colors.baseOccupied,
+			ambient1: _GridModule.colors.baseOccupied
 		} );
 		this.states.occupied = new _GridModuleState.Instance( {
 			constant: false,
@@ -218,6 +199,11 @@
 			ambient0: _GridModule.colors.vacant,
 			color1: _GridModule.colors.occupied,
 			ambient1: _GridModule.colors.occupied
+		} );
+		this.states.water = new _GridModuleState.Instance( {
+			priority: 1,
+			color: 0x17DAF8,
+			ambient: 0x17DAF8
 		} );
 		
 		// set to base state
@@ -240,7 +226,7 @@
 		// clear occupant
 		
 		this.occupant = undefined;
-			
+		
 	}
 	
 	/*===================================================
@@ -408,9 +394,18 @@
 			
 			// sort potential states by priority and extract top
 			
-			statesPotential.sort( sort_by_priority );
-			
-			state = statesPotential[ 0 ];
+			if ( statesPotential.length > 0 ) {
+				
+				statesPotential.sort( sort_by_priority );
+				
+				state = statesPotential[ 0 ];
+				
+			}
+			else {
+				
+				state = states.base;
+				
+			}
 			
 		}
 		
@@ -430,7 +425,7 @@
 	
 	function set_occupant ( occupant ) {
 		
-		// if current
+		// if has occupant
 		
 		if ( typeof this._occupant !== 'undefined' && this._occupant.parent === this ) {
 			
@@ -444,7 +439,7 @@
 		
 		// set occupied state
 		
-		this.change_state( 'occupied', ( typeof this.occupant !== 'undefined' ) );
+		this.change_state( [ 'occupied', 'base' ], ( typeof this.occupant !== 'undefined' ) );
 		
 		// signal
 		

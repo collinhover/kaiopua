@@ -286,6 +286,12 @@ var KAIOPUA = (function (main) {
 				
 				descriptor = Object.getOwnPropertyDescriptor( source, name );
 				
+				if ( destination.hasOwnProperty( name ) ) {
+					
+					delete destination[ name ];
+					
+				}
+				
 				Object.defineProperty( destination, name, descriptor );
 				
 				// if deep copy

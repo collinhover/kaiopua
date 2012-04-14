@@ -50,26 +50,32 @@
 		
 		// properties
 		
+		_Field.hints = [
+			"You can grab and move plants you've already planted by selecting them.",
+			"You can rotate plants you've selected with a click, hold, and drag.",
+			"You can get rid of plants by clicking them outside of a field."
+		];
+		
 		_Field.scores = {};
 		_Field.scores.base = {
 			threshold: 0,
 			icon: shared.pathToIcons + 'face_smile_rev_64.png',
-			status: 'good'
+			status: 'Good'
 		};
 		_Field.scores.okay = {
 			threshold: 0,
 			icon: shared.pathToIcons + 'face_okay_rev_64.png',
-			status: 'uh oh...'
+			status: "Okay"
 		};
 		_Field.scores.good = {
 			threshold: 0.8,
 			icon: shared.pathToIcons + 'face_smile_rev_64.png',
-			status: 'good'
+			status: 'Good'
 		};
 		_Field.scores.perfect = {
 			threshold: 1,
 			icon: shared.pathToIcons + 'face_laugh_rev_64.png',
-			status: 'perfect'
+			status: 'Perfect'
 		};
 		
 		_Field.scoreMap = [
@@ -124,6 +130,11 @@
 		// properties
 		
 		numElementsMin = parameters.numElementsMin;
+			
+		this.hints = {
+			list: main.type( parameters.hints ) === 'array' ? parameters.hints : _Field.hints,
+			used: []
+		}
 		
 		/*===================================================
 		
@@ -143,9 +154,11 @@
 				numElementsDiff,
 				numElementsToMin,
 				title,
+				hint,
 				score,
 				scorePct,
 				scoreInfo,
+				scoreIndex,
 				scoreHighestInfo,
 				scoreStatus,
 				scoreIcon,
@@ -164,10 +177,6 @@
 			// if is solved
 			
 			if ( this.isSolved === true ){
-				
-				// set title
-				
-				title = "You solved the " + this.id + " puzzle!";
 				
 				// get elements filling grid
 				
@@ -191,9 +200,7 @@
 					
 				}
 				
-				score = _MathHelper.round( score, 3 );
-				
-				scorePct = score * 100 + "%";
+				scorePct = _MathHelper.round( score * 100, 3 ) + "%";
 				
 				// use score map to determine status/icon/rewards
 				
@@ -208,6 +215,8 @@
 					if ( score >= scoreInfo.threshold ) {
 						
 						scoreHighestInfo = scoreInfo;
+						
+						scoreIndex = i;
 						
 					}
 					
@@ -233,9 +242,54 @@
 				
 				scoreIcon = scoreHighestInfo.icon;
 				
+				// title
+				// perfect score
+				if ( scoreIndex === this.scoreMap.length - 1 ) {
+					
+					title = "Hurrah! You solved the " + this.id + " puzzle!";
+					
+				}
+				// other scores
+				else {
+					
+					// title
+					
+					if ( scoreIndex === 0 ) {
+						
+						title = "You've got the basics of the " + this.id + " puzzle!";
+						
+					}
+					else {
+						
+						title = "Getting better at the " + this.id + " puzzle!";
+						
+					}
+					
+					// reset hints
+					
+					if ( this.hints.list.length === 0 && this.hints.used.length > 0 ) {
+						
+						this.hints.list = this.hints.list.concat( this.hints.used.splice( 0, this.hints.used.length ) );
+						
+					}
+					
+					// hint
+					
+					if ( this.hints.list.length > 0 ) {
+						
+						hint = this.hints.list.shift();
+						
+						this.hints.used.push( hint );
+						
+						title += "<br/><span class='highlight text_large title_alt emphasis'>Hint: " + hint + "</span>";
+						
+					}
+					
+				}
+				
 				// send message notifying user of score
 				
-				scoreHTML = "<div class='grid'><ul><li class='grid_compartment score_counter'><div class='grid_cell_inner'><img src='" + scoreIcon + "'></div><p class='score_label'>" + scoreStatus + "</p></li><li class='grid_compartment score_counter'><div class='grid_cell_inner'><p class='score_count text_huge'>" + numElementsBase + "</p><p class='score_label'>total spaces</p></div></li>";
+				scoreHTML = "<div class='grid align_center'><ul><li class='grid_compartment score_counter'><div class='grid_cell_inner'><img src='" + scoreIcon + "'></div><p class='score_label'>" + scoreStatus + "</p></li><li class='grid_compartment score_counter'><div class='grid_cell_inner'><p class='score_count text_huge'>" + numElementsBase + "</p><p class='score_label'>total spaces</p></div></li>";
 				
 				if ( numElementsToMin > 0 ) {
 					
@@ -244,8 +298,6 @@
 					
 				}
 				else {
-					
-					title = "Hurrah! " + title;
 					
 					scoreHTML += "<li class='grid_compartment score_counter'><div class='grid_cell_inner'><p class='score_label'>you solved it with only</p><p class='score_count text_huge score_count_highlight'>" + numElementsUsed + "</p><p class='score_label'>plants</p></div></li>";
 					
@@ -256,7 +308,7 @@
 				// show all rewards
 				// give all enabled rewards
 				
-				bodyHTML = "<div class='grid'><ul>";
+				bodyHTML = "<div class='grid align_center'><ul>";
 				
 				for ( i = 0, l = rewards.length; i < l; i++ ) {
 					
@@ -327,16 +379,18 @@
 					
 				}
 				
+				// notify about number of rewards given
+				
 				bodyHTML += "</ul></div>";
 				
 				if ( numRewardsGiven > 0 ) {
 					
-					bodyHTML = "<p>The tiki spirits <span class='highlight'>favor you with " + numRewardsGiven + " gift" + ( numRewardsGiven > 1 ? "s" : "" ) + "</span>!</p><br/>" + bodyHTML;
+					bodyHTML = "<div class='info_panel align_center'><p>The tiki spirits <span class='highlight'>favor you with " + numRewardsGiven + " gift" + ( numRewardsGiven > 1 ? "s" : "" ) + "!</span></p><br/>" + bodyHTML + "</div>";
 					
 				}
 				else {
 					
-					bodyHTML = "<p>The tiki spirits have given all they can for what you have done.</p><br/>" + bodyHTML;
+					bodyHTML = "<div class='info_panel align_center'><p>The tiki spirits have given all they can for now.</p><br/>" + bodyHTML + "</div>";
 					
 				}
 				
@@ -347,7 +401,8 @@
 					title: title,
 					body: bodyHTML,
 					priority: true,
-					transitionerOpacity: 0.9
+					transitionerOpacity: 0.9,
+					confirmRequired: true
 				} );
 				
 			}

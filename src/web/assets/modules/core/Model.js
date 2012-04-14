@@ -187,8 +187,9 @@
 		}
 		
 		// call prototype constructor
+		// default to single material
 		
-		THREE.Mesh.call( this, geometry, /* currently no multimaterials */ materials[0] );
+		THREE.Mesh.call( this, geometry, materials[0] );
 		
 		// force use quaternion
 		
@@ -291,7 +292,7 @@
 		
 		this.morphs = make_morphs_handler( this );
 		
-		// adjust for offset if needed
+		// adjustments
 		
 		if ( parameters.center === true ) {
 			
@@ -302,6 +303,12 @@
 		if ( parameters.centerRotation === true ) {
 			
 			_ObjectHelper.center_rotation( this );
+			
+		}
+		
+		if ( parameters.normalizeFaces === true ) {
+			
+			_ObjectHelper.normalize_faces( this );
 			
 		}
 		

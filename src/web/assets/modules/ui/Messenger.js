@@ -11,12 +11,14 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/ui/Messenger.js",
 		_Messenger = {},
-		_UIElement,
 		_Game,
+		_UIElement,
+		_Button,
 		_GUI,
 		queue,
 		priority = false,
-		active = false;
+		active = false,
+		confirmRequired = false;
 	
 	/*===================================================
     
@@ -27,8 +29,9 @@
 	main.asset_register( assetPath, { 
 		data: _Messenger,
 		requirements: [
-			"assets/modules/ui/UIElement.js",
 			"assets/modules/core/Game.js",
+			"assets/modules/ui/UIElement.js",
+			"assets/modules/ui/Button.js",
 			"assets/modules/ui/GUI.js"
 		],
 		callbacksOnReqs: init_internal,
@@ -41,11 +44,12 @@
     
     =====================================================*/
 	
-	function init_internal ( uie, g, gui ) {
+	function init_internal ( g, uie, btn, gui ) {
 		console.log('internal messenger', _Messenger);
 		
-		_UIElement = uie;
 		_Game = g;
+		_UIElement = uie;
+		_Button = btn;
 		_GUI = gui;
 		
 		// properties
@@ -106,10 +110,10 @@
 			}
 		} );
 		
-		_Messenger.confirm = new _UIElement.Instance( {
+		_Messenger.confirm = new _Button.Instance( {
 			id: 'confirm',
-			html: "<p>press anything to continue</p>",
-			classes: 'highlight text_small',
+			html: "press anything to continue",
+			theme: 'core',
 			cssmap: {
 				'position' : 'relative',
 				'margin-top' : '20px',
@@ -269,6 +273,28 @@
 				
 			}
 			
+			// confirm
+			
+			if ( parameters.confirmRequired === true ) {
+				
+				confirmRequired = parameters.confirmRequired;
+				
+				_Messenger.confirm.html = "<p class='highlight text_small'>click HERE to continue</p>";
+				
+				_Messenger.confirm.callback = hide_message;
+				_Messenger.confirm.context = _Messenger;
+				
+			}
+			else {
+				
+				confirmRequired = false;
+				
+				_Messenger.confirm.html = "<p class='highlight text_small'>press anything to continue</p>";
+				
+				_Messenger.confirm.callback = _Messenger.confirm.context = undefined;
+				
+			}
+			
 			// if priority message
 			
 			if ( priority === true ) {
@@ -343,6 +369,10 @@
 			
 		}
 		
+		// active
+		
+		active = false;
+		
 		// was priority message
 		
 		if ( priority === true ) {
@@ -379,8 +409,6 @@
 				
 			}
 		} );
-		
-		active = false;
 		
 	}
 	
@@ -445,8 +473,12 @@
 		
 		// signals
 		
-		shared.signals.keyup.add( hide_message );
-		shared.signals.mouseup.add( hide_message );
+		if ( confirmRequired !== true ) {
+			
+			shared.signals.keyup.add( hide_message );
+			shared.signals.mouseup.add( hide_message );
+			
+		}
 		
 	}
 	

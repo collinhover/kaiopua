@@ -1555,7 +1555,7 @@
 			time: timeShow,
 			opacity: opacityShow,
 			callback: function () {
-				this.hide( {
+				this.show( {
 					remove: false,
 					time: timeHide,
 					opacity: opacityHide,

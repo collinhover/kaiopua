@@ -211,6 +211,10 @@ a:hover, a:active {
     color: #fcd700;
 }
 
+.emphasis {
+	font-style: italic;
+}
+
 .title {
 	font-family: 'CoustardRegular', Georgia, serif;
 }
@@ -231,14 +235,19 @@ a:hover, a:active {
 	font-size: 30px;
 }
 
+/* alignment
+-------------------------*/
+
+.align_center {
+	margin: 0 auto;
+}
+
 /* grid
 -------------------------*/
 
 .grid {
 	display: table;
 	border-spacing: 10px;
-	margin: 0 auto;
-	padding: 5px;
 	color: #eeeeee;
 }
 
@@ -248,11 +257,11 @@ a:hover, a:active {
 
 .grid li {
 	display: table-cell;
-	padding: 10px;
 	text-align: center;
 }
 
 .grid_compartment {
+	padding: 10px;
 	border: 1px #dddddd solid; 
 	-moz-border-radius: 5px;
     -webkit-border-radius: 5px;
@@ -317,6 +326,8 @@ a:hover, a:active {
 -------------------------*/
 
 .info_panel {
+	display: table;
+	padding: 10px;
     overflow: auto;
 	background: #222222;
     -moz-border-radius: 15px;
