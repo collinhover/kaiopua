@@ -200,7 +200,7 @@
 					
 				}
 				
-				scorePct = _MathHelper.round( score * 100, 3 ) + "%";
+				scorePct = Math.round( score * 100 ) + "%";
 				
 				// use score map to determine status/icon/rewards
 				
@@ -308,89 +308,95 @@
 				// show all rewards
 				// give all enabled rewards
 				
-				bodyHTML = "<div class='grid align_center'><ul>";
+				bodyHTML = '';
 				
-				for ( i = 0, l = rewards.length; i < l; i++ ) {
+				if ( rewards.length > 0 ) {
 					
-					rewardInfo = rewards[ i ];
+					bodyHTML += "<div class='grid align_center'><ul>";
 					
-					rewardList = rewardInfo.list;
-					
-					// for each reward in list
-					
-					for ( j = 0, k = rewardList.length; j < k; j++ ) {
+					for ( i = 0, l = rewards.length; i < l; i++ ) {
 						
-						reward = rewardList[ j ];
+						rewardInfo = rewards[ i ];
 						
-						// show
+						rewardList = rewardInfo.list;
 						
-						if ( typeof reward.image !== 'undefined' ) {
+						// for each reward in list
+						
+						for ( j = 0, k = rewardList.length; j < k; j++ ) {
 							
-							if ( rewardInfo.enabled === true ) {
+							reward = rewardList[ j ];
+							
+							// show
+							
+							if ( typeof reward.image !== 'undefined' ) {
 								
-								if ( rewardInfo.given !== true ) {
+								if ( rewardInfo.enabled === true ) {
 									
-									bodyHTML += "<li><div class='grid_cell_inner'><img src='" + reward.image + "'></div><p>" + ( reward.label || "New Gift!" ) + "</p></li>";
+									if ( rewardInfo.given !== true ) {
+										
+										bodyHTML += "<li><div class='grid_cell_inner'><img src='" + reward.image + "'></div><p>" + ( reward.label || "New Gift!" ) + "</p></li>";
+										
+									}
+									else {
+										
+										bodyHTML += "<li style='opacity:0.6'><div class='grid_cell_inner'><img src='" + ( shared.pathToIcons + "confirm_rev_64.png" ) + "'></div><p>You have this gift</p></li>";
+										
+									}
 									
 								}
 								else {
 									
-									bodyHTML += "<li style='opacity:0.6'><div class='grid_cell_inner'><img src='" + ( shared.pathToIcons + "confirm_rev_64.png" ) + "'></div><p>You have this gift</p></li>";
-									
+									bodyHTML += "<li style='opacity:0.25'><div class='grid_cell_inner'><img src='" + reward.image + "'></div><p class='text_small'>unlock at higher score</p></li>";
+								
 								}
 								
 							}
-							else {
+							
+							// if reward enabled
+							
+							if ( rewardInfo.enabled === true ) {
 								
-								bodyHTML += "<li style='opacity:0.25'><div class='grid_cell_inner'><img src='" + reward.image + "'></div><p class='text_small'>unlock at higher score</p></li>";
-							
-							}
-							
-						}
-						
-						// if reward enabled
-						
-						if ( rewardInfo.enabled === true ) {
-							
-							// if not yet given
-							
-							if ( rewardInfo.given !== true ) {
+								// if not yet given
 								
-								if ( typeof reward.callback === 'function' ) {
+								if ( rewardInfo.given !== true ) {
 									
-									reward.callback.apply( reward.context, main.ensure_array( reward.data ) );
+									if ( typeof reward.callback === 'function' ) {
+										
+										reward.callback.apply( reward.context, main.ensure_array( reward.data ) );
+										
+									}
+									
+									numRewardsGiven++;
 									
 								}
-								
-								numRewardsGiven++;
 								
 							}
 							
 						}
 						
-					}
-					
-					// set given
-					
-					if ( rewardInfo.enabled === true && rewardInfo.given !== true ) {
+						// set given
 						
-						rewardInfo.given = true;
+						if ( rewardInfo.enabled === true && rewardInfo.given !== true ) {
+							
+							rewardInfo.given = true;
+						}
+						
 					}
 					
-				}
-				
-				// notify about number of rewards given
-				
-				bodyHTML += "</ul></div>";
-				
-				if ( numRewardsGiven > 0 ) {
+					// notify about number of rewards given
 					
-					bodyHTML = "<div class='info_panel align_center'><p>The tiki spirits <span class='highlight'>favor you with " + numRewardsGiven + " gift" + ( numRewardsGiven > 1 ? "s" : "" ) + "!</span></p><br/>" + bodyHTML + "</div>";
+					bodyHTML += "</ul></div>";
 					
-				}
-				else {
-					
-					bodyHTML = "<div class='info_panel align_center'><p>The tiki spirits have given all they can for now.</p><br/>" + bodyHTML + "</div>";
+					if ( numRewardsGiven > 0 ) {
+						
+						bodyHTML = "<div class='info_panel align_center'><p>The tiki spirits <span class='highlight'>favor you with " + numRewardsGiven + " gift" + ( numRewardsGiven > 1 ? "s" : "" ) + "!</span></p><br/>" + bodyHTML + "</div>";
+						
+					}
+					else {
+						
+						bodyHTML = "<div class='info_panel align_center'><p>The tiki spirits have given all they can for now.</p><br/>" + bodyHTML + "</div>";
+						
+					}
 					
 				}
 				

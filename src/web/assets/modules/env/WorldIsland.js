@@ -416,6 +416,9 @@
 				id: 'Tutorial',
 				geometry: main.get_asset_data("assets/models/Field_Tutorial.js"),
 				materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors, reflectivity: 0 } ),
+				physics: {
+					bodyType: 'mesh'
+				},
 				grid: {
 					modulesGeometry: main.get_asset_data("assets/models/Field_Tutorial_Grid.js")
 				},
@@ -440,6 +443,40 @@
 			});
 			
 			me.parts.body.add( me.parts.fieldTutorial );
+			
+			// start
+			
+			me.parts.fieldStart = new _Field.Instance( {
+				id: 'Start',
+				geometry: main.get_asset_data("assets/models/Field_Start.js"),
+				materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors, reflectivity: 0 } ),
+				physics: {
+					bodyType: 'mesh'
+				},
+				grid: {
+					modulesGeometry: main.get_asset_data("assets/models/Field_Start_Grid.js")
+				},
+				numElementsMin: 10,
+				/*rewards: [
+					{
+						image: shared.pathToIcons + 'plant_rev_64.png',
+						label: 'New Plant!',
+						callback: _Farming.give_plants,
+						context: _Farming,
+						data: 'taro_003'
+					},
+					false,
+					{
+						image: shared.pathToIcons + 'plant_rev_64.png',
+						label: 'New Plant!',
+						callback: _Farming.give_plants,
+						context: _Farming,
+						data: 'rock'
+					}
+				]*/
+			});
+			
+			me.parts.body.add( me.parts.fieldStart );
 			
 		}
 		

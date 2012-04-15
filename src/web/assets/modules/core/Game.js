@@ -143,6 +143,8 @@
 			{ path: "assets/models/Volcano_Rocks_005.js", type: 'model' },
 			{ path: "assets/models/Field_Tutorial.js", type: 'model' },
 			{ path: "assets/models/Field_Tutorial_Grid.js", type: 'model' },
+			{ path: "assets/models/Field_Start.js", type: 'model' },
+			{ path: "assets/models/Field_Start_Grid.js", type: 'model' },
 			"assets/textures/skybox_world_posx.jpg",
             "assets/textures/skybox_world_negx.jpg",
 			"assets/textures/skybox_world_posy.jpg",

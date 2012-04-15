@@ -163,6 +163,10 @@
 		
 		parameters.normalizeFaces = true;
 		
+		/*parameters.physics = {
+			bodyType: 'mesh'
+		};*/
+		
 		// prototype constructor
 		
 		_Model.Instance.call( this, parameters );
