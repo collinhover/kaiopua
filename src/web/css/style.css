@@ -227,6 +227,10 @@ a:hover, a:active {
 	font-size: 14px;
 }
 
+.text_medium {
+	font-size: 18px;
+}
+
 .text_large {
 	font-size: 22px;
 }

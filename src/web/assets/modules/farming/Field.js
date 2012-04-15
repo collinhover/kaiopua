@@ -53,7 +53,8 @@
 		_Field.hints = [
 			"You can grab and move plants you've already planted by selecting them.",
 			"You can rotate plants you've selected with a click, hold, and drag.",
-			"You can get rid of plants by clicking them outside of a field."
+			"You can get rid of plants by clicking them outside of a field.",
+			"Sometimes fields are split into pieces."
 		];
 		
 		_Field.scores = {};
@@ -65,7 +66,7 @@
 		_Field.scores.okay = {
 			threshold: 0,
 			icon: shared.pathToIcons + 'face_okay_rev_64.png',
-			status: "Okay"
+			status: "Average"
 		};
 		_Field.scores.good = {
 			threshold: 0.8,
@@ -132,7 +133,7 @@
 		numElementsMin = parameters.numElementsMin;
 			
 		this.hints = {
-			list: main.type( parameters.hints ) === 'array' ? parameters.hints : _Field.hints,
+			list: main.type( parameters.hints ) === 'array' ? ( parameters.hintsCombine === true ? [].concat( parameters.hints, _Field.hints ) : parameters.hints ) : _Field.hints,
 			used: []
 		}
 		
@@ -222,7 +223,7 @@
 					
 					// add all rewards possible
 					
-					if ( typeof scoreInfo.rewards !== 'undefined' && main.type( scoreInfo.rewards.list ) === 'array'  ) {
+					if ( typeof scoreInfo.rewards !== 'undefined' && main.type( scoreInfo.rewards.list ) === 'array' && scoreInfo.rewards.list.length > 0 ) {
 						
 						// if giving to player
 						
@@ -281,7 +282,7 @@
 						
 						this.hints.used.push( hint );
 						
-						title += "<br/><span class='highlight text_large title_alt emphasis'>Hint: " + hint + "</span>";
+						title += "<br/><span class='highlight text_medium title_alt emphasis'>Hint: " + hint + "</span>";
 						
 					}
 					
@@ -397,6 +398,12 @@
 						bodyHTML = "<div class='info_panel align_center'><p>The tiki spirits have given all they can for now.</p><br/>" + bodyHTML + "</div>";
 						
 					}
+					
+				}
+				// no rewards
+				else {
+					
+					bodyHTML += "<p>The tiki spirits have given all they can for now.</p>";
 					
 				}
 				

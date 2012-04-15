@@ -447,16 +447,20 @@
 			// start
 			
 			me.parts.fieldStart = new _Field.Instance( {
-				id: 'Start',
-				geometry: main.get_asset_data("assets/models/Field_Start.js"),
+				id: 'Split',
+				geometry: main.get_asset_data("assets/models/Field_Basics_Split.js"),
 				materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors, reflectivity: 0 } ),
 				physics: {
 					bodyType: 'mesh'
 				},
 				grid: {
-					modulesGeometry: main.get_asset_data("assets/models/Field_Start_Grid.js")
+					modulesGeometry: main.get_asset_data("assets/models/Field_Basics_Split_Grid.js")
 				},
 				numElementsMin: 10,
+				hints: [
+					'Some fields are split into smaller parts. Fields are much easier to solve if you think this way!'
+				],
+				hintsCombine: true,
 				/*rewards: [
 					{
 						image: shared.pathToIcons + 'plant_rev_64.png',
