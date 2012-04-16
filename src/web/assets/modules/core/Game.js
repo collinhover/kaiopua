@@ -131,6 +131,7 @@
 			{ path: "assets/models/Taro_Plant_001.js", type: 'model' },
 			{ path: "assets/models/Taro_Plant_002.js", type: 'model' },
 			{ path: "assets/models/Taro_Plant_003.js", type: 'model' },
+			{ path: "assets/models/Pineapple_Plant_001.js", type: 'model' },
 			{ path: "assets/models/Rock.js", type: 'model' },
 			{ path: "assets/models/Rock_Purple.js", type: 'model' },
 			{ path: "assets/models/Rock_Blue.js", type: 'model' },

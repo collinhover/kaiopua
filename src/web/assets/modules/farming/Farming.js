@@ -130,6 +130,21 @@
 			}
 		});
 		
+		Object.defineProperty( _Farming.plantParameters, 'pineapple_001', { 
+			get: function () {
+				
+				return {
+					seed: {
+						image: shared.pathToIcons + 'plant_64.png',
+						tooltip: 'Pineapple'
+					},
+					geometry: "assets/models/Pineapple_Plant_001.js",
+					layout: [ [ 1 ] ]
+				};
+			
+			}
+		});
+		
 		// functions
 		
 		_Farming.reset = reset;

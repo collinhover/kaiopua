@@ -437,7 +437,7 @@
 						label: 'New Plant!',
 						callback: _Farming.give_plants,
 						context: _Farming,
-						data: 'rock'
+						data: 'pineapple_001'
 					}
 				]
 			});
@@ -467,15 +467,7 @@
 						label: 'New Plant!',
 						callback: _Farming.give_plants,
 						context: _Farming,
-						data: 'taro_003'
-					},
-					false,
-					{
-						image: shared.pathToIcons + 'plant_rev_64.png',
-						label: 'New Plant!',
-						callback: _Farming.give_plants,
-						context: _Farming,
-						data: 'rock'
+						data: 'pineapple_001'
 					}
 				]*/
 			});
