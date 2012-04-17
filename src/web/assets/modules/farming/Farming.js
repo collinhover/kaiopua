@@ -135,7 +135,7 @@
 				
 				return {
 					seed: {
-						image: shared.pathToIcons + 'plant_64.png',
+						image: shared.pathToIcons + 'pineapple_001_64.png',
 						tooltip: 'Pineapple'
 					},
 					geometry: "assets/models/Pineapple_Plant_001.js",

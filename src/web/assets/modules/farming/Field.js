@@ -189,15 +189,15 @@
 				
 				numElementsDiff = numElementsBase - numElementsUsed;
 				
-				numElementsMin = main.is_number( numElementsMin ) ? numElementsMin : numElementsBase;
+				numElementsMin = main.is_number( numElementsMin ) && numElementsMin > 0 ? numElementsMin : numElementsBase;
 				
 				numElementsToMin = Math.max( 0, numElementsUsed - numElementsMin );
 				
 				score = Math.min( 1, 1 - numElementsToMin / ( numElementsBase - numElementsMin ) );
 				
-				if ( isNaN( score ) ) {
+				if ( isNaN( score ) || score < 0 ) {
 					
-					score = 0;
+					score = 1;
 					
 				}
 				

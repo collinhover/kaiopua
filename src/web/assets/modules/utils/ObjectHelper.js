@@ -47,12 +47,12 @@
 	_ObjectHelper.extract_children_from_objects = extract_children_from_objects;
 	_ObjectHelper.extract_parents_from_objects = extract_parents_from_objects;
 	
-	_ObjectHelper.apply_matrix = apply_matrix;
-	_ObjectHelper.apply_quaternion = apply_quaternion;
-	
 	_ObjectHelper.dimensions = dimensions;
 	
 	_ObjectHelper.push_bounds = push_bounds;
+	
+	_ObjectHelper.apply_matrix = apply_matrix;
+	_ObjectHelper.apply_quaternion = apply_quaternion;
 	
 	_ObjectHelper.center_offset = center_offset;
 	_ObjectHelper.object_center = object_center;
@@ -208,117 +208,6 @@
 	
 	/*===================================================
     
-    apply
-    
-    =====================================================*/
-	
-	function apply_matrix ( object, matrix ) {
-		
-		var i, l,
-			j, k,
-			geometry = object instanceof THREE.Mesh ? object.geometry : object,
-			morphTargets = geometry.morphTargets,
-			morphTarget,
-			vertices,
-			vertex;
-		
-		// apply offset matrix to geometry
-		
-		geometry.applyMatrix( matrix );
-		
-		// adjust morph targets
-		
-		for ( i = 0, l = morphTargets.length; i < l; i++ ) {
-			
-			morphTarget = morphTargets[ i ];
-			
-			vertices = morphTarget.vertices;
-			
-			for ( j = 0, k = vertices.length; j < k; j++ ) {
-				
-				vertex = vertices[ j ];
-				
-				matrix.multiplyVector3( vertex.position );
-				
-			}
-			
-		}
-		
-		// force recompute bounds
-		
-		geometry.computeBoundingSphere();
-		
-		geometry.computeBoundingBox();
-		
-		// additional adjustments if object is mesh
-		
-		if ( object instanceof THREE.Mesh ) {
-			
-			object.boundRadius = geometry.boundingSphere.radius;
-			
-		}
-		
-	}
-	
-	function apply_quaternion ( object, quaternion, invisible, reverse ) {
-		
-		var matrix = utilMat41ApplyQ.setRotationFromQuaternion( quaternion ),
-			objectQ = utilQ1ApplyQ;
-			objectNewQ = utilQ2ApplyQ;
-		
-		// apply matrix to object
-		
-		apply_matrix( object, matrix );
-		
-		// additional adjustments if object is mesh
-		
-		if ( invisible === true && object instanceof THREE.Mesh ) {
-			
-			// get object quaternion
-			
-			if ( object.useQuaternion === true ) {
-				
-				objectQ = object.quaternion;
-				
-			}
-			else {
-				
-				objectQ.setFromRotationMatrix( object.matrix );
-				
-			}
-			
-			// multiply
-			
-			if ( reverse === true ) {
-				
-				objectNewQ.multiply( objectQ, quaternion.inverse() );
-				
-			}
-			else {
-				
-				objectNewQ.multiply( quaternion.inverse(), objectQ );
-				
-			}
-			
-			// apply
-			
-			if ( object.useQuaternion === true ) {
-				
-				object.quaternion.copy( objectNewQ );
-			
-			}
-			else {
-				
-				object.matrix.setRotationFromQuaternion( objectNewQ );
-				
-			}
-			
-		}
-		
-	}
-	
-	/*===================================================
-    
     dimensions
     
     =====================================================*/
@@ -429,6 +318,117 @@
 		}
 		
 		return bounds;
+		
+	}
+	
+	/*===================================================
+    
+    apply
+    
+    =====================================================*/
+	
+	function apply_matrix ( object, matrix ) {
+		
+		var i, l,
+			j, k,
+			geometry = object instanceof THREE.Mesh ? object.geometry : object,
+			morphTargets = geometry.morphTargets,
+			morphTarget,
+			vertices,
+			vertex;
+		
+		// apply offset matrix to geometry
+		
+		geometry.applyMatrix( matrix );
+		
+		// adjust morph targets
+		
+		for ( i = 0, l = morphTargets.length; i < l; i++ ) {
+			
+			morphTarget = morphTargets[ i ];
+			
+			vertices = morphTarget.vertices;
+			
+			for ( j = 0, k = vertices.length; j < k; j++ ) {
+				
+				vertex = vertices[ j ];
+				
+				matrix.multiplyVector3( vertex.position );
+				
+			}
+			
+		}
+		
+		// force recompute bounds
+		
+		geometry.computeBoundingSphere();
+		
+		geometry.computeBoundingBox();
+		
+		// additional adjustments if object is mesh
+		
+		if ( object instanceof THREE.Mesh ) {
+			
+			object.boundRadius = geometry.boundingSphere.radius;
+			
+		}
+		
+	}
+	
+	function apply_quaternion ( object, quaternion, invisible, reverse ) {
+		
+		var matrix = utilMat41ApplyQ.setRotationFromQuaternion( quaternion ),
+			objectQ = utilQ1ApplyQ;
+			objectNewQ = utilQ2ApplyQ;
+		
+		// apply matrix to object
+		
+		apply_matrix( object, matrix );
+		
+		// additional adjustments if object is mesh
+		
+		if ( invisible === true && object instanceof THREE.Mesh ) {
+			
+			// get object quaternion
+			
+			if ( object.useQuaternion === true ) {
+				
+				objectQ = object.quaternion;
+				
+			}
+			else {
+				
+				objectQ.setFromRotationMatrix( object.matrix );
+				
+			}
+			
+			// multiply
+			
+			if ( reverse === true ) {
+				
+				objectNewQ.multiply( objectQ, quaternion.inverse() );
+				
+			}
+			else {
+				
+				objectNewQ.multiply( quaternion.inverse(), objectQ );
+				
+			}
+			
+			// apply
+			
+			if ( object.useQuaternion === true ) {
+				
+				object.quaternion.copy( objectNewQ );
+			
+			}
+			else {
+				
+				object.matrix.setRotationFromQuaternion( objectNewQ );
+				
+			}
+			
+		}
 		
 	}
 	
@@ -590,7 +590,7 @@
     =====================================================*/
 	
 	function normalize_faces ( object ) {
-		
+		return;
 		// face must lie along xz axis with normal in y direction
 		// TODO: account for faces with other orientations
 		
@@ -636,7 +636,7 @@
 		for ( i = 0, l = faces.length; i < l; i++ ) {
 			
 			face = faces[ i ];
-			
+			console.log('face normal', face.normal.x.toFixed(4), face.normal.y.toFixed(4), face.normal.z.toFixed(4) );
 			faceVertexOrder = [ 'a', 'b', 'c', 'd' ];
 			
 			ia = face.a;
@@ -668,6 +668,12 @@
 				pd = vd.position;
 				npd.copy( pd ).normalize();
 				uvd = faceVertexUvs[ 3 ];
+				
+				console.log(' > face vert A', npa.x.toFixed(4), npa.y.toFixed(4), npa.z.toFixed(4) );
+				console.log(' > face vert B', npb.x.toFixed(4), npb.y.toFixed(4), npb.z.toFixed(4) );
+				console.log(' > face vert C', npc.x.toFixed(4), npc.y.toFixed(4), npc.z.toFixed(4) );
+				console.log(' > face vert D', npd.x.toFixed(4), npd.y.toFixed(4), npd.z.toFixed(4) );
+				console.log(' ');
 				
 				cpa = get_vector_with_least_distance_to_source( epa, npa, npb, npc, npd );
 				cpb = get_vector_with_least_distance_to_source( epb, npa, npb, npc, npd );

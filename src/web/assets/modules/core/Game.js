@@ -146,6 +146,8 @@
 			{ path: "assets/models/Field_Tutorial_Grid.js", type: 'model' },
 			{ path: "assets/models/Field_Basics_Split.js", type: 'model' },
 			{ path: "assets/models/Field_Basics_Split_Grid.js", type: 'model' },
+			{ path: "assets/models/Field_Basics_Function.js", type: 'model' },
+			{ path: "assets/models/Field_Basics_Function_Grid.js", type: 'model' },
 			"assets/textures/skybox_world_posx.jpg",
             "assets/textures/skybox_world_negx.jpg",
 			"assets/textures/skybox_world_posy.jpg",

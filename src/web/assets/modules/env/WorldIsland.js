@@ -422,7 +422,7 @@
 				grid: {
 					modulesGeometry: main.get_asset_data("assets/models/Field_Tutorial_Grid.js")
 				},
-				numElementsMin: 10,
+				numElementsMin: 0,
 				rewards: [
 					{
 						image: shared.pathToIcons + 'plant_rev_64.png',
@@ -430,23 +430,15 @@
 						callback: _Farming.give_plants,
 						context: _Farming,
 						data: 'taro_003'
-					},
-					false,
-					{
-						image: shared.pathToIcons + 'plant_rev_64.png',
-						label: 'New Plant!',
-						callback: _Farming.give_plants,
-						context: _Farming,
-						data: 'pineapple_001'
 					}
 				]
 			});
 			
 			me.parts.body.add( me.parts.fieldTutorial );
 			
-			// start
+			// basics split
 			
-			me.parts.fieldStart = new _Field.Instance( {
+			me.parts.fieldBasicsSplit = new _Field.Instance( {
 				id: 'Split',
 				geometry: main.get_asset_data("assets/models/Field_Basics_Split.js"),
 				materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors, reflectivity: 0 } ),
@@ -458,6 +450,7 @@
 				},
 				numElementsMin: 10,
 				hints: [
+					'Some plants will only grow when next to certain other plants!',
 					'Some fields are split into smaller parts. Fields are much easier to solve if you think this way!'
 				],
 				hintsCombine: true,
@@ -472,7 +465,45 @@
 				]*/
 			});
 			
-			me.parts.body.add( me.parts.fieldStart );
+			me.parts.body.add( me.parts.fieldBasicsSplit );
+			
+			// basics function
+			
+			me.parts.fieldBasicsFunction = new _Field.Instance( {
+				id: 'Function',
+				geometry: main.get_asset_data("assets/models/Field_Basics_Function.js"),
+				materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors, reflectivity: 0 } ),
+				physics: {
+					bodyType: 'mesh'
+				},
+				grid: {
+					modulesGeometry: main.get_asset_data("assets/models/Field_Basics_Function_Grid.js")
+				},
+				numElementsMin: 10,
+				hints: [
+					'Some plants have special abilities that will help solve puzzles!'
+				],
+				hintsCombine: true,
+				rewards: [
+					{
+						image: shared.pathToIcons + 'rock_rev_64.png',
+						label: 'New Plant!',
+						callback: _Farming.give_plants,
+						context: _Farming,
+						data: 'rock'
+					},
+					false,
+					{
+						image: shared.pathToIcons + 'plant_rev_64.png',
+						label: 'New Plant!',
+						callback: _Farming.give_plants,
+						context: _Farming,
+						data: 'pineapple_001'
+					}
+				]
+			});
+			
+			me.parts.body.add( me.parts.fieldBasicsFunction );
 			
 		}
 		

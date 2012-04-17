@@ -220,7 +220,7 @@
 			vertices = this.modulesGeometry.vertices;
 			faceUvs = this.modulesGeometry.faceUvs[ 0 ];
 			faceVertexUvs = this.modulesGeometry.faceVertexUvs[ 0 ];
-			
+			console.log(this.puzzle.id, 'grid CREATING MODULES');
 			for ( i = 0, l = faces.length; i < l; i++ ) {
 				
 				face = faces[ i ];
