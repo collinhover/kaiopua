@@ -586,10 +586,7 @@
 				
 				// load
 				
-				data = new Image();
-				data.onload = defaultCallback;
-				data.crossOrigin = '';
-				data.src = path;
+				data = main.generate_dom_image( path, defaultCallback );
 				
 				// store empty image data in assets immediately
 				

@@ -65,7 +65,7 @@
 		_Field.scores.okay = {
 			threshold: 0,
 			icon: shared.pathToIcons + 'face_okay_rev_64.png',
-			status: "Okay"
+			status: "Average"
 		};
 		_Field.scores.good = {
 			threshold: 0.8,
@@ -112,6 +112,7 @@
 	function Field ( parameters ) {
 		
 		var pGrid,
+			solvedPerfect = false,
 			solvePuzzle,
 			resetPuzzle,
 			numElementsMin;
@@ -132,7 +133,7 @@
 		numElementsMin = parameters.numElementsMin;
 			
 		this.hints = {
-			list: main.type( parameters.hints ) === 'array' ? parameters.hints : _Field.hints,
+			list: main.type( parameters.hints ) === 'array' ? ( parameters.hintsCombine === true ? [].concat( parameters.hints, _Field.hints ) : parameters.hints ) : _Field.hints,
 			used: []
 		}
 		
@@ -176,7 +177,7 @@
 			
 			// if is solved
 			
-			if ( this.isSolved === true ){
+			if ( solvedPerfect !== true && this.isSolved === true ){
 				
 				// get elements filling grid
 				
@@ -188,19 +189,19 @@
 				
 				numElementsDiff = numElementsBase - numElementsUsed;
 				
-				numElementsMin = main.is_number( numElementsMin ) ? numElementsMin : numElementsBase;
+				numElementsMin = main.is_number( numElementsMin ) && numElementsMin > 0 ? numElementsMin : numElementsBase;
 				
 				numElementsToMin = Math.max( 0, numElementsUsed - numElementsMin );
 				
 				score = Math.min( 1, 1 - numElementsToMin / ( numElementsBase - numElementsMin ) );
 				
-				if ( isNaN( score ) ) {
+				if ( isNaN( score ) || score < 0 ) {
 					
-					score = 0;
+					score = 1;
 					
 				}
 				
-				scorePct = _MathHelper.round( score * 100, 3 ) + "%";
+				scorePct = Math.round( score * 100 ) + "%";
 				
 				// use score map to determine status/icon/rewards
 				
@@ -222,7 +223,7 @@
 					
 					// add all rewards possible
 					
-					if ( typeof scoreInfo.rewards !== 'undefined' && main.type( scoreInfo.rewards.list ) === 'array'  ) {
+					if ( typeof scoreInfo.rewards !== 'undefined' && main.type( scoreInfo.rewards.list ) === 'array' && scoreInfo.rewards.list.length > 0 ) {
 						
 						// if giving to player
 						
@@ -242,9 +243,13 @@
 				
 				scoreIcon = scoreHighestInfo.icon;
 				
-				// title
+				
 				// perfect score
 				if ( scoreIndex === this.scoreMap.length - 1 ) {
+					
+					solvedPerfect = true;
+					
+					// title
 					
 					title = "Hurrah! You solved the " + this.id + " puzzle!";
 					
@@ -281,7 +286,7 @@
 						
 						this.hints.used.push( hint );
 						
-						title += "<br/><span class='highlight text_large title_alt emphasis'>Hint: " + hint + "</span>";
+						title += "<br/><span class='highlight text_medium title_alt emphasis'>Hint: " + hint + "</span>";
 						
 					}
 					
@@ -308,89 +313,101 @@
 				// show all rewards
 				// give all enabled rewards
 				
-				bodyHTML = "<div class='grid align_center'><ul>";
+				bodyHTML = '';
 				
-				for ( i = 0, l = rewards.length; i < l; i++ ) {
+				if ( rewards.length > 0 ) {
 					
-					rewardInfo = rewards[ i ];
+					bodyHTML += "<div class='grid align_center'><ul>";
 					
-					rewardList = rewardInfo.list;
-					
-					// for each reward in list
-					
-					for ( j = 0, k = rewardList.length; j < k; j++ ) {
+					for ( i = 0, l = rewards.length; i < l; i++ ) {
 						
-						reward = rewardList[ j ];
+						rewardInfo = rewards[ i ];
 						
-						// show
+						rewardList = rewardInfo.list;
 						
-						if ( typeof reward.image !== 'undefined' ) {
+						// for each reward in list
+						
+						for ( j = 0, k = rewardList.length; j < k; j++ ) {
 							
-							if ( rewardInfo.enabled === true ) {
+							reward = rewardList[ j ];
+							
+							// show
+							
+							if ( typeof reward.image !== 'undefined' ) {
 								
-								if ( rewardInfo.given !== true ) {
+								if ( rewardInfo.enabled === true ) {
 									
-									bodyHTML += "<li><div class='grid_cell_inner'><img src='" + reward.image + "'></div><p>" + ( reward.label || "New Gift!" ) + "</p></li>";
+									if ( rewardInfo.given !== true ) {
+										
+										bodyHTML += "<li><div class='grid_cell_inner'><img src='" + reward.image + "'></div><p>" + ( reward.label || "New Gift!" ) + "</p></li>";
+										
+									}
+									else {
+										
+										bodyHTML += "<li style='opacity:0.6'><div class='grid_cell_inner'><img src='" + ( shared.pathToIcons + "confirm_rev_64.png" ) + "'></div><p>You have this gift</p></li>";
+										
+									}
 									
 								}
 								else {
 									
-									bodyHTML += "<li style='opacity:0.6'><div class='grid_cell_inner'><img src='" + ( shared.pathToIcons + "confirm_rev_64.png" ) + "'></div><p>You have this gift</p></li>";
-									
+									bodyHTML += "<li style='opacity:0.25'><div class='grid_cell_inner'><img src='" + reward.image + "'></div><p class='text_small'>unlock at higher score</p></li>";
+								
 								}
 								
 							}
-							else {
+							
+							// if reward enabled
+							
+							if ( rewardInfo.enabled === true ) {
 								
-								bodyHTML += "<li style='opacity:0.25'><div class='grid_cell_inner'><img src='" + reward.image + "'></div><p class='text_small'>unlock at higher score</p></li>";
-							
-							}
-							
-						}
-						
-						// if reward enabled
-						
-						if ( rewardInfo.enabled === true ) {
-							
-							// if not yet given
-							
-							if ( rewardInfo.given !== true ) {
+								// if not yet given
 								
-								if ( typeof reward.callback === 'function' ) {
+								if ( rewardInfo.given !== true ) {
 									
-									reward.callback.apply( reward.context, main.ensure_array( reward.data ) );
+									if ( typeof reward.callback === 'function' ) {
+										
+										reward.callback.apply( reward.context, main.ensure_array( reward.data ) );
+										
+									}
+									
+									numRewardsGiven++;
 									
 								}
-								
-								numRewardsGiven++;
 								
 							}
 							
 						}
 						
-					}
-					
-					// set given
-					
-					if ( rewardInfo.enabled === true && rewardInfo.given !== true ) {
+						// set given
 						
-						rewardInfo.given = true;
+						if ( rewardInfo.enabled === true && rewardInfo.given !== true ) {
+							
+							rewardInfo.given = true;
+						}
+						
+					}
+					
+					// notify about number of rewards given
+					
+					bodyHTML += "</ul></div>";
+					
+					if ( numRewardsGiven > 0 ) {
+						
+						bodyHTML = "<div class='info_panel align_center'><p>The tiki spirits <span class='highlight'>favor you with " + numRewardsGiven + " gift" + ( numRewardsGiven > 1 ? "s" : "" ) + "!</span></p><br/>" + bodyHTML + "</div>";
+						
+					}
+					else {
+						
+						bodyHTML = "<div class='info_panel align_center'><p>The tiki spirits have given all they can for now.</p><br/>" + bodyHTML + "</div>";
+						
 					}
 					
 				}
-				
-				// notify about number of rewards given
-				
-				bodyHTML += "</ul></div>";
-				
-				if ( numRewardsGiven > 0 ) {
-					
-					bodyHTML = "<div class='info_panel align_center'><p>The tiki spirits <span class='highlight'>favor you with " + numRewardsGiven + " gift" + ( numRewardsGiven > 1 ? "s" : "" ) + "!</span></p><br/>" + bodyHTML + "</div>";
-					
-				}
+				// no rewards
 				else {
 					
-					bodyHTML = "<div class='info_panel align_center'><p>The tiki spirits have given all they can for now.</p><br/>" + bodyHTML + "</div>";
+					bodyHTML += "<p>The tiki spirits have given all they can for now.</p>";
 					
 				}
 				
@@ -428,6 +445,10 @@
 			this.scoreMap = generate_score_map( parameters.scores );
 			
 			add_rewards_to_scores( this.scoreMap, parameters.rewards );
+			
+			// perfect solution
+			
+			solvedPerfect = false;
 			
 		}
 		

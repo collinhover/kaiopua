@@ -90,6 +90,7 @@
 		_Puzzle.Instance = Puzzle;
 		_Puzzle.Instance.prototype = new _Model.Instance();
 		_Puzzle.Instance.prototype.constructor = _Puzzle.Instance;
+		_Puzzle.Instance.prototype.on_state_changed = on_state_changed;
 		
 		Object.defineProperty( _Puzzle.Instance.prototype, 'elements', { 
 			get: function () {
@@ -128,11 +129,14 @@
 		
 		this.id = typeof parameters.id === 'string' ? parameters.id : puzzleID + puzzleCount;
 		
-		// init grid
+		// signals
+		
+		this.stateChanged = new signals.Signal();
+		
+		// grid
 		
 		this.grid = new _Grid.Instance( parameters.grid );
-		
-		// add grid
+		this.grid.stateChanged.add( this.on_state_changed, this );
 		
 		this.add( this.grid );
 		
@@ -207,6 +211,19 @@
 			_Puzzle._dirtyPuzzles = true;
 			
 		}
+		
+	}
+	
+	/*===================================================
+	
+	state
+	
+	=====================================================*/
+	
+	function on_state_changed ( module ) {
+		
+		console.log(' PUZZLE GRID STATE CHANGE for ', this.id );
+		this.stateChanged.dispatch( module );
 		
 	}
 	

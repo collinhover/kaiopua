@@ -1997,10 +1997,10 @@
 	
 	function generate_dom_element ( parameters ) {
 		
-		var me = this,
-			elementType,
+		var elementType,
 			domElement,
-			imgElement;
+			imgCallback,
+			imgContext;
 		
 		// handle parameters
         
@@ -2012,16 +2012,24 @@
 		
 		// dom element
 		
-		domElement = document.createElement( elementType );
-		
-		// special cases
-		
 		// image
 		
 		if ( elementType === 'img' && typeof parameters.src === 'string' ) {
 			
-			domElement.crossOrigin = '';
-			domElement.src = parameters.src;
+			if ( this instanceof _UIElement.Instance ) {
+				
+				imgCallback = this.align;
+				imgContext = this;
+				
+			}
+			
+			domElement = main.generate_dom_image( parameters.src, imgCallback, imgContext );
+			
+		}
+		// all other types
+		else {
+			
+			domElement = document.createElement( elementType );
 			
 		}
 		

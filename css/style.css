@@ -126,6 +126,17 @@ button {width: auto; overflow: visible;}
 	Serif > Georgia, serif
 	Display > CoustardRegular (Local), Georgia, serif
 	Icons > IconicFill */
+
+@font-face {
+    font-family: 'Georgia';
+    src: url('webfonts/georgia.eot');
+    src: url('webfonts/georgia.eot?#iefix') format('embedded-opentype'),
+         url('webfonts/georgia.woff') format('woff'),
+         url('webfonts/georgia.ttf') format('truetype'),
+         url('webfonts/georgia.svg#georgia') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
    
 @font-face {
     font-family: 'OpenSansRegular';
@@ -225,6 +236,10 @@ a:hover, a:active {
 
 .text_small {
 	font-size: 14px;
+}
+
+.text_medium {
+	font-size: 18px;
 }
 
 .text_large {
@@ -327,7 +342,7 @@ a:hover, a:active {
 
 .info_panel {
 	display: table;
-	padding: 10px;
+	padding: 10px 20px;
     overflow: auto;
 	background: #222222;
     -moz-border-radius: 15px;

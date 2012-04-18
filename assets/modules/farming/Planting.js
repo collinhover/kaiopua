@@ -13,6 +13,7 @@
 		_Planting = {},
 		_Game,
 		_GUI,
+		_Messenger,
 		_Grid,
 		_Puzzle,
 		_GridModule,
@@ -117,6 +118,13 @@
 		this.rotationDistanceMin = _Planting.rotationDistanceMin;
 		this.rotationStartThreshold = _Planting.rotationStartThreshold;
 		this.rotationDirChangeThreshold = _Planting.rotationDirChangeThreshold;
+		
+		// signals
+		
+		this.planted = new signals.Signal();
+		this.plantedSingle = new signals.Signal();
+		this.plantedMulti = new signals.Signal();
+		this.selected = new signals.Signal();
 		
 		// reset
 		
@@ -331,7 +339,8 @@
 	
 	function setup ( parameters ) {
 		
-		var targetObject;
+		var targetObject,
+			selected;
 		
 		// if passed plant to use
 		
@@ -354,6 +363,8 @@
 			
 			targetObject = this.get_planting_object_under_mouse( { modules: false, character: false, plants: true } );
 			
+			selected = true;
+			
 		}
 		
 		// if is a plant
@@ -362,6 +373,14 @@
 			// use plant
 			
 			this.change_plant( targetObject );
+			
+			// selected
+			
+			if ( selected === true ) {
+				
+				this.selected.dispatch( targetObject );
+				
+			}
 			
 		}
 		
@@ -430,7 +449,9 @@
 	function complete () {
 		console.log(' > PLANTING: completing...');
 		var targetObject,
-			plantSuccessful = false;
+			plantSuccessful = false,
+			plantPlanted,
+			plantPlantedNodes;
 		
 		// find if any planting objects under mouse
 				
@@ -458,7 +479,29 @@
 			
 			if ( plantSuccessful ) {
 				console.log(' > PLANTING: plant added!', this.plant);
+				plantPlanted = this.plant;
+				plantPlantedNodes = plantPlanted.get_layout_node_total();
+				
+				// stop
+				
 				this.stop();
+				
+				// planted signal
+				
+				this.planted.dispatch( plantPlanted );
+				
+				// also signal by type
+				
+				if ( plantPlantedNodes > 1 ) {
+					
+					this.plantedMulti.dispatch( plantPlanted );
+					
+				}
+				else {
+					
+					this.plantedSingle.dispatch( plantPlanted );
+					
+				}
 				
 			}
 			else {

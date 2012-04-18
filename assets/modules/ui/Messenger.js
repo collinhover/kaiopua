@@ -240,12 +240,15 @@
 			
 			if ( typeof pImage === 'string' ) {
 				
-				imageElement.src = pImage;
+				imageElement = main.generate_dom_image( pImage, function () {
+					
+					image.align();
+					container.align();
+					
+				}, undefined, undefined, imageElement );
 				
 				image.width = main.is_number( parameters.imageWidth ) ? parameters.imageWidth : ( main.is_number( parameters.imageSize ) ? parameters.imageSize : 'auto' );
 				image.height = main.is_number( parameters.imageHeight ) ? parameters.imageHeight : ( main.is_number( parameters.imageSize ) ? parameters.imageSize : 'auto' );
-				
-				image.align_once( image.alignment );
 				
 				image.show( { parent: head, time: 0 } );
 				
@@ -368,6 +371,10 @@
 			clearRequestTimeout( _Messenger.liveTimeoutID );
 			
 		}
+		
+		// confirm
+		
+		_Messenger.confirm.pulse_stop();
 		
 		// active
 		
