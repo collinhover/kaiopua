@@ -53,8 +53,7 @@
 		_Field.hints = [
 			"You can grab and move plants you've already planted by selecting them.",
 			"You can rotate plants you've selected with a click, hold, and drag.",
-			"You can get rid of plants by clicking them outside of a field.",
-			"Sometimes fields are split into pieces."
+			"You can get rid of plants by clicking them outside of a field."
 		];
 		
 		_Field.scores = {};
@@ -113,6 +112,7 @@
 	function Field ( parameters ) {
 		
 		var pGrid,
+			solvedPerfect = false,
 			solvePuzzle,
 			resetPuzzle,
 			numElementsMin;
@@ -177,7 +177,7 @@
 			
 			// if is solved
 			
-			if ( this.isSolved === true ){
+			if ( solvedPerfect !== true && this.isSolved === true ){
 				
 				// get elements filling grid
 				
@@ -243,9 +243,13 @@
 				
 				scoreIcon = scoreHighestInfo.icon;
 				
-				// title
+				
 				// perfect score
 				if ( scoreIndex === this.scoreMap.length - 1 ) {
+					
+					solvedPerfect = true;
+					
+					// title
 					
 					title = "Hurrah! You solved the " + this.id + " puzzle!";
 					
@@ -441,6 +445,10 @@
 			this.scoreMap = generate_score_map( parameters.scores );
 			
 			add_rewards_to_scores( this.scoreMap, parameters.rewards );
+			
+			// perfect solution
+			
+			solvedPerfect = false;
 			
 		}
 		

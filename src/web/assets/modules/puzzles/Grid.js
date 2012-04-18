@@ -77,7 +77,7 @@
 		_Grid.Instance.prototype.remove_modules = remove_modules;
 		_Grid.Instance.prototype.remove_module = remove_module;
 		_Grid.Instance.prototype.get_modules_with_vertices = get_modules_with_vertices;
-		_Grid.Instance.prototype.module_occupation_changed = module_occupation_changed;
+		_Grid.Instance.prototype.on_state_changed = on_state_changed;
 		_Grid.Instance.prototype.clean = clean;
 		_Grid.Instance.prototype.reset = reset;
 		
@@ -314,6 +314,8 @@
 				module = this.modules[ i ];
 				
 				module.grid = this;
+				
+				module.occupantChanged.add( this.on_state_changed, this );
 				
 			}
 			
@@ -659,7 +661,7 @@
 	
 	=====================================================*/
 	
-	function module_occupation_changed ( module ) {
+	function on_state_changed ( module ) {
 		
 		this.stateChanged.dispatch( this, module );
 		

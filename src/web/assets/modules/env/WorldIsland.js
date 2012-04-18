@@ -445,7 +445,7 @@
 				physics: {
 					bodyType: 'mesh'
 				},
-				grid: {
+				/*grid: {
 					modulesGeometry: main.get_asset_data("assets/models/Field_Basics_Split_Grid.js")
 				},
 				numElementsMin: 10,
@@ -454,7 +454,7 @@
 					'Some fields are split into smaller parts. Fields are much easier to solve if you think this way!'
 				],
 				hintsCombine: true,
-				/*rewards: [
+				rewards: [
 					{
 						image: shared.pathToIcons + 'plant_rev_64.png',
 						label: 'New Plant!',
@@ -467,17 +467,17 @@
 			
 			me.parts.body.add( me.parts.fieldBasicsSplit );
 			
-			// basics function
+			// basics abilities
 			
-			me.parts.fieldBasicsFunction = new _Field.Instance( {
-				id: 'Function',
-				geometry: main.get_asset_data("assets/models/Field_Basics_Function.js"),
+			me.parts.fieldBasicsAbilities = new _Field.Instance( {
+				id: 'Abilities',
+				geometry: main.get_asset_data("assets/models/Field_Basics_Abilities.js"),
 				materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors, reflectivity: 0 } ),
 				physics: {
 					bodyType: 'mesh'
 				},
 				grid: {
-					modulesGeometry: main.get_asset_data("assets/models/Field_Basics_Function_Grid.js")
+					modulesGeometry: main.get_asset_data("assets/models/Field_Basics_Abilities_Grid.js")
 				},
 				numElementsMin: 10,
 				hints: [
@@ -486,7 +486,7 @@
 				hintsCombine: true,
 				rewards: [
 					{
-						image: shared.pathToIcons + 'rock_rev_64.png',
+						image: shared.pathToIcons + 'plant_rev_64.png',
 						label: 'New Plant!',
 						callback: _Farming.give_plants,
 						context: _Farming,
@@ -503,7 +503,7 @@
 				]
 			});
 			
-			me.parts.body.add( me.parts.fieldBasicsFunction );
+			me.parts.body.add( me.parts.fieldBasicsAbilities );
 			
 		}
 		

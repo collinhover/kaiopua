@@ -177,8 +177,7 @@
 		
 		// signals
 		
-		this.stateChanged = new signals.Signal();
-		this.occupiedStateChanged = new signals.Signal();
+		this.occupantChanged = new signals.Signal();
 		
 		// states
 		
@@ -296,10 +295,6 @@
 		// recalculate state showing
 		
 		this.show_state();
-		
-		// signal
-		
-		this.stateChanged.dispatch( this );
 		
 	}
 	
@@ -429,7 +424,9 @@
 	
 	function set_occupant ( occupant ) {
 		
-		// if has occupant
+		var occupantPrev = this._occupant;
+		
+		// if has occupant and occupant is in module
 		
 		if ( typeof this._occupant !== 'undefined' && this._occupant.parent === this ) {
 			
@@ -445,9 +442,13 @@
 		
 		this.change_state( [ 'occupied', 'base' ], ( typeof this.occupant !== 'undefined' ) );
 		
-		// signal
+		// if change occurred
 		
-		this.occupiedStateChanged.dispatch( this );
+		if ( occupant !== occupantPrev ) {
+			
+			this.occupantChanged.dispatch( this );
+			
+		}
 		
 	}
 	

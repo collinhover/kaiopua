@@ -522,6 +522,37 @@ var KAIOPUA = (function (main) {
 		
     };
 	
+	main.generate_dom_image = function ( src, callback, context, data, image ) {
+		
+		var loadCallback = function () {
+			
+			if ( typeof callback === 'function' ) {
+				
+				callback.apply( context, data );
+				
+			}
+			
+		};
+		
+		if ( main.is_image( image ) !== true ) {
+			
+			image = new Image();
+			
+		}
+		
+		image.crossOrigin = '';
+		image.src = src;
+		image.onload = loadCallback;
+		
+		if ( image.complete ) {
+			
+			loadCallback();
+		}
+		
+		return image;
+		
+    };
+	
 	/*===================================================
     
     event functions

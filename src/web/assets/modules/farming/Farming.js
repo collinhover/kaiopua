@@ -18,6 +18,7 @@
 		_Character,
 		_Player,
 		_GUI,
+		_Messenger,
 		_UIElement,
 		_Button,
 		_Menu,
@@ -173,6 +174,7 @@
 		main.asset_require( [
 				"assets/modules/core/Player.js",
 				"assets/modules/ui/GUI.js",
+				"assets/modules/ui/Messenger.js",
 				"assets/modules/ui/UIElement.js",
 				"assets/modules/ui/Button.js",
 				"assets/modules/ui/Menu.js"
@@ -244,6 +246,10 @@
 			
 		}
 		
+		// ui
+		
+		reset_farming_ui();
+		
 	}
 	
 	/*===================================================
@@ -252,13 +258,14 @@
 	
 	=====================================================*/
 	
-	function init_farming_ui( p, gui, uie, btn, mn ) {
+	function init_farming_ui( p, gui, msg, uie, btn, mn ) {
 		console.log('internal farming ui');
 		var i, l,
 			b, m;
 		
 		_Player = p;
 		_GUI = gui;
+		_Messenger = msg;
 		_UIElement = uie;
 		_Button = btn;
 		_Menu = mn;
@@ -303,11 +310,89 @@
 		
 		generate_farmer( _Player.character );
 		
+		// reset
+		
+		reset_farming_ui();
+		
 		// handle plants waiting for UI
 		
 		for ( i = 0, l = plantsWaitingForUI.length; i < l; i++ ) {
 			
 			add_plant_to_ui( plantsWaitingForUI[ i ] );
+			
+		}
+		
+	}
+	
+	function reset_farming_ui () {
+		
+		var i, l,
+			farmer,
+			planting,
+			bindings,
+			binding;
+			
+		if ( typeof _Farming.menu !== 'undefined' && typeof _Player !== 'undefined' ) {
+			
+			// get player farmer
+			
+			farmer = get_farmer_by_character( _Player.character, true );
+			planting = farmer.planting;
+			
+			// init bindings list
+			
+			bindings = farmer.bindings = farmer.bindings || [];
+			
+			// remove existing hint bindings
+			
+			for ( i = 0, l = bindings.length; i < l; i++ ) {
+				
+				binding = bindings[ i ];
+				
+				binding.detach();
+				
+			}
+			
+			// add basic hint bindings
+			
+			bindings.push( planting.planted.addOnce( function () {
+				
+				_Messenger.show_message( {
+					image: shared.pathToIcons + "mouse_left_rev_64.png",
+					title: "Planting Basics: Selecting",
+					body: "You can <span class='highlight'>select and move</span> plants you've already planted with a <span class='highlight'>single click.</span>",
+					priority: true,
+					transitionerOpacity: 0.9,
+					confirmRequired: true
+				} );
+				
+			} ) );
+			
+			bindings.push( planting.plantedMulti.addOnce( function () {
+				
+				_Messenger.show_message( {
+					image: shared.pathToIcons + "rotate_rev_64.png",
+					title: "Planting Basics: Rotating",
+					body: "To <span class='highlight'>rotate</span> a plant, first select it, then <span class='highlight'>hold click and drag.</span>",
+					priority: true,
+					transitionerOpacity: 0.9,
+					confirmRequired: true
+				} );
+				
+			} ) );
+			
+			bindings.push( planting.selected.addOnce( function () {
+				
+				_Messenger.show_message( { 
+					image: shared.pathToIcons + "close_rev_64.png",
+					title: "Planting Basics: Removing",
+					body: "If you want to <span class='highlight'>remove</span> a plant, first select it, then <span class='highlight'>click it outside any field.</span>",
+					priority: true,
+					transitionerOpacity: 0.9,
+					confirmRequired: true
+				} );
+				
+			} ) );
 			
 		}
 		
@@ -487,7 +572,7 @@
 			
 			index = main.index_of_object_with_property_value( farmers, 'character', character );
 			
-			// if found, use existing
+			// create new
 			
 			if ( index === -1 ) {
 				
@@ -504,6 +589,7 @@
 				give_plants( _Farming.plantTypesBase, character );
 				
 			}
+			// if found, use existing
 			else {
 				
 				farmer = farmers[ index ];

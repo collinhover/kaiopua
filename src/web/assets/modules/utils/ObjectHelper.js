@@ -590,7 +590,7 @@
     =====================================================*/
 	
 	function normalize_faces ( object ) {
-		return;
+		
 		// face must lie along xz axis with normal in y direction
 		// TODO: account for faces with other orientations
 		
@@ -636,7 +636,7 @@
 		for ( i = 0, l = faces.length; i < l; i++ ) {
 			
 			face = faces[ i ];
-			console.log('face normal', face.normal.x.toFixed(4), face.normal.y.toFixed(4), face.normal.z.toFixed(4) );
+			//console.log('face normal', face.normal.x.toFixed(4), face.normal.y.toFixed(4), face.normal.z.toFixed(4) );
 			faceVertexOrder = [ 'a', 'b', 'c', 'd' ];
 			
 			ia = face.a;
@@ -669,11 +669,11 @@
 				npd.copy( pd ).normalize();
 				uvd = faceVertexUvs[ 3 ];
 				
-				console.log(' > face vert A', npa.x.toFixed(4), npa.y.toFixed(4), npa.z.toFixed(4) );
+				/*console.log(' > face vert A', npa.x.toFixed(4), npa.y.toFixed(4), npa.z.toFixed(4) );
 				console.log(' > face vert B', npb.x.toFixed(4), npb.y.toFixed(4), npb.z.toFixed(4) );
 				console.log(' > face vert C', npc.x.toFixed(4), npc.y.toFixed(4), npc.z.toFixed(4) );
 				console.log(' > face vert D', npd.x.toFixed(4), npd.y.toFixed(4), npd.z.toFixed(4) );
-				console.log(' ');
+				console.log(' ');*/
 				
 				cpa = get_vector_with_least_distance_to_source( epa, npa, npb, npc, npd );
 				cpb = get_vector_with_least_distance_to_source( epb, npa, npb, npc, npd );
