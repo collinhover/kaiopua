@@ -72,6 +72,7 @@
 		// functions
 		
 		_Physics.translate = translate;
+		_Physics.clone = clone;
 		_Physics.add = add;
 		_Physics.remove = remove;
 		_Physics.start = start;
@@ -175,12 +176,8 @@
 			radius,
 			boxMax,
 			boxMin,
-			centerOffset,
 			mass,
-			position,
-			rotation,
-			velocityMovement,
-			velocityGravity;
+			position;
 		
 		// handle parameters
 		
@@ -190,171 +187,221 @@
 		
 		// validity check
 		
-		if ( typeof mesh === 'undefined' || typeof bodyType !== 'string' ) {
+		if ( typeof mesh !== 'undefined' && typeof bodyType === 'string' ) {
 			
-			return;
+			// handle mesh
 			
-		}
-		
-		// handle mesh
-		
-		geometry = parameters.geometry || mesh.geometry;
-		
-		if ( parameters.hasOwnProperty('dynamic') === true ) {
+			geometry = parameters.geometry || mesh.geometry;
 			
-			dynamic = parameters.dynamic;
-			
-		}
-		
-		position = parameters.position || mesh.position;
-		
-		rotation = parameters.rotation || ( mesh.useQuaternion === true ? mesh.quaternion : mesh.rotation );
-		
-		// physics width/height/depth
-		
-		width = parameters.width;
-		
-		height = parameters.height;
-		
-		depth = parameters.depth;
-		
-		if ( main.is_number( width ) === false ) {
-			
-			needWidth = true;
-			
-		}
-		
-		if ( main.is_number( height ) === false ) {
-			
-			needHeight = true;
-			
-		}
-		
-		if ( main.is_number( depth ) === false ) {
-			
-			needDepth = true;
-			
-		}
-		
-		if ( needWidth === true || needHeight === true || needDepth === true ) {
-			
-			// model bounding box
-			
-			bboxDimensions = _ObjectHelper.dimensions( mesh );
-			
-			if ( needWidth === true ) {
+			if ( parameters.hasOwnProperty('dynamic') === true ) {
 				
-				width = bboxDimensions.x;
+				dynamic = parameters.dynamic;
 				
 			}
 			
-			if ( needHeight === true ) {
-				
-				height = bboxDimensions.y;
+			position = mesh.position;
 			
+			// physics width/height/depth
+			
+			width = parameters.width;
+			
+			height = parameters.height;
+			
+			depth = parameters.depth;
+			
+			if ( main.is_number( width ) === false ) {
+				
+				needWidth = true;
+				
 			}
 			
-			if ( needDepth === true ) {
+			if ( main.is_number( height ) === false ) {
 				
-				depth = bboxDimensions.z;
+				needHeight = true;
 				
 			}
 			
-		}
-		
-		mass = parameters.mass || width * height * depth;
-		
-		// create collider
-		
-		if ( bodyType === 'mesh' ) {
+			if ( main.is_number( depth ) === false ) {
+				
+				needDepth = true;
+				
+			}
 			
-			collider = THREE.CollisionUtils.MeshColliderWBox( mesh );
-			
-		}
-		else if ( bodyType === 'sphere' ) {
-			
-			radius = Math.max( width, height, depth ) * 0.5;
-			
-			collider = new THREE.SphereCollider( position, radius );
-			
-		}
-		else if ( bodyType === 'plane' ) {
-			
-			collider = new THREE.PlaneCollider( position, parameters.up || new THREE.Vector3( 0, 0, 1 ) );
-			
-		}
-		// default box
-		else {
-			
-			boxMax = new THREE.Vector3( width, height, depth ).multiplyScalar( 0.5 );
-			boxMin = boxMax.clone().multiplyScalar( -1 );
-			
-			collider = new THREE.BoxCollider( boxMin, boxMax );
-			
-		}
-		
-		// dynamic or static
-		
-		if ( mass <= 0 ) {
-			
-			dynamic = false;
-			
-		}
-		else if ( parameters.hasOwnProperty('dynamic') === true ) {
-			
-			dynamic = parameters.dynamic;
-			
-		}
-		
-		// if not dynamic set mass to 0 for a static object
-		
-		if ( dynamic !== true ) {
-			
-			mass = 0;
-			
-		}
-		
-		// store mesh directly in collider
-		// fixes some collision bugs?
-		
-		collider.mesh = mesh;
-		
-		// create link
-		
-		linkCount++;
-		
-		link = {
-			name: parameters.name || linkBaseName + linkCount,
-			mesh: mesh,
-			rigidBody: {
-				collider: collider,
-				dynamic: dynamic,
-				mass: mass,
-				velocityMovement: generate_velocity_tracker( { 
-					damping: parameters.movementDamping,
-					offset: parameters.movementOffset,
-					relativeRotation: mesh
-				} ),
-				velocityGravity: generate_velocity_tracker( { 
-					damping: parameters.gravityDamping,
-					offset: parameters.gravityOffset
-				} ),
-				axes: {
-					up: shared.cardinalAxes.up.clone(),
-					forward: shared.cardinalAxes.forward.clone(),
-					right: shared.cardinalAxes.right.clone()
+			if ( needWidth === true || needHeight === true || needDepth === true ) {
+				
+				// model bounding box
+				
+				bboxDimensions = _ObjectHelper.dimensions( mesh );
+				
+				if ( needWidth === true ) {
+					
+					width = bboxDimensions.x;
+					
 				}
-			},
-			safe: true,
-			safetynet: {
-				position: new THREE.Vector3(),
-				quaternion: new THREE.Quaternion(),
-			},
-			safetynetstart: new signals.Signal(),
-			safetynetend: new signals.Signal()
-		};
+				
+				if ( needHeight === true ) {
+					
+					height = bboxDimensions.y;
+				
+				}
+				
+				if ( needDepth === true ) {
+					
+					depth = bboxDimensions.z;
+					
+				}
+				
+			}
+			
+			mass = parameters.mass || width * height * depth;
+			
+			// create collider
+			
+			if ( bodyType === 'mesh' ) {
+				
+				collider = THREE.CollisionUtils.MeshColliderWBox( mesh );
+				
+			}
+			else if ( bodyType === 'sphere' ) {
+				
+				radius = Math.max( width, height, depth ) * 0.5;
+				
+				collider = new THREE.SphereCollider( position, radius );
+				
+			}
+			else if ( bodyType === 'plane' ) {
+				
+				collider = new THREE.PlaneCollider( position, parameters.normal || new THREE.Vector3( 0, 0, 1 ) );
+				
+			}
+			// default box
+			else {
+				
+				boxMax = new THREE.Vector3( width, height, depth ).multiplyScalar( 0.5 );
+				boxMin = boxMax.clone().multiplyScalar( -1 );
+				
+				collider = new THREE.BoxCollider( boxMin, boxMax );
+				
+			}
+			
+			// dynamic or static
+			
+			if ( mass <= 0 ) {
+				
+				dynamic = false;
+				
+			}
+			else if ( parameters.hasOwnProperty('dynamic') === true ) {
+				
+				dynamic = parameters.dynamic;
+				
+			}
+			
+			// if not dynamic set mass to 0 for a static object
+			
+			if ( dynamic !== true ) {
+				
+				mass = 0;
+				
+			}
+			
+			// store mesh directly in collider
+			// fixes some collision bugs?
+			
+			collider.mesh = mesh;
+			
+			// create link
+			
+			linkCount++;
+			
+			link = {
+				name: parameters.name || linkBaseName + linkCount,
+				mesh: mesh,
+				rigidBody: {
+					collider: collider,
+					dynamic: dynamic,
+					mass: mass,
+					velocityMovement: generate_velocity_tracker( { 
+						damping: parameters.movementDamping,
+						offset: parameters.movementOffset,
+						relativeRotation: mesh
+					} ),
+					velocityGravity: generate_velocity_tracker( { 
+						damping: parameters.gravityDamping,
+						offset: parameters.gravityOffset
+					} ),
+					axes: {
+						up: shared.cardinalAxes.up.clone(),
+						forward: shared.cardinalAxes.forward.clone(),
+						right: shared.cardinalAxes.right.clone()
+					}
+				},
+				safe: true,
+				safetynet: {
+					position: new THREE.Vector3(),
+					quaternion: new THREE.Quaternion(),
+				},
+				safetynetstart: new signals.Signal(),
+				safetynetend: new signals.Signal()
+			};
+			
+		}
 		
 		return link;
+	}
+	
+	function clone ( link, meshNew ) {
+		
+		var c,
+			mesh,
+			rigidBody,
+			parameters;
+		
+		if ( typeof link !== 'undefined' && typeof link.mesh !== 'undefined' ) {
+			
+			mesh = meshNew || link.mesh;
+			rigidBody = link.rigidBody;
+			parameters = {};
+			
+			if ( typeof rigidBody !== 'undefined' ) {
+				
+				if ( rigidBody.collider instanceof THREE.MeshCollider ) {
+					
+					parameters.bodyType = 'mesh';
+					
+				}
+				else if ( rigidBody.collider instanceof THREE.SphereCollider ) {
+					
+					parameters.bodyType = 'sphere';
+					
+				}
+				else if ( rigidBody.collider instanceof THREE.PlaneCollider ) {
+					
+					parameters.bodyType = 'plane';
+					parameters.normal = rigidBody.collider.normal.clone();
+					
+				}
+				else {
+					
+					parameters.bodyType = 'box';
+					
+				}
+				
+				parameters.dynamic = rigidBody.dynamic;
+				parameters.mass = rigidBody.mass;
+				parameters.movementDamping = rigidBody.velocityMovement.damping.clone();
+				parameters.movementOffset = rigidBody.velocityMovement.offset.clone();
+				parameters.gravityDamping = rigidBody.velocityGravity.damping.clone();
+				parameters.gravityOffset = rigidBody.velocityGravity.offset.clone();
+				
+			}
+			
+			c = translate( mesh, parameters );
+			
+		}
+		console.log(' PHYSICS CLONE... FROM: ', link, ' >>>> TO: ', c );
+		return c;
+		
 	}
 	
 	// adds object's physics link to physics world
@@ -502,12 +549,18 @@
 		
 		velocity.force = new THREE.Vector3();
 		velocity.forceRotated = new THREE.Vector3();
-		velocity.damping = new THREE.Vector3().addScalar( parameters.damping );
-		velocity.offset = parameters.offset && parameters.offset instanceof THREE.Vector3 ? parameters.offset : new THREE.Vector3();
+		velocity.damping = parameters.damping instanceof THREE.Vector3 ? parameters.damping : new THREE.Vector3();
+		velocity.offset = parameters.offset instanceof THREE.Vector3 ? parameters.offset : new THREE.Vector3();
 		velocity.relativeRotation = parameters.relativeRotation;
 		velocity.moving = false;
 		velocity.intersection = false;
 		velocity.timeWithoutIntersection = 0;
+		
+		if ( main.is_number( parameters.damping ) === true ) {
+			
+			velocity.damping.addScalar( parameters.damping );
+			
+		}
 		
 		return velocity;
 	}

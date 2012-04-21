@@ -79,6 +79,8 @@
 		_Plant.Instance.prototype.constructor = _Plant.Instance;
 		_Plant.Instance.prototype.supr = _GridElement.Instance.prototype;
 		
+		_Plant.Instance.prototype.clone = clone;
+		
 		_Plant.Instance.prototype.reset_material = reset_material;
 		
 		_Plant.Instance.prototype.change_rotator = change_rotator;
@@ -113,20 +115,13 @@
 			parameters.layout = [ [ 1 ] ];
 			
 		}
-		/*
-		parameters.layout = $M( [
-				[ Math.round( Math.random() ), Math.round( Math.random() ), Math.round( Math.random() ) ],
-				[ Math.round( Math.random() ), Math.round( Math.random() ), Math.round( Math.random() ) ],
-				[ Math.round( Math.random() ), Math.round( Math.random() ), Math.round( Math.random() ) ]
-			] );
-		*/
 		
 		parameters.materials = parameters.materials || new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } );
 		
 		// prototype constructor
 		
 		_GridElement.Instance.call( this, parameters );
-		console.log(' new plant with geometry', this );
+		
 		// properties
 		
 		this.timeGrow = main.is_number( parameters.timeGrow ) ? parameters.timeGrow : _Plant.timeGrow;
@@ -141,6 +136,43 @@
 		this.change_seed( parameters.seed );
 		
 		this.change_rotator( parameters.rotator );
+		
+	}
+	
+	/*===================================================
+	
+	clone
+	
+	=====================================================*/
+	
+	function clone ( c ) {
+		
+		if ( typeof c === 'undefined' ) {
+			
+			c = new _Plant.Instance();
+			
+		}
+		
+		if ( c instanceof _Plant.Instance ) {
+			
+			// proto
+			
+			c = _Plant.Instance.prototype.supr.clone.call( this, c );
+			
+			// properties
+			
+			c.scale.set( 1, 1, 1 );
+			c.timeGrow = this.timeGrow;
+			
+			// TODO 
+			// actually clone uielements
+			
+			c.change_seed( this.seed );
+			c.change_rotator( this.rotator );
+			
+		}
+		
+		return c;
 		
 	}
 	

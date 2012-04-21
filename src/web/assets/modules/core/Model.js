@@ -18,7 +18,8 @@
 		durationBase = 1000,
 		durationPerFrameMinimum = shared.timeDeltaExpected || 1000 / 60;
 		objectCount = 0,
-		morphsNumMin = 5;
+		morphsNumMin = 5,
+		stabilityMorphID = 'stability_morph';
 	
 	main.asset_register( assetPath, {
 		data: _Model,
@@ -43,19 +44,20 @@
 		_Model.Instance = Model;
 		_Model.Instance.prototype = new THREE.Mesh();
 		_Model.Instance.prototype.constructor = _Model.Instance;
+		_Model.Instance.prototype.clone = clone;
 		_Model.Instance.prototype.tween_properties = tween_properties;
 		
 		// catch parent changes and add / remove physics automatically
 		
 		Object.defineProperty( _Model.Instance.prototype, 'parent', { 
 			get : function () { return this._parent; },
-			set : function ( newParent ) {
+			set : function ( parent ) {
 				
 				var scene;
 				
 				// store new parent
 				
-				this._parent = newParent;
+				this._parent = parent;
 				
 				// search for scene
 				
@@ -85,6 +87,64 @@
 			
 		});
 		
+		// catch geometry changes
+		
+		Object.defineProperty( _Model.Instance.prototype, 'geometry', { 
+			get : function () { return this._geometry; },
+			set : function ( geometry ) {
+				
+				if ( geometry instanceof THREE.Geometry && this.geometry !== geometry ) {
+					
+					// clear all morphs
+					
+					if ( typeof this.morphs !== 'undefined' ) {
+						
+						this.morphs.clearAll( 0 );
+						
+					}
+					
+					// store
+					
+					this._geometry = geometry;
+
+					// calc bound radius
+
+					if( ! this._geometry.boundingSphere ) {
+
+						this._geometry.computeBoundingSphere();
+
+					}
+
+					this.boundRadius = this._geometry.boundingSphere.radius;
+
+					// setup morph targets
+
+					if( this._geometry.morphTargets.length ) {
+
+						this.morphTargetBase = -1;
+						this.morphTargetForcedOrder = [];
+						this.morphTargetInfluences = [];
+						this.morphTargetDictionary = {};
+
+						for( var m = 0; m < this._geometry.morphTargets.length; m ++ ) {
+
+							this.morphTargetInfluences.push( 0 );
+							this.morphTargetDictionary[ this._geometry.morphTargets[ m ].name ] = m;
+
+						}
+
+					}
+					
+					// re-create morphs handler
+					
+					this.morphs = make_morphs_handler( this );
+
+				}
+				
+			}
+			
+		} );
+		
 	}
 	
 	/*===================================================
@@ -106,8 +166,7 @@
 			materialsToModify,
 			material,
 			rotation,
-			position,
-			morphs;
+			position;
 		
 		// handle parameters
 		
@@ -288,10 +347,6 @@
 			
 		}
 		
-		// morphs
-		
-		this.morphs = make_morphs_handler( this );
-		
 		// adjustments
 		
 		if ( parameters.center === true ) {
@@ -323,6 +378,125 @@
 		// id
 		
 		this.id = parameters.id || this.id;
+		
+	}
+	
+	/*===================================================
+	
+	clone
+	
+	=====================================================*/
+	
+	function clone ( c ) {
+		
+		var i, l,
+			geometry = this.geometry,
+			material = this.material,
+			children = this.children,
+			child,
+			cChild;
+		
+		if ( typeof c === 'undefined' ) {
+			
+			c = new _Model.Instance();
+			
+		}
+		
+		if ( c instanceof _Model.Instance ) {
+			
+			// geometry
+			
+			c.geometry = _ObjectHelper.clone_geometry( geometry );
+			
+			// material
+			
+			c.material = _ObjectHelper.clone_materials( material )[ 0 ];
+			
+			// three properties
+			
+			c.name = this.name;
+			
+			c.parent = this.parent;
+			
+			c.up.copy( this.up );
+			
+			c.position.copy( this.position );
+			
+			if ( c.rotation instanceof THREE.Vector3 ) {
+				
+				c.rotation.copy( this.rotation );
+				
+			}
+			
+			c.eulerOrder = this.eulerOrder;
+			
+			c.scale.copy( this.scale );
+			
+			c.dynamic = this.dynamic;
+			
+			c.doubleSided = this.doubleSided;
+			c.flipSided = this.flipSided;
+			
+			c.renderDepth = this.renderDepth;
+			
+			c.rotationAutoUpdate = this.rotationAutoUpdate;
+			
+			c.matrix.copy( this.matrix );
+			c.matrixWorld.copy( this.matrixWorld );
+			c.matrixRotationWorld.copy( this.matrixRotationWorld );
+			
+			c.matrixAutoUpdate = this.matrixAutoUpdate;
+			c.matrixWorldNeedsUpdate = this.matrixWorldNeedsUpdate;
+			
+			c.quaternion.copy( this.quaternion );
+			c.useQuaternion = this.useQuaternion;
+			
+			c.boundRadius = this.boundRadius;
+			c.boundRadiusScale = this.boundRadiusScale;
+			
+			c.visible = this.visible;
+			
+			c.castShadow = this.castShadow;
+			c.receiveShadow = this.receiveShadow;
+			
+			c.frustumCulled = this.frustumCulled;
+			
+			// children
+			
+			for ( i = 0, l = children.length; i < l; i++ ) {
+				
+				child = children[ i ];
+				
+				if ( child instanceof _Model.Instance ) {
+					
+					cChild = child.clone();
+					
+				}
+				else if ( child instanceof THREE.Object3D ) {
+					
+					cChild = THREE.SceneUtils.cloneObject( child );
+					
+				}
+				
+				c.add( cChild );
+				
+			}
+			
+			// model properties
+			
+			c.targetable = this.targetable;
+			c.interactive = this.interactive;
+			c.id = this.id;
+			
+			if ( this.hasOwnProperty( 'physics' ) ) {
+				
+				c.physics = _Physics.clone( this.physics, c );
+				
+			}
+			
+		}
+		
+		return c;
 		
 	}
 	
@@ -566,9 +740,6 @@
 				uName,
 				uList = updates.list;
 			
-			// search through all morphs for name
-			// if name not passed or is wildcard, stop all
-			
 			for ( i = 0, l = uNames.length; i < l; i ++ ) {
 				
 				uName = uNames[ i ];
@@ -607,9 +778,6 @@
 				uName,
 				uList = updates.list;
 			
-			// search through all morphs for name
-			// if name not passed or is wildcard, clear all
-			
 			for ( i = 0, l = uNames.length; i < l; i ++ ) {
 				
 				uName = uNames[ i ];
@@ -638,7 +806,8 @@
 			name,
 			nameParsed,
 			morphData,
-			map;
+			map,
+			hasStabilityMorph = false;
 		
 		// parses all morphs
 		
@@ -651,6 +820,16 @@
 			// extract base name and number
 			
 			nameParsed = parse_morph_name( name );
+			
+			// if morph is stability morph, register and skip
+			
+			if ( nameParsed.name === stabilityMorphID ) {
+				
+				hasStabilityMorph = true;
+				
+				continue;
+				
+			}
 			
 			// if morph map does not exist
 			// create new data
@@ -698,7 +877,7 @@
 		// if geometry has morphs
 		// check stability
 		
-		if ( morphs.length > 0 ) {
+		if ( morphs.length > 0 && ( hasStabilityMorph === false || morphs.length < morphsNumMin ) ) {
 			
 			// adds stability morph to end of morphs list, identical to base geometry
 			// as required to make model + morphtargets work
@@ -772,7 +951,7 @@
 			vertex,
 			vertPos,
 			morphNumber = mesh.morphTargetInfluences.length,
-			morphInfo = { name: 'stability_morph_' + morphNumber, vertices: [] },
+			morphInfo = { name: stabilityMorphID + '_' + morphNumber, vertices: [] },
 			morphVertices = morphInfo.vertices;
 		
 		for ( i = 0, l = vertices.length; i < l; i++ ) {

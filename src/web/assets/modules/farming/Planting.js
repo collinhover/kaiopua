@@ -342,6 +342,10 @@
 		var targetObject,
 			selected;
 		
+		// properties
+		
+		this.plantFromSelection = false;
+		
 		// if passed plant to use
 		
 		if ( parameters && parameters.plant ) {
@@ -363,7 +367,7 @@
 			
 			targetObject = this.get_planting_object_under_mouse( { modules: false, character: false, plants: true } );
 			
-			selected = true;
+			this.plantFromSelection = true;
 			
 		}
 		
@@ -376,7 +380,7 @@
 			
 			// selected
 			
-			if ( selected === true ) {
+			if ( this.plantFromSelection === true ) {
 				
 				this.selected.dispatch( targetObject );
 				
@@ -451,7 +455,8 @@
 		var targetObject,
 			plantSuccessful = false,
 			plantPlanted,
-			plantPlantedNodes;
+			plantPlantedNodes,
+			plantPlantedClone;
 		
 		// find if any planting objects under mouse
 				
@@ -482,9 +487,13 @@
 				plantPlanted = this.plant;
 				plantPlantedNodes = plantPlanted.get_layout_node_total();
 				
-				// stop
+				// stop if plant was selected from field or on field solve
 				
-				this.stop();
+				if ( this.plantFromSelection === true || this.field.isSolved === true ) {
+					
+					this.stop();
+					
+				}
 				
 				// planted signal
 				
@@ -500,6 +509,16 @@
 				else {
 					
 					this.plantedSingle.dispatch( plantPlanted );
+					
+				}
+				
+				// if still started, clone plant planted and continue planting
+				
+				if ( this.started === true ) {
+					
+					plantPlantedClone = plantPlanted.clone();
+					
+					this.setup( { plant: plantPlantedClone } );
 					
 				}
 				

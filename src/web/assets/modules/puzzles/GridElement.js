@@ -63,6 +63,9 @@
 		_GridElement.Instance = GridElement;
 		_GridElement.Instance.prototype = new _Model.Instance();
 		_GridElement.Instance.prototype.constructor = _GridElement.Instance;
+		_GridElement.Instance.prototype.supr = _Model.Instance.prototype;
+		
+		_GridElement.Instance.prototype.clone = clone;
 		
 		_GridElement.Instance.prototype.rotate = rotate;
 		_GridElement.Instance.prototype.rotate_reset = rotate_reset;
@@ -112,6 +115,40 @@
 		// modules layout
 		
 		this.layoutModules = this.layout.dup();
+		
+	}
+	
+	/*===================================================
+    
+    clone
+    
+    =====================================================*/
+	
+	function clone ( c ) {
+		
+		if ( typeof c === 'undefined' ) {
+			
+			c = new _GridElement.Instance();
+			
+		}
+		
+		if ( c instanceof _GridElement.Instance ) {
+			
+			// proto
+			
+			c = _GridElement.Instance.prototype.supr.clone.call( this, c );
+			
+			// properties
+			
+			c.rotationAngle = this.rotationAngle;
+			c.rotationAngleLayout = this.rotationAngleLayout;
+			c.layout = this.layout.dup();
+			c.layoutModules = this.layout.dup();
+			
+		}
+		
+		return c;
+		
 	}
 	
 	/*===================================================
