@@ -149,6 +149,8 @@
 		Object.defineProperty( this, 'isSolved', { 
 			get: function () {
 				
+				solved = this.grid.isFull;
+				
 				return solved;
 			
 			}

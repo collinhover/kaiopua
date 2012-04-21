@@ -44,6 +44,13 @@
     
     =====================================================*/
 	
+	_ObjectHelper.clone_materials = clone_materials;
+	_ObjectHelper.clone_geometry = clone_geometry;
+	_ObjectHelper.clone_morph_targets = clone_morph_targets;
+	_ObjectHelper.clone_morph_colors = clone_morph_colors;
+	_ObjectHelper.clone_vertices = clone_vertices;
+	_ObjectHelper.clone_colors = clone_colors;
+	
 	_ObjectHelper.extract_children_from_objects = extract_children_from_objects;
 	_ObjectHelper.extract_parents_from_objects = extract_parents_from_objects;
 	
@@ -121,6 +128,254 @@
 		utilMat41Bounds = new THREE.Matrix4();
 		utilMat41Center = new THREE.Matrix4();
 		utilMat41ApplyQ = new THREE.Matrix4();
+		
+	}
+	
+	/*===================================================
+    
+    cloning
+    
+    =====================================================*/
+	
+	function clone_materials ( materials ) {
+		
+		var i, l,
+			material,
+			pMat,
+			cMaterials = [];
+		
+		materials = main.ensure_array( materials );
+		
+		for ( i = 0, l = materials.length; i < l; i++ ) {
+			
+			material = materials[ i ];
+			
+			// shallow copy material
+			
+			pMat = main.extend( material, {} );
+			
+			// special properties not handled by shallow copy
+			
+			if ( material.color instanceof THREE.Color ) {
+				
+				pMat.color = material.color.getHex();
+				
+			}
+			if ( material.ambient instanceof THREE.Color ) {
+				
+				pMat.ambient = material.ambient.getHex();
+				
+			}
+			if ( material.specular instanceof THREE.Color ) {
+				
+				pMat.specular = material.specular.getHex();
+				
+			}
+			/*{
+				name: material.name,
+				opacity: material.opacity,
+				transparent: material.transparent,
+				blending: material.blending,
+				depthTest: material.depthTest,
+				depthWrite: material.depthWrite,
+				polygonOffset: material.polygonOffset,
+				polygonOffsetFactor: material.polygonOffsetFactor,
+				polygonOffsetUnits: material.polygonOffsetUnits,
+				alphaTest: material.alphaTest,
+				overdraw: material.overdraw,
+				color: ( material.color instanceof THREE.Color ? material.color.getHex() : 0xffffff ),
+				map: material.map,
+				lightMap: material.lightMap,
+				envMap: material.envMap,
+				combine: material.combine,
+				reflectivity: material.reflectivity,
+				refractionRatio: material.refractionRatio,
+				fog: material.fog,
+				shading: material.shading, 
+				wireframe: material.wireframe,
+				
+			};*/
+			
+			// new material by type
+			
+			if ( material instanceof THREE.MeshBasicMaterial ) {
+				
+				cMaterial = new THREE.MeshBasicMaterial( pMat );
+				
+			}
+			else if ( material instanceof THREE.MeshLambertMaterial ) {
+				
+				cMaterial = new THREE.MeshLambertMaterial( pMat );
+				
+			}
+			else if ( material instanceof THREE.MeshPhongMaterial ) {
+				
+				cMaterial = new THREE.MeshPhongMaterial( pMat );
+				
+			}
+			else if ( material instanceof THREE.MeshFaceMaterial ) {
+				
+				cMaterial = new THREE.MeshFaceMaterial( pMat );
+				
+			}
+			else {
+				
+				cMaterial = new THREE.Material( pMat );
+				
+			}
+			
+			// store
+			
+			cMaterials.push( cMaterial );
+			
+		}
+		
+		return cMaterials;
+		
+	}
+	
+	function clone_geometry ( geometry ) {
+
+		var i, l,
+			j, k,
+			vertices = geometry.vertices,
+			faces = geometry.faces,
+			uvs = geometry.faceVertexUvs[ 0 ],
+			vertex,
+			face,
+			uv,
+			cGeometry = new THREE.Geometry();
+		
+		// materials
+		
+		if ( geometry.materials ) {
+
+			cGeometry.materials = clone_materials( geometry.materials );
+
+		}
+
+		// vertices
+
+		for ( i = 0, l = vertices.length; i < l; i++ ) {
+
+			vertex = vertices[ i ];
+
+			cGeometry.vertices.push( vertex.clone() );
+
+		}
+
+		// faces
+
+		for ( i = 0, l = faces.length; i < l; i++ ) {
+
+			face = faces[ i ];
+
+			cGeometry.faces.push( face.clone() );
+
+		}
+
+		// uvs
+
+		for ( i = 0, l = uvs.length; i < l; i++ ) {
+
+			uv = uvs[ i ], uvCopy = [];
+
+			for ( j = 0, k = uv.length; j < k; j++ ) {
+
+				uvCopy.push( new THREE.UV( uv[ j ].u, uv[ j ].v ) );
+
+			}
+
+			cGeometry.faceVertexUvs[ 0 ].push( uvCopy );
+
+		}
+		
+		// morphs
+		
+		cGeometry.morphTargets = clone_morph_targets( geometry.morphTargets );
+		cGeometry.morphColors = clone_morph_colors( geometry.morphColors );
+
+		return cGeometry;
+
+	}
+	
+	function clone_morph_targets ( morphs ) {
+		
+		var i, l,
+			c = [],
+			morph,
+			cMorph;
+		
+		for ( i = 0, l = morphs.length; i < l; i++ ) {
+			
+			morph = morphs[ i ];
+			
+			c.push( {
+				name: morph.name,
+				vertices: clone_vertices( morph.vertices )
+			} );
+			
+		}
+		
+		return c;
+		
+	}
+	
+	function clone_morph_colors ( morphs ) {
+		
+		var i, l,
+			c = [],
+			morph,
+			cMorph;
+		
+		for ( i = 0, l = morphs.length; i < l; i++ ) {
+			
+			morph = morphs[ i ];
+			
+			c.push( {
+				name: morph.name,
+				colors: clone_colors( morph.colors )
+			} );
+			
+		}
+		
+		return c;
+		
+	}
+	
+	function clone_vertices ( vertices ) {
+		
+		var i, l,
+			vertex,
+			c = [];
+		
+		for ( i = 0, l = vertices.length; i < l; i++ ) {
+			
+			vertex = vertices[ i ];
+			
+			c.push( vertex.clone() );
+			
+		}
+		
+		return c;
+		
+	}
+	
+	function clone_colors ( colors ) {
+		
+		var i, l,
+			color,
+			c = [];
+		
+		for ( i = 0, l = colors.length; i < l; i++ ) {
+			
+			color = colors[ i ];
+			
+			c.push( color.clone() );
+			
+		}
+		
+		return c;
 		
 	}
 	
