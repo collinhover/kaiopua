@@ -586,7 +586,13 @@
 				
 				// load
 				
-				data = main.generate_dom_image( path, defaultCallback );
+				data = main.generate_dom_image( path, function ( image ) {
+					
+					data = image;
+					
+					defaultCallback();
+					
+				} );
 				
 				// store empty image data in assets immediately
 				

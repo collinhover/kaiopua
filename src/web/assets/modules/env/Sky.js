@@ -27,8 +27,8 @@
 			"assets/modules/core/Model.js",
 			"assets/modules/core/Physics.js",
 			"assets/modules/utils/ObjectHelper.js",
-			"assets/models/Cloud_001.js",
-			"assets/models/Cloud_002.js"
+			{ path: "assets/models/Cloud_001.js", type: 'model' },
+			{ path: "assets/models/Cloud_002.js", type: 'model' }
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -40,7 +40,7 @@
     
     =====================================================*/
 	
-	function init_internal ( m, phy, oh ) {
+	function init_internal ( m, phy, oh, cloudBase1, cloudBase2 ) {
 		console.log('internal sky', _Sky);
 		
 		_Model = m;
@@ -57,7 +57,7 @@
 		_Sky.cloudScaleMin = 1;
 		_Sky.cloudDistanceFromSurfaceMin = 1000;
 		_Sky.cloudDistanceFromSurfaceMax = 3000;
-		_Sky.cloudsGeometry = [ main.get_asset_data( "assets/models/Cloud_001.js" ), main.get_asset_data( "assets/models/Cloud_002.js" ) ];
+		_Sky.cloudsGeometry = [ cloudBase1, cloudBase2 ];
 		_Sky.bounds = { min: new THREE.Vector3(), max: new THREE.Vector3() };
 		_Sky.xThetaMin = 0;
 		_Sky.xThetaMax = Math.PI * 2;

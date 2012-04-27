@@ -94,7 +94,7 @@
     	
     	// skybox
 		
-		me.parts.skybox = _ObjectMaker.make_skybox( "assets/textures/skybox_world" );
+		me.parts.skybox = _ObjectMaker.make_skybox( shared.pathToTextures + "skybox_world" );
     	
     	// world base
     	
@@ -140,7 +140,7 @@
 		
 		// water
 		
-		me.parts.waterRing = new _Water.Instance();
+		me.parts.waterRing = new _Water.Instance( { wavesTexture: shared.pathToTextures + "water_world_512.png" } );
 		
 		me.add( me.parts.waterRing );
 		
@@ -533,7 +533,7 @@
 	
 			me.parts.sunmoon.morphs.play( 'bounce', { duration: 3000, loop: true, loopDelay: 4000, loopChance: 0.1 } );
 			
-			me.parts.waterRing.morphs.play( 'waves', { duration: 5000, loop: true } );
+			me.parts.waterRing.morphs.play( 'waves', { duration: 4000, loop: true } );
 			
 		}
 		

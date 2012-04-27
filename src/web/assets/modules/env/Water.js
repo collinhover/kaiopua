@@ -23,7 +23,7 @@
 		data: _Water,
 		requirements: [
 			"assets/modules/core/Model.js",
-			shared.pathToTextures + "waves_512.png"
+			shared.pathToTextures + "water_512.png"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -179,15 +179,16 @@
 		
 		if ( typeof parameters.wavesTexture === 'string' ) {
 			
+			wavesTexture = new THREE.Texture();
+			
 			main.asset_require( parameters.wavesTexture, function ( img ) {
 				
-				wavesTexture = new THREE.Texture();
 				wavesTexture.image = img;
 				wavesTexture.needsUpdate = true;
 				
-				wavesMaterial.map = wavesTexture;
-				
 			});
+			
+			wavesMaterial.map = wavesTexture;
 			
 		}
 		else {

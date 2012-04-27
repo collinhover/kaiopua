@@ -245,7 +245,7 @@
 					image.align();
 					container.align();
 					
-				}, undefined, undefined, imageElement );
+				}, this, imageElement );
 				
 				image.width = main.is_number( parameters.imageWidth ) ? parameters.imageWidth : ( main.is_number( parameters.imageSize ) ? parameters.imageSize : 'auto' );
 				image.height = main.is_number( parameters.imageHeight ) ? parameters.imageHeight : ( main.is_number( parameters.imageSize ) ? parameters.imageSize : 'auto' );

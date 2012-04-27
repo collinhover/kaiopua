@@ -29,7 +29,6 @@
 		sceneBG,
 		sceneDefault,
 		sceneBGDefault,
-		fog,
 		camera,
 		cameraBG,
 		cameraDefault,
@@ -71,13 +70,13 @@
 		],
         assetsLauncher = [
             "assets/modules/sections/Launcher.js",
-            "assets/modules/env/WaterLauncher.js",
+			/*"assets/modules/env/WaterLauncher.js",
             "assets/modules/env/SkyLauncher.js",
             "assets/textures/cloud_256.png",
             "assets/textures/light_ray.png",
 			"assets/textures/skybox_launcher_xz.jpg",
 			"assets/textures/skybox_launcher_posy.jpg",
-            "assets/textures/skybox_launcher_negy.jpg"
+            "assets/textures/skybox_launcher_negy.jpg"*/
         ],
         assetsGame = [
 			/*"js/lib/ammo.js",*/
@@ -156,7 +155,7 @@
             "assets/textures/skybox_world_negy.jpg",
 			"assets/textures/skybox_world_posz.jpg",
             "assets/textures/skybox_world_negz.jpg",
-            "assets/textures/waves_512.png",
+            "assets/textures/water_world_512.png",
             "assets/textures/dirt_128.jpg"
         ],
 		loadingHeader = 'Hold on, we need some stuff from Hawaii...',
@@ -287,7 +286,7 @@
 	
 	function load_launcher () {
 		
-		main.asset_require( assetsLauncher, [init_launcher, load_game] );
+		main.asset_require( assetsLauncher, [init_launcher/*, load_game*/] );
 		
 	}
 	
@@ -377,9 +376,7 @@
         
         // fog
 		
-		fog = new THREE.Fog( 0xffffff, -100, 10000 );
-		
-        sceneDefault.fog = fog;
+        sceneDefault.fog = undefined;
 		
 		// camera
 		
