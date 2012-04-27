@@ -11,8 +11,7 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/env/Water.js",
 		_Water = {},
-		_Model,
-		wavesTexturePath = "assets/textures/waves_512.png";
+		_Model;
     
     /*===================================================
     
@@ -23,7 +22,8 @@
 	main.asset_register( assetPath, { 
 		data: _Water,
 		requirements: [
-			"assets/modules/core/Model.js"
+			"assets/modules/core/Model.js",
+			shared.pathToTextures + "waves_512.png"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -35,11 +35,18 @@
     
     =====================================================*/
 	
-	function init_internal ( m ) {
+	function init_internal ( m, wavesImage ) {
 		console.log('internal water');
 		// assets
 		
 		_Model = m;
+		
+		// properties
+		
+		_Water.wavesTexture = new THREE.Texture( wavesImage );
+		_Water.wavesTexture.needsUpdate = true;
+		
+		// instance
 		
 		_Water.Instance = Water;
 		_Water.Instance.prototype = new _Model.Instance();
@@ -163,9 +170,6 @@
 		wavesMaterial = new THREE.MeshLambertMaterial( { 
 			ambient: wavesAmbient, 
 			color: wavesColor,
-			map: wavesTexture,
-			//specular: 0x00daff, 
-			//shininess: 10, 
 			shading: THREE.SmoothShading,
 			transparent: true,
 			opacity: parameters.wavesOpacity || 0.9
@@ -173,18 +177,22 @@
 		
 		// waves texture
 		
-		if ( typeof parameters.wavesTexturePath !== 'undefined' ) {
+		if ( typeof parameters.wavesTexture === 'string' ) {
 			
-			wavesTexture = new THREE.Texture();
-			
-			main.asset_require( wavesTexturePath, function ( img ) {
+			main.asset_require( parameters.wavesTexture, function ( img ) {
 				
+				wavesTexture = new THREE.Texture();
 				wavesTexture.image = img;
 				wavesTexture.needsUpdate = true;
 				
+				wavesMaterial.map = wavesTexture;
+				
 			});
 			
-			wavesMaterial.map = wavesTexture;
+		}
+		else {
+			
+			wavesMaterial.map = _Water.wavesTexture;
 			
 		}
 		
@@ -229,7 +237,7 @@
 				
 				morphTargetVertex = wavesGeometry.vertices[ morphTargetVertexIndex ];
 				
-				morphTargetVertices.push( new THREE.Vertex( new THREE.Vector3( morphTargetVertex.position.x, morphTargetVertex.position.y, waveVertices[ morphTargetVertexIndex ] ) ) );
+				morphTargetVertices.push( new THREE.Vector3( morphTargetVertex.x, waveVertices[ morphTargetVertexIndex ], morphTargetVertex.z ) );
 				
 			}
 			
@@ -300,41 +308,23 @@
 
 					vertIndex = i + l * wavesVertsH;
 
-					//wavesVertsNew[ vertIndex ] = vert.position.x;
-					//wavesVertsNew[ vertIndex + 1 ] = vert.position.y;
+					//wavesVertsNew[ vertIndex ] = vert.x;
+					//wavesVertsNew[ vertIndex + 1 ] = vert.y;
 					wavesVertsNew[ vertIndex ] = vvAmp + wavesAmplitude * ( Math.cos( vvpw * vvFreq + wavesTime ) + Math.sin( vvph * vvFreq + wavesTime ) );
-
-					//vert.position.z = vvAmp + wavesAmplitude * ( Math.cos( vvpw / vvFreq + wavesTime ) + Math.sin( vvph / vvFreq + wavesTime ) );
 					
 				}
 			}
-			/*
-			// recompute normals for correct lighting
-			// very heavy on processing
-			wavesGeometry.computeFaceNormals();
-			wavesGeometry.computeVertexNormals();
-			
-			// tell three to update vertices
-			wavesGeometry.__dirtyVertices = true;
-			wavesGeometry.__dirtyNormals = true;
-			*/
 
 			return wavesVertsNew;
 
 		}
-		
-        // water mesh
-        //wavesInfo.model = new _Model.Instance();
 	
 		// prototype constructor
 		
 		_Model.Instance.call( this, {
 			geometry: wavesGeometry,
 			materials: wavesMaterial,
-			doubleSided: true,
-			targetable: false,
-			interactive: false,
-			rotation: new THREE.Vector3( -90, 0, 0 )
+			doubleSided: true
 		} );
 		
     }

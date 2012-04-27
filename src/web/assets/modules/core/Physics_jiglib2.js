@@ -319,9 +319,7 @@ Physics module, handles physics in game using JigLibJS.
 				
 				vertex = vertsThree[ i ];
 				
-				vertPos = vertex.position;
-				
-				vertsJig.push( new jiglib.Vector3D( vertPos.x, vertPos.y, vertPos.z ) );
+				vertsJig.push( new jiglib.Vector3D( vertex.x, vertex.y, vertex.z ) );
 				
 			}
 			

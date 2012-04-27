@@ -46,10 +46,8 @@
 	
 	_ObjectHelper.clone_materials = clone_materials;
 	_ObjectHelper.clone_geometry = clone_geometry;
-	_ObjectHelper.clone_morph_targets = clone_morph_targets;
-	_ObjectHelper.clone_morph_colors = clone_morph_colors;
-	_ObjectHelper.clone_vertices = clone_vertices;
-	_ObjectHelper.clone_colors = clone_colors;
+	_ObjectHelper.clone_morphs = clone_morphs;
+	_ObjectHelper.clone_list = clone_list;
 	
 	_ObjectHelper.extract_children_from_objects = extract_children_from_objects;
 	_ObjectHelper.extract_parents_from_objects = extract_parents_from_objects;
@@ -171,30 +169,6 @@
 				pMat.specular = material.specular.getHex();
 				
 			}
-			/*{
-				name: material.name,
-				opacity: material.opacity,
-				transparent: material.transparent,
-				blending: material.blending,
-				depthTest: material.depthTest,
-				depthWrite: material.depthWrite,
-				polygonOffset: material.polygonOffset,
-				polygonOffsetFactor: material.polygonOffsetFactor,
-				polygonOffsetUnits: material.polygonOffsetUnits,
-				alphaTest: material.alphaTest,
-				overdraw: material.overdraw,
-				color: ( material.color instanceof THREE.Color ? material.color.getHex() : 0xffffff ),
-				map: material.map,
-				lightMap: material.lightMap,
-				envMap: material.envMap,
-				combine: material.combine,
-				reflectivity: material.reflectivity,
-				refractionRatio: material.refractionRatio,
-				fog: material.fog,
-				shading: material.shading, 
-				wireframe: material.wireframe,
-				
-			};*/
 			
 			// new material by type
 			
@@ -255,24 +229,12 @@
 		}
 
 		// vertices
-
-		for ( i = 0, l = vertices.length; i < l; i++ ) {
-
-			vertex = vertices[ i ];
-
-			cGeometry.vertices.push( vertex.clone() );
-
-		}
+		
+		cGeometry.vertices = clone_list( vertices );
 
 		// faces
-
-		for ( i = 0, l = faces.length; i < l; i++ ) {
-
-			face = faces[ i ];
-
-			cGeometry.faces.push( face.clone() );
-
-		}
+		
+		cGeometry.faces = clone_list( faces );
 
 		// uvs
 
@@ -292,14 +254,14 @@
 		
 		// morphs
 		
-		cGeometry.morphTargets = clone_morph_targets( geometry.morphTargets );
-		cGeometry.morphColors = clone_morph_colors( geometry.morphColors );
+		cGeometry.morphTargets = clone_morphs( geometry.morphTargets );
+		cGeometry.morphColors = clone_morphs( geometry.morphColors );
 
 		return cGeometry;
 
 	}
 	
-	function clone_morph_targets ( morphs ) {
+	function clone_morphs ( morphs ) {
 		
 		var i, l,
 			c = [],
@@ -310,10 +272,29 @@
 			
 			morph = morphs[ i ];
 			
-			c.push( {
-				name: morph.name,
-				vertices: clone_vertices( morph.vertices )
-			} );
+			cMorph = {
+				name: morph.name
+			};
+			
+			if ( morph.hasOwnProperty( 'vertices' ) ) {
+				
+				cMorph.vertices = clone_list( morph.vertices );
+				
+			}
+			
+			if ( morph.hasOwnProperty( 'colors' ) ) {
+				
+				cMorph.colors = clone_list( morph.colors );
+				
+			}
+			
+			if ( morph.hasOwnProperty( 'normals' ) ) {
+				
+				cMorph.normals = clone_list( morph.normals );
+				
+			}
+			
+			c.push( cMorph );
 			
 		}
 		
@@ -321,57 +302,17 @@
 		
 	}
 	
-	function clone_morph_colors ( morphs ) {
+	function clone_list ( list ) {
 		
 		var i, l,
-			c = [],
-			morph,
-			cMorph;
-		
-		for ( i = 0, l = morphs.length; i < l; i++ ) {
-			
-			morph = morphs[ i ];
-			
-			c.push( {
-				name: morph.name,
-				colors: clone_colors( morph.colors )
-			} );
-			
-		}
-		
-		return c;
-		
-	}
-	
-	function clone_vertices ( vertices ) {
-		
-		var i, l,
-			vertex,
+			element,
 			c = [];
 		
-		for ( i = 0, l = vertices.length; i < l; i++ ) {
+		for ( i = 0, l = list.length; i < l; i++ ) {
 			
-			vertex = vertices[ i ];
+			element = list[ i ];
 			
-			c.push( vertex.clone() );
-			
-		}
-		
-		return c;
-		
-	}
-	
-	function clone_colors ( colors ) {
-		
-		var i, l,
-			color,
-			c = [];
-		
-		for ( i = 0, l = colors.length; i < l; i++ ) {
-			
-			color = colors[ i ];
-			
-			c.push( color.clone() );
+			c.push( element.clone() );
 			
 		}
 		
@@ -608,7 +549,7 @@
 				
 				vertex = vertices[ j ];
 				
-				matrix.multiplyVector3( vertex.position );
+				matrix.multiplyVector3( vertex );
 				
 			}
 			
@@ -716,7 +657,7 @@
 	function object_center ( object ) {
 		
 		var offset = center_offset( object ),
-			offsetMat4 = utilMat41Center.setTranslation( offset.x, offset.y, offset.z );
+			offsetMat4 = utilMat41Center.makeTranslation( offset.x, offset.y, offset.z );
 		
 		// apply offset
 		
@@ -874,7 +815,6 @@
 			epd = _ObjectHelper.expectedVertPosD,
 			ia, ib, ic, id,
 			va, vb, vc, vd,
-			pa, pb, pc, pd,
 			npa = utilVec31Normalize,
 			npb = utilVec32Normalize,
 			npc = utilVec33Normalize,
@@ -901,14 +841,10 @@
 			va = vertices[ ia ];
 			vb = vertices[ ib ];
 			vc = vertices[ ic ];
-			
-			pa = va.position;
-			pb = vb.position;
-			pc = vc.position;
 					
-			npa.copy( pa ).normalize();
-			npb.copy( pb ).normalize();
-			npc.copy( pc ).normalize();
+			npa.copy( va ).normalize();
+			npb.copy( vb ).normalize();
+			npc.copy( vc ).normalize();
 			
 			faceVertexUvs = faceVertexUvsList[ i ];
 			
@@ -920,8 +856,7 @@
 				
 				id = face.d;
 				vd = vertices[ id ];
-				pd = vd.position;
-				npd.copy( pd ).normalize();
+				npd.copy( vd ).normalize();
 				uvd = faceVertexUvs[ 3 ];
 				
 				/*console.log(' > face vert A', npa.x.toFixed(4), npa.y.toFixed(4), npa.z.toFixed(4) );
@@ -1149,9 +1084,9 @@
 			
 			face = faces[ i ];
 			
-			vpa = vertices[ face.a ].position;
-			vpb = vertices[ face.b ].position;
-			vpc = vertices[ face.c ].position;
+			vpa = vertices[ face.a ];
+			vpb = vertices[ face.b ];
+			vpc = vertices[ face.c ];
 			
 			npa.copy( vpa ).normalize();
 			npb.copy( vpb ).normalize();
@@ -1166,7 +1101,7 @@
 			
 			if ( face instanceof THREE.Face4 ) {
 				
-				vpd = vertices[ face.d ].position;
+				vpd = vertices[ face.d ];
 				
 				npd.copy( vpd ).normalize();
 				

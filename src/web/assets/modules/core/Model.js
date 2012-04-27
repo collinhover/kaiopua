@@ -159,9 +159,6 @@
 		
 		var i, l,
 			geometry,
-			vertices,
-			vertex,
-			vertPos,
 			materials,
 			materialsToModify,
 			material,
@@ -486,7 +483,6 @@
 			
 			c.targetable = this.targetable;
 			c.interactive = this.interactive;
-			c.id = this.id;
 			
 			if ( this.hasOwnProperty( 'physics' ) ) {
 				
@@ -958,9 +954,7 @@
 			
 			vertex = vertices[ i ];
 			
-			vertPos = vertex.position;
-			
-			morphVertices.push( new THREE.Vertex( new THREE.Vector3( vertPos.x, vertPos.y, vertPos.z ) ) );
+			morphVertices.push( vertex.clone() );
 			
 		}
 		

@@ -81,6 +81,8 @@
         ],
         assetsGame = [
 			/*"js/lib/ammo.js",*/
+			"assets/modules/core/Octant.js",
+			"assets/modules/core/Octree.js",
 			"assets/modules/core/Physics.js",
 			"assets/modules/core/Player.js",
 			"assets/modules/core/Model.js",

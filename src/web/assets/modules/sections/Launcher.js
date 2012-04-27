@@ -134,6 +134,8 @@
 		
 		water = new _WaterLauncher.Instance( { wavesColor: fogColor } );
 		
+		water.environment.rotation.y = -Math.PI * 0.5;
+		
 		// sky
 		
 		_Sky.init();
@@ -143,7 +145,7 @@
 		_Sky.environment.position.x = 0;
 		_Sky.environment.position.y = 2000;
 		
-		_Sky.environment.rotation.y = -90 * Math.PI / 180;
+		_Sky.environment.rotation.y = -Math.PI * 0.5;
 		
 		// set items to add on show
 		

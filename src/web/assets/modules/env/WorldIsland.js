@@ -140,7 +140,7 @@
 		
 		// water
 		
-		me.parts.waterRing = new _Water.Instance( { wavesTexturePath: "assets/textures/waves_512.png" } );
+		me.parts.waterRing = new _Water.Instance();
 		
 		me.add( me.parts.waterRing );
 		

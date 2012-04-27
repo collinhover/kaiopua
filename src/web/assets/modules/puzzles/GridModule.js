@@ -71,28 +71,6 @@
 		_GridModule.Instance.prototype.get_modules_connected = get_modules_connected;
 		_GridModule.Instance.prototype.find_and_store_connected = find_and_store_connected;
 		
-		_GridModule.Instance.prototype.remove = function ( object ) {
-			
-			_Model.Instance.prototype.remove.call( this, object );
-			
-			// if is occupant, clear
-			
-			if ( this.occupant === object ) {
-				
-				this.occupant = undefined;
-				
-			}
-			
-			// clean grid
-			
-			if ( typeof this.grid !== 'undefined' ) {
-				
-				this.grid.clean();
-				
-			}
-			
-		};
-		
 		Object.defineProperty( _GridModule.Instance.prototype, 'connected', { 
 			get: function () { 
 				
@@ -585,7 +563,7 @@
 			}
 			
 			// get connected modules
-			//console.log( this.id, ' searching for connected at ', ids[ 2 ]);
+			
 			connectedModules = this.grid.get_modules_with_vertices( searchFor, this, [ this ].concat( this._connectedList ) );
 			
 			if ( connectedModules.length > 0 ) {
@@ -637,7 +615,7 @@
 				
 				vertex = vertices[ i ];
 				
-				if ( searchFor.position.equals( vertex.position ) ) {
+				if ( searchFor.equals( vertex ) ) {
 					
 					has = true;
 					

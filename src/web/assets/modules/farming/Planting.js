@@ -610,19 +610,10 @@
 		
 	}
 	
-	function change_module ( target ) {
+	function change_module ( module ) {
 		
-		var module,
-			grid,
+		var grid,
 			field;
-		
-		// if target is module
-		
-		if ( target instanceof _GridModule.Instance ) {
-			
-			module = target;
-			
-		}
 		
 		// if is new module
 		
@@ -690,7 +681,7 @@
 				index = this.allPlants.indexOf( this.plant );
 				
 				// if planted
-					
+				
 				if ( this.plant.planted === true ) {
 					
 					// store in all plants list

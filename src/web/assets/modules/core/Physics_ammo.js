@@ -364,9 +364,9 @@ Physics module, handles physics in game using JigLibJS.
 					
 					face = faces[ i ];
 					
-					va = vertices[ face.a ].position;
-					vb = vertices[ face.b ].position;
-					vc = vertices[ face.c ].position;
+					va = vertices[ face.a ];
+					vb = vertices[ face.b ];
+					vc = vertices[ face.c ];
 					
 					ubtv32.setValue( va.x, va.y, va.z );
 					ubtv33.setValue( vb.x, vb.y, vb.z );

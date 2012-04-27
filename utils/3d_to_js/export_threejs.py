@@ -129,9 +129,9 @@ TEMPLATE_OBJECT = """\
         "quaternion": %(quaternion)s,
         "scale"     : %(scale)s,
         "visible"       : %(visible)s,
-        "castsShadow"   : %(castsShadow)s,
-        "meshCollider"  : %(meshCollider)s,
-        "trigger"       : %(trigger)s
+        "castShadow"    : %(castShadow)s,
+        "receiveShadow" : %(receiveShadow)s,
+        "doubleSided"   : %(doubleSided)s
     }"""
 
 TEMPLATE_EMPTY = """\
@@ -140,8 +140,7 @@ TEMPLATE_EMPTY = """\
         "position"  : %(position)s,
         "rotation"  : %(rotation)s,
         "quaternion": %(quaternion)s,
-        "scale"     : %(scale)s,
-        "trigger"   : %(trigger)s
+        "scale"     : %(scale)s
     }"""
 
 TEMPLATE_GEOMETRY_LINK = """\
@@ -779,6 +778,11 @@ def extract_materials(mesh, scene, option_colors, option_copy_textures, filepath
             else:
                 material['shading'] = m.THREE_materialType
 
+            material['blending'] = m.THREE_blendingType
+            material['depthWrite'] = m.THREE_depthWrite
+            material['depthTest'] = m.THREE_depthTest
+            material['transparent'] = m.use_transparency
+
     return materials
 
 def generate_materials_string(mesh, scene, option_colors, draw_type, option_copy_textures, filepath, offset):
@@ -1206,14 +1210,11 @@ def generate_objects(data):
             if len(group_ids) > 0:
                 group_string = generate_string_list(group_ids)
 
-            castsShadow = obj.THREE_castsShadow
-            meshCollider = obj.THREE_meshCollider
-            triggerType = obj.THREE_triggerType
+            castShadow = obj.THREE_castShadow
+            receiveShadow = obj.THREE_receiveShadow
+            doubleSided = obj.THREE_doubleSided
 
             visible = True
-            #if obj.draw_type in ["BOUNDS", "WIRE"] and (meshCollider or castsShadow):
-            if meshCollider or castsShadow:
-                visible = False
 
             geometry_string = generate_string(geometry_id)
 
@@ -1228,9 +1229,9 @@ def generate_objects(data):
             "quaternion"  : generate_vec4(quaternion),
             "scale"       : generate_vec3(scale),
 
-            "castsShadow"  : generate_bool_property(castsShadow),
-            "meshCollider" : generate_bool_property(meshCollider),
-            "trigger" 	   : generate_string(triggerType),
+            "castShadow"  : generate_bool_property(castShadow),
+            "receiveShadow"  : generate_bool_property(receiveShadow),
+            "doubleSided"  : generate_bool_property(doubleSided),
             "visible"      : generate_bool_property(visible)
             }
             chunks.append(object_string)
@@ -1247,8 +1248,6 @@ def generate_objects(data):
             if len(group_ids) > 0:
                 group_string = generate_string_list(group_ids)
 
-            triggerType = obj.THREE_triggerType
-
             object_string = TEMPLATE_EMPTY % {
             "object_id"   : generate_string(object_id),
             "group_id"    : group_string,
@@ -1256,9 +1255,7 @@ def generate_objects(data):
             "position"    : generate_vec3(position),
             "rotation"    : generate_vec3(rotation),
             "quaternion"  : generate_vec4(quaternion),
-            "scale"       : generate_vec3(scale),
-
-            "trigger" 	   : generate_string(triggerType),
+            "scale"       : generate_vec3(scale)
             }
             chunks.append(object_string)
 
@@ -1432,6 +1429,10 @@ def extract_material_data(m, option_colors):
             material['mapNormalFactor'] = textures['normal']['slot'].normal_factor
 
     material['shading'] = m.THREE_materialType
+    material['blending'] = m.THREE_blendingType
+    material['depthWrite'] = m.THREE_depthWrite
+    material['depthTest'] = m.THREE_depthTest
+    material['transparent'] = m.use_transparency
 
     return material
 
@@ -1450,7 +1451,7 @@ def guess_material_textures(material):
         slot = material.texture_slots[i]
         if slot:
             texture = slot.texture
-            if slot.use and texture.type == 'IMAGE':
+            if slot.use and texture and texture.type == 'IMAGE':
 
                 if texture.use_normal_map:
                     textures['normal'] = { "texture": texture, "slot": slot }
@@ -1519,6 +1520,18 @@ def generate_material_string(material):
 
     if material['vertexColors']:
         parameters += ', "vertexColors": "vertex"'
+
+    if material['transparent']:
+        parameters += ', "transparent": true'
+
+    parameters += ', "blending": "%s"' % material['blending']
+
+    if not material['depthWrite']:
+        parameters += ', "depthWrite": false'
+
+    if not material['depthTest']:
+        parameters += ', "depthTest": false'
+
 
     material_string = TEMPLATE_MATERIAL_SCENE % {
     "material_id" : generate_string(material_id),
@@ -1741,11 +1754,24 @@ def generate_ascii_scene(data):
 def export_scene(scene, filepath, flipyz, option_colors, option_lights, option_cameras, option_embed_meshes, embeds, option_url_base_html, option_copy_textures):
 
     source_file = os.path.basename(bpy.data.filepath)
-
+    
+    # objects are contained in scene and linked groups
+    objects = []
+    
+    # get scene objects
+    sceneobjects = scene.objects
+    for obj in sceneobjects:
+      objects.append(obj)
+      
+    # get linked group objcts  
+    for group in bpy.data.groups:
+       for object in group.objects:
+          objects.append(object)
+          
     scene_text = ""
     data = {
     "scene"        : scene,
-    "objects"      : scene.objects,
+    "objects"      : objects,
     "embeds"       : embeds,
     "source_file"  : source_file,
     "filepath"     : filepath,
@@ -1796,9 +1822,21 @@ def save(operator, context, filepath = "",
         bpy.ops.object.mode_set(mode='OBJECT')
 
     if option_all_meshes:
-        objects = scene.objects
+        sceneobjects = scene.objects
     else:
-        objects = context.selected_objects
+        sceneobjects = context.selected_objects
+
+    # objects are contained in scene and linked groups
+    objects = []
+    
+    # get scene objects
+    for obj in sceneobjects:
+      objects.append(obj)
+      
+    # get objects in linked groups  
+    for group in bpy.data.groups:
+       for object in group.objects:
+          objects.append(object) 
 
     if option_export_scene:
 
