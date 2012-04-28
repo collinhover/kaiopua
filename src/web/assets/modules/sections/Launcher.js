@@ -27,6 +27,7 @@
 		lightWater,
 		fogColor = 0x529ad1,
         water,
+		sky,
         skybox,
         time,
 		camRotationBaseQ,
@@ -129,7 +130,7 @@
 		//lightSky = new THREE.DirectionalLight( 0xffffff, 1 );
 		//lightSky.position = new THREE.Vector3(-1,0.5, 0).normalize();
 		
-		lightSky = new THREE.PointLight( 0xffffff, 1, 10000 );
+		lightSky = new THREE.PointLight( 0xffffff, 2, 10000 );
 		lightSky.position.set( -3000, 4000, 0 );
 		
 		// skybox
@@ -145,9 +146,18 @@
 		water = new _Water.Instance();
 		water.quaternion.setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), -Math.PI * 0.65 );
 		
-		/*
 		// sky
 		
+		sky = new _Sky.Instance( {
+			numClouds: 20,
+			cloudOpacityByDistance: 1,
+			cloudBoundRadius: 3000,
+			cloudScaleMax: 10,
+			yThetaMin: Math.PI * 0.2,
+			yThetaMax: Math.PI * 0.8
+		} );
+		
+		/*
 		_Sky.init();
 		
 		// sky environment
@@ -159,7 +169,7 @@
 		*/
 		// set items to add on show
 		
-		addOnShow.push( ambientLight, lightSky, water/*.environment, _Sky.environment*/ );
+		addOnShow.push( ambientLight, lightSky, water, sky );
 		
 		addBGOnShow.push( skybox );
 		
@@ -247,7 +257,7 @@
 			// cameras
 			
 			camera = _Game.camera;
-			//camera.position.set(-5800, 0, 0);
+			camera.position.set(-5800, 0, 0);
 			camera.quaternion.copy( camRotationBaseQ );
 			
 			// scene

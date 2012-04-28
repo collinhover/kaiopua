@@ -13,6 +13,7 @@
 		_Sky = {},
 		_Model,
 		_Physics,
+		_MathHelper,
 		_ObjectHelper;
 	
 	/*===================================================
@@ -26,6 +27,7 @@
 		requirements: [
 			"assets/modules/core/Model.js",
 			"assets/modules/core/Physics.js",
+			"assets/modules/utils/MathHelper.js",
 			"assets/modules/utils/ObjectHelper.js",
 			{ path: "assets/models/Cloud_001.js", type: 'model' },
 			{ path: "assets/models/Cloud_002.js", type: 'model' }
@@ -40,11 +42,12 @@
     
     =====================================================*/
 	
-	function init_internal ( m, phy, oh, cloudBase1, cloudBase2 ) {
+	function init_internal ( m, phy, mh, oh, cloudBase1, cloudBase2 ) {
 		console.log('internal sky', _Sky);
 		
 		_Model = m;
 		_Physics = phy;
+		_MathHelper = mh;
 		_ObjectHelper = oh;
 		
 		// properties
@@ -53,12 +56,14 @@
 		_Sky.cloudInitAxis = new THREE.Vector3( 0, 1, 0 );
 		_Sky.cloudInitAngle = 0;
 		_Sky.cloudRotateTowardWorld = true;
+		_Sky.cloudOpacityByDistance = 0;
 		_Sky.cloudScaleMax = 6;
 		_Sky.cloudScaleMin = 1;
+		_Sky.cloudBoundRadius = 1500;
+		_Sky.cloudBoundLength = Math.sqrt( Math.pow( _Sky.cloudBoundRadius, 2 ) / 2 );
 		_Sky.cloudDistanceFromSurfaceMin = 1000;
 		_Sky.cloudDistanceFromSurfaceMax = 3000;
 		_Sky.cloudsGeometry = [ cloudBase1, cloudBase2 ];
-		_Sky.bounds = { min: new THREE.Vector3(), max: new THREE.Vector3() };
 		_Sky.xThetaMin = 0;
 		_Sky.xThetaMax = Math.PI * 2;
 		_Sky.yThetaMin = 0;
@@ -106,14 +111,17 @@
 		this.cloudInitAxis = main.is_number( parameters.cloudInitAxis ) ? parameters.cloudInitAxis : _Sky.cloudInitAxis;
 		this.cloudInitAngle = main.is_number( parameters.cloudInitAngle ) ? parameters.cloudInitAngle : _Sky.cloudInitAngle;
 		this.cloudRotateTowardWorld = typeof parameters.cloudRotateTowardWorld === 'boolean' ? parameters.cloudRotateTowardWorld : _Sky.cloudRotateTowardWorld;
+		this.cloudOpacityByDistance = _MathHelper.clamp( main.is_number( parameters.cloudOpacityByDistance ) ? parameters.cloudOpacityByDistance : _Sky.cloudOpacityByDistance, -1, 1 );
 		this.cloudRotateUtilVec31 = new THREE.Vector3();
 		this.cloudRotateUtilVec32 = new THREE.Vector3();
 		this.cloudScaleMax = main.is_number( parameters.cloudScaleMax ) ? parameters.cloudScaleMax : _Sky.cloudScaleMax;
 		this.cloudScaleMin = main.is_number( parameters.cloudScaleMin ) ? parameters.cloudScaleMin : _Sky.cloudScaleMin;
+		this.cloudBoundRadius =  main.is_number( parameters.cloudBoundRadius ) ? parameters.cloudBoundRadius : _Sky.cloudBoundRadius;
+		this.cloudBoundLength = Math.sqrt( Math.pow( this.cloudBoundRadius, 2 ) / 2 );
 		this.cloudDistanceFromSurfaceMin = main.is_number( parameters.cloudDistanceFromSurfaceMin ) ? parameters.cloudDistanceFromSurfaceMin : _Sky.cloudDistanceFromSurfaceMin;
 		this.cloudDistanceFromSurfaceMax = main.is_number( parameters.cloudDistanceFromSurfaceMax ) ? parameters.cloudDistanceFromSurfaceMax : _Sky.cloudDistanceFromSurfaceMax;
 		this.cloudsGeometry = parameters.cloudsGeometry || _Sky.cloudsGeometry;
-		this.bounds = parameters.bounds || _Sky.bounds;
+		this.bounds = parameters.bounds || { min: new THREE.Vector3(), max: new THREE.Vector3() };
 		this.xThetaMin = parameters.xThetaMin || _Sky.xThetaMin;
 		this.xThetaMax = parameters.xThetaMax || _Sky.xThetaMax;
 		this.yThetaMin = parameters.yThetaMin || _Sky.yThetaMin;
@@ -167,82 +175,123 @@
 			rt, tx, ty, w,
 			x, y, z;
 		
-		// if new world
+		// reset bounds
 		
-		if ( this._world !== world ) {
+		this.bounds.min.set( -this.cloudBoundLength, -this.cloudBoundLength, -this.cloudBoundLength );
+		this.bounds.max.set( this.cloudBoundLength, this.cloudBoundLength, this.cloudBoundLength );
+		
+		// store new world
+		
+		this._world = world;
+		
+		// world influence, pre-update
+		
+		if ( this._world instanceof _Model.Instance ) {
 			
-			// store new world
+			// get world children
 			
-			this._world = world;
+			children = _ObjectHelper.extract_children_from_objects( this._world, this._world );
 			
-			if ( this._world instanceof _Model.Instance ) {
+			// get new bounds based on world and children
+			
+			for ( i = 0, l = children.length; i < l; i++ ) {
 				
-				// get world children
+				child = children[ i ];
 				
-				children = _ObjectHelper.extract_children_from_objects( this._world, this._world );
+				this.bounds = _ObjectHelper.push_bounds( child, this.bounds );
 				
-				// get new bounds based on world and children
+			}
+			
+		}
+		
+		// set radius
+		
+		radius = Math.max( this.bounds.min.length(), this.bounds.max.length() );
+		
+		// update clouds
+		
+		for ( i = 0, l = this.clouds.length; i < l; i++ ) {
+			
+			cloud = this.clouds[ i ];
+			
+			// position
+			
+			z = ( radius * 2 ) * Math.random() - radius;
+			rt = Math.random();
+			tx = rt * ( this.xThetaMax - this.xThetaMin ) + this.xThetaMin;
+			ty = rt * ( this.yThetaMax - this.yThetaMin ) + this.yThetaMin;
+			w = Math.asin( z / radius );
+			x = radius * Math.cos( w ) * Math.cos( tx );
+			y = radius * Math.cos( w ) * Math.sin( ty );
+			
+			cloud.position.set( x, y, z );
+			
+			// rotate
+			
+			cloud.quaternion.setFromAxisAngle( this.cloudInitAxis, this.cloudInitAngle + Math.atan2( x, z ) );
+			
+			// scale
+			
+			scale = Math.random() * ( this.cloudScaleMax - this.cloudScaleMin ) + this.cloudScaleMin;
+			
+			cloud.scale.set( scale, scale, scale );
+			/*
+			// set opacity of cloud
+			
+			if ( this.cloudOpacityByDistance > 0 ) {
 				
-				this.bounds.min.set( 0, 0, 0 );
-				this.bounds.max.set( 0, 0, 0 );
+				cloud.material.opacity = 1 - ( cloud.position.length() / radius ) * this.cloudOpacityByDistance;
 				
-				for ( i = 0, l = children.length; i < l; i++ ) {
+			}
+			else if ( this.cloudOpacityByDistance < 0 ) {
+				
+				cloud.material.opacity = -( cloud.position.length() / radius ) * this.cloudOpacityByDistance;
+				
+			}
+			else {
+				
+				cloud.material.opacity = 1;
+				
+			}
+			
+			if ( cloud.material.opacity < 1 ) {
+				
+				cloud.material.transparent = true;
+				
+			}
+			else {
+				
+				cloud.material.transparent = false;
+				
+			}
+			*/
+		}
+		
+		// world influence, post update
+		
+		if ( this._world instanceof _Model.Instance ) {
+			
+			for ( i = 0, l = this.clouds.length; i < l; i++ ) {
+				
+				cloud = this.clouds[ i ];
+				
+				if ( this.cloudRotateTowardWorld ) {
 					
-					child = children[ i ];
+					cloudForward.copy( shared.cardinalAxes.forward );
+					cloudUp.copy( shared.cardinalAxes.up );
 					
-					this.bounds = _ObjectHelper.push_bounds( child, this.bounds );
+					cloud.quaternion.multiplyVector3( cloudForward );
+					cloud.quaternion.multiplyVector3( cloudUp );
+					
+					_Physics.rotate_relative_to_source( cloud, this._world, cloudForward, cloudUp );
 					
 				}
 				
-				radius = Math.max( this.bounds.min.length(), this.bounds.max.length() );
+				// distance
 				
-				// update clouds
+				distance = Math.random() * ( this.cloudDistanceFromSurfaceMax - this.cloudDistanceFromSurfaceMin ) + this.cloudDistanceFromSurfaceMin;
 				
-				for ( i = 0, l = this.clouds.length; i < l; i++ ) {
-					
-					cloud = this.clouds[ i ];
-					
-					// position
-					
-					z = ( radius * 2 ) * Math.random() - radius;
-					rt = Math.random();
-					tx = rt * ( this.xThetaMax - this.xThetaMin ) + this.xThetaMin;
-					ty = rt * ( this.yThetaMax - this.yThetaMin ) + this.yThetaMin;
-					w = Math.asin( z / radius );
-					x = radius * Math.cos( w ) * Math.cos( tx );
-					y = radius * Math.cos( w ) * Math.sin( ty );
-					
-					cloud.position.set( x, y, z );
-					
-					// rotate
-					
-					cloud.quaternion.setFromAxisAngle( this.cloudInitAxis, this.cloudInitAngle + Math.atan2( x, z ) );
-					
-					if ( this.cloudRotateTowardWorld ) {
-					
-						cloudForward.copy( shared.cardinalAxes.forward );
-						cloudUp.copy( shared.cardinalAxes.up );
-						
-						cloud.quaternion.multiplyVector3( cloudForward );
-						cloud.quaternion.multiplyVector3( cloudUp );
-						
-						_Physics.rotate_relative_to_source( cloud, this._world, cloudForward, cloudUp );
-						
-					}
-					
-					// distance
-					
-					distance = Math.random() * ( this.cloudDistanceFromSurfaceMax - this.cloudDistanceFromSurfaceMin ) + this.cloudDistanceFromSurfaceMin;
-					
-					_Physics.pull_to_source( cloud, this._world, children, distance );
-					
-					// scale
-					
-					scale = Math.random() * ( this.cloudScaleMax - this.cloudScaleMin ) + this.cloudScaleMin;
-					
-					cloud.scale.set( scale, scale, scale );
-					
-				}
+				_Physics.pull_to_source( cloud, this._world, children, distance );
 				
 			}
 			
