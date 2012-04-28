@@ -24,8 +24,6 @@
 		addBGOnShow = [],
 		ambientLight,
 		lightSky,
-		lightWater,
-		fogColor = 0x529ad1,
         water,
 		sky,
         skybox,
@@ -44,7 +42,7 @@
             rangeTransMinY: -250,
             speedTransX: 0.01, 
             speedTransY: 0.01,
-            rangeRotMaxX: 0,
+            rangeRotMaxX: 15,
             rangeRotMinX: -15,
             rangeRotMaxY: 10,
             rangeRotMinY: -10,
@@ -135,10 +133,6 @@
 		
 		// skybox
 		
-		//skybox = init_skybox();
-		
-		// skybox
-		
 		skybox = _ObjectMaker.make_skybox( shared.pathToTextures + "skybox_world" );
 		
 		// water
@@ -149,24 +143,37 @@
 		// sky
 		
 		sky = new _Sky.Instance( {
-			numClouds: 20,
+			numClouds: 30,
+			cloudScaleMax: 8,
 			cloudOpacityByDistance: 1,
-			cloudBoundRadius: 3000,
-			cloudScaleMax: 10,
-			yThetaMin: Math.PI * 0.2,
-			yThetaMax: Math.PI * 0.8
+			cloudBoundRadius: 5000,
+			cloudDistanceFromSurfaceMin: 3000,
+			cloudDistanceFromSurfaceMax: 5000,
+			cloudRotateTowardWorld: false,
+			zones: [
+				{
+					polar: {
+						min: Math.PI * 0.1,
+						max: Math.PI * 0.9
+					},
+					azimuth: {
+						min: Math.PI * 0.1,
+						max: Math.PI * 0.9
+					}
+				}/*,
+				{
+					polar: {
+						min: Math.PI * 0.2,
+						max: Math.PI * 0.8
+					},
+					azimuth: {
+						min: Math.PI * 1.2,
+						max: Math.PI * 1.8
+					}
+				}*/
+			]
 		} );
 		
-		/*
-		_Sky.init();
-		
-		// sky environment
-		
-		_Sky.environment.position.x = 0;
-		_Sky.environment.position.y = 2000;
-		
-		_Sky.environment.rotation.y = -Math.PI * 0.5;
-		*/
 		// set items to add on show
 		
 		addOnShow.push( ambientLight, lightSky, water, sky );
@@ -174,55 +181,6 @@
 		addBGOnShow.push( skybox );
 		
 	}
-	
-	/*function init_skybox () {
-		
-		var ap,
-			images,
-			textureCube,
-			shader,
-			material,
-			mesh;
-		
-		// images
-		
-		ap = "assets/textures/skybox_launcher";
-				 
-		// cube texture
-		
-		textureCube = new THREE.Texture();
-		
-		main.asset_require( [ ap + "_xz.jpg", ap + "_posy.jpg", ap + "_negy.jpg" ], function ( xz, posy, negy ) {
-			
-			textureCube.image = [ xz, xz, posy, negy, xz, xz ];
-			textureCube.needsUpdate = true;
-			
-		} );
-		
-		// shader
-		
-		shader = THREE.ShaderUtils.lib[ "cube" ];
-		shader.uniforms[ "tCube" ].texture = textureCube;
-		
-		// material
-		
-		material = new THREE.ShaderMaterial( {
-
-			fragmentShader: shader.fragmentShader,
-			vertexShader: shader.vertexShader,
-			uniforms: shader.uniforms,
-			depthWrite: false
-			
-		} );
-		
-		// mesh
-		
-		mesh = new THREE.Mesh( new THREE.CubeGeometry( 100, 100, 100 ), material );
-		mesh.flipSided = true;
-        
-        return mesh;
-		
-	}*/
     
     /*===================================================
     
@@ -267,8 +225,6 @@
 			sceneBG = _Game.sceneBG;
 			
 			// environment
-			
-			//scene.fog = new THREE.Fog( fogColor, -100, 10000 );
 			
 			water.morphs.play( 'waves', { duration: 4000, loop: true } );
 			
@@ -342,12 +298,6 @@
 		camRotationOffsetQ.setFromEuler( camRotationOffset ).normalize();
         
 		camera.quaternion.set( 0, 0, 0, 1 ).multiplySelf( camRotationOffsetQ ).multiplySelf( camRotationBaseQ );
-		
-        // update environment
-        
-        //_Sky.wind_blow( timeDelta );
-        
-        //water.generate_waves( timeDelta );
         
     }
 	

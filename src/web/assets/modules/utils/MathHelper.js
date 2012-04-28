@@ -32,11 +32,22 @@
 	
 	_MathHelper.max_magnitude = function ( n1, n2 ) {
 		
-		var n1abs = Math.abs( n1 ),
-			n2abs = Math.abs( n2 ),
-			max = Math.max( n1abs, n2abs );
+		var i, l,
+			abs = [],
+			max,
+			index;
 		
-		return ( max === n1abs ) ? n1 : n2;
+		for ( i = 0, l = arguments.length; i < l; i++ ) {
+			
+			abs.push( Math.abs( arguments[ i ] ) );
+			
+		}
+		
+		max = Math.max.apply( Math, abs );
+		
+		index = abs.indexOf( max );
+		
+		return arguments[ index ];
 		
 	};
 	

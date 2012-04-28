@@ -180,8 +180,18 @@
 			numClouds: 20,
 			cloudDistanceFromSurfaceMin: me.parts.sunmoon.position.length() - 2000,
 			cloudDistanceFromSurfaceMax: me.parts.sunmoon.position.length() + 500,
-			yThetaMin: Math.PI * 0.2,
-			yThetaMax: Math.PI * 0.8
+			zones: [
+				{
+					polar: {
+						min: Math.PI * 0.2,
+						max: Math.PI * 0.8
+					},
+					azimuth: {
+						min: Math.PI * 0.2,
+						max: Math.PI * 0.8
+					}
+				}
+			]
 		} );
 		
 		me.add( me.parts.sky );
