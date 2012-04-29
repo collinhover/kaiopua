@@ -15,7 +15,6 @@
 		_CameraControls,
 		_Hero,
 		_Physics,
-		_World,
 		_Messenger,
 		_ObjectHelper,
 		_MathHelper,
@@ -82,7 +81,6 @@
 			"assets/modules/core/CameraControls.js",
 			"assets/modules/characters/Hero.js",
 			"assets/modules/core/Physics.js",
-			"assets/modules/env/World.js",
 			"assets/modules/ui/Messenger.js",
 			"assets/modules/utils/ObjectHelper.js",
 			"assets/modules/utils/MathHelper.js"
@@ -97,7 +95,7 @@
     
     =====================================================*/
 	
-	function init_internal ( g, cc, h, physx, w, msg, oh, mh ) {
+	function init_internal ( g, cc, h, physx, msg, oh, mh ) {
 		console.log('internal player');
 		
 		if ( ready !== true ) {
@@ -108,7 +106,6 @@
 			_CameraControls = cc;
 			_Hero = h;
 			_Physics = physx;
-			_World = w;
 			_Messenger = msg;
 			_ObjectHelper = oh;
 			_MathHelper = mh;
@@ -187,6 +184,7 @@
 			title: "Well, this is embarrassing!",
 			body: "Our physics broke, but we'll do our best to drop you off at your last safe location.",
 			priority: true,
+			confirmRequired: true,
 			transitionerOpacity: 1
 		} );
 		

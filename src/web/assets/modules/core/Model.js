@@ -215,7 +215,7 @@
 		// if no materials yet, add default
 		if ( materials.length === 0 ) {
 			
-			materials = [ new THREE.MeshFaceMaterial() ];
+			materials = [ new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors, shading: THREE.SmoothShading } ) ];
 			
 			materialsToModify = materialsToModify.concat( materials );
 			
@@ -1064,7 +1064,7 @@
 				
 				// reset
 				
-				if ( parameters.reset !== false ) {
+				if ( info.cleared !== false && parameters.reset !== false ) {
 					updater.reset();
 				}
 				

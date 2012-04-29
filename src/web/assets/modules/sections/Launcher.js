@@ -153,12 +153,12 @@
 			zones: [
 				{
 					polar: {
-						min: Math.PI * 0.1,
-						max: Math.PI * 0.9
+						min: Math.PI * 0.15,
+						max: Math.PI * 0.85
 					},
 					azimuth: {
-						min: Math.PI * 0.1,
-						max: Math.PI * 0.9
+						min: Math.PI * 0.15,
+						max: Math.PI * 0.85
 					}
 				}/*,
 				{

@@ -16,9 +16,9 @@
 		threeLoaderBIN,
 		threeLoaderErrorMessage = 'Attempted to load model before THREE',
 		listIDBase = 'loadList',
-		loadingHeaderBase = 'Loading...',
+		loadingHeaderBase = "Loading...",
 		loadingTips = [
-			'Please wait.'
+			'Try meditating while you wait!'
 		],
 		listNumber = 0,
 		loading = false,
@@ -34,8 +34,8 @@
 		allLoadingOrLoaded = [],
 		listCurrent,
 		loadTypeDefault = 'script',
-		containerWidth = 260,
-		barWidth = containerWidth - 40,
+		containerWidth = 320,
+		barWidth = 240,
 		barHeight = 10,
 		barRadius = 5,
 		barToFillSpace = 2,
@@ -207,7 +207,8 @@
 			id: 'asset_loader',
 			elementType: 'section',
 			classes: 'info_panel',
-			width: containerWidth
+			width: containerWidth,
+			alignment: 'center'
 		});
 		
 		// bar
@@ -274,10 +275,6 @@
 		header.parent = container;
 		bar.parent = container;
 		message.parent = container;
-		
-		// center
-		
-		container.alignment = 'center';
 		
 		// hide
 		

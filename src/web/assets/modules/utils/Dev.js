@@ -73,7 +73,7 @@
             padding: '0',
             opacity: '0.8',
             backgroundColor: '#333',
-            color: '#fcd700',
+            color: '#fee972',
             'font-size': '13px'
         });
         // override log function to autoscroll to bottom of domElement

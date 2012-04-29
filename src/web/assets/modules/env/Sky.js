@@ -13,6 +13,7 @@
 		_Sky = {},
 		_Model,
 		_Physics,
+		_Cloud,
 		_MathHelper,
 		_ObjectHelper;
 	
@@ -27,10 +28,9 @@
 		requirements: [
 			"assets/modules/core/Model.js",
 			"assets/modules/core/Physics.js",
+			"assets/modules/env/Cloud.js",
 			"assets/modules/utils/MathHelper.js",
-			"assets/modules/utils/ObjectHelper.js",
-			{ path: "assets/models/Cloud_001.js", type: 'model' },
-			{ path: "assets/models/Cloud_002.js", type: 'model' }
+			"assets/modules/utils/ObjectHelper.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -42,11 +42,12 @@
     
     =====================================================*/
 	
-	function init_internal ( m, phy, mh, oh, cloudBase1, cloudBase2 ) {
+	function init_internal ( m, phy, cld, mh, oh ) {
 		console.log('internal sky', _Sky);
 		
 		_Model = m;
 		_Physics = phy;
+		_Cloud = cld;
 		_MathHelper = mh;
 		_ObjectHelper = oh;
 		
@@ -62,7 +63,6 @@
 		_Sky.cloudBoundRadius = 1500;
 		_Sky.cloudDistanceFromSurfaceMin = 1000;
 		_Sky.cloudDistanceFromSurfaceMax = 3000;
-		_Sky.cloudsGeometry = [ cloudBase1, cloudBase2 ];
 		_Sky.layout = 'box';
 		_Sky.zonePolar = {
 			min: 0,
@@ -139,11 +139,7 @@
 		
 		for ( i = 0, l = this.numClouds; i < l; i++ ) {
 			
-			cloud = new _Model.Instance( {
-				geometry: this.cloudsGeometry[ Math.round( Math.random() * ( this.cloudsGeometry.length - 1 ) ) ],
-				materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
-				shading: THREE.SmoothShading
-			} );
+			cloud = new _Cloud.Instance();
 			
 			// store
 			

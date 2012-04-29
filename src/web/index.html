@@ -69,30 +69,6 @@
 		<script defer src="//ajax.googleapis.com/ajax/libs/chrome-frame/1.0.3/CFInstall.min.js"></script>
 		<script defer>window.attachEvent('onload',function(){CFInstall.check({mode:'overlay'})})</script>
 	  <![endif]-->
-	
-	<noscript>
-		
-		<article id="noscript" class="error info_panel">
-			
-			<header class='title_alt text_huge'>Javascript disabled?</header>
-			
-			<p class="error_explanation">
-				We built this website with Javascript, and we can't seem to find it. If you are sure you've turned it on, but you still see this message, try upgrading to one of these friendly browsers:
-			</p>
-			<div class="browsers">
-				<div class="browsers_each chrome">
-					<a href="http://www.google.com/chrome/" target="_blank">Chrome</a>
-				</div>
-				<div class="browsers_each firefox">
-					<a href="http://www.mozilla.org/firefox/" target="_blank">Firefox</a>
-				</div>
-				<div class="browsers_each safari">
-					<a href="http://www.apple.com/safari/" target="_blank">Safari</a>
-				</div>
-			</div>
-		</article>
-	
-	</noscript>
 
 </head>
 
@@ -109,6 +85,48 @@
 				<h1>Kai 'Opua: an interactive moon-sized Hawaiian space worm that will teach you to be a better designer!</h1>
 				
 			</header>
+			
+			<!-- preloader message -->
+			<div id='preloading' class='grid info_panel'>
+				
+				<ul>
+					
+					<li>
+						<header class='text_large title_alt'>Hold on, we're loading some things...</header>
+						<div class='grid_cell_inner'>
+							<img src='assets/icons/loading_64.png'>
+						</div>
+						<p>If you're waiting more than 10 seconds,<br/><a href='index.html'>try refreshing the page.</a></p>
+					</li>
+					
+				</ul>
+				
+			</div>
+			
+			<!-- noscript message -->
+			<noscript>
+				
+				<article id="noscript" class="error info_panel">
+					
+					<header class='title_alt text_huge'>Javascript disabled?</header>
+					
+					<p class="error_explanation">
+						We built this website with Javascript, and we can't seem to find it. If you are sure you've turned it on, but you still see this message, try upgrading to one of these friendly browsers:
+					</p>
+					<div class="browsers">
+						<div class="browsers_each chrome">
+							<a href="http://www.google.com/chrome/" target="_blank">Chrome</a>
+						</div>
+						<div class="browsers_each firefox">
+							<a href="http://www.mozilla.org/firefox/" target="_blank">Firefox</a>
+						</div>
+						<div class="browsers_each safari">
+							<a href="http://www.apple.com/safari/" target="_blank">Safari</a>
+						</div>
+					</div>
+				</article>
+			
+			</noscript>
 			
 		</section>
 		

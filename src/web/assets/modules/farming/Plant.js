@@ -116,8 +116,6 @@
 			
 		}
 		
-		parameters.materials = parameters.materials || new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } );
-		
 		// prototype constructor
 		
 		_GridElement.Instance.call( this, parameters );

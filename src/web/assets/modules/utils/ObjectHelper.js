@@ -12,6 +12,9 @@
 		assetPath = "assets/modules/utils/ObjectHelper.js",
 		_ObjectHelper = {},
 		_MathHelper,
+		utilRay1Casting,
+		utilProjector1Casting,
+		utilVec31Casting,
 		utilVec31Follow,
 		utilVec32Follow,
 		utilVec31Bounds,
@@ -69,6 +72,13 @@
 	_ObjectHelper.normalize_faces = normalize_faces
 	
 	_ObjectHelper.object_follow_object = object_follow_object;
+	_ObjectHelper.object_rotate_relative_to_source = object_rotate_relative_to_source;
+	_ObjectHelper.object_pull_to_source = object_pull_to_source;
+	
+	_ObjectHelper.raycast = raycast;
+	_ObjectHelper.raycast_physics = raycast_physics;
+	_ObjectHelper.raycast_from_mouse = raycast_from_mouse;
+	_ObjectHelper.raycast_objects = raycast_objects;
 	
 	main.asset_register( assetPath, {
 		data: _ObjectHelper,
@@ -101,6 +111,9 @@
 		
 		// utility
 		
+		utilRay1Casting = new THREE.Ray();
+		utilProjector1Casting = new THREE.Projector();
+		utilVec31Casting = new THREE.Vector3();
 		utilVec31Follow = new THREE.Vector3();
 		utilVec32Follow = new THREE.Vector3();
 		utilVec31Bounds = new THREE.Vector3();
@@ -1323,6 +1336,462 @@
 			followerQ.multiplySelf( followerBaseRot );
 			
 		}
+		
+	}
+	
+	/*===================================================
+    
+    rotate
+    
+    =====================================================*/
+	
+	function object_rotate_relative_to_source ( mesh, source, axisAway, axisForward, lerpDelta, rigidBody ) {
+		
+		var uv31 = utilVec31RotateToSrc,
+			uv32 = utilVec32RotateToSrc,
+			uq1 = utilQ1RotateToSrc,
+			uq2 = utilQ2RotateToSrc,
+			uq3 = utilQ3RotateToSrc,
+			position,
+			rotation,
+			ca = shared.cardinalAxes,
+			axes,
+			axisAwayNew,
+			axisAwayToAwayNewDist,
+			gravUp,
+			gravDown,
+			angleToNew,
+			axisToNew,
+			qToNew;
+			
+		// localize basics
+		
+		position = mesh.position;
+		
+		rotation = ( mesh.useQuaternion === true ? mesh.quaternion : mesh.matrix );
+		
+		// if source is 3D object, cascade
+		if ( source instanceof THREE.Object3D ) {
+			
+			source = source.position;
+		
+		}
+		
+		// default is world gravity source
+		if ( typeof source === 'undefined' ) {
+			
+			source = worldGravitySource;
+			
+		}
+		
+		axisAway = axisAway || ca.up;
+		
+		axisForward = axisForward || ca.forward;
+		
+		lerpDelta = lerpDelta || 1;
+		
+		// get normalized vector pointing from source to mesh
+		
+		axisAwayNew = uv31.sub( position, source ).normalize();
+		
+		// get new rotation based on vector
+		
+		// find dist between current axis away and new axis away
+		
+		axisAwayToAwayNewDist = Math.max( -1, Math.min( 1, axisAway.dot( axisAwayNew ) ) );
+		
+		// if up axes are not same
+		
+		if ( axisAwayToAwayNewDist !== 1 ) {
+			
+			// axis / angle
+			
+			angleToNew = Math.acos( axisAwayToAwayNewDist );
+			axisToNew = uv32.cross( axisAway, axisAwayNew );
+			axisToNew.normalize();
+			
+			// if new axis is exactly opposite of current
+			// replace new axis with the forward axis
+			
+			if ( axisToNew.length() === 0 ) {
+				
+				axisToNew = axisForward;
+				
+			}
+			
+			// rotation change
+			
+			qToNew = uq3.setFromAxisAngle( axisToNew, angleToNew );
+			
+			// add to rotation
+			
+			if ( mesh.useQuaternion === true ) {
+				
+				// quaternion rotations
+				
+				uq1.multiply( qToNew, rotation );
+				
+				// normalized lerp to new rotation
+				
+				THREE.Quaternion.nlerp( rotation, uq1, rotation, lerpDelta );
+			
+			}
+			else {
+				
+				// matrix rotations
+				
+				uq1.setFromRotationMatrix( rotation );
+				
+				uq2.multiply( qToNew, uq1 );
+				
+				rotation.setRotationFromQuaternion( uq2 );
+				
+			}
+			
+			// if physics rigid body passed
+			
+			if ( typeof rigidBody !== 'undefined' ) {
+				
+				/*
+				quaternion = rigidBody.quaternion;
+				
+				uq1.multiply( qToNew, quaternion );
+				
+				THREE.Quaternion.nlerp( quaternion, uq1, quaternion, lerpDelta );
+				*/
+				// find new axes based on new rotation
+				
+				axes = rigidBody.axes;
+				
+				rotation.multiplyVector3( axes.up.copy( ca.up ) );
+				
+				rotation.multiplyVector3( axes.forward.copy( ca.forward ) );
+				
+				rotation.multiplyVector3( axes.right.copy( ca.right ) );
+				
+			}
+			
+		}
+		
+	}
+	
+	/*===================================================
+    
+    pull
+    
+    =====================================================*/
+	
+	function object_pull_to_source ( mesh, source, objectsToIntersect, distanceFrom, velocity, rigidBody ) {
+		
+		var i, l,
+			position,
+			difference = utilVec31Pull,
+			direction = utilVec32Pull,
+			shift = utilVec33Pull,
+			object,
+			rigidBody,
+			colliders,
+			intersection,
+			intersectionDistance;
+		
+		// handle parameters
+		
+		position = mesh.position;
+		
+		// if source is 3D object, cascade
+		if ( source instanceof THREE.Object3D ) {
+			
+			source = source.position;
+		
+		}
+		
+		// default is world gravity source
+		if ( typeof source === 'undefined' ) {
+			
+			source = worldGravitySource;
+			
+		}
+		
+		// get normalized vector from position to source
+		
+		difference.sub( source, position );
+		
+		direction.copy( difference ).normalize();
+		
+		// if objects to intersect was passed
+		
+		if ( main.is_array( objectsToIntersect ) ) {
+			
+			// extract colliders from objects
+			
+			colliders = [];
+			
+			for ( i = 0, l = objectsToIntersect.length; i < l; i++ ) {
+				
+				object = objectsToIntersect[ i ];
+				
+				if( object instanceof THREE.Collider ) {
+					
+					colliders.push( object );
+					
+				}
+				else if ( typeof object.collider !== 'undefined' ) {
+					
+					colliders.push( object.collider );
+					
+				}
+				else if ( typeof object.rigidBody !== 'undefined' ) {
+					
+					colliders.push( object.rigidBody.collider );
+					
+				}
+				else if ( typeof object.physics !== 'undefined' ) {
+					
+					colliders.push( object.physics.rigidBody.collider );
+					
+				}
+				
+			}
+			
+		}
+		
+		// cast ray from mesh to source
+		
+		intersection = raycast( position, direction, undefined, undefined, colliders );
+		
+		// if intersection found
+		
+		if ( typeof intersection !== 'undefined' ) {
+			
+			// get distance
+			
+			intersectionDistance = intersection.distance;
+			
+		}
+		else {
+			
+			intersectionDistance = difference.length();
+			
+		}
+		
+		// if distance from needed
+		
+		if ( main.is_number( distanceFrom ) ) {
+			
+			intersectionDistance -= distanceFrom;
+			
+		}
+		
+		// multiply direction by distance
+			
+		shift.copy( direction ).multiplyScalar( intersectionDistance );
+		
+		// add shift to position
+		
+		position.addSelf( shift );
+		
+	}
+	
+	/*===================================================
+    
+    raycasting
+    
+    =====================================================*/
+	
+	function raycast ( parameters ) {
+		
+		var i, l,
+			ray,
+			origin,
+			direction,
+			ignore,
+			intersections = [],
+			intersectionPotential,
+			intersectedObject,
+			intersectionDistance = Number.MAX_VALUE,
+			intersection;
+		
+		// parameters
+		
+		if ( parameters.ray instanceof THREE.Ray !== true ) {
+			
+			ray = parameters.ray = utilRay1Casting;
+			
+			// origin
+			
+			if ( parameters.origin instanceof THREE.Vector3 ) {
+				
+				ray.origin.copy( parameters.origin );
+				
+			}
+			
+			// direction
+			
+			if ( parameters.direction instanceof THREE.Vector3 ) {
+				
+				ray.direction.copy( parameters.direction );
+				
+			}
+			
+			// offset
+			
+			if ( parameters.offset instanceof THREE.Vector3 ) {
+				
+				ray.origin.addSelf( parameters.offset );
+				
+			}
+			
+		}
+		
+		// cast through physics
+		
+		if ( typeof parameters.physics !== 'undefined' ) {
+			
+			intersections = intersections.concat( raycast_physics( parameters ) );
+			
+		}
+		
+		// cast through objects
+		
+		if ( typeof parameters.mouse !== 'undefined' ) {
+			
+			intersections = intersections.concat( raycast_from_mouse( parameters ) );
+			
+		}
+		else if ( typeof parameters.objects !== 'undefined' ) {
+			
+			intersections = intersections.concat( raycast_objects( parameters ) );
+			
+		}
+		
+		// if all required
+		
+		if ( parameters.allIntersections === true ) {
+			
+			return intersections;
+			
+		}
+		// else return nearest
+		else {
+			
+			ignore = main.ensure_array( parameters.ignore );
+			
+			for ( i = 0, l = intersections.length; i < l; i++ ) {
+				
+				intersectionPotential = intersections[ i ];
+				
+				intersectedObject = intersectionPotential.mesh || intersectionPotential.object;
+				
+				if ( intersectionPotential.distance < intersectionDistance && ignore.indexOf( intersectedObject ) === -1 ) {
+					
+					intersection = intersectionPotential;
+					intersectionDistance = intersectionPotential.distance;
+					
+				}
+				
+			}
+			
+			return intersection;
+		
+		}
+		
+	}
+	
+	function raycast_physics ( parameters ) {
+		
+		var i, l,
+			ray = parameters.ray,
+			physics = parameters.physics,
+			system = physics.system,
+			colliders = parameters.colliders,
+			intersections,
+			intersectionPotential,
+			intersectionMeshRecast;
+		
+		// ray cast colliders
+		// defaults to all in system
+		
+		intersections = system.rayCastAll( ray, colliders );
+		
+		// TODO: move into system's rayCastAll
+		
+		if ( typeof intersections !== 'undefined' ) {
+			
+			for ( i = 0, l = intersections.length; i < l; i ++ ) {
+				
+				intersectionPotential = intersections[ i ];
+				
+				// cast ray again if collider is mesh
+				// initial ray cast was to mesh collider's dynamic box
+				
+				if ( intersectionPotential instanceof THREE.MeshCollider ) {
+					
+					intersectionMeshRecast = system.rayMesh( ray, intersectionPotential );
+					
+					if ( intersectionMeshRecast.dist < Number.MAX_VALUE ) {
+						intersectionPotential.distance = intersectionMeshRecast.dist;
+						intersectionPotential.faceIndex = intersectionMeshRecast.faceIndex;
+					}
+					else {
+						intersectionPotential.distance = Number.MAX_VALUE;
+					}
+					
+				}
+				
+			}
+			
+		}
+		
+		return intersections;
+		
+	}
+	
+	function raycast_from_mouse ( parameters ) {
+		
+		var ray = parameters.ray,
+			camera = parameters.camera,
+			mouse = parameters.mouse,
+			mousePosition = utilVec31Casting,
+			projector = utilProjector1Casting;
+		
+		// get corrected mouse position
+		
+		mousePosition.x = ( mouse.x / shared.screenWidth ) * 2 - 1;
+		mousePosition.y = -( mouse.y / shared.screenHeight ) * 2 + 1;
+		mousePosition.z = 0.5;
+		
+		// unproject mouse position
+		
+		projector.unprojectVector( mousePosition, camera );
+		
+		// set ray
+
+		ray.origin.copy( camera.position );
+		ray.direction.copy( mousePosition.subSelf( camera.position ) ).normalize();
+		
+		return raycast_objects( parameters );
+		
+	}
+	
+	function raycast_objects ( parameters ) {
+		
+		var ray = parameters.ray,
+			objects = parameters.objects,
+			hierarchical = parameters.hierarchical,
+			ignore = main.ensure_array( parameters.ignore ),
+			intersection;
+		
+		// account for hierarchy and extract all children
+		
+		if ( hierarchical !== false ) {
+			
+			objects = extract_children_from_objects( objects, objects );
+			
+		}
+		
+		// find intersections
+		
+		return ray.intersectObjects( objects );
 		
 	}
     

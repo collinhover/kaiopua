@@ -97,9 +97,6 @@
 		
 		parameters = parameters || {};
 		
-		parameters.geometry = parameters.geometry || new THREE.CubeGeometry( 50, 100, 50 );
-		parameters.materials = parameters.materials || new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } );
-		
 		// prototype constructor
 		
 		_Model.Instance.call( this, parameters );

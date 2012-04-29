@@ -13,7 +13,6 @@
 		_Planting = {},
 		_Game,
 		_GUI,
-		_Messenger,
 		_Grid,
 		_Puzzle,
 		_GridModule,
@@ -209,7 +208,11 @@
 		
 		// find if any planting objects under mouse
 		
-		targetObject = _Game.get_object_under_mouse( plantingObjects, false, this.mouse );
+		targetObject = _Game.get_object_under_mouse( {
+			objects: plantingObjects,
+			hierarchical: false,
+			mouse: this.mouse
+		} );
 		
 		return targetObject;
 		

@@ -35,7 +35,6 @@
 		utilVec31Velocity,
 		utilVec31Offset,
 		utilQ4Offset,
-		utilVec31Raycast,
 		utilRay1Casting,
 		utilVec31Pull,
 		utilVec32Pull,
@@ -140,7 +139,6 @@
 		
 		utilVec31Velocity = new THREE.Vector3();
 		
-		utilVec31Raycast = new THREE.Vector3();
 		utilRay1Casting = new THREE.Ray();
 		
 		utilVec31Pull = new THREE.Vector3();
@@ -945,7 +943,12 @@
 		
 		// cast ray from mesh to source
 		
-		intersection = raycast_in_direction( position, direction, undefined, undefined, colliders );
+		intersection = _ObjectHelper.raycast( {
+			physics: _Physics,
+			origin: position,
+			direction: direction,
+			colliders: colliders
+		} );//raycast_in_direction( position, direction, undefined, undefined, colliders );
 		
 		// if intersection found
 		
@@ -977,122 +980,6 @@
 		// add shift to position
 		
 		position.addSelf( shift );
-		
-		/*
-		
-		var rigidBody = link.rigidBody,
-			mesh = link.mesh,
-			position = mesh.position,
-			scale = mesh.scale,
-			scaleExp = scaleSpeedExp,
-			scaleModded = utilVec31Velocity.copy( scale ),
-			velocityForce = velocity.force,
-			velocityForceRotated = velocity.forceRotated,
-			velocityForceRotatedLength,
-			velocityForceScalar,
-			velocityOffset = velocity.offset,
-			velocityDamping = velocity.damping,
-			relativeRotation = velocity.relativeRotation,
-			boundingOffset,
-			boundingOffsetLength,
-			collision,
-			collisionDist;
-		
-		if ( rigidBody.dynamic !== true || velocityForce.isZero() === true ) {
-			
-			velocity.moving = false;
-			
-			return;
-			
-		} 
-		else {
-			
-			velocity.moving = true;
-			
-		}
-		
-		// if velocity is relative to rotation, else will just copy force into rotated
-		
-		velocityForceRotated = rotate_vector3_relative_to( relativeRotation, velocityForce, velocityForceRotated );
-		
-		//velocityForceRotated = rotate_vector3_to_mesh_rotation( mesh, velocityForce, velocityForceRotated );
-		
-		// scale velocity
-		
-		scaleModded.x = Math.pow( scaleModded.x, scaleExp );
-		scaleModded.y = Math.pow( scaleModded.y, scaleExp );
-		scaleModded.z = Math.pow( scaleModded.z, scaleExp );
-		
-		velocityForceRotated.multiplySelf( scaleModded );
-		
-		// get rotated length
-		
-		velocityForceRotatedLength = velocityForceRotated.length();
-		
-		// get bounding box offset
-		
-		boundingOffset = offset_from_dimensions_in_direction( mesh, velocityForceRotated, dimensions_from_collider_scaled( rigidBody, mesh ) );//_ObjectHelper.dimensions( mesh ) );
-		
-		boundingOffsetLength = boundingOffset.length();
-		
-		// override offset
-		
-		if ( typeof offset !== 'undefined' ) {
-		
-			velocityOffset = offset;
-			
-		}
-		
-		// rotate offset if needed
-		
-		if ( velocityOffset.length() > 0 ) {
-			
-			velocityOffset = rotate_vector3_to_mesh_rotation( mesh, velocityOffset );
-			
-		}
-		
-		var castDistance = boundingOffsetLength + velocityForceRotatedLength;
-		
-		// get collision
-		
-		collision = raycast_in_direction( link, velocityForceRotated, castDistance, velocityOffset );
-		
-		// modify velocity based on collision distances to avoid passing through or into objects
-		
-		if ( collision ) {
-			
-			collisionDist = collision.distance;
-			
-			// set the rotated velocity to be no more than collision distance
-			
-			if ( collisionDist - velocityForceRotatedLength <= boundingOffsetLength ) {
-				
-				velocityForceScalar = ( collisionDist - boundingOffsetLength ) / velocityForceRotatedLength;
-				
-				velocityForceRotated.multiplyScalar( velocityForceScalar );
-				
-				// set the base velocity to 0
-				
-				velocityForce.set( 0, 0, 0 );
-				
-				velocity.moving = false;
-				
-			}
-			
-		}
-		
-		// add velocity to position
-		
-		position.addSelf( velocityForceRotated );
-		
-		// damp velocity
-		
-		velocityForce.multiplySelf( velocityDamping );
-		
-		// return collision
-		
-		return collision;
-		*/
 		
 	}
 	
@@ -1348,7 +1235,13 @@
 		
 		// get intersection
 		
-		intersection = raycast_in_direction( position, velocityForceRotated, velocityOffset, mesh );
+		intersection = _ObjectHelper.raycast( {
+			physics: _Physics,
+			origin: position,
+			direction: velocityForceRotated,
+			offset: velocityOffset,
+			ignore: mesh
+		} );//raycast_in_direction( position, velocityForceRotated, velocityOffset, mesh );
 		
 		// modify velocity based on intersection distances to avoid passing through or into objects
 		
