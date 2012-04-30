@@ -45,6 +45,7 @@
 		_Model.Instance.prototype = new THREE.Mesh();
 		_Model.Instance.prototype.constructor = _Model.Instance;
 		_Model.Instance.prototype.clone = clone;
+		
 		_Model.Instance.prototype.tween_properties = tween_properties;
 		
 		// catch parent changes and add / remove physics automatically
@@ -93,6 +94,8 @@
 			get : function () { return this._geometry; },
 			set : function ( geometry ) {
 				
+				var i, l;
+				
 				if ( geometry instanceof THREE.Geometry && this.geometry !== geometry ) {
 					
 					// clear all morphs
@@ -125,11 +128,11 @@
 						this.morphTargetForcedOrder = [];
 						this.morphTargetInfluences = [];
 						this.morphTargetDictionary = {};
-
-						for( var m = 0; m < this._geometry.morphTargets.length; m ++ ) {
+						
+						for( i = 0, l = this._geometry.morphTargets.length; i < l; i++ ) {
 
 							this.morphTargetInfluences.push( 0 );
-							this.morphTargetDictionary[ this._geometry.morphTargets[ m ].name ] = m;
+							this.morphTargetDictionary[ this._geometry.morphTargets[ i ].name ] = i;
 
 						}
 

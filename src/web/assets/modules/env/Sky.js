@@ -87,6 +87,9 @@
 		_Sky.Instance.prototype.set_world = set_world;
 		_Sky.Instance.prototype.set_clouds = set_clouds;
 		
+		_Sky.Instance.prototype.animate = animate;
+		_Sky.Instance.prototype.stop = stop;
+		
 		Object.defineProperty( _Sky.Instance.prototype, 'world', {
 			get: function () { return this._world; },
 			set: function ( world ) { this.set_world( world ); }
@@ -300,15 +303,7 @@
 			
 			cloud.scale.set( scale, scale, scale );
 			
-		}
-		
-		// pull towards world
-		
-		for ( i = 0, l = this.clouds.length; i < l; i++ ) {
-			
-			cloud = this.clouds[ i ];
-			
-			// pull
+			// pull towards world
 			
 			distance = Math.random() * ( this.cloudDistanceFromSurfaceMax - this.cloudDistanceFromSurfaceMin ) + this.cloudDistanceFromSurfaceMin;
 			
@@ -352,6 +347,40 @@
 	function clouds_layout_box () {
 		
 		
+		
+	}
+	
+	function animate () {
+		
+		var i, l,
+			cloud;
+		
+		// clouds
+		
+		for ( i = 0, l = this.clouds.length; i < l; i++ ) {
+			
+			cloud = this.clouds[ i ];
+			
+			cloud.orbit.start();
+			
+		}
+		
+	}
+	
+	function stop () {
+		
+		var i, l,
+			cloud;
+		
+		// clouds
+		
+		for ( i = 0, l = this.clouds.length; i < l; i++ ) {
+			
+			cloud = this.clouds[ i ];
+			
+			cloud.orbit.stop();
+			
+		}
 		
 	}
 	

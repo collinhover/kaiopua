@@ -17,6 +17,8 @@
 		utilVec31Casting,
 		utilVec31Follow,
 		utilVec32Follow,
+		utilVec31Orbit,
+		utilVec32Orbit,
 		utilVec31Bounds,
 		utilVec32Bounds,
 		utilVec31Dimensions,
@@ -32,6 +34,8 @@
 		utilQ2Follow,
 		utilQ3Follow,
 		utilQ4Follow,
+		utilQ1Orbit,
+		utilQ2Orbit,
 		utilQ1Axis,
 		utilQ1ApplyQ,
 		utilQ2ApplyQ,
@@ -72,6 +76,7 @@
 	_ObjectHelper.normalize_faces = normalize_faces
 	
 	_ObjectHelper.object_follow_object = object_follow_object;
+	_ObjectHelper.object_orbit_source = object_orbit_source;
 	_ObjectHelper.object_rotate_relative_to_source = object_rotate_relative_to_source;
 	_ObjectHelper.object_pull_to_source = object_pull_to_source;
 	
@@ -116,6 +121,8 @@
 		utilVec31Casting = new THREE.Vector3();
 		utilVec31Follow = new THREE.Vector3();
 		utilVec32Follow = new THREE.Vector3();
+		utilVec31Orbit = new THREE.Vector3();
+		utilVec32Orbit = new THREE.Vector3();
 		utilVec31Bounds = new THREE.Vector3();
 		utilVec32Bounds = new THREE.Vector3();
 		utilVec31Dimensions = new THREE.Vector3();
@@ -131,6 +138,8 @@
 		utilQ2Follow = new THREE.Quaternion();
 		utilQ3Follow = new THREE.Quaternion();
 		utilQ4Follow = new THREE.Quaternion();
+		utilQ1Orbit = new THREE.Quaternion();
+		utilQ2Orbit = new THREE.Quaternion();
 		utilQ1Axis = new THREE.Quaternion();
 		utilQ1ApplyQ = new THREE.Quaternion();
 		utilQ2ApplyQ = new THREE.Quaternion();
@@ -1334,6 +1343,128 @@
 		if ( skipBaseRot !== true ) {
 			
 			followerQ.multiplySelf( followerBaseRot );
+			
+		}
+		
+	}
+	
+	/*===================================================
+    
+    orbit
+    
+    =====================================================*/
+	
+	function object_orbit_source ( object, source, rotationBase, rotationOffset, positionOffset ) {
+		
+		var sPos = utilVec31Orbit,
+			oPos = object.position,
+			oQ = object.quaternion,
+			oBaseRot = utilQ1Orbit,
+			oOffsetRot = utilQ2Orbit,
+			oOffsetPos = utilVec32Orbit,
+			skipBaseRot,
+			skipOffsetRot,
+			skipOffsetPos;
+		
+		// base rotation
+		
+		if ( rotationBase instanceof THREE.Quaternion ) {
+			
+			oBaseRot.copy( rotationBase );
+			
+		}
+		else if ( rotationBase instanceof THREE.Vector3 ) {
+			
+			oBaseRot.setFromEuler( rotationBase ).normalize();
+			
+		}
+		else {
+			
+			skipBaseRot = true;
+			
+		}
+		
+		// offset rotation
+		
+		if ( rotationOffset instanceof THREE.Quaternion ) {
+			
+			oOffsetRot.copy( rotationOffset );
+			
+		}
+		else if ( rotationOffset instanceof THREE.Vector3 ) {
+			
+			oOffsetRot.setFromEuler( rotationOffset ).normalize();
+			
+		}
+		else {
+			
+			skipOffsetRot = true;
+			
+		}
+		
+		// offset position
+		
+		if ( positionOffset instanceof THREE.Vector3 ) {
+		
+			oOffsetPos.copy( positionOffset );
+			
+		}
+		else {
+			
+			skipOffsetPos = true;
+			
+		}
+		
+		// modify offset position
+		
+		if ( skipOffsetPos !== true ) {
+			
+			if ( skipBaseRot !== true ) {
+				
+				oBaseRot.multiplyVector3( oOffsetPos );
+				
+			}
+			
+			if ( skipOffsetRot !== true ) {
+				
+				oOffsetRot.multiplyVector3( oOffsetPos );
+				
+			}
+			
+		}
+		
+		// position
+		
+		if ( source instanceof THREE.Object3D ) {
+			
+			oPos.copy( source.position );
+			
+		}
+		else {
+			
+			oPos.copy( source );
+			
+		}
+		
+		if ( skipOffsetPos !== true ) {
+			
+			oPos.addSelf( oOffsetPos );
+			
+		}
+		
+		// rotation
+		
+		oQ.set( 0, 0, 0, 1 );
+		
+		if ( skipOffsetRot !== true ) {
+			
+			oQ.multiplySelf( oOffsetRot );
+			
+		}
+		
+		if ( skipBaseRot !== true ) {
+			
+			oQ.multiplySelf( oBaseRot );
 			
 		}
 		

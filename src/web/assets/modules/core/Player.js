@@ -58,6 +58,10 @@
 		}
 	});
 	
+	Object.defineProperty(_Player, 'cameraControls', { 
+		get : function () { return cameraControls; }
+	});
+	
 	Object.defineProperty(_Player, 'camera', { 
 		get : function () { return cameraControls.camera; }
 	});

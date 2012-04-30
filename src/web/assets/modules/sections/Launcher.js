@@ -42,8 +42,8 @@
             rangeTransMinY: -250,
             speedTransX: 0.01, 
             speedTransY: 0.01,
-            rangeRotMaxX: 15,
-            rangeRotMinX: -15,
+            rangeRotMaxX: 0,
+            rangeRotMinX: -25,
             rangeRotMaxY: 10,
             rangeRotMinY: -10,
             speedRotX: 0.05,
@@ -228,6 +228,8 @@
 			
 			water.morphs.play( 'waves', { duration: 4000, loop: true } );
 			
+			sky.animate();
+			
 			// add items
 			
 			_Game.add_to_scene( addOnShow, scene );
@@ -256,6 +258,8 @@
 		waitingToShow = false;
 		
 		water.morphs.stopAll();
+		
+		sky.stop();
 		
 		shared.signals.mousemoved.remove( on_mouse_moved );
 		

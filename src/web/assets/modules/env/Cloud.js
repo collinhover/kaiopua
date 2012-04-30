@@ -11,7 +11,8 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/env/Cloud.js",
 		_Cloud = {},
-		_Model;
+		_Model,
+		_OrbitUpdater;
 	
 	/*===================================================
     
@@ -23,6 +24,7 @@
 		data: _Cloud,
 		requirements: [
 			"assets/modules/core/Model.js",
+			"assets/modules/models/OrbitUpdater.js",
 			{ path: "assets/models/Cloud_001.js", type: 'model' },
 			{ path: "assets/models/Cloud_002.js", type: 'model' }
 		],
@@ -36,10 +38,11 @@
     
     =====================================================*/
 	
-	function init_internal ( m, cloudBase1, cloudBase2 ) {
+	function init_internal ( m, ou, cloudBase1, cloudBase2 ) {
 		console.log('internal cloud', _Cloud);
 		
 		_Model = m;
+		_OrbitUpdater = ou;
 		
 		// properties
 		
@@ -51,9 +54,6 @@
 		_Cloud.Instance.prototype = new _Model.Instance();
 		_Cloud.Instance.prototype.constructor = _Cloud.Instance;
 		_Cloud.Instance.prototype.supr = _Model.Instance.prototype;
-		
-		_Cloud.Instance.prototype.orbit = orbit;
-		_Cloud.Instance.prototype.orbit_stop = orbit_stop;
 		
 	}
 	
@@ -77,76 +77,14 @@
 		
 		// properties
 		
-		this.orbitOrigin = new THREE.Vector3();
-		this.orbitAxis = shared.cardinalAxes.up.clone();
+		this.orbit = new _OrbitUpdater.Instance( { object: this } );
 		
-	}
-	
-	/*===================================================
-    
-    orbit
-    
-    =====================================================*/
-	
-	function orbit ( parameters ) {
-		
-		// handle parameters
-		
-		parameters = parameters || {};
-		
-		// stop
-		
-		if ( parameters.stop === true ) {
-			
-			// properties
-			
-			this.orbiting = false;
-			
-			// signal
-			
-			shared.signals.update.remove( orbit_update, this );
-			
-		}
-		// start
-		else {
-			
-			// properties
-			
-			this.orbiting = true;
-			
-			if ( parameters.origin ) {
-				
-				this.orbitOrigin.copy( parameters.origin );
-				
-			}
-			
-			if ( parameters.axis ) {
-				
-				this.orbitAxis.copy( parameters.axis );
-				
-			}
-			
-			this.orbitRadius = parameters.radius || this.position.distanceTo( this.orbitOrigin );
-			
-			this.orbitWander = typeof parameters.wander === 'boolean' ? parameters.wander : true;
-			
-			// signal
-			
-			shared.signals.update.add( orbit_update, this );
-			
-		}
-		
-	}
-	
-	function orbit_stop () {
-		
-		this.orbit( { stop: true } );
-		
-	}
-	
-	function orbit_update () {
-		
-		
+		/*
+		this.wander = {
+			positionOffsetMax: new THREE.Vector3( 50, 50, 50 ),
+			positionOffsetMin: new THREE.Vector3( -50, -50, -50 ),
+			properties: new ModifierProperties()
+		}*/
 		
 	}
 	

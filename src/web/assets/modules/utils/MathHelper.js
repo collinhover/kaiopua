@@ -109,6 +109,14 @@
 		
 	};
 	
+	_MathHelper.angle_between_vectors = function ( vFrom, vTo ) {
+		
+		var dist = _MathHelper.clamp( vFrom.dot( vTo ), -1, 1 );
+		
+		return Math.acos( dist );
+		
+	};
+	
 	_MathHelper.get_orthonormal_vectors = function ( v1 ) {
 		
 		// returns 2 orthographic ( perpendicular ) vectors to the first
