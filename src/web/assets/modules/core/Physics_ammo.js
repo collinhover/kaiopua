@@ -1050,7 +1050,7 @@ Physics module, handles physics in game using JigLibJS.
 					
 					uq1.multiply( upToUpNewQ, quaternion );
 					
-					THREE.Quaternion.nlerp( quaternion, uq1, quaternion, lerpDelta );
+					_MathHelper.lerp_normalized( quaternion, uq1, lerpDelta );
 					
 					if ( mesh.useQuaternion === true ) {
 						
@@ -1060,7 +1060,7 @@ Physics module, handles physics in game using JigLibJS.
 						
 						// normalized lerp to new rotation
 						
-						THREE.Quaternion.nlerp( rotation, uq1, rotation, lerpDelta );
+						_MathHelper.lerp_normalized( rotation, uq1, lerpDelta );
 					
 					}
 					else {

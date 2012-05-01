@@ -1,7 +1,7 @@
 /*
  *
- * OrbitUpdater.js
- * Property updater for orbiting.
+ * WanderUpdater.js
+ * Property updater for wandering.
  *
  * @author Collin Hover / http://collinhover.com/
  *
@@ -9,16 +9,17 @@
 (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/models/OrbitUpdater.js",
-		_OrbitUpdater = {},
+		assetPath = "assets/modules/models/WanderUpdater.js",
+		_WanderUpdater = {},
 		_PropertyUpdater,
 		_MathHelper,
 		_ObjectHelper,
 		accelerationDamping = 0.9,
 		speedLerp = 0.01,
-		speedMax = 0.00005,
-		speedMin = 0.00001,
-		snapThreshold = 0.01;
+		speedMax = 0.0001,
+		speedMin = 0.0001,
+		snapThreshold = 0.01,
+		range = 100;
 	
 	/*===================================================
     
@@ -27,7 +28,7 @@
     =====================================================*/
 	
 	main.asset_register( assetPath, { 
-		data: _OrbitUpdater,
+		data: _WanderUpdater,
 		requirements: [
 			"assets/modules/core/PropertyUpdater.js",
 			"assets/modules/utils/MathHelper.js",
@@ -44,22 +45,22 @@
     =====================================================*/
 	
 	function init_internal ( pu, mh, oh ) {
-		console.log('internal orbit updater', _OrbitUpdater);
+		console.log('internal wander updater', _WanderUpdater);
 		
 		_PropertyUpdater = pu;
 		_MathHelper = mh;
 		_ObjectHelper = oh;
 		
-		_OrbitUpdater.Instance = OrbitUpdater;
-		_OrbitUpdater.Instance.prototype = new _PropertyUpdater.Instance();
-		_OrbitUpdater.Instance.prototype.constructor = _OrbitUpdater.Instance;
-		_OrbitUpdater.Instance.prototype.supr = _PropertyUpdater.Instance.prototype;
+		_WanderUpdater.Instance = WanderUpdater;
+		_WanderUpdater.Instance.prototype = new _PropertyUpdater.Instance();
+		_WanderUpdater.Instance.prototype.constructor = _WanderUpdater.Instance;
+		_WanderUpdater.Instance.prototype.supr = _PropertyUpdater.Instance.prototype;
 		
-		_OrbitUpdater.Instance.prototype.start = start;
-		_OrbitUpdater.Instance.prototype.step = step;
-		_OrbitUpdater.Instance.prototype.reset = reset;
-		_OrbitUpdater.Instance.prototype.integrate = integrate;
-		_OrbitUpdater.Instance.prototype.apply = apply;
+		_WanderUpdater.Instance.prototype.start = start;
+		_WanderUpdater.Instance.prototype.reset = reset;
+		_WanderUpdater.Instance.prototype.step = step;
+		_WanderUpdater.Instance.prototype.integrate = integrate;
+		_WanderUpdater.Instance.prototype.apply = apply;
 		
 	}
 	
@@ -69,40 +70,35 @@
     
     =====================================================*/
 	
-	function OrbitUpdater ( parameters ) {
+	function WanderUpdater ( parameters ) {
 		
 		// prototype
 		
 		_PropertyUpdater.Instance.call( this, parameters );
 		
-		// utility
-		
-		this.utilVec31Start = new THREE.Vector3();
-		
 		// properties
 		
-		this.axisTarget = shared.cardinalAxes.up.clone();
-		this.axis = new THREE.Vector3().copy( this.axisTarget );
 		this.acceleration = 0;
 		this.accelerationDamping = accelerationDamping;
 		this.speedLerp = speedLerp;
 		this.speedMax = speedMax;
 		this.speedMin = speedMin;
 		this.speed = 0;
-		this.radius = 0;
-		this.angle = 0;
+		this.angleSeed = Math.PI * 2;
+		this.angleA = 0;
+		this.angleB = 0;
+		this.angleC = 0;
+		this.rangeMax = new THREE.Vector3( range, range, range );
+		this.rangeMin = new THREE.Vector3( -range, -range, -range );
 		
 		this.originTarget = new THREE.Vector3();
 		this.origin = new THREE.Vector3();
+		this.positionOffsetTarget = new THREE.Vector3();
 		this.positionOffset = new THREE.Vector3();
-		this.rotationBase = new THREE.Quaternion();
-		this.rotationOffset = new THREE.Quaternion();
 		
 		this.forApply = {
 			origin: new THREE.Vector3(),
-			positionOffset: new THREE.Vector3(),
-			rotationBase: new THREE.Quaternion(),
-			rotationOffset: new THREE.Quaternion()
+			positionOffset: new THREE.Vector3()
 		};
 		
 		this.reset();
@@ -115,18 +111,10 @@
 		
 		fa.origin.set( 0, 0, 0 );
 		fa.positionOffset.set( 0, 0, 0 );
-		fa.rotationBase.set( 0, 0, 0, 1 );
-		fa.rotationOffset.set( 0, 0, 0, 1 );
 		
 	}
 	
 	function start ( parameters ) {
-		
-		var posVec = this.utilVec31Start,
-			angleA,
-			lengthA,
-			lengthB,
-			lengthC;
 		
 		// handle parameters
 		
@@ -134,37 +122,33 @@
 		
 		// properties
 		
-		if ( parameters.axis ) {
-			
-			this.axisTarget.copy( parameters.axis );
-			
-		}
-		
 		if ( parameters.origin ) {
 			
 			this.originTarget.copy( parameters.origin );
 			
 		}
-		// find origin based on axis and current position
-		else {
+		
+		if ( parameters.rangeMin instanceof THREE.Vector3 ) {
 			
-			posVec.copy( this.object.position ).normalize();
+			this.rangeMin.copy( parameters.rangeMin );
 			
-			angleA = _MathHelper.angle_between_vectors( this.axisTarget, posVec );
+		}
+		else if ( main.is_number( parameters.rangeMin ) ) {
 			
-			lengthC = this.object.position.length();
-			lengthA = ( Math.sin( angleA ) * lengthC ) / Math.sin( Math.PI * 0.5 );
-			lengthB = Math.sqrt( Math.pow( lengthC, 2 ) - Math.pow( lengthA, 2 ) );
-			
-			this.originTarget.copy( this.axis ).multiplyScalar( lengthB );
+			this.rangeMin.set( parameters.rangeMin, parameters.rangeMin, parameters.rangeMin );
 			
 		}
 		
-		this.radius = parameters.radius || this.object.position.distanceTo( this.originTarget );
-		this.positionOffset.z = this.radius;
-		
-		this.angle = 0;
-		this.rotationBase.copy( this.object.quaternion );
+		if ( parameters.rangeMax instanceof THREE.Vector3 ) {
+			
+			this.rangeMax.copy( parameters.rangeMax );
+			
+		}
+		else if ( main.is_number( parameters.rangeMax ) ) {
+			
+			this.rangeMax.set( parameters.rangeMax, parameters.rangeMax, parameters.rangeMax );
+			
+		}
 		
 		this.accelerationDamping = parameters.accelerationDamping || this.accelerationDamping;
 		this.speedLerp = parameters.speedLerp || this.speedLerp;
@@ -172,22 +156,29 @@
 		this.speedMin = parameters.speedMin || parameters.speed || this.speedMin;
 		this.speed = Math.random() * ( this.speedMax - this.speedMin ) + this.speedMin;
 		
+		this.angleSeed = parameters.angleSeed || this.angleSeed;
+		this.angleA = parameters.angleA || parameters.angle || ( Math.random() * ( this.angleSeed * 2 ) - this.angleSeed );
+		this.angleB = parameters.angleB || parameters.angle || ( Math.random() * ( this.angleSeed * 2 ) - this.angleSeed );
+		this.angleC = parameters.angleC || parameters.angle || ( Math.random() * ( this.angleSeed * 2 ) - this.angleSeed );
+		
 		// snap to initial values
 		
 		if ( parameters.snapToInitial === true ) {
 			
-			this.axis.copy( this.axisTarget );
 			this.origin.copy( this.originTarget );
 			
 		}
 		
 		// prototype
 		
-		_OrbitUpdater.Instance.prototype.supr.start.call( this, parameters );
+		_WanderUpdater.Instance.prototype.supr.start.call( this, parameters );
 		
 	}
 	
 	function step () {
+		
+		var rangeMax = this.rangeMax,
+			rangeMin = this.rangeMin;
 		
 		// reset
 		
@@ -203,21 +194,25 @@
 		
 		// position
 		
-		if ( this.positionOffset.z !== this.radius ) {
+		// random movement
+		
+		if ( this.randomWalk ) {
 			
-			this.positionOffset.z += this.acceleration * ( this.radius - this.positionOffset.z );
+			// TODO
+			
+		}
+		// wave movement
+		else {
+			
+			this.angleA = _MathHelper.rad_between_PI( this.angleA + this.acceleration );
+			this.angleB = _MathHelper.rad_between_PI( this.angleB + this.acceleration );
+			this.angleC = _MathHelper.rad_between_PI( this.angleC + this.acceleration );
+			
+			this.positionOffsetTarget.set( 0, Math.sin( this.angleB ) * ( rangeMax.y - rangeMin.y ), 0 );
 			
 		}
 		
-		// rotation
-		
-		this.angle = _MathHelper.rad_between_PI( this.angle + this.acceleration );
-		
-		//this.axisTarget.set( Math.random(), Math.random(), Math.random() );
-		
-		_MathHelper.lerp_snap( this.axis, this.axisTarget, this.speedLerp, snapThreshold );
-		
-		this.rotationOffset.setFromAxisAngle( this.axis, this.angle );
+		_MathHelper.lerp_snap( this.positionOffset, this.positionOffsetTarget, this.speedLerp, snapThreshold );
 		
 		// damping
 		
@@ -245,18 +240,6 @@
 			
 		}
 		
-		if ( child.rotationBase ) {
-			
-			fa.rotationBase.multiplySelf( child.rotationBase );
-			
-		}
-		
-		if ( child.rotationOffset ) {
-			
-			fa.rotationOffset.multiplySelf( child.rotationOffset );
-			
-		}
-		
 	}
 	
 	function apply () {
@@ -267,7 +250,7 @@
 			
 			fa = this.forApply;
 			
-			_ObjectHelper.object_orbit_source( this.object, fa.origin, fa.positionOffset, fa.rotationBase, fa.rotationOffset );
+			_ObjectHelper.object_orbit_source( this.object, fa.origin, fa.positionOffset );
 			
 		}
 	}

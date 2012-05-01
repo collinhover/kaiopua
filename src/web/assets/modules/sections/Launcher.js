@@ -215,7 +215,7 @@
 			// cameras
 			
 			camera = _Game.camera;
-			camera.position.set(-5800, 0, 0);
+			camera.position.set( -5800, 0, 0 );
 			camera.quaternion.copy( camRotationBaseQ );
 			
 			// scene

@@ -1183,7 +1183,7 @@
     
     =====================================================*/
 	
-	function object_follow_object ( follower, leader, rotationBase, rotationOffset, positionOffset ) {
+	function object_follow_object ( follower, leader, positionOffset, rotationBase, rotationOffset ) {
 		
 		var leaderScale = leader.scale,
 			leaderScaleMax = Math.max( leaderScale.x, leaderScale.y, leaderScale.z ),
@@ -1354,7 +1354,7 @@
     
     =====================================================*/
 	
-	function object_orbit_source ( object, source, rotationBase, rotationOffset, positionOffset ) {
+	function object_orbit_source ( object, source, positionOffset, rotationBase, rotationOffset ) {
 		
 		var sPos = utilVec31Orbit,
 			oPos = object.position,
@@ -1365,6 +1365,19 @@
 			skipBaseRot,
 			skipOffsetRot,
 			skipOffsetPos;
+		
+		// offset position
+		
+		if ( positionOffset instanceof THREE.Vector3 ) {
+		
+			oOffsetPos.copy( positionOffset );
+			
+		}
+		else {
+			
+			skipOffsetPos = true;
+			
+		}
 		
 		// base rotation
 		
@@ -1402,26 +1415,19 @@
 			
 		}
 		
-		// offset position
+		// rotation
 		
-		if ( positionOffset instanceof THREE.Vector3 ) {
-		
-			oOffsetPos.copy( positionOffset );
+		if ( skipBaseRot !== true || skipOffsetRot !== true ) {
 			
-		}
-		else {
-			
-			skipOffsetPos = true;
-			
-		}
+			oQ.set( 0, 0, 0, 1 );
 		
-		// modify offset position
-		
-		if ( skipOffsetPos !== true ) {
+			// modify offset position
 			
 			if ( skipBaseRot !== true ) {
 				
 				oBaseRot.multiplyVector3( oOffsetPos );
+				
+				oQ.multiplySelf( oOffsetRot );
 				
 			}
 			
@@ -1429,8 +1435,10 @@
 				
 				oOffsetRot.multiplyVector3( oOffsetPos );
 				
+				oQ.multiplySelf( oBaseRot );
+				
 			}
-			
+		
 		}
 		
 		// position
@@ -1448,23 +1456,9 @@
 		
 		if ( skipOffsetPos !== true ) {
 			
+			// add offset position
+			
 			oPos.addSelf( oOffsetPos );
-			
-		}
-		
-		// rotation
-		
-		oQ.set( 0, 0, 0, 1 );
-		
-		if ( skipOffsetRot !== true ) {
-			
-			oQ.multiplySelf( oOffsetRot );
-			
-		}
-		
-		if ( skipBaseRot !== true ) {
-			
-			oQ.multiplySelf( oBaseRot );
 			
 		}
 		
@@ -1564,7 +1558,7 @@
 				
 				// normalized lerp to new rotation
 				
-				THREE.Quaternion.nlerp( rotation, uq1, rotation, lerpDelta );
+				_MathHelper.lerp_normalized( rotation, uq1, lerpDelta );
 			
 			}
 			else {
@@ -1588,7 +1582,7 @@
 				
 				uq1.multiply( qToNew, quaternion );
 				
-				THREE.Quaternion.nlerp( quaternion, uq1, quaternion, lerpDelta );
+				_MathHelper.lerp_normalized( quaternion, uq1, lerpDelta );
 				*/
 				// find new axes based on new rotation
 				

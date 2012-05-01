@@ -44,6 +44,7 @@
 		_PropertyUpdater.Instance.prototype.remove = remove;
 		_PropertyUpdater.Instance.prototype.detach = detach;
 		_PropertyUpdater.Instance.prototype.update = update;
+		_PropertyUpdater.Instance.prototype.step = step;
 		_PropertyUpdater.Instance.prototype.integrate = integrate;
 		_PropertyUpdater.Instance.prototype.apply = apply;
 		
@@ -107,8 +108,12 @@
 			this.updating = true;
 			
 			// signal
+			
+			if ( this.parent instanceof _PropertyUpdater.Instance !== true ) {
 				
-			shared.signals.update.add( this.update, this );
+				shared.signals.update.add( this.update, this );
+				
+			}
 			
 		}
 		
@@ -132,7 +137,8 @@
 		
 		var i, l,
 			updater,
-			children = this.children;
+			children = this.children,
+			needStart;
 		
 		// add
 		
@@ -148,6 +154,12 @@
 				
 				children.push( updater );
 				
+				if ( updater.updating === true ) {
+					
+					needStart = true;
+					
+				}
+				
 			}
 			
 			// set parent
@@ -158,7 +170,7 @@
 		
 		// updating
 		
-		if ( children.length > 0 ) {
+		if ( needStart === true && children.length > 0 ) {
 			
 			this.start();
 			
@@ -231,6 +243,10 @@
 			children = this.children,
 			child;
 		
+		// step self
+		
+		this.step();
+		
 		// children
 		
 		for ( i = 0, l = children.length; i < l; i++ ) {
@@ -239,7 +255,7 @@
 			
 			// update
 			
-			child.update.call( child.context || this );
+			child.update.call( child );
 			
 			// integrate child
 			
@@ -250,6 +266,10 @@
 		// apply
 		
 		this.apply();
+		
+	}
+	
+	function step () {
 		
 	}
 	

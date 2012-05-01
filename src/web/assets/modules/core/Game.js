@@ -306,10 +306,6 @@
 		var shaderScreen = THREE.ShaderExtras[ "screen" ],
             shaderFocusVignette = main.get_asset_data("assets/modules/effects/FocusVignette");
 		
-		// modify THREE classes
-		
-		add_three_modifications();
-		
 		// utility
 		
 		_UIElement = main.get_asset_data( "assets/modules/ui/UIElement.js" );
@@ -436,43 +432,6 @@
         animate();
 		
     }
-	
-	function add_three_modifications () {
-		
-		// quaternion normalized lerp
-		
-		THREE.Quaternion.nlerp = function ( qa, qb, qr, t ) {
-			
-			var tFrom = 1 - t;
-			
-			qr.x = qa.x * tFrom + qb.x * t;
-			qr.y = qa.y * tFrom + qb.y * t;
-			qr.z = qa.z * tFrom + qb.z * t;
-			qr.w = qa.w * tFrom + qb.w * t;
-			
-			qr.normalize();
-			
-			return qr;
-			
-		}
-		
-		// vector3 normalized lerp
-		
-		THREE.Vector3.nlerp = function ( va, vb, vr, t ) {
-			
-			var tFrom = 1 - t;
-			
-			vr.x = va.x * tFrom + vb.x * t;
-			vr.y = va.y * tFrom + vb.y * t;
-			vr.z = va.z * tFrom + vb.z * t;
-			
-			vr.normalize();
-			
-			return vr;
-			
-		}
-		
-	}
 	
 	/*===================================================
     

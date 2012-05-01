@@ -12,7 +12,8 @@
 		assetPath = "assets/modules/env/Cloud.js",
 		_Cloud = {},
 		_Model,
-		_OrbitUpdater;
+		_OrbitUpdater,
+		_WanderUpdater;
 	
 	/*===================================================
     
@@ -25,6 +26,7 @@
 		requirements: [
 			"assets/modules/core/Model.js",
 			"assets/modules/models/OrbitUpdater.js",
+			"assets/modules/models/WanderUpdater.js",
 			{ path: "assets/models/Cloud_001.js", type: 'model' },
 			{ path: "assets/models/Cloud_002.js", type: 'model' }
 		],
@@ -38,11 +40,12 @@
     
     =====================================================*/
 	
-	function init_internal ( m, ou, cloudBase1, cloudBase2 ) {
+	function init_internal ( m, ou, wu, cloudBase1, cloudBase2 ) {
 		console.log('internal cloud', _Cloud);
 		
 		_Model = m;
 		_OrbitUpdater = ou;
+		_WanderUpdater = wu;
 		
 		// properties
 		
@@ -79,12 +82,9 @@
 		
 		this.orbit = new _OrbitUpdater.Instance( { object: this } );
 		
-		/*
-		this.wander = {
-			positionOffsetMax: new THREE.Vector3( 50, 50, 50 ),
-			positionOffsetMin: new THREE.Vector3( -50, -50, -50 ),
-			properties: new ModifierProperties()
-		}*/
+		this.wander = new _WanderUpdater.Instance( { object: this } );
+		
+		this.orbit.add( this.wander );
 		
 	}
 	

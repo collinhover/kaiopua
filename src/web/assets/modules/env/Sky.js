@@ -63,6 +63,7 @@
 		_Sky.cloudBoundRadius = 1500;
 		_Sky.cloudDistanceFromSurfaceMin = 1000;
 		_Sky.cloudDistanceFromSurfaceMax = 3000;
+		_Sky.cloudRangeWander = 200;
 		_Sky.layout = 'box';
 		_Sky.zonePolar = {
 			min: 0,
@@ -131,6 +132,7 @@
 		this.cloudBoundRadius =  main.is_number( parameters.cloudBoundRadius ) ? parameters.cloudBoundRadius : _Sky.cloudBoundRadius;
 		this.cloudDistanceFromSurfaceMin = main.is_number( parameters.cloudDistanceFromSurfaceMin ) ? parameters.cloudDistanceFromSurfaceMin : _Sky.cloudDistanceFromSurfaceMin;
 		this.cloudDistanceFromSurfaceMax = main.is_number( parameters.cloudDistanceFromSurfaceMax ) ? parameters.cloudDistanceFromSurfaceMax : _Sky.cloudDistanceFromSurfaceMax;
+		this.cloudRangeWander = main.is_number( parameters.cloudRangeWander ) ? parameters.cloudRangeWander : _Sky.cloudRangeWander;
 		this.cloudsGeometry = parameters.cloudsGeometry || _Sky.cloudsGeometry;
 		this.bounds = parameters.bounds || { min: new THREE.Vector3(), max: new THREE.Vector3() };
 		this.layout = typeof parameters.layout === 'string' ? parameters.layout : _Sky.layout;
@@ -361,7 +363,8 @@
 			
 			cloud = this.clouds[ i ];
 			
-			cloud.orbit.start();
+			cloud.orbit.start( { snapToInitial: true } );
+			cloud.wander.start( { snapToInitial: true, rangeMax: this.cloudRangeWander, rangeMin: -this.cloudRangeWander } );
 			
 		}
 		
@@ -379,6 +382,7 @@
 			cloud = this.clouds[ i ];
 			
 			cloud.orbit.stop();
+			cloud.wander.stop();
 			
 		}
 		

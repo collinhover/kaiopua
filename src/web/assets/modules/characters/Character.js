@@ -442,7 +442,7 @@
 			
 			followSettings = this.followers[ i ];
 			
-			_ObjectHelper.object_follow_object( followSettings.obj, this, followSettings.rotationBase, followSettings.rotationOffset, followSettings.positionOffset );
+			_ObjectHelper.object_follow_object( followSettings.obj, this, followSettings.positionOffset, followSettings.rotationBase, followSettings.rotationOffset );
 				
 		}
 		

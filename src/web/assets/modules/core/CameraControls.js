@@ -430,7 +430,7 @@
 		
 		// follow player
 		
-		_ObjectHelper.object_follow_object( this.camera, pc, rotBase, rotOffset, posOffset );
+		_ObjectHelper.object_follow_object( this.camera, pc, posOffset, rotBase, rotOffset );
 		
 		// decay deltas
 		

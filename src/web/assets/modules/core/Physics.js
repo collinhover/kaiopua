@@ -819,7 +819,7 @@
 				
 				// normalized lerp to new rotation
 				
-				THREE.Quaternion.nlerp( rotation, uq1, rotation, lerpDelta );
+				_MathHelper.lerp_normalized( rotation, uq1, lerpDelta );
 			
 			}
 			else {
@@ -843,7 +843,7 @@
 				
 				uq1.multiply( qToNew, quaternion );
 				
-				THREE.Quaternion.nlerp( quaternion, uq1, quaternion, lerpDelta );
+				_MathHelper.lerp_normalized( quaternion, uq1, lerpDelta );
 				*/
 				// find new axes based on new rotation
 				
