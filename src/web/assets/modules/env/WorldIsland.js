@@ -174,17 +174,28 @@
 		me.parts.sky = new _Sky.Instance( {
 			world: me.parts.body,
 			numClouds: 20,
+			cloudBoundRadius: 5000,
 			cloudDistanceFromSurfaceMin: me.parts.sunmoon.position.length() - 2000,
 			cloudDistanceFromSurfaceMax: me.parts.sunmoon.position.length() + 500,
 			zones: [
 				{
 					polar: {
-						min: Math.PI * 0.2,
-						max: Math.PI * 0.8
+						min: Math.PI * 0.15,
+						max: Math.PI * 0.85
 					},
 					azimuth: {
-						min: Math.PI * 0.2,
-						max: Math.PI * 0.8
+						min: Math.PI * 0.15,
+						max: Math.PI * 0.4
+					}
+				},
+				{
+					polar: {
+						min: Math.PI * 0.15,
+						max: Math.PI * 0.85
+					},
+					azimuth: {
+						min: Math.PI * 0.6,
+						max: Math.PI * 0.85
 					}
 				}
 			]
@@ -510,6 +521,8 @@
 			
 			me.parts.waterRing.morphs.play( 'waves', { duration: 4000, loop: true } );
 			
+			me.parts.sky.animate();
+			
 		}
 		
 		function hide () {
@@ -529,6 +542,8 @@
 			me.parts.sunmoon.morphs.stopAll();
 			
 			me.parts.waterRing.morphs.stopAll();
+			
+			me.parts.sky.animate( { stop: true } );
 			
 		}
     	

@@ -259,7 +259,7 @@
 		
 		water.morphs.stopAll();
 		
-		sky.stop();
+		sky.animate( { stop: true } );
 		
 		shared.signals.mousemoved.remove( on_mouse_moved );
 		

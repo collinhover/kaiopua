@@ -89,7 +89,6 @@
 		_Sky.Instance.prototype.set_clouds = set_clouds;
 		
 		_Sky.Instance.prototype.animate = animate;
-		_Sky.Instance.prototype.stop = stop;
 		
 		Object.defineProperty( _Sky.Instance.prototype, 'world', {
 			get: function () { return this._world; },
@@ -295,7 +294,7 @@
 				cloud.quaternion.multiplyVector3( cloudForward );
 				cloud.quaternion.multiplyVector3( cloudUp );
 				
-				_Physics.rotate_relative_to_source( cloud, this._world, cloudUp, cloudForward );
+				_Physics.rotate_relative_to_source( cloud, this._world, cloudForward, cloudUp );
 				
 			}
 			
@@ -352,10 +351,17 @@
 		
 	}
 	
-	function animate () {
+	function animate ( parameters ) {
 		
 		var i, l,
-			cloud;
+			cloud,
+			stop;
+		
+		// handle parameters
+		
+		parameters = parameters || {};
+		
+		stop = typeof parameters.stop === 'boolean' ? parameters.stop : false;
 		
 		// clouds
 		
@@ -363,26 +369,18 @@
 			
 			cloud = this.clouds[ i ];
 			
-			cloud.orbit.start( { snapToInitial: true } );
-			cloud.wander.start( { snapToInitial: true, rangeMax: this.cloudRangeWander, rangeMin: -this.cloudRangeWander } );
-			
-		}
-		
-	}
-	
-	function stop () {
-		
-		var i, l,
-			cloud;
-		
-		// clouds
-		
-		for ( i = 0, l = this.clouds.length; i < l; i++ ) {
-			
-			cloud = this.clouds[ i ];
-			
-			cloud.orbit.stop();
-			cloud.wander.stop();
+			if ( stop === true ) {
+				
+				cloud.orbit.stop();
+				cloud.wander.stop();
+				
+			}
+			else {
+				
+				cloud.orbit.start( { snapToInitial: true } );
+				cloud.wander.start( { snapToInitial: true, rangeMax: this.cloudRangeWander, rangeMin: -this.cloudRangeWander, waveY: true } );
+				
+			}
 			
 		}
 		

@@ -16,7 +16,7 @@
 		_ObjectHelper,
 		accelerationDamping = 0.9,
 		speedLerp = 0.01,
-		speedMax = 0.00005,
+		speedMax = 0.00002,
 		speedMin = 0.00001,
 		snapThreshold = 0.01;
 	
@@ -160,16 +160,16 @@
 			
 		}
 		
-		this.radius = parameters.radius || this.object.position.distanceTo( this.originTarget );
+		this.radius = main.is_number( parameters.radius ) ? parameters.radius : this.object.position.distanceTo( this.originTarget );
 		this.positionOffset.z = this.radius;
 		
 		this.angle = 0;
 		this.rotationBase.copy( this.object.quaternion );
 		
-		this.accelerationDamping = parameters.accelerationDamping || this.accelerationDamping;
-		this.speedLerp = parameters.speedLerp || this.speedLerp;
-		this.speedMax = parameters.speedMax || parameters.speed || this.speedMax;
-		this.speedMin = parameters.speedMin || parameters.speed || this.speedMin;
+		this.accelerationDamping = main.is_number( parameters.accelerationDamping ) ? parameters.accelerationDamping : this.accelerationDamping;
+		this.speedLerp = main.is_number( parameters.speedLerp ) ? parameters.speedLerp : this.speedLerp;
+		this.speedMax = main.is_number( parameters.speedMax ) ? parameters.speedMax : main.is_number( parameters.speed ) ? parameters.speed : speedMax;
+		this.speedMin = main.is_number( parameters.speedMin ) ? parameters.speedMin : main.is_number( parameters.speed ) ? parameters.speed : speedMin;
 		this.speed = Math.random() * ( this.speedMax - this.speedMin ) + this.speedMin;
 		
 		// snap to initial values
@@ -189,43 +189,47 @@
 	
 	function step () {
 		
-		// reset
-		
-		this.reset();
-		
-		// acceleration
-		
-		this.acceleration += this.speed;
-		
-		// origin
-		
-		_MathHelper.lerp_snap( this.origin, this.originTarget, this.speedLerp, snapThreshold );
-		
-		// position
-		
-		if ( this.positionOffset.z !== this.radius ) {
+		if ( this.speed !== 0 ) {
 			
-			this.positionOffset.z += this.acceleration * ( this.radius - this.positionOffset.z );
+			// reset
+			
+			this.reset();
+			
+			// acceleration
+			
+			this.acceleration += this.speed;
+			
+			// origin
+			
+			_MathHelper.lerp_snap( this.origin, this.originTarget, this.speedLerp, snapThreshold );
+			
+			// position
+			
+			if ( this.positionOffset.z !== this.radius ) {
+				
+				this.positionOffset.z += this.acceleration * ( this.radius - this.positionOffset.z );
+				
+			}
+			
+			// rotation
+			
+			this.angle = _MathHelper.rad_between_PI( this.angle + this.acceleration );
+			
+			//this.axisTarget.set( Math.random(), Math.random(), Math.random() );
+			
+			_MathHelper.lerp_snap( this.axis, this.axisTarget, this.speedLerp, snapThreshold );
+			
+			this.rotationOffset.setFromAxisAngle( this.axis, this.angle );
+			
+			// damping
+			
+			this.acceleration *= this.accelerationDamping;
+			
+			// integrate step
+			
+			this.integrate( this );
 			
 		}
-		
-		// rotation
-		
-		this.angle = _MathHelper.rad_between_PI( this.angle + this.acceleration );
-		
-		//this.axisTarget.set( Math.random(), Math.random(), Math.random() );
-		
-		_MathHelper.lerp_snap( this.axis, this.axisTarget, this.speedLerp, snapThreshold );
-		
-		this.rotationOffset.setFromAxisAngle( this.axis, this.angle );
-		
-		// damping
-		
-		this.acceleration *= this.accelerationDamping;
-		
-		// integrate step
-		
-		this.integrate( this );
 		
 	}
 	

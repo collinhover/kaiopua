@@ -16,10 +16,13 @@
 		_ObjectHelper,
 		accelerationDamping = 0.9,
 		speedLerp = 0.01,
-		speedMax = 0.0001,
-		speedMin = 0.0001,
+		speedMaxBase = 0.1,
+		speedMaxWave = 0.001,
+		speedMinBase = 0.001,
+		speedMinWave = 0.0001,
 		snapThreshold = 0.01,
-		range = 100;
+		range = 100,
+		directionChangeChance = 0.01;
 	
 	/*===================================================
     
@@ -81,13 +84,15 @@
 		this.acceleration = 0;
 		this.accelerationDamping = accelerationDamping;
 		this.speedLerp = speedLerp;
-		this.speedMax = speedMax;
-		this.speedMin = speedMin;
+		this.speedMax = speedMaxBase;
+		this.speedMin = speedMinBase;
 		this.speed = 0;
+		this.direction = new THREE.Vector3( 1, 1, 1 );
+		this.directionChangeChance = new THREE.Vector3( directionChangeChance, directionChangeChance, directionChangeChance );
 		this.angleSeed = Math.PI * 2;
-		this.angleA = 0;
-		this.angleB = 0;
-		this.angleC = 0;
+		this.angleX = 0;
+		this.angleY = 0;
+		this.angleZ = 0;
 		this.rangeMax = new THREE.Vector3( range, range, range );
 		this.rangeMin = new THREE.Vector3( -range, -range, -range );
 		
@@ -128,17 +133,6 @@
 			
 		}
 		
-		if ( parameters.rangeMin instanceof THREE.Vector3 ) {
-			
-			this.rangeMin.copy( parameters.rangeMin );
-			
-		}
-		else if ( main.is_number( parameters.rangeMin ) ) {
-			
-			this.rangeMin.set( parameters.rangeMin, parameters.rangeMin, parameters.rangeMin );
-			
-		}
-		
 		if ( parameters.rangeMax instanceof THREE.Vector3 ) {
 			
 			this.rangeMax.copy( parameters.rangeMax );
@@ -150,16 +144,64 @@
 			
 		}
 		
-		this.accelerationDamping = parameters.accelerationDamping || this.accelerationDamping;
-		this.speedLerp = parameters.speedLerp || this.speedLerp;
-		this.speedMax = parameters.speedMax || parameters.speed || this.speedMax;
-		this.speedMin = parameters.speedMin || parameters.speed || this.speedMin;
-		this.speed = Math.random() * ( this.speedMax - this.speedMin ) + this.speedMin;
+		if ( parameters.rangeMin instanceof THREE.Vector3 ) {
+			
+			this.rangeMin.copy( parameters.rangeMin );
+			
+		}
+		else if ( main.is_number( parameters.rangeMin ) ) {
+			
+			this.rangeMin.set( parameters.rangeMin, parameters.rangeMin, parameters.rangeMin );
+			
+		}
+		console.log( this.rangeMax, this.rangeMin );
+		if ( parameters.direction instanceof THREE.Vector3 ) {
+			
+			this.direction.copy( parameters.direction );
+			
+		}
+		else if ( main.is_number( parameters.direction ) ) {
+			
+			this.direction.set( parameters.direction, parameters.direction, parameters.direction );
+			
+		}
 		
-		this.angleSeed = parameters.angleSeed || this.angleSeed;
-		this.angleA = parameters.angleA || parameters.angle || ( Math.random() * ( this.angleSeed * 2 ) - this.angleSeed );
-		this.angleB = parameters.angleB || parameters.angle || ( Math.random() * ( this.angleSeed * 2 ) - this.angleSeed );
-		this.angleC = parameters.angleC || parameters.angle || ( Math.random() * ( this.angleSeed * 2 ) - this.angleSeed );
+		if ( parameters.directionChangeChance instanceof THREE.Vector3 ) {
+			
+			this.directionChangeChance.copy( parameters.directionChangeChance );
+			
+		}
+		else if ( main.is_number( parameters.directionChangeChance ) ) {
+			
+			this.directionChangeChance.set( parameters.directionChangeChance, parameters.directionChangeChance, parameters.directionChangeChance );
+			
+		}
+		
+		this.waveX = typeof parameters.waveX === 'boolean' ? parameters.waveX : false;
+		this.waveY = typeof parameters.waveY === 'boolean' ? parameters.waveY : false;
+		this.waveZ = typeof parameters.waveZ === 'boolean' ? parameters.waveZ : false;
+		this.angleSeed = main.is_number( parameters.angleSeed ) ? parameters.angleSeed : this.angleSeed;
+		this.angleX = main.is_number( parameters.angleX ) ? parameters.angleX : main.is_number( parameters.angle ) ? parameters.angle : ( Math.random() * ( this.angleSeed * 2 ) - this.angleSeed );
+		this.angleY = main.is_number( parameters.angleY ) ? parameters.angleY : main.is_number( parameters.angle ) ? parameters.angle : ( Math.random() * ( this.angleSeed * 2 ) - this.angleSeed );
+		this.angleZ = main.is_number( parameters.angleZ ) ? parameters.angleZ : main.is_number( parameters.angle ) ? parameters.angle : ( Math.random() * ( this.angleSeed * 2 ) - this.angleSeed );
+		
+		this.accelerationDamping = main.is_number( parameters.accelerationDamping ) ? parameters.accelerationDamping : this.accelerationDamping;
+		this.speedLerp = main.is_number( parameters.speedLerp ) ? parameters.speedLerp : this.speedLerp;
+		
+		if ( this.waveX === true || this.waveY === true || this.waveZ === true ) {
+			
+			this.speedMax = main.is_number( parameters.speedMax ) ? parameters.speedMax : main.is_number( parameters.speed ) ? parameters.speed : speedMaxWave;
+			this.speedMin = main.is_number( parameters.speedMin ) ? parameters.speedMin : main.is_number( parameters.speed ) ? parameters.speed : speedMinWave;
+			
+		}
+		else {
+			
+			this.speedMax = main.is_number( parameters.speedMax ) ? parameters.speedMax : main.is_number( parameters.speed ) ? parameters.speed : speedMaxBase;
+			this.speedMin = main.is_number( parameters.speedMin ) ? parameters.speedMin : main.is_number( parameters.speed ) ? parameters.speed : speedMinBase;
+			
+		}
+		
+		this.speed = Math.random() * ( this.speedMax - this.speedMin ) + this.speedMin;
 		
 		// snap to initial values
 		
@@ -178,49 +220,101 @@
 	function step () {
 		
 		var rangeMax = this.rangeMax,
-			rangeMin = this.rangeMin;
+			rangeMin = this.rangeMin,
+			sinX, sinY, sinZ;
 		
-		// reset
-		
-		this.reset();
-		
-		// acceleration
-		
-		this.acceleration += this.speed;
-		
-		// origin
-		
-		_MathHelper.lerp_snap( this.origin, this.originTarget, this.speedLerp, snapThreshold );
-		
-		// position
-		
-		// random movement
-		
-		if ( this.randomWalk ) {
+		if ( this.speed !== 0 ) {
 			
-			// TODO
+			// reset
+			
+			this.reset();
+			
+			// acceleration
+			
+			this.acceleration += this.speed;
+			
+			// origin
+			
+			_MathHelper.lerp_snap( this.origin, this.originTarget, this.speedLerp, snapThreshold );
+			
+			// position
+			
+			// wave movement
+			if ( this.waveX === true || this.waveY === true || this.waveZ === true ) {
+				
+				if ( this.waveX === true ) {
+					
+					this.angleX = _MathHelper.rad_between_PI( this.angleX + this.acceleration );
+					
+					sinX = Math.sin( this.angleX );
+					
+					this.positionOffsetTarget.x = sinX > 0 ? sinX * rangeMax.x : -sinX * rangeMin.x;
+					
+				}
+				
+				if ( this.waveY === true ) {
+					
+					this.angleY = _MathHelper.rad_between_PI( this.angleY + this.acceleration );
+					
+					sinY = Math.sin( this.angleY );
+					
+					this.positionOffsetTarget.y = sinY > 0 ? sinY * rangeMax.y : -sinY * rangeMin.y;
+					
+				}
+				
+				if ( this.waveZ === true ) {
+					
+					this.angleZ = _MathHelper.rad_between_PI( this.angleZ + this.acceleration );
+					
+					sinZ = Math.sin( this.angleZ );
+					
+					this.positionOffsetTarget.z = sinZ > 0 ? sinZ * rangeMax.z : -sinZ * rangeMin.z;
+					
+				}
+				
+			}
+			// random movement
+			else {
+				
+				// direction
+				
+				if ( Math.random() <= this.directionChangeChance.x ) {
+					
+					this.direction.x *= -1;
+					
+				}
+				
+				if ( Math.random() <= this.directionChangeChance.y ) {
+					
+					this.direction.y *= -1;
+					
+				}
+				
+				if ( Math.random() <= this.directionChangeChance.z ) {
+					
+					this.direction.z *= -1;
+					
+				}
+				
+				this.positionOffsetTarget.set( 
+					_MathHelper.clamp( this.positionOffsetTarget.x + this.acceleration * this.direction.x, rangeMin.x, rangeMax.x ),
+					_MathHelper.clamp( this.positionOffsetTarget.y + this.acceleration * this.direction.y, rangeMin.y, rangeMax.y ),
+					_MathHelper.clamp( this.positionOffsetTarget.z + this.acceleration * this.direction.z, rangeMin.z, rangeMax.z )
+				);
+				
+			}
+			
+			_MathHelper.lerp_snap( this.positionOffset, this.positionOffsetTarget, this.speedLerp, snapThreshold );
+			
+			// damping
+			
+			this.acceleration *= this.accelerationDamping;
+			
+			// integrate step
+			
+			this.integrate( this );
 			
 		}
-		// wave movement
-		else {
-			
-			this.angleA = _MathHelper.rad_between_PI( this.angleA + this.acceleration );
-			this.angleB = _MathHelper.rad_between_PI( this.angleB + this.acceleration );
-			this.angleC = _MathHelper.rad_between_PI( this.angleC + this.acceleration );
-			
-			this.positionOffsetTarget.set( 0, Math.sin( this.angleB ) * ( rangeMax.y - rangeMin.y ), 0 );
-			
-		}
-		
-		_MathHelper.lerp_snap( this.positionOffset, this.positionOffsetTarget, this.speedLerp, snapThreshold );
-		
-		// damping
-		
-		this.acceleration *= this.accelerationDamping;
-		
-		// integrate step
-		
-		this.integrate( this );
 		
 	}
 	
