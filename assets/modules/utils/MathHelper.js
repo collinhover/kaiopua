@@ -18,6 +18,8 @@
     
     =====================================================*/
 	
+	_MathHelper.twopi = Math.PI * 2;
+	
 	_MathHelper.is_number = function ( n ) {
 		
 		return isNaN( n ) === false && isFinite( n );
@@ -32,11 +34,22 @@
 	
 	_MathHelper.max_magnitude = function ( n1, n2 ) {
 		
-		var n1abs = Math.abs( n1 ),
-			n2abs = Math.abs( n2 ),
-			max = Math.max( n1abs, n2abs );
+		var i, l,
+			abs = [],
+			max,
+			index;
 		
-		return ( max === n1abs ) ? n1 : n2;
+		for ( i = 0, l = arguments.length; i < l; i++ ) {
+			
+			abs.push( Math.abs( arguments[ i ] ) );
+			
+		}
+		
+		max = Math.max.apply( Math, abs );
+		
+		index = abs.indexOf( max );
+		
+		return arguments[ index ];
 		
 	};
 	
@@ -70,11 +83,9 @@
 	
 	_MathHelper.rad_between_PI = function ( n ) {
 		
-		var twopi = ( Math.PI * 2 );
+		n = n % _MathHelper.twopi;
 		
-		n = n % twopi;
-		
-		return ( n > Math.PI ) ? n - twopi : ( n < -Math.PI ) ? n + twopi : n;
+		return ( n > Math.PI ) ? n - _MathHelper.twopi : ( n < -Math.PI ) ? n + _MathHelper.twopi : n;
 		
 	};
 	
@@ -95,6 +106,14 @@
 	_MathHelper.rad_to_degree = function ( n ) {
 		
 		return n * 180 / Math.PI;
+		
+	};
+	
+	_MathHelper.angle_between_vectors = function ( vFrom, vTo ) {
+		
+		var dist = _MathHelper.clamp( vFrom.dot( vTo ), -1, 1 );
+		
+		return Math.acos( dist );
 		
 	};
 	
@@ -260,7 +279,7 @@
 		
 		return matrix2dRotated;
 		
-	}
+	};
 	
 	_MathHelper.rotate_matrix2d_anticlockwise_90 = function ( matrix2d ) {
 		
@@ -287,33 +306,47 @@
 		
 		return matrix2dRotated;
 		
-	}
+	};
 	
-	_MathHelper.trig_table = function ( increment, degreeMin, degreeMax ) {
+	_MathHelper.lerp = function ( from, to, alpha ) {
 		
-		var i, l,
-			rad,
-			table = {
-				sin: {},
-				cos: {}
-			};
+		from.x += ( to.x - from.x ) * alpha;
+		from.y += ( to.y - from.y ) * alpha;
+		from.z += ( to.z - from.z ) * alpha;
 		
-		increment = _MathHelper.is_number( increment ) ? increment : 1;
-		degreeMin = _MathHelper.is_number( degreeMin ) ? degreeMin : -180;
-		degreeMax = _MathHelper.is_number( degreeMax ) ? degreeMax : 180;
-		
-		for ( i = degreeMin, l = degreeMax; i < l; i += increment ) {
+		if ( from.hasOwnProperty( 'w' ) ) {
 			
-			rad = _MathHelper.degree_to_rad( i );
-			
-			table.sin[ i ] = Math.sin( rad );
-			table.cos[ i ] = Math.cos( rad );
+			from.w += ( to.w - from.w ) * alpha;
 			
 		}
 		
-		return table;
+		return from;
 		
-	}
+	};
+	
+	_MathHelper.lerp_normalized = function ( from, to, alpha ) {
+		
+		return _MathHelper.lerp( from, to, alpha ).normalize();
+		
+	};
+	
+	_MathHelper.lerp_snap = function ( from, to, alpha, threshold ) {
+		
+		if ( from.equals( to ) !== true ) {
+			
+			_MathHelper.lerp( from, to, alpha );
+			
+			if ( from.distanceTo( to ) < threshold ) {
+				
+				from.copy( to );
+				
+			}
+			
+		}
+		
+		return from;
+		
+	};
 	
 	main.asset_register( assetPath, { data: _MathHelper } );
     

@@ -16,8 +16,9 @@
 		_Button,
 		_GUI,
 		queue,
-		priority = false,
+		open = false,
 		active = false,
+		priority = false,
 		confirmRequired = false;
 	
 	/*===================================================
@@ -155,6 +156,10 @@
 		
 		hide_current_message();
 		
+		// remove signal
+		
+		shared.signals.resumed.remove( step_message_queue );
+		
 	}
 	
 	/*===================================================
@@ -162,6 +167,12 @@
     message
     
     =====================================================*/
+	
+	function get_is_show_safe () {
+		
+		return open === true || _Game.paused !== true;
+		
+	}
 	
 	function show_message ( parameters ) {
 		
@@ -171,7 +182,7 @@
 		
 		// if only 1 message, show immediately
 		
-		if ( queue.length == 1 ) {
+		if ( queue.length === 1 ) {
 			
 			step_message_queue();
 			
@@ -181,18 +192,27 @@
 	
 	function step_message_queue () {
 		
-		// if game paused
-		
-		if ( active !== true && _Game.paused === true ) {
+		if ( get_is_show_safe() ) {
 			
-			shared.signals.resumed.addOnce( step_message_queue );
+			if ( _Messenger.container.hiding !== true ) {
+				
+				if ( active === true ) {
+					
+					hide_current_message( { callback: step_message_queue } );
+					
+				}
+				else {
+					
+					show_next_message();
+					
+				}
+				
+			}
 			
 		}
 		else {
 			
-			// hide current and show next
-			
-			hide_current_message( { callback: show_next_message } );
+			shared.signals.resumed.addOnce( step_message_queue );
 			
 		}
 		
@@ -215,9 +235,13 @@
 		
 		if ( queue.length > 0 ) {
 			
+			// set open
+			
+			open = true;
+			
 			// handle parameters
 			
-			parameters = queue.shift() || {};
+			parameters = queue[ 0 ] || {};
 			
 			pHead = parameters.head;
 			pImage = parameters.image;
@@ -245,7 +269,7 @@
 					image.align();
 					container.align();
 					
-				}, undefined, undefined, imageElement );
+				}, this, imageElement );
 				
 				image.width = main.is_number( parameters.imageWidth ) ? parameters.imageWidth : ( main.is_number( parameters.imageSize ) ? parameters.imageSize : 'auto' );
 				image.height = main.is_number( parameters.imageHeight ) ? parameters.imageHeight : ( main.is_number( parameters.imageSize ) ? parameters.imageSize : 'auto' );
@@ -359,6 +383,10 @@
 		
 		parameters = parameters || {};
 		
+		// clear current from queue
+		
+		queue.shift();
+		
 		// signals
 		
 		shared.signals.keyup.remove( hide_message );
@@ -391,6 +419,14 @@
 				_Game.resume();
 				
 			}
+			
+		}
+		
+		// open
+		
+		if ( queue.length === 0 ) {
+			
+			open = false;
 			
 		}
 		

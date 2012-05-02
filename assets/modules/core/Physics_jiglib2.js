@@ -319,9 +319,7 @@ Physics module, handles physics in game using JigLibJS.
 				
 				vertex = vertsThree[ i ];
 				
-				vertPos = vertex.position;
-				
-				vertsJig.push( new jiglib.Vector3D( vertPos.x, vertPos.y, vertPos.z ) );
+				vertsJig.push( new jiglib.Vector3D( vertex.x, vertex.y, vertex.z ) );
 				
 			}
 			
@@ -843,7 +841,7 @@ Physics module, handles physics in game using JigLibJS.
 						
 						uq1.multiply( upToUpNewQ, quaternion );
 						
-						THREE.Quaternion.nlerp( quaternion, uq1, quaternion, lerpDelta );
+						_MathHelper.lerp_normalized( quaternion, uq1, lerpDelta );
 						
 						// lerp current rotation towards complete rotation
 						
@@ -855,7 +853,7 @@ Physics module, handles physics in game using JigLibJS.
 							
 							// normalized lerp to new rotation
 							
-							THREE.Quaternion.nlerp( rotation, uq1, rotation, lerpDelta );
+							_MathHelper.lerp_normalized( rotation, uq1, lerpDelta );
 							//console.log('new rotation: ' + rotation.x + '(' + uq4.x + '), ' + rotation.y + '(' + uq4.y + '), ' + rotation.z + '(' + uq4.z + '), ' + rotation.w + '(' + uq4.w + ') ' );
 							// set rigid body rotation to new rotation
 							

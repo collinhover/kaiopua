@@ -605,7 +605,7 @@
 						
 						searchVertex = searchVertices[ j ];
 						
-						searchVertexPosition.copy( searchVertex.position );
+						searchVertexPosition.copy( searchVertex );
 						
 						searchFromMatrix.multiplyVector3( searchVertexPosition );
 						
@@ -615,7 +615,7 @@
 							
 							vertex = vertices[ n ];
 							
-							position.copy( vertex.position );
+							position.copy( vertex );
 							
 							moduleMatrix.multiplyVector3( position );
 							

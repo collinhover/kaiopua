@@ -522,13 +522,13 @@ var KAIOPUA = (function (main) {
 		
     };
 	
-	main.generate_dom_image = function ( src, callback, context, data, image ) {
+	main.generate_dom_image = function ( path, callback, context, image ) {
 		
 		var loadCallback = function () {
 			
 			if ( typeof callback === 'function' ) {
 				
-				callback.apply( context, data );
+				callback.call( context, image );
 				
 			}
 			
@@ -541,12 +541,16 @@ var KAIOPUA = (function (main) {
 		}
 		
 		image.crossOrigin = '';
-		image.src = src;
-		image.onload = loadCallback;
+		image.src = path;
 		
 		if ( image.complete ) {
 			
 			loadCallback();
+		}
+		else {
+			
+			image.onload = loadCallback;
+			
 		}
 		
 		return image;
@@ -1093,17 +1097,27 @@ var KAIOPUA = (function (main) {
 	main.asset_register = function ( path, parameters ) {
 		
 		var assetNew,
-			assetCurrent,
-			assetCurrentWaiting;
+			dataNew,
+			assetCurrent = main.get_asset( path );
 		
-		// initialize new asset
+		if ( assetCurrent instanceof KaiopuaAsset !== true || ( parameters && typeof parameters.data !== 'undefined' && parameters.data !== assetCurrent.data ) ) {
+			
+			// initialize new asset
+			
+			assetNew = new KaiopuaAsset( path, parameters );
+			
+			dataNew = assetNew.data;
+			
+		}
+		else {
+			
+			dataNew = assetCurrent.data;
+			
+		}
 		
-		assetNew = new KaiopuaAsset( path, parameters );
+		// asset is usually only useful internally, return data instead
 		
-		// asset is usually only useful internally
-		// so return asset data
-		
-		return assetNew.data;
+		return dataNew;
 		
 	}
 	

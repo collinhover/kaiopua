@@ -25,7 +25,9 @@
 	main.asset_register( assetPath, { 
 		data: _GUI,
 		requirements: [
-			"assets/modules/ui/UIElement.js"
+			"assets/modules/ui/UIElement.js",
+			"assets/modules/ui/Button.js",
+			"assets/modules/ui/Menu.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -37,10 +39,12 @@
     
     =====================================================*/
 	
-	function init_internal ( uie ) {
+	function init_internal ( uie, btn, mn ) {
 		console.log('internal gui', _GUI);
 		
 		_UIElement = uie;
+		_Button = btn;
+		_Menu = mn;
 		
 		// properties
 		
@@ -54,8 +58,6 @@
 		_GUI.groupsNames = [];
 		
 		// functions
-		
-		_GUI.build = build;
 		
 		_GUI.generate_button_back = generate_button_back;
 		_GUI.generate_button_close = generate_button_close;
@@ -125,6 +127,10 @@
 		// init
 		
 		init_core();
+		
+		// build
+		
+		build();
 		
 	}
 	
@@ -225,25 +231,7 @@
     
     =====================================================*/
 	
-	function build ( callback ) {
-		
-		if ( ready !== true ) {
-			
-			ready = true;
-			
-			main.asset_require( [
-				"assets/modules/ui/Button.js",
-				"assets/modules/ui/Menu.js"
-			], [ build_basics, callback ] );
-			
-		}
-		
-	}
-	
-	function build_basics ( btn, mn) {
-		
-		_Button = btn;
-		_Menu = mn;
+	function build () {
 		
 		// init
 		

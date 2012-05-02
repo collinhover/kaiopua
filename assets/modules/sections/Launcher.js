@@ -10,12 +10,13 @@
     
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/sections/Launcher.js",
-		launcher = {},
+		_Launcher = {},
+		_Game,
+		_Water,
+        _Sky,
+		_ObjectMaker,
         ready = false,
 		waitingToShow = false,
-		_Game,
-		_WaterLauncher,
-        _Sky,
         camera,
         scene,
 		sceneBG,
@@ -23,9 +24,8 @@
 		addBGOnShow = [],
 		ambientLight,
 		lightSky,
-		lightWater,
-		fogColor = 0x529ad1,
         water,
+		sky,
         skybox,
         time,
 		camRotationBaseQ,
@@ -38,12 +38,12 @@
             ry: 0, 
             rangeTransMaxX: 500, 
             rangeTransMinX: -500,
-            rangeTransMaxY: 0, 
+            rangeTransMaxY: 250, 
             rangeTransMinY: -250,
             speedTransX: 0.01, 
             speedTransY: 0.01,
             rangeRotMaxX: 0,
-            rangeRotMinX: -15,
+            rangeRotMinX: -25,
             rangeRotMaxY: 10,
             rangeRotMinY: -10,
             speedRotX: 0.05,
@@ -56,18 +56,25 @@
     
     =====================================================*/
 	
-    launcher.show = show;
-    launcher.hide = hide;
-    launcher.remove = remove;
-    launcher.update = update;
-	launcher.resize = resize;
+    _Launcher.show = show;
+    _Launcher.hide = hide;
+    _Launcher.remove = remove;
+    _Launcher.update = update;
+	_Launcher.resize = resize;
 	
 	main.asset_register( assetPath, { 
-		data: launcher,
+		data: _Launcher,
 		requirements: [
 			"assets/modules/core/Game.js",
-			"assets/modules/env/SkyLauncher.js",
-			"assets/modules/env/WaterLauncher.js"
+			"assets/modules/env/Sky.js",
+			"assets/modules/env/Water.js",
+			"assets/modules/utils/ObjectMaker.js",
+			"assets/textures/skybox_world_posx.jpg",
+            "assets/textures/skybox_world_negx.jpg",
+			"assets/textures/skybox_world_posy.jpg",
+            "assets/textures/skybox_world_negy.jpg",
+			"assets/textures/skybox_world_posz.jpg",
+            "assets/textures/skybox_world_negz.jpg"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -79,13 +86,14 @@
     
     =====================================================*/
     
-    function init_internal ( g, s, w ) {
+    function init_internal ( g, s, w, om ) {
 		
 		if ( ready !== true ) {
 			console.log('internal launcher');
 			_Game = g;
 			_Sky = s;
-			_WaterLauncher = w;
+			_Water = w;
+			_ObjectMaker = om;
 			
 			init_environment();
 			
@@ -117,88 +125,60 @@
 		
 		ambientLight = new THREE.AmbientLight( 0xeeeeee );
 		
-		lightSky = new THREE.DirectionalLight( 0xffffff, 1 );
-		lightSky.position = new THREE.Vector3(-1,0.5, 0).normalize();
+		//lightSky = new THREE.DirectionalLight( 0xffffff, 1 );
+		//lightSky.position = new THREE.Vector3(-1,0.5, 0).normalize();
 		
-		//lightSky = new THREE.PointLight( 0xffffcc, 0.75, 40000 );
-		//lightSky.position.set( 0, 3000, 2000 );
-		
-		//lightWater = new THREE.PointLight( 0xffffcc, 0.25, 20000 );
-		//lightWater.position.set( 0, -6000, 0 );
+		lightSky = new THREE.PointLight( 0xffffff, 2, 10000 );
+		lightSky.position.set( -3000, 4000, 0 );
 		
 		// skybox
 		
-		skybox = init_skybox();
+		skybox = _ObjectMaker.make_skybox( shared.pathToTextures + "skybox_world" );
 		
 		// water
 		
-		water = new _WaterLauncher.Instance( { wavesColor: fogColor } );
+		water = new _Water.Instance();
+		water.quaternion.setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), -Math.PI * 0.65 );
 		
 		// sky
 		
-		_Sky.init();
-		
-		// sky environment
-		
-		_Sky.environment.position.x = 0;
-		_Sky.environment.position.y = 2000;
-		
-		_Sky.environment.rotation.y = -90 * Math.PI / 180;
+		sky = new _Sky.Instance( {
+			numClouds: 30,
+			cloudScaleMax: 8,
+			cloudOpacityByDistance: 1,
+			cloudBoundRadius: 5000,
+			cloudDistanceFromSurfaceMin: 3000,
+			cloudDistanceFromSurfaceMax: 5000,
+			cloudRotateTowardWorld: false,
+			zones: [
+				{
+					polar: {
+						min: Math.PI * 0.15,
+						max: Math.PI * 0.85
+					},
+					azimuth: {
+						min: Math.PI * 0.15,
+						max: Math.PI * 0.85
+					}
+				}/*,
+				{
+					polar: {
+						min: Math.PI * 0.2,
+						max: Math.PI * 0.8
+					},
+					azimuth: {
+						min: Math.PI * 1.2,
+						max: Math.PI * 1.8
+					}
+				}*/
+			]
+		} );
 		
 		// set items to add on show
 		
-		addOnShow.push( ambientLight, lightSky, water.environment, _Sky.environment );
+		addOnShow.push( ambientLight, lightSky, water, sky );
 		
 		addBGOnShow.push( skybox );
-		
-	}
-	
-	function init_skybox () {
-		
-		var ap,
-			images,
-			textureCube,
-			shader,
-			material,
-			mesh;
-		
-		// images
-		
-		ap = "assets/textures/skybox_launcher";
-				 
-		// cube texture
-		
-		textureCube = new THREE.Texture();
-		
-		main.asset_require( [ ap + "_xz.jpg", ap + "_posy.jpg", ap + "_negy.jpg" ], function ( xz, posy, negy ) {
-			
-			textureCube.image = [ xz, xz, posy, negy, xz, xz ];
-			textureCube.needsUpdate = true;
-			
-		} );
-		
-		// shader
-		
-		shader = THREE.ShaderUtils.lib[ "cube" ];
-		shader.uniforms[ "tCube" ].texture = textureCube;
-		
-		// material
-		
-		material = new THREE.ShaderMaterial( {
-
-			fragmentShader: shader.fragmentShader,
-			vertexShader: shader.vertexShader,
-			uniforms: shader.uniforms,
-			depthWrite: false
-			
-		} );
-		
-		// mesh
-		
-		mesh = new THREE.Mesh( new THREE.CubeGeometry( 100, 100, 100 ), material );
-		mesh.flipSided = true;
-        
-        return mesh;
 		
 	}
     
@@ -232,15 +212,10 @@
 		
 		if ( ready === true ) {
 			
-			// camera
+			// cameras
 			
 			camera = _Game.camera;
-			
-			// starting position
-			camera.position.set(-5800, 0, 0);
-			
-			// set base quaternion
-			
+			camera.position.set( -5800, 0, 0 );
 			camera.quaternion.copy( camRotationBaseQ );
 			
 			// scene
@@ -249,8 +224,11 @@
 			
 			sceneBG = _Game.sceneBG;
 			
-			// fog
-			scene.fog = new THREE.Fog( fogColor, -100, 10000 );
+			// environment
+			
+			water.morphs.play( 'waves', { duration: 4000, loop: true } );
+			
+			sky.animate();
 			
 			// add items
 			
@@ -278,6 +256,10 @@
     function hide () {
 		
 		waitingToShow = false;
+		
+		water.morphs.stopAll();
+		
+		sky.animate( { stop: true } );
 		
 		shared.signals.mousemoved.remove( on_mouse_moved );
 		
@@ -320,12 +302,6 @@
 		camRotationOffsetQ.setFromEuler( camRotationOffset ).normalize();
         
 		camera.quaternion.set( 0, 0, 0, 1 ).multiplySelf( camRotationOffsetQ ).multiplySelf( camRotationBaseQ );
-		
-        // update environment
-        
-        _Sky.wind_blow( timeDelta );
-        
-        water.generate_waves( timeDelta );
         
     }
 	

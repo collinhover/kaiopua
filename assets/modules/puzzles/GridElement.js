@@ -97,9 +97,6 @@
 		
 		parameters = parameters || {};
 		
-		parameters.geometry = parameters.geometry || new THREE.CubeGeometry( 50, 100, 50 );
-		parameters.materials = parameters.materials || new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } );
-		
 		// prototype constructor
 		
 		_Model.Instance.call( this, parameters );
@@ -311,14 +308,6 @@
 		
 		if ( this.module !== moduleNew ) {
 			
-			// remove self from previous
-			
-			if ( typeof this.parent !== 'undefined' ) {
-				
-				this.parent.remove( this );
-			
-			}
-			
 			// for each module in previous layout modules
 			
 			if ( typeof this.layoutModules !== 'undefined' ) {
@@ -364,6 +353,12 @@
 				}, this.layoutModules );
 				
 			}
+			// remove self from previous
+			else if ( typeof this.parent !== 'undefined' ) {
+				
+				this.parent.remove( this );
+			
+			}
 			
 		}
 		
@@ -403,17 +398,17 @@
 			
 			if ( typeof this.parent !== 'undefined' ) {
 				
-				// if has module, add this to it
-				
-				if ( this.module instanceof _GridModule.Instance ) {
-					
-					this.module.add( this );
-					
-				}
-				// otherwise just remove 
-				else {
+				// if no module, remove 
+				if ( this.module instanceof _GridModule.Instance !== true ) {
 					
 					this.parent.remove( this );
+					
+				}
+				
+				// if has module, add to
+				else if ( this.parent !== this.module ) {
+					
+					this.module.add( this );
 					
 				}
 				
@@ -469,42 +464,11 @@
 					if ( testLayoutModule instanceof _GridModule.Instance ) {
 						
 						testLayoutModule.show_state( 'occupied', 1 - success );
-						/*
-						moduleDimensions = _ObjectHelper.dimensions( testLayoutModule );
-						console.log( 'TESTED MODULE' );
-						console.log( 'moduleDimensions', moduleDimensions.x.toFixed(3), moduleDimensions.y.toFixed(3), moduleDimensions.z.toFixed(3) );
-						console.log( 'module Q', testLayoutModule.quaternion.x.toFixed(3), testLayoutModule.quaternion.y.toFixed(3), testLayoutModule.quaternion.z.toFixed(3), testLayoutModule.quaternion.w.toFixed(3) );
-						var mqworld = new THREE.Quaternion().setFromRotationMatrix( testLayoutModule.matrixWorld );
-						console.log( 'module Q world', mqworld.x.toFixed(3), mqworld.y.toFixed(3), mqworld.z.toFixed(3), mqworld.w.toFixed(3) );
-						modulesWidthTotal += moduleDimensions.x;
-						modulesDepthTotal += moduleDimensions.z;
-						modulesCount++;
-						*/
+						
 					}
 					
 				}, testLayoutModules );
-				/*
-				// offset self
-				// based on size of modules tested
-				// and the center offset of own layout
 				
-				// average module size
-				
-				avgModuleWidth = modulesWidthTotal / modulesCount;
-				avgModuleDepth = modulesDepthTotal / modulesCount;
-				
-				// center offset of layout
-				
-				var layoutCenterOffset = this.get_layout_center_offset();
-				
-				console.log( 'avgModuleWidth', avgModuleWidth, 'avgModuleDepth', avgModuleDepth );
-				console.log(' get_layout_center_offset: ', layoutCenterOffset.row.toFixed(3), layoutCenterOffset.col.toFixed(3) );
-				
-				//this.position.x += avgModuleWidth * ( layoutCenterOffset.row - 1 );
-				//this.position.z += avgModuleDepth * ( layoutCenterOffset.col - 1 );
-				console.log( ' new pos ', this.position.x.toFixed(2), this.position.y.toFixed(2), this.position.z.toFixed(2) );
-				console.log( ' new Q ', this.quaternion.x.toFixed(3), this.quaternion.y.toFixed(3), this.quaternion.z.toFixed(3), this.quaternion.w.toFixed(3) );
-				*/
 			}
 			
 			// if successful and should occupy

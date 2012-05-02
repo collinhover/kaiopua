@@ -70,9 +70,6 @@
         
         this.environment = new THREE.Object3D();
 		
-		this.environment.rotation.x = -90 * Math.PI / 180;
-		this.environment.rotation.z = -Math.PI * 0.5;
-		
 		// waves
 		
 		this.waves = {};
@@ -338,13 +335,13 @@
 					
 				}
 				
-				// set water vert z
+				// set water vert
 				
-				vert.position.z = vvAmp + wavesAmplitude * ( Math.cos( vvpw * vvFreq + wavesTime ) + Math.sin( vvph * vvFreq + wavesTime ) );
+				vert.y = vvAmp + wavesAmplitude * ( Math.cos( vvpw * vvFreq + wavesTime ) + Math.sin( vvph * vvFreq + wavesTime ) );
 				
-				// check vert z, if low enough 
+				// check vert y, if low enough 
                 // and there are inactive water rays, show water ray
-                if (vert.position.z < -wavesAmplitude && rays.inactive.length > 0 && Math.random() <= rays.showChance ) {
+                if (vert.y < -wavesAmplitude && rays.inactive.length > 0 && Math.random() <= rays.showChance ) {
                 
                     // get next ray by removing last from inactive
 					
@@ -353,7 +350,7 @@
                     
                     // set ray position to position of triggering water vertex
 					
-                    ray.position.set( vert.position.x, vert.position.y, -( vert.position.z + rays.height * 0.5 + wavesAmplitude ) );
+                    ray.position.set( vert.x, -( vert.y + rays.height * 0.5 + wavesAmplitude ), vert.z );
                     
                     // record active index for later so we dont have to search
 					
@@ -378,8 +375,10 @@
 		wavesGeometry.computeVertexNormals();
 		
 		// tell three to update vertices
-		wavesGeometry.__dirtyVertices = true;
-		wavesGeometry.__dirtyNormals = true;
+		//wavesGeometry.__dirtyVertices = true;
+		//wavesGeometry.__dirtyNormals = true;
+		wavesGeometry.verticesNeedUpdate = true;
+		wavesGeometry.normalsNeedUpdate = true;
 
 	}
     

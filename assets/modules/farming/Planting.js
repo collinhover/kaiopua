@@ -13,7 +13,6 @@
 		_Planting = {},
 		_Game,
 		_GUI,
-		_Messenger,
 		_Grid,
 		_Puzzle,
 		_GridModule,
@@ -209,7 +208,11 @@
 		
 		// find if any planting objects under mouse
 		
-		targetObject = _Game.get_object_under_mouse( plantingObjects, false, this.mouse );
+		targetObject = _Game.get_object_under_mouse( {
+			objects: plantingObjects,
+			hierarchical: false,
+			mouse: this.mouse
+		} );
 		
 		return targetObject;
 		
@@ -610,19 +613,10 @@
 		
 	}
 	
-	function change_module ( target ) {
+	function change_module ( module ) {
 		
-		var module,
-			grid,
+		var grid,
 			field;
-		
-		// if target is module
-		
-		if ( target instanceof _GridModule.Instance ) {
-			
-			module = target;
-			
-		}
 		
 		// if is new module
 		
@@ -690,7 +684,7 @@
 				index = this.allPlants.indexOf( this.plant );
 				
 				// if planted
-					
+				
 				if ( this.plant.planted === true ) {
 					
 					// store in all plants list

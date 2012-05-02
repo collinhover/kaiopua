@@ -29,7 +29,6 @@
 		sceneBG,
 		sceneDefault,
 		sceneBGDefault,
-		fog,
 		camera,
 		cameraBG,
 		cameraDefault,
@@ -71,16 +70,18 @@
 		],
         assetsLauncher = [
             "assets/modules/sections/Launcher.js",
-            "assets/modules/env/WaterLauncher.js",
+			/*"assets/modules/env/WaterLauncher.js",
             "assets/modules/env/SkyLauncher.js",
             "assets/textures/cloud_256.png",
             "assets/textures/light_ray.png",
 			"assets/textures/skybox_launcher_xz.jpg",
 			"assets/textures/skybox_launcher_posy.jpg",
-            "assets/textures/skybox_launcher_negy.jpg"
+            "assets/textures/skybox_launcher_negy.jpg"*/
         ],
         assetsGame = [
 			/*"js/lib/ammo.js",*/
+			"assets/modules/core/Octant.js",
+			"assets/modules/core/Octree.js",
 			"assets/modules/core/Physics.js",
 			"assets/modules/core/Player.js",
 			"assets/modules/core/Model.js",
@@ -154,7 +155,7 @@
             "assets/textures/skybox_world_negy.jpg",
 			"assets/textures/skybox_world_posz.jpg",
             "assets/textures/skybox_world_negz.jpg",
-            "assets/textures/waves_512.png",
+            "assets/textures/water_world_512.png",
             "assets/textures/dirt_128.jpg"
         ],
 		loadingHeader = 'Hold on, we need some stuff from Hawaii...',
@@ -190,7 +191,6 @@
 	_Game.add_to_scene = add_to_scene;
 	_Game.remove_from_scene = remove_from_scene;
 	
-	_Game.get_intersection_from_mouse = get_intersection_from_mouse;
 	_Game.get_object_under_mouse = get_object_under_mouse;
 	
 	_Game.is_event_in_game = is_event_in_game;
@@ -285,7 +285,7 @@
 	
 	function load_launcher () {
 		
-		main.asset_require( assetsLauncher, [init_launcher, load_game] );
+		main.asset_require( assetsLauncher, [init_launcher, load_game], true );
 		
 	}
 	
@@ -305,10 +305,6 @@
 		
 		var shaderScreen = THREE.ShaderExtras[ "screen" ],
             shaderFocusVignette = main.get_asset_data("assets/modules/effects/FocusVignette");
-		
-		// modify THREE classes
-		
-		add_three_modifications();
 		
 		// utility
 		
@@ -375,9 +371,7 @@
         
         // fog
 		
-		fog = new THREE.Fog( 0xffffff, -100, 10000 );
-		
-        sceneDefault.fog = fog;
+        sceneDefault.fog = undefined;
 		
 		// camera
 		
@@ -439,43 +433,6 @@
 		
     }
 	
-	function add_three_modifications () {
-		
-		// quaternion normalized lerp
-		
-		THREE.Quaternion.nlerp = function ( qa, qb, qr, t ) {
-			
-			var tFrom = 1 - t;
-			
-			qr.x = qa.x * tFrom + qb.x * t;
-			qr.y = qa.y * tFrom + qb.y * t;
-			qr.z = qa.z * tFrom + qb.z * t;
-			qr.w = qa.w * tFrom + qb.w * t;
-			
-			qr.normalize();
-			
-			return qr;
-			
-		}
-		
-		// vector3 normalized lerp
-		
-		THREE.Vector3.nlerp = function ( va, vb, vr, t ) {
-			
-			var tFrom = 1 - t;
-			
-			vr.x = va.x * tFrom + vb.x * t;
-			vr.y = va.y * tFrom + vb.y * t;
-			vr.z = va.z * tFrom + vb.z * t;
-			
-			vr.normalize();
-			
-			return vr;
-			
-		}
-		
-	}
-	
 	/*===================================================
     
     init launcher
@@ -498,75 +455,69 @@
 	
     function init_game () {
 		
+		var l, m, b;
+		
 		// assets
 		
 		_ObjectHelper = main.get_asset_data( "assets/modules/utils/ObjectHelper.js" );
 		_Messenger = main.get_asset_data( "assets/modules/ui/Messenger.js" );
 		
-		// build gui, and on complete init game ui
+		// ui
 		
-		_GUI.build( function () {
-			
-			var l, m, b;
-			
-			// ui
-			
-			l = _GUI.layers;
-			m = _GUI.menus;
-			b = _GUI.buttons;
-			
-			m.start.childrenByID.play.callback = function () {
-				start_game();
-			};
-			m.start.childrenByID.play.context = this;
-			
-			m.main.childrenByID.resume.callback = function () {
-				resume();
-			};
-			m.main.childrenByID.resume.context = this;
-			
-			b.end.callback = function () {
-				stop_game();
-			};
-			b.end.context = this;
-			
-			b.mainMenu.callback = function () {
-				_Game.pause();
-			};
-			b.mainMenu.context = this;
-			
-			// menus
-			
-			m.start.alignment = 'center';
-			m.main.alignment = 'center';
-			
-			m.navigation.spacingBottom = 20;
-			m.navigation.alignment = 'bottomcenter';
-			
-			// setup ui groups
-			
-			_GUI.add_to_group( 'start', [
-				{ child: m.start, parent: l.ui },
-				{ child: m.footer, parent: _GUI.container }
-			] );
-			
-			_GUI.add_to_group( 'pause', [
-				{ child: m.main, parent: l.uiPriority },
-				{ child: m.footer, parent: _GUI.container }
-			] );
-			
-			_GUI.add_to_group( 'ingame', [
-				{ child: m.navigation, parent: l.ui }
-			] );
-			
-			_GUI.add_to_group( 'constant', [ { child: b.fullscreenEnter, parent: l.ui } ] );
-			
-			// show initial groups
-			
-			_GUI.show_group( 'constant' );
-			_GUI.show_group( 'start' );
-			
-		} );
+		l = _GUI.layers;
+		m = _GUI.menus;
+		b = _GUI.buttons;
+		
+		m.start.childrenByID.play.callback = function () {
+			start_game();
+		};
+		m.start.childrenByID.play.context = this;
+		
+		m.main.childrenByID.resume.callback = function () {
+			resume();
+		};
+		m.main.childrenByID.resume.context = this;
+		
+		b.end.callback = function () {
+			stop_game();
+		};
+		b.end.context = this;
+		
+		b.mainMenu.callback = function () {
+			_Game.pause();
+		};
+		b.mainMenu.context = this;
+		
+		// menus
+		
+		m.start.alignment = 'center';
+		m.main.alignment = 'center';
+		
+		m.navigation.spacingBottom = 20;
+		m.navigation.alignment = 'bottomcenter';
+		
+		// setup ui groups
+		
+		_GUI.add_to_group( 'start', [
+			{ child: m.start, parent: l.ui },
+			{ child: m.footer, parent: _GUI.container }
+		] );
+		
+		_GUI.add_to_group( 'pause', [
+			{ child: m.main, parent: l.uiPriority },
+			{ child: m.footer, parent: _GUI.container }
+		] );
+		
+		_GUI.add_to_group( 'ingame', [
+			{ child: m.navigation, parent: l.ui }
+		] );
+		
+		_GUI.add_to_group( 'constant', [ { child: b.fullscreenEnter, parent: l.ui } ] );
+		
+		// show initial groups
+		
+		_GUI.show_group( 'constant' );
+		_GUI.show_group( 'start' );
 		
     }
 	
@@ -860,62 +811,21 @@
     
     =====================================================*/
 	
-	function get_intersection_from_mouse ( objects, traverseHierarchy, mouse, cameraTarget ) {
+	function get_object_under_mouse ( parameters ) {
 		
-		var projector = utilProjector1Selection,
-			ray = utilRay1Selection,
-			mousePosition = utilVec31Selection,
-			intersections,
-			intersectedMesh;
+		var intersection;
 		
 		// handle parameters
 		
-		objects = objects || scene;
+		parameters = parameters || {};
 		
-		traverseHierarchy = ( typeof traverseHierarchy === 'boolean' ) ? traverseHierarchy : true;
+		parameters.objects = parameters.objects || scene;
+		parameters.mouse = parameters.mouse || main.get_mouse();
+		parameters.camera = parameters.camera || camera;
 		
-		mouse = mouse || main.get_mouse();
+		// intersection
 		
-		cameraTarget = cameraTarget || camera;
-		
-		// account for hierarchy and extract all children
-		
-		if ( traverseHierarchy !== false ) {
-			
-			objects = _ObjectHelper.extract_children_from_objects( objects, objects );
-			
-		}
-		
-		// get corrected mouse position
-		
-		mousePosition.x = ( mouse.x / shared.screenWidth ) * 2 - 1;
-		mousePosition.y = -( mouse.y / shared.screenHeight ) * 2 + 1;
-		mousePosition.z = 0.5;
-		
-		// unproject mouse position
-		
-		projector.unprojectVector( mousePosition, cameraTarget );
-		
-		// set ray
-
-		ray.origin = cameraTarget.position;
-		ray.direction = mousePosition.subSelf( cameraTarget.position ).normalize();
-		
-		// find ray intersections
-		
-		intersections = ray.intersectObjects( objects );
-		
-		if ( intersections.length > 0 ) {
-			
-			return intersections[ 0 ];
-			
-		}
-		
-	}
-	
-	function get_object_under_mouse ( objects, traverseHierarchy, mouse, cameraTarget ) {
-		
-		var intersection = get_intersection_from_mouse( objects, traverseHierarchy, mouse, cameraTarget );
+		intersection = _ObjectHelper.raycast( parameters );
 		
 		if ( typeof intersection !== 'undefined' ) {
 			

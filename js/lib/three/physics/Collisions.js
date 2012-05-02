@@ -168,10 +168,10 @@ THREE.CollisionSystem.prototype.rayMesh = function( r, me ) {
 
 	for( var i = 0; i < me.numFaces; i++ ) {
         var face = me.mesh.geometry.faces[i];
-        var p0 = me.mesh.geometry.vertices[ face.a ].position;
-        var p1 = me.mesh.geometry.vertices[ face.b ].position;
-        var p2 = me.mesh.geometry.vertices[ face.c ].position;
-        var p3 = face instanceof THREE.Face4 ? me.mesh.geometry.vertices[ face.d ].position : null;
+        var p0 = me.mesh.geometry.vertices[ face.a ];
+        var p1 = me.mesh.geometry.vertices[ face.b ];
+        var p2 = me.mesh.geometry.vertices[ face.c ];
+        var p3 = face instanceof THREE.Face4 ? me.mesh.geometry.vertices[ face.d ] : null;
 
         if (face instanceof THREE.Face3) {
             var nd = this.rayTriangle( rt, p0, p1, p2, d, this.collisionNormal, me.mesh );
@@ -240,13 +240,13 @@ THREE.CollisionSystem.prototype.rayMesh = function( r, me ) {
 		
 		var face = geometry.faces[ i ];
 		
-		p0.copy( vertices[ face.a ].position ).multiplySelf( scale );
-		p1.copy( vertices[ face.b ].position ).multiplySelf( scale );
-		p2.copy( vertices[ face.c ].position ).multiplySelf( scale );
+		p0.copy( vertices[ face.a ] ).multiplySelf( scale );
+		p1.copy( vertices[ face.b ] ).multiplySelf( scale );
+		p2.copy( vertices[ face.c ] ).multiplySelf( scale );
 		
 		if ( face instanceof THREE.Face4 ) {
 			
-			p3.copy( vertices[ face.d ].position ).multiplySelf( scale );
+			p3.copy( vertices[ face.d ] ).multiplySelf( scale );
 			
 			var nd = this.rayTriangle( rt, p0, p1, p3, d, this.collisionNormal, mesh );
 			

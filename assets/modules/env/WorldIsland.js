@@ -94,7 +94,7 @@
     	
     	// skybox
 		
-		me.parts.skybox = _ObjectMaker.make_skybox( "assets/textures/skybox_world" );
+		me.parts.skybox = _ObjectMaker.make_skybox( shared.pathToTextures + "skybox_world" );
     	
     	// world base
     	
@@ -120,9 +120,7 @@
             geometry: main.get_asset_data("assets/models/Whale_Head.js"),
 			physics: {
 				bodyType: 'mesh'
-			},
-			materials: new THREE.MeshLambertMaterial( { color: 0xFFFFFF, ambient: 0xFFFFFF, vertexColors: THREE.VertexColors } ),
-			shading: THREE.SmoothShading
+			}
         });
 		
 		me.parts.body.add( me.parts.head );
@@ -131,16 +129,14 @@
             geometry: main.get_asset_data("assets/models/Whale_Tail.js"),
 			physics: {
 				bodyType: 'mesh'
-			},
-			materials: new THREE.MeshLambertMaterial( { color: 0xFFFFFF, ambient: 0xFFFFFF, vertexColors: THREE.VertexColors } ),
-			shading: THREE.SmoothShading
+			}
         });
 		
 		me.parts.body.add( me.parts.tail );
 		
 		// water
 		
-		me.parts.waterRing = new _Water.Instance( { wavesTexturePath: "assets/textures/waves_512.png" } );
+		me.parts.waterRing = new _Water.Instance( { wavesTexture: shared.pathToTextures + "water_world_512.png" } );
 		
 		me.add( me.parts.waterRing );
 		
@@ -154,10 +150,10 @@
 		
 		me.parts.sunmoon = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Sun_Moon.js"),
+			materials: new THREE.MeshBasicMaterial( { shading: THREE.NoShading, vertexColors: THREE.VertexColors } ),
 			physics: {
 				bodyType: 'mesh'
-			},
-			materials: new THREE.MeshBasicMaterial( { color: 0xffffff, shading: THREE.NoShading, vertexColors: THREE.VertexColors } )
+			}
         });
 		
 		me.parts.sunmoon.position.set( 0, 4000, 0 );
@@ -178,10 +174,31 @@
 		me.parts.sky = new _Sky.Instance( {
 			world: me.parts.body,
 			numClouds: 20,
+			cloudBoundRadius: 5000,
 			cloudDistanceFromSurfaceMin: me.parts.sunmoon.position.length() - 2000,
 			cloudDistanceFromSurfaceMax: me.parts.sunmoon.position.length() + 500,
-			yThetaMin: Math.PI * 0.2,
-			yThetaMax: Math.PI * 0.8
+			zones: [
+				{
+					polar: {
+						min: Math.PI * 0.15,
+						max: Math.PI * 0.85
+					},
+					azimuth: {
+						min: Math.PI * 0.15,
+						max: Math.PI * 0.4
+					}
+				},
+				{
+					polar: {
+						min: Math.PI * 0.15,
+						max: Math.PI * 0.85
+					},
+					azimuth: {
+						min: Math.PI * 0.6,
+						max: Math.PI * 0.85
+					}
+				}
+			]
 		} );
 		
 		me.add( me.parts.sky );
@@ -203,8 +220,6 @@
 			physics: {
 				bodyType: 'mesh'
 			},
-			materials:  new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
-			shading: THREE.SmoothShading,
 			center: true
         });
 		
@@ -217,8 +232,6 @@
 			physics: {
 				bodyType: 'mesh'
 			},
-			materials:  new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
-			shading: THREE.SmoothShading,
 			center: true
         });
 		
@@ -231,8 +244,6 @@
 			physics: {
 				bodyType: 'mesh'
 			},
-			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
-			shading: THREE.SmoothShading,
 			center: true
         });
 		
@@ -242,8 +253,6 @@
 		
 		me.parts.bananaLeafDoor = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Banana_Leaf_Door.js"),
-			materials:  new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
-			shading: THREE.SmoothShading,
 			center: true,
 			doubleSided: true
         });
@@ -254,8 +263,6 @@
 		
 		me.parts.surfboard = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Surfboard.js"),
-			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
-			shading: THREE.SmoothShading,
 			center: true
         });
 		
@@ -275,8 +282,6 @@
 		
 		me.parts.volcanoLarge = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Volcano_Large.js"),
-			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
-			shading: THREE.SmoothShading,
 			physics: {
 				bodyType: 'mesh'
 			},
@@ -289,8 +294,6 @@
 		
 		me.parts.volcanoSmall = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Volcano_Small.js"),
-			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
-			shading: THREE.SmoothShading,
 			physics: {
 				bodyType: 'mesh'
 			},
@@ -303,8 +306,6 @@
 		
 		me.parts.volcanoRocks001 = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Volcano_Rocks_001.js"),
-			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
-			shading: THREE.SmoothShading,
 			physics: {
 				bodyType: 'mesh'
 			},
@@ -315,8 +316,6 @@
 		
 		me.parts.volcanoRocks002 = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Volcano_Rocks_002.js"),
-			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
-			shading: THREE.SmoothShading,
 			physics: {
 				bodyType: 'mesh'
 			},
@@ -327,8 +326,6 @@
 		
 		me.parts.volcanoRocks003 = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Volcano_Rocks_003.js"),
-			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
-			shading: THREE.SmoothShading,
 			physics: {
 				bodyType: 'mesh'
 			},
@@ -339,8 +336,6 @@
 		
 		me.parts.volcanoRocks004 = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Volcano_Rocks_004.js"),
-			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
-			shading: THREE.SmoothShading,
 			physics: {
 				bodyType: 'mesh'
 			},
@@ -351,8 +346,6 @@
 		
 		me.parts.volcanoRocks005 = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Volcano_Rocks_005.js"),
-			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
-			shading: THREE.SmoothShading,
 			physics: {
 				bodyType: 'mesh'
 			},
@@ -375,8 +368,6 @@
 		
 		me.parts.kukuiTrees = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Kukui_Trees.js"),
-			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
-			shading: THREE.SmoothShading
         });
 		
 		me.parts.trees.add( me.parts.kukuiTrees );
@@ -385,8 +376,6 @@
 		
 		me.parts.palmTrees = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Palm_Trees.js"),
-			materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors } ),
-			shading: THREE.SmoothShading
         });
 		
 		me.parts.trees.add( me.parts.palmTrees );
@@ -415,7 +404,6 @@
 			me.parts.fieldTutorial = new _Field.Instance( {
 				id: 'Tutorial',
 				geometry: main.get_asset_data("assets/models/Field_Tutorial.js"),
-				materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors, reflectivity: 0 } ),
 				physics: {
 					bodyType: 'mesh'
 				},
@@ -441,7 +429,6 @@
 			me.parts.fieldBasicsSplit = new _Field.Instance( {
 				id: 'Split',
 				geometry: main.get_asset_data("assets/models/Field_Basics_Split.js"),
-				materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors, reflectivity: 0 } ),
 				physics: {
 					bodyType: 'mesh'
 				},
@@ -472,7 +459,6 @@
 			me.parts.fieldBasicsAbilities = new _Field.Instance( {
 				id: 'Abilities',
 				geometry: main.get_asset_data("assets/models/Field_Basics_Abilities.js"),
-				materials: new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors, reflectivity: 0 } ),
 				physics: {
 					bodyType: 'mesh'
 				},
@@ -533,7 +519,9 @@
 	
 			me.parts.sunmoon.morphs.play( 'bounce', { duration: 3000, loop: true, loopDelay: 4000, loopChance: 0.1 } );
 			
-			me.parts.waterRing.morphs.play( 'waves', { duration: 5000, loop: true } );
+			me.parts.waterRing.morphs.play( 'waves', { duration: 4000, loop: true } );
+			
+			me.parts.sky.animate();
 			
 		}
 		
@@ -554,6 +542,8 @@
 			me.parts.sunmoon.morphs.stopAll();
 			
 			me.parts.waterRing.morphs.stopAll();
+			
+			me.parts.sky.animate( { stop: true } );
 			
 		}
     	

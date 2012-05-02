@@ -63,6 +63,7 @@
 		_CameraControls.Instance = CameraControls;
 		_CameraControls.Instance.prototype.rotate = rotate;
 		_CameraControls.Instance.prototype.rotate_update = rotate_update;
+		_CameraControls.Instance.prototype.rotate_revert = rotate_revert;
 		_CameraControls.Instance.prototype.zoom = zoom;
 		_CameraControls.Instance.prototype.update = update;
 		
@@ -256,6 +257,18 @@
 		
 	}
 	
+	function rotate_revert ( speed ) {
+		
+		var pRot = this.settingsRotation,
+			rotBaseRevertSpeed = speed || pRot.baseRevertSpeed,
+			rotOffsetBase = pRot.offsetBase,
+			rotOffset = pRot.offset;
+		
+		if ( rotOffset.x !== rotOffsetBase.x ) rotOffset.x += (rotOffsetBase.x - rotOffset.x) * rotBaseRevertSpeed;
+		if ( rotOffset.y !== rotOffsetBase.y ) rotOffset.y += (rotOffsetBase.y - rotOffset.y) * rotBaseRevertSpeed;
+		
+	}
+	
 	/*===================================================
 	
 	zoom
@@ -411,14 +424,13 @@
 		// move rotation offset back towards original
 		else if ( typeof pRot.mouse === 'undefined' && player.moving === true ) {
 			
-			if ( rotOffset.x !== rotOffsetBase.x ) rotOffset.x += (rotOffsetBase.x - rotOffset.x) * rotBaseRevertSpeed;
-			if ( rotOffset.y !== rotOffsetBase.y ) rotOffset.y += (rotOffsetBase.y - rotOffset.y) * rotBaseRevertSpeed;
+			this.rotate_revert();
 			
 		}
 		
 		// follow player
 		
-		_ObjectHelper.object_follow_object( this.camera, pc, rotBase, rotOffset, posOffset );
+		_ObjectHelper.object_follow_object( this.camera, pc, posOffset, rotBase, rotOffset );
 		
 		// decay deltas
 		

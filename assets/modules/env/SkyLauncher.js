@@ -206,8 +206,9 @@
             cloudPlane.position.x = Math.random() * Math.random() * (width * 2) - width;
             cloudPlane.position.y = Math.random() * Math.random() * (currPlaneHeightMax - currPlaneHeightMin) + currPlaneHeightMin;
             cloudPlane.position.z = i * (depth / numPlanes) - depth * 0.5;
-            cloudPlane.rotation.z = lightAngle + (Math.random() * (lightAngleVariation * 2) - lightAngleVariation);
-            cloudPlane.scale.x = cloudPlane.scale.y = Math.random() * Math.random() * currScale + (currScale * 0.3);
+			cloudPlane.rotation.x = Math.PI * 0.5;
+            cloudPlane.rotation.y = lightAngle + (Math.random() * (lightAngleVariation * 2) - lightAngleVariation);
+            cloudPlane.scale.x = cloudPlane.scale.y = cloudPlane.scale.z = Math.random() * Math.random() * currScale + (currScale * 0.3);
             
             THREE.GeometryUtils.merge( cloudGeometry, cloudPlane );
             
