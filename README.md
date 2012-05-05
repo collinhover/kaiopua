@@ -27,8 +27,10 @@ Robert Hower (Committee Member) - Professor & Dept. Chair, Art + Art History
 Tuan Ho (Committee Member) - Assistant Professor, Art + Art History   
 Vassilis Athitsos (Committee Member) - Assistant Professor, Computer Science and Engineering  
 
-####Modelling / Animation Technical Assistance
-
+####Extra Credits
+  
+Thanks to the following individuals for help starting up the game with some basic illustrations, models, and animation assistance:
+  
 Ian Wilson  
 Kevin Ly  
 Houston Hardaway  
