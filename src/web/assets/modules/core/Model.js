@@ -160,6 +160,8 @@
 	
 	function Model ( parameters ) {
 		
+		objectCount++;
+		
 		var i, l,
 			geometry,
 			materials,

@@ -83,7 +83,7 @@ TEMPLATE_SCENE_ASCII = """\
 {
     "formatVersion" : 3,
     "sourceFile"    : "%(fname)s",
-    "generatedBy"   : "Blender 2.62 Exporter",
+    "generatedBy"   : "Blender 2.63 Exporter",
     "objects"       : %(nobjects)s,
     "geometries"    : %(ngeometries)s,
     "materials"     : %(nmaterials)s,
@@ -192,7 +192,7 @@ TEMPLATE_CAMERA_ORTHO = """\
 
 TEMPLATE_LIGHT_DIRECTIONAL = """\
     %(light_id)s: {
-        "type"		 : "directional",
+        "type"    	 : "directional",
         "direction"	 : %(direction)s,
         "color" 	 : %(color)d,
         "intensity"	 : %(intensity).2f
@@ -222,7 +222,7 @@ TEMPLATE_FILE_ASCII = """\
     "metadata" :
     {
         "formatVersion" : 3,
-        "generatedBy"   : "Blender 2.62 Exporter",
+        "generatedBy"   : "Blender 2.63 Exporter",
         "vertices"      : %(nvertex)d,
         "faces"         : %(nface)d,
         "normals"       : %(nnormal)d,
@@ -276,6 +276,12 @@ def veckey3d(v):
 def veckey2d(v):
     return round(v[0], 6), round(v[1], 6)
 
+def get_faces(obj):
+    if hasattr(obj, "tessfaces"):
+        return obj.tessfaces
+    else:
+        return obj.faces
+
 def get_normal_indices(v, normals, mesh):
     n = []
     mv = mesh.vertices
@@ -290,7 +296,7 @@ def get_normal_indices(v, normals, mesh):
 
 def get_uv_indices(face_index, uvs, mesh):
     uv = []
-    uv_layer = mesh.uv_textures.active.data
+    uv_layer = mesh.tessface_uv_textures.active.data
     for i in uv_layer[face_index].uv:
         uv.append( uvs[veckey2d(i)] )
     return uv
@@ -481,7 +487,7 @@ def generate_faces(normals, uvs, colors, meshes, option_normals, option_colors, 
             if not active_col_layer:
                 mesh_extract_colors = False
 
-        for i, f in enumerate(mesh.faces):
+        for i, f in enumerate(get_faces(mesh)):
             face = generate_face(f, i, normals, uvs, colors, mesh, option_normals, mesh_colors, mesh_uvs, option_materials, vertex_offset, material_offset)
             chunks.append(face)
 
@@ -574,7 +580,7 @@ def generate_face(f, faceIndex, normals, uvs, colors, mesh, option_normals, opti
 # #####################################################
 
 def extract_vertex_normals(mesh, normals, count):
-    for f in mesh.faces:
+    for f in get_faces(mesh):
         for v in f.vertices:
 
             normal = mesh.vertices[v].normal
@@ -603,7 +609,7 @@ def generate_normals(normals, option_normals):
 def extract_vertex_colors(mesh, colors, count):
     color_layer = mesh.vertex_colors.active.data
 
-    for face_index, face in enumerate(mesh.faces):
+    for face_index, face in enumerate(get_faces(mesh)):
 
         face_colors = color_layer[face_index]
         face_colors = face_colors.color1, face_colors.color2, face_colors.color3, face_colors.color4
@@ -631,9 +637,9 @@ def generate_vertex_colors(colors, option_colors):
 # #####################################################
 
 def extract_uvs(mesh, uvs, count):
-    uv_layer = mesh.uv_textures.active.data
+    uv_layer = mesh.tessface_uv_textures.active.data
 
-    for face_index, face in enumerate(mesh.faces):
+    for face_index, face in enumerate(get_faces(mesh)):
 
         for uv_index, uv in enumerate(uv_layer[face_index].uv):
 
@@ -1754,20 +1760,20 @@ def generate_ascii_scene(data):
 def export_scene(scene, filepath, flipyz, option_colors, option_lights, option_cameras, option_embed_meshes, embeds, option_url_base_html, option_copy_textures):
 
     source_file = os.path.basename(bpy.data.filepath)
-    
+
     # objects are contained in scene and linked groups
     objects = []
-    
+
     # get scene objects
     sceneobjects = scene.objects
     for obj in sceneobjects:
       objects.append(obj)
-      
-    # get linked group objcts  
+
+    # get linked group objcts
     for group in bpy.data.groups:
        for object in group.objects:
           objects.append(object)
-          
+
     scene_text = ""
     data = {
     "scene"        : scene,
@@ -1828,15 +1834,15 @@ def save(operator, context, filepath = "",
 
     # objects are contained in scene and linked groups
     objects = []
-    
+
     # get scene objects
     for obj in sceneobjects:
       objects.append(obj)
-      
-    # get objects in linked groups  
+
+    # get objects in linked groups
     for group in bpy.data.groups:
        for object in group.objects:
-          objects.append(object) 
+          objects.append(object)
 
     if option_export_scene:
 

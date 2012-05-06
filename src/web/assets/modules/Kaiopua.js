@@ -363,19 +363,15 @@ var KAIOPUA = (function (main) {
 			index = -1,
 			object;
 		
-		if ( main.type( array ) === 'array' ) {
+		for ( i = 0, l = array.length; i < l; i++ ) {
 			
-			for ( i = 0, l = array.length; i < l; i++ ) {
+			object = array[ i ];
+			
+			if ( value === object[ property ] ) {
 				
-				object = array[ i ];
+				index = i;
 				
-				if ( value === object[ property ] ) {
-					
-					index = i;
-					
-					break;
-					
-				}
+				break;
 				
 			}
 			
