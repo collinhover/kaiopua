@@ -69,18 +69,10 @@
             "assets/modules/effects/FocusVignette.js"
 		],
         assetsLauncher = [
-            "assets/modules/sections/Launcher.js",
-			/*"assets/modules/env/WaterLauncher.js",
-            "assets/modules/env/SkyLauncher.js",
-            "assets/textures/cloud_256.png",
-            "assets/textures/light_ray.png",
-			"assets/textures/skybox_launcher_xz.jpg",
-			"assets/textures/skybox_launcher_posy.jpg",
-            "assets/textures/skybox_launcher_negy.jpg"*/
+            "assets/modules/sections/Launcher.js"
         ],
         assetsGame = [
 			/*"js/lib/ammo.js",*/
-			"assets/modules/core/Octant.js",
 			"assets/modules/core/Octree.js",
 			"assets/modules/core/Physics.js",
 			"assets/modules/core/Player.js",
@@ -461,6 +453,53 @@
 		
 		_ObjectHelper = main.get_asset_data( "assets/modules/utils/ObjectHelper.js" );
 		_Messenger = main.get_asset_data( "assets/modules/ui/Messenger.js" );
+		
+		//
+		//
+		//
+		// TESTING
+		// octree
+		
+		var _Octree = main.get_asset_data( "assets/modules/core/Octree.js" );
+		var _Model = main.get_asset_data( "assets/modules/core/Model.js" );
+		
+		var radius = 3000;
+		var octree = new _Octree.Instance( {
+			radius: radius
+		} );
+		
+		var objects = [];
+		for ( var i = 0; i < 64; i++ ) {
+			
+			var testObj = new _Model.Instance( {
+				geometry: new THREE.CubeGeometry( 50, 50, 50 ),
+				materials: new THREE.MeshNormalMaterial()// { color: 0x00FF00, wireframe: true, wireframeLinewidth: 10 } )
+			} );
+			
+			testObj.position.set( Math.random() * -radius, Math.random() * -radius, Math.random() * -radius );// Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius );
+			
+			objects.push( testObj );
+			octree.visual.add( testObj );
+			
+		}
+		
+		octree.add( objects );
+		
+		console.log( ' OCTREE: ', octree );
+		octree.to_string();
+		console.log( ' ... OCTREE total objects: ', octree.object_count_end() );
+		scene.add( octree.visual );
+		
+		// TEST
+		var controls = new THREE.FirstPersonControls( camera );
+		shared.signals.update.add( function ( timeDelta ) { controls.update( timeDelta ) } );
+		// TEST
+		
+		// TESTING
+		// octree
+		//
+		//
+		//
 		
 		// ui
 		

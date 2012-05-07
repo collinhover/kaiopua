@@ -154,7 +154,7 @@
 			this.rangeMin.set( parameters.rangeMin, parameters.rangeMin, parameters.rangeMin );
 			
 		}
-		console.log( this.rangeMax, this.rangeMin );
+		
 		if ( parameters.direction instanceof THREE.Vector3 ) {
 			
 			this.direction.copy( parameters.direction );

@@ -162,10 +162,6 @@ var KAIOPUA = (function (main) {
 		
 		window.onerror = on_error;
 		
-		// start updating
-		
-		
-		
 		// asset loader and setup
 		
 		_AssetLoader = main.get_asset_data( 'assets/modules/utils/AssetLoader.js' );

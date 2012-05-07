@@ -290,7 +290,7 @@
     }
     
     function update ( timeDelta ) {
-        
+        /*
         camera.position.z += (  viewShift.x - camera.position.z ) * viewShift.speedTransX;
         camera.position.y += ( -viewShift.y - camera.position.y ) * viewShift.speedTransY;
         
@@ -302,7 +302,7 @@
 		camRotationOffsetQ.setFromEuler( camRotationOffset ).normalize();
         
 		camera.quaternion.set( 0, 0, 0, 1 ).multiplySelf( camRotationOffsetQ ).multiplySelf( camRotationBaseQ );
-        
+        */
     }
 	
 	function resize () {
