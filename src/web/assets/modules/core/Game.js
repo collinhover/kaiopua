@@ -463,31 +463,70 @@
 		var _Octree = main.get_asset_data( "assets/modules/core/Octree.js" );
 		var _Model = main.get_asset_data( "assets/modules/core/Model.js" );
 		
-		var radius = 3000;
-		var octree = new _Octree.Instance( {
-			radius: radius
-		} );
+		var radius = 3000,
+			octree = new _Octree.Instance( {
+				radius: radius
+			} ),
+			objects = [],
+			countMax = 8,
+			add = true,
+			testObj;
 		
-		var objects = [];
-		for ( var i = 0; i < 64; i++ ) {
+		var intervalID = setInterval( function () {
+		//shared.signals.update.add( function () {
 			
-			var testObj = new _Model.Instance( {
-				geometry: new THREE.CubeGeometry( 50, 50, 50 ),
-				materials: new THREE.MeshNormalMaterial()// { color: 0x00FF00, wireframe: true, wireframeLinewidth: 10 } )
-			} );
+			if ( add === true && objects.length === countMax ) {
+				
+				add = false
+				
+			}
+			else if ( add === false && objects.length === 0 ) {
+				
+				add = true;
+				
+				//clearInterval( intervalID );
+				
+			}
 			
-			testObj.position.set( Math.random() * -radius, Math.random() * -radius, Math.random() * -radius );// Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius );
+			if ( add === true ) {
+				
+				testObj = new _Model.Instance( {
+					geometry: new THREE.CubeGeometry( 50, 50, 50 ),
+					materials: new THREE.MeshNormalMaterial()// { color: 0x00FF00, wireframe: true, wireframeLinewidth: 10 } )
+				} );
+				
+				testObj.position.set( Math.random() * -radius, Math.random() * -radius, Math.random() * -radius );// Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius );
+				
+				objects.push( testObj );
+				
+				octree.add( testObj );
+				octree.visual.add( testObj );
+				
+			}
+			else {
+				
+				testObj = objects.shift();
+				
+				octree.visual.remove( testObj );
+				octree.remove( testObj );
+				
+			}
 			
-			objects.push( testObj );
-			octree.visual.add( testObj );
+			testObj = undefined;
 			
-		}
+			/*
+			console.log( ' ============================================================================================================');
+			console.log( ' OCTREE: ', octree );
+			octree.to_string();
+			console.log( ' ... OCTREE total objects: ', octree.object_count_end() );
+			console.log( ' ============================================================================================================');
+			console.log( ' ');
+			*/
+		//} );
+		}, 500 );
 		
-		octree.add( objects );
 		
-		console.log( ' OCTREE: ', octree );
-		octree.to_string();
-		console.log( ' ... OCTREE total objects: ', octree.object_count_end() );
+		
 		scene.add( octree.visual );
 		
 		// TEST

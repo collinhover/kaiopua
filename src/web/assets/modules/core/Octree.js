@@ -16,7 +16,7 @@
 		octreeCount = 0,
 		depthMax = -1,
 		objectsMax = 1,
-		objectsMin = 0;
+		objectsMin = 1;
 	
 	/*===================================================
     
@@ -51,6 +51,7 @@
 		_Octree.Instance.prototype.remove = remove;
 		_Octree.Instance.prototype.search = search;
 		_Octree.Instance.prototype.object_count_end = object_count_end;
+		_Octree.Instance.prototype.object_count_limited = object_count_limited;
 		_Octree.Instance.prototype.object_count_start = object_count_start;
 		
 		_Octree.Instance.prototype.to_string = function ( space ) {
@@ -61,7 +62,7 @@
 			
 			space = typeof space === 'string' ? space : spaceAddition;
 			
-			console.log( ( this.parent ? space + ' octree NODE > ' : ' octree ROOT > ' ), this, ' // position: ', this.position.x, this.position.y, this.position.z, ' // radius: ', this.radius, ' // depth: ', this.depth );
+			console.log( ( this.parent ? space + ' octree NODE > ' : ' octree ROOT > ' ), this, ' // id: ', this.id, ' // octantIndex: ', this.octantIndex, ' // position: ', this.position.x, this.position.y, this.position.z, ' // radius: ', this.radius, ' // depth: ', this.depth );
 			console.log( ( this.parent ? space + ' ' : ' ' ), '+ objects ( ', this.objects.length, ' ) ', this.objects );
 			console.log( ( this.parent ? space + ' ' : ' ' ), '+ children ( ', this.nodesIndices.length, ' )', this.nodesIndices, this.nodesByIndex );
 			
@@ -138,6 +139,7 @@
 		
 		this.position = parameters.position instanceof THREE.Vector3 ? parameters.position : new THREE.Vector3();
 		this.radius = main.is_number( parameters.radius ) ? parameters.radius : 0;
+		this.octantIndex = parameters.octantIndex;
 		
 		// TEST
 		this.visual = new THREE.Mesh( new THREE.CubeGeometry( this.radius * 2, this.radius * 2, this.radius * 2 ), new THREE.MeshLambertMaterial( { color: 0xFF0000, wireframe: true, wireframeLinewidth: 10 } ) );
@@ -195,8 +197,7 @@
 	function add ( elements ) {
 		
 		var i, l,
-			element,
-			index;
+			element;
 		
 		// handle elements
 		
@@ -208,17 +209,11 @@
 			
 			element = elements[ i ];
 			
-			// if is octree, assume next is index
+			// if is octree
 			
 			if ( element instanceof _Octree.Instance ) {
-				
-				index = elements[ i + 1 ] || 0;
-				
-				if ( main.is_number( index ) ) {
 					
-					add_octree.call( this, element, index );
-				
-				}
+				add_octree.call( this, element );
 				
 			}
 			// all other considered objects
@@ -271,15 +266,17 @@
     
     =====================================================*/
 	
-	function add_octree ( octree, index ) {
+	function add_octree ( octree ) {
 		
-		if ( this.nodesIndices.indexOf( index ) === -1 ) {
+		var octantIndex = octree.octantIndex || octant_index.call( this, octree );
+		
+		if ( this.nodesIndices.indexOf( octantIndex ) === -1 ) {
 			
-			this.nodesIndices.push( index );
+			this.nodesIndices.push( octantIndex );
 			
 		}
 		
-		this.nodesByIndex[ index ] = octree;
+		this.nodesByIndex[ octantIndex ] = octree;
 		
 		if ( octree.parent !== this ) {
 			
@@ -289,11 +286,19 @@
 		
 	}
 	
-	function remove_octree ( identifier, octree ) {
+	function remove_octree ( identifier ) {
 		
 		var index = -1,
+			octree,
 			nodeIndex;
 		
+		// if identifier is octree
+		if ( identifier instanceof _Octree.Instance && this.nodesByIndex[ identifier.octantIndex ] === identifier ) {
+			
+			octree = identifier;
+			index = octree.octantIndex;
+			
+		}
 		// if identifier is number
 		if ( main.is_number( identifier ) ) {
 			
@@ -329,13 +334,19 @@
 		
 	}
 	
-	function remove_octree_by_index ( index, octree ) {
+	function remove_octree_by_index ( octantIndex, octree ) {
 		
-		octree = octree || this.nodesByIndex[ index ];
+		var index = this.nodesIndices.indexOf( octantIndex );
 		
-		this.nodesIndices.slice( index, 1 );
+		if ( index !== -1 ) {
+			
+			this.nodesIndices.splice( index, 1 );
+			
+		}
 		
-		delete this.nodesByIndex[ index ];
+		octree = octree || this.nodesByIndex[ octantIndex ];
+		
+		delete this.nodesByIndex[ octantIndex ];
 		
 		if ( octree.parent === this ) {
 			
@@ -356,51 +367,36 @@
 		var octantIndex,
 			node;
 		
-		// if no nodes, add to self
+		// get object octant index
 		
-		if ( this.nodesIndices.length === 0 ) {
+		octantIndex = octant_index.call( this, object );
+		
+		// if object fully contained by an octant, add to subtree
+		if ( octantIndex > -1 && this.nodesIndices.length > 0 ) {
+			
+			node = branch.call( this, octantIndex );
+			
+			add_object.call( node, object );
+			
+		}
+		// if object lies outside bounds, add to parent node
+		else if ( octantIndex === -1 && this.parent instanceof _Octree.Instance ) {
+			
+			add_object.call( this.parent, object );
+			
+		}
+		// else add to self
+		else {
 			
 			if ( this.objects.indexOf( object ) === -1 ) {
-			
+				
 				this.objects.push( object );
 				
 			}
 			
-			// is object count at max
+			// check if need to grow, split, or both
 			
-			if ( this.objects.length > this.objectsMax && this.objectsMax > 0 ) {
-				
-				split.call( this );
-				
-			}
-			
-		}
-		// else try to add to nodes
-		else {
-			
-			// get object octant index
-			
-			octantIndex = octant.call( this, object );
-			
-			// if object contained by octant, add to node at octant
-			
-			if ( octantIndex !== -1 ) {
-				
-				node = branch.call( this, octantIndex );
-				
-				add_object.call( node, object );
-				
-			}
-			// else add to self
-			else {
-				
-				if ( this.objects.indexOf( object ) === -1 ) {
-				
-					this.objects.push( object );
-					
-				}
-				
-			}
+			morph_check.call( this );
 			
 		}
 		
@@ -408,34 +404,52 @@
 	
 	function remove_object ( object ) {
 		
+		var nodeRemovedFrom;
+		
+		// cascade through tree to find and remove object
+		
+		nodeRemovedFrom = remove_object_end.call( this, object );
+		
+		// if object removed, try to merge the node it was removed from
+		
+		if ( nodeRemovedFrom instanceof _Octree.Instance ) {
+			
+			merge_check.call( nodeRemovedFrom );
+			
+		}
+		
+	}
+	
+	function remove_object_end ( object ) {
+		
 		var i, l,
 			index,
 			node,
-			removed = false;
+			nodeRemovedFrom;
 		
 		// if is part of this objects
 		
 		index = this.objects.indexOf( object );
 		
 		if ( index !== -1 ) {
-		
-			this.objects.slice( index, 1 );
 			
-			removed = true;
+			this.objects.splice( index, 1 );
 			
-			merge_check.call( this );
+			nodeRemovedFrom = this;
 			
 		}
-		// if not removed, search nodes
+		// if not found, search nodes
 		else {
 			
 			for ( i = 0, l = this.nodesIndices.length; i < l; i++ ) {
 				
 				node = this.nodesByIndex[ this.nodesIndices[ i ] ];
 				
-				if ( node.remove_object( object ) ) {
-					
-					removed = true;
+				nodeRemovedFrom = remove_object_end.call( node, object );
+				
+				// try removing object from node
+				
+				if ( nodeRemovedFrom instanceof _Octree.Instance ) {
 					
 					break;
 					
@@ -445,7 +459,86 @@
 			
 		}
 		
-		return removed;
+		return nodeRemovedFrom;
+		
+	}
+	
+	/*===================================================
+    
+    morph
+    
+    =====================================================*/
+	
+	function morph_check () {
+		
+		// if object count above max
+		
+		if ( this.objects.length > this.objectsMax && this.objectsMax > 0 ) {
+			
+			morph.call( this );
+			
+		}
+		
+	}
+	
+	function morph () {
+		
+		var objectsGrow = [],
+			objectsSplit = [],
+			objectsRemaining = [];
+		
+		// for each object
+		
+		for ( i = 0, l = this.objects.length; i < l; i++ ) {
+			
+			object = this.objects[ i ];
+			
+			// get object octant index
+			
+			octantIndex = octant_index.call( this, object );
+			
+			// if lies within octant
+			if ( octantIndex > -1 ) {
+				
+				objectsSplit.push( object );
+			
+			}
+			// if lies outside radius
+			else if ( octantIndex === -1 ) {
+				
+				objectsGrow.push( object );
+				
+			}
+			// else if lies across bounds between octants
+			else {
+				
+				objectsRemaining.push( object );
+				
+			}
+			
+		}
+		
+		// if has objects to split
+		
+		if ( objectsSplit.length > 0) {
+			
+			objectsRemaining = objectsRemaining.concat( split.call( this, objectsSplit ) );
+			
+		}
+		
+		//
+		//
+		// TODO: if has objects to grow
+		
+		if ( objectsGrow.length > 0) {
+			
+			objectsRemaining = objectsRemaining.concat( objectsGrow );
+			
+		}
+		
+		// store remaining
+		
+		this.objects = objectsRemaining;
 		
 	}
 	
@@ -455,55 +548,70 @@
     
     =====================================================*/
 	
-	function split () {
+	function split ( objects ) {
 		
 		var i, l,
 			octantIndex,
 			object,
 			node,
-			remainder = [];
+			objectsRemaining;
 		
 		// if not at max depth
 		
 		if ( this.depthMax < 0 || this.depth < this.depthMax ) {
 			
+			objects = objects || this.objects;
+			
+			objectsRemaining = [];
+			
 			// for each object
 			
-			for ( i = 0, l = this.objects.length; i < l; i++ ) {
+			for ( i = 0, l = objects.length; i < l; i++ ) {
 				
-				object = this.objects[ i ];
+				object = objects[ i ];
 				
 				// get object octant index
 				
-				octantIndex = octant.call( this, object );
+				octantIndex = octant_index.call( this, object );
 				
 				// if object contained by octant, branch this tree
 				
-				if ( octantIndex !== -1 ) {
+				if ( octantIndex > -1 ) {
 					
 					node = branch.call( this, octantIndex );
 					
 					add_object.call( node, object );
 					
 				}
-				// else add to remainder
+				// else add to remaining
 				else {
 					
-					remainder.push( object );
+					objectsRemaining.push( object );
 					
 				}
 				
 			}
 			
-			// set remainder as new objects
+			// if split all objects, set remaining as new objects
 			
-			this.objects = remainder;
+			if ( objects === this.objects ) {
+				
+				this.objects = objectsRemaining;
+				
+			}
+			
+		}
+		else {
+			
+			objectsRemaining = this.objects;
 			
 		}
 		
+		return objectsRemaining;
+		
 	}
 	
-	function branch ( index ) {
+	function branch ( octantIndex ) {
 		
 		var node,
 			offset,
@@ -512,9 +620,9 @@
 		
 		// node exists
 		
-		if ( this.nodesByIndex[ index ] instanceof _Octree.Instance ) {
+		if ( this.nodesByIndex[ octantIndex ] instanceof _Octree.Instance ) {
 			
-			node = this.nodesByIndex[ index ];
+			node = this.nodesByIndex[ octantIndex ];
 			
 		}
 		// create new
@@ -523,7 +631,7 @@
 			// properties
 			
 			radius = this.radius * 0.5;
-			offset = this.utilVec31Branch.set( index & 1 ? radius : -radius, index & 2 ? radius : -radius, index & 4 ? radius : -radius );
+			offset = this.utilVec31Branch.set( octantIndex & 1 ? radius : -radius, octantIndex & 2 ? radius : -radius, octantIndex & 4 ? radius : -radius );
 			position = new THREE.Vector3().add( this.position, offset );
 			
 			// node
@@ -532,6 +640,7 @@
 				parent: this,
 				position: position,
 				radius: radius,
+				octantIndex: octantIndex,
 				depthMax: this.depthMax,
 				objectsMax: this.objectsMax,
 				objectsMin: this.objectsMin
@@ -539,7 +648,7 @@
 			
 			// store
 			
-			add_octree.call( this, node, index );
+			add_octree.call( this, node, octantIndex );
 		
 		}
 		
@@ -555,21 +664,23 @@
 	
 	function merge_check () {
 		
-		var nodeEnd = this;
+		var nodeParent = this,
+			nodeMerge;
 		
-		// check node + entire subtree's object count
+		// traverse up tree as long as node + entire subtree's object count is under minimum
 		
-		while ( this.parent instanceof _Octree.Instance && nodeEnd.object_count_end() < this.objectsMin ) {
+		while ( nodeParent.parent instanceof _Octree.Instance && nodeParent.object_count_end() < nodeParent.objectsMin ) {
 			
-			nodeEnd = this.parent;
+			nodeMerge = nodeParent;
+			nodeParent = nodeParent.parent;
 			
 		}
 		
-		// if end node is not this, merge up to end node
+		// if parent node is not this, merge entire subtree into merge node
 		
-		if ( nodeEnd !== this ) {
+		if ( nodeParent !== this ) {
 			
-			merge.call( nodeEnd );
+			merge.call( nodeMerge );
 			
 		}
 		
@@ -577,19 +688,9 @@
 	
 	function merge () {
 		
-		var i, l,
-			node,
-			initiator = false;
+		var objects = [];
 		
-		// handle objects
-		
-		if ( typeof objects === 'undefined' ) {
-			
-			objects = [];
-			
-		}
-		
-		// gather own + entire subtree's objects
+		// gather self + entire subtree's objects
 		
 		objects = objects_end.call( this );
 		
@@ -597,9 +698,43 @@
 		
 		this.reset( true );
 		
-		// restore objects
+		// if gathered at least 1 object, set as own 
 		
-		this.objects = objects;
+		if ( objects.length > 0 ) {
+			
+			this.objects = objects;
+			
+		}
+		// else remove from parent
+		else if ( this.parent instanceof _Octree.Instance ) {
+			
+			remove_octree_by_index.call( this.parent, this.octantIndex, this );
+			
+		}
+		
+	}
+	
+	/*===================================================
+    
+    grow
+    
+    =====================================================*/
+	
+	function grow () {
+		
+		
+		
+	}
+	
+	/*===================================================
+    
+    shrink
+    
+    =====================================================*/
+	
+	function shrink () {
+		
+		
 		
 	}
 	
@@ -624,7 +759,7 @@
 				
 				node = this.nodesByIndex[ this.nodesIndices[ i ] ];
 				
-				objects = node.objects_end( depth--, objects );
+				objects = objects_end.call( node, depth - 1, objects );
 				
 			}
 			
@@ -634,18 +769,31 @@
 		
 	}
 	
-	function object_count_end ( depth ) {
+	function object_count_end () {
 		
 		var i, l,
 			count = this.objects.length;
 		
-		depth = main.is_number( depth ) ? depth : -1;
+		for ( i = 0, l = this.nodesIndices.length; i < l; i++ ) {
+			
+			count += this.nodesByIndex[ this.nodesIndices[ i ] ].object_count_end();
+			
+		}
 		
-		if ( depth !== 0 ) {
+		return count;
+		
+	}
+	
+	function object_count_limited ( depth, excludeSelf ) {
+		
+		var i, l,
+			count = excludeSelf === true ? 0 : this.objects.length;
+		
+		if ( depth > 0 ) {
 			
 			for ( i = 0, l = this.nodesIndices.length; i < l; i++ ) {
 				
-				count += this.nodesByIndex[ this.nodesIndices[ i ] ].object_count_end( depth-- );
+				count += this.nodesByIndex[ this.nodesIndices[ i ] ].object_count_limited( depth - 1 );
 				
 			}
 			
@@ -655,18 +803,15 @@
 		
 	}
 	
-	function object_count_start ( depth ) {
+	function object_count_start () {
 		
 		var count = this.objects.length,
 			parent = this.parent;
 		
-		depth = main.is_number( depth ) ? depth : -1;
-		
-		while( parent instanceof _Octree.Instance && depth !== 0 ) {
+		while( parent instanceof _Octree.Instance ) {
 			
 			count += parent.objects.length;
-			
-			depth--;
+			parent = parent.parent;
 			
 		}
 		
@@ -680,14 +825,14 @@
     
     =====================================================*/
 	
-	function octant ( object ) {
+	function octant_index ( object ) {
 		
 		var i, l,
 			position,
 			scale,
 			radius,
-			delta,
-			distance,
+			deltaX, deltaY, deltaZ,
+			distX, distY, distZ,
 			index = 0;
 		
 		// handle object type
@@ -699,20 +844,39 @@
 			radius = object.geometry.boundingSphere.radius * Math.max( scale.x, scale.y, scale.z );
 			
 		}
+		else if ( object instanceof _Octree.Instance ) {
+			
+			position = object.position;
+			radius = 0;//object.radius;
+			
+		}
+		
+		// find delta and distance
+		
+		deltaX = position.x - this.position.x;
+		deltaY = position.y - this.position.y;
+		deltaZ = position.z - this.position.z;
+		
+		distX = Math.abs( deltaX );
+		distY = Math.abs( deltaY );
+		distZ = Math.abs( deltaZ );
 		
 		// x
 		
-		delta = position.x - this.position.x;
-		distance = Math.abs( delta );
-		
-		// lies across
-		if ( distance <= radius ) {
+		// outside
+		if ( distX + radius > this.radius ) {
 			
 			return -1;
 			
 		}
+		// across
+		else if ( distZ < radius ) {
+			
+			return -2;
+			
+		}
 		// in octant
-		else if ( delta > 0 ) {
+		else if ( deltaX > 0 ) {
 			
 			index = index | 1;
 			
@@ -720,17 +884,20 @@
 		
 		// y
 		
-		delta = position.y - this.position.y;
-		distance = Math.abs( delta );
-		
-		// lies across
-		if ( distance <= radius ) {
+		// outside
+		if ( distY + radius > this.radius ) {
 			
 			return -1;
 			
 		}
+		// across
+		else if ( distX < radius ) {
+			
+			return -2;
+			
+		}
 		// in octant
-		else if ( delta > 0 ) {
+		else if ( deltaY > 0 ) {
 			
 			index = index | 2;
 			
@@ -738,17 +905,20 @@
 		
 		// z
 		
-		delta = position.z - this.position.z;
-		distance = Math.abs( delta );
-		
-		// lies across
-		if ( distance <= radius ) {
+		// outside
+		if ( distZ + radius > this.radius ) {
 			
 			return -1;
 			
 		}
+		// across
+		else if ( distY < radius ) {
+			
+			return -2;
+			
+		}
 		// in octant
-		else if ( delta > 0 ) {
+		else if ( deltaZ > 0 ) {
 			
 			index = index | 4;
 			
