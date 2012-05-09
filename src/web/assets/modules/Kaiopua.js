@@ -205,7 +205,7 @@ var KAIOPUA = (function (main) {
 	};
 	
 	main.is_number = function ( n ) {
-		return isNaN( n ) === false && isFinite( n );
+		return !isNaN( n ) && isFinite( n );
 	};
 	
 	main.is_image = function ( target ) {

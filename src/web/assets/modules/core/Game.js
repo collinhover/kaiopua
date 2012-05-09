@@ -484,7 +484,7 @@
 				
 				add = true;
 				
-				//clearInterval( intervalID );
+				clearInterval( intervalID );
 				
 			}
 			
@@ -495,7 +495,7 @@
 					materials: new THREE.MeshNormalMaterial()// { color: 0x00FF00, wireframe: true, wireframeLinewidth: 10 } )
 				} );
 				
-				testObj.position.set( Math.random() * -radius, Math.random() * -radius, Math.random() * -radius );// Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius );
+				testObj.position.set( -radius + Math.random() * -radius * 0.1, -radius + Math.random() * -radius * 0.1, -radius + Math.random() * -radius * 0.1 );// Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius );
 				
 				objects.push( testObj );
 				
