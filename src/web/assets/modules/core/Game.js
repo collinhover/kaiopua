@@ -468,9 +468,11 @@
 				radius: radius
 			} ),
 			objects = [],
-			countMax = 8,
+			countMax = 4,
 			add = true,
 			testObj;
+		
+		scene.add( octree.visual );
 		
 		var intervalID = setInterval( function () {
 		//shared.signals.update.add( function () {
@@ -479,12 +481,16 @@
 				
 				add = false
 				
+				//clearInterval( intervalID );
+				//return;
+				
 			}
 			else if ( add === false && objects.length === 0 ) {
 				
 				add = true;
 				
-				clearInterval( intervalID );
+				//clearInterval( intervalID );
+				//return;
 				
 			}
 			
@@ -495,44 +501,42 @@
 					materials: new THREE.MeshNormalMaterial()// { color: 0x00FF00, wireframe: true, wireframeLinewidth: 10 } )
 				} );
 				
-				testObj.position.set( -radius + Math.random() * -radius * 0.1, -radius + Math.random() * -radius * 0.1, -radius + Math.random() * -radius * 0.1 );// Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius );
+				//testObj.position.set( Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius );
+				//testObj.position.set( Math.random() * -radius * 0.5, Math.random() * -radius * 0.5, Math.random() * -radius * 0.5 );
+				testObj.position.set( -radius + Math.random() * -radius * 0.25, -radius + Math.random() * -radius * 0.25, -radius + Math.random() * -radius * 0.25 );
 				
 				objects.push( testObj );
 				
-				octree.add( testObj );
-				octree.visual.add( testObj );
+				octree = octree.add( testObj );
+				scene.add( testObj );
 				
 			}
 			else {
 				
 				testObj = objects.shift();
 				
-				octree.visual.remove( testObj );
-				octree.remove( testObj );
+				scene.remove( testObj );
+				octree = octree.remove( testObj );
 				
 			}
 			
 			testObj = undefined;
 			
-			/*
+			scene.add( octree.root.visual );
+			
+			
 			console.log( ' ============================================================================================================');
 			console.log( ' OCTREE: ', octree );
-			octree.to_string();
 			console.log( ' ... OCTREE total objects: ', octree.object_count_end() );
+			octree.to_string();
 			console.log( ' ============================================================================================================');
 			console.log( ' ');
-			*/
+			/**/
 		//} );
-		}, 500 );
+		}, 2000 );
 		
-		
-		
-		scene.add( octree.visual );
-		
-		// TEST
 		var controls = new THREE.FirstPersonControls( camera );
 		shared.signals.update.add( function ( timeDelta ) { controls.update( timeDelta ) } );
-		// TEST
 		
 		// TESTING
 		// octree
