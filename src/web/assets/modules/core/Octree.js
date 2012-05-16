@@ -15,7 +15,7 @@
 		_Octree = {},
 		octreeCount = 0,
 		depthMax = -1,
-		objectsThreshold = 1,
+		objectsThreshold = 8,
 		indexInsideCross = -1,
 		indexOutsideOffset = 2,
 		posX = 0, negX = 1,
@@ -194,6 +194,7 @@
 		
 		this.utilVec31Branch = new THREE.Vector3();
 		this.utilVec31Expand = new THREE.Vector3();
+		this.utilVec31Search = new THREE.Vector3();
 		
 		// handle parameters
 		
@@ -273,6 +274,8 @@
 		
 		if ( this.root === this ) {
 			
+			root = this;
+			
 			// handle elements
 			
 			elements = main.ensure_array( elements );
@@ -287,13 +290,13 @@
 				
 				if ( element instanceof _Octree.Instance ) {
 						
-					add_octree.call( this, element );
+					add_octree.call( root, element );
 					
 				}
 				// all other considered objects
 				else {
 					
-					root = add_object.call( this, element );
+					root = add_object.call( root, element ) || root;
 					
 				}
 				
@@ -301,7 +304,7 @@
 			
 			// return root in case of expand/contract
 			
-			return root || this.root;
+			return root;
 			
 		}
 		// else pass elements to root
@@ -322,6 +325,8 @@
 		// if is root
 		
 		if ( this.root === this ) {
+			
+			root = this;
 		
 			// handle elements
 			
@@ -337,13 +342,13 @@
 				
 				if ( element instanceof _Octree.Instance ) {
 					
-					remove_octree.call( this, element );
+					remove_octree.call( root, element );
 					
 				}
 				// all other considered objects
 				else {
 					
-					root = remove_object.call( this, element );
+					root = remove_object.call( root, element ) || root;
 					
 				}
 				
@@ -351,7 +356,7 @@
 			
 			// return root in case of expand/contract
 			
-			return root || this.root;
+			return root;
 			
 		}
 		// else pass elements to root
@@ -631,8 +636,6 @@
 			objectsRemaining = objectsRemaining.concat( expand.call( this, objectsExpand, objectsExpandOctants ) );
 			
 		}
-		
-		console.log( this.id, 'MORPH! Objects # ', this.objects.length, ' + Split #', objectsSplit.length, ' + Expand # ', objectsExpand.length, ' + remaining # ', objectsRemaining.length );
 		
 		// store remaining
 		
@@ -1109,7 +1112,7 @@
 				// subtract heaviest count from outside count
 				
 				outsideHeaviestObjectsCount -= nodeHeaviestObjectsCount;
-				console.log( this, this.id, ' CONTRACT? nodeHeaviestObjectsCount = ', nodeHeaviestObjectsCount, ' // outsideHeaviestObjectsCount = ', outsideHeaviestObjectsCount );
+				//console.log( this, this.id, ' CONTRACT? nodeHeaviestObjectsCount = ', nodeHeaviestObjectsCount, ' // outsideHeaviestObjectsCount = ', outsideHeaviestObjectsCount );
 				// if should contract
 				
 				if ( outsideHeaviestObjectsCount <= this.objectsThreshold && nodeHeaviest instanceof _Octree.Instance ) {
@@ -1119,7 +1122,7 @@
 				}
 				
 			}
-			console.log( this, this.id, ' contract checked and not needed' );
+			//console.log( this, this.id, ' contract checked and not needed' );
 			return this;
 			
 		}
@@ -1133,7 +1136,7 @@
 	}
 	
 	function contract ( nodeRoot ) {
-		console.log( this, this.id, ' CONTRACT into ', nodeRoot.id, nodeRoot );
+		//console.log( this, this.id, ' CONTRACT into ', nodeRoot.id, nodeRoot );
 		var i, l,
 			node;
 		
@@ -1175,6 +1178,122 @@
 	
 	/*===================================================
     
+    octant
+    
+    =====================================================*/
+	
+	function octant_index ( object ) {
+		
+		var i, l,
+			position,
+			scale,
+			radius,
+			deltaX, deltaY, deltaZ,
+			distX, distY, distZ, 
+			distance,
+			indexOutside = 0;
+		
+		// handle object type
+		
+		if ( object instanceof THREE.Object3D ) {
+			
+			position = object.position;
+			scale = object.scale;
+			radius = object.geometry.boundingSphere.radius * Math.max( scale.x, scale.y, scale.z );
+			
+		}
+		else if ( object instanceof _Octree.Instance ) {
+			
+			position = object.position;
+			radius = 0;//object.radius;
+			
+		}
+		
+		// find delta and distance
+		
+		deltaX = position.x - this.position.x;
+		deltaY = position.y - this.position.y;
+		deltaZ = position.z - this.position.z;
+		
+		distX = Math.abs( deltaX );
+		distY = Math.abs( deltaY );
+		distZ = Math.abs( deltaZ );
+		distance = Math.max( distX, distY, distZ );
+		
+		// if outside, use bitwise flags to indicate on which sides object is outside of
+		
+		if ( distance + radius > this.radius ) {
+			
+			// x
+			
+			if ( distX + radius > this.radius ) {
+				
+				indexOutside = indexOutside ^ ( deltaX > 0 ? FLAG_POS_X : FLAG_NEG_X );
+				
+			}
+			
+			// y
+			
+			if ( distY + radius > this.radius ) {
+				
+				indexOutside = indexOutside ^ ( deltaY > 0 ? FLAG_POS_Y : FLAG_NEG_Y );
+				
+			}
+			
+			// z
+			
+			if ( distZ + radius > this.radius ) {
+				
+				indexOutside = indexOutside ^ ( deltaZ > 0 ? FLAG_POS_Z : FLAG_NEG_Z );
+				
+			}
+			
+			return -indexOutside - indexOutsideOffset;
+			
+		}
+		
+		// if across
+		
+		if ( Math.min( distX, distY, distZ ) < radius ) {
+			
+			return indexInsideCross;
+			
+		}
+		
+		// return octant index from delta xyz
+		
+		return octant_index_from_xyz( deltaX, deltaY, deltaZ );
+		
+	}
+	
+	function octant_index_from_xyz ( x, y, z ) {
+		
+		var indexOctant = 0;
+		
+		if ( x > 0 ) {
+			
+			indexOctant = indexOctant | 1;
+			
+		}
+		
+		if ( y > 0 ) {
+			
+			indexOctant = indexOctant | 2;
+			
+		}
+		
+		if ( z > 0 ) {
+			
+			indexOctant = indexOctant | 4;
+			
+		}
+		
+		return indexOctant;
+		
+	}
+	
+	/*===================================================
+    
     traversal
     
     =====================================================*/
@@ -1207,12 +1326,18 @@
 	
 	function octree_count_end () {
 		
+		return octree_count_cascade.call( this.root ) + 1;
+		
+	}
+	
+	function octree_count_cascade () {
+		
 		var i, l,
 			count = this.nodesIndices.length;
 		
 		for ( i = 0, l = this.nodesIndices.length; i < l; i++ ) {
 			
-			count += this.nodesByIndex[ this.nodesIndices[ i ] ].octree_count_end();
+			count += octree_count_cascade.call( this.nodesByIndex[ this.nodesIndices[ i ] ] );
 			
 		}
 		
@@ -1297,128 +1422,47 @@
 	
 	/*===================================================
     
-    octant
-    
-    =====================================================*/
-	
-	function octant_index ( object ) {
-		
-		var i, l,
-			position,
-			scale,
-			radius,
-			deltaX, deltaY, deltaZ,
-			distX, distY, distZ, distMax,
-			indexOutside = 0;
-		
-		// handle object type
-		
-		if ( object instanceof THREE.Object3D ) {
-			
-			position = object.position;
-			scale = object.scale;
-			radius = object.geometry.boundingSphere.radius * Math.max( scale.x, scale.y, scale.z );
-			
-		}
-		else if ( object instanceof _Octree.Instance ) {
-			
-			position = object.position;
-			radius = 0;//object.radius;
-			
-		}
-		
-		// find delta and distance
-		
-		deltaX = position.x - this.position.x;
-		deltaY = position.y - this.position.y;
-		deltaZ = position.z - this.position.z;
-		
-		distX = Math.abs( deltaX );
-		distY = Math.abs( deltaY );
-		distZ = Math.abs( deltaZ );
-		distMax = Math.max( distX, distY, distZ );
-		
-		// if outside, use bitwise flags to indicate on which sides object is outside of
-		
-		if ( distMax + radius > this.radius ) {
-			
-			// x
-			
-			if ( distX + radius > this.radius ) {
-				
-				indexOutside = indexOutside ^ ( deltaX > 0 ? FLAG_POS_X : FLAG_NEG_X );
-				
-			}
-			
-			// y
-			
-			if ( distY + radius > this.radius ) {
-				
-				indexOutside = indexOutside ^ ( deltaY > 0 ? FLAG_POS_Y : FLAG_NEG_Y );
-				
-			}
-			
-			// z
-			
-			if ( distZ + radius > this.radius ) {
-				
-				indexOutside = indexOutside ^ ( deltaZ > 0 ? FLAG_POS_Z : FLAG_NEG_Z );
-				
-			}
-			
-			return -indexOutside - indexOutsideOffset;
-			
-		}
-		
-		// if across
-		
-		if ( Math.min( distX, distY, distZ ) < radius ) {
-			
-			return indexInsideCross;
-			
-		}
-		
-		// return octant index from delta xyz
-		
-		return octant_index_from_xyz( deltaX, deltaY, deltaZ );
-		
-	}
-	
-	function octant_index_from_xyz ( x, y, z ) {
-		
-		var indexOctant = 0;
-		
-		if ( x > 0 ) {
-			
-			indexOctant = indexOctant | 1;
-			
-		}
-		
-		if ( y > 0 ) {
-			
-			indexOctant = indexOctant | 2;
-			
-		}
-		
-		if ( z > 0 ) {
-			
-			indexOctant = indexOctant | 4;
-			
-		}
-		
-		return indexOctant;
-		
-	}
-	
-	/*===================================================
-    
     search
     
     =====================================================*/
 	
 	function search ( position, radius ) {
 		
+		return search_cascade.call( this.root, position, radius, [], true );
 		
+	}
+	
+	function search_cascade ( position, radius, objects, override ) {
+		
+		var i, l,
+			node,
+			delta,
+			distance;
+		
+		// if is within distance
+		
+		delta = this.utilVec31Search.sub( position, this.position );
+		distance = Math.max( Math.abs( delta.x ), Math.abs( delta.y ), Math.abs( delta.z ) );
+		//console.log( this.id, ' > octree SEARCH cascade, this POS ', this.position.x, this.position.y, this.position.z, ' + this.radius ', this.radius, ' + delta ', delta.x, delta.y, delta.z, ' + distance ', distance, ' + is within? ', ( distance - radius <= this.radius ) );
+		if ( distance - radius <= this.radius || override === true ) {
+			
+			// gather objects
+			
+			objects = ( objects || [] ).concat( this.objects );
+			
+			// search subtree
+			
+			for ( i = 0, l = this.nodesIndices.length; i < l; i++ ) {
+				
+				node = this.nodesByIndex[ this.nodesIndices[ i ] ];
+				
+				objects = search_cascade.call( node, position, radius, objects );
+				
+			}
+			
+		}
+		
+		return objects;
 		
 	}
 	

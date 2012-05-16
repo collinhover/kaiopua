@@ -32,7 +32,7 @@
 		
 	};
 	
-	_MathHelper.max_magnitude = function ( n1, n2 ) {
+	_MathHelper.max_magnitude = function () {
 		
 		var i, l,
 			abs = [],

@@ -463,25 +463,226 @@
 		var _Octree = main.get_asset_data( "assets/modules/core/Octree.js" );
 		var _Model = main.get_asset_data( "assets/modules/core/Model.js" );
 		
-		var radius = 200,
+		var radius = 400,
 			octree = new _Octree.Instance( {
 				radius: radius,
 				scene: scene
 			} ),
 			objects = [],
-			countMax = 6,
+			countMax = 1000,
 			add = true,
 			testObj;
 		
-		var intervalID = setInterval( function () {
+		setTimeout( function () {
+			
+			// build octree with max count objects
+			
+			var ta = new Date().getTime();
+			
+			for ( var i = 0; i < countMax; i++ ) {
+				
+				testObj = new _Model.Instance( {
+					geometry: new THREE.CubeGeometry( 50, 50, 50 ),
+					materials: new THREE.MeshNormalMaterial()// { color: 0x00FF00, wireframe: true, wireframeLinewidth: 10 } )
+				} );
+				
+				//testObj.position.set( Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius );
+				//testObj.position.set( Math.random() * -radius * 0.5, Math.random() * -radius * 0.5, Math.random() * -radius * 0.5 );
+				//testObj.position.set( -radius + Math.random() * -radius * 0.25, -radius + Math.random() * -radius * 0.25, -radius + Math.random() * -radius * 0.25 );
+				testObj.position.set( Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5 );
+				
+				objects.push( testObj );
+				
+				//octree = octree.add( testObj );
+				scene.add( testObj );
+				
+			}
+			
+			octree = octree.add( objects );
+			
+			var tb = new Date().getTime();
+			
+			console.log( 'OCTREE BUILD time: ', ( tb - ta ) );
+			
+			// search octree
+			
+			var searchRad = 200;
+				testObj = new _Model.Instance( {
+					geometry: new THREE.CubeGeometry( searchRad * 2, searchRad * 2, searchRad * 2 ),
+					materials: new THREE.MeshBasicMaterial ( { color: 0xFF000, opacity: 0.4, transparent: true } )
+				} );
+			
+			scene.add( testObj );
+			
+			//testObj.position.set( searchRad * 2 + 1 );
+			var testCompare = function ( a, b ) {
+				
+				var delta = new THREE.Vector3()
+					.add( a.position, b.position )
+					.multiply( a.position, b.position )
+					.add( a.position, b.position )
+					.multiply( a.position, b.position )
+					.add( a.position, b.position )
+					.multiply( a.position, b.position )
+					.add( a.position, b.position )
+					.multiply( a.position, b.position )
+					.add( a.position, b.position )
+					.multiply( a.position, b.position )
+					.add( a.position, b.position )
+					.multiply( a.position, b.position )
+					.add( a.position, b.position )
+					.multiply( a.position, b.position )
+					.add( a.position, b.position )
+					.multiply( a.position, b.position )
+					.add( a.position, b.position )
+					.multiply( a.position, b.position )
+					.add( a.position, b.position )
+					.multiply( a.position, b.position )
+					.add( a.position, b.position )
+					.multiply( a.position, b.position )
+					.add( a.position, b.position )
+					.multiply( a.position, b.position )
+					.sub( a.position, b.position );
+				var distance = Math.max( Math.abs( delta.x ), Math.abs( delta.y ), Math.abs( delta.z ) );
+				
+				return distance;
+				
+			};
+			
+			var testCount = 0;
+			var testIntervalID = setInterval( function () {
+				
+				testCount++;
+				
+				if ( testCount === 20 ) {
+					
+					clearInterval( testIntervalID );
+					return;
+					
+				}
+				
+				var tc = new Date().getTime();
+				
+				for ( var i = 0, l = 1000; i < l; i++ ) {
+					
+					testObj.position.set( Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5 );
+					
+					var searchObjects = octree.search( testObj.position, searchRad );
+					
+					//for ( var m = 0, n = searchObjects.length; m < n; m++ ) {
+						
+						//var so = testCompare( testObj, objects[ m ] );
+						
+					//}
+					for ( var m = 0, n = objects.length; m < n; m++ ) {
+						
+						var so = testCompare( testObj, objects[ m ] );
+						
+					}
+					//console.log( ' OCTREE SEARCH from ', testObj.position.x, testObj.position.y, testObj.position.z, ' + radius: ', searchRad, ' gives objects ', searchObjects );
+					
+				}
+				
+				var td = new Date().getTime();
+				
+				console.log( 'OCTREE SEARCH time: ', (td - tc ) );
+				
+			}, 100 );
+		
+		}, 1000 );
+		
+		/*var intervalID = setInterval( function () {
 		//shared.signals.update.add( function () {
 			
 			if ( add === true && objects.length === countMax ) {
 				
 				add = false
 				
-				//clearInterval( intervalID );
-				//return;
+				var searchRad = 200;
+				testObj = new _Model.Instance( {
+					geometry: new THREE.CubeGeometry( searchRad * 2, searchRad * 2, searchRad * 2 ),
+					materials: new THREE.MeshBasicMaterial ( { color: 0xFF000, opacity: 0.4, transparent: true } )
+				} );
+				
+				scene.add( testObj );
+				
+				//testObj.position.set( searchRad * 2 + 1 );
+				var testCompare = function ( a, b ) {
+					
+					var delta = new THREE.Vector3()
+						.add( a.position, b.position )
+						.multiply( a.position, b.position )
+						.add( a.position, b.position )
+						.multiply( a.position, b.position )
+						.add( a.position, b.position )
+						.multiply( a.position, b.position )
+						.add( a.position, b.position )
+						.multiply( a.position, b.position )
+						.add( a.position, b.position )
+						.multiply( a.position, b.position )
+						.add( a.position, b.position )
+						.multiply( a.position, b.position )
+						.add( a.position, b.position )
+						.multiply( a.position, b.position )
+						.add( a.position, b.position )
+						.multiply( a.position, b.position )
+						.add( a.position, b.position )
+						.multiply( a.position, b.position )
+						.add( a.position, b.position )
+						.multiply( a.position, b.position )
+						.add( a.position, b.position )
+						.multiply( a.position, b.position )
+						.add( a.position, b.position )
+						.multiply( a.position, b.position )
+						.sub( a.position, b.position );
+					var distance = Math.max( Math.abs( delta.x ), Math.abs( delta.y ), Math.abs( delta.z ) );
+					
+					return distance;
+					
+				};
+				
+				var testCount = 0;
+				var testIntervalID = setInterval( function () {
+					
+					testCount++;
+					
+					if ( testCount === 20 ) {
+						
+						clearInterval( testIntervalID );
+						return;
+						
+					}
+					
+					var ta = new Date().getTime();
+					
+					for ( var i = 0, l = 10000; i < l; i++ ) {
+						
+						testObj.position.set( Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5 );
+						
+						var searchObjects = octree.search( testObj.position, searchRad );
+						
+						for ( var m = 0, n = searchObjects.length; m < n; m++ ) {
+							
+							var so = testCompare( testObj, objects[ m ] );
+							
+						}
+						//for ( var m = 0, n = objects.length; m < n; m++ ) {
+							
+							//var so = testCompare( testObj, objects[ m ] );
+							
+						//}
+						//console.log( ' OCTREE SEARCH from ', testObj.position.x, testObj.position.y, testObj.position.z, ' + radius: ', searchRad, ' gives objects ', searchObjects );
+						
+					}
+					
+					var tb = new Date().getTime();
+					
+					console.log( 'OCTREE SEARCH time: ', (tb - ta ) );
+					
+				}, 100 );
+				
+				clearInterval( intervalID );
+				return;
 				
 			}
 			else if ( add === false && objects.length === 0 ) {
@@ -503,7 +704,7 @@
 				//testObj.position.set( Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius );
 				//testObj.position.set( Math.random() * -radius * 0.5, Math.random() * -radius * 0.5, Math.random() * -radius * 0.5 );
 				//testObj.position.set( -radius + Math.random() * -radius * 0.25, -radius + Math.random() * -radius * 0.25, -radius + Math.random() * -radius * 0.25 );
-				testObj.position.set( Math.random() * ( radius * 4 ) - radius * 2, Math.random() * ( radius * 4 ) - radius * 2, Math.random() * ( radius * 4 ) - radius * 2 );
+				testObj.position.set( Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5 );
 				
 				objects.push( testObj );
 				
@@ -530,9 +731,9 @@
 			//octree.to_string();
 			console.log( ' ============================================================================================================');
 			console.log( ' ');
-			/**/
+			
 		//} );
-		}, 500 );
+		}, 100 );*/
 		
 		var controls = new THREE.FirstPersonControls( camera );
 		shared.signals.update.add( function ( timeDelta ) { controls.update( timeDelta ) } );
