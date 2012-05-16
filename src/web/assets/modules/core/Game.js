@@ -463,16 +463,15 @@
 		var _Octree = main.get_asset_data( "assets/modules/core/Octree.js" );
 		var _Model = main.get_asset_data( "assets/modules/core/Model.js" );
 		
-		var radius = 3000,
+		var radius = 200,
 			octree = new _Octree.Instance( {
-				radius: radius
+				radius: radius,
+				scene: scene
 			} ),
 			objects = [],
-			countMax = 4,
+			countMax = 6,
 			add = true,
 			testObj;
-		
-		scene.add( octree.visual );
 		
 		var intervalID = setInterval( function () {
 		//shared.signals.update.add( function () {
@@ -503,7 +502,8 @@
 				
 				//testObj.position.set( Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius );
 				//testObj.position.set( Math.random() * -radius * 0.5, Math.random() * -radius * 0.5, Math.random() * -radius * 0.5 );
-				testObj.position.set( -radius + Math.random() * -radius * 0.25, -radius + Math.random() * -radius * 0.25, -radius + Math.random() * -radius * 0.25 );
+				//testObj.position.set( -radius + Math.random() * -radius * 0.25, -radius + Math.random() * -radius * 0.25, -radius + Math.random() * -radius * 0.25 );
+				testObj.position.set( Math.random() * ( radius * 4 ) - radius * 2, Math.random() * ( radius * 4 ) - radius * 2, Math.random() * ( radius * 4 ) - radius * 2 );
 				
 				objects.push( testObj );
 				
@@ -522,18 +522,17 @@
 			
 			testObj = undefined;
 			
-			scene.add( octree.root.visual );
-			
-			
 			console.log( ' ============================================================================================================');
 			console.log( ' OCTREE: ', octree );
-			console.log( ' ... OCTREE total objects: ', octree.object_count_end() );
-			octree.to_string();
+			console.log( ' ... depth end?', octree.depth_end() );
+			console.log( ' ... num octrees: ', octree.octree_count_end() );
+			console.log( ' ... total objects: ', octree.object_count_end() );
+			//octree.to_string();
 			console.log( ' ============================================================================================================');
 			console.log( ' ');
 			/**/
 		//} );
-		}, 2000 );
+		}, 500 );
 		
 		var controls = new THREE.FirstPersonControls( camera );
 		shared.signals.update.add( function ( timeDelta ) { controls.update( timeDelta ) } );
