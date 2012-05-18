@@ -1,7 +1,7 @@
 /*
  *
  * Octree.js
- * 3D spatial representation structure for fast searches.
+ * (sparse) 3D spatial representation structure for fast searches.
  * 
  * based on Octree by Marek Pawlowski @ pawlowski.it and Dynamic Octree by Piko3D @ http://www.piko3d.com/
  *
@@ -13,9 +13,9 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/core/Octree.js",
 		_Octree = {},
-		octreeCount = 0,
+		octreeNodeCount = 0,
 		depthMax = -1,
-		objectsThreshold = 8,
+		objectsThreshold = 1,//8,
 		indexInsideCross = -1,
 		indexOutsideOffset = 2,
 		posX = 0, negX = 1,
@@ -69,115 +69,6 @@
 		
 		_Octree.Instance = Octree;
 		
-		_Octree.Instance.prototype.reset = reset;
-		_Octree.Instance.prototype.add = add;
-		_Octree.Instance.prototype.remove = remove;
-		_Octree.Instance.prototype.search = search;
-		_Octree.Instance.prototype.depth_end = depth_end;
-		_Octree.Instance.prototype.octree_count_end = octree_count_end;
-		_Octree.Instance.prototype.object_count_end = object_count_end;
-		_Octree.Instance.prototype.object_count_limited = object_count_limited;
-		_Octree.Instance.prototype.object_count_start = object_count_start;
-		
-		_Octree.Instance.prototype.to_string = function ( space ) {
-			
-			var i, l,
-				node,
-				spaceAddition = '   ';
-			
-			space = typeof space === 'string' ? space : spaceAddition;
-			
-			console.log( ( this.parent ? space + ' octree NODE > ' : ' octree ROOT > ' ), this, ' // id: ', this.id, ' // indexOctant: ', this.indexOctant, ' // position: ', this.position.x, this.position.y, this.position.z, ' // radius: ', this.radius, ' // depth: ', this.depth );
-			console.log( ( this.parent ? space + ' ' : ' ' ), '+ objects ( ', this.objects.length, ' ) ', this.objects );
-			console.log( ( this.parent ? space + ' ' : ' ' ), '+ children ( ', this.nodesIndices.length, ' )', this.nodesIndices, this.nodesByIndex );
-			
-			for ( i = 0, l = this.nodesIndices.length; i < l; i++ ) {
-				
-				node = this.nodesByIndex[ this.nodesIndices[ i ] ];
-				
-				node.to_string( space + spaceAddition );
-				
-			}
-			
-		};
-		
-		Object.defineProperty( _Octree.Instance.prototype, 'root', { 
-			get : function () { return this._root; },
-			set : function ( root ) {
-				
-				var i, l,
-					node,
-					rootPrev = this._root;
-				
-				// store new root
-				
-				this._root = root instanceof _Octree.Instance ? root : this;
-				
-				// update properties
-				
-				if ( this._parent instanceof _Octree.Instance ) {
-					
-					this.depth = this._parent.depth + 1;
-					
-				}
-				else {
-					
-					this.depth = 0;
-					
-				}
-				
-				// update children
-				
-				for ( i = 0, l = this.nodesIndices.length; i < l; i++ ) {
-					
-					node = this.nodesByIndex[ this.nodesIndices[ i ] ];
-					
-					node.root = this._root;
-					
-				}
-				
-			}
-		} );
-		
-		Object.defineProperty( _Octree.Instance.prototype, 'parent', { 
-			get : function () { return this._parent; },
-			set : function ( parent ) {
-				
-				var rootPrev = this.root;
-				
-				// store new parent
-				
-				if ( parent !== this ) {
-					
-					this._parent = parent;
-					
-				}
-				
-				// update properties
-				
-				if ( this._parent instanceof _Octree.Instance ) {
-					
-					if ( this.root !== this._parent.root ) {
-						
-						this.root = this._parent.root;
-					
-					}
-					
-				}
-				else if ( this.root !== this ) {
-					
-					this.root = this;
-					
-				}
-				
-			}
-			
-		} );
-		
-		Object.defineProperty( _Octree.Instance.prototype, 'empty', { 
-			get : function () { return this.nodesIndices.length === 0 && this.objects.length === 0; }
-		} );
-		
 	}
 	
 	/*===================================================
@@ -188,7 +79,116 @@
 	
 	function Octree ( parameters ) {
 		
-		octreeCount++;
+		// handle parameters
+		
+		parameters = parameters || {};
+		
+		parameters.tree = this;
+		
+		// TEST
+		this.scene = parameters.scene;
+		// TEST
+		
+		this.depth = 0;
+		this.depthMax = main.is_number( parameters.depthMax ) ? parameters.depthMax : depthMax;
+		this.objectsThreshold = main.is_number( parameters.objectsThreshold ) ? parameters.objectsThreshold : objectsThreshold;
+		
+		this.root = parameters.root instanceof OctreeNode ? parameters.root : new OctreeNode( parameters );
+		
+		// TODO: tree holds all objects, nodes hold list of indices
+		//this.objects = [];
+		
+	}
+	
+	Octree.prototype.root_set = function ( root ) { 
+		
+		if ( root instanceof OctreeNode ) {
+			
+			// store new root
+			
+			this.root = root;
+			
+			// update properties
+			
+			this.depth = depth_end.call( this.root );
+			console.log( this, 'tree updated root, new depth ', this.depth );
+		}
+		
+	};
+	
+	Octree.prototype.add = function () { 
+		
+		add.apply( this.root, arguments );
+		
+	};
+	
+	Octree.prototype.remove = function () {
+		
+		remove.apply( this.root, arguments );
+		
+	};
+	
+	Octree.prototype.search = function ( position, radius ) {
+		
+		return search.call( this.root, position, radius, [], true );
+		
+	};
+	
+	Octree.prototype.depth_end = function () {
+		
+		return depth_end.call( this.root );
+		
+	};
+	
+	Octree.prototype.octree_count_end = function () {
+		
+		return octree_count_end.call( this.root );
+		
+	};
+	
+	Octree.prototype.object_count_end = function () {
+		
+		return object_count_end.call( this.root );
+		
+	};
+	
+	Octree.prototype.to_console = function ( space ) {
+		
+		to_console.call( this.root );
+		
+	};
+	
+	function to_console ( space ) {
+		
+		var i, l,
+			node,
+			spaceAddition = '   ';
+		
+		space = typeof space === 'string' ? space : spaceAddition;
+		
+		console.log( ( this.parent ? space + ' octree NODE > ' : ' octree ROOT > ' ), this, ' // id: ', this.id, ' // indexOctant: ', this.indexOctant, ' // position: ', this.position.x, this.position.y, this.position.z, ' // radius: ', this.radius, ' // depth: ', this.tree.depth );
+		console.log( ( this.parent ? space + ' ' : ' ' ), '+ objects ( ', this.objects.length, ' ) ', this.objects );
+		console.log( ( this.parent ? space + ' ' : ' ' ), '+ children ( ', this.nodesIndices.length, ' )', this.nodesIndices, this.nodesByIndex );
+		
+		for ( i = 0, l = this.nodesIndices.length; i < l; i++ ) {
+			
+			node = this.nodesByIndex[ this.nodesIndices[ i ] ];
+			
+			to_console.call( node, space + spaceAddition );
+			
+		}
+		
+	};
+	
+	/*===================================================
+    
+    node
+    
+    =====================================================*/
+	
+	function OctreeNode ( parameters ) {
+		
+		octreeNodeCount++;
 		
 		// utility
 		
@@ -200,29 +200,98 @@
 		
 		parameters = parameters || {};
 		
-		this.id = octreeCount;
+		// basic properties
 		
+		this.id = octreeNodeCount;
 		this.position = parameters.position instanceof THREE.Vector3 ? parameters.position : new THREE.Vector3();
 		this.radius = main.is_number( parameters.radius ) ? parameters.radius : 0;
 		this.indexOctant = parameters.indexOctant;
 		
+		// reset and assign parent
+		
+		reset.call( this );
+		this.parent = parameters.parent;
+		
+		// store or create tree
+		
+		if ( parameters.tree instanceof Octree ) {
+			
+			this.tree = parameters.tree;
+			
+		}
+		else {
+			
+			parameters.root = this;
+			
+			this.tree = new Octree( parameters );
+			
+		}
+		
 		// TEST
-		this.scene = parameters.scene;
 		this.visual = new THREE.Mesh( new THREE.CubeGeometry( this.radius * 2, this.radius * 2, this.radius * 2 ), new THREE.MeshLambertMaterial( { color: 0xFF0000, wireframe: true, wireframeLinewidth: 10 } ) );
 		this.visual.position.copy( this.position );
-		if ( this.scene ) {
-			this.scene.add( this.visual );
+		if ( this.tree.scene ) {
+			this.tree.scene.add( this.visual );
 		}
 		// TEST
 		
-		this.depthMax = main.is_number( parameters.depthMax ) ? parameters.depthMax : depthMax;
-		this.objectsThreshold = main.is_number( parameters.objectsThreshold ) ? parameters.objectsThreshold : objectsThreshold;
+	}
+	
+	Object.defineProperty( OctreeNode.prototype, 'parent', { 
+		get : function () { return this._parent; },
+		set : function ( parent ) {
+			
+			// store new parent
+			
+			if ( parent !== this ) {
+				
+				this._parent = parent;
+				
+			}
+			
+			// update properties
+			
+			if ( this._parent instanceof OctreeNode ) {
+				
+				properties_update_cascade.call( this );
+				
+			}
+			
+		}
 		
-		this.reset();
+	} );
+	
+	function properties_update_cascade () {
 		
-		this.parent = parameters.parent;
+		var i, l;
+		
+		// properties
+		
+		if ( this.tree !== this._parent.tree ) {
+			
+			this.tree = this._parent.tree;
+		
+		}
+		
+		// cascade
+		
+		for ( i = 0, l = this.nodesIndices.length; i < l; i++ ) {
+			
+			properties_update_cascade.call( this.nodesByIndex[ this.nodesIndices[ i ] ] );
+			
+		}
 		
 	}
+	
+	Object.defineProperty( OctreeNode.prototype, 'empty', { 
+		get : function () { return this.nodesIndices.length === 0 && this.objects.length === 0; }
+	} );
+	
+	/*===================================================
+    
+    reset
+    
+    =====================================================*/
 	
 	function reset ( cascade, removeVisual ) {
 		
@@ -245,15 +314,15 @@
 			
 			if ( cascade === true ) {
 				
-				node.reset( cascade, removeVisual );
+				reset.call( node, cascade, removeVisual );
 				
 			}
 			
 		}
 		
 		// TEST
-		if ( removeVisual === true && this.scene ) {
-			this.scene.remove( this.visual );
+		if ( removeVisual === true && this.tree.scene ) {
+			this.tree.scene.remove( this.visual );
 		}
 		// TEST
 	}
@@ -270,47 +339,31 @@
 			element,
 			root;
 		
-		// if is root
+		// handle elements
 		
-		if ( this.root === this ) {
+		elements = main.ensure_array( elements );
+		
+		// for each element
+		
+		for ( i = 0, l = elements.length; i < l; i++ ) {
 			
-			root = this;
+			element = elements[ i ];
 			
-			// handle elements
+			root = this.tree.root;
 			
-			elements = main.ensure_array( elements );
+			// if is octree
 			
-			// for each element
-			
-			for ( i = 0, l = elements.length; i < l; i++ ) {
-				
-				element = elements[ i ];
-				
-				// if is octree
-				
-				if ( element instanceof _Octree.Instance ) {
-						
-					add_octree.call( root, element );
+			if ( element instanceof OctreeNode ) {
 					
-				}
-				// all other considered objects
-				else {
-					
-					root = add_object.call( root, element ) || root;
-					
-				}
+				add_octree.call( root, element );
 				
 			}
-			
-			// return root in case of expand/contract
-			
-			return root;
-			
-		}
-		// else pass elements to root
-		else {
-			
-			return this.root.add( elements );
+			// all other considered objects
+			else {
+				
+				add_object.call( root, element );
+				console.log( ' ADD > tree root ', this.tree.root.id, this.tree.root, ' vs this ', this.id, this );
+			}
 			
 		}
 		
@@ -322,47 +375,31 @@
 			element,
 			root;
 		
-		// if is root
+		// handle elements
 		
-		if ( this.root === this ) {
-			
-			root = this;
+		elements = main.ensure_array( elements );
 		
-			// handle elements
+		// for each argument
+		
+		for ( i = 0, l = elements.length; i < l; i++ ) {
 			
-			elements = main.ensure_array( elements );
+			element = elements[ i ];
 			
-			// for each argument
+			root = this.tree.root;
 			
-			for ( i = 0, l = elements.length; i < l; i++ ) {
+			// is octree
+			
+			if ( element instanceof OctreeNode ) {
 				
-				element = elements[ i ];
-				
-				// is octree
-				
-				if ( element instanceof _Octree.Instance ) {
-					
-					remove_octree.call( root, element );
-					
-				}
-				// all other considered objects
-				else {
-					
-					root = remove_object.call( root, element ) || root;
-					
-				}
+				remove_octree.call( root, element );
 				
 			}
-			
-			// return root in case of expand/contract
-			
-			return root;
-			
-		}
-		// else pass elements to root
-		else {
-			
-			return this.root.remove( elements );
+			// all other considered objects
+			else {
+				
+				remove_object.call( root, element );
+				console.log( ' REMOVE > tree root ', this.tree.root.id, this.tree.root, ' vs this ', this.id, this );
+			}
 			
 		}
 		
@@ -401,7 +438,7 @@
 			octree;
 		
 		// if identifier is octree
-		if ( identifier instanceof _Octree.Instance && this.nodesByIndex[ identifier.indexOctant ] === identifier ) {
+		if ( identifier instanceof OctreeNode && this.nodesByIndex[ identifier.indexOctant ] === identifier ) {
 			
 			octree = identifier;
 			indexOctant = octree.indexOctant;
@@ -461,7 +498,7 @@
     =====================================================*/
 	
 	function add_object ( object ) {
-		
+		console.log( this, this.id, ' ADD object ' );
 		var indexOctant,
 			node;
 		
@@ -474,13 +511,13 @@
 			
 			node = branch.call( this, indexOctant );
 			
-			return add_object.call( node, object );
+			add_object.call( node, object );
 			
 		}
 		// if object lies outside bounds, add to parent node
-		else if ( indexOctant < -1 && this.parent instanceof _Octree.Instance ) {
+		else if ( indexOctant < -1 && this.parent instanceof OctreeNode ) {
 			
-			return add_object.call( this.parent, object );
+			add_object.call( this.parent, object );
 			
 		}
 		// else add to self
@@ -494,14 +531,14 @@
 			
 			// check if need to expand, split, or both
 			
-			return grow_check.call( this );
+			grow_check.call( this );
 			
 		}
 		
 	}
 	
 	function remove_object ( object ) {
-		
+		console.log( this, this.id, ' REMOVE object ' );
 		var nodeRemovedFrom;
 		
 		// cascade through tree to find and remove object
@@ -510,10 +547,9 @@
 		
 		// if object removed, try to shrink the node it was removed from
 		
-		if ( nodeRemovedFrom instanceof _Octree.Instance ) {
-			
-			return shrink.call( nodeRemovedFrom );
-			//return merge_check.call( nodeRemovedFrom );
+		if ( nodeRemovedFrom instanceof OctreeNode ) {
+			console.log( '(removed)', nodeRemovedFrom, nodeRemovedFrom.id, ' REMOVE object ' );
+			shrink.call( nodeRemovedFrom );
 			
 		}
 		
@@ -544,11 +580,11 @@
 				
 				node = this.nodesByIndex[ this.nodesIndices[ i ] ];
 				
-				nodeRemovedFrom = remove_object_end.call( node, object );
-				
 				// try removing object from node
 				
-				if ( nodeRemovedFrom instanceof _Octree.Instance ) {
+				nodeRemovedFrom = remove_object_end.call( node, object );
+				
+				if ( nodeRemovedFrom instanceof OctreeNode ) {
 					
 					break;
 					
@@ -572,9 +608,9 @@
 		
 		// if object count above max
 		
-		if ( this.objects.length > this.objectsThreshold && this.objectsThreshold > 0 ) {
+		if ( this.objects.length > this.tree.objectsThreshold && this.tree.objectsThreshold > 0 ) {
 			
-			return grow.call( this );
+			grow.call( this );
 			
 		}
 		
@@ -643,7 +679,7 @@
 		
 		// merge check
 		
-		return merge_check.call( this );
+		merge_check.call( this );
 		
 	}
 	
@@ -655,15 +691,13 @@
 	
 	function shrink () {
 		
-		var root;
-		
 		// merge check
 		
-		root = merge_check.call( this );
+		merge_check.call( this );
 		
 		// contract check
 		
-		return contract_check.call( root || this.root );
+		contract_check.call( this.tree.root );
 		
 	}
 	
@@ -674,7 +708,9 @@
     =====================================================*/
 	
 	function split ( objects, octants ) {
-		
+		console.log( this, this.id, ' SPLIT ');
+		console.log( ' <<< BEFORE ~~~~~~~~~~~~~~~~~~~~~~~');
+		this.tree.to_console();
 		var i, l,
 			indexOctant,
 			object,
@@ -683,7 +719,7 @@
 		
 		// if not at max depth
 		
-		if ( this.depthMax < 0 || this.depth < this.depthMax ) {
+		if ( this.tree.depthMax < 0 || this.tree.depth < this.tree.depthMax ) {
 			
 			objects = objects || this.objects;
 			
@@ -747,7 +783,7 @@
 		
 		// node exists
 		
-		if ( this.nodesByIndex[ indexOctant ] instanceof _Octree.Instance ) {
+		if ( this.nodesByIndex[ indexOctant ] instanceof OctreeNode ) {
 			
 			node = this.nodesByIndex[ indexOctant ];
 			
@@ -763,14 +799,12 @@
 			
 			// node
 			
-			node = new _Octree.Instance( {
-				scene: this.scene,
+			node = new OctreeNode( {
+				tree: this.tree,
 				parent: this,
 				position: position,
 				radius: radius,
-				indexOctant: indexOctant,
-				depthMax: this.depthMax,
-				objectsThreshold: this.objectsThreshold
+				indexOctant: indexOctant
 			} );
 			
 			// store
@@ -796,7 +830,7 @@
 		
 		// traverse up tree as long as node + entire subtree's object count is under minimum
 		
-		while ( nodeParent.parent instanceof _Octree.Instance && nodeParent.object_count_end() <= nodeParent.objectsThreshold ) {
+		while ( nodeParent.parent instanceof OctreeNode && object_count_end.call( nodeParent ) <= nodeParent.objectsThreshold ) {
 			
 			nodeMerge = nodeParent;
 			nodeParent = nodeParent.parent;
@@ -807,19 +841,16 @@
 		
 		if ( nodeParent !== this ) {
 			
-			return merge.call( nodeParent, nodeMerge );
-			
-		}
-		else {
-			
-			return this.root;
+			merge.call( nodeParent, nodeMerge );
 			
 		}
 		
 	}
 	
 	function merge ( nodes ) {
-		
+		console.log( this, this.id, ' MERGE ');
+		console.log( ' <<< BEFORE ~~~~~~~~~~~~~~~~~~~~~~~');
+		this.tree.to_console();
 		var i, l,
 			node;
 		
@@ -837,7 +868,7 @@
 			
 			// reset node + entire subtree
 			
-			node.reset( true, true );
+			reset.call( node, true, true );
 			
 			// remove node
 			
@@ -847,7 +878,7 @@
 		
 		// merge check
 		
-		return merge_check.call( this );
+		merge_check.call( this );
 		
 	}
 	
@@ -858,7 +889,9 @@
     =====================================================*/
 	
 	function expand ( objects, octants ) {
-		
+		console.log( this, this.id, ' EXPAND ');
+		console.log( ' <<< BEFORE ~~~~~~~~~~~~~~~~~~~~~~~');
+		this.tree.to_console();
 		var i, l,
 			object,
 			objectsRemaining,
@@ -887,7 +920,7 @@
 		
 		// handle max depth down tree
 		
-		if ( this.depthMax < 0 || this.depth_end() < this.depthMax ) {
+		if ( this.tree.depthMax < 0 || this.tree.depth < this.tree.depthMax ) {
 			
 			objects = objects || this.objects;
 			octants = octants || [];
@@ -1030,21 +1063,23 @@
 				
 				// parent
 				
-				parent = new _Octree.Instance( {
-					scene: this.scene,
+				parent = new OctreeNode( {
+					tree: this.tree,
 					position: position,
-					radius: this.radius * 2,
-					depthMax: this.depthMax,
-					objectsThreshold: this.objectsThreshold
+					radius: this.radius * 2
 				} );
 				
 				// set self as node of parent
 				
 				add_octree.call( parent, this, indexOctantInverse );
 				
+				// set parent as root
+				
+				this.tree.root_set( parent );
+				
 				// add all expand objects to parent
 				
-				parent.add( objectsExpand );
+				add.call( parent, objectsExpand );
 				
 			}
 			
@@ -1082,61 +1117,50 @@
 			nodeHeaviestObjectsCount,
 			outsideHeaviestObjectsCount;
 		
-		// if is root
+		// find node with highest object count
 		
-		if ( this.root === this ) {
+		if ( this.nodesIndices.length > 0 ) {
 			
-			// find node with highest object count
+			nodeHeaviestObjectsCount = 0;
+			outsideHeaviestObjectsCount = this.objects.length;
 			
-			if ( this.nodesIndices.length > 0 ) {
+			for ( i = 0, l = this.nodesIndices.length; i < l; i++ ) {
 				
-				nodeHeaviestObjectsCount = 0;
-				outsideHeaviestObjectsCount = this.objects.length;
+				node = this.nodesByIndex[ this.nodesIndices[ i ] ];
 				
-				for ( i = 0, l = this.nodesIndices.length; i < l; i++ ) {
-					
-					node = this.nodesByIndex[ this.nodesIndices[ i ] ];
-					
-					nodeObjectsCount = node.object_count_end();
-					outsideHeaviestObjectsCount += nodeObjectsCount;
-					
-					if ( nodeHeaviest instanceof _Octree.Instance === false || nodeObjectsCount > nodeHeaviestObjectsCount ) {
-						
-						nodeHeaviest = node;
-						nodeHeaviestObjectsCount = nodeObjectsCount;
-						
-					}
-					
-				}
+				nodeObjectsCount = object_count_end.call( node );
+				outsideHeaviestObjectsCount += nodeObjectsCount;
 				
-				// subtract heaviest count from outside count
-				
-				outsideHeaviestObjectsCount -= nodeHeaviestObjectsCount;
-				//console.log( this, this.id, ' CONTRACT? nodeHeaviestObjectsCount = ', nodeHeaviestObjectsCount, ' // outsideHeaviestObjectsCount = ', outsideHeaviestObjectsCount );
-				// if should contract
-				
-				if ( outsideHeaviestObjectsCount <= this.objectsThreshold && nodeHeaviest instanceof _Octree.Instance ) {
+				if ( nodeHeaviest instanceof OctreeNode === false || nodeObjectsCount > nodeHeaviestObjectsCount ) {
 					
-					return contract.call( this, nodeHeaviest );
+					nodeHeaviest = node;
+					nodeHeaviestObjectsCount = nodeObjectsCount;
 					
 				}
 				
 			}
-			//console.log( this, this.id, ' contract checked and not needed' );
-			return this;
+			
+			// subtract heaviest count from outside count
+			
+			outsideHeaviestObjectsCount -= nodeHeaviestObjectsCount;
+			//console.log( this, this.id, ' CONTRACT? nodeHeaviestObjectsCount = ', nodeHeaviestObjectsCount, ' // outsideHeaviestObjectsCount = ', outsideHeaviestObjectsCount );
+			// if should contract
+			
+			if ( outsideHeaviestObjectsCount <= this.tree.objectsThreshold && nodeHeaviest instanceof OctreeNode ) {
+				
+				contract.call( this, nodeHeaviest );
+				
+			}
 			
 		}
-		// else start check at root
-		else {
-			
-			return contract_check.call( this.root );
-			
-		}
+		//console.log( this, this.id, ' contract checked and not needed' );
 		
 	}
 	
 	function contract ( nodeRoot ) {
-		//console.log( this, this.id, ' CONTRACT into ', nodeRoot.id, nodeRoot );
+		console.log( this, this.id, ' CONTRACT into ', nodeRoot.id, nodeRoot );
+		console.log( ' <<< BEFORE ~~~~~~~~~~~~~~~~~~~~~~~');
+		this.tree.to_console();
 		var i, l,
 			node;
 		
@@ -1156,7 +1180,7 @@
 				
 				// reset node + entire subtree
 				
-				node.reset( true, true );
+				reset.call( node, true, true );
 				
 			}
 			
@@ -1168,11 +1192,15 @@
 		
 		// reset self
 		
-		this.reset( false, true );
+		reset.call( this, false, true );
+		
+		// set new root
+		
+		this.tree.root_set( nodeRoot );
 		
 		// contract check on new root
 		
-		return contract_check.call( nodeRoot );
+		contract_check.call( nodeRoot );
 		
 	}
 	
@@ -1202,7 +1230,7 @@
 			radius = object.geometry.boundingSphere.radius * Math.max( scale.x, scale.y, scale.z );
 			
 		}
-		else if ( object instanceof _Octree.Instance ) {
+		else if ( object instanceof OctreeNode ) {
 			
 			position = object.position;
 			radius = 0;//object.radius;
@@ -1298,25 +1326,28 @@
     
     =====================================================*/
 	
-	function depth_end ( depth ) {
+	function depth_end ( depth, counter ) {
 		
 		var i, l,
 			node;
 		
+		depth = depth || 0;
+		
 		if ( this.nodesIndices.length > 0 ) {
+			
+			counter = ( counter || 0 ) + 1;
+			
+			if ( depth < counter ) { 
+				depth++;
+			}
 			
 			for ( i = 0, l = this.nodesIndices.length; i < l; i++ ) {
 				
 				node = this.nodesByIndex[ this.nodesIndices[ i ] ];
 				
-				depth = node.depth_end( depth );
+				depth = depth_end.call( node, depth, counter );
 				
 			}
-			
-		}
-		else {
-			
-			depth = !depth || this.depth > depth ? this.depth : depth;
 			
 		}
 		
@@ -1326,7 +1357,7 @@
 	
 	function octree_count_end () {
 		
-		return octree_count_cascade.call( this.root ) + 1;
+		return octree_count_cascade.call( this.tree.root ) + 1;
 		
 	}
 	
@@ -1345,7 +1376,26 @@
 		
 	}
 	
-	function objects_end ( depth, objects ) {
+	function objects_end ( objects ) {
+		
+		var i, l,
+			node;
+		
+		objects = ( objects || [] ).concat( this.objects );
+		
+		for ( i = 0, l = this.nodesIndices.length; i < l; i++ ) {
+			
+			node = this.nodesByIndex[ this.nodesIndices[ i ] ];
+			
+			objects = objects_end.call( node, objects );
+			
+		}
+		
+		return objects;
+		
+	}
+	
+	function objects_end_limited ( depth, objects ) {
 		
 		var i, l,
 			node;
@@ -1360,7 +1410,7 @@
 				
 				node = this.nodesByIndex[ this.nodesIndices[ i ] ];
 				
-				objects = objects_end.call( node, depth - 1, objects );
+				objects = objects_end_limited.call( node, depth - 1, objects );
 				
 			}
 			
@@ -1377,7 +1427,7 @@
 		
 		for ( i = 0, l = this.nodesIndices.length; i < l; i++ ) {
 			
-			count += this.nodesByIndex[ this.nodesIndices[ i ] ].object_count_end();
+			count += object_count_end.call( this.nodesByIndex[ this.nodesIndices[ i ] ] );
 			
 		}
 		
@@ -1394,7 +1444,7 @@
 			
 			for ( i = 0, l = this.nodesIndices.length; i < l; i++ ) {
 				
-				count += this.nodesByIndex[ this.nodesIndices[ i ] ].object_count_limited( depth - 1 );
+				count += object_count_limited.call( this.nodesByIndex[ this.nodesIndices[ i ] ], depth - 1 );
 				
 			}
 			
@@ -1409,7 +1459,7 @@
 		var count = this.objects.length,
 			parent = this.parent;
 		
-		while( parent instanceof _Octree.Instance ) {
+		while( parent instanceof OctreeNode ) {
 			
 			count += parent.objects.length;
 			parent = parent.parent;
@@ -1426,13 +1476,7 @@
     
     =====================================================*/
 	
-	function search ( position, radius ) {
-		
-		return search_cascade.call( this.root, position, radius, [], true );
-		
-	}
-	
-	function search_cascade ( position, radius, objects, override ) {
+	function search ( position, radius, objects, override ) {
 		
 		var i, l,
 			node,
@@ -1456,7 +1500,7 @@
 				
 				node = this.nodesByIndex[ this.nodesIndices[ i ] ];
 				
-				objects = search_cascade.call( node, position, radius, objects );
+				objects = search.call( node, position, radius, objects );
 				
 			}
 			

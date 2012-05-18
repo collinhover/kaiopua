@@ -225,7 +225,7 @@
 			sceneBG = _Game.sceneBG;
 			
 			// environment
-			
+			/*
 			water.morphs.play( 'waves', { duration: 4000, loop: true } );
 			
 			sky.animate();
@@ -233,17 +233,17 @@
 			// add items
 			
 			_Game.add_to_scene( addOnShow, scene );
-			
+			*/
 			_Game.add_to_scene( addBGOnShow, sceneBG );
 			
 			// shared
-			
+			/*
 			shared.renderer.sortObjects = false;
 			
 			shared.signals.mousemoved.add( on_mouse_moved );
 			
 			shared.signals.update.add( update );
-			
+			*/
 		}
 		else {
 			
