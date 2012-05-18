@@ -469,13 +469,13 @@
 				scene: scene
 			} ),
 			objects = [],
-			countMax = 60,
+			countMax = 1000,
 			testObj,
 			testObjLast,
 			offset = new THREE.Vector3();
 		
 		setTimeout( function () {
-			/*
+			
 			// build octree with max count objects
 			
 			var ta = new Date().getTime();
@@ -515,7 +515,6 @@
 			
 			scene.add( testObj );
 			
-			//testObj.position.set( searchRad * 2 + 1 );
 			var testCompare = function ( a, b ) {
 				
 				var delta = new THREE.Vector3()
@@ -551,11 +550,13 @@
 			};
 			
 			var testCount = 0;
+			var testCountMax = 20;
+			var avgObjectCount = 0;
 			var testIntervalID = setInterval( function () {
 				
 				testCount++;
 				
-				if ( testCount === 20 ) {
+				if ( testCount === testCountMax ) {
 					
 					clearInterval( testIntervalID );
 					return;
@@ -569,33 +570,36 @@
 					testObj.position.set( Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5 );
 					
 					var searchObjects = octree.search( testObj.position, searchRad );
-					
-					//for ( var m = 0, n = searchObjects.length; m < n; m++ ) {
-						
-						//var so = testCompare( testObj, objects[ m ] );
-						
-					//}
-					for ( var m = 0, n = objects.length; m < n; m++ ) {
+					avgObjectCount += searchObjects.length;
+					for ( var m = 0, n = searchObjects.length; m < n; m++ ) {
 						
 						var so = testCompare( testObj, objects[ m ] );
 						
 					}
+					//avgObjectCount += objects.length;
+					//for ( var m = 0, n = objects.length; m < n; m++ ) {
+						
+					//	var so = testCompare( testObj, objects[ m ] );
+						
+					//}
 					//console.log( ' OCTREE SEARCH from ', testObj.position.x, testObj.position.y, testObj.position.z, ' + radius: ', searchRad, ' gives objects ', searchObjects );
 					
 				}
 				
+				avgObjectCount = avgObjectCount / 1000;
+				
 				var td = new Date().getTime();
 				
-				console.log( 'OCTREE SEARCH time: ', (td - tc ) );
+				console.log( 'OCTREE SEARCH time: ', (td - tc ), ' + avgObjectCount ', avgObjectCount );
 				
 			}, 100 );
-			*/
 			
+			/*
 			var addRemoveTest = true;
 			var adding = true;
 			//var intervalID = setInterval( function () {
-			//shared.signals.update.add( function () {
-			shared.signals.mouseup.add( function () {
+			shared.signals.update.add( function () {
+			//shared.signals.mouseup.add( function () {
 				
 				// adding/removing static
 				if ( addRemoveTest === true ) {
@@ -611,14 +615,14 @@
 							materials: new THREE.MeshNormalMaterial()// { color: 0x00FF00, wireframe: true, wireframeLinewidth: 10 } )
 						} );
 						
+						//testObj.position.set( Math.random() * ( radius * 1.5 ) - radius * 0.75, Math.random() * ( radius * 1.5 ) - radius * 0.75, Math.random() * ( radius * 1.5 ) - radius * 0.75 );
+						//testObj.position.set( Math.random() * -radius * 0.5, Math.random() * -radius * 0.5, Math.random() * -radius * 0.5 );
+						//testObj.position.set( -radius + Math.random() * -radius * 0.25, -radius + Math.random() * -radius * 0.25, -radius + Math.random() * -radius * 0.25 );
+						testObj.position.set( Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5 );
+						
 						objects.push( testObj );
 						octree.add( testObj );
 						scene.add( testObj );
-						
-						testObj.position.set( Math.random() * ( radius * 1.5 ) - radius * 0.75, Math.random() * ( radius * 1.5 ) - radius * 0.75, Math.random() * ( radius * 1.5 ) - radius * 0.75 );
-						//testObj.position.set( Math.random() * -radius * 0.5, Math.random() * -radius * 0.5, Math.random() * -radius * 0.5 );
-						//testObj.position.set( -radius + Math.random() * -radius * 0.25, -radius + Math.random() * -radius * 0.25, -radius + Math.random() * -radius * 0.25 );
-						//testObj.position.set( offset.x + Math.random() * ( radius * 10 ) - radius * 5, offset.y + Math.random() * ( radius * 10 ) - radius * 5, offset.z + Math.random() * ( radius * 10 ) - radius * 5 );
 						
 						// if at max
 						
@@ -672,19 +676,19 @@
 						
 					}
 					
-					// add as last
-					
-					objects.push( testObj );
-					octree.add( testObj );
-					scene.add( testObj );
-					
 					// update offset
 					
 					offset.z += 10;
 					
 					// position
 					
-					testObj.position.set( offset.x + Math.random() * ( radius * 10 ) - radius * 5, offset.y + Math.random() * ( radius * 10 ) - radius * 5, offset.z + Math.random() * ( radius * 10 ) - radius * 5 );
+					testObj.position.set( offset.x + Math.random() * ( radius * 4 ) - radius * 2, offset.y + Math.random() * ( radius * 4 ) - radius * 2, offset.z + Math.random() * ( radius * 4 ) - radius * 2 );
+					
+					// add as last
+					
+					objects.push( testObj );
+					octree.add( testObj );
+					scene.add( testObj );
 					
 				}
 				
@@ -693,13 +697,13 @@
 				console.log( ' ... depth ', octree.depth, ' vs depth end?', octree.depth_end() );
 				console.log( ' ... num octrees: ', octree.octree_count_end() );
 				console.log( ' ... total objects: ', octree.object_count_end() );
-				octree.to_console();
+				//octree.to_console();
 				console.log( ' ============================================================================================================');
 				console.log( ' ');
 				
 			} );
 			//}, 1000 );
-			
+			*/
 		}, 1000 );
 		
 		var controls = new THREE.FirstPersonControls( camera );
