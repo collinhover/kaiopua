@@ -484,7 +484,7 @@
 				
 				testObj = new _Model.Instance( {
 					geometry: new THREE.CubeGeometry( 50, 50, 50 ),
-					materials: new THREE.MeshNormalMaterial()// { color: 0x00FF00, wireframe: true, wireframeLinewidth: 10 } )
+					materials: new THREE.MeshBasicMaterial( { color: 0xFF0000 } )
 				} );
 				
 				//testObj.position.set( Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius );
@@ -551,10 +551,8 @@
 			
 			var testCount = 0;
 			var testCountMax = 20;
-			var avgObjectCount = 0;
+			var searchObjects = [];
 			var testIntervalID = setInterval( function () {
-				
-				testCount++;
 				
 				if ( testCount === testCountMax ) {
 					
@@ -563,30 +561,55 @@
 					
 				}
 				
+				testCount++;
+				
+				var avgObjectCount = 0;
+				
 				var tc = new Date().getTime();
 				
-				for ( var i = 0, l = 1000; i < l; i++ ) {
+				//for ( var i = 0, l = 1000; i < l; i++ ) {
+					
+					// clean previous search objects
+					
+					if ( searchObjects.length > 0 ) {
+						
+						for ( var m = 0, n = searchObjects.length; m < n; m++ ) {
+							
+							searchObjects[ m ].material.color.setRGB( 255, 0, 0 );
+							
+						}
+						
+					}
+					
+					// new test position
 					
 					testObj.position.set( Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5 );
 					
-					var searchObjects = octree.search( testObj.position, searchRad );
+					// search octree
+					
+					searchObjects = octree.search( testObj.position, searchRad );
 					avgObjectCount += searchObjects.length;
 					for ( var m = 0, n = searchObjects.length; m < n; m++ ) {
 						
-						var so = testCompare( testObj, objects[ m ] );
+						var so = testCompare( testObj, searchObjects[ m ] );
+						searchObjects[ m ].material.color.setRGB( 0, 255, 0 );
 						
 					}
+					
+					// search all objects
+					
 					//avgObjectCount += objects.length;
 					//for ( var m = 0, n = objects.length; m < n; m++ ) {
 						
 					//	var so = testCompare( testObj, objects[ m ] );
+					//	objects[ m ].material.color.setRGB( 0, 255, 0 );
 						
 					//}
 					//console.log( ' OCTREE SEARCH from ', testObj.position.x, testObj.position.y, testObj.position.z, ' + radius: ', searchRad, ' gives objects ', searchObjects );
 					
-				}
+				//}
 				
-				avgObjectCount = avgObjectCount / 1000;
+				avgObjectCount = avgObjectCount;// / 1000;
 				
 				var td = new Date().getTime();
 				
@@ -615,6 +638,7 @@
 							materials: new THREE.MeshNormalMaterial()// { color: 0x00FF00, wireframe: true, wireframeLinewidth: 10 } )
 						} );
 						
+						//testObj.position.set( Math.random() * ( radius * 1.5 ) - radius * 0.75, radius * 0.2 + Math.random() * radius * 0.6, Math.random() * ( radius * 1.5 ) - radius * 0.75 );
 						//testObj.position.set( Math.random() * ( radius * 1.5 ) - radius * 0.75, Math.random() * ( radius * 1.5 ) - radius * 0.75, Math.random() * ( radius * 1.5 ) - radius * 0.75 );
 						//testObj.position.set( Math.random() * -radius * 0.5, Math.random() * -radius * 0.5, Math.random() * -radius * 0.5 );
 						//testObj.position.set( -radius + Math.random() * -radius * 0.25, -radius + Math.random() * -radius * 0.25, -radius + Math.random() * -radius * 0.25 );
@@ -697,7 +721,7 @@
 				console.log( ' ... depth ', octree.depth, ' vs depth end?', octree.depth_end() );
 				console.log( ' ... num octrees: ', octree.octree_count_end() );
 				console.log( ' ... total objects: ', octree.object_count_end() );
-				//octree.to_console();
+				octree.to_console();
 				console.log( ' ============================================================================================================');
 				console.log( ' ');
 				

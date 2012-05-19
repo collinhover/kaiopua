@@ -16,6 +16,7 @@
 		octreeNodeCount = 0,
 		depthMax = -1,
 		objectsThreshold = 8,
+		overlapPct = 0.1,
 		indexInsideCross = -1,
 		indexOutsideOffset = 2,
 		posX = 0, negX = 1,
@@ -91,6 +92,7 @@
 		
 		this.depthMax = main.is_number( parameters.depthMax ) ? parameters.depthMax : depthMax;
 		this.objectsThreshold = main.is_number( parameters.objectsThreshold ) ? parameters.objectsThreshold : objectsThreshold;
+		this.overlapPct = main.is_number( parameters.overlapPct ) ? parameters.overlapPct : overlapPct;
 		
 		this.root = parameters.root instanceof OctreeNode ? parameters.root : new OctreeNode( parameters );
 		
@@ -227,8 +229,12 @@
 			
 		}
 		
+		// additional properties
+		
+		this.overlap = this.radius * this.tree.overlapPct;
+		
 		// TEST
-		this.visual = new THREE.Mesh( new THREE.CubeGeometry( this.radius * 2, this.radius * 2, this.radius * 2 ), new THREE.MeshLambertMaterial( { color: 0xFF0000, wireframe: true, wireframeLinewidth: 10 } ) );
+		this.visual = new THREE.Mesh( new THREE.CubeGeometry( ( this.radius + this.overlap ) * 2, ( this.radius + this.overlap ) * 2, ( this.radius + this.overlap ) * 2 ), new THREE.MeshLambertMaterial( { color: 0xFF0000, wireframe: true, wireframeLinewidth: 10 } ) );
 		this.visual.position.copy( this.position );
 		if ( this.tree.scene ) {
 			this.tree.scene.add( this.visual );
@@ -759,8 +765,10 @@
 	function branch ( indexOctant ) {
 		
 		var node,
-			offset,
+			overlap,
 			radius,
+			radiusOffset,
+			offset,
 			position;
 		
 		// node exists
@@ -775,8 +783,10 @@
 			
 			// properties
 			
-			radius = this.radius * 0.5;
-			offset = this.utilVec31Branch.set( indexOctant & 1 ? radius : -radius, indexOctant & 2 ? radius : -radius, indexOctant & 4 ? radius : -radius );
+			radius = ( this.radius + this.overlap ) * 0.5;
+			overlap = radius * this.tree.overlapPct;
+			radiusOffset = radius - overlap;
+			offset = this.utilVec31Branch.set( indexOctant & 1 ? radiusOffset : -radiusOffset, indexOctant & 2 ? radiusOffset : -radiusOffset, indexOctant & 4 ? radiusOffset : -radiusOffset );
 			position = new THREE.Vector3().add( this.position, offset );
 			
 			// node
@@ -828,7 +838,11 @@
 			indexPotentialBitwise1,
 			indexPotentialBitwise2,
 			octantX, octantY, octantZ,
+			overlap,
 			radius,
+			radiusOffset,
+			radiusParent,
+			overlapParent,
 			offset = this.utilVec31Expand,
 			position,
 			parent;
@@ -972,8 +986,18 @@
 				
 				// properties
 				
+				overlap = this.overlap;
 				radius = this.radius;
-				offset.set( indexOctant & 1 ? radius : -radius, indexOctant & 2 ? radius : -radius, indexOctant & 4 ? radius : -radius );
+				
+				// radius of parent comes from reversing overlap of this, unless overlap percent is 0
+				
+				radiusParent = this.tree.overlapPct > 0 ? overlap / ( ( 0.5 * this.tree.overlapPct ) * ( 1 + this.tree.overlapPct ) ) : radius * 2; 
+				overlapParent = radiusParent * this.tree.overlapPct;
+				
+				// parent offset is difference between radius + overlap of parent and child
+				
+				radiusOffset = ( radiusParent + overlapParent ) - ( radius + overlap );
+				offset.set( indexOctant & 1 ? radiusOffset : -radiusOffset, indexOctant & 2 ? radiusOffset : -radiusOffset, indexOctant & 4 ? radiusOffset : -radiusOffset );
 				position = new THREE.Vector3().add( this.position, offset );
 				
 				// parent
@@ -981,7 +1005,7 @@
 				parent = new OctreeNode( {
 					tree: this.tree,
 					position: position,
-					radius: this.radius * 2
+					radius: radiusParent
 				} );
 				
 				// set self as node of parent
@@ -1206,35 +1230,39 @@
 	function octant_index ( object ) {
 		
 		var i, l,
-			position,
-			scale,
-			radius,
+			positionObj,
+			scaleObj,
+			radiusObj,
+			position = this.position,
+			radius = this.radius,
+			overlap = this.overlap,
+			radiusOverlap = radius + overlap,
 			deltaX, deltaY, deltaZ,
 			distX, distY, distZ, 
 			distance,
-			indexOutside = 0;
+			indexOctant = 0;
 		
 		// handle object type
 		
 		if ( object instanceof THREE.Object3D ) {
 			
-			position = object.position;
-			scale = object.scale;
-			radius = object.geometry.boundingSphere.radius * Math.max( scale.x, scale.y, scale.z );
+			positionObj = object.position;
+			scaleObj = object.scale;
+			radiusObj = object.geometry.boundingSphere.radius * Math.max( scaleObj.x, scaleObj.y, scaleObj.z );
 			
 		}
 		else if ( object instanceof OctreeNode ) {
 			
-			position = object.position;
-			radius = 0;//object.radius;
+			positionObj = object.position;
+			radiusObj = 0;//object.radius;
 			
 		}
 		
 		// find delta and distance
 		
-		deltaX = position.x - this.position.x;
-		deltaY = position.y - this.position.y;
-		deltaZ = position.z - this.position.z;
+		deltaX = positionObj.x - position.x;
+		deltaY = positionObj.y - position.y;
+		deltaZ = positionObj.z - position.z;
 		
 		distX = Math.abs( deltaX );
 		distY = Math.abs( deltaY );
@@ -1243,39 +1271,87 @@
 		
 		// if outside, use bitwise flags to indicate on which sides object is outside of
 		
-		if ( distance + radius > this.radius ) {
+		if ( distance + radiusObj > radiusOverlap ) {
 			
 			// x
 			
-			if ( distX + radius > this.radius ) {
+			if ( distX + radiusObj > radiusOverlap ) {
 				
-				indexOutside = indexOutside ^ ( deltaX > 0 ? FLAG_POS_X : FLAG_NEG_X );
+				indexOctant = indexOctant ^ ( deltaX > 0 ? FLAG_POS_X : FLAG_NEG_X );
 				
 			}
 			
 			// y
 			
-			if ( distY + radius > this.radius ) {
+			if ( distY + radiusObj > radiusOverlap ) {
 				
-				indexOutside = indexOutside ^ ( deltaY > 0 ? FLAG_POS_Y : FLAG_NEG_Y );
+				indexOctant = indexOctant ^ ( deltaY > 0 ? FLAG_POS_Y : FLAG_NEG_Y );
 				
 			}
 			
 			// z
 			
-			if ( distZ + radius > this.radius ) {
+			if ( distZ + radiusObj > radiusOverlap ) {
 				
-				indexOutside = indexOutside ^ ( deltaZ > 0 ? FLAG_POS_Z : FLAG_NEG_Z );
+				indexOctant = indexOctant ^ ( deltaZ > 0 ? FLAG_POS_Z : FLAG_NEG_Z );
 				
 			}
 			
-			return -indexOutside - indexOutsideOffset;
+			return -indexOctant - indexOutsideOffset;
 			
 		}
 		
-		// if across
+		// return octant index from delta xyz
 		
-		if ( Math.min( distX, distY, distZ ) < radius ) {
+		//console.log( 'octant index inside ', position.x, position.y, position.z, ' with radius ', radiusOverlap, ' and overlap', overlap, ' >>> for object at ', positionObj.x, positionObj.y, positionObj.z, ' with radius ', radiusObj );
+		//console.log( ' deltaX - radiusObj ', ( deltaX - radiusObj ), ' // deltaX + radiusObj ', ( deltaX + radiusObj ), ' > ( deltaX - radiusObj > -overlap ) ', ( deltaX - radiusObj > -overlap ), ' < !(deltaX + radiusObj < overlap) ', !(deltaX + radiusObj < overlap) );
+		//console.log( ' deltaY - radiusObj ', ( deltaY - radiusObj ), ' // deltaY + radiusObj ', ( deltaY + radiusObj ), ' > ( deltaY - radiusObj > -overlap ) ', ( deltaY - radiusObj > -overlap ), ' < !(deltaY + radiusObj < overlap) ', !(deltaY + radiusObj < overlap) );
+		//console.log( ' deltaZ - radiusObj ', ( deltaZ - radiusObj ), ' // deltaZ + radiusObj ', ( deltaZ + radiusObj ), ' > ( deltaZ - radiusObj > -overlap ) ', ( deltaZ - radiusObj > -overlap ), ' < !(deltaZ + radiusObj < overlap) ', !(deltaZ + radiusObj < overlap) );
+		// x right
+		if ( deltaX - radiusObj > -overlap ) {
+			
+			indexOctant = indexOctant | 1;
+			
+		}
+		// x left
+		else if ( !( deltaX + radiusObj < overlap ) ) {
+			
+			return indexInsideCross;
+			
+		}
+		
+		// y right
+		if ( deltaY - radiusObj > -overlap ) {
+			
+			indexOctant = indexOctant | 2;
+			
+		}
+		// y left
+		else if ( !( deltaY + radiusObj < overlap ) ) {
+			
+			return indexInsideCross;
+			
+		}
+		
+		// z right
+		if ( deltaZ - radiusObj > -overlap ) {
+			
+			indexOctant = indexOctant | 4;
+			
+		}
+		// z left
+		else if ( !( deltaZ + radiusObj < overlap ) ) {
+			
+			return indexInsideCross;
+			
+		}
+		
+		return indexOctant;
+		
+		/*
+		// across
+		
+		if ( Math.min( distX, distY, distZ ) < radiusObj ) {
 			
 			return indexInsideCross;
 			
@@ -1284,7 +1360,7 @@
 		// return octant index from delta xyz
 		
 		return octant_index_from_xyz( deltaX, deltaY, deltaZ );
-		
+		*/
 	}
 	
 	function octant_index_from_xyz ( x, y, z ) {
@@ -1308,7 +1384,7 @@
 			indexOctant = indexOctant | 4;
 			
 		}
-		
+		console.log( indexOctant );
 		return indexOctant;
 		
 	}
@@ -1478,7 +1554,7 @@
 		delta = this.utilVec31Search.sub( position, this.position );
 		distance = Math.max( Math.abs( delta.x ), Math.abs( delta.y ), Math.abs( delta.z ) );
 		//console.log( this.id, ' > octree SEARCH cascade, this POS ', this.position.x, this.position.y, this.position.z, ' + this.radius ', this.radius, ' + delta ', delta.x, delta.y, delta.z, ' + distance ', distance, ' + is within? ', ( distance - radius <= this.radius ) );
-		if ( distance - radius <= this.radius || override === true ) {
+		if ( ( distance - radius ) <= ( this.radius + this.overlap ) || override === true ) {
 			
 			// gather objects
 			
