@@ -13,6 +13,7 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/core/Octree.js",
 		_Octree = {},
+		_ObjectHelper,
 		octreeNodeCount = 0,
 		depthMax = -1,
 		objectsThreshold = 8,
@@ -39,12 +40,12 @@
 	init_internal();
 	
 	main.asset_register( assetPath, { 
-		data: _Octree/*,
+		data: _Octree,
 		requirements: [
-			"assets/modules/core/Octant.js"
+			"assets/modules/utils/ObjectHelper.js"
 		],
 		callbacksOnReqs: init_internal,
-		wait: true*/
+		wait: true
 	});
 	
 	/*===================================================
@@ -53,8 +54,10 @@
     
     =====================================================*/
 	
-	function init_internal () {
+	function init_internal ( oh ) {
 		console.log('internal octree', _Octree);
+		
+		_ObjectHelper = oh;
 		
 		// properties
 		
@@ -96,9 +99,6 @@
 		
 		this.root = parameters.root instanceof OctreeNode ? parameters.root : new OctreeNode( parameters );
 		
-		// TODO: tree holds all objects, nodes hold list of indices
-		//this.objects = [];
-		
 	}
 	
 	Octree.prototype.root_set = function ( root ) { 
@@ -117,15 +117,44 @@
 		
 	};
 	
-	Octree.prototype.add = function () { 
+	Octree.prototype.add = function ( object, splitByFaces ) {
 		
-		add.apply( this.root, arguments );
+		var i, l,
+			geometry,
+			faces;
+		
+		// if adding faces of object, instead of object itself
+		
+		if ( splitByFaces === true ) {
+			
+			if ( object instanceof OctreeObjectData ) {
+				
+				object = object.object;
+				
+			}
+			
+			geometry = object.geometry;
+			faces = geometry.faces;
+			
+			for ( i = 0, l = faces.length; i < l; i++ ) {
+				
+				add_object.call( this.root, new OctreeObjectData( object, faces[ i ] ) );
+				
+			}
+			
+		}
+		// else add object
+		else {
+			
+			add_object.call( this.root, object instanceof OctreeObjectData ? object : new OctreeObjectData( object ) );
+			
+		}
 		
 	};
 	
-	Octree.prototype.remove = function () {
+	Octree.prototype.remove = function ( object ) {
 		
-		remove.apply( this.root, arguments );
+		remove_object.call( this.root, object );
 		
 	};
 	
@@ -183,6 +212,49 @@
 	
 	/*===================================================
     
+    object data
+    
+    =====================================================*/
+	
+	function OctreeObjectData ( object, face ) {
+		
+		this.object = object;
+		this.face = face;
+		
+		// properties by type
+		
+		if ( object instanceof THREE.Object3D ) {
+			
+			// ensure matrix world is calculated
+			
+			if ( object.matrixAutoUpdate !== true ) {
+				
+				object.updateMatrix();
+				
+			}
+			object.updateMatrixWorld();
+			
+			this.matrix = object.matrixWorld;
+			this.scale = object.scale;
+			
+			if ( face instanceof THREE.Face3 || face instanceof THREE.Face4 ) {
+				
+				this.radius = _ObjectHelper.face_bounding_radius( object, face );
+				this.offset = face.centroid;
+				
+			}
+			else {
+				
+				this.radius = object.geometry.boundingSphere.radius;
+				
+			}
+			
+		}
+		
+	}
+	
+	/*===================================================
+    
     node
     
     =====================================================*/
@@ -195,6 +267,7 @@
 		
 		this.utilVec31Branch = new THREE.Vector3();
 		this.utilVec31Expand = new THREE.Vector3();
+		this.utilVec31Index = new THREE.Vector3();
 		this.utilVec31Search = new THREE.Vector3();
 		
 		// handle parameters
@@ -369,7 +442,7 @@
 			// all other considered objects
 			else {
 				
-				add_object.call( root, element );
+				add_object.call( root, element instanceof OctreeObjectData ? element : new OctreeObjectData( element ) );
 				
 			}
 			
@@ -547,42 +620,89 @@
 	
 	function remove_object ( object ) {
 		
-		var nodeRemovedFrom;
+		var i, l,
+			nodesRemovedFrom,
+			removeData;
 		
 		// cascade through tree to find and remove object
 		
-		nodeRemovedFrom = remove_object_end.call( this, object );
+		removeData = remove_object_end.call( this, object, { searchComplete: false, nodesRemovedFrom: [] } );
 		
-		// if object removed, try to shrink the node it was removed from
+		// if object removed, try to shrink the nodes it was removed from
 		
-		if ( nodeRemovedFrom instanceof OctreeNode ) {
+		nodesRemovedFrom = removeData.nodesRemovedFrom;
+		
+		if ( nodesRemovedFrom.length > 0 ) {
 			
-			shrink.call( nodeRemovedFrom );
+			for ( i = 0, l = nodesRemovedFrom.length; i < l; i++ ) {
+				
+				shrink.call( nodesRemovedFrom[ i ] );
+				
+			}
 			
 		}
 		
 	}
 	
-	function remove_object_end ( object ) {
+	function remove_object_end ( object, removeData ) {
 		
 		var i, l,
-			index,
+			index = -1,
+			objectData,
 			node,
-			nodeRemovedFrom;
+			objectRemoved;
 		
-		// if is part of this objects
+		// find index of object in objects list
 		
-		index = this.objects.indexOf( object );
-		
-		if ( index !== -1 ) {
+		// search and remove object data (fast)
+		if ( object instanceof OctreeObjectData ) {
 			
-			this.objects.splice( index, 1 );
+			index = this.objects.indexOf( object );
 			
-			nodeRemovedFrom = this;
+			if ( index !== -1 ) {
+				
+				this.objects.splice( index, 1 );
+				
+				removeData.searchComplete = objectRemoved = true;
+				
+			}
 			
 		}
-		// if not found, search nodes
+		// search each object data for object and remove (slow)
 		else {
+			
+			for ( i = this.objects.length - 1; i >= 0; i-- ) {
+				
+				if ( this.objects[ i ].object === object ) {
+					
+					objectData = this.objects.splice( i, 1 )[ 0 ];
+					
+					objectRemoved = true;
+					
+					if ( !( objectData.face instanceof THREE.Face3 || objectData.face instanceof THREE.Face4 ) ) {
+						
+						removeData.searchComplete = true;
+						break;
+						
+					}
+					
+				}
+				
+			}
+			
+		}
+		
+		// if object data removed and this is not on nodes removed from
+		
+		if ( objectRemoved === true && removeData.nodesRemovedFrom.indexOf( this ) === -1 ) {
+			
+			removeData.nodesRemovedFrom.push( this );
+			
+		}
+		
+		// if search not complete, search nodes
+		
+		if ( removeData.searchComplete !== true ) {
 			
 			for ( i = 0, l = this.nodesIndices.length; i < l; i++ ) {
 				
@@ -590,9 +710,9 @@
 				
 				// try removing object from node
 				
-				nodeRemovedFrom = remove_object_end.call( node, object );
+				removeData = remove_object_end.call( node, object, removeData );
 				
-				if ( nodeRemovedFrom instanceof OctreeNode ) {
+				if ( removeData.searchComplete === true ) {
 					
 					break;
 					
@@ -602,7 +722,7 @@
 			
 		}
 		
-		return nodeRemovedFrom;
+		return removeData;
 		
 	}
 	
@@ -1018,7 +1138,12 @@
 				
 				// add all expand objects to parent
 				
-				add.call( parent, objectsExpand );
+				for ( i = 0, l = objectsExpand.length; i < l; i++ ) {
+					
+					add_object.call( this.tree.root, objectsExpand[ i ] );
+					
+				}
+				//add.call( parent, objectsExpand );
 				
 			}
 			
@@ -1227,11 +1352,10 @@
     
     =====================================================*/
 	
-	function octant_index ( object ) {
+	function octant_index ( objectData ) {
 		
 		var i, l,
 			positionObj,
-			scaleObj,
 			radiusObj,
 			position = this.position,
 			radius = this.radius,
@@ -1242,19 +1366,38 @@
 			distance,
 			indexOctant = 0;
 		
-		// handle object type
+		// handle type
 		
-		if ( object instanceof THREE.Object3D ) {
+		// object data
+		if ( objectData instanceof OctreeObjectData ) {
 			
-			positionObj = object.position;
-			scaleObj = object.scale;
-			radiusObj = object.geometry.boundingSphere.radius * Math.max( scaleObj.x, scaleObj.y, scaleObj.z );
+			radiusObj = objectData.radius * Math.max( objectData.scale.x, objectData.scale.y, objectData.scale.z );
+			
+			// object face
+			
+			if ( typeof objectData.face !== 'undefined' ) {
+				
+				// get offset of face from object center
+				
+				positionObj = this.utilVec31Index.copy( objectData.offset );
+				
+				// adjust for object world position, scale, and rotation
+				
+				objectData.matrix.multiplyVector3( positionObj );
+				
+			}
+			// object self
+			else {
+				
+				positionObj = objectData.matrix.getPosition();
+				
+			}
 			
 		}
-		else if ( object instanceof OctreeNode ) {
+		// node
+		else if ( objectData instanceof OctreeNode ) {
 			
-			positionObj = object.position;
-			radiusObj = 0;//object.radius;
+			radiusObj = 0;
 			
 		}
 		
@@ -1303,10 +1446,6 @@
 		
 		// return octant index from delta xyz
 		
-		//console.log( 'octant index inside ', position.x, position.y, position.z, ' with radius ', radiusOverlap, ' and overlap', overlap, ' >>> for object at ', positionObj.x, positionObj.y, positionObj.z, ' with radius ', radiusObj );
-		//console.log( ' deltaX - radiusObj ', ( deltaX - radiusObj ), ' // deltaX + radiusObj ', ( deltaX + radiusObj ), ' > ( deltaX - radiusObj > -overlap ) ', ( deltaX - radiusObj > -overlap ), ' < !(deltaX + radiusObj < overlap) ', !(deltaX + radiusObj < overlap) );
-		//console.log( ' deltaY - radiusObj ', ( deltaY - radiusObj ), ' // deltaY + radiusObj ', ( deltaY + radiusObj ), ' > ( deltaY - radiusObj > -overlap ) ', ( deltaY - radiusObj > -overlap ), ' < !(deltaY + radiusObj < overlap) ', !(deltaY + radiusObj < overlap) );
-		//console.log( ' deltaZ - radiusObj ', ( deltaZ - radiusObj ), ' // deltaZ + radiusObj ', ( deltaZ + radiusObj ), ' > ( deltaZ - radiusObj > -overlap ) ', ( deltaZ - radiusObj > -overlap ), ' < !(deltaZ + radiusObj < overlap) ', !(deltaZ + radiusObj < overlap) );
 		// x right
 		if ( deltaX - radiusObj > -overlap ) {
 			
@@ -1348,19 +1487,6 @@
 		
 		return indexOctant;
 		
-		/*
-		// across
-		
-		if ( Math.min( distX, distY, distZ ) < radiusObj ) {
-			
-			return indexInsideCross;
-			
-		}
-		
-		// return octant index from delta xyz
-		
-		return octant_index_from_xyz( deltaX, deltaY, deltaZ );
-		*/
 	}
 	
 	function octant_index_from_xyz ( x, y, z ) {
@@ -1384,7 +1510,7 @@
 			indexOctant = indexOctant | 4;
 			
 		}
-		console.log( indexOctant );
+		
 		return indexOctant;
 		
 	}

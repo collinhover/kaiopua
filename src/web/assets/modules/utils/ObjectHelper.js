@@ -62,6 +62,7 @@
 	_ObjectHelper.dimensions = dimensions;
 	
 	_ObjectHelper.push_bounds = push_bounds;
+	_ObjectHelper.face_bounding_radius = face_bounding_radius;
 	
 	_ObjectHelper.apply_matrix = apply_matrix;
 	_ObjectHelper.apply_quaternion = apply_quaternion;
@@ -536,6 +537,37 @@
 		}
 		
 		return bounds;
+		
+	}
+	
+	function face_bounding_radius ( object, face ) {
+		
+		var geometry = object instanceof THREE.Mesh ? object.geometry : object,
+			vertices = geometry.vertices,
+			centroid = face.centroid,
+			va = vertices[ face.a ], vb = vertices[ face.b ], vc = vertices[ face.c ], vd,
+			radius;
+		
+		// handle face type
+		
+		if ( face instanceof THREE.Face4 ) {
+			
+			vd = vertices[ face.d ];
+			
+			centroid.add( va, vb ).addSelf( vc ).addSelf( vd ).divideScalar( 4 );
+			
+			radius = Math.max( va.length(), vb.length(), vc.length(), vd.length() );
+			
+		}
+		else {
+			
+			centroid.add( va, vb ).addSelf( vc ).divideScalar( 3 );
+			
+			radius = Math.max( va.length(), vb.length(), vc.length() );
+			
+		}
+		
+		return radius - centroid.length();
 		
 	}
 	
