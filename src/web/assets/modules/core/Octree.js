@@ -16,7 +16,7 @@
 		_ObjectHelper,
 		octreeNodeCount = 0,
 		depthMax = -1,
-		objectsThreshold = 2,
+		objectsThreshold = 8,
 		overlapPct = 0.1,
 		indexInsideCross = -1,
 		indexOutsideOffset = 2,
@@ -168,7 +168,7 @@
 			indexOctantLast,
 			positionObj,
 			objectsUpdate = [];
-		console.log( this, ' UPDATE!');
+		
 		// check all objects for changes in position
 		
 		for ( i = 0, l = this.objects.length; i < l; i++ ) {
@@ -180,7 +180,7 @@
 			var cp = objectData.position_current();
 			
 			// if position has changed since last organization of object in tree
-			console.log( ' >  object has node? ', node instanceof OctreeNode, ' positions equal? ', objectData.positionLast.equals( cp ), ' current pos ', cp.x, cp.y, cp.z, ' last pos ', objectData.positionLast.x, objectData.positionLast.y, objectData.positionLast.z );
+			
 			if ( node instanceof OctreeNode && !objectData.positionLast.equals( objectData.position_current() ) ) {
 				
 				// get octant index of object within current node
@@ -188,7 +188,7 @@
 				indexOctantLast = objectData.indexOctant;
 				
 				indexOctant = octant_index.call( node, objectData );
-				console.log( ' > >  object new octant? ', indexOctant !== indexOctantLast );
+				
 				// if object octant index has changed
 				
 				if ( indexOctant !== indexOctantLast ) {
@@ -202,7 +202,7 @@
 			}
 			
 		}
-		console.log( '  ... objects to update', objectsUpdate);
+		
 		// update changed objects
 		
 		for ( i = 0, l = objectsUpdate.length; i < l; i++ ) {
@@ -211,7 +211,7 @@
 			
 			// remove object from current node
 			
-			remove_object.call( /*this.root*/objectData.node, objectData );
+			remove_object.call( objectData.node, objectData );
 			
 			// add object to tree root
 			
@@ -603,8 +603,7 @@
 	
 	function add_object ( object ) {
 		
-		var indexOctant,
-			index,
+		var index,
 			node;
 		
 		// get object octant index
@@ -653,6 +652,23 @@
 			// check if need to expand, split, or both
 			
 			grow_check.call( this );
+			
+		}
+		
+	}
+	
+	function add_objects_no_check ( objects ) {
+		
+		var i, l,
+			object;
+	
+		for ( i = 0, l = objects.length; i < l; i++ ) {
+			
+			object = objects[ i ];
+			
+			this.objects.push( object );
+			
+			object.node = this;
 			
 		}
 		
@@ -1209,7 +1225,6 @@
 					add_object.call( this.tree.root, objectsExpand[ i ] );
 					
 				}
-				//add.call( parent, objectsExpand );
 				
 			}
 			
@@ -1283,6 +1298,7 @@
 	function merge ( nodes ) {
 		
 		var i, l,
+			j, k,
 			node;
 		
 		// handle nodes
@@ -1295,7 +1311,7 @@
 			
 			// gather node + all subtree objects
 			
-			this.objects = this.objects.concat( objects_end.call( node ) );
+			add_objects_no_check.call( this, objects_end.call( node ) );
 			
 			// reset node + entire subtree
 			
@@ -1384,7 +1400,8 @@
 				
 				// add node + all subtree objects to root
 				
-				nodeRoot.objects = nodeRoot.objects.concat( objects_end.call( node ) );
+				add_objects_no_check.call( nodeRoot, objects_end.call( node ) );
+				//nodeRoot.objects = nodeRoot.objects.concat( objects_end.call( node ) );
 				
 				// reset node + entire subtree
 				
@@ -1395,8 +1412,8 @@
 		}
 		
 		// add own objects to root
-		
-		nodeRoot.objects = nodeRoot.objects.concat( this.objects );
+		add_objects_no_check.call( nodeRoot, this.objects );
+		//nodeRoot.objects = nodeRoot.objects.concat( this.objects );
 		
 		// reset self
 		

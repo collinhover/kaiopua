@@ -469,7 +469,7 @@
 				scene: scene
 			} ),
 			objects = [],
-			countMax = 6,
+			countMax = 20,
 			testObj,
 			testObjLast,
 			offset = new THREE.Vector3();
@@ -548,7 +548,7 @@
 				
 				var tc = new Date().getTime();
 				
-				//for ( var i = 0, l = 1000; i < l; i++ ) {
+				for ( var i = 0, l = 100; i < l; i++ ) {
 					
 					// clean previous search objects
 					
@@ -588,9 +588,9 @@
 					//}
 					//console.log( ' OCTREE SEARCH from ', testObj.position.x, testObj.position.y, testObj.position.z, ' + radius: ', searchRad, ' gives objects ', searchObjects );
 					
-				//}
+				}
 				
-				avgObjectCount = avgObjectCount;// / 1000;
+				avgObjectCount = avgObjectCount / 100;
 				
 				var td = new Date().getTime();
 				
@@ -603,8 +603,8 @@
 			var facesTest = false;
 			var adding = true;
 			//var intervalID = setInterval( function () {
-			//shared.signals.update.add( function () {
-			shared.signals.mouseup.add( function () {
+			shared.signals.update.add( function () {
+			//shared.signals.mouseup.add( function () {
 				
 				// adding/removing static
 				if ( addRemoveTest === true ) {
@@ -710,7 +710,7 @@
 							
 							//testObj.position.x += 10;
 							//testObj.position.y += 10;
-							testObj.position.z += 100;
+							testObj.position.z += 10;
 							
 						}
 						
