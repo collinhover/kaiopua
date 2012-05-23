@@ -16,7 +16,7 @@
 		_ObjectHelper,
 		octreeNodeCount = 0,
 		depthMax = -1,
-		objectsThreshold = 8,
+		objectsThreshold = 2,
 		overlapPct = 0.1,
 		indexInsideCross = -1,
 		indexOutsideOffset = 2,
@@ -93,6 +93,7 @@
 		this.scene = parameters.scene;
 		// TEST
 		
+		this.objects = [];
 		this.depthMax = main.is_number( parameters.depthMax ) ? parameters.depthMax : depthMax;
 		this.objectsThreshold = main.is_number( parameters.objectsThreshold ) ? parameters.objectsThreshold : objectsThreshold;
 		this.overlapPct = main.is_number( parameters.overlapPct ) ? parameters.overlapPct : overlapPct;
@@ -155,6 +156,68 @@
 	Octree.prototype.remove = function ( object ) {
 		
 		remove_object.call( this.root, object );
+		
+	};
+	
+	Octree.prototype.update = function () {
+		
+		var i, l,
+			node,
+			objectData,
+			indexOctant,
+			indexOctantLast,
+			positionObj,
+			objectsUpdate = [];
+		console.log( this, ' UPDATE!');
+		// check all objects for changes in position
+		
+		for ( i = 0, l = this.objects.length; i < l; i++ ) {
+			
+			objectData = this.objects[ i ];
+			
+			node = objectData.node;
+			
+			var cp = objectData.position_current();
+			
+			// if position has changed since last organization of object in tree
+			console.log( ' >  object has node? ', node instanceof OctreeNode, ' positions equal? ', objectData.positionLast.equals( cp ), ' current pos ', cp.x, cp.y, cp.z, ' last pos ', objectData.positionLast.x, objectData.positionLast.y, objectData.positionLast.z );
+			if ( node instanceof OctreeNode && !objectData.positionLast.equals( objectData.position_current() ) ) {
+				
+				// get octant index of object within current node
+				
+				indexOctantLast = objectData.indexOctant;
+				
+				indexOctant = octant_index.call( node, objectData );
+				console.log( ' > >  object new octant? ', indexOctant !== indexOctantLast );
+				// if object octant index has changed
+				
+				if ( indexOctant !== indexOctantLast ) {
+					
+					// add to list for deferred update
+					
+					objectsUpdate.push( objectData );
+					
+				}
+				
+			}
+			
+		}
+		console.log( '  ... objects to update', objectsUpdate);
+		// update changed objects
+		
+		for ( i = 0, l = objectsUpdate.length; i < l; i++ ) {
+			
+			objectData = objectsUpdate[ i ];
+			
+			// remove object from current node
+			
+			remove_object.call( /*this.root*/objectData.node, objectData );
+			
+			// add object to tree root
+			
+			add_object.call( this.root, objectData );
+			
+		}
 		
 	};
 	
@@ -236,6 +299,8 @@
 			
 			this.matrix = object.matrixWorld;
 			this.scale = object.scale;
+			this.positionLast = new THREE.Vector3();
+			this.utilVec31Position = new THREE.Vector3();
 			
 			if ( face instanceof THREE.Face3 || face instanceof THREE.Face4 ) {
 				
@@ -253,6 +318,43 @@
 		
 	}
 	
+	OctreeObjectData.prototype.position_current = function () {
+		
+		var position;
+		
+		// ensure matrices are updated
+		
+		if ( this.object.matrixAutoUpdate !== true ) {
+			
+			this.object.updateMatrix();
+			
+		}
+		this.object.updateMatrixWorld();
+		
+		// object face
+		
+		if ( typeof this.face !== 'undefined' ) {
+			
+			// get offset of face from object center
+			
+			position = this.utilVec31Position.copy( this.offset );
+			
+			// adjust for object world position, scale, and rotation
+			
+			this.matrix.multiplyVector3( position );
+			
+		}
+		// object self
+		else {
+			
+			position = this.matrix.getPosition();
+			
+		}
+		
+		return position;
+		
+	}
+	
 	/*===================================================
     
     node
@@ -267,7 +369,6 @@
 		
 		this.utilVec31Branch = new THREE.Vector3();
 		this.utilVec31Expand = new THREE.Vector3();
-		this.utilVec31Index = new THREE.Vector3();
 		this.utilVec31Search = new THREE.Vector3();
 		
 		// handle parameters
@@ -410,84 +511,6 @@
 	
 	/*===================================================
     
-    add / remove external
-    
-    =====================================================*/
-	
-	function add ( elements ) {
-		
-		var i, l,
-			element,
-			root;
-		
-		// handle elements
-		
-		elements = main.ensure_array( elements );
-		
-		// for each element
-		
-		for ( i = 0, l = elements.length; i < l; i++ ) {
-			
-			element = elements[ i ];
-			
-			root = this.tree.root;
-			
-			// if is octree
-			
-			if ( element instanceof OctreeNode ) {
-					
-				add_octree.call( root, element );
-				
-			}
-			// all other considered objects
-			else {
-				
-				add_object.call( root, element instanceof OctreeObjectData ? element : new OctreeObjectData( element ) );
-				
-			}
-			
-		}
-		
-	}
-	
-	function remove ( elements ) {
-		
-		var i, l,
-			element,
-			root;
-		
-		// handle elements
-		
-		elements = main.ensure_array( elements );
-		
-		// for each argument
-		
-		for ( i = 0, l = elements.length; i < l; i++ ) {
-			
-			element = elements[ i ];
-			
-			root = this.tree.root;
-			
-			// is octree
-			
-			if ( element instanceof OctreeNode ) {
-				
-				remove_octree.call( root, element );
-				
-			}
-			// all other considered objects
-			else {
-				
-				remove_object.call( root, element );
-				
-			}
-			
-		}
-		
-	}
-	
-	/*===================================================
-    
     octree add / remove
     
     =====================================================*/
@@ -581,6 +604,7 @@
 	function add_object ( object ) {
 		
 		var indexOctant,
+			index,
 			node;
 		
 		// get object octant index
@@ -604,11 +628,27 @@
 		// else add to self
 		else {
 			
-			if ( this.objects.indexOf( object ) === -1 ) {
+			// add to this objects list
+			
+			index = this.objects.indexOf( object );
+			
+			if ( index === -1 ) {
 				
 				this.objects.push( object );
 				
 			}
+			
+			// add to tree objects list
+			
+			if ( !( object.node instanceof OctreeNode ) ) {
+				
+				this.tree.objects.push( object );
+				
+			}
+			
+			// node reference
+			
+			object.node = this;
 			
 			// check if need to expand, split, or both
 			
@@ -657,11 +697,13 @@
 		// search and remove object data (fast)
 		if ( object instanceof OctreeObjectData ) {
 			
+			// remove from this objects list
+			
 			index = this.objects.indexOf( object );
 			
 			if ( index !== -1 ) {
 				
-				this.objects.splice( index, 1 );
+				remove_object_index_tree.call( this, index );
 				
 				removeData.searchComplete = objectRemoved = true;
 				
@@ -675,7 +717,7 @@
 				
 				if ( this.objects[ i ].object === object ) {
 					
-					objectData = this.objects.splice( i, 1 )[ 0 ];
+					objectData = remove_object_index_tree.call( this, i );
 					
 					objectRemoved = true;
 					
@@ -723,6 +765,30 @@
 		}
 		
 		return removeData;
+		
+	}
+	
+	function remove_object_index_tree ( index ) {
+		
+		// remove from this objects list
+		
+		var objectRemoved = this.objects.splice( index, 1 )[ 0 ];
+		
+		// remove from tree objects list
+		
+		index = this.tree.objects.indexOf( objectRemoved );
+		
+		if ( index !== -1 ) {
+			
+			this.tree.objects.splice( index, 1 );
+			
+		}
+		
+		// node reference
+		
+		objectRemoved.node = undefined;
+		
+		return objectRemoved;
 		
 	}
 	
@@ -1316,7 +1382,7 @@
 			
 			if ( node !== nodeRoot ) {
 				
-				// gather node + all subtree objects
+				// add node + all subtree objects to root
 				
 				nodeRoot.objects = nodeRoot.objects.concat( objects_end.call( node ) );
 				
@@ -1328,7 +1394,7 @@
 			
 		}
 		
-		// gather own objects
+		// add own objects to root
 		
 		nodeRoot.objects = nodeRoot.objects.concat( this.objects );
 		
@@ -1373,25 +1439,11 @@
 			
 			radiusObj = objectData.radius * Math.max( objectData.scale.x, objectData.scale.y, objectData.scale.z );
 			
-			// object face
+			positionObj = objectData.position_current();
 			
-			if ( typeof objectData.face !== 'undefined' ) {
-				
-				// get offset of face from object center
-				
-				positionObj = this.utilVec31Index.copy( objectData.offset );
-				
-				// adjust for object world position, scale, and rotation
-				
-				objectData.matrix.multiplyVector3( positionObj );
-				
-			}
-			// object self
-			else {
-				
-				positionObj = objectData.matrix.getPosition();
-				
-			}
+			// update object data position last
+			
+			objectData.positionLast.copy( positionObj );
 			
 		}
 		// node
@@ -1440,7 +1492,9 @@
 				
 			}
 			
-			return -indexOctant - indexOutsideOffset;
+			objectData.indexOctant = -indexOctant - indexOutsideOffset;
+			
+			return objectData.indexOctant;
 			
 		}
 		
@@ -1455,7 +1509,8 @@
 		// x left
 		else if ( !( deltaX + radiusObj < overlap ) ) {
 			
-			return indexInsideCross;
+			objectData.indexOctant = indexInsideCross;
+			return objectData.indexOctant;
 			
 		}
 		
@@ -1468,7 +1523,8 @@
 		// y left
 		else if ( !( deltaY + radiusObj < overlap ) ) {
 			
-			return indexInsideCross;
+			objectData.indexOctant = indexInsideCross;
+			return objectData.indexOctant;
 			
 		}
 		
@@ -1481,11 +1537,13 @@
 		// z left
 		else if ( !( deltaZ + radiusObj < overlap ) ) {
 			
-			return indexInsideCross;
+			objectData.indexOctant = indexInsideCross;
+			return objectData.indexOctant;
 			
 		}
 		
-		return indexOctant;
+		objectData.indexOctant = indexOctant;
+		return objectData.indexOctant;
 		
 	}
 	
@@ -1512,6 +1570,46 @@
 		}
 		
 		return indexOctant;
+		
+	}
+	
+	/*===================================================
+    
+    search
+    
+    =====================================================*/
+	
+	function search ( position, radius, objects, override ) {
+		
+		var i, l,
+			node,
+			delta,
+			distance;
+		
+		// if is within distance
+		
+		delta = this.utilVec31Search.sub( position, this.position );
+		distance = Math.max( Math.abs( delta.x ), Math.abs( delta.y ), Math.abs( delta.z ) );
+		//console.log( this.id, ' > octree SEARCH cascade, this POS ', this.position.x, this.position.y, this.position.z, ' + this.radius ', this.radius, ' + delta ', delta.x, delta.y, delta.z, ' + distance ', distance, ' + is within? ', ( distance - radius <= this.radius ) );
+		if ( ( distance - radius ) <= ( this.radius + this.overlap ) || override === true ) {
+			
+			// gather objects
+			
+			objects = ( objects || [] ).concat( this.objects );
+			
+			// search subtree
+			
+			for ( i = 0, l = this.nodesIndices.length; i < l; i++ ) {
+				
+				node = this.nodesByIndex[ this.nodesIndices[ i ] ];
+				
+				objects = search.call( node, position, radius, objects );
+				
+			}
+			
+		}
+		
+		return objects;
 		
 	}
 	
@@ -1659,46 +1757,6 @@
 		}
 		
 		return count;
-		
-	}
-	
-	/*===================================================
-    
-    search
-    
-    =====================================================*/
-	
-	function search ( position, radius, objects, override ) {
-		
-		var i, l,
-			node,
-			delta,
-			distance;
-		
-		// if is within distance
-		
-		delta = this.utilVec31Search.sub( position, this.position );
-		distance = Math.max( Math.abs( delta.x ), Math.abs( delta.y ), Math.abs( delta.z ) );
-		//console.log( this.id, ' > octree SEARCH cascade, this POS ', this.position.x, this.position.y, this.position.z, ' + this.radius ', this.radius, ' + delta ', delta.x, delta.y, delta.z, ' + distance ', distance, ' + is within? ', ( distance - radius <= this.radius ) );
-		if ( ( distance - radius ) <= ( this.radius + this.overlap ) || override === true ) {
-			
-			// gather objects
-			
-			objects = ( objects || [] ).concat( this.objects );
-			
-			// search subtree
-			
-			for ( i = 0, l = this.nodesIndices.length; i < l; i++ ) {
-				
-				node = this.nodesByIndex[ this.nodesIndices[ i ] ];
-				
-				objects = search.call( node, position, radius, objects );
-				
-			}
-			
-		}
-		
-		return objects;
 		
 	}
 	

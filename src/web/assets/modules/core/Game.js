@@ -469,7 +469,7 @@
 				scene: scene
 			} ),
 			objects = [],
-			countMax = 1,
+			countMax = 6,
 			testObj,
 			testObjLast,
 			offset = new THREE.Vector3();
@@ -599,8 +599,8 @@
 			}, 100 );
 			*/
 			
-			var addRemoveTest = true;
-			var facesTest = true;
+			var addRemoveTest = false;
+			var facesTest = false;
 			var adding = true;
 			//var intervalID = setInterval( function () {
 			//shared.signals.update.add( function () {
@@ -682,17 +682,7 @@
 				// moving test
 				else {
 					
-					if ( objects.length === countMax ) {
-						
-						// remove first object
-						
-						testObj = objects.shift();
-						
-						scene.remove( testObj );
-						octree.remove( testObj );
-						
-					}
-					else {
+					if ( objects.length !== countMax ) {
 						
 						// add new
 						
@@ -701,21 +691,32 @@
 							materials: new THREE.MeshNormalMaterial()// { color: 0x00FF00, wireframe: true, wireframeLinewidth: 10 } )
 						} );
 						
+						// position
+						
+						testObj.position.set( Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5 );
+						
+						// add as last
+						
+						octree.add( testObj );
+						objects.push( testObj );
+						scene.add( testObj );
+						
 					}
-					
-					// update offset
-					
-					offset.z += 10;
-					
-					// position
-					
-					testObj.position.set( offset.x + Math.random() * ( radius * 4 ) - radius * 2, offset.y + Math.random() * ( radius * 4 ) - radius * 2, offset.z + Math.random() * ( radius * 4 ) - radius * 2 );
-					
-					// add as last
-					
-					objects.push( testObj );
-					octree.add( testObj );
-					scene.add( testObj );
+					else {
+						
+						for ( var i = 0, l = objects.length; i < l; i++ ) {
+							
+							testObj = objects[ i ];
+							
+							//testObj.position.x += 10;
+							//testObj.position.y += 10;
+							testObj.position.z += 100;
+							
+						}
+						
+						octree.update();
+						
+					}
 					
 				}
 				
@@ -723,7 +724,7 @@
 				console.log( ' OCTREE: ', octree );
 				console.log( ' ... depth ', octree.depth, ' vs depth end?', octree.depth_end() );
 				console.log( ' ... num octrees: ', octree.octree_count_end() );
-				console.log( ' ... total objects: ', octree.object_count_end() );
+				console.log( ' ... total objects: ', octree.object_count_end(), ' vs tree objects length: ', octree.objects.length );
 				//octree.to_console();
 				console.log( ' ============================================================================================================');
 				console.log( ' ');
