@@ -37,8 +37,6 @@
     
     =====================================================*/
 	
-	init_internal();
-	
 	main.asset_register( assetPath, { 
 		data: _Octree,
 		requirements: [
@@ -124,30 +122,36 @@
 			geometry,
 			faces;
 		
-		// if adding faces of object, instead of object itself
+		// if does not yet contain object
 		
-		if ( splitByFaces === true ) {
+		if ( this.contains( object ) !== true ) {
 			
-			if ( object instanceof OctreeObjectData ) {
+			// if adding faces of object
+			
+			if ( splitByFaces === true ) {
 				
-				object = object.object;
+				if ( object instanceof OctreeObjectData ) {
+					
+					object = object.object;
+					
+				}
+				
+				geometry = object.geometry;
+				faces = geometry.faces;
+				
+				for ( i = 0, l = faces.length; i < l; i++ ) {
+					
+					add_object.call( this.root, new OctreeObjectData( object, faces[ i ] ) );
+					
+				}
 				
 			}
-			
-			geometry = object.geometry;
-			faces = geometry.faces;
-			
-			for ( i = 0, l = faces.length; i < l; i++ ) {
+			// else add object itself
+			else {
 				
-				add_object.call( this.root, new OctreeObjectData( object, faces[ i ] ) );
+				add_object.call( this.root, object instanceof OctreeObjectData ? object : new OctreeObjectData( object ) );
 				
 			}
-			
-		}
-		// else add object
-		else {
-			
-			add_object.call( this.root, object instanceof OctreeObjectData ? object : new OctreeObjectData( object ) );
 			
 		}
 		
@@ -156,6 +160,31 @@
 	Octree.prototype.remove = function ( object ) {
 		
 		remove_object.call( this.root, object );
+		
+	};
+	
+	Octree.prototype.contains = function ( object ) {
+		
+		var i, l,
+			objectData,
+			contains = false;
+		
+		// check all objects data
+		
+		for ( i = 0, l = this.objects.length; i < l; i++ ) {
+			
+			objectData = this.objects[ i ];
+			
+			if ( ( object instanceof OctreeObjectData && objectData === object ) || objectData.object === object ) {
+				
+				contains = true;
+				break;
+				
+			}
+			
+		}
+		
+		return contains;
 		
 	};
 	
@@ -221,9 +250,86 @@
 		
 	};
 	
-	Octree.prototype.search = function ( position, radius ) {
+	Octree.prototype.search = function ( position, radius, organizeByObject ) {
 		
-		return search.call( this.root, position, radius, [], true );
+		var i, l,
+			node,
+			objects,
+			objectData,
+			object,
+			results,
+			resultData,
+			resultsObjectsIndices,
+			resultObjectIndex;
+		
+		// add root objects
+		
+		objects = [].concat( this.root.objects );
+		
+		// search each node of root
+		
+		for ( i = 0, l = this.root.nodesIndices.length; i < l; i++ ) {
+			
+			node = this.root.nodesByIndex[ this.root.nodesIndices[ i ] ];
+			
+			objects = search.call( node, position, radius, objects );
+			
+		}
+		
+		// if should organize results by object
+		
+		if ( organizeByObject === true ) {
+			
+			results = [];
+			resultsObjectsIndices = [];
+			
+			// for each object data found
+			
+			for ( i = 0, l = objects.length; i < l; i++ ) {
+				
+				objectData = objects[ i ];
+				object = objectData.object;
+				
+				resultObjectIndex = resultsObjectsIndices.indexOf( object );
+				
+				// if needed, create new result data
+				
+				if ( resultObjectIndex === -1 ) {
+					
+					resultData = {
+						object: object,
+						faces: []
+					};
+					
+					results.push( resultData );
+					
+					resultsObjectsIndices.push( object );
+					
+				}
+				else {
+					
+					resultData = results[ resultObjectIndex ];
+					
+				}
+				
+				// if object data has face, add to list
+				
+				if ( typeof objectData.faces !== 'undefined' ) {
+					
+					resultData.faces.push( objectData.faces );
+					
+				}
+				
+			}
+			
+		}
+		else {
+			
+			results = objects;
+			
+		}
+		
+		return results;
 		
 	};
 	
@@ -282,7 +388,7 @@
 	function OctreeObjectData ( object, face ) {
 		
 		this.object = object;
-		this.face = face;
+		this.faces = face;
 		
 		// properties by type
 		
@@ -302,10 +408,10 @@
 			this.positionLast = new THREE.Vector3();
 			this.utilVec31Position = new THREE.Vector3();
 			
-			if ( face instanceof THREE.Face3 || face instanceof THREE.Face4 ) {
+			if ( this.faces instanceof THREE.Face3 || this.faces instanceof THREE.Face4 ) {
 				
-				this.radius = _ObjectHelper.face_bounding_radius( object, face );
-				this.offset = face.centroid;
+				this.radius = _ObjectHelper.face_bounding_radius( object, this.faces );
+				this.offset = this.faces.centroid;
 				
 			}
 			else {
@@ -333,7 +439,7 @@
 		
 		// object face
 		
-		if ( typeof this.face !== 'undefined' ) {
+		if ( typeof this.faces !== 'undefined' ) {
 			
 			// get offset of face from object center
 			
@@ -737,7 +843,7 @@
 					
 					objectRemoved = true;
 					
-					if ( !( objectData.face instanceof THREE.Face3 || objectData.face instanceof THREE.Face4 ) ) {
+					if ( typeof objectData.faces === 'undefined' ) {
 						
 						removeData.searchComplete = true;
 						break;
@@ -1596,23 +1702,27 @@
     
     =====================================================*/
 	
-	function search ( position, radius, objects, override ) {
+	function search ( position, radius, objects ) {
 		
 		var i, l,
 			node,
 			delta,
 			distance;
 		
+		//
+		// TODO: account for direction
+		//
+		
 		// if is within distance
 		
 		delta = this.utilVec31Search.sub( position, this.position );
 		distance = Math.max( Math.abs( delta.x ), Math.abs( delta.y ), Math.abs( delta.z ) );
 		//console.log( this.id, ' > octree SEARCH cascade, this POS ', this.position.x, this.position.y, this.position.z, ' + this.radius ', this.radius, ' + delta ', delta.x, delta.y, delta.z, ' + distance ', distance, ' + is within? ', ( distance - radius <= this.radius ) );
-		if ( ( distance - radius ) <= ( this.radius + this.overlap ) || override === true ) {
+		if ( ( distance - radius ) <= ( this.radius + this.overlap ) ) {
 			
 			// gather objects
 			
-			objects = ( objects || [] ).concat( this.objects );
+			objects = objects.concat( this.objects );
 			
 			// search subtree
 			

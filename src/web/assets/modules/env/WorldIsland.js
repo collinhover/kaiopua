@@ -100,7 +100,7 @@
     	
     	me.parts.body = new _Model.Instance();
 		
-		me.parts.body.quaternion.setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), -Math.PI * 0.4 );
+		//me.parts.body.quaternion.setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), -Math.PI * 0.4 );
 		
 		me.add( me.parts.body );
 		
@@ -115,6 +115,8 @@
 		me.parts.fog = null;//new THREE.Fog( 0x226fb3, 1, 10000 );
 		
 		// body parts
+		
+		// TODO: triangulate head mesh
 		
         me.parts.head = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Whale_Head.js"),
@@ -133,7 +135,7 @@
         });
 		
 		me.parts.body.add( me.parts.tail );
-		
+		return;
 		// water
 		
 		me.parts.waterRing = new _Water.Instance( { wavesTexture: shared.pathToTextures + "water_world_512.png" } );
@@ -512,7 +514,7 @@
 			_Game.sceneBG.add( me.parts.skybox );
 			
 			// morph animations
-			
+			/*
 			me.parts.tail.morphs.play( 'swim', { duration: 5000, loop: true } );
 			
 			me.parts.sunmoon.morphs.play( 'shine', { duration: 500, loop: true, reverseOnComplete: true, durationShift: 4000 } );
@@ -522,7 +524,7 @@
 			me.parts.waterRing.morphs.play( 'waves', { duration: 4000, loop: true } );
 			
 			me.parts.sky.animate();
-			
+			*/
 		}
 		
 		function hide () {

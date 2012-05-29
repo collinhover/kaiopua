@@ -189,8 +189,33 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	// better type checking
-	// trade off is performance
+	main.time_test = function ( fn, iterations, message ) {
+		
+		var i,
+			ta, tb,
+			result;
+		
+		iterations = main.is_number( iterations ) && iterations > 0 ? iterations : 1;
+		
+		message = typeof message === 'string' ? message : '';
+		
+		ta = new Date().getTime();
+		
+		for ( i = 0; i < iterations; i++ ) {
+			
+			result = fn.call();
+			
+		}
+		
+		tb = new Date().getTime();
+		
+		console.log( message, ' > time test ( x', iterations, '): ', (tb - ta) );
+		
+		return result;
+		
+	};
+	
+	// better type checking, slower performance
 	
 	main.type = function ( o ) {
 		return o==null?o+'':Object.prototype.toString.call(o).slice(8,-1).toLowerCase();
@@ -379,13 +404,7 @@ var KAIOPUA = (function (main) {
 	
 	main.ensure_array = function ( target ) {
 		
-		target = target || [];
-		
-		if ( main.is_array ( target ) !== true ) {
-			target = [target];
-		}
-		
-		return target;
+		return target ? ( main.is_array ( target ) !== true ? [ target ] : target ) : [];
 		
 	};
 	

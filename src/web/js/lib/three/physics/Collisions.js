@@ -1,6 +1,13 @@
 /**
  * @author bartek drozdz / http://everyday3d.com/
+ * @author collin hover / http://collinhover.com/
  */
+
+/*===================================================
+
+colliders
+
+=====================================================*/
  
  THREE.Collider = function () {
 	 
@@ -35,7 +42,6 @@ THREE.BoxCollider = function( min, max ) {
 
 	this.min = min;
 	this.max = max;
-	this.dynamic = true;
 
 	this.normal = new THREE.Vector3();
 
@@ -43,19 +49,92 @@ THREE.BoxCollider = function( min, max ) {
 THREE.BoxCollider.prototype = new THREE.Collider();
 THREE.BoxCollider.prototype.constructor = THREE.BoxCollider;
 
-THREE.MeshCollider = function( mesh, box ) {
+// @params object THREE.Mesh
+// @returns CBox static Axis-Aligned Bounding Box
+//
+// The AABB is calculated based on current
+// position of the object (assumes it won't move)
+
+THREE.ObjectColliderAABB = function( object ) {
+	
+	var geometry = object.geometry,
+		bbox,
+		min,
+		max;
+	
+	if ( !geometry.boundingBox ) {
+		
+		geometry.computeBoundingBox();
+		
+	}
+	
+	bbox = geometry.boundingBox;
+	min = bbox.min.clone();
+	max = bbox.max.clone();
+	
+	// proto
+	
+	THREE.BoxCollider.call( this, min, max );
+	
+	// add object position
+	
+	this.min.addSelf( object.position );
+	this.max.addSelf( object.position );
+
+};
+THREE.ObjectColliderAABB.prototype = new THREE.BoxCollider();
+THREE.ObjectColliderAABB.prototype.constructor = THREE.ObjectColliderAABB;
+
+// @params object THREE.Mesh
+// @returns CBox dynamic Object Bounding Box
+
+THREE.ObjectColliderOBB = function( object ) {
+	
+	var geometry = object.geometry,
+		bbox,
+		min,
+		max;
+	
+	if ( !geometry.boundingBox ) {
+		
+		geometry.computeBoundingBox();
+		
+	}
+	
+	bbox = geometry.boundingBox;
+	min = bbox.min.clone();
+	max = bbox.max.clone();
+	
+	// proto
+	
+	THREE.BoxCollider.call( this, min, max );
+	
+	// store object
+	
+	this.object = object;
+
+};
+THREE.ObjectColliderOBB.prototype = new THREE.BoxCollider();
+THREE.ObjectColliderOBB.prototype.constructor = THREE.ObjectColliderOBB;
+
+THREE.MeshCollider = function( object, box ) {
 	
 	THREE.Collider.call( this );
 
-	this.mesh = mesh;
-	this.box = box;
-	this.numFaces = this.mesh.geometry.faces.length;
+	this.object = object;
+	this.box = box || new THREE.ObjectColliderOBB( this.object );
 
 	this.normal = new THREE.Vector3();
-
+	
 };
 THREE.MeshCollider.prototype = new THREE.Collider();
 THREE.MeshCollider.prototype.constructor = THREE.MeshCollider;
+
+/*===================================================
+
+system
+
+=====================================================*/
 
 THREE.CollisionSystem = function() {
 
@@ -74,26 +153,56 @@ THREE.CollisionSystem.prototype.merge = function( collisionSystem ) {
 
 };
 
-THREE.CollisionSystem.prototype.rayCastAll = function( ray, colliders ) {
+THREE.CollisionSystem.prototype.rayCastColliders = function( ray, colliders ) {
 
 	ray.direction.normalize();
 
-	this.hits.length = 0;
+	this.hits = [];
 
-	var i, l, d, collider,
+	var i, l, 
+		d,
+		collider,
+		colliderRecast,
 		ld = 0;
 	
 	colliders = colliders || this.colliders;
-
+	
 	for ( i = 0, l = colliders.length; i < l; i++ ) {
 
 		collider = colliders[ i ];
-
+		
+		// TODO: allow for return of face colliding with
+		
 		d = this.rayCast( ray, collider );
-
+		
 		if ( d < Number.MAX_VALUE ) {
-
+			
 			collider.distance = d;
+			
+			// redo raycast for any mesh collider with dynamic box
+			
+			if ( collider instanceof THREE.MeshCollider && collider.box ) {
+				
+				d = this.rayMesh( ray, collider );
+				
+				if ( d < Number.MAX_VALUE ) {
+					collider.distance = d;
+				}
+				/*
+				colliderRecast = this.rayMesh( ray, collider );
+				
+				if ( colliderRecast.distance < Number.MAX_VALUE ) {
+					collider.distance = colliderRecast.distance;
+					collider.face = colliderRecast.face;
+				}
+				*/
+				else {
+					collider.distance = Number.MAX_VALUE;
+				}
+				
+			}
+			
+			// check distance
 
 			if ( d > ld )
 				this.hits.push( collider );
@@ -105,54 +214,48 @@ THREE.CollisionSystem.prototype.rayCastAll = function( ray, colliders ) {
 		}
 
 	}
-
+	
 	return this.hits;
 
 };
 
-THREE.CollisionSystem.prototype.rayCastNearest = function( ray ) {
-
-	var cs = this.rayCastAll( ray );
-
-	if( cs.length == 0 ) return null;
-
-	var i = 0;
-
-	while( cs[ i ] instanceof THREE.MeshCollider ) {
-
-        var dist_index = this.rayMesh ( ray, cs[ i ] );
-
-		if( dist_index.dist < Number.MAX_VALUE ) {
-
-			cs[ i ].distance = dist_index.dist;
-            cs[ i ].faceIndex = dist_index.faceIndex;
-			break;
-
-		}
-
-		i++;
-
-	}
-
-	if ( i > cs.length ) return null;
-
-	return cs[ i ];
-
-};
-
 THREE.CollisionSystem.prototype.rayCast = function( ray, collider ) {
+	
+	// ensure collider properties
+	
+	if ( collider.normal instanceof THREE.Vector3 !== true ) {
+		
+		collider.normal = new THREE.Vector3();
+		
+	}
+	
+	// cast by type
 
-	if ( collider instanceof THREE.PlaneCollider )
+	if ( collider instanceof THREE.PlaneCollider ) {
+		
 		return this.rayPlane( ray, collider );
-
-	else if ( collider instanceof THREE.SphereCollider )
+		
+	}
+	else if ( collider instanceof THREE.SphereCollider ) {
+		
 		return this.raySphere( ray, collider );
-
-	else if ( collider instanceof THREE.BoxCollider )
+		
+	}
+	else if ( collider instanceof THREE.BoxCollider ) {
+		
 		return this.rayBox( ray, collider );
-
-	else if ( collider instanceof THREE.MeshCollider && collider.box )
+		
+	}
+	else if ( collider instanceof THREE.MeshCollider && collider.box ) {
+		
 		return this.rayBox( ray, collider.box );
+		
+	}
+	else {
+		console.log( 'physics cast rayMesh with ', collider );
+		return this.rayMesh( ray, collider );
+		
+	}
 
 };
 
@@ -220,25 +323,28 @@ THREE.CollisionSystem.prototype.rayMesh = function( r, me ) {
 };
 */
 
-THREE.CollisionSystem.prototype.rayMesh = function( r, me ) {
+THREE.CollisionSystem.prototype.rayMesh = function( ray, collider ) {
 	
 	var i, l,
 		p0 = new THREE.Vector3(),
 		p1 = new THREE.Vector3(),
 		p2 = new THREE.Vector3(),
 		p3 = new THREE.Vector3(),
-		mesh = me.mesh,
-		scale = mesh.scale,
-		geometry = mesh.geometry,
+		object = collider.object,
+		scale = object.scale,
+		geometry = object.geometry,
 		vertices = geometry.vertices,
-		rt = this.makeRayLocal( r, mesh );
+		faces = collider.faces ? ( Object.prototype.toString.call( collider.faces ) !== '[object Array]' ? [ collider.faces ] : collider.faces ) : geometry.faces,// TODO: make check less ugly
+		rayLocal = this.makeRayLocal( ray, object ),
+		distMin = Number.MAX_VALUE,
+		faceDist,
+		faceClosest;
 	
-	var d = Number.MAX_VALUE;
-	var nearestface;
+	// for each face in collider
 	
-	for( i = 0, l = me.numFaces; i < l; i ++ ) {
+	for( i = 0, l = faces.length; i < l; i ++ ) {
 		
-		var face = geometry.faces[ i ];
+		var face = faces[ i ];
 		
 		p0.copy( vertices[ face.a ] ).multiplySelf( scale );
 		p1.copy( vertices[ face.b ] ).multiplySelf( scale );
@@ -248,51 +354,51 @@ THREE.CollisionSystem.prototype.rayMesh = function( r, me ) {
 			
 			p3.copy( vertices[ face.d ] ).multiplySelf( scale );
 			
-			var nd = this.rayTriangle( rt, p0, p1, p3, d, this.collisionNormal, mesh );
+			faceDist = this.rayTriangle( rayLocal, p0, p1, p3, distMin, this.collisionNormal, object );
 			
-			if( nd < d ) {
+			if( faceDist < distMin ) {
 				
-				d = nd;
-				nearestface = i;
-				me.normal.copy( this.collisionNormal );
-				me.normal.normalize();
+				distMin = faceDist;
+				faceClosest = face;
+				collider.normal.copy( this.collisionNormal );
+				collider.normal.normalize();
 				
 			}
 			
-			nd = this.rayTriangle( rt, p1, p2, p3, d, this.collisionNormal, mesh );
+			faceDist = this.rayTriangle( rayLocal, p1, p2, p3, distMin, this.collisionNormal, object );
 			
-			if( nd < d ) {
+			if( faceDist < distMin ) {
 				
-				d = nd;
-				nearestface = i;
-				me.normal.copy( this.collisionNormal );
-				me.normal.normalize();
+				distMin = faceDist;
+				faceClosest = face;
+				collider.normal.copy( this.collisionNormal );
+				collider.normal.normalize();
 				
 			}
 			
 		}
 		else {
 			
-			var nd = this.rayTriangle( rt, p0, p1, p2, d, this.collisionNormal, mesh );
+			faceDist = this.rayTriangle( rayLocal, p0, p1, p2, distMin, this.collisionNormal, object );
 			
-			if( nd < d ) {
+			if( faceDist < distMin ) {
 				
-				d = nd;
-				nearestface = i;
-				me.normal.copy( this.collisionNormal );
-				me.normal.normalize();
+				distMin = faceDist;
+				faceClosest = face;
+				collider.normal.copy( this.collisionNormal );
+				collider.normal.normalize();
 				
 			}
 			
 		}
 		
 	}
-	
-	return {dist: d, faceIndex: nearestface};
+	console.log( ' RAYMESH, collider ', collider, ', faces #', faces.length, ' + distMin ', distMin, ' + faceClosest', faceClosest );
+	return distMin;//{ distance: distMin, face: faceClosest };
 	
 };
 
-THREE.CollisionSystem.prototype.rayTriangle = function( ray, p0, p1, p2, mind, n, mesh ) {
+THREE.CollisionSystem.prototype.rayTriangle = function( ray, p0, p1, p2, mind, n, object ) {
 
 	var e1 = THREE.CollisionSystem.__v1,
 		e2 = THREE.CollisionSystem.__v2;
@@ -308,7 +414,7 @@ THREE.CollisionSystem.prototype.rayTriangle = function( ray, p0, p1, p2, mind, n
 	var dot = n.dot( ray.direction );
 	if ( !( dot < 0 ) ) {
 		
-		if ( mesh.doubleSided || mesh.flipSided ) {
+		if ( object.doubleSided || object.flipSided ) {
 		
 			n.multiplyScalar (-1.0);
 			dot *= -1.0;
@@ -429,32 +535,32 @@ THREE.CollisionSystem.prototype.makeRayLocal = function( ray, m ) {
 };
 */
 
-THREE.CollisionSystem.prototype.makeRayLocal = function( ray, m, i ) {
+THREE.CollisionSystem.prototype.makeRayLocal = function( ray, object, i ) {
 	
 	var scale,
-		mMat,
-		mCopy;
-
-	var rt = THREE.CollisionSystem.__r;
+		matrixObj,
+		matrixObjCopy,
+		mt = THREE.CollisionSystem.__m,
+		rt = THREE.CollisionSystem.__r;
+	
 	rt.origin.copy( ray.origin );
 	rt.direction.copy( ray.direction );
 	
-	if ( m instanceof THREE.Mesh ) {
+	if ( object instanceof THREE.Mesh ) {
 		
-		scale = m.scale,
-		mMat = m.matrixWorld,
-		mCopy = THREE.CollisionSystem.__mRayLocal;
+		scale = object.scale,
+		matrixObj = object.matrixWorld,
+		matrixObjCopy = THREE.CollisionSystem.__mRayLocal;
 		
-		// get copy of m world matrix without scale applied
+		// get copy of object world matrix without scale applied
 		// matrix with scale does not seem to invert correctly
 		
-		mCopy.extractPosition( mMat );
-		mCopy.extractRotation( mMat, scale );
+		matrixObjCopy.extractPosition( matrixObj );
+		matrixObjCopy.extractRotation( matrixObj, scale );
 		
 		// invert copy
 		
-		var mt = THREE.CollisionSystem.__m;
-		mt.getInverse( mCopy );
+		mt.getInverse( matrixObjCopy );
 		
 		mt.multiplyVector3( rt.origin );
 		mt.rotateAxis( rt.direction );
@@ -600,22 +706,19 @@ THREE.CollisionSystem.prototype.rayBox = function( ray, ab ) {
 
 THREE.CollisionSystem.prototype.rayBox = function( ray, ab ) {
 	
-	var mesh = ab.mesh,
-		rt = this.makeRayLocal( ray, mesh ),
+	var object = ab.object,
+		rt = this.makeRayLocal( ray, object ),
 		abMin = THREE.CollisionSystem.__v1RayBox.copy( ab.min ),
 		abMax = THREE.CollisionSystem.__v2RayBox.copy( ab.max ),
 		origin = rt.origin,
 		direction = rt.direction,
 		scale;
 	
-	//rt.origin.copy( ray.origin );
-	//rt.direction.copy( ray.direction );
+	// account for object
 	
-	if ( ab.dynamic && typeof mesh !== 'undefined' ) {
+	if ( typeof object !== 'undefined' ) {
 		
-		// scale
-		
-		scale = mesh.scale;
+		scale = object.scale;
 		
 		abMin.multiplySelf( scale );
 		abMax.multiplySelf( scale );

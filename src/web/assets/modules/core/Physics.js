@@ -11,9 +11,11 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/core/Physics.js",
 		_Physics = {},
+		_Octree,
 		_ObjectHelper,
 		_MathHelper,
 		ready = false,
+		octree,
 		system,
 		worldGravitySource,
 		worldGravityMagnitude,
@@ -49,6 +51,8 @@
 	main.asset_register( assetPath, { 
 		data: _Physics,
 		requirements: [
+			"assets/modules/core/Game.js",
+			"assets/modules/core/Octree.js",
 			"assets/modules/utils/ObjectHelper.js",
 			"assets/modules/utils/MathHelper.js"
 		],
@@ -62,11 +66,52 @@
     
     =====================================================*/
 	
-	function init_internal ( oh, mh ) {
+	function init_internal ( game, oc, oh, mh ) {
 		console.log('internal physics');
 		
+		_Octree = oc;
 		_ObjectHelper = oh;
 		_MathHelper = mh;
+		
+		// octree
+		
+		octree = new _Octree.Instance( {
+			radius: 400,
+			scene: game.scene
+		} );
+		
+		// system
+		
+		system = new THREE.CollisionSystem();
+		set_world_gravity_source( new THREE.Vector3( 0, 0, 0 ) );
+		set_world_gravity_magnitude( new THREE.Vector3( 0, -1, 0 ) );
+		
+		// utility / conversion objects
+		
+		utilVec31RotateToSrc = new THREE.Vector3();
+		
+		utilVec31RotateToSrc = new THREE.Vector3();
+		utilVec32RotateToSrc = new THREE.Vector3();
+		utilQ1RotateToSrc = new THREE.Quaternion();
+		utilQ2RotateToSrc = new THREE.Quaternion();
+		utilQ3RotateToSrc = new THREE.Quaternion();
+		
+		utilVec31Update = new THREE.Vector3();
+		utilVec32Update = new THREE.Vector3();
+		utilVec33Update = new THREE.Vector3();
+		utilVec34Update = new THREE.Vector3();
+		utilVec35Update = new THREE.Vector3();
+		
+		utilVec31Offset = new THREE.Vector3();
+		utilQ4Offset = new THREE.Quaternion();
+		
+		utilVec31Velocity = new THREE.Vector3();
+		
+		utilRay1Casting = new THREE.Ray();
+		
+		utilVec31Pull = new THREE.Vector3();
+		utilVec32Pull = new THREE.Vector3();
+		utilVec33Pull = new THREE.Vector3();
 		
 		// functions
 		
@@ -104,52 +149,15 @@
 			get : function () { return system; }
 		});
 		
-		// init
-		
-		init_system();
-		
-	}
-	
-	function init_system() {
-		
-		// system
-		
-		system = new THREE.CollisionSystem();
-		set_world_gravity_source( new THREE.Vector3( 0, 0, 0 ) );
-		set_world_gravity_magnitude( new THREE.Vector3( 0, -1, 0 ) );
-		
-		// utility / conversion objects
-		
-		utilVec31RotateToSrc = new THREE.Vector3();
-		
-		utilVec31RotateToSrc = new THREE.Vector3();
-		utilVec32RotateToSrc = new THREE.Vector3();
-		utilQ1RotateToSrc = new THREE.Quaternion();
-		utilQ2RotateToSrc = new THREE.Quaternion();
-		utilQ3RotateToSrc = new THREE.Quaternion();
-		
-		utilVec31Update = new THREE.Vector3();
-		utilVec32Update = new THREE.Vector3();
-		utilVec33Update = new THREE.Vector3();
-		utilVec34Update = new THREE.Vector3();
-		utilVec35Update = new THREE.Vector3();
-		
-		utilVec31Offset = new THREE.Vector3();
-		utilQ4Offset = new THREE.Quaternion();
-		
-		utilVec31Velocity = new THREE.Vector3();
-		
-		utilRay1Casting = new THREE.Ray();
-		
-		utilVec31Pull = new THREE.Vector3();
-		utilVec32Pull = new THREE.Vector3();
-		utilVec33Pull = new THREE.Vector3();
+		Object.defineProperty(_Physics, 'octree', { 
+			get : function () { return octree; }
+		});
 		
 	}
 	
 	/*===================================================
     
-    translate / add / remove
+    translate / clone
     
     =====================================================*/
 	
@@ -257,7 +265,7 @@
 			
 			if ( bodyType === 'mesh' ) {
 				
-				collider = THREE.CollisionUtils.MeshColliderWBox( mesh );
+				collider = new THREE.MeshCollider( mesh );
 				
 			}
 			else if ( bodyType === 'sphere' ) {
@@ -275,11 +283,15 @@
 			// default box
 			else {
 				
+				collider = new THREE.ObjectColliderOBB( mesh );
+				
+				/*
 				boxMax = new THREE.Vector3( width, height, depth ).multiplyScalar( 0.5 );
 				boxMin = boxMax.clone().multiplyScalar( -1 );
 				
 				collider = new THREE.BoxCollider( boxMin, boxMax );
-				
+				collider.object = mesh;
+				*/
 			}
 			
 			// dynamic or static
@@ -302,11 +314,6 @@
 				mass = 0;
 				
 			}
-			
-			// store mesh directly in collider
-			// fixes some collision bugs?
-			
-			collider.mesh = mesh;
 			
 			// create link
 			
@@ -397,12 +404,16 @@
 			c = translate( mesh, parameters );
 			
 		}
-		console.log(' PHYSICS CLONE... FROM: ', link, ' >>>> TO: ', c );
+		
 		return c;
 		
 	}
 	
-	// adds object's physics link to physics world
+	/*===================================================
+    
+   add / remove
+    
+    =====================================================*/
 	
 	function add ( object ) {
 		
@@ -410,16 +421,11 @@
 		
 	}
 	
-	// removes object's physics link from physics world
-	
 	function remove( object ) {
 		
 		modify_links( object );
 		
 	}
-	
-	// adds or removes physics links from physics world
-	// TODO: allow passing of links directly
 	
 	function modify_links ( object, adding ) {
 		
@@ -472,6 +478,10 @@
 						
 					}
 					
+					// octree, split by faces if collider is mesh
+					
+					octree.add( object, rigidBody.collider instanceof THREE.MeshCollider ? true : false );
+					
 				}
 				// default to remove
 				else {
@@ -491,6 +501,10 @@
 						links.splice( indexLink, 1 );
 						
 					}
+					
+					// octree
+					
+					octree.remove( object );
 					
 				}
 				
@@ -948,7 +962,7 @@
 			origin: position,
 			direction: direction,
 			colliders: colliders
-		} );//raycast_in_direction( position, direction, undefined, undefined, colliders );
+		} );
 		
 		// if intersection found
 		
@@ -1109,7 +1123,7 @@
 					// if no intersection
 					if ( !velocityGravity.intersection ) {
 						
-						velocityGravity.timeWithoutIntersection += timeDelta;
+						velocityGravity.timeWithoutIntersection += timeDelta / timeDeltaMod;
 						
 						// without intersection for time above threshold
 						if ( velocityGravity.timeWithoutIntersection > _Physics.timeWithoutIntersectionThreshold ) {
@@ -1135,7 +1149,7 @@
 					// link is safe
 					else {
 						
-						velocityGravity.timeWithoutIntersection = 0;
+						velocityGravity.timeWithoutIntersection = velocityGravity.updatesWithoutIntersection = 0;
 						
 						link.safe = true;
 						
@@ -1235,13 +1249,21 @@
 		
 		// get intersection
 		
+		var ta = new Date().getTime();
+		
 		intersection = _ObjectHelper.raycast( {
 			physics: _Physics,
+			octree: octree,
 			origin: position,
 			direction: velocityForceRotated,
 			offset: velocityOffset,
+			distance: boundingOffsetLength + velocityForceRotatedLength,
 			ignore: mesh
-		} );//raycast_in_direction( position, velocityForceRotated, velocityOffset, mesh );
+		} );
+		
+		var tb = new Date().getTime();
+		
+		console.log( ' PHYSICS raycast time: ', ( tb - ta ) );
 		
 		// modify velocity based on intersection distances to avoid passing through or into objects
 		
@@ -1294,90 +1316,6 @@
 		// return intersection
 		
 		return intersection;
-	}
-	
-	/*===================================================
-    
-    raycast functions
-    
-    =====================================================*/
-	
-	function raycast_in_direction ( origin, direction, offset, mesh, colliders ) {
-		
-		var i, l,
-			ray = utilRay1Casting,
-			intersections = [],
-			intersectionPotential,
-			intersectionMeshRecast,
-			intersectionDistance = Number.MAX_VALUE,
-			intersection;
-		
-		// set ray
-		
-		ray.origin.copy( origin );
-		ray.direction.copy( direction ).normalize();
-		
-		// add offset if passed
-		
-		if ( typeof offset !== 'undefined' ) {
-			
-			ray.origin.addSelf( offset );
-			
-		}
-		
-		// ray cast colliders, defaults to all in system
-		
-		intersections = system.rayCastAll( ray, colliders );
-		
-		// find nearest intersection
-		
-		if ( typeof intersections !== 'undefined' ) {
-			
-			for ( i = 0, l = intersections.length; i < l; i ++ ) {
-				
-				intersectionPotential = intersections[ i ];
-				
-				// if is collider for this object, skip
-				
-				if ( intersectionPotential.mesh === mesh ) {
-					
-					continue;
-					
-				}
-				
-				// cast ray again if collider is mesh
-				// initial ray cast was to mesh collider's dynamic box
-				
-				if ( intersectionPotential instanceof THREE.MeshCollider ) {
-					
-					intersectionMeshRecast = system.rayMesh( ray, intersectionPotential );
-					
-					if ( intersectionMeshRecast.dist < Number.MAX_VALUE ) {
-						intersectionPotential.distance = intersectionMeshRecast.dist;
-						intersectionPotential.faceIndex = intersectionMeshRecast.faceIndex;
-					}
-					else {
-						intersectionPotential.distance = Number.MAX_VALUE;
-					}
-					
-				}
-				
-				// if distance is less than last ( last starts at number max value )
-				// store as intersection
-				
-				if ( intersectionPotential.distance < intersectionDistance ) {
-					
-					intersectionDistance = intersectionPotential.distance;
-					intersection = intersectionPotential;
-					
-				}
-				
-			}
-			
-		}
-		
-		return intersection;
-		
 	}
 	
 } ( KAIOPUA ) );

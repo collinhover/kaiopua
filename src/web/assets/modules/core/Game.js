@@ -65,7 +65,6 @@
             "js/lib/three/postprocessing/ShaderPass.js",
             "js/lib/three/postprocessing/MaskPass.js",
 			"js/lib/three/physics/Collisions.js",
-			"js/lib/three/physics/CollisionUtils.js",
             "assets/modules/effects/FocusVignette.js"
 		],
         assetsLauncher = [
@@ -454,8 +453,66 @@
 		_ObjectHelper = main.get_asset_data( "assets/modules/utils/ObjectHelper.js" );
 		_Messenger = main.get_asset_data( "assets/modules/ui/Messenger.js" );
 		
+		// ui
+		
+		l = _GUI.layers;
+		m = _GUI.menus;
+		b = _GUI.buttons;
+		
+		m.start.childrenByID.play.callback = function () {
+			start_game();
+		};
+		m.start.childrenByID.play.context = this;
+		
+		m.main.childrenByID.resume.callback = function () {
+			resume();
+		};
+		m.main.childrenByID.resume.context = this;
+		
+		b.end.callback = function () {
+			stop_game();
+		};
+		b.end.context = this;
+		
+		b.mainMenu.callback = function () {
+			_Game.pause();
+		};
+		b.mainMenu.context = this;
+		
+		// menus
+		
+		m.start.alignment = 'center';
+		m.main.alignment = 'center';
+		
+		m.navigation.spacingBottom = 20;
+		m.navigation.alignment = 'bottomcenter';
+		
+		// setup ui groups
+		
+		_GUI.add_to_group( 'start', [
+			{ child: m.start, parent: l.ui },
+			{ child: m.footer, parent: _GUI.container }
+		] );
+		
+		_GUI.add_to_group( 'pause', [
+			{ child: m.main, parent: l.uiPriority },
+			{ child: m.footer, parent: _GUI.container }
+		] );
+		
+		_GUI.add_to_group( 'ingame', [
+			{ child: m.navigation, parent: l.ui }
+		] );
+		
+		_GUI.add_to_group( 'constant', [ { child: b.fullscreenEnter, parent: l.ui } ] );
+		
+		// show initial groups
+		
+		_GUI.show_group( 'constant' );
+		_GUI.show_group( 'start' );
+		
 		//
 		//
+		return;
 		//
 		// TESTING
 		// octree
@@ -744,63 +801,6 @@
 		//
 		//
 		//
-		
-		// ui
-		
-		l = _GUI.layers;
-		m = _GUI.menus;
-		b = _GUI.buttons;
-		
-		m.start.childrenByID.play.callback = function () {
-			start_game();
-		};
-		m.start.childrenByID.play.context = this;
-		
-		m.main.childrenByID.resume.callback = function () {
-			resume();
-		};
-		m.main.childrenByID.resume.context = this;
-		
-		b.end.callback = function () {
-			stop_game();
-		};
-		b.end.context = this;
-		
-		b.mainMenu.callback = function () {
-			_Game.pause();
-		};
-		b.mainMenu.context = this;
-		
-		// menus
-		
-		m.start.alignment = 'center';
-		m.main.alignment = 'center';
-		
-		m.navigation.spacingBottom = 20;
-		m.navigation.alignment = 'bottomcenter';
-		
-		// setup ui groups
-		
-		_GUI.add_to_group( 'start', [
-			{ child: m.start, parent: l.ui },
-			{ child: m.footer, parent: _GUI.container }
-		] );
-		
-		_GUI.add_to_group( 'pause', [
-			{ child: m.main, parent: l.uiPriority },
-			{ child: m.footer, parent: _GUI.container }
-		] );
-		
-		_GUI.add_to_group( 'ingame', [
-			{ child: m.navigation, parent: l.ui }
-		] );
-		
-		_GUI.add_to_group( 'constant', [ { child: b.fullscreenEnter, parent: l.ui } ] );
-		
-		// show initial groups
-		
-		_GUI.show_group( 'constant' );
-		_GUI.show_group( 'start' );
 		
     }
 	

@@ -440,8 +440,10 @@
 		
 		// if needs calculation
 		
-		if ( typeof geometry.boundingBox !== 'undefined' ) {
+		if ( !geometry.boundingBox ) {
+			
 			geometry.computeBoundingBox();
+			
 		}
 		
 		bbox = geometry.boundingBox;
@@ -1502,7 +1504,9 @@
     
     =====================================================*/
 	
-	function object_rotate_relative_to_source ( mesh, source, axisAway, axisForward, lerpDelta, rigidBody ) {
+	function object_rotate_relative_to_source ( object, source, axisAway, axisForward, lerpDelta, rigidBody ) {
+		
+		// TODO: test for working
 		
 		var uv31 = utilVec31RotateToSrc,
 			uv32 = utilVec32RotateToSrc,
@@ -1523,9 +1527,9 @@
 			
 		// localize basics
 		
-		position = mesh.position;
+		position = object.position;
 		
-		rotation = ( mesh.useQuaternion === true ? mesh.quaternion : mesh.matrix );
+		rotation = ( object.useQuaternion === true ? object.quaternion : object.matrix );
 		
 		// if source is 3D object, cascade
 		if ( source instanceof THREE.Object3D ) {
@@ -1547,7 +1551,7 @@
 		
 		lerpDelta = lerpDelta || 1;
 		
-		// get normalized vector pointing from source to mesh
+		// get normalized vector pointing from source to object
 		
 		axisAwayNew = uv31.sub( position, source ).normalize();
 		
@@ -1582,7 +1586,7 @@
 			
 			// add to rotation
 			
-			if ( mesh.useQuaternion === true ) {
+			if ( object.useQuaternion === true ) {
 				
 				// quaternion rotations
 				
@@ -1638,7 +1642,9 @@
     
     =====================================================*/
 	
-	function object_pull_to_source ( mesh, source, objectsToIntersect, distanceFrom, velocity, rigidBody ) {
+	function object_pull_to_source ( object, source, objectsToIntersect, distanceFrom, velocity, rigidBody ) {
+		
+		// TODO: test for working
 		
 		var i, l,
 			position,
@@ -1653,7 +1659,7 @@
 		
 		// handle parameters
 		
-		position = mesh.position;
+		position = object.position;
 		
 		// if source is 3D object, cascade
 		if ( source instanceof THREE.Object3D ) {
@@ -1712,7 +1718,7 @@
 			
 		}
 		
-		// cast ray from mesh to source
+		// cast ray from object to source
 		
 		intersection = raycast( position, direction, undefined, undefined, colliders );
 		
@@ -1859,46 +1865,28 @@
 		var i, l,
 			ray = parameters.ray,
 			physics = parameters.physics,
+			octree = parameters.octree,
+			distance = parameters.distance,
 			system = physics.system,
 			colliders = parameters.colliders,
-			intersections,
-			intersectionPotential,
-			intersectionMeshRecast;
+			intersections;
+		
+		// if using octree
+		
+		if ( typeof octree !== 'undefined' && distance > 0 ) {
+			
+			// search for potential colliders
+			
+			colliders = main.ensure_array( colliders ).concat( octree.search( ray.origin, distance, true ) );
+			console.log( ' RAYCAST, octree search results from position ', ray.origin.x, ray.origin.y, ray.origin.z, ' + dist ', distance, ' = # ', colliders.length, ' + colliders', colliders );
+			//colliders = undefined;
+		}
 		
 		// ray cast colliders
 		// defaults to all in system
 		
-		intersections = system.rayCastAll( ray, colliders );
-		
-		// TODO: move into system's rayCastAll
-		
-		if ( typeof intersections !== 'undefined' ) {
-			
-			for ( i = 0, l = intersections.length; i < l; i ++ ) {
-				
-				intersectionPotential = intersections[ i ];
-				
-				// cast ray again if collider is mesh
-				// initial ray cast was to mesh collider's dynamic box
-				
-				if ( intersectionPotential instanceof THREE.MeshCollider ) {
-					
-					intersectionMeshRecast = system.rayMesh( ray, intersectionPotential );
-					
-					if ( intersectionMeshRecast.dist < Number.MAX_VALUE ) {
-						intersectionPotential.distance = intersectionMeshRecast.dist;
-						intersectionPotential.faceIndex = intersectionMeshRecast.faceIndex;
-					}
-					else {
-						intersectionPotential.distance = Number.MAX_VALUE;
-					}
-					
-				}
-				
-			}
-			
-		}
-		
+		intersections = system.rayCastColliders( ray, colliders );
+		console.log( ' RAYCAST, intersections ', intersections );
 		return intersections;
 		
 	}
@@ -1934,9 +1922,7 @@
 		
 		var ray = parameters.ray,
 			objects = parameters.objects,
-			hierarchical = parameters.hierarchical,
-			ignore = main.ensure_array( parameters.ignore ),
-			intersection;
+			hierarchical = parameters.hierarchical;
 		
 		// account for hierarchy and extract all children
 		
