@@ -135,7 +135,7 @@
         });
 		
 		me.parts.body.add( me.parts.tail );
-		return;
+		
 		// water
 		
 		me.parts.waterRing = new _Water.Instance( { wavesTexture: shared.pathToTextures + "water_world_512.png" } );

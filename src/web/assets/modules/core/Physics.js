@@ -77,7 +77,7 @@
 		
 		octree = new _Octree.Instance( {
 			radius: 400,
-			scene: game.scene
+			//scene: game.scene
 		} );
 		
 		// system
@@ -1249,8 +1249,7 @@
 		
 		// get intersection
 		
-		var ta = new Date().getTime();
-		
+		main.time_test( function () {
 		intersection = _ObjectHelper.raycast( {
 			physics: _Physics,
 			octree: octree,
@@ -1260,10 +1259,7 @@
 			distance: boundingOffsetLength + velocityForceRotatedLength,
 			ignore: mesh
 		} );
-		
-		var tb = new Date().getTime();
-		
-		console.log( ' PHYSICS raycast time: ', ( tb - ta ) );
+		}, 100, 'PHYSICS raycast' );
 		
 		// modify velocity based on intersection distances to avoid passing through or into objects
 		

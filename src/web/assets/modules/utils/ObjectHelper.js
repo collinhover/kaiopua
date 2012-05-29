@@ -1878,15 +1878,15 @@
 			// search for potential colliders
 			
 			colliders = main.ensure_array( colliders ).concat( octree.search( ray.origin, distance, true ) );
-			console.log( ' RAYCAST, octree search results from position ', ray.origin.x, ray.origin.y, ray.origin.z, ' + dist ', distance, ' = # ', colliders.length, ' + colliders', colliders );
-			//colliders = undefined;
+			//console.log( ' RAYCAST, octree search results from position ', ray.origin.x, ray.origin.y, ray.origin.z, ' + dist ', distance, ' = # ', colliders.length, ' + colliders', colliders );
+			
 		}
 		
 		// ray cast colliders
 		// defaults to all in system
 		
 		intersections = system.rayCastColliders( ray, colliders );
-		console.log( ' RAYCAST, intersections ', intersections );
+		//console.log( ' RAYCAST, intersections ', intersections );
 		return intersections;
 		
 	}

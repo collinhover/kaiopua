@@ -252,7 +252,7 @@ THREE.CollisionSystem.prototype.rayCast = function( ray, collider ) {
 		
 	}
 	else {
-		console.log( 'physics cast rayMesh with ', collider );
+		
 		return this.rayMesh( ray, collider );
 		
 	}
@@ -393,7 +393,7 @@ THREE.CollisionSystem.prototype.rayMesh = function( ray, collider ) {
 		}
 		
 	}
-	console.log( ' RAYMESH, collider ', collider, ', faces #', faces.length, ' + distMin ', distMin, ' + faceClosest', faceClosest );
+	//console.log( ' RAYMESH, collider ', collider, ', faces #', faces.length, ' + distMin ', distMin, ' + faceClosest', faceClosest );
 	return distMin;//{ distance: distMin, face: faceClosest };
 	
 };
