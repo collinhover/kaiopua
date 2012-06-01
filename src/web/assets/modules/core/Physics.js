@@ -16,15 +16,13 @@
 		_MathHelper,
 		_ObjectHelper,
 		ready = false,
-		octree,
-		system,
-		worldGravitySource,
-		worldGravityMagnitude,
 		linkBaseName = 'visual_physical_link_',
 		linkCount = 0,
 		links = [],
+		octree,
+		worldGravitySource,
+		worldGravityMagnitude,
 		scaleSpeedExp = Math.log( 1.5 ),
-		utilVec31FaceSrc,
 		utilVec31RotateToSrc,
 		utilVec32RotateToSrc,
 		utilQ1RotateToSrc,
@@ -83,15 +81,12 @@
 			//scene: game.scene
 		} );
 		
-		// system
+		// properties
 		
-		system = new THREE.CollisionSystem();
 		set_world_gravity_source( new THREE.Vector3( 0, 0, 0 ) );
 		set_world_gravity_magnitude( new THREE.Vector3( 0, -1, 0 ) );
 		
 		// utility / conversion objects
-		
-		utilVec31RotateToSrc = new THREE.Vector3();
 		
 		utilVec31RotateToSrc = new THREE.Vector3();
 		utilVec32RotateToSrc = new THREE.Vector3();
@@ -146,10 +141,6 @@
 		Object.defineProperty(_Physics, 'worldGravityMagnitude', { 
 			get : function () { return worldGravityMagnitude; },
 			set : set_world_gravity_magnitude
-		});
-		
-		Object.defineProperty(_Physics, 'system', { 
-			get : function () { return system; }
 		});
 		
 		Object.defineProperty(_Physics, 'octree', { 
@@ -268,31 +259,31 @@
 			
 			if ( bodyType === 'mesh' ) {
 				
-				collider = new THREE.MeshCollider( mesh );
+				collider = new _RayHelper.MeshCollider( mesh );
 				
 			}
 			else if ( bodyType === 'sphere' ) {
 				
 				radius = Math.max( width, height, depth ) * 0.5;
 				
-				collider = new THREE.SphereCollider( position, radius );
+				collider = new _RayHelper.SphereCollider( position, radius );
 				
 			}
 			else if ( bodyType === 'plane' ) {
 				
-				collider = new THREE.PlaneCollider( position, parameters.normal || new THREE.Vector3( 0, 0, 1 ) );
+				collider = new _RayHelper.PlaneCollider( position, parameters.normal || new THREE.Vector3( 0, 0, 1 ) );
 				
 			}
 			// default box
 			else {
 				
-				collider = new THREE.ObjectColliderOBB( mesh );
+				collider = new _RayHelper.ObjectColliderOBB( mesh );
 				
 				/*
 				boxMax = new THREE.Vector3( width, height, depth ).multiplyScalar( 0.5 );
 				boxMin = boxMax.clone().multiplyScalar( -1 );
 				
-				collider = new THREE.BoxCollider( boxMin, boxMax );
+				collider = new _RayHelper.BoxCollider( boxMin, boxMax );
 				collider.object = mesh;
 				*/
 			}
@@ -373,17 +364,17 @@
 			
 			if ( typeof rigidBody !== 'undefined' ) {
 				
-				if ( rigidBody.collider instanceof THREE.MeshCollider ) {
+				if ( rigidBody.collider instanceof _RayHelper.MeshCollider ) {
 					
 					parameters.bodyType = 'mesh';
 					
 				}
-				else if ( rigidBody.collider instanceof THREE.SphereCollider ) {
+				else if ( rigidBody.collider instanceof _RayHelper.SphereCollider ) {
 					
 					parameters.bodyType = 'sphere';
 					
 				}
-				else if ( rigidBody.collider instanceof THREE.PlaneCollider ) {
+				else if ( rigidBody.collider instanceof _RayHelper.PlaneCollider ) {
 					
 					parameters.bodyType = 'plane';
 					parameters.normal = rigidBody.collider.normal.clone();
@@ -414,7 +405,7 @@
 	
 	/*===================================================
     
-   add / remove
+	add / remove
     
     =====================================================*/
 	
@@ -435,7 +426,6 @@
 		var i, l,
 			link,
 			rigidBody,
-			indexCollider,
 			indexLink,
 			child;
 		
@@ -457,21 +447,11 @@
 				
 				// get indices
 				
-				indexCollider = system.colliders.indexOf( rigidBody.collider );
-				
 				indexLink = links.indexOf( link );
 				
 				// if adding
 				
 				if ( adding === true ) {
-					
-					// system
-					
-					if ( indexCollider === -1 ) {
-						
-						system.colliders.push( rigidBody.collider );
-						
-					}
 					
 					// links
 					
@@ -483,19 +463,11 @@
 					
 					// octree, split by faces if collider is mesh
 					
-					octree.add( object, rigidBody.collider instanceof THREE.MeshCollider ? true : false );
+					octree.add( object, rigidBody.collider instanceof _RayHelper.MeshCollider ? true : false );
 					
 				}
 				// default to remove
 				else {
-					
-					// system
-					
-					if ( indexCollider !== -1 ) {
-						
-						system.colliders.splice( indexCollider, 1 );
-						
-					}
 					
 					// links
 					
@@ -893,7 +865,7 @@
 			shift = utilVec33Pull,
 			object,
 			rigidBody,
-			colliders,
+			colliders = [],
 			intersection,
 			intersectionDistance;
 		
@@ -921,19 +893,15 @@
 		
 		direction.copy( difference ).normalize();
 		
-		// if objects to intersect was passed
+		// if objects to intersect was passed, extract colliders from objects
 		
 		if ( main.is_array( objectsToIntersect ) ) {
-			
-			// extract colliders from objects
-			
-			colliders = [];
 			
 			for ( i = 0, l = objectsToIntersect.length; i < l; i++ ) {
 				
 				object = objectsToIntersect[ i ];
 				
-				if( object instanceof THREE.Collider ) {
+				if( object instanceof _RayHelper.Collider ) {
 					
 					colliders.push( object );
 					
@@ -957,11 +925,21 @@
 			}
 			
 		}
+		// else gather all colliders from links
+		else {
+			
+			for ( i = 0, l = links.length; i < l; i++ ) {
+				
+				colliders.push( link[ i ].rigidBody.collider );
+				
+			}
+			
+		}
 		
 		// cast ray from mesh to source
 		
 		intersection = _RayHelper.raycast( {
-			physics: _Physics,
+			physics: true,
 			origin: position,
 			direction: direction,
 			colliders: colliders
@@ -1087,7 +1065,9 @@
 				handle_velocity( link, velocityGravity );
 				
 				// post physics
+				// TODO: correct safety net for octree and non-infinite rays
 				
+				/*
 				// if link is not safe
 				if ( link.safe === false ) {
 					
@@ -1174,6 +1154,7 @@
 					}
 					
 				}
+				*/
 				
 			}
 			
@@ -1253,7 +1234,7 @@
 		// get intersection
 		
 		intersection = _RayHelper.raycast( {
-			physics: _Physics,
+			physics: true,
 			octree: octree,
 			origin: position,
 			direction: velocityForceRotated,

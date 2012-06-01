@@ -1606,7 +1606,7 @@
 				
 				object = objectsToIntersect[ i ];
 				
-				if( object instanceof THREE.Collider ) {
+				if( object instanceof _RayHelper.Collider ) {
 					
 					colliders.push( object );
 					

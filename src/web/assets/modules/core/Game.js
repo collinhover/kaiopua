@@ -61,7 +61,6 @@
             "js/lib/three/postprocessing/RenderPass.js",
             "js/lib/three/postprocessing/ShaderPass.js",
             "js/lib/three/postprocessing/MaskPass.js",
-			"js/lib/three/physics/Collisions.js",
             "assets/modules/effects/FocusVignette.js"
 		],
         assetsLauncher = [
