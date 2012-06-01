@@ -12,9 +12,7 @@
 		assetPath = "assets/modules/utils/ObjectHelper.js",
 		_ObjectHelper = {},
 		_MathHelper,
-		utilRay1Casting,
-		utilProjector1Casting,
-		utilVec31Casting,
+		_RayHelper,
 		utilVec31Follow,
 		utilVec32Follow,
 		utilVec31Orbit,
@@ -51,45 +49,11 @@
     
     =====================================================*/
 	
-	_ObjectHelper.clone_materials = clone_materials;
-	_ObjectHelper.clone_geometry = clone_geometry;
-	_ObjectHelper.clone_morphs = clone_morphs;
-	_ObjectHelper.clone_list = clone_list;
-	
-	_ObjectHelper.extract_children_from_objects = extract_children_from_objects;
-	_ObjectHelper.extract_parents_from_objects = extract_parents_from_objects;
-	
-	_ObjectHelper.dimensions = dimensions;
-	
-	_ObjectHelper.push_bounds = push_bounds;
-	_ObjectHelper.face_bounding_radius = face_bounding_radius;
-	
-	_ObjectHelper.apply_matrix = apply_matrix;
-	_ObjectHelper.apply_quaternion = apply_quaternion;
-	
-	_ObjectHelper.center_offset = center_offset;
-	_ObjectHelper.object_center = object_center;
-	
-	_ObjectHelper.q_to_axis = q_to_axis;
-	_ObjectHelper.rotation_offset = rotation_offset;
-	_ObjectHelper.center_rotation = center_rotation;
-	
-	_ObjectHelper.normalize_faces = normalize_faces
-	
-	_ObjectHelper.object_follow_object = object_follow_object;
-	_ObjectHelper.object_orbit_source = object_orbit_source;
-	_ObjectHelper.object_rotate_relative_to_source = object_rotate_relative_to_source;
-	_ObjectHelper.object_pull_to_source = object_pull_to_source;
-	
-	_ObjectHelper.raycast = raycast;
-	_ObjectHelper.raycast_physics = raycast_physics;
-	_ObjectHelper.raycast_from_mouse = raycast_from_mouse;
-	_ObjectHelper.raycast_objects = raycast_objects;
-	
 	main.asset_register( assetPath, {
 		data: _ObjectHelper,
 		requirements: [
-			"assets/modules/utils/MathHelper.js"
+			"assets/modules/utils/MathHelper.js",
+			"assets/modules/utils/RayHelper.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -101,25 +65,20 @@
     
     =====================================================*/
 	
-	function init_internal ( mh ) {
-		console.log('internal object helper');
+	function init_internal ( mh, rh ) {
+		console.log('internal object helper', _ObjectHelper);
 		var len = Math.sqrt( 1 / 2 ),
 			ca = shared.cardinalAxes,
 			right = ca.right,
 			forward = ca.forward;
-			
-		_ObjectHelper.expectedVertPosA = new THREE.Vector3( right.x * -len, 0, forward.z * len ),//( right.x * len, 0, forward.z * -len ),
-		_ObjectHelper.expectedVertPosB = new THREE.Vector3( right.x * -len, 0, forward.z * -len ),//( right.x * len, 0, forward.z * len ),
-		_ObjectHelper.expectedVertPosC = new THREE.Vector3( right.x * len, 0, forward.z * -len ),//( right.x * -len, 0, forward.z * len ),
-		_ObjectHelper.expectedVertPosD = new THREE.Vector3( right.x * len, 0, forward.z * len );//( right.x * -len, 0, forward.z * -len );
+		
+		// helpers
 		
 		_MathHelper = mh;
+		_RayHelper = rh;
 		
 		// utility
 		
-		utilRay1Casting = new THREE.Ray();
-		utilProjector1Casting = new THREE.Projector();
-		utilVec31Casting = new THREE.Vector3();
 		utilVec31Follow = new THREE.Vector3();
 		utilVec32Follow = new THREE.Vector3();
 		utilVec31Orbit = new THREE.Vector3();
@@ -149,6 +108,42 @@
 		utilMat41Bounds = new THREE.Matrix4();
 		utilMat41Center = new THREE.Matrix4();
 		utilMat41ApplyQ = new THREE.Matrix4();
+		
+		// properties
+		
+		_ObjectHelper.expectedVertPosA = new THREE.Vector3( right.x * -len, 0, forward.z * len ),//( right.x * len, 0, forward.z * -len ),
+		_ObjectHelper.expectedVertPosB = new THREE.Vector3( right.x * -len, 0, forward.z * -len ),//( right.x * len, 0, forward.z * len ),
+		_ObjectHelper.expectedVertPosC = new THREE.Vector3( right.x * len, 0, forward.z * -len ),//( right.x * -len, 0, forward.z * len ),
+		_ObjectHelper.expectedVertPosD = new THREE.Vector3( right.x * len, 0, forward.z * len );//( right.x * -len, 0, forward.z * -len );
+		
+		// functions
+		
+		_ObjectHelper.clone_materials = clone_materials;
+		_ObjectHelper.clone_geometry = clone_geometry;
+		_ObjectHelper.clone_morphs = clone_morphs;
+		_ObjectHelper.clone_list = clone_list;
+		
+		_ObjectHelper.dimensions = dimensions;
+		
+		_ObjectHelper.push_bounds = push_bounds;
+		_ObjectHelper.face_bounding_radius = face_bounding_radius;
+		
+		_ObjectHelper.apply_matrix = apply_matrix;
+		_ObjectHelper.apply_quaternion = apply_quaternion;
+		
+		_ObjectHelper.center_offset = center_offset;
+		_ObjectHelper.object_center = object_center;
+		
+		_ObjectHelper.q_to_axis = q_to_axis;
+		_ObjectHelper.rotation_offset = rotation_offset;
+		_ObjectHelper.center_rotation = center_rotation;
+		
+		_ObjectHelper.normalize_faces = normalize_faces
+		
+		_ObjectHelper.object_follow_object = object_follow_object;
+		_ObjectHelper.object_orbit_source = object_orbit_source;
+		_ObjectHelper.object_rotate_relative_to_source = object_rotate_relative_to_source;
+		_ObjectHelper.object_pull_to_source = object_pull_to_source;
 		
 	}
 	
@@ -340,88 +335,6 @@
 		}
 		
 		return c;
-		
-	}
-	
-	/*===================================================
-    
-    hierarchy support
-    
-    =====================================================*/
-	
-	function extract_children_from_objects ( objects, cascade ) {
-		
-		var i, l,
-			object;
-		
-		objects = main.ensure_array( objects );
-		
-		for ( i = 0, l = objects.length; i < l; i++ ) {
-			
-			cascade = extract_child_cascade( objects[ i ], cascade );
-			
-		}
-		
-		return cascade;
-		
-	}
-	
-	function extract_child_cascade ( object, cascade ) {
-		
-		var i, l,
-			children;
-		
-		cascade = main.ensure_array( cascade );
-			
-		if ( typeof object !== 'undefined' ) {
-			
-			children = object.children;
-			
-			cascade = cascade.concat( children );
-			
-			for ( i = 0, l = children.length; i < l; i++ ) {
-				
-				cascade = extract_child_cascade( children[ i ], cascade );
-				
-			}
-			
-		}
-		
-		return cascade;
-		
-	}
-	
-	function extract_parents_from_objects ( objects, cascade ) {
-		
-		var i, l;
-		
-		objects = main.ensure_array( objects );
-		
-		for ( i = 0, l = objects.length; i < l; i++ ) {
-			
-			cascade = extract_parent_cascade( objects[ i ], cascade );
-			
-		}
-		
-		return cascade;
-		
-	}
-	
-	function extract_parent_cascade ( object, cascade ) {
-		
-		var i, l;
-		
-		cascade = cascade || [];
-		
-		while( typeof object.parent !== 'undefined' ) {
-			
-			cascade.push( object.parent );
-			
-			object = object.parent;
-			
-		}
-		
-		return cascade;
 		
 	}
 	
@@ -1720,7 +1633,13 @@
 		
 		// cast ray from object to source
 		
-		intersection = raycast( position, direction, undefined, undefined, colliders );
+		intersection = _RayHelper.raycast( {
+			origin: position,
+			direction: direction,
+			colliders: colliders
+		} );
+		
+		//intersection = _RayHelper.raycast( position, direction, undefined, undefined, colliders );
 		
 		// if intersection found
 		
@@ -1752,189 +1671,6 @@
 		// add shift to position
 		
 		position.addSelf( shift );
-		
-	}
-	
-	/*===================================================
-    
-    raycasting
-    
-    =====================================================*/
-	
-	function raycast ( parameters ) {
-		
-		var i, l,
-			ray,
-			origin,
-			direction,
-			ignore,
-			intersections = [],
-			intersectionPotential,
-			intersectedObject,
-			intersectionDistance = Number.MAX_VALUE,
-			intersection;
-		
-		// parameters
-		
-		if ( parameters.ray instanceof THREE.Ray !== true ) {
-			
-			ray = parameters.ray = utilRay1Casting;
-			
-			// origin
-			
-			if ( parameters.origin instanceof THREE.Vector3 ) {
-				
-				ray.origin.copy( parameters.origin );
-				
-			}
-			
-			// direction
-			
-			if ( parameters.direction instanceof THREE.Vector3 ) {
-				
-				ray.direction.copy( parameters.direction );
-				
-			}
-			
-			// offset
-			
-			if ( parameters.offset instanceof THREE.Vector3 ) {
-				
-				ray.origin.addSelf( parameters.offset );
-				
-			}
-			
-		}
-		
-		// cast through physics
-		
-		if ( typeof parameters.physics !== 'undefined' ) {
-			
-			intersections = intersections.concat( raycast_physics( parameters ) );
-			
-		}
-		
-		// cast through objects
-		
-		if ( typeof parameters.mouse !== 'undefined' ) {
-			
-			intersections = intersections.concat( raycast_from_mouse( parameters ) );
-			
-		}
-		else if ( typeof parameters.objects !== 'undefined' ) {
-			
-			intersections = intersections.concat( raycast_objects( parameters ) );
-			
-		}
-		
-		// if all required
-		
-		if ( parameters.allIntersections === true ) {
-			
-			return intersections;
-			
-		}
-		// else return nearest
-		else {
-			
-			ignore = main.ensure_array( parameters.ignore );
-			
-			for ( i = 0, l = intersections.length; i < l; i++ ) {
-				
-				intersectionPotential = intersections[ i ];
-				
-				intersectedObject = intersectionPotential.mesh || intersectionPotential.object;
-				
-				if ( intersectionPotential.distance < intersectionDistance && ignore.indexOf( intersectedObject ) === -1 ) {
-					
-					intersection = intersectionPotential;
-					intersectionDistance = intersectionPotential.distance;
-					
-				}
-				
-			}
-			
-			return intersection;
-		
-		}
-		
-	}
-	
-	function raycast_physics ( parameters ) {
-		
-		var i, l,
-			ray = parameters.ray,
-			physics = parameters.physics,
-			octree = parameters.octree,
-			distance = parameters.distance,
-			system = physics.system,
-			colliders = parameters.colliders,
-			intersections;
-		
-		// if using octree
-		
-		if ( typeof octree !== 'undefined' && distance > 0 ) {
-			
-			// search for potential colliders
-			
-			colliders = main.ensure_array( colliders ).concat( octree.search( ray.origin, distance, true ) );
-			//console.log( ' RAYCAST, octree search results from position ', ray.origin.x, ray.origin.y, ray.origin.z, ' + dist ', distance, ' = # ', colliders.length, ' + colliders', colliders );
-			
-		}
-		
-		// ray cast colliders
-		// defaults to all in system
-		
-		intersections = system.rayCastColliders( ray, colliders );
-		//console.log( ' RAYCAST, intersections ', intersections );
-		return intersections;
-		
-	}
-	
-	function raycast_from_mouse ( parameters ) {
-		
-		var ray = parameters.ray,
-			camera = parameters.camera,
-			mouse = parameters.mouse,
-			mousePosition = utilVec31Casting,
-			projector = utilProjector1Casting;
-		
-		// get corrected mouse position
-		
-		mousePosition.x = ( mouse.x / shared.screenWidth ) * 2 - 1;
-		mousePosition.y = -( mouse.y / shared.screenHeight ) * 2 + 1;
-		mousePosition.z = 0.5;
-		
-		// unproject mouse position
-		
-		projector.unprojectVector( mousePosition, camera );
-		
-		// set ray
-
-		ray.origin.copy( camera.position );
-		ray.direction.copy( mousePosition.subSelf( camera.position ) ).normalize();
-		
-		return raycast_objects( parameters );
-		
-	}
-	
-	function raycast_objects ( parameters ) {
-		
-		var ray = parameters.ray,
-			objects = parameters.objects,
-			hierarchical = parameters.hierarchical;
-		
-		// account for hierarchy and extract all children
-		
-		if ( hierarchical !== false ) {
-			
-			objects = extract_children_from_objects( objects, objects );
-			
-		}
-		
-		// find intersections
-		
-		return ray.intersectObjects( objects );
 		
 	}
     

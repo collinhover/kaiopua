@@ -54,7 +54,6 @@
 	
 	function init_internal ( oh ) {
 		console.log('internal octree', _Octree);
-		
 		_ObjectHelper = oh;
 		
 		// properties

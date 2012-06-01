@@ -38,6 +38,7 @@
 	
 	function init_internal () {
 		console.log('internal ui element', _UIElement);
+		
 		// properties
 		
 		_UIElement.timeShow = 500;

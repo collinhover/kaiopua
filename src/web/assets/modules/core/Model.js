@@ -21,6 +21,12 @@
 		morphsNumMin = 5,
 		stabilityMorphID = 'stability_morph';
 	
+	/*===================================================
+    
+    public properties
+    
+    =====================================================*/
+	
 	main.asset_register( assetPath, {
 		data: _Model,
 		requirements: [
@@ -32,6 +38,12 @@
 		callbacksOnReqs: init_internal,
 		wait: true
 	} );
+	
+	/*===================================================
+    
+    internal init
+    
+    =====================================================*/
 	
 	function init_internal ( p, oh, mh ) {
 		console.log('internal model', _Model);

@@ -11,10 +11,9 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/core/Game.js",
 		_Game = {},
-        _AssetLoader,
 		_ErrorHandler,
 		_MathHelper,
-		_ObjectHelper,
+		_RayHelper,
 		_Physics,
 		_GUI,
 		_Messenger,
@@ -45,13 +44,11 @@
 		sectionChangePauseTime = 500,
 		introMessageDelayTime = 2000,
 		dependencies = [
-			"assets/modules/utils/AssetLoader.js",
             "assets/modules/utils/ErrorHandler.js",
 		],
         assetsBasic = [
 			"assets/modules/ui/UIElement.js",
 			"assets/modules/ui/GUI.js",
-			"assets/modules/utils/MathHelper.js",
             "js/lib/three/Three.js",
 			"js/lib/Tween.js",
 			"js/lib/jquery.transform2d.min.js",
@@ -71,7 +68,6 @@
             "assets/modules/sections/Launcher.js"
         ],
         assetsGame = [
-			/*"js/lib/ammo.js",*/
 			"assets/modules/core/Octree.js",
 			"assets/modules/core/Physics.js",
 			"assets/modules/core/Player.js",
@@ -81,8 +77,11 @@
 			"assets/modules/ui/Menu.js",
 			"assets/modules/ui/Inventory.js",
 			"assets/modules/ui/Messenger.js",
-			"assets/modules/utils/ObjectMaker.js",
+			"assets/modules/utils/MathHelper.js",
+			"assets/modules/utils/SceneHelper.js",
+			"assets/modules/utils/RayHelper.js",
 			"assets/modules/utils/ObjectHelper.js",
+			"assets/modules/utils/ObjectMaker.js",
 			"assets/modules/characters/Character.js",
 			"assets/modules/characters/Hero.js",
 			"assets/modules/env/World.js",
@@ -230,9 +229,8 @@
     
     =====================================================*/
 	
-	function init_internal ( al, err ) {
+	function init_internal ( err ) {
 		console.log('internal game');
-		_AssetLoader = al;
 		_ErrorHandler = err;
 		
 		// register error listeners
@@ -251,8 +249,8 @@
 			
 			// set loading messages
 			
-			_AssetLoader.loadingHeader = loadingHeader;
-			_AssetLoader.loadingTips = loadingTips;
+			main.loadingHeader = loadingHeader;
+			main.loadingTips = loadingTips;
 			
 			// start loading
 			
@@ -264,7 +262,7 @@
 	
 	function load_basics () {
 		
-		main.asset_require( assetsBasic, [ load_three_extras ] );
+		main.asset_require( assetsBasic, [ load_three_extras ], true );
 		
 	}
 	
@@ -450,7 +448,7 @@
 		
 		// assets
 		
-		_ObjectHelper = main.get_asset_data( "assets/modules/utils/ObjectHelper.js" );
+		_RayHelper = main.get_asset_data( "assets/modules/utils/RayHelper.js" );
 		_Messenger = main.get_asset_data( "assets/modules/ui/Messenger.js" );
 		
 		// ui
@@ -1108,7 +1106,7 @@
 		
 		// intersection
 		
-		intersection = _ObjectHelper.raycast( parameters );
+		intersection = _RayHelper.raycast( parameters );
 		
 		if ( typeof intersection !== 'undefined' ) {
 			

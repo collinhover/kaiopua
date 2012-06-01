@@ -12,8 +12,9 @@
 		assetPath = "assets/modules/core/Physics.js",
 		_Physics = {},
 		_Octree,
-		_ObjectHelper,
+		_RayHelper,
 		_MathHelper,
+		_ObjectHelper,
 		ready = false,
 		octree,
 		system,
@@ -53,8 +54,9 @@
 		requirements: [
 			"assets/modules/core/Game.js",
 			"assets/modules/core/Octree.js",
-			"assets/modules/utils/ObjectHelper.js",
-			"assets/modules/utils/MathHelper.js"
+			"assets/modules/utils/RayHelper.js",
+			"assets/modules/utils/MathHelper.js",
+			"assets/modules/utils/ObjectHelper.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -66,12 +68,13 @@
     
     =====================================================*/
 	
-	function init_internal ( game, oc, oh, mh ) {
+	function init_internal ( game, oc, rh, mh, oh ) {
 		console.log('internal physics');
 		
 		_Octree = oc;
-		_ObjectHelper = oh;
+		_RayHelper = rh;
 		_MathHelper = mh;
+		_ObjectHelper = oh;
 		
 		// octree
 		
@@ -957,7 +960,7 @@
 		
 		// cast ray from mesh to source
 		
-		intersection = _ObjectHelper.raycast( {
+		intersection = _RayHelper.raycast( {
 			physics: _Physics,
 			origin: position,
 			direction: direction,
@@ -1249,8 +1252,7 @@
 		
 		// get intersection
 		
-		main.time_test( function () {
-		intersection = _ObjectHelper.raycast( {
+		intersection = _RayHelper.raycast( {
 			physics: _Physics,
 			octree: octree,
 			origin: position,
@@ -1259,7 +1261,6 @@
 			distance: boundingOffsetLength + velocityForceRotatedLength,
 			ignore: mesh
 		} );
-		}, 100, 'PHYSICS raycast' );
 		
 		// modify velocity based on intersection distances to avoid passing through or into objects
 		

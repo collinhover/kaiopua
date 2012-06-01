@@ -15,6 +15,7 @@
 		_Physics,
 		_Cloud,
 		_MathHelper,
+		_SceneHelper,
 		_ObjectHelper;
 	
 	/*===================================================
@@ -30,6 +31,7 @@
 			"assets/modules/core/Physics.js",
 			"assets/modules/env/Cloud.js",
 			"assets/modules/utils/MathHelper.js",
+			"assets/modules/utils/SceneHelper.js",
 			"assets/modules/utils/ObjectHelper.js"
 		],
 		callbacksOnReqs: init_internal,
@@ -42,13 +44,14 @@
     
     =====================================================*/
 	
-	function init_internal ( m, phy, cld, mh, oh ) {
+	function init_internal ( m, phy, cld, mh, sh, oh ) {
 		console.log('internal sky', _Sky);
 		
 		_Model = m;
 		_Physics = phy;
 		_Cloud = cld;
 		_MathHelper = mh;
+		_SceneHelper = sh;
 		_ObjectHelper = oh;
 		
 		// properties
@@ -202,7 +205,7 @@
 			
 			// get world children
 			
-			children = _ObjectHelper.extract_children_from_objects( this._world, this._world );
+			children = _SceneHelper.extract_children_from_objects( this._world, this._world );
 			
 			// get new bounds based on world and children
 			
@@ -253,7 +256,7 @@
 		
 		// get children
 		
-		children = main.type( children ) === 'array' ? children : _ObjectHelper.extract_children_from_objects( this._world, this._world );
+		children = main.type( children ) === 'array' ? children : _SceneHelper.extract_children_from_objects( this._world, this._world );
 		
 		// set radius
 		
