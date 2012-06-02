@@ -525,7 +525,7 @@
 				scene: scene
 			} ),
 			objects = [],
-			countMax = 20,
+			countMax = 40,
 			testObj,
 			testObjLast,
 			offset = new THREE.Vector3();
@@ -655,12 +655,12 @@
 			}, 100 );
 			*/
 			
-			var addRemoveTest = false;
+			var addRemoveTest = true;
 			var facesTest = false;
 			var adding = true;
 			//var intervalID = setInterval( function () {
-			shared.signals.update.add( function () {
-			//shared.signals.mouseup.add( function () {
+			//shared.signals.update.add( function () {
+			shared.signals.mouseup.add( function () {
 				
 				// adding/removing static
 				if ( addRemoveTest === true ) {

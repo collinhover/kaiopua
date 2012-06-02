@@ -13,6 +13,7 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/core/Octree.js",
 		_Octree = {},
+		_SceneHelper,
 		_ObjectHelper,
 		octreeNodeCount = 0,
 		depthMax = -1,
@@ -40,6 +41,7 @@
 	main.asset_register( assetPath, { 
 		data: _Octree,
 		requirements: [
+			"assets/modules/utils/SceneHelper.js",
 			"assets/modules/utils/ObjectHelper.js"
 		],
 		callbacksOnReqs: init_internal,
@@ -52,8 +54,9 @@
     
     =====================================================*/
 	
-	function init_internal ( oh ) {
+	function init_internal ( sh, oh ) {
 		console.log('internal octree', _Octree);
+		_SceneHelper = sh;
 		_ObjectHelper = oh;
 		
 		// properties
@@ -91,6 +94,7 @@
 		// TEST
 		
 		this.objects = [];
+		this.objectsData = [];
 		this.depthMax = main.is_number( parameters.depthMax ) ? parameters.depthMax : depthMax;
 		this.objectsThreshold = main.is_number( parameters.objectsThreshold ) ? parameters.objectsThreshold : objectsThreshold;
 		this.overlapPct = main.is_number( parameters.overlapPct ) ? parameters.overlapPct : overlapPct;
@@ -118,12 +122,31 @@
 	Octree.prototype.add = function ( object, splitByFaces ) {
 		
 		var i, l,
+			index,
 			geometry,
 			faces;
 		
+		// ensure object is not object data for index search
+		
+		if ( object instanceof OctreeObjectData ) {
+			
+			object = object.object;
+			
+		}
+		
 		// if does not yet contain object
 		
-		if ( this.contains( object ) !== true ) {
+		index = this.objects.indexOf( object );
+		
+		if ( index === -1 ) {
+			
+			// store
+			
+			this.objects.push( object );
+			
+			// ensure world matrices are updated
+			
+			_ObjectHelper.update_world_matrix( object );
 			
 			// if adding faces of object
 			
@@ -148,9 +171,11 @@
 			// else add object itself
 			else {
 				
-				add_object.call( this.root, object instanceof OctreeObjectData ? object : new OctreeObjectData( object ) );
+				add_object.call( this.root, new OctreeObjectData( object ) );
 				
 			}
+			
+			console.log( ' num objects? ', this.objects.length, ' + num data? ', this.objectsData.length );
 			
 		}
 		
@@ -158,32 +183,52 @@
 	
 	Octree.prototype.remove = function ( object ) {
 		
-		remove_object.call( this.root, object );
-		
-	};
-	
-	Octree.prototype.contains = function ( object ) {
-		
 		var i, l,
-			objectData,
-			contains = false;
+			objectData = object,
+			index,
+			objectsDataRemoved;
 		
-		// check all objects data
+		// ensure object is not object data for index search
 		
-		for ( i = 0, l = this.objects.length; i < l; i++ ) {
+		if ( object instanceof OctreeObjectData ) {
 			
-			objectData = this.objects[ i ];
-			
-			if ( ( object instanceof OctreeObjectData && objectData === object ) || objectData.object === object ) {
-				
-				contains = true;
-				break;
-				
-			}
+			object = object.object;
 			
 		}
 		
-		return contains;
+		// if contains object
+		
+		index = this.objects.indexOf( object );
+		
+		if ( index !== -1 ) {
+			
+			// remove from objects list
+			
+			this.objects.splice( index, 1 );
+			
+			// remove from nodes
+			
+			objectsDataRemoved = remove_object.call( this.root, objectData );
+			
+			// remove from objects data list
+			
+			for ( i = 0, l = objectsDataRemoved.length; i < l; i++ ) {
+				
+				objectData = objectsDataRemoved[ i ];
+				
+				index = this.objectsData.indexOf( objectData );
+				
+				if ( index !== -1 ) {
+					
+					this.objectsData.splice( index, 1 );
+					
+				}
+				
+			}
+			
+			console.log( ' num objects? ', this.objects.length, ' + num data? ', this.objectsData.length );
+			
+		}
 		
 	};
 	
@@ -191,25 +236,39 @@
 		
 		var i, l,
 			node,
+			object,
 			objectData,
 			indexOctant,
 			indexOctantLast,
-			positionObj,
 			objectsUpdate = [];
 		
-		// check all objects for changes in position
+		// update all objects
 		
 		for ( i = 0, l = this.objects.length; i < l; i++ ) {
 			
-			objectData = this.objects[ i ];
+			object = this.objects[ i ];
+			
+			// ensure world matrices are updated
+			
+			_ObjectHelper.update_world_matrix( objectData.object );
+			
+		}
+		
+		// check all object data for changes in position
+		
+		for ( i = 0, l = this.objectsData.length; i < l; i++ ) {
+			
+			objectData = this.objectsData[ i ];
 			
 			node = objectData.node;
 			
-			var cp = objectData.position_current();
+			// update object
+			
+			objectData.update();
 			
 			// if position has changed since last organization of object in tree
 			
-			if ( node instanceof OctreeNode && !objectData.positionLast.equals( objectData.position_current() ) ) {
+			if ( node instanceof OctreeNode && !objectData.positionLast.equals( objectData.position ) ) {
 				
 				// get octant index of object within current node
 				
@@ -221,7 +280,7 @@
 				
 				if ( indexOctant !== indexOctantLast ) {
 					
-					// add to list for deferred update
+					// add to update list
 					
 					objectsUpdate.push( objectData );
 					
@@ -391,74 +450,39 @@
 		
 		// properties by type
 		
-		if ( object instanceof THREE.Object3D ) {
+		if ( this.object instanceof THREE.Object3D ) {
 			
-			// ensure matrix world is calculated
+			// properties
 			
-			if ( object.matrixAutoUpdate !== true ) {
-				
-				object.updateMatrix();
-				
-			}
-			object.updateMatrixWorld();
+			this.position = new THREE.Vector3();
 			
-			this.matrix = object.matrixWorld;
-			this.scale = object.scale;
-			this.positionLast = new THREE.Vector3();
-			this.utilVec31Position = new THREE.Vector3();
+			// initial update
 			
-			if ( this.faces instanceof THREE.Face3 || this.faces instanceof THREE.Face4 ) {
-				
-				this.radius = _ObjectHelper.face_bounding_radius( object, this.faces );
-				this.offset = this.faces.centroid;
-				
-			}
-			else {
-				
-				this.radius = object.geometry.boundingSphere.radius;
-				
-			}
+			this.update();
+			this.positionLast = this.position.clone();
 			
 		}
 		
 	}
 	
-	OctreeObjectData.prototype.position_current = function () {
+	OctreeObjectData.prototype.update = function () {
 		
-		var position;
-		
-		// ensure matrices are updated
-		
-		if ( this.object.matrixAutoUpdate !== true ) {
+		if ( this.faces instanceof THREE.Face3 || this.faces instanceof THREE.Face4 ) {
 			
-			this.object.updateMatrix();
+			this.radius = _ObjectHelper.face_bounding_radius( this.object, this.faces );
+			this.object.matrixWorld.multiplyVector3( this.position.copy( this.faces.centroid ) );
 			
 		}
-		this.object.updateMatrixWorld();
-		
-		// object face
-		
-		if ( typeof this.faces !== 'undefined' ) {
-			
-			// get offset of face from object center
-			
-			position = this.utilVec31Position.copy( this.offset );
-			
-			// adjust for object world position, scale, and rotation
-			
-			this.matrix.multiplyVector3( position );
-			
-		}
-		// object self
 		else {
 			
-			position = this.matrix.getPosition();
+			this.radius = this.object.geometry.boundingSphere.radius;
+			this.position.copy( this.object.matrixWorld.getPosition() );
 			
 		}
 		
-		return position;
+		this.radius = this.radius * Math.max( this.object.scale.x, this.object.scale.y, this.object.scale.z );
 		
-	}
+	};
 	
 	/*===================================================
     
@@ -512,13 +536,15 @@
 		
 		this.overlap = this.radius * this.tree.overlapPct;
 		
-		// TEST
-		this.visual = new THREE.Mesh( new THREE.CubeGeometry( ( this.radius + this.overlap ) * 2, ( this.radius + this.overlap ) * 2, ( this.radius + this.overlap ) * 2 ), new THREE.MeshLambertMaterial( { color: 0xFF0000, wireframe: true, wireframeLinewidth: 10 } ) );
-		this.visual.position.copy( this.position );
+		// visual
+		
 		if ( this.tree.scene ) {
+			
+			this.visual = new THREE.Mesh( new THREE.CubeGeometry( ( this.radius + this.overlap ) * 2, ( this.radius + this.overlap ) * 2, ( this.radius + this.overlap ) * 2 ), new THREE.MeshLambertMaterial( { color: 0xFF0000, wireframe: true, wireframeLinewidth: 10 } ) );
+			this.visual.position.copy( this.position );
 			this.tree.scene.add( this.visual );
+			
 		}
-		// TEST
 		
 	}
 	
@@ -607,11 +633,14 @@
 			
 		}
 		
-		// TEST
-		if ( removeVisual === true && this.tree.scene ) {
-			this.tree.scene.remove( this.visual );
+		// visual
+		
+		if ( removeVisual === true && this.visual && this.visual.parent ) {
+			
+			this.visual.parent.remove( this.visual );
+			
 		}
-		// TEST
+		
 	}
 	
 	/*===================================================
@@ -742,11 +771,11 @@
 				
 			}
 			
-			// add to tree objects list
+			// add to tree objects data list
 			
 			if ( !( object.node instanceof OctreeNode ) ) {
 				
-				this.tree.objects.push( object );
+				this.tree.objectsData.push( object );
 				
 			}
 			
@@ -787,7 +816,7 @@
 		
 		// cascade through tree to find and remove object
 		
-		removeData = remove_object_end.call( this, object, { searchComplete: false, nodesRemovedFrom: [] } );
+		removeData = remove_object_end.call( this, object, { searchComplete: false, nodesRemovedFrom: [], objectsDataRemoved: [] } );
 		
 		// if object removed, try to shrink the nodes it was removed from
 		
@@ -802,6 +831,8 @@
 			}
 			
 		}
+		
+		return removeData.objectsDataRemoved;
 		
 	}
 	
@@ -824,7 +855,10 @@
 			
 			if ( index !== -1 ) {
 				
-				remove_object_index_tree.call( this, index );
+				this.objects.splice( index, 1 );
+				object.node = undefined;
+				
+				removeData.objectsDataRemoved.push( object );
 				
 				removeData.searchComplete = objectRemoved = true;
 				
@@ -836,9 +870,14 @@
 			
 			for ( i = this.objects.length - 1; i >= 0; i-- ) {
 				
-				if ( this.objects[ i ].object === object ) {
+				objectData = this.objects[ i ];
+				
+				if ( objectData.object === object ) {
 					
-					objectData = remove_object_index_tree.call( this, i );
+					this.objects.splice( i, 1 );
+					objectData.node = undefined;
+					
+					removeData.objectsDataRemoved.push( objectData );
 					
 					objectRemoved = true;
 					
@@ -857,7 +896,7 @@
 		
 		// if object data removed and this is not on nodes removed from
 		
-		if ( objectRemoved === true && removeData.nodesRemovedFrom.indexOf( this ) === -1 ) {
+		if ( objectRemoved === true ) {//&& removeData.nodesRemovedFrom.indexOf( this ) === -1 ) {
 			
 			removeData.nodesRemovedFrom.push( this );
 			
@@ -890,27 +929,26 @@
 	}
 	
 	function remove_object_index_tree ( index ) {
-		
+
 		// remove from this objects list
-		
-		var objectRemoved = this.objects.splice( index, 1 )[ 0 ];
-		
-		// remove from tree objects list
-		
-		index = this.tree.objects.indexOf( objectRemoved );
-		
+
+		var objectRemoved = [ 0 ];
+
+		// remove from tree objects data list
+
+		index = this.tree.objectsData.indexOf( objectRemoved );
+
 		if ( index !== -1 ) {
-			
-			this.tree.objects.splice( index, 1 );
-			
+
+			this.tree.objectsData.splice( index, 1 );
+
 		}
-		
+
 		// node reference
 		
-		objectRemoved.node = undefined;
-		
+
 		return objectRemoved;
-		
+
 	}
 	
 	/*===================================================
@@ -1559,9 +1597,9 @@
 		// object data
 		if ( objectData instanceof OctreeObjectData ) {
 			
-			radiusObj = objectData.radius * Math.max( objectData.scale.x, objectData.scale.y, objectData.scale.z );
+			radiusObj = objectData.radius;
 			
-			positionObj = objectData.position_current();
+			positionObj = objectData.position;
 			
 			// update object data position last
 			

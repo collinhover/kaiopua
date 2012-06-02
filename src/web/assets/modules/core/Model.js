@@ -13,8 +13,9 @@
 		assetPath = "assets/modules/core/Model.js",
 		_Model = {},
 		_Physics,
-		_ObjectHelper,
 		_MathHelper,
+		_SceneHelper,
+		_ObjectHelper,
 		durationBase = 1000,
 		durationPerFrameMinimum = shared.timeDeltaExpected || 1000 / 60;
 		objectCount = 0,
@@ -31,8 +32,9 @@
 		data: _Model,
 		requirements: [
 			"assets/modules/core/Physics.js",
-			"assets/modules/utils/ObjectHelper.js",
 			"assets/modules/utils/MathHelper.js",
+			"assets/modules/utils/SceneHelper.js",
+			"assets/modules/utils/ObjectHelper.js",
 			"js/lib/Tween.js"
 		], 
 		callbacksOnReqs: init_internal,
@@ -45,11 +47,12 @@
     
     =====================================================*/
 	
-	function init_internal ( p, oh, mh ) {
+	function init_internal ( p, mh, sh, oh ) {
 		console.log('internal model', _Model);
 		_Physics = p;
-		_ObjectHelper = oh;
 		_MathHelper = mh;
+		_SceneHelper = sh;
+		_ObjectHelper = oh;
 		
 		// instance
 		
@@ -66,25 +69,13 @@
 			get : function () { return this._parent; },
 			set : function ( parent ) {
 				
-				var scene;
-				
 				// store new parent
 				
 				this._parent = parent;
 				
-				// search for scene
+				// if is child of scene, add physics
 				
-				scene = this;
-				
-				while ( typeof scene.parent !== 'undefined' ) {
-					
-					scene = scene.parent;
-					
-				}
-				
-				// if parent is child of scene, add physics
-				
-				if ( scene instanceof THREE.Scene )  {
+				if ( _SceneHelper.extract_parent_root( this ) instanceof THREE.Scene )  {
 					
 					_Physics.add( this );
 					

@@ -12,6 +12,7 @@
 		assetPath = "assets/modules/utils/ObjectHelper.js",
 		_ObjectHelper = {},
 		_MathHelper,
+		_SceneHelper,
 		_VectorHelper,
 		_RayHelper,
 		utilVec31Follow,
@@ -52,6 +53,7 @@
 		data: _ObjectHelper,
 		requirements: [
 			"assets/modules/utils/MathHelper.js",
+			"assets/modules/utils/SceneHelper.js",
 			"assets/modules/utils/VectorHelper.js",
 			"assets/modules/utils/RayHelper.js"
 		],
@@ -65,7 +67,7 @@
     
     =====================================================*/
 	
-	function init_internal ( mh, vh, rh ) {
+	function init_internal ( mh, sh, vh, rh ) {
 		console.log('internal object helper', _ObjectHelper);
 		var len = Math.sqrt( 1 / 2 ),
 			ca = shared.cardinalAxes,
@@ -75,6 +77,7 @@
 		// helpers
 		
 		_MathHelper = mh;
+		_SceneHelper = sh;
 		_VectorHelper = vh;
 		_RayHelper = rh;
 		
@@ -122,13 +125,15 @@
 		_ObjectHelper.clone_morphs = clone_morphs;
 		_ObjectHelper.clone_list = clone_list;
 		
+		_ObjectHelper.update_world_matrix = update_world_matrix;
+		
+		_ObjectHelper.apply_matrix = apply_matrix;
+		_ObjectHelper.apply_quaternion = apply_quaternion;
+		
 		_ObjectHelper.dimensions = dimensions;
 		
 		_ObjectHelper.push_bounds = push_bounds;
 		_ObjectHelper.face_bounding_radius = face_bounding_radius;
-		
-		_ObjectHelper.apply_matrix = apply_matrix;
-		_ObjectHelper.apply_quaternion = apply_quaternion;
 		
 		_ObjectHelper.center_offset = center_offset;
 		_ObjectHelper.object_center = object_center;
@@ -336,6 +341,156 @@
 	
 	/*===================================================
     
+    update
+    
+    =====================================================*/
+	
+	function update_world_matrix ( object ) {
+		
+		var i, l,
+			parentCascade,
+			parent,
+			parentUpdate
+		
+		// search all parents between object and root for world matrix update
+		
+		parentCascade = _SceneHelper.extract_parents_from_objects( object, object );
+		
+		for ( i = 0, l = parentCascade.length; i < l; i++ ) {
+			
+			parent = parentCascade[ i ];
+			
+			if ( parent.matrixWorldNeedsUpdate === true ) {
+				
+				parentUpdate = parent;
+				
+			}
+			
+		}
+		
+		// update world matrix starting at uppermost parent that needs update
+		
+		if ( typeof parentUpdate !== 'undefined' ) {
+			
+			parentUpdate.updateMatrixWorld();
+			
+		}
+		
+	}
+	
+	/*===================================================
+    
+    apply
+    
+    =====================================================*/
+	
+	function apply_matrix ( object, matrix ) {
+		
+		var i, l,
+			j, k,
+			geometry = object instanceof THREE.Mesh ? object.geometry : object,
+			morphTargets = geometry.morphTargets,
+			morphTarget,
+			vertices,
+			vertex;
+		
+		// apply offset matrix to geometry
+		
+		geometry.applyMatrix( matrix );
+		
+		// adjust morph targets
+		
+		for ( i = 0, l = morphTargets.length; i < l; i++ ) {
+			
+			morphTarget = morphTargets[ i ];
+			
+			vertices = morphTarget.vertices;
+			
+			for ( j = 0, k = vertices.length; j < k; j++ ) {
+				
+				vertex = vertices[ j ];
+				
+				matrix.multiplyVector3( vertex );
+				
+			}
+			
+		}
+		
+		// force recompute bounds
+		
+		geometry.computeBoundingSphere();
+		
+		geometry.computeBoundingBox();
+		
+		// additional adjustments if object is mesh
+		
+		if ( object instanceof THREE.Mesh ) {
+			
+			object.boundRadius = geometry.boundingSphere.radius;
+			
+		}
+		
+	}
+	
+	function apply_quaternion ( object, quaternion, invisible, reverse ) {
+		
+		var matrix = utilMat41ApplyQ.setRotationFromQuaternion( quaternion ),
+			objectQ = utilQ1ApplyQ;
+			objectNewQ = utilQ2ApplyQ;
+		
+		// apply matrix to object
+		
+		apply_matrix( object, matrix );
+		
+		// additional adjustments if object is mesh
+		
+		if ( invisible === true && object instanceof THREE.Mesh ) {
+			
+			// get object quaternion
+			
+			if ( object.useQuaternion === true ) {
+				
+				objectQ = object.quaternion;
+				
+			}
+			else {
+				
+				objectQ.setFromRotationMatrix( object.matrix );
+				
+			}
+			
+			// multiply
+			
+			if ( reverse === true ) {
+				
+				objectNewQ.multiply( objectQ, quaternion.inverse() );
+				
+			}
+			else {
+				
+				objectNewQ.multiply( quaternion.inverse(), objectQ );
+				
+			}
+			
+			// apply
+			
+			if ( object.useQuaternion === true ) {
+				
+				object.quaternion.copy( objectNewQ );
+			
+			}
+			else {
+				
+				object.matrix.setRotationFromQuaternion( objectNewQ );
+				
+			}
+			
+		}
+		
+	}
+	
+	/*===================================================
+    
     dimensions
     
     =====================================================*/
@@ -484,117 +639,6 @@
 	
 	/*===================================================
     
-    apply
-    
-    =====================================================*/
-	
-	function apply_matrix ( object, matrix ) {
-		
-		var i, l,
-			j, k,
-			geometry = object instanceof THREE.Mesh ? object.geometry : object,
-			morphTargets = geometry.morphTargets,
-			morphTarget,
-			vertices,
-			vertex;
-		
-		// apply offset matrix to geometry
-		
-		geometry.applyMatrix( matrix );
-		
-		// adjust morph targets
-		
-		for ( i = 0, l = morphTargets.length; i < l; i++ ) {
-			
-			morphTarget = morphTargets[ i ];
-			
-			vertices = morphTarget.vertices;
-			
-			for ( j = 0, k = vertices.length; j < k; j++ ) {
-				
-				vertex = vertices[ j ];
-				
-				matrix.multiplyVector3( vertex );
-				
-			}
-			
-		}
-		
-		// force recompute bounds
-		
-		geometry.computeBoundingSphere();
-		
-		geometry.computeBoundingBox();
-		
-		// additional adjustments if object is mesh
-		
-		if ( object instanceof THREE.Mesh ) {
-			
-			object.boundRadius = geometry.boundingSphere.radius;
-			
-		}
-		
-	}
-	
-	function apply_quaternion ( object, quaternion, invisible, reverse ) {
-		
-		var matrix = utilMat41ApplyQ.setRotationFromQuaternion( quaternion ),
-			objectQ = utilQ1ApplyQ;
-			objectNewQ = utilQ2ApplyQ;
-		
-		// apply matrix to object
-		
-		apply_matrix( object, matrix );
-		
-		// additional adjustments if object is mesh
-		
-		if ( invisible === true && object instanceof THREE.Mesh ) {
-			
-			// get object quaternion
-			
-			if ( object.useQuaternion === true ) {
-				
-				objectQ = object.quaternion;
-				
-			}
-			else {
-				
-				objectQ.setFromRotationMatrix( object.matrix );
-				
-			}
-			
-			// multiply
-			
-			if ( reverse === true ) {
-				
-				objectNewQ.multiply( objectQ, quaternion.inverse() );
-				
-			}
-			else {
-				
-				objectNewQ.multiply( quaternion.inverse(), objectQ );
-				
-			}
-			
-			// apply
-			
-			if ( object.useQuaternion === true ) {
-				
-				object.quaternion.copy( objectNewQ );
-			
-			}
-			else {
-				
-				object.matrix.setRotationFromQuaternion( objectNewQ );
-				
-			}
-			
-		}
-		
-	}
-	
-	/*===================================================
-    
     center offset
     
     =====================================================*/
@@ -679,17 +723,21 @@
 		axisUp = axisUp || ( ( typeof object.physics !== 'undefined' ) ? object.physics.axes.up : ca.up );
 		axisForward = axisForward || ( ( typeof object.physics !== 'undefined' ) ? object.physics.axes.forward : ca.forward );
 		
-		// find quaternion to go from average of normals to current axis up 
+		// find quaternion to go from average of normals to current axis up
 		
-		offset = _VectorHelper.q_to_axis( axisUp, normalAvg, axisForward );
-		
-		return offset;
+		return _VectorHelper.q_to_axis( axisUp, normalAvg, axisForward );
 		
 	}
 	
 	function center_rotation ( object ) {
 		
-		apply_quaternion( object, rotation_offset( object ), true );
+		var offset = rotation_offset( object );
+		
+		if ( offset instanceof THREE.Quaternion ) {
+			
+			apply_quaternion( object, offset, true );
+			
+		}
 		
 	}
 	

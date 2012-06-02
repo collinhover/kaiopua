@@ -100,7 +100,7 @@
     	
     	me.parts.body = new _Model.Instance();
 		
-		//me.parts.body.quaternion.setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), -Math.PI * 0.4 );
+		me.parts.body.quaternion.setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), -Math.PI * 0.4 );
 		
 		me.add( me.parts.body );
 		

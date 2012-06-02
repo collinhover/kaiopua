@@ -152,16 +152,14 @@
 			
 			// rotation change
 			
-			qToA.setFromAxisAngle( axis, angle );
+			return qToA.setFromAxisAngle( axis, angle );
 			
 		}
 		else {
 			
-			qToA.set( 0, 0, 0, 1 );
+			return false;
 			
 		}
-		
-		return qToA;
 		
 	}
 	

@@ -135,6 +135,8 @@
 		
 		skybox = _ObjectMaker.make_skybox( shared.pathToTextures + "skybox_world" );
 		
+		addBGOnShow.push( skybox );
+		
 		// water
 		
 		water = new _Water.Instance();
@@ -177,8 +179,6 @@
 		// set items to add on show
 		
 		addOnShow.push( ambientLight, lightSky, water, sky );
-		
-		addBGOnShow.push( skybox );
 		
 	}
     

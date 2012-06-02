@@ -37,6 +37,7 @@
 		
 		_SceneHelper.extract_children_from_objects = extract_children_from_objects;
 		_SceneHelper.extract_parents_from_objects = extract_parents_from_objects;
+		_SceneHelper.extract_parent_root = extract_parent_root;
 		
 	}
 	
@@ -106,9 +107,7 @@
 	
 	function extract_parent_cascade ( object, cascade ) {
 		
-		var i, l;
-		
-		while( typeof object.parent !== 'undefined' ) {
+		while( object.parent ) {
 			
 			cascade.push( object.parent );
 			
@@ -117,6 +116,18 @@
 		}
 		
 		return cascade;
+		
+	}
+	
+	function extract_parent_root ( object ) {
+		
+		while( object.parent ) {
+			
+			object = object.parent;
+			
+		}
+		
+		return object;
 		
 	}
 	

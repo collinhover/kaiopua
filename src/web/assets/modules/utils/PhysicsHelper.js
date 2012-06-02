@@ -110,50 +110,17 @@
 			
 		}
 		
-		axisAway = axisAway || ca.up;
-		
-		axisForward = axisForward || ca.forward;
-		
 		lerpDelta = lerpDelta || 1;
-		
-		// get normalized vector pointing from source to object
 		
 		axisAwayNew.sub( position, source ).normalize();
 		
-		// get new rotation based on vector
+		// quaternion between axes
 		
-		// find dist between current axis away and new axis away
+		qToNew = _VectorHelper.q_to_axis( axisAwayNew, axisAway, axisForward );
 		
-		axisAwayToAwayNewDist = Math.max( -1, Math.min( 1, axisAway.dot( axisAwayNew ) ) );
-		
-		// if up axes are not same
-		
-		if ( axisAwayToAwayNewDist !== 1 ) {
+		if ( qToNew instanceof THREE.Quaternion ) {
 			
-			// axis / angle
-			
-			angleToNew = Math.acos( axisAwayToAwayNewDist );
-			axisToNew.cross( axisAway, axisAwayNew );
-			axisToNew.normalize();
-			
-			// if new axis is exactly opposite of current
-			// replace new axis with the forward axis
-			
-			if ( axisToNew.length() === 0 ) {
-				
-				axisToNew = axisForward;
-				
-			}
-			
-			// rotation change
-			
-			qToNew.setFromAxisAngle( axisToNew, angleToNew );
-			
-			// TODO: use _VectorHelper.q_to_axis
-			//var qToNew2 = _VectorHelper.q_to_axis( axisAwayNew, axisAway, axisForward );
-			//console.log( 'qToNew: ', qToNew.x, qToNew.y, qToNew.z, qToNew.w, ' <<<< VS >>>> qToNew2 ', qToNew2.x, qToNew2.y, qToNew2.z, qToNew2.w );
-			
-			// add to rotation
+			// apply as quaternion or matrix
 			
 			if ( object.useQuaternion === true ) {
 				
@@ -174,11 +141,15 @@
 				
 				rotationTargetForMatrix.multiply( qToNew, rotationTarget );
 				
-				rotation.setRotationFromQuaternion( rotationTargetForMatrix );
+				// normalized lerp to new rotation
+				
+				_VectorHelper.lerp_normalized( rotationTarget, rotationTargetForMatrix, lerpDelta );
+				
+				rotation.setRotationFromQuaternion( rotationTarget );
 				
 			}
 			
-			// if physics rigid body passed
+			// update rigid body
 			
 			if ( typeof rigidBody !== 'undefined' ) {
 				
