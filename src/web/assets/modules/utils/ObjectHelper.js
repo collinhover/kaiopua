@@ -12,6 +12,7 @@
 		assetPath = "assets/modules/utils/ObjectHelper.js",
 		_ObjectHelper = {},
 		_MathHelper,
+		_VectorHelper,
 		_RayHelper,
 		utilVec31Follow,
 		utilVec32Follow,
@@ -20,7 +21,6 @@
 		utilVec31Bounds,
 		utilVec32Bounds,
 		utilVec31Dimensions,
-		utilVec31Axis,
 		utilVec31Offset,
 		utilVec31OffsetRot,
 		utilVec31Normalize,
@@ -34,7 +34,6 @@
 		utilQ4Follow,
 		utilQ1Orbit,
 		utilQ2Orbit,
-		utilQ1Axis,
 		utilQ1ApplyQ,
 		utilQ2ApplyQ,
 		utilQ1Normalize,
@@ -53,6 +52,7 @@
 		data: _ObjectHelper,
 		requirements: [
 			"assets/modules/utils/MathHelper.js",
+			"assets/modules/utils/VectorHelper.js",
 			"assets/modules/utils/RayHelper.js"
 		],
 		callbacksOnReqs: init_internal,
@@ -65,7 +65,7 @@
     
     =====================================================*/
 	
-	function init_internal ( mh, rh ) {
+	function init_internal ( mh, vh, rh ) {
 		console.log('internal object helper', _ObjectHelper);
 		var len = Math.sqrt( 1 / 2 ),
 			ca = shared.cardinalAxes,
@@ -75,6 +75,7 @@
 		// helpers
 		
 		_MathHelper = mh;
+		_VectorHelper = vh;
 		_RayHelper = rh;
 		
 		// utility
@@ -86,7 +87,6 @@
 		utilVec31Bounds = new THREE.Vector3();
 		utilVec32Bounds = new THREE.Vector3();
 		utilVec31Dimensions = new THREE.Vector3();
-		utilVec31Axis = new THREE.Vector3();
 		utilVec31Offset = new THREE.Vector3();
 		utilVec31OffsetRot = new THREE.Vector3();
 		utilVec31Normalize = new THREE.Vector3();
@@ -94,16 +94,15 @@
 		utilVec33Normalize = new THREE.Vector3();
 		utilVec34Normalize = new THREE.Vector3();
 		utilVec41Normalize = new THREE.Vector4();
+		utilQ1ApplyQ = new THREE.Quaternion();
+		utilQ2ApplyQ = new THREE.Quaternion();
 		utilQ1Follow = new THREE.Quaternion();
 		utilQ2Follow = new THREE.Quaternion();
 		utilQ3Follow = new THREE.Quaternion();
 		utilQ4Follow = new THREE.Quaternion();
+		utilQ1Normalize = new THREE.Quaternion();
 		utilQ1Orbit = new THREE.Quaternion();
 		utilQ2Orbit = new THREE.Quaternion();
-		utilQ1Axis = new THREE.Quaternion();
-		utilQ1ApplyQ = new THREE.Quaternion();
-		utilQ2ApplyQ = new THREE.Quaternion();
-		utilQ1Normalize = new THREE.Quaternion();
 		utilMat41Follow = new THREE.Matrix4();
 		utilMat41Bounds = new THREE.Matrix4();
 		utilMat41Center = new THREE.Matrix4();
@@ -134,7 +133,6 @@
 		_ObjectHelper.center_offset = center_offset;
 		_ObjectHelper.object_center = object_center;
 		
-		_ObjectHelper.q_to_axis = q_to_axis;
 		_ObjectHelper.rotation_offset = rotation_offset;
 		_ObjectHelper.center_rotation = center_rotation;
 		
@@ -142,8 +140,6 @@
 		
 		_ObjectHelper.object_follow_object = object_follow_object;
 		_ObjectHelper.object_orbit_source = object_orbit_source;
-		_ObjectHelper.object_rotate_relative_to_source = object_rotate_relative_to_source;
-		_ObjectHelper.object_pull_to_source = object_pull_to_source;
 		
 	}
 	
@@ -652,57 +648,6 @@
     
     =====================================================*/
 	
-	function q_to_axis ( axisTo, axisFrom, axisFromRightAngle ) {
-		
-		var ca = shared.cardinalAxes,
-			dist,
-			axis = utilVec31Axis,
-			angle,
-			qToA = utilQ1Axis;
-		
-		// current axes
-		
-		axisFrom = axisFrom || ca.up;
-		
-		axisFromRightAngle = axisFromRightAngle || ca.forward;
-		
-		// find dist between current axis up and average of normals
-		
-		dist = _MathHelper.clamp( axisFrom.dot( axisTo ), -1, 1 );
-		
-		// if up axes are not same
-		
-		if ( dist !== 1 ) {
-			
-			// axis / angle
-			
-			angle = Math.acos( dist );
-			axis.cross( axisFrom, axisTo ).normalize();
-			
-			// if new axis is exactly opposite of current
-			// replace new axis with the forward axis
-			
-			if ( axis.length() === 0 ) {
-				
-				axis.copy( axisFromRightAngle );
-				
-			}
-			
-			// rotation change
-			
-			qToA.setFromAxisAngle( axis, angle );
-			
-		}
-		else {
-			
-			qToA.set( 0, 0, 0, 1 );
-			
-		}
-		
-		return qToA;
-		
-	}
-	
 	function rotation_offset ( object, axisUp, axisForward ) {
 		
 		var i, l,
@@ -736,7 +681,7 @@
 		
 		// find quaternion to go from average of normals to current axis up 
 		
-		offset = q_to_axis( axisUp, normalAvg, axisForward );
+		offset = _VectorHelper.q_to_axis( axisUp, normalAvg, axisForward );
 		
 		return offset;
 		
@@ -975,7 +920,7 @@
 			
 			var objectQ = object.quaternion,
 				currentAxis = new THREE.Vector3( objectQ.x / Math.sqrt( 1 - objectQ.w * objectQ.w), objectQ.y / Math.sqrt( 1 - objectQ.w * objectQ.w ), objectQ.z / Math.sqrt( 1 - objectQ.w * objectQ.w ) ),
-				vectors = _MathHelper.get_orthonormal_vectors( currentAxis );
+				vectors = _VectorHelper.get_orthonormal_vectors( currentAxis );
 				
 			console.log(' current axis ', currentAxis, ' + vectors ', vectors.v2, vectors.v3 );
 			sortRotOffset.setFromAxisAngle( currentAxis, angle );
@@ -1092,7 +1037,7 @@
 		apply_quaternion( object, vrotAvg, true, true );
 		
 		/*
-		var vectors = _MathHelper.get_orthonormal_vectors( normalAvg.clone() ),
+		var vectors = _VectorHelper.get_orthonormal_vectors( normalAvg.clone() ),
 			xlg = new THREE.Geometry(),
 			ylg = new THREE.Geometry(),
 			zlg = new THREE.Geometry(),
@@ -1408,269 +1353,6 @@
 			oPos.addSelf( oOffsetPos );
 			
 		}
-		
-	}
-	
-	/*===================================================
-    
-    rotate
-    
-    =====================================================*/
-	
-	function object_rotate_relative_to_source ( object, source, axisAway, axisForward, lerpDelta, rigidBody ) {
-		
-		// TODO: test for working
-		
-		var uv31 = utilVec31RotateToSrc,
-			uv32 = utilVec32RotateToSrc,
-			uq1 = utilQ1RotateToSrc,
-			uq2 = utilQ2RotateToSrc,
-			uq3 = utilQ3RotateToSrc,
-			position,
-			rotation,
-			ca = shared.cardinalAxes,
-			axes,
-			axisAwayNew,
-			axisAwayToAwayNewDist,
-			gravUp,
-			gravDown,
-			angleToNew,
-			axisToNew,
-			qToNew;
-			
-		// localize basics
-		
-		position = object.position;
-		
-		rotation = ( object.useQuaternion === true ? object.quaternion : object.matrix );
-		
-		// if source is 3D object, cascade
-		if ( source instanceof THREE.Object3D ) {
-			
-			source = source.position;
-		
-		}
-		
-		// default is world gravity source
-		if ( typeof source === 'undefined' ) {
-			
-			source = worldGravitySource;
-			
-		}
-		
-		axisAway = axisAway || ca.up;
-		
-		axisForward = axisForward || ca.forward;
-		
-		lerpDelta = lerpDelta || 1;
-		
-		// get normalized vector pointing from source to object
-		
-		axisAwayNew = uv31.sub( position, source ).normalize();
-		
-		// get new rotation based on vector
-		
-		// find dist between current axis away and new axis away
-		
-		axisAwayToAwayNewDist = Math.max( -1, Math.min( 1, axisAway.dot( axisAwayNew ) ) );
-		
-		// if up axes are not same
-		
-		if ( axisAwayToAwayNewDist !== 1 ) {
-			
-			// axis / angle
-			
-			angleToNew = Math.acos( axisAwayToAwayNewDist );
-			axisToNew = uv32.cross( axisAway, axisAwayNew );
-			axisToNew.normalize();
-			
-			// if new axis is exactly opposite of current
-			// replace new axis with the forward axis
-			
-			if ( axisToNew.length() === 0 ) {
-				
-				axisToNew = axisForward;
-				
-			}
-			
-			// rotation change
-			
-			qToNew = uq3.setFromAxisAngle( axisToNew, angleToNew );
-			
-			// add to rotation
-			
-			if ( object.useQuaternion === true ) {
-				
-				// quaternion rotations
-				
-				uq1.multiply( qToNew, rotation );
-				
-				// normalized lerp to new rotation
-				
-				_MathHelper.lerp_normalized( rotation, uq1, lerpDelta );
-			
-			}
-			else {
-				
-				// matrix rotations
-				
-				uq1.setFromRotationMatrix( rotation );
-				
-				uq2.multiply( qToNew, uq1 );
-				
-				rotation.setRotationFromQuaternion( uq2 );
-				
-			}
-			
-			// if physics rigid body passed
-			
-			if ( typeof rigidBody !== 'undefined' ) {
-				
-				/*
-				quaternion = rigidBody.quaternion;
-				
-				uq1.multiply( qToNew, quaternion );
-				
-				_MathHelper.lerp_normalized( quaternion, uq1, lerpDelta );
-				*/
-				// find new axes based on new rotation
-				
-				axes = rigidBody.axes;
-				
-				rotation.multiplyVector3( axes.up.copy( ca.up ) );
-				
-				rotation.multiplyVector3( axes.forward.copy( ca.forward ) );
-				
-				rotation.multiplyVector3( axes.right.copy( ca.right ) );
-				
-			}
-			
-		}
-		
-	}
-	
-	/*===================================================
-    
-    pull
-    
-    =====================================================*/
-	
-	function object_pull_to_source ( object, source, objectsToIntersect, distanceFrom, velocity, rigidBody ) {
-		
-		// TODO: test for working
-		
-		var i, l,
-			position,
-			difference = utilVec31Pull,
-			direction = utilVec32Pull,
-			shift = utilVec33Pull,
-			object,
-			rigidBody,
-			colliders,
-			intersection,
-			intersectionDistance;
-		
-		// handle parameters
-		
-		position = object.position;
-		
-		// if source is 3D object, cascade
-		if ( source instanceof THREE.Object3D ) {
-			
-			source = source.position;
-		
-		}
-		
-		// default is world gravity source
-		if ( typeof source === 'undefined' ) {
-			
-			source = worldGravitySource;
-			
-		}
-		
-		// get normalized vector from position to source
-		
-		difference.sub( source, position );
-		
-		direction.copy( difference ).normalize();
-		
-		// if objects to intersect was passed
-		
-		if ( main.is_array( objectsToIntersect ) ) {
-			
-			// extract colliders from objects
-			
-			colliders = [];
-			
-			for ( i = 0, l = objectsToIntersect.length; i < l; i++ ) {
-				
-				object = objectsToIntersect[ i ];
-				
-				if( object instanceof _RayHelper.Collider ) {
-					
-					colliders.push( object );
-					
-				}
-				else if ( typeof object.collider !== 'undefined' ) {
-					
-					colliders.push( object.collider );
-					
-				}
-				else if ( typeof object.rigidBody !== 'undefined' ) {
-					
-					colliders.push( object.rigidBody.collider );
-					
-				}
-				else if ( typeof object.physics !== 'undefined' ) {
-					
-					colliders.push( object.physics.rigidBody.collider );
-					
-				}
-				
-			}
-			
-		}
-		
-		// cast ray from object to source
-		
-		intersection = _RayHelper.raycast( {
-			origin: position,
-			direction: direction,
-			colliders: colliders
-		} );
-		
-		//intersection = _RayHelper.raycast( position, direction, undefined, undefined, colliders );
-		
-		// if intersection found
-		
-		if ( typeof intersection !== 'undefined' ) {
-			
-			// get distance
-			
-			intersectionDistance = intersection.distance;
-			
-		}
-		else {
-			
-			intersectionDistance = difference.length();
-			
-		}
-		
-		// if distance from needed
-		
-		if ( main.is_number( distanceFrom ) ) {
-			
-			intersectionDistance -= distanceFrom;
-			
-		}
-		
-		// multiply direction by distance
-			
-		shift.copy( direction ).multiplyScalar( intersectionDistance );
-		
-		// add shift to position
-		
-		position.addSelf( shift );
 		
 	}
     

@@ -14,7 +14,9 @@
 		_Octree,
 		_RayHelper,
 		_MathHelper,
+		_VectorHelper,
 		_ObjectHelper,
+		_PhysicsHelper,
 		ready = false,
 		linkBaseName = 'visual_physical_link_',
 		linkCount = 0,
@@ -23,11 +25,6 @@
 		worldGravitySource,
 		worldGravityMagnitude,
 		scaleSpeedExp = Math.log( 1.5 ),
-		utilVec31RotateToSrc,
-		utilVec32RotateToSrc,
-		utilQ1RotateToSrc,
-		utilQ2RotateToSrc,
-		utilQ3RotateToSrc,
 		utilVec31Update,
 		utilVec32Update,
 		utilVec33Update,
@@ -36,10 +33,7 @@
 		utilVec31Velocity,
 		utilVec31Offset,
 		utilQ4Offset,
-		utilRay1Casting,
-		utilVec31Pull,
-		utilVec32Pull,
-		utilVec33Pull;
+		utilRay1Casting;
 	
 	/*===================================================
     
@@ -52,9 +46,11 @@
 		requirements: [
 			"assets/modules/core/Game.js",
 			"assets/modules/core/Octree.js",
-			"assets/modules/utils/RayHelper.js",
 			"assets/modules/utils/MathHelper.js",
-			"assets/modules/utils/ObjectHelper.js"
+			"assets/modules/utils/VectorHelper.js",
+			"assets/modules/utils/RayHelper.js",
+			"assets/modules/utils/ObjectHelper.js",
+			"assets/modules/utils/PhysicsHelper.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -66,13 +62,15 @@
     
     =====================================================*/
 	
-	function init_internal ( game, oc, rh, mh, oh ) {
+	function init_internal ( game, oc, mh, vh, rh, oh, ph ) {
 		console.log('internal physics');
 		
 		_Octree = oc;
-		_RayHelper = rh;
 		_MathHelper = mh;
+		_VectorHelper = vh;
+		_RayHelper = rh;
 		_ObjectHelper = oh;
+		_PhysicsHelper = ph;
 		
 		// octree
 		
@@ -81,35 +79,22 @@
 			//scene: game.scene
 		} );
 		
-		// properties
-		
-		set_world_gravity_source( new THREE.Vector3( 0, 0, 0 ) );
-		set_world_gravity_magnitude( new THREE.Vector3( 0, -1, 0 ) );
-		
 		// utility / conversion objects
-		
-		utilVec31RotateToSrc = new THREE.Vector3();
-		utilVec32RotateToSrc = new THREE.Vector3();
-		utilQ1RotateToSrc = new THREE.Quaternion();
-		utilQ2RotateToSrc = new THREE.Quaternion();
-		utilQ3RotateToSrc = new THREE.Quaternion();
 		
 		utilVec31Update = new THREE.Vector3();
 		utilVec32Update = new THREE.Vector3();
 		utilVec33Update = new THREE.Vector3();
 		utilVec34Update = new THREE.Vector3();
 		utilVec35Update = new THREE.Vector3();
-		
 		utilVec31Offset = new THREE.Vector3();
 		utilQ4Offset = new THREE.Quaternion();
-		
 		utilVec31Velocity = new THREE.Vector3();
-		
 		utilRay1Casting = new THREE.Ray();
 		
-		utilVec31Pull = new THREE.Vector3();
-		utilVec32Pull = new THREE.Vector3();
-		utilVec33Pull = new THREE.Vector3();
+		// properties
+		
+		set_world_gravity_source( new THREE.Vector3( 0, 0, 0 ) );
+		set_world_gravity_magnitude( new THREE.Vector3( 0, -1, 0 ) );
 		
 		// functions
 		
@@ -120,9 +105,6 @@
 		_Physics.start = start;
 		_Physics.stop = stop;
 		_Physics.update = update;
-		
-		_Physics.rotate_relative_to_source = rotate_relative_to_source;
-		_Physics.pull_to_source = pull_to_source;
 		
 		// signals
 		
@@ -614,7 +596,7 @@
 		
 		// rotate to match mesh
 		
-		offset = rotate_vector3_to_mesh_rotation( mesh, offset );
+		offset = _VectorHelper.rotate_vector3_to_mesh_rotation( mesh, offset );
 		
 		return offset;
 		
@@ -659,323 +641,9 @@
 		
 		// rotate to match mesh
 		
-		offset = rotate_vector3_to_mesh_rotation( mesh, offset );
+		offset = _VectorHelper.rotate_vector3_to_mesh_rotation( mesh, offset );
 		
 		return offset;
-	}
-	
-	/*===================================================
-    
-	rotation
-    
-    =====================================================*/
-	
-	function rotate_vector3_to_mesh_rotation ( mesh, vec3, rotatedVec3 ) {
-		
-		var rotation;
-		
-		if ( mesh.useQuaternion === true ) {
-			
-			rotation = mesh.quaternion;
-			
-		}
-		else {
-			
-			rotation = mesh.matrix;
-			
-		}
-		
-		return rotate_vector3_relative_to( rotation, vec3, rotatedVec3 );
-		
-	}
-	
-	function rotate_vector3_relative_to ( rotation, vec3, rotatedVec3 ) {
-		
-		if ( rotatedVec3 instanceof THREE.Vector3 ) {
-			rotatedVec3.copy( vec3 );
-		}
-		else {
-			rotatedVec3 = vec3.clone();
-		}
-		
-		if ( rotation instanceof THREE.Quaternion || rotation instanceof THREE.Matrix4 ) {
-			
-			rotation.multiplyVector3( rotatedVec3 );
-			
-		}
-		else if ( rotation instanceof THREE.Vector3 ) {
-			
-			rotatedVec3.x = rotation.x * vec3.x + rotation.x * vec3.y + rotation.x * vec3.z;
-			rotatedVec3.y = rotation.y * vec3.x + rotation.y * vec3.y + rotation.y * vec3.z;
-			rotatedVec3.z = rotation.z * vec3.x + rotation.z * vec3.y + rotation.z * vec3.z;
-			
-		}
-		else if ( rotation instanceof THREE.Object3D ) {
-			
-			rotatedVec3 = rotate_vector3_to_mesh_rotation( rotation, vec3, rotatedVec3 );
-			
-		}
-		
-		return rotatedVec3;
-		
-	}
-	
-	function rotate_relative_to_source ( mesh, source, axisAway, axisForward, lerpDelta, rigidBody ) {
-		
-		var uv31 = utilVec31RotateToSrc,
-			uv32 = utilVec32RotateToSrc,
-			uq1 = utilQ1RotateToSrc,
-			uq2 = utilQ2RotateToSrc,
-			uq3 = utilQ3RotateToSrc,
-			position,
-			rotation,
-			ca = shared.cardinalAxes,
-			axes,
-			axisAwayNew,
-			axisAwayToAwayNewDist,
-			gravUp,
-			gravDown,
-			angleToNew,
-			axisToNew,
-			qToNew;
-			
-		// localize basics
-		
-		position = mesh.position;
-		
-		rotation = ( mesh.useQuaternion === true ? mesh.quaternion : mesh.matrix );
-		
-		// if source is 3D object, cascade
-		if ( source instanceof THREE.Object3D ) {
-			
-			source = source.position;
-		
-		}
-		
-		// default is world gravity source
-		if ( typeof source === 'undefined' ) {
-			
-			source = worldGravitySource;
-			
-		}
-		
-		axisAway = axisAway || ca.up;
-		
-		axisForward = axisForward || ca.forward;
-		
-		lerpDelta = lerpDelta || 1;
-		
-		// get normalized vector pointing from source to mesh
-		
-		axisAwayNew = uv31.sub( position, source ).normalize();
-		
-		// get new rotation based on vector
-		
-		// find dist between current axis away and new axis away
-		
-		axisAwayToAwayNewDist = Math.max( -1, Math.min( 1, axisAway.dot( axisAwayNew ) ) );
-		
-		// if up axes are not same
-		
-		if ( axisAwayToAwayNewDist !== 1 ) {
-			
-			// axis / angle
-			
-			angleToNew = Math.acos( axisAwayToAwayNewDist );
-			axisToNew = uv32.cross( axisAway, axisAwayNew );
-			axisToNew.normalize();
-			
-			// if new axis is exactly opposite of current
-			// replace new axis with the forward axis
-			
-			if ( axisToNew.length() === 0 ) {
-				
-				axisToNew = axisForward;
-				
-			}
-			
-			// rotation change
-			
-			qToNew = uq3.setFromAxisAngle( axisToNew, angleToNew );
-			
-			// add to rotation
-			
-			if ( mesh.useQuaternion === true ) {
-				
-				// quaternion rotations
-				
-				uq1.multiply( qToNew, rotation );
-				
-				// normalized lerp to new rotation
-				
-				_MathHelper.lerp_normalized( rotation, uq1, lerpDelta );
-			
-			}
-			else {
-				
-				// matrix rotations
-				
-				uq1.setFromRotationMatrix( rotation );
-				
-				uq2.multiply( qToNew, uq1 );
-				
-				rotation.setRotationFromQuaternion( uq2 );
-				
-			}
-			
-			// if physics rigid body passed
-			
-			if ( typeof rigidBody !== 'undefined' ) {
-				
-				/*
-				quaternion = rigidBody.quaternion;
-				
-				uq1.multiply( qToNew, quaternion );
-				
-				_MathHelper.lerp_normalized( quaternion, uq1, lerpDelta );
-				*/
-				// find new axes based on new rotation
-				
-				axes = rigidBody.axes;
-				
-				rotation.multiplyVector3( axes.up.copy( ca.up ) );
-				
-				rotation.multiplyVector3( axes.forward.copy( ca.forward ) );
-				
-				rotation.multiplyVector3( axes.right.copy( ca.right ) );
-				
-			}
-			
-		}
-		
-	}
-	
-	/*===================================================
-    
-    pull
-    
-    =====================================================*/
-	
-	function pull_to_source ( mesh, source, objectsToIntersect, distanceFrom, velocity, rigidBody ) {
-		
-		var i, l,
-			position,
-			difference = utilVec31Pull,
-			direction = utilVec32Pull,
-			shift = utilVec33Pull,
-			object,
-			rigidBody,
-			colliders = [],
-			intersection,
-			intersectionDistance;
-		
-		// handle parameters
-		
-		position = mesh.position;
-		
-		// if source is 3D object, cascade
-		if ( source instanceof THREE.Object3D ) {
-			
-			source = source.position;
-		
-		}
-		
-		// default is world gravity source
-		if ( typeof source === 'undefined' ) {
-			
-			source = worldGravitySource;
-			
-		}
-		
-		// get normalized vector from position to source
-		
-		difference.sub( source, position );
-		
-		direction.copy( difference ).normalize();
-		
-		// if objects to intersect was passed, extract colliders from objects
-		
-		if ( main.is_array( objectsToIntersect ) ) {
-			
-			for ( i = 0, l = objectsToIntersect.length; i < l; i++ ) {
-				
-				object = objectsToIntersect[ i ];
-				
-				if( object instanceof _RayHelper.Collider ) {
-					
-					colliders.push( object );
-					
-				}
-				else if ( typeof object.collider !== 'undefined' ) {
-					
-					colliders.push( object.collider );
-					
-				}
-				else if ( typeof object.rigidBody !== 'undefined' ) {
-					
-					colliders.push( object.rigidBody.collider );
-					
-				}
-				else if ( typeof object.physics !== 'undefined' ) {
-					
-					colliders.push( object.physics.rigidBody.collider );
-					
-				}
-				
-			}
-			
-		}
-		// else gather all colliders from links
-		else {
-			
-			for ( i = 0, l = links.length; i < l; i++ ) {
-				
-				colliders.push( link[ i ].rigidBody.collider );
-				
-			}
-			
-		}
-		
-		// cast ray from mesh to source
-		
-		intersection = _RayHelper.raycast( {
-			physics: true,
-			origin: position,
-			direction: direction,
-			colliders: colliders
-		} );
-		
-		// if intersection found
-		
-		if ( typeof intersection !== 'undefined' ) {
-			
-			// get distance
-			
-			intersectionDistance = intersection.distance;
-			
-		}
-		else {
-			
-			intersectionDistance = difference.length();
-			
-		}
-		
-		// if distance from needed
-		
-		if ( main.is_number( distanceFrom ) ) {
-			
-			intersectionDistance -= distanceFrom;
-			
-		}
-		
-		// multiply direction by distance
-			
-		shift.copy( direction ).multiplyScalar( intersectionDistance );
-		
-		// add shift to position
-		
-		position.addSelf( shift );
-		
 	}
 	
 	/*===================================================
@@ -1040,7 +708,7 @@
 				
 				// rotate to stand on source
 				
-				rotate_relative_to_source( mesh, gravSrc, rigidBody.axes.up, rigidBody.axes.forward, lerpDelta, rigidBody );
+				_PhysicsHelper.rotate_relative_to_source( mesh, gravSrc, rigidBody.axes.up, rigidBody.axes.forward, lerpDelta, rigidBody );
 				
 				// movement velocity
 				
@@ -1058,7 +726,7 @@
 				
 				velocityGravityForceUpDir.copy( velocityGravity.force ).negate().normalize();
 				
-				velocityGravityForceUpDirRot = rotate_vector3_relative_to( velocityGravity.relativeRotation, velocityGravityForceUpDir, velocityGravityForceUpDirRot );
+				velocityGravityForceUpDirRot = _VectorHelper.rotate_vector3_relative_to( velocityGravity.relativeRotation, velocityGravityForceUpDir, velocityGravityForceUpDirRot );
 				
 				// gravity velocity
 				
@@ -1203,7 +871,7 @@
 		
 		// if velocity is relative to rotation, else will just copy force into rotated
 		
-		velocityForceRotated = rotate_vector3_relative_to( relativeRotation, velocityForce, velocityForceRotated );
+		velocityForceRotated = _VectorHelper.rotate_vector3_relative_to( relativeRotation, velocityForce, velocityForceRotated );
 		
 		// scale velocity
 		
@@ -1227,14 +895,13 @@
 		
 		if ( velocityOffset.length() > 0 ) {
 			
-			velocityOffset = rotate_vector3_to_mesh_rotation( mesh, velocityOffset );
+			velocityOffset = _VectorHelper.rotate_vector3_to_mesh_rotation( mesh, velocityOffset );
 			
 		}
 		
 		// get intersection
 		
 		intersection = _RayHelper.raycast( {
-			physics: true,
 			octree: octree,
 			origin: position,
 			direction: velocityForceRotated,

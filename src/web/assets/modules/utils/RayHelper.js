@@ -273,7 +273,11 @@
 			intersectionDistance = Number.MAX_VALUE,
 			intersection;
 		
-		// parameters
+		// handle parameters
+		
+		parameters = parameters || {};
+		
+		// ray
 		
 		if ( parameters.ray instanceof THREE.Ray !== true ) {
 			
@@ -307,7 +311,7 @@
 		
 		// cast through physics
 		
-		if ( parameters.physics === true ) {
+		if ( typeof parameters.colliders !== 'undefined' || typeof parameters.octree !== 'undefined' ) {
 			
 			intersections = intersections.concat( raycast_physics( parameters ) );
 			
@@ -375,7 +379,7 @@
 			// search for potential colliders
 			
 			colliders = main.ensure_array( colliders ).slice( 0 ).concat( octree.search( ray.origin, distance, true ) );
-			console.log( ' RAYCAST, octree search results from position ', ray.origin.x, ray.origin.y, ray.origin.z, ' + dist ', distance, ' = # ', colliders.length, ' + colliders', colliders );
+			//console.log( ' RAYCAST, octree search results from position ', ray.origin.x, ray.origin.y, ray.origin.z, ' + dist ', distance, ' = # ', colliders.length, ' + colliders', colliders );
 			
 		}
 		

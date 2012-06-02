@@ -14,12 +14,12 @@
 		_World,
         _Game,
 		_Model,
-		_Physics,
 		_Field,
 		_Farming,
-		_ObjectMaker,
 		_Water,
-		_Sky;
+		_Sky,
+		_ObjectMaker,
+		_PhysicsHelper;
 	
 	/*===================================================
     
@@ -33,10 +33,10 @@
 			"assets/modules/core/Game.js",
 			"assets/modules/env/World.js",
 			"assets/modules/core/Model.js",
-			"assets/modules/core/Physics.js",
-			"assets/modules/utils/ObjectMaker.js",
 			"assets/modules/env/Water.js",
-			"assets/modules/env/Sky.js"
+			"assets/modules/env/Sky.js",
+			"assets/modules/utils/ObjectMaker.js",
+			"assets/modules/utils/PhysicsHelper.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -48,7 +48,7 @@
     
     =====================================================*/
 	
-	function init_internal ( g, world, m, physics, om, w, sky ) {
+	function init_internal ( g, world, m, w, sky, om, ph ) {
 		console.log('internal world island');
 		
 		// assets
@@ -56,10 +56,10 @@
 		_Game = g;
 		_World = world;
 		_Model = m;
-		_Physics = physics;
-		_ObjectMaker = om;
 		_Water = w;
 		_Sky = sky;
+		_ObjectMaker = om;
+		_PhysicsHelper = ph;
 		
 		_WorldIsland.Instance = WorldIsland;
 		_WorldIsland.Instance.prototype = new _World.Instance();
@@ -161,7 +161,7 @@
 		me.parts.sunmoon.position.set( 0, 4000, 0 );
 		me.parts.sunmoon.quaternion.setFromAxisAngle( new THREE.Vector3( 0, 0, 1 ), Math.PI );
 		
-		_Physics.rotate_relative_to_source( me.parts.sunmoon, me.parts.body, shared.cardinalAxes.forward.clone().negate(), shared.cardinalAxes.up );
+		_PhysicsHelper.rotate_relative_to_source( me.parts.sunmoon, me.parts.body, shared.cardinalAxes.forward.clone().negate(), shared.cardinalAxes.up );
 		
 		me.add( me.parts.sunmoon );
 		

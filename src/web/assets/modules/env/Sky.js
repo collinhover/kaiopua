@@ -12,11 +12,11 @@
 		assetPath = "assets/modules/env/Sky.js",
 		_Sky = {},
 		_Model,
-		_Physics,
 		_Cloud,
 		_MathHelper,
 		_SceneHelper,
-		_ObjectHelper;
+		_ObjectHelper,
+		_PhysicsHelper;
 	
 	/*===================================================
     
@@ -28,11 +28,11 @@
 		data: _Sky,
 		requirements: [
 			"assets/modules/core/Model.js",
-			"assets/modules/core/Physics.js",
 			"assets/modules/env/Cloud.js",
 			"assets/modules/utils/MathHelper.js",
 			"assets/modules/utils/SceneHelper.js",
-			"assets/modules/utils/ObjectHelper.js"
+			"assets/modules/utils/ObjectHelper.js",
+			"assets/modules/utils/PhysicsHelper.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -44,15 +44,15 @@
     
     =====================================================*/
 	
-	function init_internal ( m, phy, cld, mh, sh, oh ) {
+	function init_internal ( m, cld, mh, sh, oh, ph ) {
 		console.log('internal sky', _Sky);
 		
 		_Model = m;
-		_Physics = phy;
 		_Cloud = cld;
 		_MathHelper = mh;
 		_SceneHelper = sh;
 		_ObjectHelper = oh;
+		_PhysicsHelper = ph;
 		
 		// properties
 		
@@ -297,7 +297,7 @@
 				cloud.quaternion.multiplyVector3( cloudForward );
 				cloud.quaternion.multiplyVector3( cloudUp );
 				
-				_Physics.rotate_relative_to_source( cloud, this._world, cloudForward, cloudUp );
+				_PhysicsHelper.rotate_relative_to_source( cloud, this._world, cloudForward, cloudUp );
 				
 			}
 			
@@ -311,7 +311,7 @@
 			
 			distance = Math.random() * ( this.cloudDistanceFromSurfaceMax - this.cloudDistanceFromSurfaceMin ) + this.cloudDistanceFromSurfaceMin;
 			
-			_Physics.pull_to_source( cloud, this._world, children, distance );
+			_PhysicsHelper.pull_to_source( cloud, this._world, children, distance );
 			
 			/*
 			// opacity by distance
