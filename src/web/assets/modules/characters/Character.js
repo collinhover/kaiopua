@@ -456,8 +456,7 @@
 	
 	function update ( timeDelta, timeDeltaMod ) {
 		
-		var physics = this.physics,
-			rigidBody = physics.rigidBody,
+		var rigidBody = this.rigidBody,
 			morphs = this.morphs,
 			movement = this.movement,
 			move = movement.move,

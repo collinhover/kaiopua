@@ -175,8 +175,6 @@
 				
 			}
 			
-			console.log( ' num objects? ', this.objects.length, ' + num data? ', this.objectsData.length );
-			
 		}
 		
 	};
@@ -225,8 +223,6 @@
 				}
 				
 			}
-			
-			console.log( ' num objects? ', this.objects.length, ' + num data? ', this.objectsData.length );
 			
 		}
 		

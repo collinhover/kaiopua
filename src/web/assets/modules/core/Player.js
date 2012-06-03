@@ -173,9 +173,9 @@
 		
 		// add handler for physics safety net
 		
-		if ( character.physics ) {
+		if ( character.rigidBody ) {
 			
-			character.physics.safetynetstart.add( character_on_safety_net, this );
+			character.rigidBody.safetynetstart.add( character_on_safety_net, this );
 			
 		}
 		

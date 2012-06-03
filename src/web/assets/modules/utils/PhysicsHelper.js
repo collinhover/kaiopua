@@ -182,7 +182,7 @@
     
     =====================================================*/
 	
-	function pull_to_source ( mesh, source, objectsToIntersect, distanceFrom, velocity, rigidBody ) {
+	function pull_to_source ( mesh, source, objectsToIntersect, distanceFrom/*, velocity, rigidBody */ ) {
 		
 		var i, l,
 			position,
@@ -190,7 +190,6 @@
 			direction = utilVec32Pull,
 			shift = utilVec33Pull,
 			object,
-			rigidBody,
 			colliders = [],
 			intersection,
 			intersectionDistance;
@@ -243,21 +242,6 @@
 					colliders.push( object.rigidBody.collider );
 					
 				}
-				else if ( typeof object.physics !== 'undefined' ) {
-					
-					colliders.push( object.physics.rigidBody.collider );
-					
-				}
-				
-			}
-			
-		}
-		// else gather all colliders from links
-		else {
-			
-			for ( i = 0, l = links.length; i < l; i++ ) {
-				
-				colliders.push( link[ i ].rigidBody.collider );
 				
 			}
 			

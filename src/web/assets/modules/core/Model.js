@@ -13,6 +13,7 @@
 		assetPath = "assets/modules/core/Model.js",
 		_Model = {},
 		_Physics,
+		_RigidBody,
 		_MathHelper,
 		_SceneHelper,
 		_ObjectHelper,
@@ -32,6 +33,7 @@
 		data: _Model,
 		requirements: [
 			"assets/modules/core/Physics.js",
+			"assets/modules/physics/RigidBody.js",
 			"assets/modules/utils/MathHelper.js",
 			"assets/modules/utils/SceneHelper.js",
 			"assets/modules/utils/ObjectHelper.js",
@@ -47,9 +49,10 @@
     
     =====================================================*/
 	
-	function init_internal ( p, mh, sh, oh ) {
+	function init_internal ( p, rb, mh, sh, oh ) {
 		console.log('internal model', _Model);
 		_Physics = p;
+		_RigidBody = rb;
 		_MathHelper = mh;
 		_SceneHelper = sh;
 		_ObjectHelper = oh;
@@ -376,7 +379,7 @@
 		
 		if ( parameters.hasOwnProperty( 'physics' ) ) {
 			
-			this.physics = _Physics.translate( this, parameters.physics );
+			this.rigidBody = new _RigidBody.Instance( this, parameters.physics );
 			
 		}
 		
@@ -492,9 +495,9 @@
 			c.targetable = this.targetable;
 			c.interactive = this.interactive;
 			
-			if ( this.hasOwnProperty( 'physics' ) ) {
+			if ( this.hasOwnProperty( 'rigidBody' ) ) {
 				
-				c.physics = _Physics.clone( this.physics, c );
+				c.rigidBody = this.rigidBody.clone( c );
 				
 			}
 			

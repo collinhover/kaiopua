@@ -718,10 +718,10 @@
 		normalAvg.normalize();
 		
 		// handle axes
-		// use physics axis if available, or default to global up
+		// use rigidBody axis if available, or default to global up
 		
-		axisUp = axisUp || ( ( typeof object.physics !== 'undefined' ) ? object.physics.axes.up : ca.up );
-		axisForward = axisForward || ( ( typeof object.physics !== 'undefined' ) ? object.physics.axes.forward : ca.forward );
+		axisUp = axisUp || ( ( typeof object.rigidBody !== 'undefined' ) ? object.rigidBody.axes.up : ca.up );
+		axisForward = axisForward || ( ( typeof object.rigidBody !== 'undefined' ) ? object.rigidBody.axes.forward : ca.forward );
 		
 		// find quaternion to go from average of normals to current axis up
 		
