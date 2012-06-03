@@ -21,6 +21,7 @@
 		linkBaseName = 'visual_physical_link_',
 		linkCount = 0,
 		links = [],
+		dynamicColliders = [],
 		octree,
 		worldGravitySource,
 		worldGravityMagnitude,
@@ -174,12 +175,6 @@
 			// handle mesh
 			
 			geometry = parameters.geometry || mesh.geometry;
-			
-			if ( parameters.hasOwnProperty('dynamic') === true ) {
-				
-				dynamic = parameters.dynamic;
-				
-			}
 			
 			position = mesh.position;
 			
@@ -408,7 +403,8 @@
 		var i, l,
 			link,
 			rigidBody,
-			indexLink,
+			collider,
+			index,
 			child;
 		
 		if ( typeof object !== 'undefined' ) {
@@ -421,6 +417,8 @@
 				
 				rigidBody = link.rigidBody;
 				
+				collider = rigidBody.collider;
+				
 				// zero out velocities
 				
 				rigidBody.velocityMovement.force.set( 0, 0, 0 );
@@ -429,7 +427,7 @@
 				
 				// get indices
 				
-				indexLink = links.indexOf( link );
+				index = links.indexOf( link );
 				
 				// if adding
 				
@@ -437,15 +435,31 @@
 					
 					// links
 					
-					if ( indexLink === -1 ) {
+					if ( index === -1 ) {
 						
 						links.push( link );
 						
 					}
 					
-					// octree, split by faces if collider is mesh
+					// dynamic colliders
 					
-					octree.add( object, rigidBody.collider instanceof _RayHelper.MeshCollider ? true : false );
+					if ( rigidBody.dynamic === true ) {
+						
+						index = dynamicColliders.indexOf( collider );
+						
+						if ( index === -1 ) {
+							
+							dynamicColliders.push( collider );
+							
+						}
+						
+					}
+					// static colliders in octree and split by faces if collider is mesh
+					else {
+						
+						octree.add( object, collider instanceof _RayHelper.MeshCollider ? true : false );
+						
+					}
 					
 				}
 				// default to remove
@@ -453,15 +467,31 @@
 					
 					// links
 					
-					if ( indexLink !== -1 ) {
+					if ( index !== -1 ) {
 						
-						links.splice( indexLink, 1 );
+						links.splice( index, 1 );
 						
 					}
 					
-					// octree
+					// dynamic colliders
 					
-					octree.remove( object );
+					if ( rigidBody.dynamic === true ) {
+						
+						index = dynamicColliders.indexOf( collider );
+						
+						if ( index !== -1 ) {
+							
+							dynamicColliders.splice( index, 1 );
+							
+						}
+						
+					}
+					// static colliders in octree
+					else {
+						
+						octree.remove( object );
+						
+					}
 					
 				}
 				
