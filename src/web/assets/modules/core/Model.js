@@ -226,7 +226,7 @@
 		// if no materials yet, add default
 		if ( materials.length === 0 ) {
 			
-			materials = [ new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors, shading: THREE.SmoothShading } ) ];
+			materials = [ new THREE.MeshLambertMaterial( { vertexColors: THREE.VertexColors, shading: THREE.SmoothShading } ) ];
 			
 			materialsToModify = materialsToModify.concat( materials );
 			

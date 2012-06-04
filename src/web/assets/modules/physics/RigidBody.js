@@ -198,11 +198,35 @@
 			
 		}
 		
+		// gravity source
+		
+		this.gravitySource = typeof parameters.gravitySource === 'boolean' ? parameters.gravitySource : false;
+		
+		// gravity magnitude
+		
+		if ( this.gravitySource === true && parameters.gravityMagnitude instanceof THREE.Vector3 ) {
+			
+			this.gravityMagnitude = parameters.gravityMagnitude;
+			
+		}
+		
+		// gravity body
+		
+		if ( parameters.gravityBody instanceof RigidBody ) {
+			
+			this.gravityBody = parameters.gravityBody;
+			
+		}
+		
+		// axes
+		
 		this.axes = {
 			up: shared.cardinalAxes.up.clone(),
 			forward: shared.cardinalAxes.forward.clone(),
 			right: shared.cardinalAxes.right.clone()
 		};
+		
+		// velocity trackers
 		
 		this.velocityMovement = generate_velocity_tracker( { 
 			damping: parameters.movementDamping,
@@ -213,6 +237,8 @@
 			damping: parameters.gravityDamping,
 			offset: parameters.gravityOffset
 		} );
+		
+		// safety net
 		
 		this.safe = true;
 		this.safetynet = {

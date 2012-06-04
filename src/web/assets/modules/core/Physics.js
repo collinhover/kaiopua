@@ -21,7 +21,8 @@
 		ready = false,
 		bodyCount = 0,
 		bodies = [],
-		dynamicColliders = [],
+		bodiesDynamic = [],
+		bodiesGravity = [],
 		octree,
 		worldGravitySource,
 		worldGravityMagnitude,
@@ -188,15 +189,29 @@
 						
 					}
 					
-					// dynamic colliders
+					// gravity bodies
 					
-					if ( rigidBody.dynamic === true ) {
-						
-						index = dynamicColliders.indexOf( collider );
+					if ( rigidBody.gravitySource === true ) {
+					
+						index = bodiesGravity.indexOf( rigidBody );
 						
 						if ( index === -1 ) {
 							
-							dynamicColliders.push( collider );
+							bodiesGravity.push( rigidBody );
+							
+						}
+						
+					}
+					
+					// dynamic body
+					
+					if ( rigidBody.dynamic === true ) {
+						
+						index = bodiesDynamic.indexOf( rigidBody );
+						
+						if ( index === -1 ) {
+							
+							bodiesDynamic.push( rigidBody );
 							
 						}
 						
@@ -220,15 +235,29 @@
 						
 					}
 					
+					// gravity bodies
+					
+					if ( rigidBody.gravitySource === true ) {
+					
+						index = bodiesGravity.indexOf( rigidBody );
+						
+						if ( index === -1 ) {
+							
+							bodiesGravity.splice( index, 1 );
+							
+						}
+						
+					}
+					
 					// dynamic colliders
 					
 					if ( rigidBody.dynamic === true ) {
 						
-						index = dynamicColliders.indexOf( collider );
+						index = bodiesDynamic.indexOf( rigidBody );
 						
 						if ( index !== -1 ) {
 							
-							dynamicColliders.splice( index, 1 );
+							bodiesDynamic.splice( index, 1 );
 							
 						}
 						
@@ -300,158 +329,170 @@
 			lerpDelta = 0.1,
 			rigidBody,
 			mesh,
-			gravSrc = utilVec31Update,
-			gravMag = utilVec32Update,
-			gravUp = utilVec33Update,
+			gravityOrigin = utilVec31Update,
+			gravityMagnitude = utilVec32Update,
+			gravityUp = utilVec33Update,
 			velocityGravity,
 			velocityGravityForceUpDir = utilVec34Update,
 			velocityGravityForceUpDirRot = utilVec35Update,
 			velocityMovement,
 			safetynet;
 		
-		// handle rotation and check velocity
+		// dynamic bodies
 		
-		for ( i = 0, l = bodies.length; i < l; i ++ ) {
+		for ( i = 0, l = bodiesDynamic.length; i < l; i ++ ) {
 			
-			rigidBody = bodies[ i ];
+			rigidBody = bodiesDynamic[ i ];
+			
+			// properties
 			
 			mesh = rigidBody.mesh;
 			
+			velocityGravity = rigidBody.velocityGravity;
+			
+			velocityMovement = rigidBody.velocityMovement;
+			
 			safetynet = rigidBody.safetynet;
 			
-			// is dynamic
+			gravityBody = rigidBody.gravityBody;
 			
-			if ( rigidBody.dynamic === true ) {
+			// if has gravity body
+			
+			if ( gravityBody instanceof _RigidBody.Instance && gravityBody.mesh instanceof THREE.Object3D ) {
 				
-				// localize dynamic basics
+				gravityOrigin.copy( gravityBody.mesh.position );
 				
-				velocityGravity = rigidBody.velocityGravity;
+				gravityMagnitude.copy( rigidBody.gravityMagnitude || worldGravityMagnitude );
 				
-				velocityMovement = rigidBody.velocityMovement;
+			}
+			// else use world gravity
+			else {
 				
-				gravSrc.copy( rigidBody.gravSrc || worldGravitySource );
+				gravityOrigin.copy( worldGravitySource );
 				
-				gravMag.copy( rigidBody.gravMag || worldGravityMagnitude ).multiplyScalar( timeDeltaMod );
+				gravityMagnitude.copy( worldGravityMagnitude );
 				
-				// rotate to stand on source
+			}
+			
+			gravityMagnitude.multiplyScalar( timeDeltaMod );
+			
+			// rotate to stand on source
+			
+			_PhysicsHelper.rotate_relative_to_source( mesh, gravityOrigin, rigidBody.axes.up, rigidBody.axes.forward, lerpDelta, rigidBody );
+			
+			// movement velocity
+			
+			handle_velocity( rigidBody, velocityMovement );
+			
+			// find up direction
+			
+			gravityUp.sub( mesh.position, gravityOrigin ).normalize();
+			
+			// add non rotated gravity to gravity velocity
+			
+			velocityGravity.force.addSelf( gravityMagnitude );
+			
+			velocityGravity.relativeRotation = gravityUp;
+			
+			velocityGravityForceUpDir.copy( velocityGravity.force ).negate().normalize();
+			
+			velocityGravityForceUpDirRot = _VectorHelper.rotate_vector3_relative_to( velocityGravity.relativeRotation, velocityGravityForceUpDir, velocityGravityForceUpDirRot );
+			
+			// gravity velocity
+			
+			handle_velocity( rigidBody, velocityGravity );
+			
+			// post physics
+			// TODO: correct safety net for octree and non-infinite rays
+			
+			/*
+			// if rigidBody is not safe
+			if ( rigidBody.safe === false ) {
 				
-				_PhysicsHelper.rotate_relative_to_source( mesh, gravSrc, rigidBody.axes.up, rigidBody.axes.forward, lerpDelta, rigidBody );
+				// rescue rigidBody and set back to last safe
 				
-				// movement velocity
+				mesh.position.copy( safetynet.position );
 				
-				handle_velocity( rigidBody, velocityMovement );
-				
-				// find up direction
-				
-				gravUp.sub( mesh.position, gravSrc ).normalize();
-				
-				// add non rotated gravity to gravity velocity
-				
-				velocityGravity.force.addSelf( gravMag );
-				
-				velocityGravity.relativeRotation = gravUp;
-				
-				velocityGravityForceUpDir.copy( velocityGravity.force ).negate().normalize();
-				
-				velocityGravityForceUpDirRot = _VectorHelper.rotate_vector3_relative_to( velocityGravity.relativeRotation, velocityGravityForceUpDir, velocityGravityForceUpDirRot );
-				
-				// gravity velocity
-				
-				handle_velocity( rigidBody, velocityGravity );
-				
-				// post physics
-				// TODO: correct safety net for octree and non-infinite rays
-				
-				/*
-				// if rigidBody is not safe
-				if ( rigidBody.safe === false ) {
+				if ( mesh.useQuaternion === true ) {
 					
-					// rescue rigidBody and set back to last safe
+					mesh.quaternion.copy( safetynet.quaternion );
 					
-					mesh.position.copy( safetynet.position );
+				}
+				else {
 					
-					if ( mesh.useQuaternion === true ) {
+					mesh.matrix.setRotationFromQuaternion( safetynet.quaternion );
+					
+				}
+				
+				velocityGravity.force.set( 0, 0, 0 );
+				velocityMovement.force.set( 0, 0, 0 );
+				
+				velocityGravity.timeWithoutIntersection = 0;
+				
+				rigidBody.safe = true;
+				
+				// safety net end
+					
+				rigidBody.safetynetend.dispatch();
+				
+				shared.signals.physicssafetynetend.dispatch( rigidBody );
+				
+			}		
+			// if velocity gravity force is moving towards source
+			else if ( velocityGravityForceUpDirRot.equals( gravityUp ) ) {
+				
+				// if no intersection
+				if ( !velocityGravity.intersection ) {
+					
+					velocityGravity.timeWithoutIntersection += timeDelta / timeDeltaMod;
+					
+					// without intersection for time above threshold
+					if ( velocityGravity.timeWithoutIntersection > _Physics.timeWithoutIntersectionThreshold ) {
 						
-						mesh.quaternion.copy( safetynet.quaternion );
+						// set rigidBody to unsafe, but do not reset to safe position immediately
+						// wait until next update to allow dispatched signals to be handled first
 						
-					}
-					else {
+						rigidBody.safe = false;
 						
-						mesh.matrix.setRotationFromQuaternion( safetynet.quaternion );
+						// safety net start
 						
-					}
-					
-					velocityGravity.force.set( 0, 0, 0 );
-					velocityMovement.force.set( 0, 0, 0 );
-					
-					velocityGravity.timeWithoutIntersection = 0;
-					
-					rigidBody.safe = true;
-					
-					// safety net end
-						
-					rigidBody.safetynetend.dispatch();
-					
-					shared.signals.physicssafetynetend.dispatch( rigidBody );
-					
-				}		
-				// if velocity gravity force is moving towards source
-				else if ( velocityGravityForceUpDirRot.equals( gravUp ) ) {
-					
-					// if no intersection
-					if ( !velocityGravity.intersection ) {
-						
-						velocityGravity.timeWithoutIntersection += timeDelta / timeDeltaMod;
-						
-						// without intersection for time above threshold
-						if ( velocityGravity.timeWithoutIntersection > _Physics.timeWithoutIntersectionThreshold ) {
+						if ( rigidBody.safetynetstart ) {
 							
-							// set rigidBody to unsafe, but do not reset to safe position immediately
-							// wait until next update to allow dispatched signals to be handled first
-							
-							rigidBody.safe = false;
-							
-							// safety net start
-							
-							if ( rigidBody.safetynetstart ) {
-								
-								rigidBody.safetynetstart.dispatch();
-								
-							}
-							
-							shared.signals.physicssafetynetstart.dispatch( rigidBody );
-							
-						}
-						
-					}
-					// rigidBody is safe
-					else {
-						
-						velocityGravity.timeWithoutIntersection = velocityGravity.updatesWithoutIntersection = 0;
-						
-						rigidBody.safe = true;
-						
-						// copy last safe position and rotation into rigidBody
-						
-						safetynet.position.copy( mesh.position );
-						
-						if ( mesh.useQuaternion === true ) {
-							
-							safetynet.quaternion.copy( mesh.quaternion );
+							rigidBody.safetynetstart.dispatch();
 							
 						}
-						else {
-							
-							safetynet.quaternion.setFromRotationMatrix( mesh.matrix );
-							
-						}
+						
+						shared.signals.physicssafetynetstart.dispatch( rigidBody );
 						
 					}
 					
 				}
-				*/
+				// rigidBody is safe
+				else {
+					
+					velocityGravity.timeWithoutIntersection = velocityGravity.updatesWithoutIntersection = 0;
+					
+					rigidBody.safe = true;
+					
+					// copy last safe position and rotation into rigidBody
+					
+					safetynet.position.copy( mesh.position );
+					
+					if ( mesh.useQuaternion === true ) {
+						
+						safetynet.quaternion.copy( mesh.quaternion );
+						
+					}
+					else {
+						
+						safetynet.quaternion.setFromRotationMatrix( mesh.matrix );
+						
+					}
+					
+				}
 				
 			}
+			*/
 			
 		}
 		

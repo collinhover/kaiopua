@@ -514,6 +514,8 @@
 			_Game.sceneBG.add( me.parts.skybox );
 			
 			// morph animations
+			
+			me.parts.sunmoon.morphs.play( 'idle', { duration: 6000, loop: true } );
 			/*
 			me.parts.tail.morphs.play( 'swim', { duration: 5000, loop: true } );
 			

@@ -375,13 +375,13 @@
 			if ( stop === true ) {
 				
 				cloud.orbit.stop();
-				cloud.wander.stop();
+				cloud.morphs.stopAll();
 				
 			}
 			else {
 				
 				cloud.orbit.start( { snapToInitial: true } );
-				cloud.wander.start( { snapToInitial: true, rangeMax: this.cloudRangeWander, rangeMin: -this.cloudRangeWander, waveY: true } );
+				cloud.morphs.play( 'idle', { duration: 2000, loop: true } );
 				
 			}
 			
