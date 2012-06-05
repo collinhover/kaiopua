@@ -9,7 +9,7 @@
 (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/core/Physics.js",
+		assetPath = "assets/modules/physics/Physics.js",
 		_Physics = {},
 		_Octree,
 		_RigidBody,
@@ -27,11 +27,13 @@
 		worldGravitySource,
 		worldGravityMagnitude,
 		scaleSpeedExp = Math.log( 1.5 ),
+		lerpDeltaGravityChange = 0.025,
 		utilVec31Update,
 		utilVec32Update,
 		utilVec33Update,
 		utilVec34Update,
 		utilVec35Update,
+		utilVec36Update,
 		utilVec31Velocity,
 		utilVec31Offset,
 		utilQ4Offset,
@@ -90,6 +92,7 @@
 		utilVec33Update = new THREE.Vector3();
 		utilVec34Update = new THREE.Vector3();
 		utilVec35Update = new THREE.Vector3();
+		utilVec36Update = new THREE.Vector3();
 		utilVec31Offset = new THREE.Vector3();
 		utilQ4Offset = new THREE.Quaternion();
 		utilVec31Velocity = new THREE.Vector3();
@@ -191,7 +194,7 @@
 					
 					// gravity bodies
 					
-					if ( rigidBody.gravitySource === true ) {
+					if ( is_gravity_body( rigidBody ) ) {
 					
 						index = bodiesGravity.indexOf( rigidBody );
 						
@@ -237,7 +240,7 @@
 					
 					// gravity bodies
 					
-					if ( rigidBody.gravitySource === true ) {
+					if ( is_gravity_body( rigidBody ) ) {
 					
 						index = bodiesGravity.indexOf( rigidBody );
 						
@@ -305,6 +308,10 @@
 		worldGravityMagnitude = new THREE.Vector3( magnitude.x, magnitude.y, magnitude.z );
 	}
 	
+	function is_gravity_body ( rigidBody ) {
+		return rigidBody instanceof _RigidBody.Instance && rigidBody.gravitySource;
+	}
+	
 	/*===================================================
     
     start/stop/update functions
@@ -326,21 +333,33 @@
 	function update ( timeDelta, timeDeltaMod ) {
 		
 		var i, l,
-			lerpDelta = 0.1,
+			j, k,
+			timeDeltaFix = timeDelta / timeDeltaMod,
 			rigidBody,
 			mesh,
-			gravityOrigin = utilVec31Update,
-			gravityMagnitude = utilVec32Update,
-			gravityUp = utilVec33Update,
+			gravityBodyPotential,
+			gravityMeshPotential,
+			gravityBodyDifference = utilVec31Update,
+			gravityBodyDistancePotential,
+			gravityBody,
+			gravityMesh,
+			gravityBodyDistance,
+			gravityOrigin = utilVec32Update,
+			gravityMagnitude = utilVec33Update,
+			gravityUp = utilVec34Update,
 			velocityGravity,
-			velocityGravityForceUpDir = utilVec34Update,
-			velocityGravityForceUpDirRot = utilVec35Update,
+			velocityGravityCollision,
+			velocityGravityCollisionRigidBody,
+			velocityGravityForceUpDir = utilVec35Update,
+			velocityGravityForceUpDirRot = utilVec36Update,
 			velocityMovement,
+			velocityMovementCollision,
+			velocityMovementCollisionRigidBody,
 			safetynet;
 		
 		// dynamic bodies
 		
-		for ( i = 0, l = bodiesDynamic.length; i < l; i ++ ) {
+		for ( i = 0, l = bodiesDynamic.length; i < l; i++ ) {
 			
 			rigidBody = bodiesDynamic[ i ];
 			
@@ -358,9 +377,11 @@
 			
 			// if has gravity body
 			
-			if ( gravityBody instanceof _RigidBody.Instance && gravityBody.mesh instanceof THREE.Object3D ) {
+			if ( gravityBody instanceof _RigidBody.Instance ) {
 				
-				gravityOrigin.copy( gravityBody.mesh.position );
+				gravityMesh = gravityBody.mesh;
+				
+				gravityOrigin.copy( gravityMesh.position );
 				
 				gravityMagnitude.copy( rigidBody.gravityMagnitude || worldGravityMagnitude );
 				
@@ -378,7 +399,7 @@
 			
 			// rotate to stand on source
 			
-			_PhysicsHelper.rotate_relative_to_source( mesh, gravityOrigin, rigidBody.axes.up, rigidBody.axes.forward, lerpDelta, rigidBody );
+			_PhysicsHelper.rotate_relative_to_source( mesh, gravityOrigin, rigidBody.axes.up, rigidBody.axes.forward, rigidBody.lerpDelta, rigidBody );
 			
 			// movement velocity
 			
@@ -402,6 +423,112 @@
 			
 			handle_velocity( rigidBody, velocityGravity );
 			
+			// get velocity collisions
+			
+			velocityGravityCollision = velocityGravity.collision;
+			velocityMovementCollision = velocityMovement.collision;
+			
+			// get velocity collision rigid bodies
+			
+			if ( velocityGravityCollision ) {
+				velocityGravityCollisionRigidBody = velocityGravityCollision.object.rigidBody;
+			}
+			if ( velocityMovementCollision ) {
+				velocityMovementCollisionRigidBody = velocityMovementCollision.object.rigidBody;
+			}
+			
+			// get distance to current gravity body
+			
+			if ( gravityBody instanceof _RigidBody.Instance ) {
+				
+				gravityBodyDistance = gravityBodyDifference.sub( mesh.position, gravityMesh.position ).length();
+				
+			}
+			else {
+				
+				gravityBodyDistance = Number.MAX_VALUE;
+			
+			}
+			
+			// attempt to change gravity body
+			
+			if ( ( is_gravity_body( velocityGravityCollisionRigidBody ) && gravityBody !== velocityGravityCollisionRigidBody ) ) {
+				
+				rigidBody.change_gravity_body_start( velocityGravityCollisionRigidBody );
+				rigidBody.change_gravity_body_complete();
+				
+			}
+			else if ( ( is_gravity_body( velocityMovementCollisionRigidBody ) && gravityBody !== velocityMovementCollisionRigidBody ) ) {
+				
+				rigidBody.change_gravity_body_start( velocityMovementCollisionRigidBody );
+				rigidBody.change_gravity_body_complete();
+				
+			}
+			else if ( gravityBody === rigidBody.gravityBodyLast && rigidBody.grounded === false ) {
+				
+				// delay time, so dynamic body does not get stuck between two close gravity bodies
+			
+				rigidBody.gravityBodyChangeDelayTime += timeDeltaFix;
+				
+				// if delay over max
+				
+				if ( rigidBody.gravityBodyChangeDelayTime >= rigidBody.gravityBodyChangeDelayTimeMax ) {
+					
+					rigidBody.gravityBodyChangeDelayTime = 0;
+					
+					console.log( 'gravity body check for ', rigidBody, ' from ', rigidBody.gravityBody, ' + current dist ', gravityBodyDistance );
+					// get closest gravity body
+					
+					for ( j = 0, k = bodiesGravity.length; j < k; j++ ) {
+						
+						gravityBodyPotential = bodiesGravity[ j ];
+						gravityMeshPotential = gravityBodyPotential.mesh;
+						
+						gravityBodyDifference.sub( mesh.position, gravityMeshPotential.position );
+						gravityBodyDistancePotential = gravityBodyDifference.length() - gravityBodyPotential.radius;
+						if ( gravityBodyPotential !== rigidBody.gravityBody ) console.log( ' > other gravity body at dist ', gravityBodyDistancePotential );
+						if ( gravityBodyDistancePotential < gravityBodyDistance ) {
+							
+							gravityBody = gravityBodyPotential;
+							gravityBodyDistance = gravityBodyDistancePotential;
+							
+						}
+						
+					}
+					
+					// swap to closest gravity body
+					
+					if ( rigidBody.gravityBody !== gravityBody ) {
+						
+						rigidBody.change_gravity_body_start( gravityBody, lerpDeltaGravityChange );
+						
+						velocityGravity.force.multiplyScalar( rigidBody.gravityBodyChangeForceMod );
+						
+						console.log( ' > > gravity body to ', gravityBody, ' at dist ', gravityBodyDistance, ' temp gravity magnitude = ', rigidBody.gravityMagnitude.x, rigidBody.gravityMagnitude.y, rigidBody.gravityMagnitude.z );
+					}
+					
+				}
+				
+			}
+			else if ( rigidBody.grounded === true ) {
+				
+				rigidBody.change_gravity_body_complete();
+				
+			}
+			else if ( rigidBody.gravityBodyChanging === true ) {
+				
+				// gravity magnitude change
+				
+				rigidBody.gravityBodyChangeMagnitudeTime += timeDeltaFix;
+				
+				if ( rigidBody.gravityBodyChangeMagnitudeTime >= rigidBody.gravityBodyChangeMagnitudeTimeMax ) {
+					
+					rigidBody.gravityMagnitude = rigidBody.gravityMagnitudeLast;
+					console.log( ' rigid body gravity magnitude reset to ', rigidBody.gravityMagnitude );
+				}
+				
+			}
+			
 			// post physics
 			// TODO: correct safety net for octree and non-infinite rays
 			
@@ -424,10 +551,8 @@
 					
 				}
 				
-				velocityGravity.force.set( 0, 0, 0 );
-				velocityMovement.force.set( 0, 0, 0 );
-				
-				velocityGravity.timeWithoutIntersection = 0;
+				velocityGravity.reset();
+				velocityMovement.reset();
 				
 				rigidBody.safe = true;
 				
@@ -442,29 +567,22 @@
 			else if ( velocityGravityForceUpDirRot.equals( gravityUp ) ) {
 				
 				// if no intersection
-				if ( !velocityGravity.intersection ) {
+				if ( gravityBodyDistance < rigidBody.radius * 0.5 && !velocityGravityCollision ) {
+					console.log(' SAFETY NET: ', gravityBodyDistance, velocityGravityCollision );
+					// set rigidBody to unsafe, but do not reset to safe position immediately
+					// wait until next update to allow dispatched signals to be handled first
 					
-					velocityGravity.timeWithoutIntersection += timeDelta / timeDeltaMod;
+					rigidBody.safe = false;
 					
-					// without intersection for time above threshold
-					if ( velocityGravity.timeWithoutIntersection > _Physics.timeWithoutIntersectionThreshold ) {
+					// safety net start
+					
+					if ( rigidBody.safetynetstart ) {
 						
-						// set rigidBody to unsafe, but do not reset to safe position immediately
-						// wait until next update to allow dispatched signals to be handled first
-						
-						rigidBody.safe = false;
-						
-						// safety net start
-						
-						if ( rigidBody.safetynetstart ) {
-							
-							rigidBody.safetynetstart.dispatch();
-							
-						}
-						
-						shared.signals.physicssafetynetstart.dispatch( rigidBody );
+						rigidBody.safetynetstart.dispatch();
 						
 					}
+					
+					shared.signals.physicssafetynetstart.dispatch( rigidBody );
 					
 				}
 				// rigidBody is safe
@@ -493,7 +611,6 @@
 				
 			}
 			*/
-			
 		}
 		
 	}
@@ -595,7 +712,13 @@
 				
 				// setting force to 0 causes instability, ex: stuttering through world and run/falling when going downhill
 				// but halves effective octree search radius, so fewer raycast checks
-				//velocity.force.set( 0, 0, 0 );
+				// safe to set if jumping
+				
+				if ( mesh && mesh.movement && mesh.movement.jump && mesh.movement.jump.active === true ) {
+					
+					velocity.force.set( 0, 0, 0 );
+					
+				}
 				
 				velocity.moving = false;
 				

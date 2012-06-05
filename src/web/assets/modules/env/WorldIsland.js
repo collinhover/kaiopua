@@ -154,7 +154,8 @@
             geometry: main.get_asset_data("assets/models/Sun_Moon.js"),
 			materials: new THREE.MeshBasicMaterial( { shading: THREE.NoShading, vertexColors: THREE.VertexColors } ),
 			physics: {
-				bodyType: 'mesh'
+				bodyType: 'mesh',
+				//gravitySource: true
 			}
         });
 		
@@ -177,8 +178,8 @@
 			world: me.parts.body,
 			numClouds: 20,
 			cloudBoundRadius: 5000,
-			cloudDistanceFromSurfaceMin: me.parts.sunmoon.position.length() - 2000,
-			cloudDistanceFromSurfaceMax: me.parts.sunmoon.position.length() + 500,
+			cloudDistanceFromSurfaceMin: 100,//me.parts.sunmoon.position.length() - 2000,
+			cloudDistanceFromSurfaceMax: 1000,//me.parts.sunmoon.position.length() + 500,
 			zones: [
 				{
 					polar: {

@@ -32,7 +32,7 @@
 	main.asset_register( assetPath, {
 		data: _Model,
 		requirements: [
-			"assets/modules/core/Physics.js",
+			"assets/modules/physics/Physics.js",
 			"assets/modules/physics/RigidBody.js",
 			"assets/modules/utils/MathHelper.js",
 			"assets/modules/utils/SceneHelper.js",

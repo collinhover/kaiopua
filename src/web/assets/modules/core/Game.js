@@ -68,7 +68,7 @@
         ],
         assetsGame = [
 			"assets/modules/core/Octree.js",
-			"assets/modules/core/Physics.js",
+			"assets/modules/physics/Physics.js",
 			"assets/modules/core/Player.js",
 			"assets/modules/core/Model.js",
 			"assets/modules/core/CameraControls.js",
@@ -1228,7 +1228,7 @@
 		console.log('start game');
 		// assets
 		
-		_Physics = main.get_asset_data( 'assets/modules/core/Physics.js' );
+		_Physics = main.get_asset_data( 'assets/modules/physics/Physics.js' );
 		_Intro = main.get_asset_data( 'assets/modules/sections/Intro.js' );
 		
 		// ui

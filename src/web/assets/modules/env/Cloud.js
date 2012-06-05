@@ -76,6 +76,11 @@
 		
 		parameters.materials = parameters.materials || new THREE.MeshBasicMaterial( { shading: THREE.NoShading, vertexColors: THREE.VertexColors } );
 		
+		parameters.physics = {
+			bodyType: 'mesh',
+			gravitySource: true
+		};
+		
 		// prototype constructor
 		
 		_Model.Instance.call( this, parameters );

@@ -45,6 +45,14 @@
 		_RayHelper = rh;
 		_ObjectHelper = oh;
 		
+		// properties
+		
+		_RigidBody.lerpDelta = 0.1;
+		_RigidBody.gravityBodyChangeDelayTimeMax = 250;
+		_RigidBody.gravityBodyChangeForceMod = 0.5;
+		_RigidBody.gravityBodyChangeMagnitude = new THREE.Vector3( 0, -0.1, 0 );
+		_RigidBody.gravityBodyChangeMagnitudeTimeMax = 500;
+		
 		// instance
 		
 		_RigidBody.Instance = RigidBody;
@@ -55,6 +63,12 @@
 		_RigidBody.Instance.prototype.collider_dimensions_scaled = collider_dimensions_scaled;
 		_RigidBody.Instance.prototype.collider_radius = collider_radius;
 		_RigidBody.Instance.prototype.offset_in_direction = offset_in_direction;
+		_RigidBody.Instance.prototype.change_gravity_body_start = change_gravity_body_start;
+		_RigidBody.Instance.prototype.change_gravity_body_complete = change_gravity_body_complete;
+		
+		Object.defineProperty( _RigidBody.Instance.prototype, 'grounded', { 
+			get : function () { return Boolean( this.velocityGravity.collision ) && !this.velocityGravity.moving }
+		});
 		
 	}
 	
@@ -212,11 +226,17 @@
 		
 		// gravity body
 		
-		if ( parameters.gravityBody instanceof RigidBody ) {
-			
-			this.gravityBody = parameters.gravityBody;
-			
-		}
+		this.gravityBodyChangeDelayTime = 0;
+		this.gravityBodyChangeDelayTimeMax = main.is_number( parameters.gravityBodyChangeDelayTimeMax ) ? parameters.gravityBodyChangeDelayTimeMax : _RigidBody.gravityBodyChangeDelayTimeMax;
+		
+		this.gravityBodyChangeForceMod = main.is_number( parameters.gravityBodyChangeForceMod ) ? parameters.gravityBodyChangeForceMod : _RigidBody.gravityBodyChangeForceMod;
+		this.gravityBodyChangeMagnitude = parameters.gravityBodyChangeMagnitude instanceof THREE.Vector3 ? parameters.gravityBodyChangeMagnitude : _RigidBody.gravityBodyChangeMagnitude.clone();
+		this.gravityBodyChangeMagnitudeTime = 0;
+		this.gravityBodyChangeMagnitudeTimeMax = main.is_number( parameters.gravityBodyChangeMagnitudeTimeMax ) ? parameters.gravityBodyChangeMagnitudeTimeMax : _RigidBody.gravityBodyChangeMagnitudeTimeMax;
+		
+		// lerp delta
+		
+		this.lerpDeltaLast = this.lerpDelta = main.is_number( parameters.lerpDelta ) ? parameters.lerpDelta : _RigidBody.lerpDelta;
 		
 		// axes
 		
@@ -228,12 +248,12 @@
 		
 		// velocity trackers
 		
-		this.velocityMovement = generate_velocity_tracker( { 
+		this.velocityMovement = new VelocityTracker( { 
 			damping: parameters.movementDamping,
 			offset: parameters.movementOffset,
 			relativeRotation: this.mesh
 		} );
-		this.velocityGravity = generate_velocity_tracker( { 
+		this.velocityGravity = new VelocityTracker( { 
 			damping: parameters.gravityDamping,
 			offset: parameters.gravityOffset
 		} );
@@ -295,8 +315,7 @@
     
     =====================================================*/
 	
-	function generate_velocity_tracker ( parameters ) {
-		var velocity = {};
+	function VelocityTracker ( parameters ) {
 		
 		// handle parameters
 		
@@ -304,25 +323,34 @@
 		
 		parameters.damping = parameters.damping || 0.99;
 		
-		// init velocity
+		// properties
 		
-		velocity.force = new THREE.Vector3();
-		velocity.forceRotated = new THREE.Vector3();
-		velocity.damping = parameters.damping instanceof THREE.Vector3 ? parameters.damping : new THREE.Vector3();
-		velocity.offset = parameters.offset instanceof THREE.Vector3 ? parameters.offset : new THREE.Vector3();
-		velocity.relativeRotation = parameters.relativeRotation;
-		velocity.moving = false;
-		velocity.intersection = false;
-		velocity.timeWithoutIntersection = 0;
+		this.force = new THREE.Vector3();
+		this.forceRotated = new THREE.Vector3();
+		this.damping = parameters.damping instanceof THREE.Vector3 ? parameters.damping : new THREE.Vector3();
+		this.offset = parameters.offset instanceof THREE.Vector3 ? parameters.offset : new THREE.Vector3();
+		this.relativeRotation = parameters.relativeRotation;
+		this.moving = false;
+		this.intersection = false;
+		this.timeWithoutIntersection = 0;
 		
 		if ( main.is_number( parameters.damping ) === true ) {
 			
-			velocity.damping.addScalar( parameters.damping );
+			this.damping.addScalar( parameters.damping );
 			
 		}
 		
-		return velocity;
+		this.reset();
+		
 	}
+	
+	VelocityTracker.prototype.reset = function () {
+		
+		this.force.set( 0, 0, 0 );
+		
+		this.moving = false;
+		
+	};
 	
 	/*===================================================
     
@@ -423,6 +451,47 @@
 		offset = _VectorHelper.rotate_vector3_to_mesh_rotation( this.mesh, offset );
 		
 		return offset;
+		
+	}
+	
+	/*===================================================
+    
+	gravity body
+    
+    =====================================================*/
+	
+	function change_gravity_body_start ( gravityBody, lerpDelta ) {
+		
+		this.gravityBody = gravityBody;
+		
+		if ( main.is_number( lerpDelta ) ) {
+			
+			this.lerpDeltaLast = this.lerpDelta;
+			this.lerpDelta = lerpDelta;
+			
+		}
+		
+		if ( this.gravityMagnitude instanceof THREE.Vector3 ) {
+			
+			this.gravityMagnitudeLast = this.gravityMagnitude;
+			
+		}
+		this.gravityMagnitude = this.gravityBodyChangeMagnitude;
+		this.gravityBodyChangeMagnitudeTime = 0;
+		
+		this.gravityBodyChanging = true;
+		
+	}
+	
+	function change_gravity_body_complete () {
+		
+		this.gravityBodyLast = this.gravityBody;
+		
+		this.lerpDelta = this.lerpDeltaLast;
+		
+		this.gravityMagnitude = this.gravityMagnitudeLast;
+		
+		this.gravityBodyChanging = false;
 		
 	}
 	
