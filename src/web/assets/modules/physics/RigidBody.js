@@ -48,7 +48,10 @@
 		// properties
 		
 		_RigidBody.lerpDelta = 0.1;
+		_RigidBody.lerpDeltaGravityChange = 0.025;
 		_RigidBody.gravityBodyChangeDelayTimeMax = 250;
+		_RigidBody.gravityBodyChangeGravityProjectionMod = 5;
+		_RigidBody.gravityBodyChangeMovementProjectionMod = 20;
 		_RigidBody.gravityBodyChangeForceMod = 0.5;
 		_RigidBody.gravityBodyChangeMagnitude = new THREE.Vector3( 0, -0.1, 0 );
 		_RigidBody.gravityBodyChangeMagnitudeTimeMax = 500;
@@ -63,8 +66,8 @@
 		_RigidBody.Instance.prototype.collider_dimensions_scaled = collider_dimensions_scaled;
 		_RigidBody.Instance.prototype.collider_radius = collider_radius;
 		_RigidBody.Instance.prototype.offset_in_direction = offset_in_direction;
-		_RigidBody.Instance.prototype.change_gravity_body_start = change_gravity_body_start;
-		_RigidBody.Instance.prototype.change_gravity_body_complete = change_gravity_body_complete;
+		_RigidBody.Instance.prototype.find_gravity_body = find_gravity_body;
+		_RigidBody.Instance.prototype.change_gravity_body = change_gravity_body;
 		
 		Object.defineProperty( _RigidBody.Instance.prototype, 'grounded', { 
 			get : function () { return Boolean( this.velocityGravity.collision ) && !this.velocityGravity.moving }
@@ -97,6 +100,10 @@
 		// utility
 		
 		this.utilVec31Dimensions = new THREE.Vector3();
+		this.utilVec31GravityBody = new THREE.Vector3();
+		this.utilVec32GravityBody = new THREE.Vector3();
+		this.utilVec33GravityBody = new THREE.Vector3();
+		this.utilVec34GravityBody = new THREE.Vector3();
 		this.utilVec31Offset = new THREE.Vector3();
 		this.utilQ4Offset = new THREE.Quaternion();
 		
@@ -229,6 +236,8 @@
 		this.gravityBodyChangeDelayTime = 0;
 		this.gravityBodyChangeDelayTimeMax = main.is_number( parameters.gravityBodyChangeDelayTimeMax ) ? parameters.gravityBodyChangeDelayTimeMax : _RigidBody.gravityBodyChangeDelayTimeMax;
 		
+		this.gravityBodyChangeGravityProjectionMod = main.is_number( parameters.gravityBodyChangeGravityProjectionMod ) ? parameters.gravityBodyChangeGravityProjectionMod : _RigidBody.gravityBodyChangeGravityProjectionMod;
+		this.gravityBodyChangeMovementProjectionMod = main.is_number( parameters.gravityBodyChangeMovementProjectionMod ) ? parameters.gravityBodyChangeMovementProjectionMod : _RigidBody.gravityBodyChangeMovementProjectionMod;
 		this.gravityBodyChangeForceMod = main.is_number( parameters.gravityBodyChangeForceMod ) ? parameters.gravityBodyChangeForceMod : _RigidBody.gravityBodyChangeForceMod;
 		this.gravityBodyChangeMagnitude = parameters.gravityBodyChangeMagnitude instanceof THREE.Vector3 ? parameters.gravityBodyChangeMagnitude : _RigidBody.gravityBodyChangeMagnitude.clone();
 		this.gravityBodyChangeMagnitudeTime = 0;
@@ -237,6 +246,7 @@
 		// lerp delta
 		
 		this.lerpDeltaLast = this.lerpDelta = main.is_number( parameters.lerpDelta ) ? parameters.lerpDelta : _RigidBody.lerpDelta;
+		this.lerpDeltaGravityChange = main.is_number( parameters.lerpDeltaGravityChange ) ? parameters.lerpDeltaGravityChange : _RigidBody.lerpDeltaGravityChange;
 		
 		// axes
 		
@@ -460,38 +470,182 @@
     
     =====================================================*/
 	
-	function change_gravity_body_start ( gravityBody, lerpDelta ) {
+	function find_gravity_body ( bodiesGravity, timeDelta ) {
 		
-		this.gravityBody = gravityBody;
+		var i, l,
+			gravityBodyPotential,
+			gravityMeshPotential,
+			gravityBodyDifference = this.utilVec31GravityBody,
+			gravityBodyDistancePotential,
+			gravityBody,
+			gravityBodyDistance = Number.MAX_VALUE,
+			velocityGravityCollision,
+			velocityGravityCollisionRigidBody,
+			velocityMovementCollision,
+			velocityMovementCollisionRigidBody,
+			velocityGravityRotatedProjected = this.utilVec32GravityBody,
+			velocityMovementRotatedProjected = this.utilVec33GravityBody,
+			meshPosition,
+			meshPositionProjected = this.utilVec34GravityBody;
 		
-		if ( main.is_number( lerpDelta ) ) {
+		// get velocity collisions
+		
+		velocityGravityCollision = this.velocityGravity.collision;
+		velocityMovementCollision = this.velocityMovement.collision;
+		
+		// get velocity collision rigid bodies
+		
+		if ( velocityGravityCollision ) {
+			velocityGravityCollisionRigidBody = velocityGravityCollision.object.rigidBody;
+		}
+		if ( velocityMovementCollision ) {
+			velocityMovementCollisionRigidBody = velocityMovementCollision.object.rigidBody;
+		}
+		
+		// attempt to change gravity body
+		
+		// movement collision with new gravity body
+		if ( velocityMovementCollisionRigidBody && velocityMovementCollisionRigidBody.gravitySource === true && this.gravityBody !== velocityMovementCollisionRigidBody ) {
 			
-			this.lerpDeltaLast = this.lerpDelta;
-			this.lerpDelta = lerpDelta;
+			this.change_gravity_body( velocityMovementCollisionRigidBody );
+			
+		}
+		// gravity collision with new gravity body
+		else if ( velocityGravityCollisionRigidBody && velocityGravityCollisionRigidBody.gravitySource === true && this.gravityBody !== velocityGravityCollisionRigidBody ) {
+			
+			this.change_gravity_body( velocityGravityCollisionRigidBody );
+			
+		}
+		// currently changing gravity body
+		else if ( this.gravityBodyChanging === true ) {
+			
+			// gravity magnitude while changing
+			
+			this.gravityBodyChangeMagnitudeTime += timeDelta;
+			
+			if ( this.gravityBodyChangeMagnitudeTime >= this.gravityBodyChangeMagnitudeTimeMax ) {
+				
+				this.gravityMagnitude = this.gravityMagnitudeLast;
+				
+			}
+			
+			// if grounded, end change
+			
+			if ( this.grounded === true ) {
+				
+				change_gravity_body_end.call( this );
+				
+			}
+			
+		}
+		// else if not grounded
+		else if ( this.grounded === false ) {
+			
+			// delay time, so dynamic body does not get stuck between two close gravity bodies
+		
+			this.gravityBodyChangeDelayTime += timeDelta;
+			
+			// if delay over max
+			
+			if ( this.gravityBodyChangeDelayTime >= this.gravityBodyChangeDelayTimeMax ) {
+				
+				this.gravityBodyChangeDelayTime = 0;
+				
+				// project mesh position along combined rotated velocity
+				
+				meshPosition = this.mesh.position;
+				
+				velocityGravityRotatedProjected.copy( this.velocityGravity.forceRotated ).multiplyScalar( this.gravityBodyChangeGravityProjectionMod );
+				velocityMovementRotatedProjected.copy( this.velocityMovement.forceRotated ).multiplyScalar( this.gravityBodyChangeMovementProjectionMod );//.normalize().multiplyScalar( this.radius * this.gravityBodyChangeProjectionMod );
+				
+				meshPositionProjected.copy( meshPosition ).addSelf( velocityGravityRotatedProjected ).addSelf( velocityMovementRotatedProjected );
+				
+				console.log( 'gravity body check for ', this, ' from ', this.gravityBody, ' + pos ', meshPosition.x.toFixed(2), meshPosition.y.toFixed(2), meshPosition.z.toFixed(2), ' + vel rot GRAV ', velocityGravityRotatedProjected.x.toFixed(2), velocityGravityRotatedProjected.y.toFixed(2), velocityGravityRotatedProjected.z.toFixed(2), ' + vel rot MOVE ', velocityMovementRotatedProjected.x.toFixed(2), velocityMovementRotatedProjected.y.toFixed(2), velocityMovementRotatedProjected.z.toFixed(2),' + projected ', meshPositionProjected.x.toFixed(2), meshPositionProjected.y.toFixed(2), meshPositionProjected.z.toFixed(2) );
+				// get closest gravity body
+				
+				for ( i = 0, l = bodiesGravity.length; i < l; i++ ) {
+					
+					gravityBodyPotential = bodiesGravity[ i ];
+					
+					gravityBodyDifference.sub( meshPositionProjected, gravityBodyPotential.mesh.position );
+					gravityBodyDistancePotential = gravityBodyDifference.length() - gravityBodyPotential.radius;
+					
+					if ( gravityBodyDistancePotential < gravityBodyDistance ) {
+						
+						gravityBody = gravityBodyPotential;
+						gravityBodyDistance = gravityBodyDistancePotential;
+						
+					}
+					
+				}
+				
+				// swap to closest gravity body
+				
+				if ( this.gravityBody !== gravityBody ) {
+					
+			// test
+			if ( this.gbcline ) this.mesh.remove( this.gbcline );
+			this.gbclineGeom = new THREE.Geometry();
+			this.gbclineGeom.vertices.push( new THREE.Vector3(), new THREE.Vector3().add( this.velocityGravity.force.clone().multiplyScalar( this.gravityBodyChangeGravityProjectionMod ), this.velocityMovement.force.clone().multiplyScalar( this.gravityBodyChangeMovementProjectionMod ) ) );
+			this.gbcline = new THREE.Line( this.gbclineGeom, new THREE.LineBasicMaterial( { color: 0xFF0000, linewidth: 8 } ), THREE.LinePieces );
+			this.mesh.add( this.gbcline );
+			// test
+					
+					this.change_gravity_body( gravityBody, true );
+					
+					this.velocityGravity.force.multiplyScalar( this.gravityBodyChangeForceMod );
+					this.velocityMovement.force.multiplyScalar( this.gravityBodyChangeForceMod );
+					console.log( ' > > gravity body to ', gravityBody, ' at dist ', gravityBodyDistance, ' temp gravity magnitude = ', this.gravityMagnitude.x, this.gravityMagnitude.y, this.gravityMagnitude.z );
+				}
+				
+			}
 			
 		}
 		
-		if ( this.gravityMagnitude instanceof THREE.Vector3 ) {
-			
-			this.gravityMagnitudeLast = this.gravityMagnitude;
-			
-		}
-		this.gravityMagnitude = this.gravityBodyChangeMagnitude;
-		this.gravityBodyChangeMagnitudeTime = 0;
-		
-		this.gravityBodyChanging = true;
 		
 	}
 	
-	function change_gravity_body_complete () {
+	function change_gravity_body ( gravityBody, ease ) {
 		
-		this.gravityBodyLast = this.gravityBody;
+		// if in middle of change already
 		
-		this.lerpDelta = this.lerpDeltaLast;
+		if ( this.gravityBodyChanging !== false ) {
+			
+			change_gravity_body_end.call( this );
+			
+		}
 		
-		this.gravityMagnitude = this.gravityMagnitudeLast;
+		// properties
+		
+		this.gravityBody = gravityBody;
+		
+		// if should ease change
+		
+		if ( ease === true ) {
+			
+			this.lerpDeltaLast = this.lerpDelta;
+			this.lerpDelta = this.lerpDeltaGravityChange;
+			
+			if ( this.gravityMagnitude instanceof THREE.Vector3 ) {
+				
+				this.gravityMagnitudeLast = this.gravityMagnitude;
+				
+			}
+			this.gravityMagnitude = this.gravityBodyChangeMagnitude;
+			this.gravityBodyChangeMagnitudeTime = 0;
+			
+			this.gravityBodyChanging = true;
+			
+		}
+		
+	}
+	
+	function change_gravity_body_end () {
 		
 		this.gravityBodyChanging = false;
+		
+		this.lerpDelta = this.lerpDeltaLast;
+		this.gravityMagnitude = this.gravityMagnitudeLast;
 		
 	}
 	

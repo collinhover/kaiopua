@@ -27,7 +27,6 @@
 		worldGravitySource,
 		worldGravityMagnitude,
 		scaleSpeedExp = Math.log( 1.5 ),
-		lerpDeltaGravityChange = 0.025,
 		utilVec31Update,
 		utilVec32Update,
 		utilVec33Update,
@@ -194,7 +193,7 @@
 					
 					// gravity bodies
 					
-					if ( is_gravity_body( rigidBody ) ) {
+					if ( rigidBody.gravitySource === true ) {
 					
 						index = bodiesGravity.indexOf( rigidBody );
 						
@@ -240,7 +239,7 @@
 					
 					// gravity bodies
 					
-					if ( is_gravity_body( rigidBody ) ) {
+					if ( rigidBody.gravitySource === true ) {
 					
 						index = bodiesGravity.indexOf( rigidBody );
 						
@@ -308,10 +307,6 @@
 		worldGravityMagnitude = new THREE.Vector3( magnitude.x, magnitude.y, magnitude.z );
 	}
 	
-	function is_gravity_body ( rigidBody ) {
-		return rigidBody instanceof _RigidBody.Instance && rigidBody.gravitySource;
-	}
-	
 	/*===================================================
     
     start/stop/update functions
@@ -334,27 +329,15 @@
 		
 		var i, l,
 			j, k,
-			timeDeltaFix = timeDelta / timeDeltaMod,
 			rigidBody,
 			mesh,
-			gravityBodyPotential,
-			gravityMeshPotential,
-			gravityBodyDifference = utilVec31Update,
-			gravityBodyDistancePotential,
-			gravityBody,
-			gravityMesh,
-			gravityBodyDistance,
-			gravityOrigin = utilVec32Update,
-			gravityMagnitude = utilVec33Update,
-			gravityUp = utilVec34Update,
+			gravityOrigin = utilVec31Update,
+			gravityMagnitude = utilVec32Update,
+			gravityUp = utilVec33Update,
 			velocityGravity,
-			velocityGravityCollision,
-			velocityGravityCollisionRigidBody,
-			velocityGravityForceUpDir = utilVec35Update,
-			velocityGravityForceUpDirRot = utilVec36Update,
+			velocityGravityForceUpDir = utilVec34Update,
+			velocityGravityForceUpDirRot = utilVec35Update,
 			velocityMovement,
-			velocityMovementCollision,
-			velocityMovementCollisionRigidBody,
 			safetynet;
 		
 		// dynamic bodies
@@ -423,6 +406,15 @@
 			
 			handle_velocity( rigidBody, velocityGravity );
 			
+			// update gravity body
+			
+			rigidBody.find_gravity_body( bodiesGravity, timeDelta );
+			
+			// post physics
+			// TODO: correct safety net for octree and non-infinite rays
+			
+			/*
+			
 			// get velocity collisions
 			
 			velocityGravityCollision = velocityGravity.collision;
@@ -450,89 +442,6 @@
 			
 			}
 			
-			// attempt to change gravity body
-			
-			if ( ( is_gravity_body( velocityGravityCollisionRigidBody ) && gravityBody !== velocityGravityCollisionRigidBody ) ) {
-				
-				rigidBody.change_gravity_body_start( velocityGravityCollisionRigidBody );
-				rigidBody.change_gravity_body_complete();
-				
-			}
-			else if ( ( is_gravity_body( velocityMovementCollisionRigidBody ) && gravityBody !== velocityMovementCollisionRigidBody ) ) {
-				
-				rigidBody.change_gravity_body_start( velocityMovementCollisionRigidBody );
-				rigidBody.change_gravity_body_complete();
-				
-			}
-			else if ( gravityBody === rigidBody.gravityBodyLast && rigidBody.grounded === false ) {
-				
-				// delay time, so dynamic body does not get stuck between two close gravity bodies
-			
-				rigidBody.gravityBodyChangeDelayTime += timeDeltaFix;
-				
-				// if delay over max
-				
-				if ( rigidBody.gravityBodyChangeDelayTime >= rigidBody.gravityBodyChangeDelayTimeMax ) {
-					
-					rigidBody.gravityBodyChangeDelayTime = 0;
-					
-					console.log( 'gravity body check for ', rigidBody, ' from ', rigidBody.gravityBody, ' + current dist ', gravityBodyDistance );
-					// get closest gravity body
-					
-					for ( j = 0, k = bodiesGravity.length; j < k; j++ ) {
-						
-						gravityBodyPotential = bodiesGravity[ j ];
-						gravityMeshPotential = gravityBodyPotential.mesh;
-						
-						gravityBodyDifference.sub( mesh.position, gravityMeshPotential.position );
-						gravityBodyDistancePotential = gravityBodyDifference.length() - gravityBodyPotential.radius;
-						if ( gravityBodyPotential !== rigidBody.gravityBody ) console.log( ' > other gravity body at dist ', gravityBodyDistancePotential );
-						if ( gravityBodyDistancePotential < gravityBodyDistance ) {
-							
-							gravityBody = gravityBodyPotential;
-							gravityBodyDistance = gravityBodyDistancePotential;
-							
-						}
-						
-					}
-					
-					// swap to closest gravity body
-					
-					if ( rigidBody.gravityBody !== gravityBody ) {
-						
-						rigidBody.change_gravity_body_start( gravityBody, lerpDeltaGravityChange );
-						
-						velocityGravity.force.multiplyScalar( rigidBody.gravityBodyChangeForceMod );
-						
-						console.log( ' > > gravity body to ', gravityBody, ' at dist ', gravityBodyDistance, ' temp gravity magnitude = ', rigidBody.gravityMagnitude.x, rigidBody.gravityMagnitude.y, rigidBody.gravityMagnitude.z );
-					}
-					
-				}
-				
-			}
-			else if ( rigidBody.grounded === true ) {
-				
-				rigidBody.change_gravity_body_complete();
-				
-			}
-			else if ( rigidBody.gravityBodyChanging === true ) {
-				
-				// gravity magnitude change
-				
-				rigidBody.gravityBodyChangeMagnitudeTime += timeDeltaFix;
-				
-				if ( rigidBody.gravityBodyChangeMagnitudeTime >= rigidBody.gravityBodyChangeMagnitudeTimeMax ) {
-					
-					rigidBody.gravityMagnitude = rigidBody.gravityMagnitudeLast;
-					console.log( ' rigid body gravity magnitude reset to ', rigidBody.gravityMagnitude );
-				}
-				
-			}
-			
-			// post physics
-			// TODO: correct safety net for octree and non-infinite rays
-			
-			/*
 			// if rigidBody is not safe
 			if ( rigidBody.safe === false ) {
 				
