@@ -48,13 +48,14 @@
 		// properties
 		
 		_RigidBody.lerpDelta = 0.1;
-		_RigidBody.lerpDeltaGravityChange = 0.025;
+		_RigidBody.lerpDeltaGravityChange = 0;
 		_RigidBody.gravityBodyChangeDelayTimeMax = 250;
+		_RigidBody.gravityBodyChangeLerpDeltaTimeMax = 500;
+		_RigidBody.gravityBodyChangeMagnitudeTimeMax = 500;
 		_RigidBody.gravityBodyChangeGravityProjectionMod = 5;
 		_RigidBody.gravityBodyChangeMovementProjectionMod = 20;
 		_RigidBody.gravityBodyChangeForceMod = 0.5;
 		_RigidBody.gravityBodyChangeMagnitude = new THREE.Vector3( 0, -0.1, 0 );
-		_RigidBody.gravityBodyChangeMagnitudeTimeMax = 500;
 		
 		// instance
 		
@@ -233,6 +234,7 @@
 		
 		// gravity body
 		
+		this.gravityBodyChangeTime = 0;
 		this.gravityBodyChangeDelayTime = 0;
 		this.gravityBodyChangeDelayTimeMax = main.is_number( parameters.gravityBodyChangeDelayTimeMax ) ? parameters.gravityBodyChangeDelayTimeMax : _RigidBody.gravityBodyChangeDelayTimeMax;
 		
@@ -240,7 +242,8 @@
 		this.gravityBodyChangeMovementProjectionMod = main.is_number( parameters.gravityBodyChangeMovementProjectionMod ) ? parameters.gravityBodyChangeMovementProjectionMod : _RigidBody.gravityBodyChangeMovementProjectionMod;
 		this.gravityBodyChangeForceMod = main.is_number( parameters.gravityBodyChangeForceMod ) ? parameters.gravityBodyChangeForceMod : _RigidBody.gravityBodyChangeForceMod;
 		this.gravityBodyChangeMagnitude = parameters.gravityBodyChangeMagnitude instanceof THREE.Vector3 ? parameters.gravityBodyChangeMagnitude : _RigidBody.gravityBodyChangeMagnitude.clone();
-		this.gravityBodyChangeMagnitudeTime = 0;
+		
+		this.gravityBodyChangeLerpDeltaTimeMax = main.is_number( parameters.gravityBodyChangeLerpDeltaTimeMax ) ? parameters.gravityBodyChangeLerpDeltaTimeMax : _RigidBody.gravityBodyChangeLerpDeltaTimeMax;
 		this.gravityBodyChangeMagnitudeTimeMax = main.is_number( parameters.gravityBodyChangeMagnitudeTimeMax ) ? parameters.gravityBodyChangeMagnitudeTimeMax : _RigidBody.gravityBodyChangeMagnitudeTimeMax;
 		
 		// lerp delta
@@ -479,6 +482,7 @@
 			gravityBodyDistancePotential,
 			gravityBody,
 			gravityBodyDistance = Number.MAX_VALUE,
+			gravityBodyChangeLerpDeltaPct, 
 			velocityGravityCollision,
 			velocityGravityCollisionRigidBody,
 			velocityMovementCollision,
@@ -519,15 +523,29 @@
 		// currently changing gravity body
 		else if ( this.gravityBodyChanging === true ) {
 			
+			// lerp delta while changing
+			
+			if ( this.gravityBodyChangeTime < this.gravityBodyChangeMagnitudeTimeMax ) {
+				
+				gravityBodyChangeLerpDeltaPct = Math.min( this.gravityBodyChangeTime / this.gravityBodyChangeLerpDeltaTimeMax, 1 );
+				this.lerpDelta = this.lerpDeltaGravityChange * ( 1 - gravityBodyChangeLerpDeltaPct ) + this.lerpDeltaLast * gravityBodyChangeLerpDeltaPct;
+			
+			}
+			else {
+				
+				this.lerpDelta = this.lerpDeltaLast;
+				
+			}
+			
 			// gravity magnitude while changing
 			
-			this.gravityBodyChangeMagnitudeTime += timeDelta;
-			
-			if ( this.gravityBodyChangeMagnitudeTime >= this.gravityBodyChangeMagnitudeTimeMax ) {
+			if ( this.gravityBodyChangeTime >= this.gravityBodyChangeMagnitudeTimeMax ) {
 				
 				this.gravityMagnitude = this.gravityMagnitudeLast;
 				
 			}
+			
+			this.gravityBodyChangeTime += timeDelta;
 			
 			// if grounded, end change
 			
@@ -594,7 +612,7 @@
 					this.change_gravity_body( gravityBody, true );
 					
 					this.velocityGravity.force.multiplyScalar( this.gravityBodyChangeForceMod );
-					this.velocityMovement.force.multiplyScalar( this.gravityBodyChangeForceMod );
+					//this.velocityMovement.force.multiplyScalar( this.gravityBodyChangeForceMod );
 					console.log( ' > > gravity body to ', gravityBody, ' at dist ', gravityBodyDistance, ' temp gravity magnitude = ', this.gravityMagnitude.x, this.gravityMagnitude.y, this.gravityMagnitude.z );
 				}
 				
@@ -632,7 +650,7 @@
 				
 			}
 			this.gravityMagnitude = this.gravityBodyChangeMagnitude;
-			this.gravityBodyChangeMagnitudeTime = 0;
+			this.gravityBodyChangeTime = 0;
 			
 			this.gravityBodyChanging = true;
 			

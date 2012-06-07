@@ -88,17 +88,19 @@
 		
 		/*===================================================
 		
-		environment
+		body
 		
 		=====================================================*/
-    	
-    	// skybox
 		
-		me.parts.skybox = _ObjectMaker.make_skybox( shared.pathToTextures + "skybox_world" );
+		// body
     	
-    	// world base
-    	
-    	me.parts.body = new _Model.Instance();
+    	me.parts.body = new _Model.Instance({
+            geometry: main.get_asset_data("assets/models/Whale.js"),
+			physics: {
+				bodyType: 'mesh',
+				gravitySource: true
+			}
+        });
 		
 		me.parts.body.quaternion.setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), -Math.PI * 0.4 );
 		
@@ -114,44 +116,20 @@
 		
 		me.parts.fog = null;//new THREE.Fog( 0x226fb3, 1, 10000 );
 		
-		// body parts
-		
-		// TODO: triangulate head mesh
-		
-        me.parts.head = new _Model.Instance({
-            geometry: main.get_asset_data("assets/models/Whale_Head.js"),
-			physics: {
-				bodyType: 'mesh'
-			}
-        });
-		
-		me.parts.body.add( me.parts.head );
-		
-		me.parts.tail = new _Model.Instance({
-            geometry: main.get_asset_data("assets/models/Whale_Tail.js"),
-			physics: {
-				bodyType: 'mesh'
-			}
-        });
-		
-		me.parts.body.add( me.parts.tail );
-		
-		// water
-		
-		me.parts.waterRing = new _Water.Instance( { wavesTexture: shared.pathToTextures + "water_world_512.png" } );
-		
-		me.add( me.parts.waterRing );
-		
 		/*===================================================
 		
-		sky
+		environment
 		
 		=====================================================*/
 		
+		// skybox
+		
+		me.parts.skybox = _ObjectMaker.make_skybox( shared.pathToTextures + "skybox_world" );
+		
 		// sun/moon
 		
-		me.parts.sunmoon = new _Model.Instance({
-            geometry: main.get_asset_data("assets/models/Sun_Moon.js"),
+		me.parts.sun = new _Model.Instance({
+            geometry: main.get_asset_data("assets/models/Sun.js"),
 			materials: new THREE.MeshBasicMaterial( { shading: THREE.NoShading, vertexColors: THREE.VertexColors } ),
 			physics: {
 				bodyType: 'mesh',
@@ -159,18 +137,18 @@
 			}
         });
 		
-		me.parts.sunmoon.position.set( 0, 4000, 0 );
-		me.parts.sunmoon.quaternion.setFromAxisAngle( new THREE.Vector3( 0, 0, 1 ), Math.PI );
+		me.parts.sun.position.set( 0, 4000, 0 );
+		me.parts.sun.quaternion.setFromAxisAngle( new THREE.Vector3( 0, 0, 1 ), Math.PI );
 		
-		_PhysicsHelper.rotate_relative_to_source( me.parts.sunmoon, me.parts.body, shared.cardinalAxes.forward.clone().negate(), shared.cardinalAxes.up );
+		_PhysicsHelper.rotate_relative_to_source( me.parts.sun, me.parts.body, shared.cardinalAxes.forward.clone().negate(), shared.cardinalAxes.up );
 		
-		me.add( me.parts.sunmoon );
+		me.add( me.parts.sun );
 		
 		// sun light
 		
-		me.parts.sunmoonLight = new THREE.PointLight( 0xffffff, 1, 10000 );
+		me.parts.sunLight = new THREE.PointLight( 0xffffff, 1, 10000 );
 		
-		me.parts.sunmoon.add( me.parts.sunmoonLight );
+		me.parts.sun.add( me.parts.sunLight );
 		
 		// sky
 		
@@ -178,8 +156,8 @@
 			world: me.parts.body,
 			numClouds: 20,
 			cloudBoundRadius: 5000,
-			cloudDistanceFromSurfaceMin: 100,//me.parts.sunmoon.position.length() - 2000,
-			cloudDistanceFromSurfaceMax: 1000,//me.parts.sunmoon.position.length() + 500,
+			cloudDistanceFromSurfaceMin: 100,//me.parts.sun.position.length() - 2000,
+			cloudDistanceFromSurfaceMax: 1000,//me.parts.sun.position.length() + 500,
 			zones: [
 				{
 					polar: {
@@ -205,6 +183,12 @@
 		} );
 		
 		me.add( me.parts.sky );
+		
+		// water
+		
+		me.parts.waterRing = new _Water.Instance( { wavesTexture: shared.pathToTextures + "water_world_512.png" } );
+		
+		me.add( me.parts.waterRing );
 		
 		/*===================================================
 		
@@ -516,15 +500,11 @@
 			
 			// morph animations
 			
-			me.parts.sunmoon.morphs.play( 'idle', { duration: 6000, loop: true } );
-			/*
-			me.parts.tail.morphs.play( 'swim', { duration: 5000, loop: true } );
-			
-			me.parts.sunmoon.morphs.play( 'shine', { duration: 500, loop: true, reverseOnComplete: true, durationShift: 4000 } );
-	
-			me.parts.sunmoon.morphs.play( 'bounce', { duration: 3000, loop: true, loopDelay: 4000, loopChance: 0.1 } );
-			
 			me.parts.waterRing.morphs.play( 'waves', { duration: 4000, loop: true } );
+			
+			me.parts.sun.morphs.play( 'idle', { duration: 6000, loop: true } );
+			/*
+			me.parts.body.morphs.play( 'idle', { duration: 5000, loop: true } );
 			
 			me.parts.sky.animate();
 			*/
@@ -542,11 +522,11 @@
 			
 			// morphs
 			
-			me.parts.tail.morphs.stopAll();
-			
-			me.parts.sunmoon.morphs.stopAll();
-			
 			me.parts.waterRing.morphs.stopAll();
+			
+			me.parts.sun.morphs.stopAll();
+			
+			me.parts.body.morphs.stopAll();
 			
 			me.parts.sky.animate( { stop: true } );
 			

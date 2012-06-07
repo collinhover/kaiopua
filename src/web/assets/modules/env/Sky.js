@@ -67,7 +67,6 @@
 		_Sky.cloudDistanceFromSurfaceMin = 1000;
 		_Sky.cloudDistanceFromSurfaceMax = 3000;
 		_Sky.cloudRangeWander = 200;
-		_Sky.layout = 'box';
 		_Sky.zonePolar = {
 			min: 0,
 			max: Math.PI
@@ -137,26 +136,12 @@
 		this.cloudRangeWander = main.is_number( parameters.cloudRangeWander ) ? parameters.cloudRangeWander : _Sky.cloudRangeWander;
 		this.cloudsGeometry = parameters.cloudsGeometry || _Sky.cloudsGeometry;
 		this.bounds = parameters.bounds || { min: new THREE.Vector3(), max: new THREE.Vector3() };
-		this.layout = typeof parameters.layout === 'string' ? parameters.layout : _Sky.layout;
+		this.layout = parameters.layout;
 		this.zones = main.type( parameters.zones ) === 'array' ? parameters.zones : _Sky.zones;
 		
-		// generate clouds
+		// init clouds list
 		
 		this.clouds = [];
-		
-		for ( i = 0, l = this.numClouds; i < l; i++ ) {
-			
-			cloud = new _Cloud.Instance();
-			
-			// store
-			
-			this.clouds.push( cloud );
-			
-			// add
-			
-			this.add( cloud );
-			
-		}
 		
 		// world
 		
@@ -187,6 +172,56 @@
     clouds
     
     =====================================================*/
+	
+	function update_cloud_count ( count ) {
+		
+		var i, l,
+			cloud,
+			cloudsExtra;
+		
+		// change count
+		
+		if ( main.is_number( count ) && count >= 0 ) {
+			
+			this.numClouds = count;
+			
+		}
+		
+		// remove any extra clouds
+		
+		if ( this.clouds.length > this.numClouds ) {
+			
+			cloudsExtra = this.clouds.splice( this.numClouds, this.clouds.length - this.numClouds );
+			
+			for ( i = 0, l = cloudsExtra.length; i < l; i++ ) {
+				
+				cloud = cloudsExtra[ i ];
+				
+				this.remove( cloud );
+				
+			}
+			
+		}
+		// add until num clouds reached
+		else if ( this.clouds.length < this.numClouds ) {
+			
+			for ( i = this.clouds.length, l = this.numClouds; i < l; i++ ) {
+				
+				cloud = new _Cloud.Instance();
+				
+				// store
+				
+				this.clouds.push( cloud );
+				
+				// add
+				
+				this.add( cloud );
+				
+			}
+			
+		}
+		
+	}
 	
 	function set_clouds () {
 		
@@ -221,17 +256,99 @@
 		
 		// layout
 		
-		// sphere
+		// prearranged
 		
-		if ( this.layout === 'sphere' ) {
+		if ( main.is_array( this.layout ) ) {
+			
+			clouds_layout_prearranged.call( this );
+			
+		}
+		// default to sphere
+		else {
 			
 			clouds_layout_sphere.call( this, children );
 			
 		}
-		// default to box
-		else {
+		
+	}
+	
+	function clouds_layout_prearranged () {
+		
+		var i, l,
+			cloud,
+			properties,
+			position,
+			rotation,
+			scale,
+			cloudForward = this.cloudRotateUtilVec31,
+			cloudUp = this.cloudRotateUtilVec32;
+		
+		// update cloud count
+		
+		update_cloud_count.call( this, this.layout.length );
+		
+		// update clouds
+		
+		for ( i = 0, l = this.numClouds; i < l; i++ ) {
 			
-			clouds_layout_sphere.call( this, children );//clouds_layout_box.call( this );
+			cloud = this.clouds[ i ];
+			
+			properties = this.layout[ i ];
+			position = properties.position;
+			rotation = properties.rotation;
+			scale = properties.scale;
+			
+			// position
+			
+			if ( position instanceof THREE.Vector3 ) {
+				
+				cloud.position.copy( position );
+				
+			}
+			
+			// rotate
+			
+			if ( rotation instanceof THREE.Quaternion ) {
+				
+				cloud.quaternion.copy( rotation );
+				
+			}
+			else if ( rotation instanceof THREE.Vector3 ) {
+				
+				cloud.quaternion.setFromEuler( rotation );
+			
+			}
+			else if ( this.cloudRotateTowardWorld ) {
+				
+				cloudForward.copy( shared.cardinalAxes.forward );
+				cloudUp.copy( shared.cardinalAxes.up );
+				
+				cloud.quaternion.multiplyVector3( cloudForward );
+				cloud.quaternion.multiplyVector3( cloudUp );
+				
+				_PhysicsHelper.rotate_relative_to_source( cloud, this._world, cloudForward, cloudUp );
+				
+			}
+			
+			// scale
+			
+			if ( scale instanceof THREE.Vector3 ) {
+				
+				cloud.scale.copy( scale );
+			
+			}
+			else if ( main.is_number( scale ) ) {
+				
+				cloud.scale.set( scale, scale, scale );
+			
+			}
+			else {
+				
+				scale = Math.random() * ( this.cloudScaleMax - this.cloudScaleMin ) + this.cloudScaleMin;
+				
+				cloud.scale.set( scale, scale, scale );
+				
+			}
 			
 		}
 		
@@ -264,7 +381,9 @@
 		
 		// update clouds
 		
-		for ( i = 0, l = this.clouds.length; i < l; i++ ) {
+		update_cloud_count.call( this );
+		
+		for ( i = 0, l = this.numClouds; i < l; i++ ) {
 			
 			cloud = this.clouds[ i ];
 			
@@ -313,44 +432,7 @@
 			
 			_PhysicsHelper.pull_to_source( cloud, this._world, children, distance );
 			
-			/*
-			// opacity by distance
-			
-			if ( this.cloudOpacityByDistance > 0 ) {
-				
-				cloud.material.opacity = 1 - ( cloud.position.length() / radius ) * this.cloudOpacityByDistance;
-				
-			}
-			else if ( this.cloudOpacityByDistance < 0 ) {
-				
-				cloud.material.opacity = -( cloud.position.length() / radius ) * this.cloudOpacityByDistance;
-				
-			}
-			else {
-				
-				cloud.material.opacity = 1;
-				
-			}
-			
-			if ( cloud.material.opacity < 1 ) {
-				
-				cloud.material.transparent = true;
-				
-			}
-			else {
-				
-				cloud.material.transparent = false;
-				
-			}
-			*/
-			
 		}
-		
-	}
-	
-	function clouds_layout_box () {
-		
-		
 		
 	}
 	

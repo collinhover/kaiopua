@@ -110,7 +110,7 @@
 			
 		}
 		
-		lerpDelta = lerpDelta || 1;
+		lerpDelta = main.is_number( lerpDelta ) ? lerpDelta : 1;
 		
 		axisAwayNew.sub( position, source ).normalize();
 		
