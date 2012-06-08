@@ -133,7 +133,7 @@
 			materials: new THREE.MeshBasicMaterial( { shading: THREE.NoShading, vertexColors: THREE.VertexColors } ),
 			physics: {
 				bodyType: 'mesh',
-				//gravitySource: true
+				gravitySource: true
 			}
         });
 		
@@ -155,34 +155,36 @@
 		me.parts.sky = new _Sky.Instance( {
 			world: me.parts.body,
 			numClouds: 20,
-			cloudBoundRadius: 5000,
-			cloudDistanceFromSurfaceMin: 100,//me.parts.sun.position.length() - 2000,
-			cloudDistanceFromSurfaceMax: 1000,//me.parts.sun.position.length() + 500,
-			zones: [
-				{
-					polar: {
-						min: Math.PI * 0.15,
-						max: Math.PI * 0.85
-					},
-					azimuth: {
-						min: Math.PI * 0.15,
-						max: Math.PI * 0.4
-					}
-				},
-				{
-					polar: {
-						min: Math.PI * 0.15,
-						max: Math.PI * 0.85
-					},
-					azimuth: {
-						min: Math.PI * 0.6,
-						max: Math.PI * 0.85
-					}
-				}
+			layout: [
+				{ position: new THREE.Vector3( 119, 2604, 990 ), scale: 0.85 },
+				{ position: new THREE.Vector3( 438, 3022, 1350 ), scale: 2.23 },
+				{ position: new THREE.Vector3( -281, 3250, 1362 ), scale: 1.60 },
+				{ position: new THREE.Vector3( -700, 3246, 1456 ), scale: 2.34 },
+				{ position: new THREE.Vector3( -1403, 3148, 1895 ), scale: 1.08 },
+				{ position: new THREE.Vector3( -777, 2984, 2231 ), scale: 0.61 },
+				{ position: new THREE.Vector3( -1932, 2222, 2340 ), scale: 3.56 },
+				{ position: new THREE.Vector3( -2157, 1563, 3030 ), scale: 1.67 },
+				{ position: new THREE.Vector3( -2377, 993, 2980 ), scale: 0.61 },
+				{ position: new THREE.Vector3( -2150, 626, 3434 ), scale: 3.52 },
+				{ position: new THREE.Vector3( -1870, 398, 3697 ), scale: 2.23 },
+				{ position: new THREE.Vector3( -1095, 511, 4275 ), scale: 1.25 },
+				
+				{ position: new THREE.Vector3( 515, 2070, 2969 ), scale: 2.02 },
+				{ position: new THREE.Vector3( 1467, 1960, 2516 ), scale: 0.88 },
+				{ position: new THREE.Vector3( 1170, 1361, 3514 ), scale: 2.34 },
+				{ position: new THREE.Vector3( 2119, 716, 3196 ), scale: 4.22 },
+				{ position: new THREE.Vector3( 1650, 438, 3098 ), scale: 2.17 },
+				
+				{ position: new THREE.Vector3( 122, -20, 4103 ), scale: 2.82 },
+				{ position: new THREE.Vector3( 980, -587, 3804 ), scale: 3.28 },
+				{ position: new THREE.Vector3( 505, -1121, 3776 ), scale: 0.84 },
+				{ position: new THREE.Vector3( -131, -1234, 3401 ), scale: 0.84 },
+				{ position: new THREE.Vector3( 413, -1570, 3572 ), scale: 1.59 },
+				{ position: new THREE.Vector3( -484, -2012, 3453 ), scale: 4.45 }
 			]
 		} );
 		
-		me.add( me.parts.sky );
+		me.parts.body.add( me.parts.sky );
 		
 		// water
 		

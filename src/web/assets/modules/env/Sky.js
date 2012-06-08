@@ -326,20 +326,19 @@
 				cloud.quaternion.multiplyVector3( cloudForward );
 				cloud.quaternion.multiplyVector3( cloudUp );
 				
-				_PhysicsHelper.rotate_relative_to_source( cloud, this._world, cloudForward, cloudUp );
+				_PhysicsHelper.rotate_relative_to_source( cloud, this._world, cloudUp, cloudForward );
 				
 			}
 			
 			// scale
-			
-			if ( scale instanceof THREE.Vector3 ) {
-				
-				cloud.scale.copy( scale );
-			
-			}
-			else if ( main.is_number( scale ) ) {
+			if ( main.is_number( scale ) ) {
 				
 				cloud.scale.set( scale, scale, scale );
+			
+			}
+			else if ( scale instanceof THREE.Vector3 ) {
+				
+				cloud.scale.copy( scale );
 			
 			}
 			else {

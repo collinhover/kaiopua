@@ -49,6 +49,7 @@
 		
 		_RigidBody.lerpDelta = 0.1;
 		_RigidBody.lerpDeltaGravityChange = 0;
+		_RigidBody.gravityBodyRadiusAdditionPct = 1;
 		_RigidBody.gravityBodyChangeDelayTimeMax = 250;
 		_RigidBody.gravityBodyChangeLerpDeltaTimeMax = 500;
 		_RigidBody.gravityBodyChangeMagnitudeTimeMax = 500;
@@ -74,6 +75,29 @@
 			get : function () { return Boolean( this.velocityGravity.collision ) && !this.velocityGravity.moving }
 		});
 		
+		Object.defineProperty( _RigidBody.Instance.prototype, 'radiusGravity', { 
+			get : function () {
+				
+				var scale = this.mesh.scale,
+					scaleMax = Math.max( scale.x, scale.y, scale.z ),
+					radiusGravity = this.radiusCore * scaleMax;
+				
+				if ( this.radiusGravityScaled === false ) {
+					
+					radiusGravity += this.radiusGravityAddition;
+					
+				}
+				else {
+					
+					radiusGravity += this.radiusGravityAddition * scaleMax;
+					
+				}
+				
+				return radiusGravity;
+				
+			}
+		});
+		
 	}
 	
 	/*===================================================
@@ -86,7 +110,10 @@
 		
 		bodyCount++;
 		
-		var geometry,
+		var i, l,
+			geometry,
+			vertices,
+			vertex,
 			bboxDimensions,
 			bodyType,
 			width,
@@ -96,7 +123,10 @@
 			needHeight,
 			needDepth,
 			radius,
-			position;
+			radiusAvg,
+			position,
+			gravityBodyRadiusAdditionPct,
+			gravityBodyRadiusAddition;
 		
 		// utility
 		
@@ -206,6 +236,38 @@
 		
 		this.radius = this.collider_radius();
 		
+		// radius average
+		
+		this.radiusCore = 0;
+		
+		vertices = geometry.vertices;
+		
+		for ( i = 0, l = vertices.length; i < l; i++ ) {
+			
+			vertex = vertices[ i ];
+			
+			this.radiusCore += vertex.length();
+			
+		}
+		
+		this.radiusCore = this.radiusCore / vertices.length;
+		
+		// radius gravity
+		
+		if ( main.is_number( parameters.radiusGravityAddition ) ) {
+			
+			this.radiusGravityAddition = parameters.radiusGravityAddition;
+			this.radiusGravityScaled = false;
+			
+		}
+		else {
+			
+			gravityBodyRadiusAdditionPct = main.is_number( parameters.gravityBodyRadiusAdditionPct ) ? parameters.gravityBodyRadiusAdditionPct : _RigidBody.gravityBodyRadiusAdditionPct;
+			this.radiusGravityAddition = this.radiusCore * gravityBodyRadiusAdditionPct;
+			this.radiusGravityScaled = true;
+			
+		}
+		
 		// dynamic or static, set mass to 0 for a static object
 		
 		if ( parameters.hasOwnProperty('dynamic') ) {
@@ -226,7 +288,7 @@
 		
 		// gravity magnitude
 		
-		if ( this.gravitySource === true && parameters.gravityMagnitude instanceof THREE.Vector3 ) {
+		if ( parameters.gravityMagnitude instanceof THREE.Vector3 ) {
 			
 			this.gravityMagnitude = parameters.gravityMagnitude;
 			
@@ -476,8 +538,10 @@
 	function find_gravity_body ( bodiesGravity, timeDelta ) {
 		
 		var i, l,
+			bodiesGravityAttracting,
 			gravityBodyPotential,
-			gravityMeshPotential,
+			gravityMesh,
+			gravityMeshScale,
 			gravityBodyDifference = this.utilVec31GravityBody,
 			gravityBodyDistancePotential,
 			gravityBody,
@@ -571,27 +635,64 @@
 				
 				// project mesh position along combined rotated velocity
 				
-				meshPosition = this.mesh.position;
+				meshPosition = this.mesh.matrixWorld.getPosition();
 				
 				velocityGravityRotatedProjected.copy( this.velocityGravity.forceRotated ).multiplyScalar( this.gravityBodyChangeGravityProjectionMod );
-				velocityMovementRotatedProjected.copy( this.velocityMovement.forceRotated ).multiplyScalar( this.gravityBodyChangeMovementProjectionMod );//.normalize().multiplyScalar( this.radius * this.gravityBodyChangeProjectionMod );
+				velocityMovementRotatedProjected.copy( this.velocityMovement.forceRotated ).multiplyScalar( this.gravityBodyChangeMovementProjectionMod );
 				
 				meshPositionProjected.copy( meshPosition ).addSelf( velocityGravityRotatedProjected ).addSelf( velocityMovementRotatedProjected );
 				
-				console.log( 'gravity body check for ', this, ' from ', this.gravityBody, ' + pos ', meshPosition.x.toFixed(2), meshPosition.y.toFixed(2), meshPosition.z.toFixed(2), ' + vel rot GRAV ', velocityGravityRotatedProjected.x.toFixed(2), velocityGravityRotatedProjected.y.toFixed(2), velocityGravityRotatedProjected.z.toFixed(2), ' + vel rot MOVE ', velocityMovementRotatedProjected.x.toFixed(2), velocityMovementRotatedProjected.y.toFixed(2), velocityMovementRotatedProjected.z.toFixed(2),' + projected ', meshPositionProjected.x.toFixed(2), meshPositionProjected.y.toFixed(2), meshPositionProjected.z.toFixed(2) );
-				// get closest gravity body
+				// get all gravity bodies that overlap this with gravity radius
+				
+				bodiesGravityAttracting = [];
 				
 				for ( i = 0, l = bodiesGravity.length; i < l; i++ ) {
 					
 					gravityBodyPotential = bodiesGravity[ i ];
 					
-					gravityBodyDifference.sub( meshPositionProjected, gravityBodyPotential.mesh.position );
-					gravityBodyDistancePotential = gravityBodyDifference.length() - gravityBodyPotential.radius;
-					
-					if ( gravityBodyDistancePotential < gravityBodyDistance ) {
+					if ( gravityBodyPotential !== this.gravityBody ) {
 						
-						gravityBody = gravityBodyPotential;
-						gravityBodyDistance = gravityBodyDistancePotential;
+						gravityMesh = gravityBodyPotential.mesh;
+						gravityMeshScale = gravityMesh.scale;
+						
+						gravityBodyDifference.sub( meshPositionProjected, gravityMesh.matrixWorld.getPosition() );
+
+						// if within gravity radius, store in attracting list
+						console.log( gravityBodyPotential.radius * Math.max( gravityMeshScale.x, gravityMeshScale.y, gravityMeshScale.z ), ' core ', gravityBodyPotential.radiusCore * Math.max( gravityMeshScale.x, gravityMeshScale.y, gravityMeshScale.z ), ' grav ', gravityBodyPotential.radiusGravity );
+						if ( gravityBodyDifference.length() <= gravityBodyPotential.radiusGravity ) {
+							
+							bodiesGravityAttracting.push( gravityBodyPotential );
+							
+						}
+						
+					}
+					
+				}
+				
+				// find closest gravity body
+				
+				if ( bodiesGravityAttracting.length === 1 ) {
+					
+					gravityBody = bodiesGravityAttracting[ 0 ];
+				
+				}
+				else if ( bodiesGravityAttracting.length > 1 ) {
+					
+					for ( i = 0, l = bodiesGravityAttracting.length; i < l; i++ ) {
+						
+						gravityBodyPotential = bodiesGravityAttracting[ i ];
+						gravityMesh = gravityBodyPotential.mesh;
+						gravityMeshScale = gravityMesh.scale;
+						
+						gravityBodyDifference.sub( meshPositionProjected, gravityMesh.matrixWorld.getPosition() );
+						gravityBodyDistancePotential = gravityBodyDifference.length() - ( gravityBodyPotential.radiusCore * Math.max( gravityMeshScale.x, gravityMeshScale.y, gravityMeshScale.z ) );
+						
+						if ( gravityBodyDistancePotential < gravityBodyDistance ) {
+							
+							gravityBody = gravityBodyPotential;
+							gravityBodyDistance = gravityBodyDistancePotential;
+							
+						}
 						
 					}
 					
@@ -599,21 +700,21 @@
 				
 				// swap to closest gravity body
 				
-				if ( this.gravityBody !== gravityBody ) {
+				if ( gravityBody instanceof RigidBody && this.gravityBody !== gravityBody ) {
 					
-			// test
-			if ( this.gbcline ) this.mesh.remove( this.gbcline );
-			this.gbclineGeom = new THREE.Geometry();
-			this.gbclineGeom.vertices.push( new THREE.Vector3(), new THREE.Vector3().add( this.velocityGravity.force.clone().multiplyScalar( this.gravityBodyChangeGravityProjectionMod ), this.velocityMovement.force.clone().multiplyScalar( this.gravityBodyChangeMovementProjectionMod ) ) );
-			this.gbcline = new THREE.Line( this.gbclineGeom, new THREE.LineBasicMaterial( { color: 0xFF0000, linewidth: 8 } ), THREE.LinePieces );
-			this.mesh.add( this.gbcline );
-			// test
+					// test
+					if ( this.gbcline ) this.mesh.remove( this.gbcline );
+					this.gbclineGeom = new THREE.Geometry();
+					this.gbclineGeom.vertices.push( new THREE.Vector3(), new THREE.Vector3().add( this.velocityGravity.force.clone().multiplyScalar( this.gravityBodyChangeGravityProjectionMod ), this.velocityMovement.force.clone().multiplyScalar( this.gravityBodyChangeMovementProjectionMod ) ) );
+					this.gbcline = new THREE.Line( this.gbclineGeom, new THREE.LineBasicMaterial( { color: 0xFF0000, linewidth: 8 } ), THREE.LinePieces );
+					this.mesh.add( this.gbcline );
+					// test
 					
 					this.change_gravity_body( gravityBody, true );
 					
 					this.velocityGravity.force.multiplyScalar( this.gravityBodyChangeForceMod );
 					//this.velocityMovement.force.multiplyScalar( this.gravityBodyChangeForceMod );
-					console.log( ' > > gravity body to ', gravityBody, ' at dist ', gravityBodyDistance, ' temp gravity magnitude = ', this.gravityMagnitude.x, this.gravityMagnitude.y, this.gravityMagnitude.z );
+					
 				}
 				
 			}

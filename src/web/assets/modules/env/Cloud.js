@@ -78,7 +78,8 @@
 		
 		parameters.physics = {
 			bodyType: 'mesh',
-			gravitySource: true
+			gravitySource: true,
+			radiusGravityAddition: 300
 		};
 		
 		// prototype constructor

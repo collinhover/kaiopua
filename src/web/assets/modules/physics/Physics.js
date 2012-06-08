@@ -364,7 +364,7 @@
 				
 				gravityMesh = gravityBody.mesh;
 				
-				gravityOrigin.copy( gravityMesh.position );
+				gravityOrigin.copy( gravityMesh.matrixWorld.getPosition() );
 				
 				gravityMagnitude.copy( rigidBody.gravityMagnitude || worldGravityMagnitude );
 				
