@@ -285,6 +285,7 @@
 		// gravity source
 		
 		this.gravitySource = typeof parameters.gravitySource === 'boolean' ? parameters.gravitySource : false;
+		this.gravityChildren = [];
 		
 		// gravity magnitude
 		
@@ -531,7 +532,7 @@
 	
 	/*===================================================
     
-	gravity body
+	gravity body find
     
     =====================================================*/
 	
@@ -658,7 +659,7 @@
 						gravityBodyDifference.sub( meshPositionProjected, gravityMesh.matrixWorld.getPosition() );
 
 						// if within gravity radius, store in attracting list
-						console.log( gravityBodyPotential.radius * Math.max( gravityMeshScale.x, gravityMeshScale.y, gravityMeshScale.z ), ' core ', gravityBodyPotential.radiusCore * Math.max( gravityMeshScale.x, gravityMeshScale.y, gravityMeshScale.z ), ' grav ', gravityBodyPotential.radiusGravity );
+						
 						if ( gravityBodyDifference.length() <= gravityBodyPotential.radiusGravity ) {
 							
 							bodiesGravityAttracting.push( gravityBodyPotential );
@@ -724,7 +725,15 @@
 		
 	}
 	
+	/*===================================================
+    
+	gravity body change
+    
+    =====================================================*/
+	
 	function change_gravity_body ( gravityBody, ease ) {
+		
+		var index;
 		
 		// if in middle of change already
 		
@@ -734,26 +743,42 @@
 			
 		}
 		
-		// properties
+		// remove from previous gravity body
+		
+		if ( this.gravityBody instanceof RigidBody ) {
+			
+			remove_gravity_child.call( this.gravityBody, this );
+			
+		}
+		
+		// new gravity body
 		
 		this.gravityBody = gravityBody;
 		
-		// if should ease change
-		
-		if ( ease === true ) {
+		if ( this.gravityBody instanceof RigidBody ) {
 			
-			this.lerpDeltaLast = this.lerpDelta;
-			this.lerpDelta = this.lerpDeltaGravityChange;
+			// add to body's gravity children
 			
-			if ( this.gravityMagnitude instanceof THREE.Vector3 ) {
+			add_gravity_child.call( this.gravityBody, this );
+			
+			// if should ease change
+			
+			if ( ease === true ) {
 				
-				this.gravityMagnitudeLast = this.gravityMagnitude;
+				this.lerpDeltaLast = this.lerpDelta;
+				this.lerpDelta = this.lerpDeltaGravityChange;
+				
+				if ( this.gravityMagnitude instanceof THREE.Vector3 ) {
+					
+					this.gravityMagnitudeLast = this.gravityMagnitude;
+					
+				}
+				this.gravityMagnitude = this.gravityBodyChangeMagnitude;
+				this.gravityBodyChangeTime = 0;
+				
+				this.gravityBodyChanging = true;
 				
 			}
-			this.gravityMagnitude = this.gravityBodyChangeMagnitude;
-			this.gravityBodyChangeTime = 0;
-			
-			this.gravityBodyChanging = true;
 			
 		}
 		
@@ -765,6 +790,60 @@
 		
 		this.lerpDelta = this.lerpDeltaLast;
 		this.gravityMagnitude = this.gravityMagnitudeLast;
+		
+	}
+	
+	/*===================================================
+    
+	gravity children
+    
+    =====================================================*/
+	
+	function add_gravity_child ( gravityChild ) {
+		
+		var index;
+		
+		index = this.gravityChildren.indexOf( gravityChild );
+		
+		if ( index === -1 ) {
+			
+			this.gravityChildren.push( gravityChild );
+			
+			// if at least 1 child
+			
+			if ( this.gravityChildren.length > 0 ) {
+				
+				// stop all morphs
+				
+				this.mesh.morphs.stopAll();
+				
+			}
+			
+		}
+		
+	}
+	
+	function remove_gravity_child ( gravityChild ) {
+		
+		var index;
+		
+		index = this.gravityChildren.indexOf( gravityChild );
+		
+		if ( index !== -1 ) {
+			
+			this.gravityChildren.splice( index, 1 );
+			
+			// if no children
+			
+			if ( this.gravityChildren.length === 0 ) {
+				
+				// play idle morph
+				
+				this.mesh.morphs.play( 'idle', { loop: true, startDelay: true } );
+				
+			}
+			
+		}
 		
 	}
 	

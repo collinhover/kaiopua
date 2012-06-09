@@ -76,24 +76,24 @@
 		
 		parameters.materials = parameters.materials || new THREE.MeshBasicMaterial( { shading: THREE.NoShading, vertexColors: THREE.VertexColors } );
 		
-		parameters.physics = {
+		parameters.physics = parameters.physics || {
 			bodyType: 'mesh',
 			gravitySource: true,
 			radiusGravityAddition: 300
 		};
+		
+		parameters.morphDurationBase = main.is_number( parameters.morphDurationBase ) ? parameters.morphDurationBase : 1000;
 		
 		// prototype constructor
 		
 		_Model.Instance.call( this, parameters );
 		
 		// properties
-		
+		/*
 		this.orbit = new _OrbitUpdater.Instance( { object: this } );
-		
 		this.wander = new _WanderUpdater.Instance( { object: this } );
-		
 		this.orbit.add( this.wander );
-		
+		*/
 	}
 	
 } (KAIOPUA) );

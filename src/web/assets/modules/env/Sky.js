@@ -439,6 +439,7 @@
 		
 		var i, l,
 			cloud,
+			idleMod,
 			stop;
 		
 		// handle parameters
@@ -455,14 +456,16 @@
 			
 			if ( stop === true ) {
 				
-				cloud.orbit.stop();
+				//cloud.orbit.stop();
+				//cloud.wander.stop();
 				cloud.morphs.stopAll();
 				
 			}
 			else {
 				
-				cloud.orbit.start( { snapToInitial: true } );
-				cloud.morphs.play( 'idle', { duration: 2000, loop: true } );
+				//cloud.orbit.start( { snapToInitial: true } );
+				//cloud.wander.start();
+				cloud.morphs.play( 'idle', { loop: true, startDelay: true } );
 				
 			}
 			

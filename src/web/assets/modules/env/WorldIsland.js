@@ -99,7 +99,8 @@
 			physics: {
 				bodyType: 'mesh',
 				gravitySource: true
-			}
+			},
+			morphDurationBase: 5000
         });
 		
 		me.parts.body.quaternion.setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), -Math.PI * 0.4 );
@@ -134,7 +135,8 @@
 			physics: {
 				bodyType: 'mesh',
 				gravitySource: true
-			}
+			},
+			morphDurationBase: 6000
         });
 		
 		me.parts.sun.position.set( 0, 4000, 0 );
@@ -504,12 +506,6 @@
 			
 			me.parts.waterRing.morphs.play( 'waves', { duration: 4000, loop: true } );
 			
-			me.parts.sun.morphs.play( 'idle', { duration: 6000, loop: true } );
-			/*
-			me.parts.body.morphs.play( 'idle', { duration: 5000, loop: true } );
-			
-			me.parts.sky.animate();
-			*/
 		}
 		
 		function hide () {
@@ -525,12 +521,6 @@
 			// morphs
 			
 			me.parts.waterRing.morphs.stopAll();
-			
-			me.parts.sun.morphs.stopAll();
-			
-			me.parts.body.morphs.stopAll();
-			
-			me.parts.sky.animate( { stop: true } );
 			
 		}
     	

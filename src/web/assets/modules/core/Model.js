@@ -17,9 +17,9 @@
 		_MathHelper,
 		_SceneHelper,
 		_ObjectHelper,
-		durationBase = 1000,
-		durationPerFrameMinimum = shared.timeDeltaExpected || 1000 / 60;
 		objectCount = 0,
+		morphDurationBase = 1000,
+		morphDurationPerFrameMinimum = shared.timeDeltaExpected || 1000 / 60,
 		morphsNumMin = 5,
 		stabilityMorphID = 'stability_morph';
 	
@@ -76,15 +76,27 @@
 				
 				this._parent = parent;
 				
-				// if is child of scene, add physics
+				// if is child of scene
 				
 				if ( _SceneHelper.extract_parent_root( this ) instanceof THREE.Scene )  {
+					
+					// add physics
 					
 					_Physics.add( this );
 					
 				}
 				// else default to remove
 				else {
+				
+					// stop morphs
+					
+					if ( typeof this.morphs !== 'undefined' ) {
+						
+						this.morphs.stop();
+						
+					}
+					
+					// remove physics
 					
 					_Physics.remove( this );
 					
@@ -104,7 +116,7 @@
 				
 				if ( geometry instanceof THREE.Geometry && this.geometry !== geometry ) {
 					
-					// clear all morphs
+					// clear morphs
 					
 					if ( typeof this.morphs !== 'undefined' ) {
 						
@@ -354,6 +366,10 @@
 			this.interactive = false;
 			
 		}
+		
+		// morph defaults
+		
+		this.morphDurationBase = parameters.morphDurationBase;
 		
 		// adjustments
 		
@@ -1015,13 +1031,7 @@
 		
 		updater.start = function ( mesh, morphsMap, parameters, updatingParameters ) {
 			
-			var durationNew,
-				durationPrev,
-				durationFramePrev,
-				durationFrameNew,
-				timeFromStart,
-				framePct,
-				cyclePct;
+			var startDelay;
 			
 			// if not already updating
 			
@@ -1033,7 +1043,7 @@
 				
 				info.morphsMap = morphsMap;
 				
-				info.duration = info.durationOriginal = parameters.duration || durationBase;
+				info.duration = info.durationOriginal = parameters.duration || mesh.morphDurationBase || morphDurationBase;
 				
 				if ( parameters.hasOwnProperty('loop') === true ) {
 					
@@ -1083,9 +1093,31 @@
 				
 				this.changeParameters( parameters );
 				
+				// start delay
+				
+				if ( main.is_number( parameters.startDelay ) ) {
+					
+					startDelay = parameters.startDelay;
+					
+				}
+				else if ( parameters.startDelay === true ) {
+					
+					startDelay = Math.random() * info.duration;
+					
+				}
+				
 				// resume
 				
-				updater.resume();
+				if ( startDelay ) {
+					
+					info.startDelayID = requestTimeout( updater.resume, startDelay );
+					
+				}
+				else {
+					
+					updater.resume();
+					
+				}
 			
 			}
 			// if new parameters passed
@@ -1101,6 +1133,13 @@
 
 		updater.changeParameters = function ( parameters ) {
 			
+			var durationNew,
+				durationPrev,
+				durationFramePrev,
+				durationFrameNew,
+				timeFromStart,
+				framePct;
+			
 			parameters = parameters || {};
 			
 			// stop clearing
@@ -1113,7 +1152,7 @@
 			
 			// duration
 			
-			if ( main.is_number( parameters.duration ) && ( parameters.duration / info.morphsMap.length ) > durationPerFrameMinimum && info.durationOriginal !== parameters.duration ) {
+			if ( main.is_number( parameters.duration ) && ( parameters.duration / info.morphsMap.length ) > morphDurationPerFrameMinimum && info.durationOriginal !== parameters.duration ) {
 				
 				durationNew = parameters.duration;
 				
@@ -1225,6 +1264,28 @@
 			
 		};
 		
+		updater.clearDelays = function () {
+			
+			// loop delay
+			
+			if ( typeof info.loopDelayID !== 'undefined' ) {
+				
+				clearRequestTimeout( info.loopDelayID );
+				info.loopDelayID = undefined;
+				
+			}
+			
+			// start delay
+			
+			if ( typeof info.startDelayID !== 'undefined' ) {
+				
+				clearRequestTimeout( info.startDelayID );
+				info.startDelayID = undefined;
+				
+			}
+			
+		};
+		
 		updater.handleLooping = function ( delay ) {
 			
 			// delay
@@ -1241,10 +1302,7 @@
 			
 			if ( delay > 0 ) {
 				
-				// stop waiting on loop delay
-				if ( typeof info.loopDelayID !== 'undefined' ) {
-					clearRequestTimeout( info.loopDelayID );
-				}
+				updater.clearDelays();
 				
 				// pause updater
 				
@@ -1280,13 +1338,15 @@
 				loop = info.loop,
 				callback,
 				morphsMap = info.morphsMap,
-				influences = info.mesh.morphTargetInfluences,
+				mesh = info.mesh,
+				scale = mesh.scale,
+				influences = mesh.morphTargetInfluences,
 				numFrames = morphsMap.length,
 				time = info.time,
 				timeStart = info.timeStart,
 				timeLast = info.timeLast,
 				timeFromStart = time - timeStart,
-				duration = info.duration,
+				duration = info.duration * Math.max( scale.x, scale.y, scale.z ),
 				cyclePct = timeFromStart / duration,
 				frameTimeDelta,
 				frame,
@@ -1308,7 +1368,7 @@
 				
 				// decrease all morphs by the same amount at the same time
 				
-				for ( i = 0, l = numFrames; i < l; i ++ ) {
+				for ( i = 0, l = numFrames; i < l; i++ ) {
 					
 					morphIndex = morphsMap[ i ].index;
 					
@@ -1348,7 +1408,7 @@
 					
 					info.frame = frame + 1 * direction;
 					
-					info.numFramesUpdated ++;
+					info.numFramesUpdated++;
 					
 					// reset frame to start?
 					
@@ -1457,10 +1517,7 @@
 			
 			if ( info.updating !== true ) {
 				
-				// stop waiting on loop delay
-				if ( typeof info.loopDelayID !== 'undefined' ) {
-					clearRequestTimeout( info.loopDelayID );
-				}
+				updater.clearDelays();
 				
 				// start updating
 				

@@ -201,6 +201,8 @@
 							
 							bodiesGravity.push( rigidBody );
 							
+							rigidBody.mesh.morphs.play( 'idle', { loop: true, startDelay: true } );
+							
 						}
 						
 					}

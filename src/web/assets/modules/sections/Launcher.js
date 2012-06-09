@@ -150,7 +150,7 @@
 			cloudOpacityByDistance: 1,
 			cloudBoundRadius: 5000,
 			cloudDistanceFromSurfaceMin: 3000,
-			cloudDistanceFromSurfaceMax: 5000,
+			cloudDistanceFromSurfaceMax: 6000,
 			cloudRotateTowardWorld: false,
 			zones: [
 				{
