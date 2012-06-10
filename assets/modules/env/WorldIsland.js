@@ -14,12 +14,12 @@
 		_World,
         _Game,
 		_Model,
-		_Physics,
 		_Field,
 		_Farming,
-		_ObjectMaker,
 		_Water,
-		_Sky;
+		_Sky,
+		_ObjectMaker,
+		_PhysicsHelper;
 	
 	/*===================================================
     
@@ -33,10 +33,10 @@
 			"assets/modules/core/Game.js",
 			"assets/modules/env/World.js",
 			"assets/modules/core/Model.js",
-			"assets/modules/core/Physics.js",
-			"assets/modules/utils/ObjectMaker.js",
 			"assets/modules/env/Water.js",
-			"assets/modules/env/Sky.js"
+			"assets/modules/env/Sky.js",
+			"assets/modules/utils/ObjectMaker.js",
+			"assets/modules/utils/PhysicsHelper.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -48,7 +48,7 @@
     
     =====================================================*/
 	
-	function init_internal ( g, world, m, physics, om, w, sky ) {
+	function init_internal ( g, world, m, w, sky, om, ph ) {
 		console.log('internal world island');
 		
 		// assets
@@ -56,10 +56,10 @@
 		_Game = g;
 		_World = world;
 		_Model = m;
-		_Physics = physics;
-		_ObjectMaker = om;
 		_Water = w;
 		_Sky = sky;
+		_ObjectMaker = om;
+		_PhysicsHelper = ph;
 		
 		_WorldIsland.Instance = WorldIsland;
 		_WorldIsland.Instance.prototype = new _World.Instance();
@@ -88,17 +88,20 @@
 		
 		/*===================================================
 		
-		environment
+		body
 		
 		=====================================================*/
-    	
-    	// skybox
 		
-		me.parts.skybox = _ObjectMaker.make_skybox( shared.pathToTextures + "skybox_world" );
-    	
-    	// world base
-    	
-    	me.parts.body = new _Model.Instance();
+		// body
+		
+    	me.parts.body = new _Model.Instance({
+            geometry: main.get_asset_data("assets/models/Whale.js"),
+			physics: {
+				bodyType: 'mesh',
+				gravitySource: true
+			},
+			morphDurationBase: 5000
+        });
 		
 		me.parts.body.quaternion.setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), -Math.PI * 0.4 );
 		
@@ -114,25 +117,15 @@
 		
 		me.parts.fog = null;//new THREE.Fog( 0x226fb3, 1, 10000 );
 		
-		// body parts
+		/*===================================================
 		
-        me.parts.head = new _Model.Instance({
-            geometry: main.get_asset_data("assets/models/Whale_Head.js"),
-			physics: {
-				bodyType: 'mesh'
-			}
-        });
+		environment
 		
-		me.parts.body.add( me.parts.head );
+		=====================================================*/
 		
-		me.parts.tail = new _Model.Instance({
-            geometry: main.get_asset_data("assets/models/Whale_Tail.js"),
-			physics: {
-				bodyType: 'mesh'
-			}
-        });
+		// skybox
 		
-		me.parts.body.add( me.parts.tail );
+		me.parts.skybox = _ObjectMaker.make_skybox( shared.pathToTextures + "skybox_world" );
 		
 		// water
 		
@@ -140,68 +133,74 @@
 		
 		me.add( me.parts.waterRing );
 		
-		/*===================================================
-		
-		sky
-		
-		=====================================================*/
-		
 		// sun/moon
 		
-		me.parts.sunmoon = new _Model.Instance({
-            geometry: main.get_asset_data("assets/models/Sun_Moon.js"),
+		me.parts.sun = new _Model.Instance({
+            geometry: main.get_asset_data("assets/models/Sun.js"),
 			materials: new THREE.MeshBasicMaterial( { shading: THREE.NoShading, vertexColors: THREE.VertexColors } ),
 			physics: {
-				bodyType: 'mesh'
-			}
+				bodyType: 'mesh',
+				gravitySource: true
+			},
+			morphDurationBase: 6000
         });
 		
-		me.parts.sunmoon.position.set( 0, 4000, 0 );
-		me.parts.sunmoon.quaternion.setFromAxisAngle( new THREE.Vector3( 0, 0, 1 ), Math.PI );
+		me.parts.sun.position.set( 0, 4000, 0 );
+		me.parts.sun.quaternion.setFromAxisAngle( new THREE.Vector3( 0, 0, 1 ), Math.PI );
 		
-		_Physics.rotate_relative_to_source( me.parts.sunmoon, me.parts.body, shared.cardinalAxes.forward.clone().negate(), shared.cardinalAxes.up );
+		_PhysicsHelper.rotate_relative_to_source( me.parts.sun, me.parts.body, shared.cardinalAxes.forward.clone().negate(), shared.cardinalAxes.up );
 		
-		me.add( me.parts.sunmoon );
+		me.add( me.parts.sun );
 		
 		// sun light
 		
-		me.parts.sunmoonLight = new THREE.PointLight( 0xffffff, 1, 10000 );
+		me.parts.sunLight = new THREE.PointLight( 0xffffff, 1, 10000 );
 		
-		me.parts.sunmoon.add( me.parts.sunmoonLight );
+		me.parts.sun.add( me.parts.sunLight );
 		
 		// sky
 		
 		me.parts.sky = new _Sky.Instance( {
 			world: me.parts.body,
 			numClouds: 20,
-			cloudBoundRadius: 5000,
-			cloudDistanceFromSurfaceMin: me.parts.sunmoon.position.length() - 2000,
-			cloudDistanceFromSurfaceMax: me.parts.sunmoon.position.length() + 500,
-			zones: [
-				{
-					polar: {
-						min: Math.PI * 0.15,
-						max: Math.PI * 0.85
-					},
-					azimuth: {
-						min: Math.PI * 0.15,
-						max: Math.PI * 0.4
-					}
+			cloudParameters: {
+				physics: {
+					bodyType: 'mesh',
+					gravitySource: true,
+					radiusGravityAddition: 300
 				},
-				{
-					polar: {
-						min: Math.PI * 0.15,
-						max: Math.PI * 0.85
-					},
-					azimuth: {
-						min: Math.PI * 0.6,
-						max: Math.PI * 0.85
-					}
-				}
+				morphDurationBase: 1000
+			},
+			layout: [
+				{ position: new THREE.Vector3( 119, 2604, 990 ), scale: 0.85 },
+				{ position: new THREE.Vector3( 438, 3022, 1350 ), scale: 2.23 },
+				{ position: new THREE.Vector3( -281, 3250, 1362 ), scale: 1.60 },
+				{ position: new THREE.Vector3( -700, 3246, 1456 ), scale: 2.34 },
+				{ position: new THREE.Vector3( -1403, 3148, 1895 ), scale: 1.08 },
+				{ position: new THREE.Vector3( -777, 2984, 2231 ), scale: 0.61 },
+				{ position: new THREE.Vector3( -1932, 2222, 2340 ), scale: 3.56 },
+				{ position: new THREE.Vector3( -2157, 1563, 3030 ), scale: 1.67 },
+				{ position: new THREE.Vector3( -2377, 993, 2980 ), scale: 0.61 },
+				{ position: new THREE.Vector3( -2150, 626, 3434 ), scale: 3.52 },
+				{ position: new THREE.Vector3( -1870, 398, 3697 ), scale: 2.23 },
+				{ position: new THREE.Vector3( -1095, 511, 4275 ), scale: 1.25 },
+				
+				{ position: new THREE.Vector3( 515, 2070, 2969 ), scale: 2.02 },
+				{ position: new THREE.Vector3( 1467, 1960, 2516 ), scale: 0.88 },
+				{ position: new THREE.Vector3( 1170, 1361, 3514 ), scale: 2.34 },
+				{ position: new THREE.Vector3( 2119, 716, 3196 ), scale: 4.22 },
+				{ position: new THREE.Vector3( 1650, 438, 3098 ), scale: 2.17 },
+				
+				{ position: new THREE.Vector3( 122, -20, 4103 ), scale: 2.82 },
+				{ position: new THREE.Vector3( 980, -587, 3804 ), scale: 3.28 },
+				{ position: new THREE.Vector3( 505, -1121, 3776 ), scale: 0.84 },
+				{ position: new THREE.Vector3( -131, -1234, 3401 ), scale: 0.84 },
+				{ position: new THREE.Vector3( 413, -1570, 3572 ), scale: 1.59 },
+				{ position: new THREE.Vector3( -484, -2012, 3453 ), scale: 4.45 }
 			]
 		} );
 		
-		me.add( me.parts.sky );
+		me.parts.body.add( me.parts.sky );
 		
 		/*===================================================
 		
@@ -513,15 +512,7 @@
 			
 			// morph animations
 			
-			me.parts.tail.morphs.play( 'swim', { duration: 5000, loop: true } );
-			
-			me.parts.sunmoon.morphs.play( 'shine', { duration: 500, loop: true, reverseOnComplete: true, durationShift: 4000 } );
-	
-			me.parts.sunmoon.morphs.play( 'bounce', { duration: 3000, loop: true, loopDelay: 4000, loopChance: 0.1 } );
-			
 			me.parts.waterRing.morphs.play( 'waves', { duration: 4000, loop: true } );
-			
-			me.parts.sky.animate();
 			
 		}
 		
@@ -537,13 +528,7 @@
 			
 			// morphs
 			
-			me.parts.tail.morphs.stopAll();
-			
-			me.parts.sunmoon.morphs.stopAll();
-			
 			me.parts.waterRing.morphs.stopAll();
-			
-			me.parts.sky.animate( { stop: true } );
 			
 		}
     	

@@ -12,17 +12,17 @@
 		assetPath = "assets/modules/utils/ObjectHelper.js",
 		_ObjectHelper = {},
 		_MathHelper,
-		utilRay1Casting,
-		utilProjector1Casting,
-		utilVec31Casting,
+		_SceneHelper,
+		_VectorHelper,
+		_RayHelper,
 		utilVec31Follow,
 		utilVec32Follow,
 		utilVec31Orbit,
 		utilVec32Orbit,
 		utilVec31Bounds,
 		utilVec32Bounds,
+		utilVec31FaceBounds,
 		utilVec31Dimensions,
-		utilVec31Axis,
 		utilVec31Offset,
 		utilVec31OffsetRot,
 		utilVec31Normalize,
@@ -36,7 +36,6 @@
 		utilQ4Follow,
 		utilQ1Orbit,
 		utilQ2Orbit,
-		utilQ1Axis,
 		utilQ1ApplyQ,
 		utilQ2ApplyQ,
 		utilQ1Normalize,
@@ -51,44 +50,13 @@
     
     =====================================================*/
 	
-	_ObjectHelper.clone_materials = clone_materials;
-	_ObjectHelper.clone_geometry = clone_geometry;
-	_ObjectHelper.clone_morphs = clone_morphs;
-	_ObjectHelper.clone_list = clone_list;
-	
-	_ObjectHelper.extract_children_from_objects = extract_children_from_objects;
-	_ObjectHelper.extract_parents_from_objects = extract_parents_from_objects;
-	
-	_ObjectHelper.dimensions = dimensions;
-	
-	_ObjectHelper.push_bounds = push_bounds;
-	
-	_ObjectHelper.apply_matrix = apply_matrix;
-	_ObjectHelper.apply_quaternion = apply_quaternion;
-	
-	_ObjectHelper.center_offset = center_offset;
-	_ObjectHelper.object_center = object_center;
-	
-	_ObjectHelper.q_to_axis = q_to_axis;
-	_ObjectHelper.rotation_offset = rotation_offset;
-	_ObjectHelper.center_rotation = center_rotation;
-	
-	_ObjectHelper.normalize_faces = normalize_faces
-	
-	_ObjectHelper.object_follow_object = object_follow_object;
-	_ObjectHelper.object_orbit_source = object_orbit_source;
-	_ObjectHelper.object_rotate_relative_to_source = object_rotate_relative_to_source;
-	_ObjectHelper.object_pull_to_source = object_pull_to_source;
-	
-	_ObjectHelper.raycast = raycast;
-	_ObjectHelper.raycast_physics = raycast_physics;
-	_ObjectHelper.raycast_from_mouse = raycast_from_mouse;
-	_ObjectHelper.raycast_objects = raycast_objects;
-	
 	main.asset_register( assetPath, {
 		data: _ObjectHelper,
 		requirements: [
-			"assets/modules/utils/MathHelper.js"
+			"assets/modules/utils/MathHelper.js",
+			"assets/modules/utils/SceneHelper.js",
+			"assets/modules/utils/VectorHelper.js",
+			"assets/modules/utils/RayHelper.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -100,33 +68,30 @@
     
     =====================================================*/
 	
-	function init_internal ( mh ) {
-		console.log('internal object helper');
+	function init_internal ( mh, sh, vh, rh ) {
+		console.log('internal object helper', _ObjectHelper);
 		var len = Math.sqrt( 1 / 2 ),
 			ca = shared.cardinalAxes,
 			right = ca.right,
 			forward = ca.forward;
-			
-		_ObjectHelper.expectedVertPosA = new THREE.Vector3( right.x * -len, 0, forward.z * len ),//( right.x * len, 0, forward.z * -len ),
-		_ObjectHelper.expectedVertPosB = new THREE.Vector3( right.x * -len, 0, forward.z * -len ),//( right.x * len, 0, forward.z * len ),
-		_ObjectHelper.expectedVertPosC = new THREE.Vector3( right.x * len, 0, forward.z * -len ),//( right.x * -len, 0, forward.z * len ),
-		_ObjectHelper.expectedVertPosD = new THREE.Vector3( right.x * len, 0, forward.z * len );//( right.x * -len, 0, forward.z * -len );
+		
+		// helpers
 		
 		_MathHelper = mh;
+		_SceneHelper = sh;
+		_VectorHelper = vh;
+		_RayHelper = rh;
 		
 		// utility
 		
-		utilRay1Casting = new THREE.Ray();
-		utilProjector1Casting = new THREE.Projector();
-		utilVec31Casting = new THREE.Vector3();
 		utilVec31Follow = new THREE.Vector3();
 		utilVec32Follow = new THREE.Vector3();
 		utilVec31Orbit = new THREE.Vector3();
 		utilVec32Orbit = new THREE.Vector3();
 		utilVec31Bounds = new THREE.Vector3();
 		utilVec32Bounds = new THREE.Vector3();
+		utilVec31FaceBounds = new THREE.Vector3();
 		utilVec31Dimensions = new THREE.Vector3();
-		utilVec31Axis = new THREE.Vector3();
 		utilVec31Offset = new THREE.Vector3();
 		utilVec31OffsetRot = new THREE.Vector3();
 		utilVec31Normalize = new THREE.Vector3();
@@ -134,20 +99,54 @@
 		utilVec33Normalize = new THREE.Vector3();
 		utilVec34Normalize = new THREE.Vector3();
 		utilVec41Normalize = new THREE.Vector4();
+		utilQ1ApplyQ = new THREE.Quaternion();
+		utilQ2ApplyQ = new THREE.Quaternion();
 		utilQ1Follow = new THREE.Quaternion();
 		utilQ2Follow = new THREE.Quaternion();
 		utilQ3Follow = new THREE.Quaternion();
 		utilQ4Follow = new THREE.Quaternion();
+		utilQ1Normalize = new THREE.Quaternion();
 		utilQ1Orbit = new THREE.Quaternion();
 		utilQ2Orbit = new THREE.Quaternion();
-		utilQ1Axis = new THREE.Quaternion();
-		utilQ1ApplyQ = new THREE.Quaternion();
-		utilQ2ApplyQ = new THREE.Quaternion();
-		utilQ1Normalize = new THREE.Quaternion();
 		utilMat41Follow = new THREE.Matrix4();
 		utilMat41Bounds = new THREE.Matrix4();
 		utilMat41Center = new THREE.Matrix4();
 		utilMat41ApplyQ = new THREE.Matrix4();
+		
+		// properties
+		
+		_ObjectHelper.expectedVertPosA = new THREE.Vector3( right.x * -len, 0, forward.z * len ),//( right.x * len, 0, forward.z * -len ),
+		_ObjectHelper.expectedVertPosB = new THREE.Vector3( right.x * -len, 0, forward.z * -len ),//( right.x * len, 0, forward.z * len ),
+		_ObjectHelper.expectedVertPosC = new THREE.Vector3( right.x * len, 0, forward.z * -len ),//( right.x * -len, 0, forward.z * len ),
+		_ObjectHelper.expectedVertPosD = new THREE.Vector3( right.x * len, 0, forward.z * len );//( right.x * -len, 0, forward.z * -len );
+		
+		// functions
+		
+		_ObjectHelper.clone_materials = clone_materials;
+		_ObjectHelper.clone_geometry = clone_geometry;
+		_ObjectHelper.clone_morphs = clone_morphs;
+		_ObjectHelper.clone_list = clone_list;
+		
+		_ObjectHelper.update_world_matrix = update_world_matrix;
+		
+		_ObjectHelper.apply_matrix = apply_matrix;
+		_ObjectHelper.apply_quaternion = apply_quaternion;
+		
+		_ObjectHelper.dimensions = dimensions;
+		
+		_ObjectHelper.push_bounds = push_bounds;
+		_ObjectHelper.face_bounding_radius = face_bounding_radius;
+		
+		_ObjectHelper.center_offset = center_offset;
+		_ObjectHelper.object_center = object_center;
+		
+		_ObjectHelper.rotation_offset = rotation_offset;
+		_ObjectHelper.center_rotation = center_rotation;
+		
+		_ObjectHelper.normalize_faces = normalize_faces
+		
+		_ObjectHelper.object_follow_object = object_follow_object;
+		_ObjectHelper.object_orbit_source = object_orbit_source;
 		
 	}
 	
@@ -344,198 +343,40 @@
 	
 	/*===================================================
     
-    hierarchy support
+    update
     
     =====================================================*/
 	
-	function extract_children_from_objects ( objects, cascade ) {
+	function update_world_matrix ( object ) {
 		
 		var i, l,
-			object;
+			parentCascade,
+			parent,
+			parentUpdate
 		
-		objects = main.ensure_array( objects );
+		// search all parents between object and root for world matrix update
 		
-		for ( i = 0, l = objects.length; i < l; i++ ) {
-			
-			cascade = extract_child_cascade( objects[ i ], cascade );
-			
-		}
+		parentCascade = _SceneHelper.extract_parents_from_objects( object, object );
 		
-		return cascade;
-		
-	}
-	
-	function extract_child_cascade ( object, cascade ) {
-		
-		var i, l,
-			children;
-		
-		cascade = main.ensure_array( cascade );
+		for ( i = 0, l = parentCascade.length; i < l; i++ ) {
 			
-		if ( typeof object !== 'undefined' ) {
+			parent = parentCascade[ i ];
 			
-			children = object.children;
-			
-			cascade = cascade.concat( children );
-			
-			for ( i = 0, l = children.length; i < l; i++ ) {
+			if ( parent.matrixWorldNeedsUpdate === true ) {
 				
-				cascade = extract_child_cascade( children[ i ], cascade );
+				parentUpdate = parent;
 				
 			}
 			
 		}
 		
-		return cascade;
+		// update world matrix starting at uppermost parent that needs update
 		
-	}
-	
-	function extract_parents_from_objects ( objects, cascade ) {
-		
-		var i, l;
-		
-		objects = main.ensure_array( objects );
-		
-		for ( i = 0, l = objects.length; i < l; i++ ) {
+		if ( typeof parentUpdate !== 'undefined' ) {
 			
-			cascade = extract_parent_cascade( objects[ i ], cascade );
+			parentUpdate.updateMatrixWorld();
 			
 		}
-		
-		return cascade;
-		
-	}
-	
-	function extract_parent_cascade ( object, cascade ) {
-		
-		var i, l;
-		
-		cascade = cascade || [];
-		
-		while( typeof object.parent !== 'undefined' ) {
-			
-			cascade.push( object.parent );
-			
-			object = object.parent;
-			
-		}
-		
-		return cascade;
-		
-	}
-	
-	/*===================================================
-    
-    dimensions
-    
-    =====================================================*/
-	
-	function dimensions ( object, ignoreScale ) {
-		
-		var mesh = object instanceof THREE.Mesh ? object : false,
-			geometry = mesh ? mesh.geometry : object,
-			dimensions = utilVec31Dimensions,
-			bbox;
-		
-		// if needs calculation
-		
-		if ( typeof geometry.boundingBox !== 'undefined' ) {
-			geometry.computeBoundingBox();
-		}
-		
-		bbox = geometry.boundingBox;
-		
-		if ( bbox ) {
-			
-			// get original dimensions
-			
-			dimensions.set( bbox.max.x - bbox.min.x, bbox.max.y - bbox.min.y, bbox.max.z - bbox.min.z );
-			
-			// scale to mesh's scale
-			
-			if ( ignoreScale !== true && mesh ) {
-				
-				dimensions.multiplySelf( mesh.scale );
-				
-			}
-			
-		}
-		else {
-			
-			dimensions.set( 0, 0, 0 );
-			
-		}
-		
-		return dimensions;
-		
-	}
-	
-	/*===================================================
-    
-    bounds
-    
-    =====================================================*/
-	
-	function push_bounds ( object, bounds ) {
-		
-		var geometry = object instanceof THREE.Mesh ? object.geometry : object,
-			objectWorldMatrix = object instanceof THREE.Mesh ? object.matrixWorld : utilMat41Bounds,
-			objectBounds,
-			objectMin = utilVec31Bounds,
-			objectMax = utilVec32Bounds,
-			min = bounds.min,
-			max = bounds.max;
-		
-		if ( !geometry.boundingBox ) {
-			
-			geometry.computeBoundingBox();
-			
-		}
-		
-		objectBounds = geometry.boundingBox;
-		objectMin.copy( objectBounds.min );
-		objectMax.copy( objectBounds.max );
-		
-		objectWorldMatrix.multiplyVector3( objectMin );
-		objectWorldMatrix.multiplyVector3( objectMax );
-		
-		if ( objectMin.x < min.x ) {
-			
-			min.x = objectMin.x;
-			
-		}
-		
-		if ( objectMax.x > max.x ) {
-			
-			max.x = objectMax.x;
-			
-		}
-		
-		if ( objectMin.y < min.y ) {
-			
-			min.y = objectMin.y;
-			
-		}
-		
-		if ( objectMax.y > max.y ) {
-			
-			max.y = objectMax.y;
-			
-		}
-		
-		if ( objectMin.z < min.z ) {
-			
-			min.z = objectMin.z;
-			
-		}
-		
-		if ( objectMax.z > max.z ) {
-			
-			max.z = objectMax.z;
-			
-		}
-		
-		return bounds;
 		
 	}
 	
@@ -652,6 +493,155 @@
 	
 	/*===================================================
     
+    dimensions
+    
+    =====================================================*/
+	
+	function dimensions ( object, ignoreScale ) {
+		
+		var mesh = object instanceof THREE.Mesh ? object : false,
+			geometry = mesh ? mesh.geometry : object,
+			dimensions = utilVec31Dimensions,
+			bbox;
+		
+		// if needs calculation
+		
+		if ( !geometry.boundingBox ) {
+			
+			geometry.computeBoundingBox();
+			
+		}
+		
+		bbox = geometry.boundingBox;
+		
+		if ( bbox ) {
+			
+			// get original dimensions
+			
+			dimensions.set( bbox.max.x - bbox.min.x, bbox.max.y - bbox.min.y, bbox.max.z - bbox.min.z );
+			
+			// scale to mesh's scale
+			
+			if ( ignoreScale !== true && mesh ) {
+				
+				dimensions.multiplySelf( mesh.scale );
+				
+			}
+			
+		}
+		else {
+			
+			dimensions.set( 0, 0, 0 );
+			
+		}
+		
+		return dimensions;
+		
+	}
+	
+	/*===================================================
+    
+    bounds
+    
+    =====================================================*/
+	
+	function push_bounds ( object, bounds ) {
+		
+		var geometry = object instanceof THREE.Mesh ? object.geometry : object,
+			objectWorldMatrix = object instanceof THREE.Mesh ? object.matrixWorld : utilMat41Bounds,
+			objectBounds,
+			objectMin = utilVec31Bounds,
+			objectMax = utilVec32Bounds,
+			min = bounds.min,
+			max = bounds.max;
+		
+		if ( !geometry.boundingBox ) {
+			
+			geometry.computeBoundingBox();
+			
+		}
+		
+		objectBounds = geometry.boundingBox;
+		objectMin.copy( objectBounds.min );
+		objectMax.copy( objectBounds.max );
+		
+		objectWorldMatrix.multiplyVector3( objectMin );
+		objectWorldMatrix.multiplyVector3( objectMax );
+		
+		if ( objectMin.x < min.x ) {
+			
+			min.x = objectMin.x;
+			
+		}
+		
+		if ( objectMax.x > max.x ) {
+			
+			max.x = objectMax.x;
+			
+		}
+		
+		if ( objectMin.y < min.y ) {
+			
+			min.y = objectMin.y;
+			
+		}
+		
+		if ( objectMax.y > max.y ) {
+			
+			max.y = objectMax.y;
+			
+		}
+		
+		if ( objectMin.z < min.z ) {
+			
+			min.z = objectMin.z;
+			
+		}
+		
+		if ( objectMax.z > max.z ) {
+			
+			max.z = objectMax.z;
+			
+		}
+		
+		return bounds;
+		
+	}
+	
+	function face_bounding_radius ( object, face ) {
+		
+		var geometry = object instanceof THREE.Mesh ? object.geometry : object,
+			vertices = geometry.vertices,
+			centroid = face.centroid,
+			va = vertices[ face.a ], vb = vertices[ face.b ], vc = vertices[ face.c ], vd,
+			centroidToVert = utilVec31FaceBounds,
+			radius;
+		
+		// handle face type
+		
+		if ( face instanceof THREE.Face4 ) {
+			
+			vd = vertices[ face.d ];
+			
+			centroid.add( va, vb ).addSelf( vc ).addSelf( vd ).divideScalar( 4 );
+			
+			radius = Math.max( centroidToVert.sub( centroid, va ).length(), centroidToVert.sub( centroid, vb ).length(), centroidToVert.sub( centroid, vc ).length(), centroidToVert.sub( centroid, vd ).length() );
+			
+		}
+		else {
+			
+			centroid.add( va, vb ).addSelf( vc ).divideScalar( 3 );
+			
+			radius = Math.max( centroidToVert.sub( centroid, va ).length(), centroidToVert.sub( centroid, vb ).length(), centroidToVert.sub( centroid, vc ).length() );
+			
+		}
+		
+		return radius;
+		
+	}
+	
+	/*===================================================
+    
     center offset
     
     =====================================================*/
@@ -705,57 +695,6 @@
     
     =====================================================*/
 	
-	function q_to_axis ( axisTo, axisFrom, axisFromRightAngle ) {
-		
-		var ca = shared.cardinalAxes,
-			dist,
-			axis = utilVec31Axis,
-			angle,
-			qToA = utilQ1Axis;
-		
-		// current axes
-		
-		axisFrom = axisFrom || ca.up;
-		
-		axisFromRightAngle = axisFromRightAngle || ca.forward;
-		
-		// find dist between current axis up and average of normals
-		
-		dist = _MathHelper.clamp( axisFrom.dot( axisTo ), -1, 1 );
-		
-		// if up axes are not same
-		
-		if ( dist !== 1 ) {
-			
-			// axis / angle
-			
-			angle = Math.acos( dist );
-			axis.cross( axisFrom, axisTo ).normalize();
-			
-			// if new axis is exactly opposite of current
-			// replace new axis with the forward axis
-			
-			if ( axis.length() === 0 ) {
-				
-				axis.copy( axisFromRightAngle );
-				
-			}
-			
-			// rotation change
-			
-			qToA.setFromAxisAngle( axis, angle );
-			
-		}
-		else {
-			
-			qToA.set( 0, 0, 0, 1 );
-			
-		}
-		
-		return qToA;
-		
-	}
-	
 	function rotation_offset ( object, axisUp, axisForward ) {
 		
 		var i, l,
@@ -782,22 +721,26 @@
 		normalAvg.normalize();
 		
 		// handle axes
-		// use physics axis if available, or default to global up
+		// use rigidBody axis if available, or default to global up
 		
-		axisUp = axisUp || ( ( typeof object.physics !== 'undefined' ) ? object.physics.axes.up : ca.up );
-		axisForward = axisForward || ( ( typeof object.physics !== 'undefined' ) ? object.physics.axes.forward : ca.forward );
+		axisUp = axisUp || ( ( typeof object.rigidBody !== 'undefined' ) ? object.rigidBody.axes.up : ca.up );
+		axisForward = axisForward || ( ( typeof object.rigidBody !== 'undefined' ) ? object.rigidBody.axes.forward : ca.forward );
 		
-		// find quaternion to go from average of normals to current axis up 
+		// find quaternion to go from average of normals to current axis up
 		
-		offset = q_to_axis( axisUp, normalAvg, axisForward );
-		
-		return offset;
+		return _VectorHelper.q_to_axis( axisUp, normalAvg, axisForward );
 		
 	}
 	
 	function center_rotation ( object ) {
 		
-		apply_quaternion( object, rotation_offset( object ), true );
+		var offset = rotation_offset( object );
+		
+		if ( offset instanceof THREE.Quaternion ) {
+			
+			apply_quaternion( object, offset, true );
+			
+		}
 		
 	}
 	
@@ -1028,7 +971,7 @@
 			
 			var objectQ = object.quaternion,
 				currentAxis = new THREE.Vector3( objectQ.x / Math.sqrt( 1 - objectQ.w * objectQ.w), objectQ.y / Math.sqrt( 1 - objectQ.w * objectQ.w ), objectQ.z / Math.sqrt( 1 - objectQ.w * objectQ.w ) ),
-				vectors = _MathHelper.get_orthonormal_vectors( currentAxis );
+				vectors = _VectorHelper.get_orthonormal_vectors( currentAxis );
 				
 			console.log(' current axis ', currentAxis, ' + vectors ', vectors.v2, vectors.v3 );
 			sortRotOffset.setFromAxisAngle( currentAxis, angle );
@@ -1145,7 +1088,7 @@
 		apply_quaternion( object, vrotAvg, true, true );
 		
 		/*
-		var vectors = _MathHelper.get_orthonormal_vectors( normalAvg.clone() ),
+		var vectors = _VectorHelper.get_orthonormal_vectors( normalAvg.clone() ),
 			xlg = new THREE.Geometry(),
 			ylg = new THREE.Geometry(),
 			zlg = new THREE.Geometry(),
@@ -1461,462 +1404,6 @@
 			oPos.addSelf( oOffsetPos );
 			
 		}
-		
-	}
-	
-	/*===================================================
-    
-    rotate
-    
-    =====================================================*/
-	
-	function object_rotate_relative_to_source ( mesh, source, axisAway, axisForward, lerpDelta, rigidBody ) {
-		
-		var uv31 = utilVec31RotateToSrc,
-			uv32 = utilVec32RotateToSrc,
-			uq1 = utilQ1RotateToSrc,
-			uq2 = utilQ2RotateToSrc,
-			uq3 = utilQ3RotateToSrc,
-			position,
-			rotation,
-			ca = shared.cardinalAxes,
-			axes,
-			axisAwayNew,
-			axisAwayToAwayNewDist,
-			gravUp,
-			gravDown,
-			angleToNew,
-			axisToNew,
-			qToNew;
-			
-		// localize basics
-		
-		position = mesh.position;
-		
-		rotation = ( mesh.useQuaternion === true ? mesh.quaternion : mesh.matrix );
-		
-		// if source is 3D object, cascade
-		if ( source instanceof THREE.Object3D ) {
-			
-			source = source.position;
-		
-		}
-		
-		// default is world gravity source
-		if ( typeof source === 'undefined' ) {
-			
-			source = worldGravitySource;
-			
-		}
-		
-		axisAway = axisAway || ca.up;
-		
-		axisForward = axisForward || ca.forward;
-		
-		lerpDelta = lerpDelta || 1;
-		
-		// get normalized vector pointing from source to mesh
-		
-		axisAwayNew = uv31.sub( position, source ).normalize();
-		
-		// get new rotation based on vector
-		
-		// find dist between current axis away and new axis away
-		
-		axisAwayToAwayNewDist = Math.max( -1, Math.min( 1, axisAway.dot( axisAwayNew ) ) );
-		
-		// if up axes are not same
-		
-		if ( axisAwayToAwayNewDist !== 1 ) {
-			
-			// axis / angle
-			
-			angleToNew = Math.acos( axisAwayToAwayNewDist );
-			axisToNew = uv32.cross( axisAway, axisAwayNew );
-			axisToNew.normalize();
-			
-			// if new axis is exactly opposite of current
-			// replace new axis with the forward axis
-			
-			if ( axisToNew.length() === 0 ) {
-				
-				axisToNew = axisForward;
-				
-			}
-			
-			// rotation change
-			
-			qToNew = uq3.setFromAxisAngle( axisToNew, angleToNew );
-			
-			// add to rotation
-			
-			if ( mesh.useQuaternion === true ) {
-				
-				// quaternion rotations
-				
-				uq1.multiply( qToNew, rotation );
-				
-				// normalized lerp to new rotation
-				
-				_MathHelper.lerp_normalized( rotation, uq1, lerpDelta );
-			
-			}
-			else {
-				
-				// matrix rotations
-				
-				uq1.setFromRotationMatrix( rotation );
-				
-				uq2.multiply( qToNew, uq1 );
-				
-				rotation.setRotationFromQuaternion( uq2 );
-				
-			}
-			
-			// if physics rigid body passed
-			
-			if ( typeof rigidBody !== 'undefined' ) {
-				
-				/*
-				quaternion = rigidBody.quaternion;
-				
-				uq1.multiply( qToNew, quaternion );
-				
-				_MathHelper.lerp_normalized( quaternion, uq1, lerpDelta );
-				*/
-				// find new axes based on new rotation
-				
-				axes = rigidBody.axes;
-				
-				rotation.multiplyVector3( axes.up.copy( ca.up ) );
-				
-				rotation.multiplyVector3( axes.forward.copy( ca.forward ) );
-				
-				rotation.multiplyVector3( axes.right.copy( ca.right ) );
-				
-			}
-			
-		}
-		
-	}
-	
-	/*===================================================
-    
-    pull
-    
-    =====================================================*/
-	
-	function object_pull_to_source ( mesh, source, objectsToIntersect, distanceFrom, velocity, rigidBody ) {
-		
-		var i, l,
-			position,
-			difference = utilVec31Pull,
-			direction = utilVec32Pull,
-			shift = utilVec33Pull,
-			object,
-			rigidBody,
-			colliders,
-			intersection,
-			intersectionDistance;
-		
-		// handle parameters
-		
-		position = mesh.position;
-		
-		// if source is 3D object, cascade
-		if ( source instanceof THREE.Object3D ) {
-			
-			source = source.position;
-		
-		}
-		
-		// default is world gravity source
-		if ( typeof source === 'undefined' ) {
-			
-			source = worldGravitySource;
-			
-		}
-		
-		// get normalized vector from position to source
-		
-		difference.sub( source, position );
-		
-		direction.copy( difference ).normalize();
-		
-		// if objects to intersect was passed
-		
-		if ( main.is_array( objectsToIntersect ) ) {
-			
-			// extract colliders from objects
-			
-			colliders = [];
-			
-			for ( i = 0, l = objectsToIntersect.length; i < l; i++ ) {
-				
-				object = objectsToIntersect[ i ];
-				
-				if( object instanceof THREE.Collider ) {
-					
-					colliders.push( object );
-					
-				}
-				else if ( typeof object.collider !== 'undefined' ) {
-					
-					colliders.push( object.collider );
-					
-				}
-				else if ( typeof object.rigidBody !== 'undefined' ) {
-					
-					colliders.push( object.rigidBody.collider );
-					
-				}
-				else if ( typeof object.physics !== 'undefined' ) {
-					
-					colliders.push( object.physics.rigidBody.collider );
-					
-				}
-				
-			}
-			
-		}
-		
-		// cast ray from mesh to source
-		
-		intersection = raycast( position, direction, undefined, undefined, colliders );
-		
-		// if intersection found
-		
-		if ( typeof intersection !== 'undefined' ) {
-			
-			// get distance
-			
-			intersectionDistance = intersection.distance;
-			
-		}
-		else {
-			
-			intersectionDistance = difference.length();
-			
-		}
-		
-		// if distance from needed
-		
-		if ( main.is_number( distanceFrom ) ) {
-			
-			intersectionDistance -= distanceFrom;
-			
-		}
-		
-		// multiply direction by distance
-			
-		shift.copy( direction ).multiplyScalar( intersectionDistance );
-		
-		// add shift to position
-		
-		position.addSelf( shift );
-		
-	}
-	
-	/*===================================================
-    
-    raycasting
-    
-    =====================================================*/
-	
-	function raycast ( parameters ) {
-		
-		var i, l,
-			ray,
-			origin,
-			direction,
-			ignore,
-			intersections = [],
-			intersectionPotential,
-			intersectedObject,
-			intersectionDistance = Number.MAX_VALUE,
-			intersection;
-		
-		// parameters
-		
-		if ( parameters.ray instanceof THREE.Ray !== true ) {
-			
-			ray = parameters.ray = utilRay1Casting;
-			
-			// origin
-			
-			if ( parameters.origin instanceof THREE.Vector3 ) {
-				
-				ray.origin.copy( parameters.origin );
-				
-			}
-			
-			// direction
-			
-			if ( parameters.direction instanceof THREE.Vector3 ) {
-				
-				ray.direction.copy( parameters.direction );
-				
-			}
-			
-			// offset
-			
-			if ( parameters.offset instanceof THREE.Vector3 ) {
-				
-				ray.origin.addSelf( parameters.offset );
-				
-			}
-			
-		}
-		
-		// cast through physics
-		
-		if ( typeof parameters.physics !== 'undefined' ) {
-			
-			intersections = intersections.concat( raycast_physics( parameters ) );
-			
-		}
-		
-		// cast through objects
-		
-		if ( typeof parameters.mouse !== 'undefined' ) {
-			
-			intersections = intersections.concat( raycast_from_mouse( parameters ) );
-			
-		}
-		else if ( typeof parameters.objects !== 'undefined' ) {
-			
-			intersections = intersections.concat( raycast_objects( parameters ) );
-			
-		}
-		
-		// if all required
-		
-		if ( parameters.allIntersections === true ) {
-			
-			return intersections;
-			
-		}
-		// else return nearest
-		else {
-			
-			ignore = main.ensure_array( parameters.ignore );
-			
-			for ( i = 0, l = intersections.length; i < l; i++ ) {
-				
-				intersectionPotential = intersections[ i ];
-				
-				intersectedObject = intersectionPotential.mesh || intersectionPotential.object;
-				
-				if ( intersectionPotential.distance < intersectionDistance && ignore.indexOf( intersectedObject ) === -1 ) {
-					
-					intersection = intersectionPotential;
-					intersectionDistance = intersectionPotential.distance;
-					
-				}
-				
-			}
-			
-			return intersection;
-		
-		}
-		
-	}
-	
-	function raycast_physics ( parameters ) {
-		
-		var i, l,
-			ray = parameters.ray,
-			physics = parameters.physics,
-			system = physics.system,
-			colliders = parameters.colliders,
-			intersections,
-			intersectionPotential,
-			intersectionMeshRecast;
-		
-		// ray cast colliders
-		// defaults to all in system
-		
-		intersections = system.rayCastAll( ray, colliders );
-		
-		// TODO: move into system's rayCastAll
-		
-		if ( typeof intersections !== 'undefined' ) {
-			
-			for ( i = 0, l = intersections.length; i < l; i ++ ) {
-				
-				intersectionPotential = intersections[ i ];
-				
-				// cast ray again if collider is mesh
-				// initial ray cast was to mesh collider's dynamic box
-				
-				if ( intersectionPotential instanceof THREE.MeshCollider ) {
-					
-					intersectionMeshRecast = system.rayMesh( ray, intersectionPotential );
-					
-					if ( intersectionMeshRecast.dist < Number.MAX_VALUE ) {
-						intersectionPotential.distance = intersectionMeshRecast.dist;
-						intersectionPotential.faceIndex = intersectionMeshRecast.faceIndex;
-					}
-					else {
-						intersectionPotential.distance = Number.MAX_VALUE;
-					}
-					
-				}
-				
-			}
-			
-		}
-		
-		return intersections;
-		
-	}
-	
-	function raycast_from_mouse ( parameters ) {
-		
-		var ray = parameters.ray,
-			camera = parameters.camera,
-			mouse = parameters.mouse,
-			mousePosition = utilVec31Casting,
-			projector = utilProjector1Casting;
-		
-		// get corrected mouse position
-		
-		mousePosition.x = ( mouse.x / shared.screenWidth ) * 2 - 1;
-		mousePosition.y = -( mouse.y / shared.screenHeight ) * 2 + 1;
-		mousePosition.z = 0.5;
-		
-		// unproject mouse position
-		
-		projector.unprojectVector( mousePosition, camera );
-		
-		// set ray
-
-		ray.origin.copy( camera.position );
-		ray.direction.copy( mousePosition.subSelf( camera.position ) ).normalize();
-		
-		return raycast_objects( parameters );
-		
-	}
-	
-	function raycast_objects ( parameters ) {
-		
-		var ray = parameters.ray,
-			objects = parameters.objects,
-			hierarchical = parameters.hierarchical,
-			ignore = main.ensure_array( parameters.ignore ),
-			intersection;
-		
-		// account for hierarchy and extract all children
-		
-		if ( hierarchical !== false ) {
-			
-			objects = extract_children_from_objects( objects, objects );
-			
-		}
-		
-		// find intersections
-		
-		return ray.intersectObjects( objects );
 		
 	}
     

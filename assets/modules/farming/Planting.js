@@ -17,8 +17,8 @@
 		_Puzzle,
 		_GridModule,
 		_Plant,
-		_ObjectHelper,
 		_MathHelper,
+		_ObjectHelper,
 		utilVec31Rotate,
 		utilProjector1Rotate;
 	
@@ -37,8 +37,8 @@
 			"assets/modules/puzzles/Grid.js",
 			"assets/modules/puzzles/GridModule.js",
 			"assets/modules/farming/Plant.js",
-			"assets/modules/utils/ObjectHelper.js",
-			"assets/modules/utils/MathHelper.js"
+			"assets/modules/utils/MathHelper.js",
+			"assets/modules/utils/ObjectHelper.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -50,7 +50,7 @@
     
     =====================================================*/
 	
-	function init_internal ( g, gui, pzl, gr, gm, pl, oh, mh ) {
+	function init_internal ( g, gui, pzl, gr, gm, pl, mh, oh ) {
 		console.log('internal planting', _Planting);
 		
 		_Game = g;
@@ -59,8 +59,8 @@
 		_Grid = gr;
 		_GridModule = gm;
 		_Plant = pl;
-		_ObjectHelper = oh;
 		_MathHelper = mh;
+		_ObjectHelper = oh;
 		
 		utilVec31Rotate = new THREE.Vector3();
 		utilProjector1Rotate = new THREE.Projector();

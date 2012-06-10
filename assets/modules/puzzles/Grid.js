@@ -14,8 +14,8 @@
 		_Model,
 		_GridModule,
 		_GridElement,
-		_ObjectHelper,
 		_MathHelper,
+		_ObjectHelper,
 		idStateMaterialBase = 'base',
 		utilVec31Vertex,
 		utilVec32Vertex,
@@ -36,8 +36,8 @@
 			"assets/modules/core/Model.js",
 			"assets/modules/puzzles/GridModule.js",
 			"assets/modules/puzzles/GridElement.js",
-			"assets/modules/utils/ObjectHelper.js",
-			"assets/modules/utils/MathHelper.js"
+			"assets/modules/utils/MathHelper.js",
+			"assets/modules/utils/ObjectHelper.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -49,14 +49,14 @@
 	
 	=====================================================*/
 	
-	function init_internal ( m, gm, ge, oh, mh ) {
+	function init_internal ( m, gm, ge, mh, oh ) {
 		console.log("internal grid", _Grid);
 		
 		_Model = m;
 		_GridModule = gm;
 		_GridElement = ge;
-		_ObjectHelper = oh;
 		_MathHelper = mh;
+		_ObjectHelper = oh;
 		
 		utilVec31Vertex = new THREE.Vector3();
 		utilVec32Vertex = new THREE.Vector3();

@@ -13,31 +13,49 @@
 		assetPath = "assets/modules/core/Model.js",
 		_Model = {},
 		_Physics,
-		_ObjectHelper,
+		_RigidBody,
 		_MathHelper,
-		durationBase = 1000,
-		durationPerFrameMinimum = shared.timeDeltaExpected || 1000 / 60;
+		_SceneHelper,
+		_ObjectHelper,
 		objectCount = 0,
+		morphDurationBase = 1000,
+		morphDurationPerFrameMinimum = shared.timeDeltaExpected || 1000 / 60,
 		morphsNumMin = 5,
 		stabilityMorphID = 'stability_morph';
+	
+	/*===================================================
+    
+    public properties
+    
+    =====================================================*/
 	
 	main.asset_register( assetPath, {
 		data: _Model,
 		requirements: [
-			"assets/modules/core/Physics.js",
-			"assets/modules/utils/ObjectHelper.js",
+			"assets/modules/physics/Physics.js",
+			"assets/modules/physics/RigidBody.js",
 			"assets/modules/utils/MathHelper.js",
+			"assets/modules/utils/SceneHelper.js",
+			"assets/modules/utils/ObjectHelper.js",
 			"js/lib/Tween.js"
 		], 
 		callbacksOnReqs: init_internal,
 		wait: true
 	} );
 	
-	function init_internal ( p, oh, mh ) {
+	/*===================================================
+    
+    internal init
+    
+    =====================================================*/
+	
+	function init_internal ( p, rb, mh, sh, oh ) {
 		console.log('internal model', _Model);
 		_Physics = p;
-		_ObjectHelper = oh;
+		_RigidBody = rb;
 		_MathHelper = mh;
+		_SceneHelper = sh;
+		_ObjectHelper = oh;
 		
 		// instance
 		
@@ -54,31 +72,31 @@
 			get : function () { return this._parent; },
 			set : function ( parent ) {
 				
-				var scene;
-				
 				// store new parent
 				
 				this._parent = parent;
 				
-				// search for scene
+				// if is child of scene
 				
-				scene = this;
-				
-				while ( typeof scene.parent !== 'undefined' ) {
+				if ( _SceneHelper.extract_parent_root( this ) instanceof THREE.Scene )  {
 					
-					scene = scene.parent;
-					
-				}
-				
-				// if parent is child of scene, add physics
-				
-				if ( scene instanceof THREE.Scene )  {
+					// add physics
 					
 					_Physics.add( this );
 					
 				}
 				// else default to remove
 				else {
+				
+					// stop morphs
+					
+					if ( typeof this.morphs !== 'undefined' ) {
+						
+						this.morphs.stop();
+						
+					}
+					
+					// remove physics
 					
 					_Physics.remove( this );
 					
@@ -98,7 +116,7 @@
 				
 				if ( geometry instanceof THREE.Geometry && this.geometry !== geometry ) {
 					
-					// clear all morphs
+					// clear morphs
 					
 					if ( typeof this.morphs !== 'undefined' ) {
 						
@@ -160,6 +178,8 @@
 	
 	function Model ( parameters ) {
 		
+		objectCount++;
+		
 		var i, l,
 			geometry,
 			materials,
@@ -218,7 +238,7 @@
 		// if no materials yet, add default
 		if ( materials.length === 0 ) {
 			
-			materials = [ new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xffffff, vertexColors: THREE.VertexColors, shading: THREE.SmoothShading } ) ];
+			materials = [ new THREE.MeshLambertMaterial( { vertexColors: THREE.VertexColors, shading: THREE.SmoothShading } ) ];
 			
 			materialsToModify = materialsToModify.concat( materials );
 			
@@ -347,6 +367,10 @@
 			
 		}
 		
+		// morph defaults
+		
+		this.morphDurationBase = parameters.morphDurationBase;
+		
 		// adjustments
 		
 		if ( parameters.center === true ) {
@@ -371,7 +395,7 @@
 		
 		if ( parameters.hasOwnProperty( 'physics' ) ) {
 			
-			this.physics = _Physics.translate( this, parameters.physics );
+			this.rigidBody = new _RigidBody.Instance( this, parameters.physics );
 			
 		}
 		
@@ -487,9 +511,9 @@
 			c.targetable = this.targetable;
 			c.interactive = this.interactive;
 			
-			if ( this.hasOwnProperty( 'physics' ) ) {
+			if ( this.hasOwnProperty( 'rigidBody' ) ) {
 				
-				c.physics = _Physics.clone( this.physics, c );
+				c.rigidBody = this.rigidBody.clone( c );
 				
 			}
 			
@@ -1007,13 +1031,7 @@
 		
 		updater.start = function ( mesh, morphsMap, parameters, updatingParameters ) {
 			
-			var durationNew,
-				durationPrev,
-				durationFramePrev,
-				durationFrameNew,
-				timeFromStart,
-				framePct,
-				cyclePct;
+			var startDelay;
 			
 			// if not already updating
 			
@@ -1025,7 +1043,7 @@
 				
 				info.morphsMap = morphsMap;
 				
-				info.duration = info.durationOriginal = parameters.duration || durationBase;
+				info.duration = info.durationOriginal = parameters.duration || mesh.morphDurationBase || morphDurationBase;
 				
 				if ( parameters.hasOwnProperty('loop') === true ) {
 					
@@ -1075,9 +1093,31 @@
 				
 				this.changeParameters( parameters );
 				
+				// start delay
+				
+				if ( main.is_number( parameters.startDelay ) ) {
+					
+					startDelay = parameters.startDelay;
+					
+				}
+				else if ( parameters.startDelay === true ) {
+					
+					startDelay = Math.random() * info.duration;
+					
+				}
+				
 				// resume
 				
-				updater.resume();
+				if ( startDelay ) {
+					
+					info.startDelayID = requestTimeout( updater.resume, startDelay );
+					
+				}
+				else {
+					
+					updater.resume();
+					
+				}
 			
 			}
 			// if new parameters passed
@@ -1093,6 +1133,13 @@
 
 		updater.changeParameters = function ( parameters ) {
 			
+			var durationNew,
+				durationPrev,
+				durationFramePrev,
+				durationFrameNew,
+				timeFromStart,
+				framePct;
+			
 			parameters = parameters || {};
 			
 			// stop clearing
@@ -1105,7 +1152,7 @@
 			
 			// duration
 			
-			if ( main.is_number( parameters.duration ) && ( parameters.duration / info.morphsMap.length ) > durationPerFrameMinimum && info.durationOriginal !== parameters.duration ) {
+			if ( main.is_number( parameters.duration ) && ( parameters.duration / info.morphsMap.length ) > morphDurationPerFrameMinimum && info.durationOriginal !== parameters.duration ) {
 				
 				durationNew = parameters.duration;
 				
@@ -1217,6 +1264,28 @@
 			
 		};
 		
+		updater.clearDelays = function () {
+			
+			// loop delay
+			
+			if ( typeof info.loopDelayID !== 'undefined' ) {
+				
+				clearRequestTimeout( info.loopDelayID );
+				info.loopDelayID = undefined;
+				
+			}
+			
+			// start delay
+			
+			if ( typeof info.startDelayID !== 'undefined' ) {
+				
+				clearRequestTimeout( info.startDelayID );
+				info.startDelayID = undefined;
+				
+			}
+			
+		};
+		
 		updater.handleLooping = function ( delay ) {
 			
 			// delay
@@ -1233,10 +1302,7 @@
 			
 			if ( delay > 0 ) {
 				
-				// stop waiting on loop delay
-				if ( typeof info.loopDelayID !== 'undefined' ) {
-					clearRequestTimeout( info.loopDelayID );
-				}
+				updater.clearDelays();
 				
 				// pause updater
 				
@@ -1272,13 +1338,15 @@
 				loop = info.loop,
 				callback,
 				morphsMap = info.morphsMap,
-				influences = info.mesh.morphTargetInfluences,
+				mesh = info.mesh,
+				scale = mesh.scale,
+				influences = mesh.morphTargetInfluences,
 				numFrames = morphsMap.length,
 				time = info.time,
 				timeStart = info.timeStart,
 				timeLast = info.timeLast,
 				timeFromStart = time - timeStart,
-				duration = info.duration,
+				duration = info.duration * Math.max( scale.x, scale.y, scale.z ),
 				cyclePct = timeFromStart / duration,
 				frameTimeDelta,
 				frame,
@@ -1300,7 +1368,7 @@
 				
 				// decrease all morphs by the same amount at the same time
 				
-				for ( i = 0, l = numFrames; i < l; i ++ ) {
+				for ( i = 0, l = numFrames; i < l; i++ ) {
 					
 					morphIndex = morphsMap[ i ].index;
 					
@@ -1340,7 +1408,7 @@
 					
 					info.frame = frame + 1 * direction;
 					
-					info.numFramesUpdated ++;
+					info.numFramesUpdated++;
 					
 					// reset frame to start?
 					
@@ -1449,10 +1517,7 @@
 			
 			if ( info.updating !== true ) {
 				
-				// stop waiting on loop delay
-				if ( typeof info.loopDelayID !== 'undefined' ) {
-					clearRequestTimeout( info.loopDelayID );
-				}
+				updater.clearDelays();
 				
 				// start updating
 				

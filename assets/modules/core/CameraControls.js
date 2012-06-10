@@ -123,7 +123,7 @@
 		this.settingsPosition = pPos = new PropertySettings();
 		
 		pRot.base.setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), Math.PI );
-		pRot.offsetBase.set( 50, 0, 0 );//( 25, 0, 0 );
+		pRot.offsetBase.set( 15, 0, 0 );//( 50, 0, 0 );
 		pRot.offset.copy( pRot.offsetBase );
 		pRot.offsetMin.set( -75, -360, 0 );
 		pRot.offsetMax.set( 75, 360, 0 );

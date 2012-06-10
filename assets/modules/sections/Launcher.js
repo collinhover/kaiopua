@@ -135,6 +135,8 @@
 		
 		skybox = _ObjectMaker.make_skybox( shared.pathToTextures + "skybox_world" );
 		
+		addBGOnShow.push( skybox );
+		
 		// water
 		
 		water = new _Water.Instance();
@@ -148,7 +150,7 @@
 			cloudOpacityByDistance: 1,
 			cloudBoundRadius: 5000,
 			cloudDistanceFromSurfaceMin: 3000,
-			cloudDistanceFromSurfaceMax: 5000,
+			cloudDistanceFromSurfaceMax: 6000,
 			cloudRotateTowardWorld: false,
 			zones: [
 				{
@@ -177,8 +179,6 @@
 		// set items to add on show
 		
 		addOnShow.push( ambientLight, lightSky, water, sky );
-		
-		addBGOnShow.push( skybox );
 		
 	}
     
@@ -290,7 +290,7 @@
     }
     
     function update ( timeDelta ) {
-        
+		
         camera.position.z += (  viewShift.x - camera.position.z ) * viewShift.speedTransX;
         camera.position.y += ( -viewShift.y - camera.position.y ) * viewShift.speedTransY;
         
@@ -302,7 +302,7 @@
 		camRotationOffsetQ.setFromEuler( camRotationOffset ).normalize();
         
 		camera.quaternion.set( 0, 0, 0, 1 ).multiplySelf( camRotationOffsetQ ).multiplySelf( camRotationBaseQ );
-        
+		
     }
 	
 	function resize () {

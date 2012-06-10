@@ -9,8 +9,9 @@
 var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
-		_AssetLoader,
 		_Game,
+		_ProgressBar,
+		loader = {},
         lastGamma, lastBeta,
         libList = [
             "js/lib/jquery-1.7.1.min.js",
@@ -18,10 +19,10 @@ var KAIOPUA = (function (main) {
             "js/lib/requestInterval.js",
             "js/lib/requestTimeout.js",
             "js/lib/signals.min.js",
-			"js/lib/sylvester.js",
-			"assets/modules/utils/AssetLoader.js"
+			"js/lib/sylvester.js"
         ],
         setupList = [
+			"assets/modules/ui/ProgressBar",
 			"assets/modules/core/Game.js",
 			//"assets/modules/utils/Dev.js"
         ];
@@ -80,7 +81,7 @@ var KAIOPUA = (function (main) {
     $LAB.script( libList ).wait( init_basics );
     
     function init_basics () {
-        
+		
         // shared
         shared.mice = [];
         shared.screenWidth = $(window).width();
@@ -162,61 +163,144 @@ var KAIOPUA = (function (main) {
 		
 		window.onerror = on_error;
 		
-		// start updating
+		// loader
 		
+		loader.active = false;
+		loader.listCount = 0;
+		loader.lists = [];
+		loader.listLocations = {};
+		loader.listLoaded = {};
+		loader.listMessages = {};
+		loader.listCallbacks = {};
+		loader.loading = [];
+		loader.loadingListIDs = [];
+		loader.started = [];
+		loader.loaded = [];
+		loader.loadingOrLoaded = [];
+		loader.listCurrent = '';
+		loader.loadTypeBase = 'script';
+		loader.tips = [];
 		
+		Object.defineProperty( main, 'loadingHeader', {
+			set: function ( header ) { 
+				
+				if ( typeof loader.progressBar !== 'undefined' ) {
+					
+					loader.progressBar.header = header;
+					
+				}
+				
+			}
+		});
 		
-		// asset loader and setup
+		Object.defineProperty( main, 'loadingTips', {
+			set: function ( tips ) { 
+				
+				if ( is_array( tips ) ) {
+					
+					loader.tips = tips.slice( 0 );
+					
+				}
+				
+			}
+		});
 		
-		_AssetLoader = main.get_asset_data( 'assets/modules/utils/AssetLoader.js' );
+		add_loaded_locations( libList );
 		
-		_AssetLoader.add_loaded_locations( libList );
+		// public functions
 		
-		main.asset_require( setupList, init_setup, true );
+		main.type = type;
+		main.is_number = is_number;
+		main.is_array = is_array;
+		main.is_image = is_image;
+		main.is_image_ext = is_image_ext;
+		
+		main.extend = extend;
+		main.time_test = time_test;
+		main.get_mouse = get_mouse;
+		main.generate_dom_image = generate_dom_image;
+		
+		main.ensure_array = ensure_array;
+		main.modify_array = modify_array;
+		main.index_of_object_with_property_value = index_of_object_with_property_value;
+		
+		main.get_asset_path = get_asset_path;
+		main.get_ext = get_ext;
+		main.add_default_ext = add_default_ext;
+		main.remove_ext = remove_ext;
+		main.get_alt_path = get_alt_path;
+		
+		main.handle_touch_event = handle_touch_event;
+		
+		main.load = load;
+		main.get_is_loaded = get_is_loaded;
+		main.get_is_loading = get_is_loading;
+		main.get_is_loading_or_loaded = get_is_loading_or_loaded;
+		
+		main.asset_register = asset_register;
+		main.asset_require = asset_require;
+		main.asset_ready = asset_ready;
+		main.set_asset = set_asset;
+		main.get_asset = get_asset;
+		main.get_asset_data = get_asset_data;
+		
+		// load for setup
+		
+		asset_require( setupList, init_setup, true );
 		
     }
     
-    function init_setup ( g ) {
+    function init_setup ( pb, g ) {
 		
         // assets
         
+		_ProgressBar = pb;
         _Game = g;
+		
+		// create progress bar for loading
+		
+		loader.progressBar = new _ProgressBar.Instance();
         
         // resize once
+		
         on_window_resize();
 		
     }
 	
 	/*===================================================
     
-    helper functions
+    type checking
     
     =====================================================*/
 	
-	// better type checking
-	// trade off is performance
-	
-	main.type = function ( o ) {
+	function type ( o ) {
 		return o==null?o+'':Object.prototype.toString.call(o).slice(8,-1).toLowerCase();
-	};
+	}
 	
-	main.is_object = function ( target ) {
-		return target !== null && target !== undefined && Object.prototype.toString.call( target ) === '[object Object]';
-	};
-	
-	main.is_array = function ( target ) {
+	function is_array ( target ) {
 		return Object.prototype.toString.call( target ) === '[object Array]';
-	};
+	}
 	
-	main.is_number = function ( n ) {
-		return isNaN( n ) === false && isFinite( n );
-	};
+	function is_number ( n ) {
+		return !isNaN( n ) && isFinite( n );
+	}
 	
-	main.is_image = function ( target ) {
+	function is_image ( target ) {
 		return ( typeof target !== 'undefined' && target.hasOwnProperty('nodeName') && target.nodeName.toLowerCase() === 'img' );
-	};
+	}
 	
-	main.is_touch_event = function ( e ) {
+	function is_image_ext ( ext ) {
+		
+		if ( ext === 'jpg' || ext === 'jpeg' || ext === 'png' || ext === 'gif' || ext === 'bmp' ) {
+			return true;
+		}
+		else {
+			return false;
+		}
+		
+    }
+	
+	function is_touch_event ( e ) {
 		
 		var eOriginal = e.originalEvent;
 		
@@ -224,34 +308,11 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	// shared mouse
-	
-	main.get_mouse = function ( parameters, allowNew ) {
-		
-		return mouse = shared.mice[ 0 ] = shared.mice[ 0 ] || { 
-			x: 0,
-			lx: 0,
-			y: 0,
-			ly: 0,
-			down: false 
-		};
-		
-		parameters = parameters || {};
-		
-		var id = parameters.identifier = ( shared.multitouch === true && parameters.identifier ) ? parameters.identifier : 0,
-			mouse;
-		
-		mouse = shared.mice[ id ] = ( allowNew !== true || id < shared.mice.length ) ? shared.mice[ id ] : { 
-			x: 0,
-			lx: 0,
-			y: 0,
-			ly: 0,
-			down: false 
-		};
-		
-		return mouse;
-		
-	}
+	/*===================================================
+    
+    general helpers
+    
+    =====================================================*/
 	
 	// object cloning/extending
 	// copies both enumerable and non-enumerable properties
@@ -259,7 +320,7 @@ var KAIOPUA = (function (main) {
 	// optional: deep copying while avoiding infinite recursion
 	// deep copy only makes one copy of any object, regardless of how many times / places it is referenced
 	
-	main.extend = function ( source, destination, deep, records ) {
+	function extend ( source, destination, deep, records ) {
 		
 		var i, l,
 			propertyNames,
@@ -304,7 +365,7 @@ var KAIOPUA = (function (main) {
 					
 					value = descriptor.value;
 						
-					valueType = main.type( value );
+					valueType = type( value );
 					
 					// if the value of the descriptor is an object or array
 					
@@ -332,7 +393,7 @@ var KAIOPUA = (function (main) {
 								value[ name ] = recordCopy;
 							}
 							
-							descriptor.value = main.extend( value, recordCopy, true, records );
+							descriptor.value = extend( value, recordCopy, true, records );
 							
 						}
 						else {
@@ -355,49 +416,109 @@ var KAIOPUA = (function (main) {
 		
 		return destination;
 		
-	};
+	}
 	
-	main.index_of_object_with_property_value = function ( array, property, value ) {
+	function time_test ( fn, iterations, message ) {
 		
-		var i, l,
-			index = -1,
-			object;
+		var i,
+			ta, tb,
+			result;
 		
-		if ( main.type( array ) === 'array' ) {
+		iterations = is_number( iterations ) && iterations > 0 ? iterations : 1;
+		
+		message = typeof message === 'string' ? message : '';
+		
+		ta = new Date().getTime();
+		
+		for ( i = 0; i < iterations; i++ ) {
 			
-			for ( i = 0, l = array.length; i < l; i++ ) {
-				
-				object = array[ i ];
-				
-				if ( value === object[ property ] ) {
-					
-					index = i;
-					
-					break;
-					
-				}
-				
-			}
+			result = fn.call();
 			
 		}
 		
-		return index;
+		tb = new Date().getTime();
+		
+		console.log( message, ' > time test ( x', iterations, '): ', (tb - ta) );
+		
+		return result;
 		
 	}
 	
-	main.ensure_array = function ( target ) {
+	function get_mouse ( parameters, allowNew ) {
 		
-		target = target || [];
+		return mouse = shared.mice[ 0 ] = shared.mice[ 0 ] || { 
+			x: 0,
+			lx: 0,
+			y: 0,
+			ly: 0,
+			down: false 
+		};
 		
-		if ( main.is_array ( target ) !== true ) {
-			target = [target];
+		parameters = parameters || {};
+		
+		var id = parameters.identifier = ( shared.multitouch === true && parameters.identifier ) ? parameters.identifier : 0,
+			mouse;
+		
+		mouse = shared.mice[ id ] = ( allowNew !== true || id < shared.mice.length ) ? shared.mice[ id ] : { 
+			x: 0,
+			lx: 0,
+			y: 0,
+			ly: 0,
+			down: false 
+		};
+		
+		return mouse;
+		
+	}
+	
+	function generate_dom_image ( path, callback, context, image ) {
+		
+		var loadCallback = function () {
+			
+			if ( typeof callback === 'function' ) {
+				
+				callback.call( context, image );
+				
+			}
+			
+		};
+		
+		if ( is_image( image ) !== true ) {
+			
+			image = new Image();
+			
 		}
 		
-		return target;
+		image.crossOrigin = '';
+		image.src = path;
 		
-	};
+		if ( image.complete ) {
+			
+			loadCallback();
+		}
+		else {
+			
+			image.onload = loadCallback;
+			
+		}
+		
+		return image;
+		
+    }
 	
-	main.modify_array = function ( target, elements, remove ) {
+	/*===================================================
+    
+    array / object helpers
+    
+    =====================================================*/
+	
+	function ensure_array( target ) {
+		
+		return target ? ( is_array ( target ) !== true ? [ target ] : target ) : [];
+		
+	}
+	
+	function modify_array( target, elements, remove ) {
 		
 		var i, l,
 			element,
@@ -405,7 +526,7 @@ var KAIOPUA = (function (main) {
 		
 		if ( typeof target !== 'undefined' && typeof elements !== 'undefined' && typeof forEach === 'function' ) {
 			
-			elements = main.ensure_array( elements );
+			elements = ensure_array( elements );
 			
 			// for each element
 			
@@ -438,19 +559,49 @@ var KAIOPUA = (function (main) {
 			
 		}
 		
-	};
+	}
 	
-	main.get_asset_path = function ( location ) {
+	function index_of_object_with_property_value( array, property, value ) {
+		
+		var i, l,
+			index = -1,
+			object;
+		
+		for ( i = 0, l = array.length; i < l; i++ ) {
+			
+			object = array[ i ];
+			
+			if ( value === object[ property ] ) {
+				
+				index = i;
+				
+				break;
+				
+			}
+			
+		}
+		
+		return index;
+		
+	}
+	
+	/*===================================================
+    
+	path / extension helpers
+    
+    =====================================================*/
+	
+	function get_asset_path( location ) {
 		
 		return location.path || location
 		
-	};
+	}
 	
-	main.get_ext = function ( location ) {
+	function get_ext( location ) {
 		
         var path, dotIndex, ext = '';
 		
-		path = main.get_asset_path( location );
+		path = get_asset_path( location );
         
         dotIndex = path.lastIndexOf('.');
         
@@ -460,23 +611,23 @@ var KAIOPUA = (function (main) {
         
         return ext;
         
-    };
+    }
 	
-	main.add_default_ext = function ( location ) {
+	function add_default_ext( location ) {
 		
-		var path = main.remove_ext( location );
+		var path = remove_ext( location );
 		
 		path = path.replace(/\./g, "") + ".js";
 		
 		return path;
 		
-	};
+	}
 	
-	main.remove_ext = function ( location ) {
+	function remove_ext ( location ) {
 		
 		var path, dotIndex;
 		
-        path = main.get_asset_path( location );
+        path = get_asset_path( location );
         
         dotIndex = path.lastIndexOf('.');
         
@@ -486,76 +637,30 @@ var KAIOPUA = (function (main) {
 		
 		return path;
 		
-	};
+	}
 	
-	main.get_alt_path = function ( location ) {
+	function get_alt_path ( location ) {
 		
 		var path, ext;
 		
-		path = main.get_asset_path( location );
-		ext = main.get_ext( path );
+		path = get_asset_path( location );
+		ext = get_ext( path );
 		
 		// if has no extension, add default
 		
 		if ( ext === '' ) {
 			
-			return main.add_default_ext( path );
+			return add_default_ext( path );
 			
 		}
 		// if has extension, remove
 		else {
 			
-			return main.remove_ext( path );
+			return remove_ext( path );
 			
 		}
 		
-	};
-	
-	main.is_image_ext = function ( ext ) {
-		
-		if ( ext === 'jpg' || ext === 'jpeg' || ext === 'png' || ext === 'gif' || ext === 'bmp' ) {
-			return true;
-		}
-		else {
-			return false;
-		}
-		
-    };
-	
-	main.generate_dom_image = function ( path, callback, context, image ) {
-		
-		var loadCallback = function () {
-			
-			if ( typeof callback === 'function' ) {
-				
-				callback.call( context, image );
-				
-			}
-			
-		};
-		
-		if ( main.is_image( image ) !== true ) {
-			
-			image = new Image();
-			
-		}
-		
-		image.crossOrigin = '';
-		image.src = path;
-		
-		if ( image.complete ) {
-			
-			loadCallback();
-		}
-		else {
-			
-			image.onload = loadCallback;
-			
-		}
-		
-		return image;
-		
-    };
+	}
 	
 	/*===================================================
     
@@ -563,7 +668,7 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	main.handle_touch_event = function ( e, eventActual ) {
+	function handle_touch_event ( e, eventActual ) {
 		
 		var i, l, fingers, touch;
 		
@@ -591,14 +696,14 @@ var KAIOPUA = (function (main) {
 		
 		// is touch event
 		
-		if ( main.is_touch_event( e ) ) {
+		if ( is_touch_event( e ) ) {
 			
-			main.handle_touch_event( e.originalEvent, on_mouse_down );
+			handle_touch_event( e.originalEvent, on_mouse_down );
 			
 		}
 		else {
 			
-			mouse = main.get_mouse( e, true );
+			mouse = get_mouse( e, true );
 			
 			mouse.down = true;
 		
@@ -617,13 +722,13 @@ var KAIOPUA = (function (main) {
 		
 		// is touch event
 		
-		if ( main.is_touch_event( e ) ){
+		if ( is_touch_event( e ) ){
 			
-			main.handle_touch_event( e.originalEvent, on_mouse_up );
+			handle_touch_event( e.originalEvent, on_mouse_up );
 		}
 		else {
 			
-			mouse = main.get_mouse( e, true );
+			mouse = get_mouse( e, true );
 			
 			mouse.down = false;
 			
@@ -656,13 +761,13 @@ var KAIOPUA = (function (main) {
 		
 		// is touch event
 		
-		if ( main.is_touch_event( e ) ){
+		if ( is_touch_event( e ) ){
 			
-			main.handle_touch_event( e.originalEvent, on_mouse_move );
+			handle_touch_event( e.originalEvent, on_mouse_move );
 		}
 		else {
 			
-			mouse = main.get_mouse( e, true );
+			mouse = get_mouse( e, true );
 			
 			mouse.lx = mouse.x;
 			mouse.ly = mouse.y;
@@ -688,13 +793,13 @@ var KAIOPUA = (function (main) {
 		
 		// is touch event
 		
-		if ( main.is_touch_event( e ) ){
+		if ( is_touch_event( e ) ){
 			
-			main.handle_touch_event( e.originalEvent, on_mouse_enter );
+			handle_touch_event( e.originalEvent, on_mouse_enter );
 		}
 		else {
 			
-			main.get_mouse( e, true );
+			get_mouse( e, true );
 			
 			shared.signals.mouseenter.dispatch( e );
 			
@@ -711,13 +816,13 @@ var KAIOPUA = (function (main) {
 		
 		// is touch event
 		
-		if ( main.is_touch_event( e ) ){
+		if ( is_touch_event( e ) ){
 			
-			main.handle_touch_event( e.originalEvent, on_mouse_leave );
+			handle_touch_event( e.originalEvent, on_mouse_leave );
 		}
 		else {
 			
-			mouse = main.get_mouse( e, true );
+			mouse = get_mouse( e, true );
 			
 			shared.signals.mouseleave.dispatch( e );
 			
@@ -808,7 +913,7 @@ var KAIOPUA = (function (main) {
 				mouse.x = x;
 				mouse.y = y;
 				
-				eCopy = main.extend( e, {} );
+				eCopy = extend( e, {} );
 				
 				eCopy.identifier = i;
 				
@@ -901,6 +1006,535 @@ var KAIOPUA = (function (main) {
 	}
 	
 	/*===================================================
+	
+	loading functions
+	
+	=====================================================*/
+	
+	function load ( locationsList, callbackList, listID, loadingMessage ) {
+		
+		var i, l,
+			location,
+			path,
+			indexLoading,
+			indexLoaded,
+			allLocationsLoaded = true,
+			assetData;
+		
+		if ( typeof locationsList !== 'undefined' ) {
+			
+			// get if list is not array
+			
+			if ( typeof locationsList === 'string' || locationsList.hasOwnProperty( 'length' ) === false ) {
+				locationsList = [locationsList];
+			}
+			
+			// make a copy of locations list
+			
+			locationsList = locationsList.slice( 0 );
+			
+			// handle list id
+			
+			if ( typeof listID !== 'string' ||  loader.listLocations.hasOwnProperty( listID )) {
+				
+				listID = loader.listCount;
+				
+			}
+			
+			// increase list count
+			
+			loader.listCount++;
+			
+			// permanent store of all loading
+			
+			for ( i = 0, l = locationsList.length; i < l; i++ ) {
+				
+				location = locationsList[ i ];
+				
+				path = get_asset_path( location );
+				
+				indexLoading = loader.loading.indexOf( path );
+				indexLoaded = loader.loaded.indexOf( path );
+				
+				// if not already loading or loaded item
+				// load new location
+				if ( indexLoading === -1 && indexLoaded == -1 ) {
+					
+					loader.loading.push( path );
+					
+					loader.loadingListIDs.push( listID );
+					
+					newLocations = true;
+					
+				}
+				
+				// if not yet loaded, mark list for loading
+				
+				if ( indexLoaded === -1 ) {
+					
+					allLocationsLoaded = false;
+					
+				}
+				
+			}
+			
+			loader.loadingOrLoaded = loader.loaded.concat( loader.loading );
+			
+			// temporary store locations
+			
+			loader.listLocations[listID] = locationsList;
+			
+			// temporary store callback list
+			
+			if ( typeof callbackList === 'undefined' ) {
+				callbackList = [];
+			}
+			else if ( typeof callbackList === 'function' || callbackList.hasOwnProperty( 'length' ) === false ) {
+				callbackList = [callbackList];
+			}
+			
+			loader.listCallbacks[listID] = callbackList;
+			
+			// store load message
+			
+			if ( typeof loadingMessage !== 'string' ) {
+				
+				loadingMessage = loader.tips[ Math.max(0, Math.min(loader.tips.length - 1, Math.round(Math.random() * loader.tips.length) - 1)) ];
+			}
+			
+			loader.listMessages[listID] = loadingMessage;
+			
+			// init new loaded array
+			
+			loader.listLoaded[listID] = [];
+			
+			// add list ID to lists to load
+				
+			loader.lists.push(listID);
+			
+			// if all locations in list are already loaded, skip loading process
+			
+			if ( allLocationsLoaded === true ) {
+				
+				list_completed( listID );
+				
+			}
+			else {
+				
+				// start loading
+				
+				load_next_list();
+				
+			}
+			
+		}
+		
+	}
+	
+	function load_next_list () {
+		
+		var i, l,
+			locationsList,
+			location,
+			path;
+		
+		// if any lists to load
+		
+		if ( loader.active === false && loader.lists.length > 0 ) {
+			
+			loader.active = true;
+			
+			// get next list 
+			
+			loader.listCurrent = loader.lists[ 0 ];
+			
+			// update ui to reset fill
+			
+			if ( typeof loader.progressBar !== 'undefined' ) {
+				loader.progressBar.update_progress( 0, loader.listMessages[loader.listCurrent] );
+			}
+			
+			// get locations, make copy because already loaded items will be removed from list immediately
+			
+			locationsList = loader.listLocations[loader.listCurrent].slice( 0 );
+			
+			// for each item location
+			
+			for (i = 0, l = locationsList.length; i < l; i += 1) {
+				
+				location = locationsList[ i ];
+				
+				path = get_asset_path( location );
+				
+				// if already loaded
+				
+				if ( loader.loaded.indexOf( path ) !== -1 ) {
+					
+					// make duplicate complete event
+					
+					load_single_completed( location );
+					
+				}
+				// if not started loading yet
+				else if ( loader.started.indexOf( path ) === -1 ) {
+					
+					// load it
+					
+					loader.started.push( path );
+					
+					load_single( location );
+					
+				}
+				
+			}
+			
+		}
+		else {
+			
+			// no longer loading
+			
+			loader.listCurrent = undefined;
+			
+			shared.signals.loadAllCompleted.dispatch();
+			
+		}
+		
+	}
+	
+	function load_single ( location ) {
+		var path, 
+			ext, 
+			loadType, 
+			data,
+			defaultCallback = function ( ) {
+				load_single_completed( location, data );
+			},
+			modelCallback = function ( geometry ) {
+				load_single_completed( location, geometry );
+			};
+		
+		if ( typeof location !== 'undefined' ) {
+			
+			// load based on type of location and file extension
+			
+			// LAB handles scripts (js)
+			// THREE handles models (ascii/bin js) and images (jpg/png/gif/bmp)
+			
+			// get type
+			
+			loadType = location.type || loader.loadTypeBase;
+			
+			// get location path
+			
+			path = get_asset_path( location );
+			
+			// get extension
+			
+			ext = get_ext( path );
+			
+			// ensure path has extension
+			
+			if ( ext === '' ) {
+				
+				path = add_default_ext( path );
+				
+			}
+			
+			// type and/or extension check
+			
+			if ( loadType === 'image' || is_image_ext( ext ) ) {
+				
+				// load
+				
+				data = generate_dom_image( path, function ( image ) {
+					
+					data = image;
+					
+					defaultCallback();
+					
+				} );
+				
+				// store empty image data in assets immediately
+				
+				asset_register( path, { data: data } );
+				
+			}
+			else if ( loadType === 'model' || loadType === 'model_ascii' ) {
+				
+				// init loader if needed
+				
+				if ( typeof loader.threeJSON === 'undefined' ) {
+					loader.threeJSON = new THREE.JSONLoader( true );
+				}
+				
+				loader.threeJSON.load( path, modelCallback );
+				
+			}
+			// default to script loading
+			else {
+				
+				$LAB.script( path ).wait( defaultCallback );
+				
+			}
+			
+		}
+		
+	}
+	
+	function load_single_completed ( location, data ) {
+		var i, l,
+			listID,
+			locationsList,
+			loadedList,
+			index,
+			path,
+			loadType,
+			listsCompleted;
+		
+		// get location path and type
+		
+		path = get_asset_path( location );
+		
+		loadType = get_load_type( location );
+		
+		// register asset
+		
+		asset_register( path, { data: data } );
+		
+		// add as loaded
+		
+		add_loaded_locations( path );
+		
+		// shared signal
+		
+		if (typeof shared !== 'undefined') {
+			
+			shared.signals.loadItemCompleted.dispatch( path );
+			
+		}
+		
+		// for each list loading
+		
+		for ( i = 0, l = loader.lists.length; i < l; i++ ) {
+			
+			listID = loader.lists[ i ];
+			
+			locationsList = loader.listLocations[ listID ];
+			
+			// get index in locations list
+			
+			index = locationsList.indexOf(location);
+			
+			// if is in list
+			
+			if ( index !== -1 ) {
+				
+				loadedList = loader.listLoaded[ listID ];
+				
+				// remove location from locations list
+				
+				locationsList.splice(index, index !== -1 ? 1 : 0);
+				
+				// add location to loaded list
+				
+				loadedList.push( location );
+				
+				// if is current list
+				
+				if ( listID === loader.listCurrent ) {
+					
+					// update progress bar
+					if ( typeof loader.progressBar !== 'undefined' ) {
+						loader.progressBar.update_progress( loadedList.length / ( locationsList.length + loadedList.length ) );
+					}
+					
+				}
+				
+				// if current list is complete, defer until all checked
+				
+				if ( locationsList.length === 0 ) {
+					
+					listsCompleted = listsCompleted || [];
+					
+					listsCompleted.push( listID );
+					
+				}
+				
+			}
+			
+		}
+		
+		// complete any completed lists
+		if ( typeof listsCompleted !== 'undefined' ) {
+			
+			for ( i = 0, l = listsCompleted.length; i < l; i++ ) {
+				
+				list_completed( listsCompleted[ i ] );
+				
+			}
+			
+		}
+		
+	}
+	
+	function list_completed( listID ) {
+		var i, l, 
+			callbackList, 
+			callback,
+			listIndex;
+		
+		// remove list from all lists to load
+		
+		listIndex = loader.lists.indexOf( listID );
+		
+		if ( listIndex !== -1 ) {
+			
+			loader.lists.splice( listIndex, 1 );
+			
+		}
+		
+		// do callbacks before clear
+		
+		callbackList = loader.listCallbacks[ listID ];
+		
+		for ( i = 0, l = callbackList.length; i < l; i++ ) {
+			
+			callback = callbackList[ i ];
+			
+			if ( typeof callback !== 'undefined' ) {
+				
+				callback.call( this );
+				
+			}
+			
+		}
+		
+		// shared signal
+		
+		if (typeof shared !== 'undefined') {
+			
+			shared.signals.loadListCompleted.dispatch( listID );
+			
+		}
+		
+		// clear
+		
+		delete loader.listLocations[ listID ];
+		
+		delete loader.listCallbacks[ listID ];
+		
+		delete loader.listMessages[ listID ];
+		
+		delete loader.listLoaded[ listID ];
+		
+		loader.active = false;
+		
+		// start next list
+		
+		load_next_list();
+		
+	}
+	
+	function add_loaded_locations ( locationsList ) {
+		
+		var i, l,
+			location,
+			path,
+			indexLoaded,
+			indexLoading,
+			locationAdded = false;
+		
+		locationsList = ensure_array( locationsList );
+		
+		// for each location
+		
+		for ( i = 0, l = locationsList.length; i < l; i++ ) {
+			
+			location = locationsList[ i ];
+			
+			path = get_asset_path( location );
+			
+			// update all loading
+			
+			indexLoading = loader.loading.indexOf( path );
+			
+			if ( indexLoading !== -1 ) {
+				
+				loader.loadingListIDs.splice( indexLoading, 1 );
+				
+				loader.loading.splice( indexLoading, 1 );
+				
+			}
+			
+			// update all loaded
+			
+			indexLoaded = loader.loaded.indexOf( path );
+			
+			if ( indexLoaded === -1 ) {
+				
+				loader.loaded.push( path );
+				
+				locationAdded = true;
+				
+			}
+			
+		}
+		
+		if ( locationAdded === true ) {
+			
+			loader.loadingOrLoaded = loader.loaded.concat( loader.loading );
+			
+		}
+		
+	}
+	
+	function get_is_path_in_list ( location, list ) {
+		
+		var path,
+			index;
+		
+		path = get_asset_path( location );
+		
+		index = list.indexOf( path );
+		
+		if ( index !== -1 ) {
+			
+			return true;
+			
+		}
+		else {
+			
+			return false;
+			
+		}
+		
+	}
+	
+	function get_is_loading_or_loaded ( location ) {
+		
+		return get_is_path_in_list( location, loader.loadingOrLoaded );
+		
+	}
+	
+	function get_is_loaded ( location ) {
+		
+		return get_is_path_in_list( location, loader.loaded );
+		
+	}
+	
+	function get_is_loading ( location ) {
+		
+		return get_is_path_in_list( location, loader.loading );
+		
+	}
+	
+	function get_load_type ( location ) {
+		
+		return location.type || loader.loadTypeBase;
+		
+	}
+	
+	/*===================================================
     
     asset handling
     
@@ -944,7 +1578,7 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	main.get_asset = function ( location, attempts ) {
+	function get_asset ( location, attempts ) {
 		
 		var path,
 			cascade,
@@ -959,7 +1593,7 @@ var KAIOPUA = (function (main) {
 		
 		// cascade path
 		
-		path = main.get_asset_path( location );
+		path = get_asset_path( location );
 		
 		cascade = asset_path_cascade( path );
 		
@@ -996,7 +1630,7 @@ var KAIOPUA = (function (main) {
 			
 			if ( attempts === 1 ) {
 				
-				return main.get_asset( main.get_alt_path( path ), attempts + 1 );
+				return get_asset( get_alt_path( path ), attempts + 1 );
 				
 			}
 			
@@ -1006,7 +1640,7 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	main.set_asset = function ( location, assetNew ) {
+	function set_asset ( location, assetNew ) {
 		
 		var path,
 			cascade,
@@ -1027,7 +1661,7 @@ var KAIOPUA = (function (main) {
 			
 			// cascade path
 			
-			path = main.get_asset_path( location );
+			path = get_asset_path( location );
 			
 			cascade = asset_path_cascade( path );
 			
@@ -1077,14 +1711,14 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	main.get_asset_data = function ( location ) {
+	function get_asset_data ( location ) {
 		
 		var asset,
 			data;
 		
 		// get asset at location
 		
-		asset = main.get_asset( location );
+		asset = get_asset( location );
 		
 		// asset data, assume asset is data if not instance of asset
 				
@@ -1094,11 +1728,11 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	main.asset_register = function ( path, parameters ) {
+	function asset_register( path, parameters ) {
 		
 		var assetNew,
 			dataNew,
-			assetCurrent = main.get_asset( path );
+			assetCurrent = get_asset( path );
 		
 		if ( assetCurrent instanceof KaiopuaAsset !== true || ( parameters && typeof parameters.data !== 'undefined' && parameters.data !== assetCurrent.data ) ) {
 			
@@ -1121,11 +1755,11 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	main.asset_ready = function ( path, asset ) {
+	function asset_ready ( path, asset ) {
 		
 		var i, l;
 		
-		asset = asset || main.get_asset( path );
+		asset = asset || get_asset( path );
 		
 		if ( asset instanceof KaiopuaAsset ) {
 			
@@ -1147,7 +1781,7 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	main.asset_require = function ( requirements, callbackList, waitForAssetsReady, loaderUIContainer, assetSource ) {
+	function asset_require( requirements, callbackList, waitForAssetsReady, loaderUIContainer, assetSource ) {
 		
 		var callback_outer,
 			on_asset_ready,
@@ -1159,9 +1793,9 @@ var KAIOPUA = (function (main) {
 		
 		// get if arguments are not array
 		
-		requirements = main.ensure_array( requirements );
+		requirements = ensure_array( requirements );
 		
-		callbackList = main.ensure_array( callbackList );
+		callbackList = ensure_array( callbackList );
 		
 		// modify original callback to wrap in new function
 		// that parses requirements and applies each asset as argument to callback
@@ -1203,7 +1837,7 @@ var KAIOPUA = (function (main) {
 			// make one extra attempt with alternative path to check if waiting for asset to be ready
 			else if ( secondAttempt !== true ) {
 				
-				on_asset_ready( main.get_alt_path( path ), true );
+				on_asset_ready( get_alt_path( path ), true );
 				
 			}
 			
@@ -1245,7 +1879,7 @@ var KAIOPUA = (function (main) {
 			
 			if ( typeof loaderUIContainer !== 'undefined' ) {
 				
-				_AssetLoader.hide_ui( { remove: true } );
+				loader.progressBar.hide( { remove: true } );
 				
 			}
 			
@@ -1255,11 +1889,11 @@ var KAIOPUA = (function (main) {
 				
 				location = requirements[ i ];
 				
-				path = main.get_asset_path( location );
+				path = get_asset_path( location );
 				
 				// get asset
 				
-				asset = main.get_asset( location );
+				asset = get_asset( location );
 				
 				// add data to required list
 				
@@ -1305,25 +1939,17 @@ var KAIOPUA = (function (main) {
 			
 		};
 		
-		// set loader manually if needed
-		
-		if ( typeof _AssetLoader === 'undefined' ) {
-			
-			_AssetLoader = main.get_asset_data( 'assets/modules/utils/AssetLoader.js' );
-			
-		}
-		
 		// show loader ui
 		
 		if ( typeof loaderUIContainer !== 'undefined' ) {
 			
-			_AssetLoader.show_ui( { parent: loaderUIContainer } );
+			loader.progressBar.show( { parent: loaderUIContainer } );
 			
 		}
 		
 		// pass all requirements to loader
 		
-		_AssetLoader.load( requirements, callback_outer );
+		load( requirements, callback_outer );
 		
 	}
 	
@@ -1353,7 +1979,7 @@ var KAIOPUA = (function (main) {
 			// returned asset from store is new asset merged into current asset if exists
 			// or this new asset if no assets at path yet
 			
-			assetNew = main.set_asset( assetNew.path, assetNew );
+			assetNew = set_asset( assetNew.path, assetNew );
 			
 			// regardless of storage results
 			// handle this new asset's readiness and requirements
@@ -1366,7 +1992,7 @@ var KAIOPUA = (function (main) {
 			
 			if ( this.requirements.length > 0 ) {
 				
-				main.asset_require( this.requirements, this.callbacksOnReqs, this.wait, this.loaderUIContainer, this );
+				asset_require( this.requirements, this.callbacksOnReqs, this.wait, this.loaderUIContainer, this );
 			
 			}
 			
@@ -1442,17 +2068,17 @@ var KAIOPUA = (function (main) {
 				
 			}
 			
-			this.requirements = main.ensure_array( this.requirements );
+			this.requirements = ensure_array( this.requirements );
 			
-			this.callbacksOnReqs = main.ensure_array( this.callbacksOnReqs );
+			this.callbacksOnReqs = ensure_array( this.callbacksOnReqs );
 			
 			// if should also copy requirements
 			
 			if ( includeRequirements === true ) {
 			
-				this.requirements = this.requirements.concat( main.ensure_array( asset.requirements ) );
+				this.requirements = this.requirements.concat( ensure_array( asset.requirements ) );
 				
-				this.callbacksOnReqs = this.callbacksOnReqs.concat( main.ensure_array( asset.callbacksOnReqs ) );
+				this.callbacksOnReqs = this.callbacksOnReqs.concat( ensure_array( asset.callbacksOnReqs ) );
 				
 				this.loaderUIContainer = this.loaderUIContainer || asset.loaderUIContainer;
 				
@@ -1472,7 +2098,7 @@ var KAIOPUA = (function (main) {
 			
 			// if this data does not exist or source data is image, set as data instead of merging, as merging causes issues
 			
-			if ( typeof this.data === 'undefined' || main.is_image( dataSrc ) ) {
+			if ( typeof this.data === 'undefined' || is_image( dataSrc ) ) {
 				
 				this.data = dataSrc;
 				
@@ -1482,7 +2108,7 @@ var KAIOPUA = (function (main) {
 				// copy properties of source asset data into this data
 				// order is important to ensure this data remains an instance of whatever it is
 				
-				main.extend( dataSrc, this.data );
+				extend( dataSrc, this.data );
 				
 			}
 			
@@ -1506,7 +2132,7 @@ var KAIOPUA = (function (main) {
 	
 	KaiopuaAsset.prototype.on_ready = function () {
 		
-		main.asset_ready( this.path, this );
+		asset_ready( this.path, this );
 		
 	}
     

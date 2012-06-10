@@ -12,10 +12,11 @@
 		assetPath = "assets/modules/env/Sky.js",
 		_Sky = {},
 		_Model,
-		_Physics,
 		_Cloud,
 		_MathHelper,
-		_ObjectHelper;
+		_SceneHelper,
+		_ObjectHelper,
+		_PhysicsHelper;
 	
 	/*===================================================
     
@@ -27,10 +28,11 @@
 		data: _Sky,
 		requirements: [
 			"assets/modules/core/Model.js",
-			"assets/modules/core/Physics.js",
 			"assets/modules/env/Cloud.js",
 			"assets/modules/utils/MathHelper.js",
-			"assets/modules/utils/ObjectHelper.js"
+			"assets/modules/utils/SceneHelper.js",
+			"assets/modules/utils/ObjectHelper.js",
+			"assets/modules/utils/PhysicsHelper.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -42,14 +44,15 @@
     
     =====================================================*/
 	
-	function init_internal ( m, phy, cld, mh, oh ) {
+	function init_internal ( m, cld, mh, sh, oh, ph ) {
 		console.log('internal sky', _Sky);
 		
 		_Model = m;
-		_Physics = phy;
 		_Cloud = cld;
 		_MathHelper = mh;
+		_SceneHelper = sh;
 		_ObjectHelper = oh;
+		_PhysicsHelper = ph;
 		
 		// properties
 		
@@ -64,7 +67,6 @@
 		_Sky.cloudDistanceFromSurfaceMin = 1000;
 		_Sky.cloudDistanceFromSurfaceMax = 3000;
 		_Sky.cloudRangeWander = 200;
-		_Sky.layout = 'box';
 		_Sky.zonePolar = {
 			min: 0,
 			max: Math.PI
@@ -120,6 +122,7 @@
 		// properties
 		
 		this.numClouds = main.is_number( parameters.numClouds ) ? parameters.numClouds : _Sky.numClouds;
+		this.cloudParameters = parameters.cloudParameters;
 		this.cloudInitAxis = main.is_number( parameters.cloudInitAxis ) ? parameters.cloudInitAxis : _Sky.cloudInitAxis;
 		this.cloudInitAngle = main.is_number( parameters.cloudInitAngle ) ? parameters.cloudInitAngle : _Sky.cloudInitAngle;
 		this.cloudRotateTowardWorld = typeof parameters.cloudRotateTowardWorld === 'boolean' ? parameters.cloudRotateTowardWorld : _Sky.cloudRotateTowardWorld;
@@ -134,26 +137,12 @@
 		this.cloudRangeWander = main.is_number( parameters.cloudRangeWander ) ? parameters.cloudRangeWander : _Sky.cloudRangeWander;
 		this.cloudsGeometry = parameters.cloudsGeometry || _Sky.cloudsGeometry;
 		this.bounds = parameters.bounds || { min: new THREE.Vector3(), max: new THREE.Vector3() };
-		this.layout = typeof parameters.layout === 'string' ? parameters.layout : _Sky.layout;
+		this.layout = parameters.layout;
 		this.zones = main.type( parameters.zones ) === 'array' ? parameters.zones : _Sky.zones;
 		
-		// generate clouds
+		// init clouds list
 		
 		this.clouds = [];
-		
-		for ( i = 0, l = this.numClouds; i < l; i++ ) {
-			
-			cloud = new _Cloud.Instance();
-			
-			// store
-			
-			this.clouds.push( cloud );
-			
-			// add
-			
-			this.add( cloud );
-			
-		}
 		
 		// world
 		
@@ -185,6 +174,56 @@
     
     =====================================================*/
 	
+	function update_cloud_count ( count ) {
+		
+		var i, l,
+			cloud,
+			cloudsExtra;
+		
+		// change count
+		
+		if ( main.is_number( count ) && count >= 0 ) {
+			
+			this.numClouds = count;
+			
+		}
+		
+		// remove any extra clouds
+		
+		if ( this.clouds.length > this.numClouds ) {
+			
+			cloudsExtra = this.clouds.splice( this.numClouds, this.clouds.length - this.numClouds );
+			
+			for ( i = 0, l = cloudsExtra.length; i < l; i++ ) {
+				
+				cloud = cloudsExtra[ i ];
+				
+				this.remove( cloud );
+				
+			}
+			
+		}
+		// add until num clouds reached
+		else if ( this.clouds.length < this.numClouds ) {
+			
+			for ( i = this.clouds.length, l = this.numClouds; i < l; i++ ) {
+				
+				cloud = new _Cloud.Instance( this.cloudParameters );
+				
+				// store
+				
+				this.clouds.push( cloud );
+				
+				// add
+				
+				this.add( cloud );
+				
+			}
+			
+		}
+		
+	}
+	
 	function set_clouds () {
 		
 		var i, l,
@@ -202,7 +241,7 @@
 			
 			// get world children
 			
-			children = _ObjectHelper.extract_children_from_objects( this._world, this._world );
+			children = _SceneHelper.extract_children_from_objects( this._world, this._world );
 			
 			// get new bounds based on world and children
 			
@@ -218,17 +257,98 @@
 		
 		// layout
 		
-		// sphere
+		// prearranged
 		
-		if ( this.layout === 'sphere' ) {
+		if ( main.is_array( this.layout ) ) {
+			
+			clouds_layout_prearranged.call( this );
+			
+		}
+		// default to sphere
+		else {
 			
 			clouds_layout_sphere.call( this, children );
 			
 		}
-		// default to box
-		else {
+		
+	}
+	
+	function clouds_layout_prearranged () {
+		
+		var i, l,
+			cloud,
+			properties,
+			position,
+			rotation,
+			scale,
+			cloudForward = this.cloudRotateUtilVec31,
+			cloudUp = this.cloudRotateUtilVec32;
+		
+		// update cloud count
+		
+		update_cloud_count.call( this, this.layout.length );
+		
+		// update clouds
+		
+		for ( i = 0, l = this.numClouds; i < l; i++ ) {
 			
-			clouds_layout_sphere.call( this, children );//clouds_layout_box.call( this );
+			cloud = this.clouds[ i ];
+			
+			properties = this.layout[ i ];
+			position = properties.position;
+			rotation = properties.rotation;
+			scale = properties.scale;
+			
+			// position
+			
+			if ( position instanceof THREE.Vector3 ) {
+				
+				cloud.position.copy( position );
+				
+			}
+			
+			// rotate
+			
+			if ( rotation instanceof THREE.Quaternion ) {
+				
+				cloud.quaternion.copy( rotation );
+				
+			}
+			else if ( rotation instanceof THREE.Vector3 ) {
+				
+				cloud.quaternion.setFromEuler( rotation );
+			
+			}
+			else if ( this.cloudRotateTowardWorld ) {
+				
+				cloudForward.copy( shared.cardinalAxes.forward );
+				cloudUp.copy( shared.cardinalAxes.up );
+				
+				cloud.quaternion.multiplyVector3( cloudForward );
+				cloud.quaternion.multiplyVector3( cloudUp );
+				
+				_PhysicsHelper.rotate_relative_to_source( cloud, this._world, cloudUp, cloudForward );
+				
+			}
+			
+			// scale
+			if ( main.is_number( scale ) ) {
+				
+				cloud.scale.set( scale, scale, scale );
+			
+			}
+			else if ( scale instanceof THREE.Vector3 ) {
+				
+				cloud.scale.copy( scale );
+			
+			}
+			else {
+				
+				scale = Math.random() * ( this.cloudScaleMax - this.cloudScaleMin ) + this.cloudScaleMin;
+				
+				cloud.scale.set( scale, scale, scale );
+				
+			}
 			
 		}
 		
@@ -253,7 +373,7 @@
 		
 		// get children
 		
-		children = main.type( children ) === 'array' ? children : _ObjectHelper.extract_children_from_objects( this._world, this._world );
+		children = main.type( children ) === 'array' ? children : _SceneHelper.extract_children_from_objects( this._world, this._world );
 		
 		// set radius
 		
@@ -261,7 +381,9 @@
 		
 		// update clouds
 		
-		for ( i = 0, l = this.clouds.length; i < l; i++ ) {
+		update_cloud_count.call( this );
+		
+		for ( i = 0, l = this.numClouds; i < l; i++ ) {
 			
 			cloud = this.clouds[ i ];
 			
@@ -294,7 +416,7 @@
 				cloud.quaternion.multiplyVector3( cloudForward );
 				cloud.quaternion.multiplyVector3( cloudUp );
 				
-				_Physics.rotate_relative_to_source( cloud, this._world, cloudForward, cloudUp );
+				_PhysicsHelper.rotate_relative_to_source( cloud, this._world, cloudForward, cloudUp );
 				
 			}
 			
@@ -308,46 +430,9 @@
 			
 			distance = Math.random() * ( this.cloudDistanceFromSurfaceMax - this.cloudDistanceFromSurfaceMin ) + this.cloudDistanceFromSurfaceMin;
 			
-			_Physics.pull_to_source( cloud, this._world, children, distance );
-			
-			/*
-			// opacity by distance
-			
-			if ( this.cloudOpacityByDistance > 0 ) {
-				
-				cloud.material.opacity = 1 - ( cloud.position.length() / radius ) * this.cloudOpacityByDistance;
-				
-			}
-			else if ( this.cloudOpacityByDistance < 0 ) {
-				
-				cloud.material.opacity = -( cloud.position.length() / radius ) * this.cloudOpacityByDistance;
-				
-			}
-			else {
-				
-				cloud.material.opacity = 1;
-				
-			}
-			
-			if ( cloud.material.opacity < 1 ) {
-				
-				cloud.material.transparent = true;
-				
-			}
-			else {
-				
-				cloud.material.transparent = false;
-				
-			}
-			*/
+			_PhysicsHelper.pull_to_source( cloud, this._world, children, distance );
 			
 		}
-		
-	}
-	
-	function clouds_layout_box () {
-		
-		
 		
 	}
 	
@@ -355,6 +440,7 @@
 		
 		var i, l,
 			cloud,
+			idleMod,
 			stop;
 		
 		// handle parameters
@@ -371,14 +457,16 @@
 			
 			if ( stop === true ) {
 				
-				cloud.orbit.stop();
-				cloud.wander.stop();
+				//cloud.orbit.stop();
+				//cloud.wander.stop();
+				cloud.morphs.stopAll();
 				
 			}
 			else {
 				
-				cloud.orbit.start( { snapToInitial: true } );
-				cloud.wander.start( { snapToInitial: true, rangeMax: this.cloudRangeWander, rangeMin: -this.cloudRangeWander, waveY: true } );
+				//cloud.orbit.start( { snapToInitial: true } );
+				//cloud.wander.start();
+				cloud.morphs.play( 'idle', { loop: true, startDelay: true } );
 				
 			}
 			

@@ -13,6 +13,7 @@
 		_WanderUpdater = {},
 		_PropertyUpdater,
 		_MathHelper,
+		_VectorHelper,
 		_ObjectHelper,
 		accelerationDamping = 0.9,
 		speedLerp = 0.01,
@@ -35,6 +36,7 @@
 		requirements: [
 			"assets/modules/core/PropertyUpdater.js",
 			"assets/modules/utils/MathHelper.js",
+			"assets/modules/utils/VectorHelper.js",
 			"assets/modules/utils/ObjectHelper.js"
 		],
 		callbacksOnReqs: init_internal,
@@ -47,11 +49,12 @@
     
     =====================================================*/
 	
-	function init_internal ( pu, mh, oh ) {
+	function init_internal ( pu, mh, vh, oh ) {
 		console.log('internal wander updater', _WanderUpdater);
 		
 		_PropertyUpdater = pu;
 		_MathHelper = mh;
+		_VectorHelper = vh;
 		_ObjectHelper = oh;
 		
 		_WanderUpdater.Instance = WanderUpdater;
@@ -154,7 +157,7 @@
 			this.rangeMin.set( parameters.rangeMin, parameters.rangeMin, parameters.rangeMin );
 			
 		}
-		console.log( this.rangeMax, this.rangeMin );
+		
 		if ( parameters.direction instanceof THREE.Vector3 ) {
 			
 			this.direction.copy( parameters.direction );
@@ -235,7 +238,7 @@
 			
 			// origin
 			
-			_MathHelper.lerp_snap( this.origin, this.originTarget, this.speedLerp, snapThreshold );
+			_VectorHelper.lerp_snap( this.origin, this.originTarget, this.speedLerp, snapThreshold );
 			
 			// position
 			
@@ -304,7 +307,7 @@
 				
 			}
 			
-			_MathHelper.lerp_snap( this.positionOffset, this.positionOffsetTarget, this.speedLerp, snapThreshold );
+			_VectorHelper.lerp_snap( this.positionOffset, this.positionOffsetTarget, this.speedLerp, snapThreshold );
 			
 			// damping
 			

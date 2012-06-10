@@ -5,7 +5,7 @@ Physics module, handles physics in game using JigLibJS.
 (function (main) {
     
     var shared = main.shared = main.shared || {},
-        assetPath = "assets/modules/core/Physics.js",
+        assetPath = "assets/modules/physics/Physics.js",
 		physics = {},
 		mathhelper,
 		ready = false,

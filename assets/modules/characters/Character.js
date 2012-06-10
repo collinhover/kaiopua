@@ -67,6 +67,7 @@
 		_Character.Instance.prototype.hide = hide;
 		_Character.Instance.prototype.update = update;
 		_Character.Instance.prototype.update_followers = update_followers;
+		_Character.Instance.prototype.stop_jumping = stop_jumping;
 		
 		Object.defineProperty( _Character.Instance.prototype, 'scene', { 
 			get : function () { return this._scene; },
@@ -85,6 +86,10 @@
 				}
 				
 			}
+		});
+		
+		Object.defineProperty( _Character.Instance.prototype, 'jumping', { 
+			get : function () { return this.movement.jump.active; }
 		});
 		
 	}
@@ -183,8 +188,6 @@
 		state.back = 0;
 		state.turnleft = 0;
 		state.turnright = 0;
-		state.grounded = false;
-		state.groundedLast = false;
 		state.moving = false;
 		state.movingBack = false;
 		state.moveType = '';
@@ -383,6 +386,18 @@
 	
 	/*===================================================
 	
+	jump
+	
+	=====================================================*/
+	
+	function stop_jumping () {
+		
+		this.movement.jump.active = false;
+		
+	}
+	
+	/*===================================================
+	
 	morph cycling
 	
 	=====================================================*/
@@ -456,8 +471,7 @@
 	
 	function update ( timeDelta, timeDeltaMod ) {
 		
-		var physics = this.physics,
-			rigidBody = physics.rigidBody,
+		var rigidBody = this.rigidBody,
 			morphs = this.morphs,
 			movement = this.movement,
 			move = movement.move,
@@ -479,6 +493,7 @@
 			jumpTimeRatio,
 			jumpTimeAfterNotGroundedMax,
 			jumpStartDelay,
+			grounded,
 			velocityGravity,
 			velocityGravityForce,
 			velocityMovement,
@@ -558,15 +573,13 @@
 			
 			// handle jumping
 			
-			state.groundedLast = state.grounded;
-			
-			state.grounded = Boolean( velocityGravity.collision ) && !velocityGravity.moving;
+			grounded = rigidBody.grounded;
 			
 			jump.timeAfterNotGrounded += timeDelta;
 			
 			// if falling but not jumping
 			
-			if ( jump.active === false && jump.timeAfterNotGrounded >= jumpTimeAfterNotGroundedMax && state.grounded === false ) {
+			if ( jump.active === false && jump.timeAfterNotGrounded >= jumpTimeAfterNotGroundedMax && grounded === false ) {
 				
 				jump.ready = false;
 				
@@ -574,7 +587,7 @@
 				
 			}
 			// do jump
-			else if ( state.up !== 0 && ( state.grounded === true || jump.timeAfterNotGrounded < jumpTimeAfterNotGroundedMax ) && jump.ready === true ) {
+			else if ( state.up !== 0 && ( grounded === true || jump.timeAfterNotGrounded < jumpTimeAfterNotGroundedMax ) && jump.ready === true ) {
 				
 				jump.timeTotal = 0;
 				
@@ -583,6 +596,8 @@
 				jump.ready = false;
 				
 				jump.active = true;
+				
+				jump.starting = true;
 				
 			}
 			else if ( jump.active === true && jump.timeTotal < jumpTimeMax ) {
@@ -595,8 +610,20 @@
 				
 				if ( jump.startDelayTime >= jump.startDelay ) {
 					
+					// if start delay just finished
+					
+					if ( jump.starting === true ) {
+						
+						jump.starting = false;
+					
+						// reset velocity
+						
+						velocityGravityForce.y  = 0;
+						
+					}
+					
 					// play jump
-				
+					
 					this.morph_cycle ( timeDelta, 'jump', jump.animationTime, true );
 					
 					// properties
@@ -618,17 +645,14 @@
 					
 					morphs.play( 'jump_start', { duration: jump.startAnimationTime, loop: false, callback: function () { morphs.clear( 'jump_start' ); } } );
 					
-					// hold velocity
-					velocityGravityForce.y  = 0;
-					
 				}
 				
 			}
 			else {
 				
-				if ( state.grounded === true && jump.active !== false ) {
+				if ( grounded === true && jump.active !== false ) {
 					
-					jump.active = false;
+					this.stop_jumping();//jump.active = false;
 					
 					if ( jump.timeAfterNotGrounded >= jumpTimeAfterNotGroundedMax ) {
 						
@@ -640,7 +664,7 @@
 					
 				}
 				
-				if ( state.grounded === true && state.up === 0 ) {
+				if ( grounded === true && state.up === 0 ) {
 					
 					jump.timeAfterNotGrounded = 0;
 					
@@ -673,7 +697,7 @@
 			
 			// walk/run/idle
 			
-			if ( jump.active === false && state.grounded === true ) {
+			if ( jump.active === false && grounded === true ) {
 				
 				// walk / run cycles
 				

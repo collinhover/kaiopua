@@ -74,18 +74,18 @@
 		
 		parameters.geometry = parameters.geometry || _Cloud.geometries[ Math.round( Math.random() * ( _Cloud.geometries.length - 1 ) ) ];
 		
+		parameters.materials = parameters.materials || new THREE.MeshBasicMaterial( { shading: THREE.NoShading, vertexColors: THREE.VertexColors } );
+		
 		// prototype constructor
 		
 		_Model.Instance.call( this, parameters );
 		
 		// properties
-		
+		/*
 		this.orbit = new _OrbitUpdater.Instance( { object: this } );
-		
 		this.wander = new _WanderUpdater.Instance( { object: this } );
-		
 		this.orbit.add( this.wander );
-		
+		*/
 	}
 	
 } (KAIOPUA) );

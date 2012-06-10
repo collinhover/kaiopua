@@ -13,6 +13,7 @@
 		_OrbitUpdater = {},
 		_PropertyUpdater,
 		_MathHelper,
+		_VectorHelper,
 		_ObjectHelper,
 		accelerationDamping = 0.9,
 		speedLerp = 0.01,
@@ -31,6 +32,7 @@
 		requirements: [
 			"assets/modules/core/PropertyUpdater.js",
 			"assets/modules/utils/MathHelper.js",
+			"assets/modules/utils/VectorHelper.js",
 			"assets/modules/utils/ObjectHelper.js"
 		],
 		callbacksOnReqs: init_internal,
@@ -43,11 +45,12 @@
     
     =====================================================*/
 	
-	function init_internal ( pu, mh, oh ) {
+	function init_internal ( pu, mh, vh, oh ) {
 		console.log('internal orbit updater', _OrbitUpdater);
 		
 		_PropertyUpdater = pu;
 		_MathHelper = mh;
+		_VectorHelper = vh;
 		_ObjectHelper = oh;
 		
 		_OrbitUpdater.Instance = OrbitUpdater;
@@ -201,7 +204,7 @@
 			
 			// origin
 			
-			_MathHelper.lerp_snap( this.origin, this.originTarget, this.speedLerp, snapThreshold );
+			_VectorHelper.lerp_snap( this.origin, this.originTarget, this.speedLerp, snapThreshold );
 			
 			// position
 			
@@ -217,7 +220,7 @@
 			
 			//this.axisTarget.set( Math.random(), Math.random(), Math.random() );
 			
-			_MathHelper.lerp_snap( this.axis, this.axisTarget, this.speedLerp, snapThreshold );
+			_VectorHelper.lerp_snap( this.axis, this.axisTarget, this.speedLerp, snapThreshold );
 			
 			this.rotationOffset.setFromAxisAngle( this.axis, this.angle );
 			

@@ -45,7 +45,7 @@
 		data: intro,
 		requirements: [
 			"assets/modules/core/Game.js",
-			"assets/modules/core/Physics.js",
+			"assets/modules/physics/Physics.js",
 			"assets/modules/env/WorldIsland.js",
 			"assets/modules/core/Player.js",
 			"assets/modules/core/Model.js"

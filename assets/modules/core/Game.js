@@ -11,10 +11,9 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/core/Game.js",
 		_Game = {},
-        _AssetLoader,
 		_ErrorHandler,
 		_MathHelper,
-		_ObjectHelper,
+		_RayHelper,
 		_Physics,
 		_GUI,
 		_Messenger,
@@ -45,13 +44,11 @@
 		sectionChangePauseTime = 500,
 		introMessageDelayTime = 2000,
 		dependencies = [
-			"assets/modules/utils/AssetLoader.js",
             "assets/modules/utils/ErrorHandler.js",
 		],
         assetsBasic = [
 			"assets/modules/ui/UIElement.js",
 			"assets/modules/ui/GUI.js",
-			"assets/modules/utils/MathHelper.js",
             "js/lib/three/Three.js",
 			"js/lib/Tween.js",
 			"js/lib/jquery.transform2d.min.js",
@@ -64,25 +61,14 @@
             "js/lib/three/postprocessing/RenderPass.js",
             "js/lib/three/postprocessing/ShaderPass.js",
             "js/lib/three/postprocessing/MaskPass.js",
-			"js/lib/three/physics/Collisions.js",
-			"js/lib/three/physics/CollisionUtils.js",
             "assets/modules/effects/FocusVignette.js"
 		],
         assetsLauncher = [
-            "assets/modules/sections/Launcher.js",
-			/*"assets/modules/env/WaterLauncher.js",
-            "assets/modules/env/SkyLauncher.js",
-            "assets/textures/cloud_256.png",
-            "assets/textures/light_ray.png",
-			"assets/textures/skybox_launcher_xz.jpg",
-			"assets/textures/skybox_launcher_posy.jpg",
-            "assets/textures/skybox_launcher_negy.jpg"*/
+            "assets/modules/sections/Launcher.js"
         ],
         assetsGame = [
-			/*"js/lib/ammo.js",*/
-			"assets/modules/core/Octant.js",
 			"assets/modules/core/Octree.js",
-			"assets/modules/core/Physics.js",
+			"assets/modules/physics/Physics.js",
 			"assets/modules/core/Player.js",
 			"assets/modules/core/Model.js",
 			"assets/modules/core/CameraControls.js",
@@ -90,8 +76,13 @@
 			"assets/modules/ui/Menu.js",
 			"assets/modules/ui/Inventory.js",
 			"assets/modules/ui/Messenger.js",
-			"assets/modules/utils/ObjectMaker.js",
+			"assets/modules/utils/MathHelper.js",
+			"assets/modules/utils/VectorHelper.js",
+			"assets/modules/utils/SceneHelper.js",
+			"assets/modules/utils/RayHelper.js",
 			"assets/modules/utils/ObjectHelper.js",
+			"assets/modules/utils/PhysicsHelper.js",
+			"assets/modules/utils/ObjectMaker.js",
 			"assets/modules/characters/Character.js",
 			"assets/modules/characters/Hero.js",
 			"assets/modules/env/World.js",
@@ -109,10 +100,9 @@
 			"assets/modules/farming/Dirt.js",
 			"assets/modules/farming/Plant.js",
 			"assets/modules/sections/Intro.js",
-            { path: "assets/models/Whale_Head.js", type: 'model' },
-			{ path: "assets/models/Whale_Tail.js", type: 'model' },
+            { path: "assets/models/Whale.js", type: 'model' },
 			{ path: "assets/models/Hero.js", type: 'model' },
-			{ path: "assets/models/Sun_Moon.js", type: 'model' },
+			{ path: "assets/models/Sun.js", type: 'model' },
 			{ path: "assets/models/Cloud_001.js", type: 'model' },
 			{ path: "assets/models/Cloud_002.js", type: 'model' },
 			{ path: "assets/models/Hut.js", type: 'model' },
@@ -239,9 +229,8 @@
     
     =====================================================*/
 	
-	function init_internal ( al, err ) {
+	function init_internal ( err ) {
 		console.log('internal game');
-		_AssetLoader = al;
 		_ErrorHandler = err;
 		
 		// register error listeners
@@ -260,8 +249,8 @@
 			
 			// set loading messages
 			
-			_AssetLoader.loadingHeader = loadingHeader;
-			_AssetLoader.loadingTips = loadingTips;
+			main.loadingHeader = loadingHeader;
+			main.loadingTips = loadingTips;
 			
 			// start loading
 			
@@ -273,7 +262,7 @@
 	
 	function load_basics () {
 		
-		main.asset_require( assetsBasic, [ load_three_extras ] );
+		main.asset_require( assetsBasic, [ load_three_extras ], true );
 		
 	}
 	
@@ -459,7 +448,7 @@
 		
 		// assets
 		
-		_ObjectHelper = main.get_asset_data( "assets/modules/utils/ObjectHelper.js" );
+		_RayHelper = main.get_asset_data( "assets/modules/utils/RayHelper.js" );
 		_Messenger = main.get_asset_data( "assets/modules/ui/Messenger.js" );
 		
 		// ui
@@ -518,6 +507,298 @@
 		
 		_GUI.show_group( 'constant' );
 		_GUI.show_group( 'start' );
+		
+		//
+		//
+		return;
+		//
+		// TESTING
+		// octree
+		
+		var _Octree = main.get_asset_data( "assets/modules/core/Octree.js" );
+		var _Model = main.get_asset_data( "assets/modules/core/Model.js" );
+		
+		var radius = 400,
+			octree = new _Octree.Instance( {
+				radius: radius,
+				scene: scene
+			} ),
+			objects = [],
+			countMax = 40,
+			testObj,
+			testObjLast,
+			offset = new THREE.Vector3();
+		
+		setTimeout( function () {
+			/*
+			// build octree with max count objects
+			
+			for ( var i = 0; i < countMax; i++ ) {
+				
+				testObj = new _Model.Instance( {
+					geometry: new THREE.CubeGeometry( 50, 50, 50 ),
+					materials: new THREE.MeshBasicMaterial( { color: 0xFF0000 } )
+				} );
+				
+				//testObj.position.set( Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius );
+				//testObj.position.set( Math.random() * -radius * 0.5, Math.random() * -radius * 0.5, Math.random() * -radius * 0.5 );
+				//testObj.position.set( -radius + Math.random() * -radius * 0.25, -radius + Math.random() * -radius * 0.25, -radius + Math.random() * -radius * 0.25 );
+				testObj.position.set( Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5 );
+				
+				objects.push( testObj );
+				scene.add( testObj );
+				
+			}
+			
+			var ta = new Date().getTime();
+			
+			for ( var i = 0; i < objects.length; i++ ) {
+				
+				octree.add( objects[ i ] );
+				
+			}
+			
+			var tb = new Date().getTime();
+			
+			console.log( 'OCTREE BUILD time: ', ( tb - ta ) );
+			
+			// search octree
+			
+			var searchRad = 200;
+				testObj = new _Model.Instance( {
+					geometry: new THREE.CubeGeometry( searchRad * 2, searchRad * 2, searchRad * 2 ),
+					materials: new THREE.MeshBasicMaterial ( { color: 0xFF000, opacity: 0.4, transparent: true } )
+				} );
+			
+			scene.add( testObj );
+			
+			var testCompare = function ( a, b ) {
+				
+				var i, l,
+					delta = new THREE.Vector3();
+				
+				for ( i = 0, l = 20; i < l; i++ ) {
+					
+					delta.add( a.position || a.matrix.getPosition(), b.position || b.matrix.getPosition() );
+					
+				}
+				
+			};
+			
+			var testCount = 0;
+			var testCountMax = 20;
+			var searchObjects = [];
+			var testIntervalID = setInterval( function () {
+				
+				if ( testCount === testCountMax ) {
+					
+					clearInterval( testIntervalID );
+					return;
+					
+				}
+				
+				testCount++;
+				
+				var avgObjectCount = 0;
+				
+				var tc = new Date().getTime();
+				
+				for ( var i = 0, l = 100; i < l; i++ ) {
+					
+					// clean previous search objects
+					
+					if ( searchObjects.length > 0 ) {
+						
+						for ( var m = 0, n = searchObjects.length; m < n; m++ ) {
+							
+							searchObjects[ m ].object.material.color.setRGB( 255, 0, 0 );
+							
+						}
+						
+					}
+					
+					// new test position
+					
+					testObj.position.set( Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5 );
+					
+					// search octree
+					
+					searchObjects = octree.search( testObj.position, searchRad );
+					avgObjectCount += searchObjects.length;
+					for ( var m = 0, n = searchObjects.length; m < n; m++ ) {
+						
+						var so = testCompare( testObj, searchObjects[ m ] );
+						searchObjects[ m ].object.material.color.setRGB( 0, 255, 0 );
+						
+					}
+					
+					// search all objects
+					
+					//avgObjectCount += objects.length;
+					//for ( var m = 0, n = objects.length; m < n; m++ ) {
+						
+					//	var so = testCompare( testObj, objects[ m ] );
+					//	objects[ m ].material.color.setRGB( 0, 255, 0 );
+						
+					//}
+					//console.log( ' OCTREE SEARCH from ', testObj.position.x, testObj.position.y, testObj.position.z, ' + radius: ', searchRad, ' gives objects ', searchObjects );
+					
+				}
+				
+				avgObjectCount = avgObjectCount / 100;
+				
+				var td = new Date().getTime();
+				
+				console.log( 'OCTREE SEARCH time: ', (td - tc ), ' + avgObjectCount ', avgObjectCount );
+				
+			}, 100 );
+			*/
+			
+			var addRemoveTest = true;
+			var facesTest = false;
+			var adding = true;
+			//var intervalID = setInterval( function () {
+			//shared.signals.update.add( function () {
+			shared.signals.mouseup.add( function () {
+				
+				// adding/removing static
+				if ( addRemoveTest === true ) {
+					
+					// if is adding
+					
+					if ( adding === true ) {
+						
+						// add new
+						
+						if ( facesTest === true ) {
+							
+							var ta = new Date().getTime();
+							
+							testObj = new _Model.Instance( {
+								geometry: new THREE.SphereGeometry( radius * 10, 50, 50 ),
+								materials: new THREE.MeshNormalMaterial()// { color: 0x00FF00, wireframe: true, wireframeLinewidth: 10 } )
+							} );
+							
+							octree.add( testObj, true );
+							
+							var tb = new Date().getTime();
+			
+							console.log( 'OCTREE faces BUILD time: ', ( tb - ta ) );
+							
+						}
+						else {
+							
+							testObj = new _Model.Instance( {
+								geometry: new THREE.CubeGeometry( 50, 50, 50 ),
+								materials: new THREE.MeshNormalMaterial()// { color: 0x00FF00, wireframe: true, wireframeLinewidth: 10 } )
+							} );
+							
+							//testObj.position.set( Math.random() * ( radius * 1.5 ) - radius * 0.75, radius * 0.2 + Math.random() * radius * 0.6, Math.random() * ( radius * 1.5 ) - radius * 0.75 );
+							//testObj.position.set( Math.random() * ( radius * 1.5 ) - radius * 0.75, Math.random() * ( radius * 1.5 ) - radius * 0.75, Math.random() * ( radius * 1.5 ) - radius * 0.75 );
+							//testObj.position.set( Math.random() * -radius * 0.5, Math.random() * -radius * 0.5, Math.random() * -radius * 0.5 );
+							//testObj.position.set( -radius + Math.random() * -radius * 0.25, -radius + Math.random() * -radius * 0.25, -radius + Math.random() * -radius * 0.25 );
+							testObj.position.set( Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5 );
+							
+							octree.add( testObj );
+							
+						}
+						
+						objects.push( testObj );
+						scene.add( testObj );
+						
+						// if at max
+						
+						if ( objects.length === countMax ) {
+							
+							adding = false;
+							
+						}
+						
+					}
+					// else is removing
+					else {
+						
+						testObj = objects.shift();
+						
+						scene.remove( testObj );
+						octree.remove( testObj );
+						
+						// if at min
+						
+						if ( objects.length === 0 ) {
+							
+							adding = true;
+							
+						}
+						
+					}
+					
+				}
+				// moving test
+				else {
+					
+					if ( objects.length !== countMax ) {
+						
+						// add new
+						
+						testObj = new _Model.Instance( {
+							geometry: new THREE.CubeGeometry( 50, 50, 50 ),
+							materials: new THREE.MeshNormalMaterial()// { color: 0x00FF00, wireframe: true, wireframeLinewidth: 10 } )
+						} );
+						
+						// position
+						
+						testObj.position.set( Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5 );
+						
+						// add as last
+						
+						octree.add( testObj );
+						objects.push( testObj );
+						scene.add( testObj );
+						
+					}
+					else {
+						
+						for ( var i = 0, l = objects.length; i < l; i++ ) {
+							
+							testObj = objects[ i ];
+							
+							//testObj.position.x += 10;
+							//testObj.position.y += 10;
+							testObj.position.z += 10;
+							
+						}
+						
+						octree.update();
+						
+					}
+					
+				}
+				
+				console.log( ' ============================================================================================================');
+				console.log( ' OCTREE: ', octree );
+				console.log( ' ... depth ', octree.depth, ' vs depth end?', octree.depth_end() );
+				console.log( ' ... num octrees: ', octree.octree_count_end() );
+				console.log( ' ... total objects: ', octree.object_count_end(), ' vs tree objects length: ', octree.objects.length );
+				//octree.to_console();
+				console.log( ' ============================================================================================================');
+				console.log( ' ');
+				
+			} );
+			//}, 1000 );
+			
+		}, 1000 );
+		
+		var controls = new THREE.FirstPersonControls( camera );
+		shared.signals.update.add( function ( timeDelta ) { controls.update( timeDelta ) } );
+		
+		return;
+		
+		// TESTING
+		// octree
+		//
+		//
+		//
 		
     }
 	
@@ -825,7 +1106,7 @@
 		
 		// intersection
 		
-		intersection = _ObjectHelper.raycast( parameters );
+		intersection = _RayHelper.raycast( parameters );
 		
 		if ( typeof intersection !== 'undefined' ) {
 			
@@ -946,7 +1227,7 @@
 		console.log('start game');
 		// assets
 		
-		_Physics = main.get_asset_data( 'assets/modules/core/Physics.js' );
+		_Physics = main.get_asset_data( 'assets/modules/physics/Physics.js' );
 		_Intro = main.get_asset_data( 'assets/modules/sections/Intro.js' );
 		
 		// ui

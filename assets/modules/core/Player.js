@@ -84,7 +84,7 @@
 			"assets/modules/core/Game.js",
 			"assets/modules/core/CameraControls.js",
 			"assets/modules/characters/Hero.js",
-			"assets/modules/core/Physics.js",
+			"assets/modules/physics/Physics.js",
 			"assets/modules/ui/Messenger.js",
 			"assets/modules/utils/ObjectHelper.js",
 			"assets/modules/utils/MathHelper.js"
@@ -173,9 +173,9 @@
 		
 		// add handler for physics safety net
 		
-		if ( character.physics ) {
+		if ( character.rigidBody ) {
 			
-			character.physics.safetynetstart.add( character_on_safety_net, this );
+			character.rigidBody.safetynetstart.add( character_on_safety_net, this );
 			
 		}
 		
