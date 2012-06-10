@@ -597,6 +597,8 @@
 				
 				jump.active = true;
 				
+				jump.starting = true;
+				
 			}
 			else if ( jump.active === true && jump.timeTotal < jumpTimeMax ) {
 				
@@ -608,8 +610,20 @@
 				
 				if ( jump.startDelayTime >= jump.startDelay ) {
 					
+					// if start delay just finished
+					
+					if ( jump.starting === true ) {
+						
+						jump.starting = false;
+					
+						// reset velocity
+						
+						velocityGravityForce.y  = 0;
+						
+					}
+					
 					// play jump
-				
+					
 					this.morph_cycle ( timeDelta, 'jump', jump.animationTime, true );
 					
 					// properties
@@ -630,9 +644,6 @@
 					// play jump start
 					
 					morphs.play( 'jump_start', { duration: jump.startAnimationTime, loop: false, callback: function () { morphs.clear( 'jump_start' ); } } );
-					
-					// hold velocity
-					velocityGravityForce.y  = 0;
 					
 				}
 				

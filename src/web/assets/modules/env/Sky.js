@@ -122,6 +122,7 @@
 		// properties
 		
 		this.numClouds = main.is_number( parameters.numClouds ) ? parameters.numClouds : _Sky.numClouds;
+		this.cloudParameters = parameters.cloudParameters;
 		this.cloudInitAxis = main.is_number( parameters.cloudInitAxis ) ? parameters.cloudInitAxis : _Sky.cloudInitAxis;
 		this.cloudInitAngle = main.is_number( parameters.cloudInitAngle ) ? parameters.cloudInitAngle : _Sky.cloudInitAngle;
 		this.cloudRotateTowardWorld = typeof parameters.cloudRotateTowardWorld === 'boolean' ? parameters.cloudRotateTowardWorld : _Sky.cloudRotateTowardWorld;
@@ -207,7 +208,7 @@
 			
 			for ( i = this.clouds.length, l = this.numClouds; i < l; i++ ) {
 				
-				cloud = new _Cloud.Instance();
+				cloud = new _Cloud.Instance( this.cloudParameters );
 				
 				// store
 				

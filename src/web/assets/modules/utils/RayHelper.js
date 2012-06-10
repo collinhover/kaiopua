@@ -365,8 +365,7 @@
 	
 	function raycast_physics ( parameters ) {
 		
-		var i, l,
-			ray = parameters.ray,
+		var ray = parameters.ray,
 			octree = parameters.octree,
 			distance = parameters.distance,
 			colliders = parameters.colliders,
@@ -379,7 +378,7 @@
 			// search for potential colliders
 			
 			colliders = main.ensure_array( colliders ).slice( 0 ).concat( octree.search( ray.origin, distance, true ) );
-			//console.log( ' RAYCAST, octree search results from position ', ray.origin.x, ray.origin.y, ray.origin.z, ' + dist ', distance, ' = # ', colliders.length, ' + colliders', colliders );
+			//console.log( ' RAYCAST, octree search results from position ', ray.origin.x, ray.origin.y, ray.origin.z, ' + dist ', distance, ' = # ', colliders.length);//, ' + colliders', colliders );
 			
 		}
 		

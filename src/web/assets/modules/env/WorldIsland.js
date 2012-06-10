@@ -93,7 +93,7 @@
 		=====================================================*/
 		
 		// body
-    	
+		
     	me.parts.body = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Whale.js"),
 			physics: {
@@ -127,6 +127,12 @@
 		
 		me.parts.skybox = _ObjectMaker.make_skybox( shared.pathToTextures + "skybox_world" );
 		
+		// water
+		
+		me.parts.waterRing = new _Water.Instance( { wavesTexture: shared.pathToTextures + "water_world_512.png" } );
+		
+		me.add( me.parts.waterRing );
+		
 		// sun/moon
 		
 		me.parts.sun = new _Model.Instance({
@@ -157,6 +163,14 @@
 		me.parts.sky = new _Sky.Instance( {
 			world: me.parts.body,
 			numClouds: 20,
+			cloudParameters: {
+				physics: {
+					bodyType: 'mesh',
+					gravitySource: true,
+					radiusGravityAddition: 300
+				},
+				morphDurationBase: 1000
+			},
 			layout: [
 				{ position: new THREE.Vector3( 119, 2604, 990 ), scale: 0.85 },
 				{ position: new THREE.Vector3( 438, 3022, 1350 ), scale: 2.23 },
@@ -187,12 +201,6 @@
 		} );
 		
 		me.parts.body.add( me.parts.sky );
-		
-		// water
-		
-		me.parts.waterRing = new _Water.Instance( { wavesTexture: shared.pathToTextures + "water_world_512.png" } );
-		
-		me.add( me.parts.waterRing );
 		
 		/*===================================================
 		

@@ -47,6 +47,7 @@
 		
 		// properties
 		
+		_RigidBody.damping = 0.97;
 		_RigidBody.lerpDelta = 0.1;
 		_RigidBody.lerpDeltaGravityChange = 0;
 		_RigidBody.gravityBodyRadiusAdditionPct = 1;
@@ -397,7 +398,7 @@
 		
 		parameters = parameters || {};
 		
-		parameters.damping = parameters.damping || 0.99;
+		parameters.damping = parameters.damping || _RigidBody.damping;
 		
 		// properties
 		
@@ -412,7 +413,7 @@
 		
 		if ( main.is_number( parameters.damping ) === true ) {
 			
-			this.damping.addScalar( parameters.damping );
+			this.damping.set( parameters.damping, parameters.damping, parameters.damping );
 			
 		}
 		
@@ -702,14 +703,6 @@
 				// swap to closest gravity body
 				
 				if ( gravityBody instanceof RigidBody && this.gravityBody !== gravityBody ) {
-					
-					// test
-					if ( this.gbcline ) this.mesh.remove( this.gbcline );
-					this.gbclineGeom = new THREE.Geometry();
-					this.gbclineGeom.vertices.push( new THREE.Vector3(), new THREE.Vector3().add( this.velocityGravity.force.clone().multiplyScalar( this.gravityBodyChangeGravityProjectionMod ), this.velocityMovement.force.clone().multiplyScalar( this.gravityBodyChangeMovementProjectionMod ) ) );
-					this.gbcline = new THREE.Line( this.gbclineGeom, new THREE.LineBasicMaterial( { color: 0xFF0000, linewidth: 8 } ), THREE.LinePieces );
-					this.mesh.add( this.gbcline );
-					// test
 					
 					this.change_gravity_body( gravityBody, true );
 					

@@ -21,6 +21,7 @@
 		utilVec32Orbit,
 		utilVec31Bounds,
 		utilVec32Bounds,
+		utilVec31FaceBounds,
 		utilVec31Dimensions,
 		utilVec31Offset,
 		utilVec31OffsetRot,
@@ -89,6 +90,7 @@
 		utilVec32Orbit = new THREE.Vector3();
 		utilVec31Bounds = new THREE.Vector3();
 		utilVec32Bounds = new THREE.Vector3();
+		utilVec31FaceBounds = new THREE.Vector3();
 		utilVec31Dimensions = new THREE.Vector3();
 		utilVec31Offset = new THREE.Vector3();
 		utilVec31OffsetRot = new THREE.Vector3();
@@ -612,6 +614,7 @@
 			vertices = geometry.vertices,
 			centroid = face.centroid,
 			va = vertices[ face.a ], vb = vertices[ face.b ], vc = vertices[ face.c ], vd,
+			centroidToVert = utilVec31FaceBounds,
 			radius;
 		
 		// handle face type
@@ -622,18 +625,18 @@
 			
 			centroid.add( va, vb ).addSelf( vc ).addSelf( vd ).divideScalar( 4 );
 			
-			radius = Math.max( va.length(), vb.length(), vc.length(), vd.length() );
+			radius = Math.max( centroidToVert.sub( centroid, va ).length(), centroidToVert.sub( centroid, vb ).length(), centroidToVert.sub( centroid, vc ).length(), centroidToVert.sub( centroid, vd ).length() );
 			
 		}
 		else {
 			
 			centroid.add( va, vb ).addSelf( vc ).divideScalar( 3 );
 			
-			radius = Math.max( va.length(), vb.length(), vc.length() );
+			radius = Math.max( centroidToVert.sub( centroid, va ).length(), centroidToVert.sub( centroid, vb ).length(), centroidToVert.sub( centroid, vc ).length() );
 			
 		}
 		
-		return radius - centroid.length();
+		return radius;
 		
 	}
 	

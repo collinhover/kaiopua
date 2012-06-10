@@ -342,7 +342,7 @@ a:hover, a:active {
 
 .info_panel {
 	display: table;
-	/*padding: 10px 20px;*/
+	padding: 10px;
     overflow: auto;
 	background: #222222;
     -moz-border-radius: 15px;

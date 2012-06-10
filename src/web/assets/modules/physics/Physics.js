@@ -601,7 +601,7 @@
 			origin: position,
 			direction: velocityForceRotated,
 			offset: velocityOffset,
-			distance: boundingRadius + velocityForceRotatedLength,
+			distance: velocityForceRotatedLength + boundingRadius,
 			ignore: mesh
 		} );
 		
@@ -625,11 +625,11 @@
 				// but halves effective octree search radius, so fewer raycast checks
 				// safe to set if jumping
 				
-				if ( mesh && mesh.movement && mesh.movement.jump && mesh.movement.jump.active === true ) {
+				//if ( mesh && mesh.movement && mesh.movement.jump && mesh.movement.jump.active === true ) {
 					
-					velocity.force.set( 0, 0, 0 );
+					//velocity.force.set( 0, 0, 0 );
 					
-				}
+				//}
 				
 				velocity.moving = false;
 				

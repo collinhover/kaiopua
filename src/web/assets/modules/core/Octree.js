@@ -18,7 +18,7 @@
 		octreeNodeCount = 0,
 		depthMax = -1,
 		objectsThreshold = 8,
-		overlapPct = 0.1,
+		overlapPct = 0.15,
 		indexInsideCross = -1,
 		indexOutsideOffset = 2,
 		posX = 0, negX = 1,
@@ -124,9 +124,10 @@
 		var i, l,
 			index,
 			geometry,
-			faces;
+			faces,
+			objectData;
 		
-		// ensure object is not object data for index search
+		// ensure object is not object data
 		
 		if ( object instanceof OctreeObjectData ) {
 			
@@ -152,18 +153,12 @@
 			
 			if ( splitByFaces === true ) {
 				
-				if ( object instanceof OctreeObjectData ) {
-					
-					object = object.object;
-					
-				}
-				
 				geometry = object.geometry;
 				faces = geometry.faces;
 				
 				for ( i = 0, l = faces.length; i < l; i++ ) {
 					
-					add_object.call( this.root, new OctreeObjectData( object, faces[ i ] ) );
+					this.add_object_data( object, faces[ i ] );
 					
 				}
 				
@@ -171,11 +166,25 @@
 			// else add object itself
 			else {
 				
-				add_object.call( this.root, new OctreeObjectData( object ) );
+				this.add_object_data( object );
 				
 			}
 			
 		}
+		
+	};
+	
+	Octree.prototype.add_object_data = function ( object, face ) {
+		
+		var objectData = new OctreeObjectData( object, face );
+		
+		// add to tree objects data list
+		
+		this.objectsData.push( objectData );
+		
+		// add to nodes
+		
+		add_object.call( this.root, objectData );
 		
 	};
 	
@@ -531,12 +540,19 @@
 		// additional properties
 		
 		this.overlap = this.radius * this.tree.overlapPct;
+		this.radiusOverlap = this.radius + this.overlap;
+		this.left = this.position.x - this.radiusOverlap;
+		this.right = this.position.x + this.radiusOverlap;
+		this.bottom = this.position.y - this.radiusOverlap;
+		this.top = this.position.y + this.radiusOverlap;
+		this.back = this.position.z - this.radiusOverlap;
+		this.front = this.position.z + this.radiusOverlap;
 		
 		// visual
 		
 		if ( this.tree.scene ) {
 			
-			this.visual = new THREE.Mesh( new THREE.CubeGeometry( ( this.radius + this.overlap ) * 2, ( this.radius + this.overlap ) * 2, ( this.radius + this.overlap ) * 2 ), new THREE.MeshLambertMaterial( { color: 0xFF0000, wireframe: true, wireframeLinewidth: 10 } ) );
+			this.visual = new THREE.Mesh( new THREE.CubeGeometry( this.radiusOverlap * 2, this.radiusOverlap * 2, this.radiusOverlap * 2 ), new THREE.MeshLambertMaterial( { color: 0xFF0000, wireframe: true, wireframeLinewidth: 10 } ) );
 			this.visual.position.copy( this.position );
 			this.tree.scene.add( this.visual );
 			
@@ -767,14 +783,6 @@
 				
 			}
 			
-			// add to tree objects data list
-			
-			if ( !( object.node instanceof OctreeNode ) ) {
-				
-				this.tree.objectsData.push( object );
-				
-			}
-			
 			// node reference
 			
 			object.node = this;
@@ -922,29 +930,6 @@
 		
 		return removeData;
 		
-	}
-	
-	function remove_object_index_tree ( index ) {
-
-		// remove from this objects list
-
-		var objectRemoved = [ 0 ];
-
-		// remove from tree objects data list
-
-		index = this.tree.objectsData.indexOf( objectRemoved );
-
-		if ( index !== -1 ) {
-
-			this.tree.objectsData.splice( index, 1 );
-
-		}
-
-		// node reference
-		
-
-		return objectRemoved;
-
 	}
 	
 	/*===================================================
@@ -1124,7 +1109,7 @@
 			
 			// properties
 			
-			radius = ( this.radius + this.overlap ) * 0.5;
+			radius = ( this.radiusOverlap ) * 0.5;
 			overlap = radius * this.tree.overlapPct;
 			radiusOffset = radius - overlap;
 			offset = this.utilVec31Branch.set( indexOctant & 1 ? radiusOffset : -radiusOffset, indexOctant & 2 ? radiusOffset : -radiusOffset, indexOctant & 4 ? radiusOffset : -radiusOffset );
@@ -1580,9 +1565,8 @@
 			positionObj,
 			radiusObj,
 			position = this.position,
-			radius = this.radius,
+			radiusOverlap = this.radiusOverlap,
 			overlap = this.overlap,
-			radiusOverlap = radius + overlap,
 			deltaX, deltaY, deltaZ,
 			distX, distY, distZ, 
 			distance,
@@ -1604,6 +1588,8 @@
 		}
 		// node
 		else if ( objectData instanceof OctreeNode ) {
+			
+			positionObj = objectData.position;
 			
 			radiusObj = 0;
 			
@@ -1738,20 +1724,15 @@
 	function search ( position, radius, objects ) {
 		
 		var i, l,
-			node,
-			delta,
-			distance;
+			node;
 		
 		//
 		// TODO: account for direction
 		//
 		
-		// if is within distance
+		// if node intersects search sphere
 		
-		delta = this.utilVec31Search.sub( position, this.position );
-		distance = Math.max( Math.abs( delta.x ), Math.abs( delta.y ), Math.abs( delta.z ) );
-		//console.log( this.id, ' > octree SEARCH cascade, this POS ', this.position.x, this.position.y, this.position.z, ' + this.radius ', this.radius, ' + delta ', delta.x, delta.y, delta.z, ' + distance ', distance, ' + is within? ', ( distance - radius <= this.radius ) );
-		if ( ( distance - radius ) <= ( this.radius + this.overlap ) ) {
+		if ( intersect_sphere.call( this, position, radius ) ) {
 			
 			// gather objects
 			
@@ -1770,6 +1751,36 @@
 		}
 		
 		return objects;
+		
+	}
+	
+	function intersect_sphere ( position, radius ) {
+		
+		var distance = radius * radius,
+			sx = position.x,
+			sy = position.y,
+			sz = position.z;
+		
+		if ( sx < this.left ) {
+			distance -= Math.pow( sx - this.left, 2 );
+		}
+		else if ( sx > this.right ) {
+			distance -= Math.pow( sx - this.right, 2 );
+		}
+		if ( sy < this.bottom ) {
+			distance -= Math.pow( sy - this.bottom, 2 );
+		}
+		else if ( sy > this.top ) {
+			distance -= Math.pow( sy - this.top, 2 );
+		}
+		if ( sz < this.back ) {
+			distance -= Math.pow( sz - this.back, 2 );
+		}
+		else if ( sz > this.front ) {
+			distance -= Math.pow( sz - this.front, 2 );
+		}
+		
+		return distance > 0;
 		
 	}
 	

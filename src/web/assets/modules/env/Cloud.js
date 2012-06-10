@@ -76,14 +76,6 @@
 		
 		parameters.materials = parameters.materials || new THREE.MeshBasicMaterial( { shading: THREE.NoShading, vertexColors: THREE.VertexColors } );
 		
-		parameters.physics = parameters.physics || {
-			bodyType: 'mesh',
-			gravitySource: true,
-			radiusGravityAddition: 300
-		};
-		
-		parameters.morphDurationBase = main.is_number( parameters.morphDurationBase ) ? parameters.morphDurationBase : 1000;
-		
 		// prototype constructor
 		
 		_Model.Instance.call( this, parameters );
