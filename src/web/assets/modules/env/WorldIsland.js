@@ -423,36 +423,6 @@
 			
 			me.parts.body.add( me.parts.fieldTutorial );
 			
-			// basics split
-			
-			me.parts.fieldBasicsSplit = new _Field.Instance( {
-				id: 'Split',
-				geometry: main.get_asset_data("assets/models/Field_Basics_Split.js"),
-				physics: {
-					bodyType: 'mesh'
-				},
-				/*grid: {
-					modulesGeometry: main.get_asset_data("assets/models/Field_Basics_Split_Grid.js")
-				},
-				numElementsMin: 10,
-				hints: [
-					'Some plants will only grow when next to certain other plants!',
-					'Some fields are split into smaller parts. Fields are much easier to solve if you think this way!'
-				],
-				hintsCombine: true,
-				rewards: [
-					{
-						image: shared.pathToIcons + 'plant_rev_64.png',
-						label: 'New Plant!',
-						callback: _Farming.give_plants,
-						context: _Farming,
-						data: 'pineapple_001'
-					}
-				]*/
-			});
-			
-			me.parts.body.add( me.parts.fieldBasicsSplit );
-			
 			// basics abilities
 			
 			me.parts.fieldBasicsAbilities = new _Field.Instance( {
@@ -489,6 +459,36 @@
 			});
 			
 			me.parts.body.add( me.parts.fieldBasicsAbilities );
+			
+			// basics split
+			
+			me.parts.fieldBasicsSplit = new _Field.Instance( {
+				id: 'Split',
+				geometry: main.get_asset_data("assets/models/Field_Basics_Split.js"),
+				physics: {
+					bodyType: 'mesh'
+				},
+				grid: {
+					modulesGeometry: main.get_asset_data("assets/models/Field_Basics_Split_Grid.js")
+				},
+				numElementsMin: 10,
+				hints: [
+					'Some plants will only grow when next to certain other plants!',
+					'Some fields are split into smaller parts. Fields are much easier to solve if you think this way!'
+				],
+				hintsCombine: true,
+				rewards: [
+					{
+						image: shared.pathToIcons + 'plant_rev_64.png',
+						label: 'New Plant!',
+						callback: _Farming.give_plants,
+						context: _Farming,
+						data: 'pineapple_001'
+					}
+				]
+			});
+			
+			me.parts.body.add( me.parts.fieldBasicsSplit );
 			
 		}
 		

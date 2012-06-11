@@ -25,11 +25,12 @@
 		utilVec31Dimensions,
 		utilVec31Offset,
 		utilVec31OffsetRot,
-		utilVec31Normalize,
-		utilVec32Normalize,
-		utilVec33Normalize,
-		utilVec34Normalize,
-		utilVec41Normalize,
+		utilVec32NormalizeFaces,
+		utilVec33NormalizeFaces,
+		utilVec34NormalizeFaces,
+		utilVec35NormalizeFaces,
+		utilVec36NormalizeFaces,
+		utilVec41NormalizeFaces,
 		utilQ1Follow,
 		utilQ2Follow,
 		utilQ3Follow,
@@ -38,7 +39,7 @@
 		utilQ2Orbit,
 		utilQ1ApplyQ,
 		utilQ2ApplyQ,
-		utilQ1Normalize,
+		utilQ1NormalizeFaces,
 		utilMat41Follow,
 		utilMat41Bounds,
 		utilMat41Center,
@@ -94,18 +95,19 @@
 		utilVec31Dimensions = new THREE.Vector3();
 		utilVec31Offset = new THREE.Vector3();
 		utilVec31OffsetRot = new THREE.Vector3();
-		utilVec31Normalize = new THREE.Vector3();
-		utilVec32Normalize = new THREE.Vector3();
-		utilVec33Normalize = new THREE.Vector3();
-		utilVec34Normalize = new THREE.Vector3();
-		utilVec41Normalize = new THREE.Vector4();
+		utilVec31NormalizeFaces = new THREE.Vector3();
+		utilVec32NormalizeFaces = new THREE.Vector3();
+		utilVec33NormalizeFaces = new THREE.Vector3();
+		utilVec34NormalizeFaces = new THREE.Vector3();
+		utilVec35NormalizeFaces = new THREE.Vector3();
+		utilVec36NormalizeFaces = new THREE.Vector3();
 		utilQ1ApplyQ = new THREE.Quaternion();
 		utilQ2ApplyQ = new THREE.Quaternion();
+		utilQ1NormalizeFaces = new THREE.Quaternion();
 		utilQ1Follow = new THREE.Quaternion();
 		utilQ2Follow = new THREE.Quaternion();
 		utilQ3Follow = new THREE.Quaternion();
 		utilQ4Follow = new THREE.Quaternion();
-		utilQ1Normalize = new THREE.Quaternion();
 		utilQ1Orbit = new THREE.Quaternion();
 		utilQ2Orbit = new THREE.Quaternion();
 		utilMat41Follow = new THREE.Matrix4();
@@ -115,10 +117,16 @@
 		
 		// properties
 		
-		_ObjectHelper.expectedVertPosA = new THREE.Vector3( right.x * -len, 0, forward.z * len ),//( right.x * len, 0, forward.z * -len ),
-		_ObjectHelper.expectedVertPosB = new THREE.Vector3( right.x * -len, 0, forward.z * -len ),//( right.x * len, 0, forward.z * len ),
-		_ObjectHelper.expectedVertPosC = new THREE.Vector3( right.x * len, 0, forward.z * -len ),//( right.x * -len, 0, forward.z * len ),
-		_ObjectHelper.expectedVertPosD = new THREE.Vector3( right.x * len, 0, forward.z * len );//( right.x * -len, 0, forward.z * -len );
+		_ObjectHelper.vertexExpectedA = new THREE.Vector3( right.x * -len, 0, forward.z * len ),//( right.x * len, 0, forward.z * -len ),
+		_ObjectHelper.vertexExpectedB = new THREE.Vector3( right.x * -len, 0, forward.z * -len ),//( right.x * len, 0, forward.z * len ),
+		_ObjectHelper.vertexExpectedC = new THREE.Vector3( right.x * len, 0, forward.z * -len ),//( right.x * -len, 0, forward.z * len ),
+		_ObjectHelper.vertexExpectedD = new THREE.Vector3( right.x * len, 0, forward.z * len );//( right.x * -len, 0, forward.z * -len );
+		_ObjectHelper.faceVerticesExpected = [
+			_ObjectHelper.vertexExpectedA,
+			_ObjectHelper.vertexExpectedB,
+			_ObjectHelper.vertexExpectedC,
+			_ObjectHelper.vertexExpectedD
+		];
 		
 		// functions
 		
@@ -752,218 +760,244 @@
 	
 	function normalize_faces ( object ) {
 		
-		// face must lie along xz axis with normal in y direction
+		// faces must lie along xz axis with normal in y direction
 		// TODO: account for faces with other orientations
 		
-		// sort object vertices
-		
-		sort_vertices ( object );
-		
-		// correct vertex rotation
-		
-		correct_for_vertex_rotation( object );
-		
-	}
-	
-	function sort_vertices ( object ) {
-		
 		var i, l,
+			j, k,
+			m, n,
 			geometry = object instanceof THREE.Mesh ? object.geometry : object,
-			faces = geometry.faces,
 			vertices = geometry.vertices,
-			faceVertexUvsList = geometry.faceVertexUvs[ 0 ],
-			faceVertexUvs,
+			faces = geometry.faces,
 			face,
-			epa = _ObjectHelper.expectedVertPosA,
-			epb = _ObjectHelper.expectedVertPosB,
-			epc = _ObjectHelper.expectedVertPosC,
-			epd = _ObjectHelper.expectedVertPosD,
-			ia, ib, ic, id,
-			va, vb, vc, vd,
-			npa = utilVec31Normalize,
-			npb = utilVec32Normalize,
-			npc = utilVec33Normalize,
-			npd = utilVec34Normalize,
-			cpa, cpb, cpc, cpd,
-			uva, uvb, uvc, uvd,
-			faceVertexOrder,
-			axis = new THREE.Vector3( 0, 1, 0 ),
-			angle = 0,
-			sortRotOffset = utilQ1Normalize;
+			vertexOrder,
+			vertexOrderNew,
+			vertexOrderIndices,
+			vertexOrderIndicesMin,
+			vertexOrderScoresList,
+			vertexOrderScores,
+			faceVertices,
+			faceVerticesIndices,
+			faceVerticesNormalized = [
+				utilVec31NormalizeFaces,
+				utilVec32NormalizeFaces,
+				utilVec33NormalizeFaces,
+				utilVec34NormalizeFaces
+			],
+			faceVerticesExpected = _ObjectHelper.faceVerticesExpected,
+			vertex,
+			vertexId,
+			vertexAltId,
+			vertexLastId,
+			vertexScoreId,
+			vertexIndex,
+			vertexOrderIndex,
+			vertexNormalized,
+			vertexExpected,
+			faceVertexNormals,
+			faceVertexColors,
+			faceVertexTangents,
+			distance,
+			angle,
+			axis = utilVec35NormalizeFaces,
+			score,
+			scoreMin,
+			vrotAvg = utilQ1NormalizeFaces,
+			vrotAxis = utilVec36NormalizeFaces.set( 0, 1, 0 ),
+			vrotAxisDot;
 		
 		// for all faces
 		
 		for ( i = 0, l = faces.length; i < l; i++ ) {
 			
 			face = faces[ i ];
-			//console.log('face normal', face.normal.x.toFixed(4), face.normal.y.toFixed(4), face.normal.z.toFixed(4) );
-			faceVertexOrder = [ 'a', 'b', 'c', 'd' ];
 			
-			ia = face.a;
-			ib = face.b;
-			ic = face.c;
-			
-			va = vertices[ ia ];
-			vb = vertices[ ib ];
-			vc = vertices[ ic ];
-					
-			npa.copy( va ).normalize();
-			npb.copy( vb ).normalize();
-			npc.copy( vc ).normalize();
-			
-			faceVertexUvs = faceVertexUvsList[ i ];
-			
-			uva = faceVertexUvs[ 0 ];
-			uvb = faceVertexUvs[ 1 ];
-			uvc = faceVertexUvs[ 2 ];
+			// face properties
 			
 			if ( face instanceof THREE.Face4 ) {
-				
-				id = face.d;
-				vd = vertices[ id ];
-				npd.copy( vd ).normalize();
-				uvd = faceVertexUvs[ 3 ];
-				
-				/*console.log(' > face vert A', npa.x.toFixed(4), npa.y.toFixed(4), npa.z.toFixed(4) );
-				console.log(' > face vert B', npb.x.toFixed(4), npb.y.toFixed(4), npb.z.toFixed(4) );
-				console.log(' > face vert C', npc.x.toFixed(4), npc.y.toFixed(4), npc.z.toFixed(4) );
-				console.log(' > face vert D', npd.x.toFixed(4), npd.y.toFixed(4), npd.z.toFixed(4) );
-				console.log(' ');*/
-				
-				cpa = get_vector_with_least_distance_to_source( epa, npa, npb, npc, npd );
-				cpb = get_vector_with_least_distance_to_source( epb, npa, npb, npc, npd );
-				cpc = get_vector_with_least_distance_to_source( epc, npa, npb, npc, npd );
-				cpd = get_vector_with_least_distance_to_source( epd, npa, npb, npc, npd );
-				
-				// new vertex a
-				
-				if ( cpa === npb ) {
-					
-					//vertices[ ia ] = vb;
-					face.a = ib;
-					//faceVertexUvs[ 0 ] = uvb;
-					faceVertexOrder[ 0 ] = 'b';
-					
-				}
-				else if ( cpa === npc ) {
-					
-					//vertices[ ia ] = vc;
-					face.a = ic;
-					//faceVertexUvs[ 0 ] = uvc;
-					faceVertexOrder[ 0 ] = 'c';
-					
-				}
-				else if ( cpa ===  npd ) {
-					
-					//vertices[ ia ] = vd;
-					face.a = id;
-					//faceVertexUvs[ 0 ] = uvd;
-					faceVertexOrder[ 0 ] = 'd';
-					
-				}
-				
-				// new vertex b
-				
-				if ( cpb === npa ) {
-					
-					//vertices[ ib ] = va;
-					face.b = ia;
-					//faceVertexUvs[ 1 ] = uva;
-					faceVertexOrder[ 1 ] = 'a';
-					
-				}
-				else if ( cpb === npc ) {
-					
-					//vertices[ ib ] = vc;
-					face.b = ic;
-					//faceVertexUvs[ 1 ] = uvc;
-					faceVertexOrder[ 1 ] = 'c';
-					
-				}
-				else if ( cpb ===  npd ) {
-					
-					//vertices[ ib ] = vd;
-					face.b = id;
-					//faceVertexUvs[ 1 ] = uvd;
-					faceVertexOrder[ 1 ] = 'd';
-					
-				}
-				
-				// new vertex c
-				
-				if ( cpc === npa ) {
-					
-					//vertices[ ic ] = va;
-					face.c = ia;
-					//faceVertexUvs[ 2 ] = uva;
-					faceVertexOrder[ 2 ] = 'a';
-					
-				}
-				else if ( cpc === npb ) {
-					
-					//vertices[ ic ] = vb;
-					face.c = ib;
-					//faceVertexUvs[ 2 ] = uvb;
-					faceVertexOrder[ 2 ] = 'b';
-					
-				}
-				else if ( cpc ===  npd ) {
-					
-					//vertices[ ic ] = vd;
-					face.c = id;
-					//faceVertexUvs[ 2 ] = uvd;
-					faceVertexOrder[ 2 ] = 'd';
-					
-				}
-				
-				// new vertex d
-				
-				if ( cpd === npa ) {
-					
-					//vertices[ id ] = va;
-					face.d = ia;
-					//faceVertexUvs[ 3 ] = uva;
-					faceVertexOrder[ 3 ] = 'a';
-					
-				}
-				else if ( cpd === npb ) {
-					
-					//vertices[ id ] = vb;
-					face.d = ib;
-					//faceVertexUvs[ 3 ] = uvb;
-					faceVertexOrder[ 3 ] = 'b';
-					
-				}
-				else if ( cpd ===  npc ) {
-					
-					//vertices[ id ] = vc;
-					face.d = ic;
-					//faceVertexUvs[ 3 ] = uvc;
-					faceVertexOrder[ 3 ] = 'c';
-					
-				}
-				
-				if ( faceVertexOrder[ 0 ] === 'd' ) {
-					angle += Math.PI * 0.5;
-				}
-				else if ( faceVertexOrder[ 0 ] === 'c' ) {
-					angle += Math.PI;
-				}
-				else if ( faceVertexOrder[ 0 ] === 'b' ) {
-					angle -= Math.PI * 0.5;
-				}
-				//console.log( 'vertex order', faceVertexOrder );
-				
+				vertexOrder = [ 'a', 'b', 'c', 'd' ];
 			}
 			else {
+				vertexOrder = [ 'a', 'b', 'c' ];
+			}
+			vertexOrderNew = [];
+			vertexOrderIndices = [];
+			vertexOrderIndicesMin = [];
+			vertexOrderScoresList = {};
+			faceVertices = [];
+			faceVerticesIndices = [];
+			faceVertexNormals = [];
+			faceVertexColors = [];
+			faceVertexTangents = [];
+			
+			// for each face vertex
+			
+			scoreMin = Number.MAX_VALUE;
+			
+			for ( j = 0, k = vertexOrder.length; j < k; j++ ) {
 				
-				// TODO: enable for Face3
+				vertexId = vertexOrder[ j ];
+				
+				vertexIndex = faceVerticesIndices[ j ] = face[ vertexId ];
+				faceVertexNormals[ j ] = face.vertexNormals[ j ];
+				faceVertexColors[ j ] = face.vertexColors[ j ];
+				faceVertexTangents[ j ] = face.vertexTangents[ j ];
+				
+				vertex = faceVertices[ j ] = vertices[ vertexIndex ];
+				
+				// normalize vertex
+				
+				vertexNormalized = faceVerticesNormalized[ j ].copy( vertex ).normalize();
+				
+				// init order scores for vertex
+				
+				vertexOrderScores = vertexOrderScoresList[ vertexId ] = {};
+				
+				// find score to go from vertex to each expected
+				
+				for ( m = 0, n = vertexOrder.length; m < n; m++ ) {
+					
+					vertexAltId = vertexOrder[ m ];
+					vertexExpected = faceVerticesExpected[ m ];
+					
+					// get angle
+					
+					distance = _MathHelper.clamp( vertexNormalized.dot( vertexExpected ), -1, 1 );
+					angle = Math.acos( distance );
+					
+					// get axis between vertex and expected
+					
+					axis.cross( vertexNormalized, vertexExpected ).normalize();
+					
+					// dot expected axis with actual axis
+					
+					vrotAxisDot = vrotAxis.dot( axis );
+					
+					// score from angle and dot
+					
+					vertexOrderScores[ vertexAltId ] = score = angle + Math.acos( vrotAxisDot );
+					
+					// find minimum score amongst all face vertices
+					
+					if ( score < scoreMin ) {
+						
+						scoreMin = score;
+						vertexOrderIndex = m;
+						
+					}
+					
+				}
+				
+				// add index to vertex order indices
+				
+				vertexOrderIndicesMin.push( j );
+				
+			}
+			
+			// reorder vertex order indices by score with minimum value
+			
+			vertexOrderIndicesMin = [].concat( vertexOrderIndicesMin.slice( vertexOrderIndex ), vertexOrderIndicesMin.slice( 0, vertexOrderIndex ) );
+			
+			// sort vertices by scores, starting at score id with minimum value
+			
+			for ( j = 0, k = vertexOrder.length; j < k; j++ ) {
+				
+				vertexIndex = vertexOrderIndicesMin[ j ];
+				
+				vertexScoreId = vertexOrder[ vertexIndex ];
+				
+				scoreMin = Number.MAX_VALUE;
+				
+				for ( m = 0, n = vertexOrder.length; m < n; m++ ) {
+					
+					vertexId = vertexOrder[ m ];
+					
+					// if vertex id has not been placed in new order yet
+					
+					if ( vertexOrderNew.indexOf( vertexId ) === -1 ) {
+						
+						vertexOrderScores = vertexOrderScoresList[ vertexId ];
+						
+						score = vertexOrderScores[ vertexScoreId ];
+						
+						// if score is less than min and last vertex is to left of this vertex ( ex: da or bc )
+						
+						if ( score < scoreMin && ( j === 0 || vertexAltId === ( m === 0 ? vertexOrder[ vertexOrder.length - 1 ] : vertexOrder[ m - 1 ] ) ) ) {
+							
+							scoreMin = score;
+							vertexOrderNew[ vertexIndex ] = vertexId;
+							vertexOrderIndices[ vertexIndex ] = m;
+							
+						}
+						
+					}
+					
+				}
+				
+				// store last vertex
+				
+				vertexAltId = vertexOrderNew[ vertexIndex ];
+				
+			}
+			
+			console.log( 'face', face, 'vertexOrderScoresList', vertexOrderScoresList, 'vertexOrder', vertexOrder, 'vertexOrderNew', vertexOrderNew, ' vertexOrderIndices ', vertexOrderIndices );
+			
+			// update face by sorted vertices
+			
+			angle = 0;
+			
+			for ( j = 0, k = vertexOrder.length; j < k; j++ ) {
+				
+				vertexId = vertexOrder[ j ];
+				vertexOrderIndex = vertexOrderIndices[ j ];
+				vertexIndex = faceVerticesIndices[ vertexOrderIndex ];
+				
+				// vertex index
+				
+				face[ vertexId ] = vertexIndex;
+				
+				// normals
+				
+				face.vertexNormals[ j ] = faceVertexNormals[ vertexIndex ];
+				
+				// colors
+				
+				if ( face.vertexColors.length > j ) {
+					
+					face.vertexColors[ j ] = faceVertexColors[ vertexIndex ];
+					
+				}
+				
+				// tangents
+				
+				if ( face.vertexTangents.length > j ) {
+					
+					face.vertexTangents[ j ] = faceVertexTangents[ vertexIndex ];
+					
+				}
+				
+				// modify object to account for sorting
+				
+				vertexNormalized = faceVerticesNormalized[ vertexOrderIndex ];
+				vertexExpected = faceVerticesExpected[ j ];
+				
+				distance = _MathHelper.clamp( vertexNormalized.dot( vertexExpected ), -1, 1 );
+				angle += Math.acos( distance );
 				
 			}
 			
 		}
 		
-		// modify object to account for sorting
+		// normalize angle
+		
+		angle = angle / Math.max( 1, vertices.length );
+		
+		// apply
+		
+		vrotAvg.setFromAxisAngle( vrotAxis, angle - Math.PI * 0.5 );
+		
+		apply_quaternion( object, vrotAvg, true, true );
+		
 		/*
 		angle = angle / Math.max( 1, faces.length );
 		console.log(' angle after sorting vertices ', angle, ' + degrees:', _MathHelper.rad_to_degree( angle ) );
@@ -980,112 +1014,6 @@
 			
 		}
 		*/
-	}
-	
-	function get_vector_with_least_distance_to_source ( source, centroid ) {
-		
-		var i, l,
-			source = arguments[ 0 ],
-			dist,
-			angle,
-			angleMin = Number.MAX_VALUE,
-			vector3,
-			result;
-		
-		if ( source instanceof THREE.Vector3 ) {
-			//console.log(' source', source.x.toFixed(4), source.y.toFixed(4), source.z.toFixed(4) );
-			for ( i = 1, l = arguments.length; i < l; i++ ) {
-				
-				vector3 = arguments[ i ];
-				
-				if ( vector3 instanceof THREE.Vector3 ) {
-					//console.log(' > vector3', vector3.x.toFixed(4), vector3.y.toFixed(4), vector3.z.toFixed(4) );
-					dist = _MathHelper.clamp( vector3.dot( source ), -1, 1 );
-					
-					angle = Math.acos( dist );
-					
-					if ( Math.abs( angle ) < angleMin ) {
-						
-						angleMin = angle;
-						
-						result = vector3;
-						
-					}
-					//console.log( ' > vert', i, ' dist to source', dist.toFixed(3), ' angle', angle.toFixed(3), 'angleMin? ', angleMin.toFixed(3) );
-				}
-				
-			}
-			
-		}
-		
-		return result;
-		
-	}
-	
-	function correct_for_vertex_rotation ( object ) {
-		
-		var i, l,
-			geometry = object instanceof THREE.Mesh ? object.geometry : object,
-			faces = geometry.faces,
-			vertices = geometry.vertices,
-			face,
-			epa = _ObjectHelper.expectedVertPosA,
-			epb = _ObjectHelper.expectedVertPosB,
-			epc = _ObjectHelper.expectedVertPosC,
-			epd = _ObjectHelper.expectedVertPosD,
-			vpa, vpb, vpc, vpd,
-			npa = utilVec31Normalize,
-			npb = utilVec32Normalize,
-			npc = utilVec33Normalize,
-			npd = utilVec34Normalize,
-			vrotAvg = utilQ1Normalize,
-			ca = shared.cardinalAxes,
-			dist,
-			angle = 0;
-		
-		// for all face normals
-		
-		for ( i = 0, l = faces.length; i < l; i++ ) {
-			
-			face = faces[ i ];
-			
-			vpa = vertices[ face.a ];
-			vpb = vertices[ face.b ];
-			vpc = vertices[ face.c ];
-			
-			npa.copy( vpa ).normalize();
-			npb.copy( vpb ).normalize();
-			npc.copy( vpc ).normalize();
-			
-			dist = _MathHelper.clamp( npa.dot( epa ), -1, 1 );
-			angle += Math.acos( dist );
-			dist = _MathHelper.clamp( npb.dot( epb ), -1, 1 );
-			angle += Math.acos( dist );
-			dist = _MathHelper.clamp( npc.dot( epc ), -1, 1 );
-			angle += Math.acos( dist );
-			
-			if ( face instanceof THREE.Face4 ) {
-				
-				vpd = vertices[ face.d ];
-				
-				npd.copy( vpd ).normalize();
-				
-				dist = _MathHelper.clamp( npd.dot( epd ), -1, 1 );
-				angle += Math.acos( dist );
-				
-			}
-			
-		}
-	
-		// normalize angle
-		
-		angle = angle / Math.max( 1, vertices.length );
-		
-		// apply
-		
-		vrotAvg.setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), angle - Math.PI * 0.5 );
-		
-		apply_quaternion( object, vrotAvg, true, true );
 		
 		/*
 		var vectors = _VectorHelper.get_orthonormal_vectors( normalAvg.clone() ),
