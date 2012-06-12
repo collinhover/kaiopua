@@ -860,29 +860,40 @@
 					vertexAltId = vertexOrder[ m ];
 					vertexExpected = faceVerticesExpected[ m ];
 					
-					// get angle
+					// only check expected that are to left or right of vertex
 					
-					distance = _MathHelper.clamp( vertexNormalized.dot( vertexExpected ), -1, 1 );
-					angle = Math.acos( distance );
-					
-					// get axis between vertex and expected
-					
-					axis.cross( vertexNormalized, vertexExpected ).normalize();
-					
-					// dot expected axis with actual axis
-					
-					vrotAxisDot = vrotAxis.dot( axis );
-					
-					// score from angle and dot
-					
-					vertexOrderScores[ vertexAltId ] = score = angle + Math.acos( vrotAxisDot );
-					
-					// find minimum score amongst all face vertices
-					
-					if ( score < scoreMin ) {
+					if ( ( m >= j - 1 && m <= j + 1 ) || ( j === 0 && m === k - 1 ) || ( j === k - 1 && m === 0 ) ) {
 						
-						scoreMin = score;
-						vertexOrderIndex = m;
+						// get angle
+						
+						distance = _MathHelper.clamp( vertexNormalized.dot( vertexExpected ), -1, 1 );
+						angle = Math.acos( distance );
+						
+						// get axis between vertex and expected
+						
+						axis.cross( vertexNormalized, vertexExpected ).normalize();
+						
+						// dot expected axis with actual axis
+						
+						vrotAxisDot = vrotAxis.dot( axis );
+						
+						// score from angle and dot
+						
+						vertexOrderScores[ vertexAltId ] = score = angle + Math.acos( vrotAxisDot );
+						
+						// find minimum score amongst all face vertices
+						
+						if ( score < scoreMin ) {
+							
+							scoreMin = score;
+							vertexOrderIndex = m;
+							
+						}
+						
+					}
+					else {
+						
+						vertexOrderScores[ vertexAltId ] = Number.MAX_VALUE;
 						
 					}
 					
@@ -939,9 +950,7 @@
 				vertexAltId = vertexOrderNew[ vertexIndex ];
 				
 			}
-			
-			console.log( 'face', face, 'vertexOrderScoresList', vertexOrderScoresList, 'vertexOrder', vertexOrder, 'vertexOrderNew', vertexOrderNew, ' vertexOrderIndices ', vertexOrderIndices );
-			
+			//console.log( 'face', face, 'vertexOrderScoresList', vertexOrderScoresList, 'vertexOrder', vertexOrder, 'vertexOrderNew', vertexOrderNew, ' vertexOrderIndices ', vertexOrderIndices );
 			// update face by sorted vertices
 			
 			angle = 0;
@@ -997,23 +1006,6 @@
 		vrotAvg.setFromAxisAngle( vrotAxis, angle - Math.PI * 0.5 );
 		
 		apply_quaternion( object, vrotAvg, true, true );
-		
-		/*
-		angle = angle / Math.max( 1, faces.length );
-		console.log(' angle after sorting vertices ', angle, ' + degrees:', _MathHelper.rad_to_degree( angle ) );
-		if ( angle !== 0 ) {
-			
-			var objectQ = object.quaternion,
-				currentAxis = new THREE.Vector3( objectQ.x / Math.sqrt( 1 - objectQ.w * objectQ.w), objectQ.y / Math.sqrt( 1 - objectQ.w * objectQ.w ), objectQ.z / Math.sqrt( 1 - objectQ.w * objectQ.w ) ),
-				vectors = _VectorHelper.get_orthonormal_vectors( currentAxis );
-				
-			console.log(' current axis ', currentAxis, ' + vectors ', vectors.v2, vectors.v3 );
-			sortRotOffset.setFromAxisAngle( currentAxis, angle );
-			
-			apply_quaternion( object, sortRotOffset, true );
-			
-		}
-		*/
 		
 		/*
 		var vectors = _VectorHelper.get_orthonormal_vectors( normalAvg.clone() ),
