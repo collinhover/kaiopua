@@ -20,13 +20,17 @@ The core goal of the project is to create a universal design education tool that
 
 [Collin Hover](http://collinhover.com "Collin Hover")
 
-####Thesis Committee
+####Design Consulting
 
-Seiji Ikeda (Committee Chair) - Assistant Professor, Art + Art History  
-Robert Hower (Committee Member) - Professor & Dept. Chair, Art + Art History   
-Tuan Ho (Committee Member) - Assistant Professor, Art + Art History   
-Vassilis Athitsos (Committee Member) - Assistant Professor, Computer Science and Engineering  
-
+Seiji Ikeda - Assistant Professor (Web Design), Art + Art History  
+Robert Hower - Professor & Dept. Chair (Graphic Design), Art + Art History   
+Tuan Ho - Assistant Professor (Gaming), Art + Art History   
+Vassilis Athitsos - Assistant Professor (Computer Vision), Computer Science and Engineering  
+  
+####Music
+  
+(none yet - TBA)  
+  
 ####Extra Credits
   
 Thanks to the following individuals for help starting up the game with some basic illustrations, models, and animation assistance:
@@ -35,21 +39,17 @@ Ian Wilson
 Kevin Ly  
 Houston Hardaway  
 Joshua Wilson   
-Amanda Nicole East  
-
-####Music
-
-(none yet - TBA)
-
+Amanda Nicole East 
+  
 ##Technology
-
+  
 HTML5  
 CSS3  
 Javascript  
 WebGL  
 
 ####Libraries
-
+  
 HTML5-Reset  
 Modernizr  
 SignalsJS  
