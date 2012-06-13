@@ -781,7 +781,7 @@
 			
 			r = this.rotation = {};
 			
-			position.copy( this.plant.matrixWorld.getPosition() );
+			position.copy( this.module.matrixWorld.getPosition() );
 			position = projector.projectVector( position, _Game.camera );
 			
 			r.x0 = ( ( position.x + 1 ) * shared.screenWidth ) * 0.5;

@@ -17,7 +17,6 @@
 		_Button,
 		_GUI,
 		_ObjectHelper,
-		plantGeometryBase,
 		utilVec31Grow;
 	
 	/*===================================================
@@ -47,7 +46,7 @@
     
     =====================================================*/
 	
-	function init_internal( ge, gm, uie, btn, gui, oh, plant ) {
+	function init_internal( ge, gm, uie, btn, gui, oh, plantGeometry ) {
 		console.log('internal plant', _Plant);
 		
 		_GridElement = ge;
@@ -56,12 +55,12 @@
 		_Button = btn;
 		_GUI = gui;
 		_ObjectHelper = oh;
-		plantGeometryBase = plant;
 		
 		utilVec31Grow = new THREE.Vector3();
 		
 		// properties
 		
+		_Plant.geometryBase = plantGeometry;
 		_Plant.timeGrow = 500;
 		_Plant.timeShow = 125;
 		_Plant.timeHide = 125;
@@ -110,9 +109,7 @@
 		
 		if ( typeof parameters.geometry === 'undefined' ) {
 			
-			parameters.geometry = plantGeometryBase;
-			
-			parameters.layout = [ [ 1 ] ];
+			parameters.geometry = _Plant.geometryBase;
 			
 		}
 		
@@ -145,6 +142,10 @@
 	
 	function clone ( c ) {
 		
+		var i, l,
+			model,
+			miniature;
+		
 		if ( typeof c === 'undefined' ) {
 			
 			c = new _Plant.Instance();
@@ -159,8 +160,21 @@
 			
 			// properties
 			
-			c.scale.set( 1, 1, 1 );
 			c.timeGrow = this.timeGrow;
+			
+			// for each model
+			
+			for ( i = 0, l = c.models.length; i < l; i++ ) {
+				
+				model = c.models[ i ];
+				miniature = c.miniatures[ i ];
+				
+				// set scale to 1
+				
+				model.scale.set( 1, 1, 1 );
+				miniature.scale.set( 1, 1, 1 );
+				
+			}
 			
 			// TODO 
 			// actually clone uielements
@@ -396,18 +410,31 @@
     =====================================================*/
 	
 	function grow () {
+		
+		var i, l,
+			model;
+		
 		console.log('plant grow!');
-		// set scale to 0
 		
-		this.scale.set( 0, 0, 0 );
+		// for each model
 		
-		// tween scale to 1
-		
-		this.tween_properties( {
-			time: this.timeGrow,
-			easing: TWEEN.Easing.Back.EaseOut,
-			scale: utilVec31Grow.set( 1, 1, 1 )
-		} );
+		for ( i = 0, l = this.models.length; i < l; i++ ) {
+			
+			model = this.models[ i ];
+			
+			// set scale to 0
+			
+			model.scale.set( 0, 0, 0 );
+			
+			// tween scale to 1
+			
+			model.tween_properties( {
+				time: this.timeGrow,
+				easing: TWEEN.Easing.Back.EaseOut,
+				scale: utilVec31Grow.set( 1, 1, 1 )
+			} );
+			
+		}
 		
 	}
 	

@@ -221,6 +221,7 @@ var KAIOPUA = (function (main) {
 		main.generate_dom_image = generate_dom_image;
 		
 		main.ensure_array = ensure_array;
+		main.ensure_not_array = ensure_not_array;
 		main.modify_array = modify_array;
 		main.index_of_object_with_property_value = index_of_object_with_property_value;
 		
@@ -512,9 +513,15 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	function ensure_array( target ) {
+	function ensure_array ( target ) {
 		
 		return target ? ( is_array ( target ) !== true ? [ target ] : target ) : [];
+		
+	}
+	
+	function ensure_not_array ( target, index ) {
+		
+		return is_array ( target ) === true ? target[ index || 0 ] : target;
 		
 	}
 	

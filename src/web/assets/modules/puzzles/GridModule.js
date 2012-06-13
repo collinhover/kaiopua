@@ -416,9 +416,19 @@
 		
 		this._occupant = occupant;
 		
-		// set occupied state
+		// update state
 		
-		this.change_state( [ 'occupied', 'base' ], ( typeof this.occupant !== 'undefined' ) );
+		if ( typeof this._occupant !== 'undefined' ) {
+			
+			this.add( this._occupant );
+			this.change_state( [ 'occupied', 'base' ], true );
+			
+		}
+		else {
+			
+			this.change_state( [ 'occupied', 'base' ], false );
+			
+		}
 		
 		// if change occurred
 		

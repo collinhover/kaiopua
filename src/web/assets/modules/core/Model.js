@@ -268,7 +268,7 @@
 		// call prototype constructor
 		// default to single material
 		
-		THREE.Mesh.call( this, geometry, materials[0] );
+		THREE.Mesh.call( this, geometry, main.ensure_not_array( materials ) );
 		
 		// force use quaternion
 		
@@ -434,7 +434,7 @@
 			
 			// material
 			
-			c.material = _ObjectHelper.clone_materials( material )[ 0 ];
+			c.material = main.ensure_not_array( _ObjectHelper.clone_materials( material ) );
 			
 			// three properties
 			

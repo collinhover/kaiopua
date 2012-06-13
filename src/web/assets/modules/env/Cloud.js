@@ -11,9 +11,7 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/env/Cloud.js",
 		_Cloud = {},
-		_Model,
-		_OrbitUpdater,
-		_WanderUpdater;
+		_Model;
 	
 	/*===================================================
     
@@ -25,8 +23,6 @@
 		data: _Cloud,
 		requirements: [
 			"assets/modules/core/Model.js",
-			"assets/modules/models/OrbitUpdater.js",
-			"assets/modules/models/WanderUpdater.js",
 			{ path: "assets/models/Cloud_001.js", type: 'model' },
 			{ path: "assets/models/Cloud_002.js", type: 'model' }
 		],
@@ -40,12 +36,10 @@
     
     =====================================================*/
 	
-	function init_internal ( m, ou, wu, cloudBase1, cloudBase2 ) {
+	function init_internal ( m, cloudBase1, cloudBase2 ) {
 		console.log('internal cloud', _Cloud);
 		
 		_Model = m;
-		_OrbitUpdater = ou;
-		_WanderUpdater = wu;
 		
 		// properties
 		
@@ -80,12 +74,6 @@
 		
 		_Model.Instance.call( this, parameters );
 		
-		// properties
-		/*
-		this.orbit = new _OrbitUpdater.Instance( { object: this } );
-		this.wander = new _WanderUpdater.Instance( { object: this } );
-		this.orbit.add( this.wander );
-		*/
 	}
 	
 } (KAIOPUA) );

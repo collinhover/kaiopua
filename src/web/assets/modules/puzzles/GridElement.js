@@ -57,13 +57,12 @@
 		// properties
 		
 		rotationAxis = new THREE.Vector3( 0, 1, 0 );
+		_GridElement.NODE_EMPTY = 0;
+		_GridElement.NODE_SELF = 1;
 		
 		// instance
 		
 		_GridElement.Instance = GridElement;
-		_GridElement.Instance.prototype = new _Model.Instance();
-		_GridElement.Instance.prototype.constructor = _GridElement.Instance;
-		_GridElement.Instance.prototype.supr = _Model.Instance.prototype;
 		
 		_GridElement.Instance.prototype.clone = clone;
 		
@@ -77,7 +76,7 @@
 		
 		_GridElement.Instance.prototype.occupy_module = occupy_module;
 		_GridElement.Instance.prototype.test_occupy_module = test_occupy_module;
-		_GridElement.Instance.prototype.each_layout_element = _GridElement.each_layout_element = each_layout_element;
+		_GridElement.Instance.prototype.each_layout_element = each_layout_element;
 		
 		_GridElement.Instance.prototype.get_layout_node_total = get_layout_node_total
 		_GridElement.Instance.prototype.get_layout_center_location = get_layout_center_location;
@@ -97,21 +96,17 @@
 		
 		parameters = parameters || {};
 		
-		// prototype constructor
-		
-		_Model.Instance.call( this, parameters );
-		
 		// properties
-		
+				
 		this.rotationAngle = this.rotationAngleLayout = 0;
 		
 		// layout
 		
-		this.layout = generate_layout( parameters.layout );
+		generate_layout.call( this, parameters.layout );
 		
-		// modules layout
+		// models
 		
-		this.layoutModules = this.layout.dup();
+		generate_models.call( this, parameters );
 		
 	}
 	
@@ -123,6 +118,9 @@
 	
 	function clone ( c ) {
 		
+		var cGeometry,
+			cGeometryMiniature;
+		
 		if ( typeof c === 'undefined' ) {
 			
 			c = new _GridElement.Instance();
@@ -131,16 +129,32 @@
 		
 		if ( c instanceof _GridElement.Instance ) {
 			
-			// proto
-			
-			c = _GridElement.Instance.prototype.supr.clone.call( this, c );
-			
 			// properties
 			
 			c.rotationAngle = this.rotationAngle;
 			c.rotationAngleLayout = this.rotationAngleLayout;
-			c.layout = this.layout.dup();
-			c.layoutModules = this.layout.dup();
+			
+			// layout
+			
+			generate_layout.call( c, this.layout );
+			
+			// geometry
+			
+			cGeometry = _ObjectHelper.clone_geometry( this.geometry );
+			
+			if ( this.geometry !== this.geometryMiniature ) {
+				
+				cGeometryMiniature = _ObjectHelper.clone_geometry( this.geometryMiniature );
+				
+			}
+			
+			// models
+			
+			generate_models.call( c, {
+				materials: _ObjectHelper.clone_materials( this.material ),
+				geometry: cGeometry,
+				geometryMiniature: cGeometryMiniature
+			} );
 			
 		}
 		
@@ -154,39 +168,37 @@
     
     =====================================================*/
 	
-	function generate_layout ( source ) {
+	function generate_layout ( layout ) {
 		
-		var layout;
+		// generate layout as matrix
 		
-		// generate layout as matrix from source
-		
-		if ( source instanceof Matrix ) {
+		if ( layout instanceof Matrix ) {
 			
-			layout = source;
+			this.layout = layout;
 			
 		}
-		else if ( main.is_array( source ) ) {
+		else if ( main.is_array( layout ) ) {
 			
-			layout = $M( source );
+			this.layout = $M( layout );
 			
 		}
 		
 		// if layout is not valid, fallback to default 1x1
 		
-		if ( layout instanceof Matrix !== true ) {
+		if ( this.layout instanceof Matrix !== true ) {
 			
-			layout = $M( [
-				[ 1 ]
+			this.layout = $M( [
+				[ _GridElement.NODE_SELF ]
 			] );
 			/*
-			layout = $M( [
+			this.layout = $M( [
 				[ 0, 0, 0 ],
 				[ 0, 1, 0 ],
 				[ 0, 0, 0 ]
 			] );
 			*/
 			/*
-			layout = $M( [
+			this.layout = $M( [
 				[ 0, 1, 1, 0, 0 ],
 				[ 0, 0, 0, 1, 0 ],
 				[ 0, 0, 1, 0, 0 ],
@@ -194,19 +206,126 @@
 				[ 0, 0, 0, 0, 0 ]
 			] );
 			*/
-			/*layout = $M( [
+			/*
+			this.layout = $M( [
 				[ Math.round( Math.random() ), Math.round( Math.random() ), Math.round( Math.random() ) ],
 				[ Math.round( Math.random() ), Math.round( Math.random() ), Math.round( Math.random() ) ],
 				[ Math.round( Math.random() ), Math.round( Math.random() ), Math.round( Math.random() ) ]
-			] );*/
+			] );
+			*/
 			
 		}
 		
-		// clamp layout values between 0 and 1, and force all non-zero to snap to 1
+		// modules matrix from layout
 		
-		layout = layout.map( function( x ) { return Math.ceil( _MathHelper.clamp( x, 0, 1 ) ); } );
+		this.modules = this.layout.dup();
 		
-		return layout;
+	}
+	
+	/*===================================================
+    
+    models
+    
+    =====================================================*/
+	
+	function generate_models ( parameters ) {
+		
+		var model,
+			miniature;
+		
+		// handle parameters
+		
+		parameters = parameters || {};
+		parameters.model = parameters.model || {};
+		parameters.miniature = parameters.miniature || {};
+		
+		// properties
+		
+		this.material = parameters.model.materials = parameters.miniature.materials = main.ensure_not_array( parameters.materials || new THREE.MeshLambertMaterial( { vertexColors: THREE.VertexColors, shading: THREE.SmoothShading } ) );
+		
+		this.geometry = parameters.model.geometry = parameters.model.geometry || parameters.geometry;
+		this.geometryMiniature = parameters.miniature.geometry = parameters.miniature.geometry || parameters.geometryMiniature || parameters.model.geometry;
+		
+		if ( typeof this.geometry === 'string' ) {
+			
+			this.geometry = parameters.model.geometry = main.get_asset_data( this.geometry );
+			
+		}
+		if ( typeof this.geometryMiniature === 'string' ) {
+			
+			this.geometryMiniature = parameters.miniature.geometry = main.get_asset_data( this.geometryMiniature );
+			
+		}
+		
+		// lists
+		
+		this.models = [];
+		
+		if ( this.geometryMiniature === this.geometry ) {
+			
+			this.miniatures = this.models;
+			
+		}
+		else {
+			
+			this.miniatures = [];
+			
+		}
+		
+		// create all models
+		
+		if ( this.geometry && this.material ) {
+			
+			each_layout_element.call( this, this.layout, function ( node ) {
+				
+				if ( node === _GridElement.NODE_SELF )  {
+					
+					// model
+					
+					model = new _Model.Instance( parameters.model );
+					
+					this.models.push( model );
+					
+					// miniature
+					
+					if ( this.geometryMiniature !== this.geometry ) {
+						
+						miniature = new _Model.Instance( parameters.miniature );
+						
+						this.miniatures.push( miniature );
+						
+					}
+					
+				}
+				
+			} );
+			
+		}
+		
+	}
+	
+	function add_models ( models ) {
+		
+		occupy_modules.call( this, models, true );
+		
+	}
+	
+	function remove_models () {
+		
+		var i, l,
+			model;
+		
+		for ( i = 0, l = this.models.length; i < l; i++ ) {
+			
+			model = this.models[ i ];
+			
+			if ( typeof model.parent !== 'undefined' ) {
+				
+				model.parent.remove( model );
+				
+			}
+			
+		}
 		
 	}
 	
@@ -224,7 +343,7 @@
 		// add degrees
 		
 		this.rotationAngle = ( this.rotationAngle + radians ) % ( Math.PI * 2 );
-		
+		/*
 		// rotate self
 		// modify degrees based on cardinal right axis
 		
@@ -232,7 +351,7 @@
 		q.setFromAxisAngle( rotationAxis, angle );
 		
 		this.quaternion.multiplySelf( q );
-		
+		*/
 		// rotate layout
 		
 		this.rotate_layout( this.rotationAngle, testModule );
@@ -246,14 +365,14 @@
 		// if is not a 1x1 layout
 		// snap self back to last layout rotation angle
 		
-		if ( this.get_layout_node_total() > 1 ) {
+		if ( this.get_layout_node_total( this.layout, _GridElement.NODE_SELF ) > 1 ) {
 			
 			this.rotationAngle = this.rotationAngleLayout;
-			
+			/*
 			angle = shared.cardinalAxes.right.x * this.rotationAngle;
 			
 			this.quaternion.setFromAxisAngle( rotationAxis, angle );
-			
+			*/
 		}
 		
 	}
@@ -302,7 +421,10 @@
     
     =====================================================*/
 	
-	function change_module ( moduleNew, layoutModulesNew ) {
+	function change_module ( moduleNew, modulesNew ) {
+		
+		var models,
+			model;
 		
 		// if is change
 		
@@ -310,19 +432,11 @@
 			
 			// for each module in previous layout modules
 			
-			if ( typeof this.layoutModules !== 'undefined' ) {
+			if ( typeof this.modules !== 'undefined' ) {
 				
 				// unoccupy
 				
-				this.each_layout_element( function ( layoutModule ) {
-					
-					if ( layoutModule instanceof _GridModule.Instance ) {
-						
-						layoutModule.occupant = undefined;
-						
-					}
-					
-				}, this.layoutModules );
+				unoccupy_modules.call( this );
 				
 			}
 			
@@ -330,37 +444,66 @@
 			
 			this.module = moduleNew;
 			
-			this.layoutModules = layoutModulesNew;
+			this.modules = modulesNew;
 			
-			// if new module and layouts are valid
+			// if module and layouts are valid
 			
-			if ( this.module instanceof _GridModule.Instance && typeof this.layoutModules !== 'undefined' ) {
+			if ( this.module instanceof _GridModule.Instance && typeof this.modules !== 'undefined' ) {
 				
-				// add
-				
-				this.module.add( this );
-				
-				// for each module in layout modules set this as occupant
-				
-				this.each_layout_element( function ( layoutModule ) {
-					
-					if ( layoutModule instanceof _GridModule.Instance ) {
-						
-						layoutModule.occupant = this;
-						
-					}
-					
-				}, this.layoutModules );
-				
-			}
-			// remove self from previous
-			else if ( typeof this.parent !== 'undefined' ) {
-				
-				this.parent.remove( this );
+				occupy_modules.call( this );
 			
 			}
 			
 		}
+		
+	}
+	
+	function unoccupy_modules () {
+		
+		// for each module in layout modules add model as occupant
+		
+		each_layout_element.call( this, this.modules, function ( layoutModule ) {
+			
+			if ( layoutModule instanceof _GridModule.Instance ) {
+				
+				layoutModule.occupant = undefined;
+				
+			}
+			
+		} );
+		
+	}
+	
+	function occupy_modules ( models, temporary ) {
+		
+		models = models || this.models;
+		
+		var modelCount = 0,
+			model;
+		
+		// for each module in layout modules add model as occupant
+		
+		each_layout_element.call( this, this.modules, function ( layoutModule ) {
+			
+			if ( layoutModule instanceof _GridModule.Instance ) {
+				
+				model = models[ modelCount ];
+				modelCount++;
+				
+				if ( temporary === true ) {
+					
+					layoutModule.add( model );
+
+				}
+				else {
+					
+					layoutModule.occupant = model;
+					
+				}
+				
+			}
+			
+		} );
 		
 	}
 	
@@ -375,6 +518,8 @@
 	function test_occupy_module ( testModule, show, occupy, testLayout ) {
 		
 		var i, l,
+			modelCount = 0,
+			model,
 			success = 0,
 			dimensions,
 			rows,
@@ -382,7 +527,7 @@
 			center,
 			testResults,
 			spreadRecord,
-			testLayoutModules,
+			testModules,
 			moduleDimensions,
 			modulesWidthTotal = 0,
 			modulesDepthTotal = 0,
@@ -394,25 +539,19 @@
 			
 		if ( this.testModule !== testModule ) {
 			
-			// remove self from current parent
-			
-			if ( typeof this.parent !== 'undefined' ) {
+			// if no new test module add to current module
+			if ( testModule instanceof _GridModule.Instance !== true && this.module instanceof _GridModule.Instance ) {
 				
-				// if no module, remove 
-				if ( this.module instanceof _GridModule.Instance !== true ) {
-					
-					this.parent.remove( this );
-					
-				}
-				
-				// if has module, add to
-				else if ( this.parent !== this.module ) {
-					
-					this.module.add( this );
-					
-				}
+				add_models.call( this );
 				
 			}
+			// remove models from current module
+			else if ( this.testModule !== this.module ) {
+				
+				remove_models.call( this );
+				
+			}
+			
 			
 			// store as test
 			
@@ -423,14 +562,6 @@
 		// valid testModule
 		
 		if ( typeof testModule !== 'undefined' ) {
-			
-			// add to test module
-			
-			if ( this.parent !== testModule ) {
-				
-				testModule.add( this );
-				
-			}
 			
 			// clean testModule's grid
 			
@@ -443,39 +574,48 @@
 			// basics
 			
 			testLayout = testLayout || this.layout;
-			dimensions = this.layout.dimensions();
+			dimensions = testLayout.dimensions();
 			rows = dimensions.rows;
 			cols = dimensions.cols;
-			center = this.get_layout_center_location();
+			center = get_layout_center_location( testLayout );
 			testResults = Matrix.Zero( rows, cols );
 			spreadRecord = testResults.dup();
-			testLayoutModules = testResults.dup();
+			testModules = testResults.dup();
 			
 			// return recursive test results
 			
-			success = test_spread( testModule, testLayout, testResults, spreadRecord, center.row, center.col, rows, cols, testLayoutModules );
+			success = test_spread( testModule, testLayout, testResults, spreadRecord, center.row, center.col, rows, cols, testModules );
 			
-			// show test results of occupy on modules tested
+			// modules tested
 			
-			if ( show === true ) {
+			each_layout_element.call( this, testModules, function ( testLayoutModule ) {
 				
-				this.each_layout_element( function ( testLayoutModule ) {
+				if ( testLayoutModule instanceof _GridModule.Instance ) {
 					
-					if ( testLayoutModule instanceof _GridModule.Instance ) {
+					model = this.models[ modelCount ];
+					modelCount++;
+					
+					// add
+					
+					testLayoutModule.add( model );
+					
+					// show test results of occupy
+					
+					if ( show === true ) {
 						
 						testLayoutModule.show_state( 'occupied', 1 - success );
 						
 					}
 					
-				}, testLayoutModules );
+				}
 				
-			}
+			} );
 			
 			// if successful and should occupy
 			
 			if ( success && occupy === true ) {
 				
-				this.change_module( testModule, testLayoutModules );
+				this.change_module( testModule, testModules );
 				
 			}
 			
@@ -485,7 +625,7 @@
 		
 	}
 	
-	function test_spread ( testModule, testLayout, testResults, spreadRecord, rowIndex, colIndex, numRows, numCols, testLayoutModules ) {
+	function test_spread ( testModule, testLayout, testResults, spreadRecord, rowIndex, colIndex, numRows, numCols, testModules ) {
 		
 		var i, l,
 			j, k,
@@ -533,7 +673,7 @@
 				
 				// add testModule to layout map
 				
-				testLayoutModules.elements[ rowArr ][ colArr ] = testModule;
+				testModules.elements[ rowArr ][ colArr ] = testModule;
 				
 			}
 			// no module where needed
@@ -584,7 +724,7 @@
 					
 					if ( spreadRecord.e( rowNext, colNext ) !== 1 ) {
 						
-						successNext = test_spread( moduleNext, testLayout, testResults, spreadRecord, rowNext, colNext, numRows, numCols, testLayoutModules );
+						successNext = test_spread( moduleNext, testLayout, testResults, spreadRecord, rowNext, colNext, numRows, numCols, testModules );
 						
 						// record next success while successful
 						
@@ -620,21 +760,15 @@
     
     =====================================================*/
 	
-	function each_layout_element ( methods, layout ) {
+	function each_layout_element ( layout, callback ) {
 		
 		layout = layout || this.layout;
 		
 		var i, il,
 			j, jl,
-			m, ml,
 			elements = layout.elements,
 			row,
-			node,
-			method;
-		
-		// handle parameters
-		
-		methods = main.ensure_array( methods );
+			node;
 		
 		// for each row
 		
@@ -648,17 +782,9 @@
 				
 				node = row[ j ];
 				
-				// for each node
+				// call method and pass node and row and column indices
 				
-				for ( m = 0, ml = methods.length; m < ml; m++ ) {
-					
-					method = methods[ m ];
-					
-					// call method and pass node and row and column indices
-					
-					method.call( this, node, i, j );
-					
-				}
+				callback.call( this, node, i, j );
 				
 			}
 			
@@ -666,21 +792,21 @@
 		
 	}
 	
-	function get_layout_node_total ( layout ) {
-		
-		layout = layout || this.layout;
+	function get_layout_node_total ( layout, nodeType ) {
 		
 		var nodeTotal = 0;
 		
-		this.each_layout_element( function ( node ) {
+		nodeType = main.is_number( nodeType ) ? nodeType : -1;
+		
+		each_layout_element.call( this, layout, function ( node ) {
 			
-			if ( node > 0 ) {
+			if ( ( typeof nodeType === 'undefined' && node > 0 ) || ( main.is_number( nodeType ) ? node === nodeType : node instanceof nodeType ) )  {
 				
-				nodeTotal += node;
+				nodeTotal += 1;
 				
 			}
 			
-		}, layout );
+		} );
 		
 		return nodeTotal;
 		
@@ -700,13 +826,11 @@
 	
 	function get_layout_center_offset ( layout ) {
 		
-		layout = layout || this.layout;
-		
 		var nodeTotal = 0,
 			iTotal = 0,
 			jTotal = 0;
 		
-		this.each_layout_element( function ( node, i, j ) {
+		each_layout_element.call( this, layout, function ( node, i, j ) {
 			
 			if ( node > 0 ) {
 				
@@ -716,7 +840,7 @@
 				
 			}
 			
-		}, layout );
+		} );
 		
 		return { row: iTotal / nodeTotal, col: jTotal / nodeTotal };
 		
