@@ -91,6 +91,16 @@
 		_Field.Instance.prototype.constructor = _Field.Instance;
 		_Field.Instance.prototype.supr = _Puzzle.Instance.prototype;
 		
+		Object.defineProperty( _Field.Instance.prototype, 'plantModels', { 
+			get: function () {
+				
+				// prototype call
+				
+				return this.models;
+			
+			}
+		});
+		
 		Object.defineProperty( _Field.Instance.prototype, 'plants', { 
 			get: function () {
 				
@@ -181,7 +191,7 @@
 				
 				// get elements filling grid
 				
-				elements = this.grid.elements;
+				elements = this.plants;
 				
 				numElementsUsed = elements.length;
 				

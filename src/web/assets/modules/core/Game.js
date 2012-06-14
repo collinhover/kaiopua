@@ -93,6 +93,7 @@
 			"assets/modules/puzzles/Grid.js",
 			"assets/modules/puzzles/GridModule.js",
 			"assets/modules/puzzles/GridModuleState.js",
+			"assets/modules/puzzles/GridModel.js",
 			"assets/modules/puzzles/GridElement.js",
 			"assets/modules/farming/Farming.js",
 			"assets/modules/farming/Planting.js",

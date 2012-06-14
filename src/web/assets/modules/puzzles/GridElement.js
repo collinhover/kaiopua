@@ -11,10 +11,11 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/puzzles/GridElement.js",
 		_GridElement = {},
-		_Model,
+		_GridModel,
 		_GridModule,
 		_ObjectHelper,
 		_MathHelper,
+		gridElementCount = 0,
 		rotationAxis,
 		utilQ1Rotate;
 	
@@ -27,7 +28,7 @@
 	main.asset_register( assetPath, { 
 		data: _GridElement,
 		requirements: [
-			"assets/modules/core/Model.js",
+			"assets/modules/puzzles/GridModel.js",
 			"assets/modules/puzzles/GridModule.js",
 			"assets/modules/utils/ObjectHelper.js",
 			"assets/modules/utils/MathHelper.js"
@@ -45,7 +46,7 @@
 	function init_internal( m, gm, oh, mh ) {
 		console.log('internal grid element', _GridElement);
 		
-		_Model = m;
+		_GridModel = m;
 		_GridModule = gm;
 		_ObjectHelper = oh;
 		_MathHelper = mh;
@@ -66,6 +67,8 @@
 		
 		_GridElement.Instance.prototype.clone = clone;
 		
+		_GridElement.Instance.prototype.customize = customize;
+		
 		_GridElement.Instance.prototype.rotate = rotate;
 		_GridElement.Instance.prototype.rotate_reset = rotate_reset;
 		_GridElement.Instance.prototype.rotate_layout = rotate_layout;
@@ -82,6 +85,10 @@
 		_GridElement.Instance.prototype.get_layout_center_location = get_layout_center_location;
 		_GridElement.Instance.prototype.get_layout_center_offset = get_layout_center_offset;
 		
+		Object.defineProperty( _GridModule.Instance.prototype, 'hasCustomModels', { 
+			get: function () { return this.geometry !== this.customizations.geometry; }
+		});
+		
 	}
 	
 	/*===================================================
@@ -92,21 +99,34 @@
 	
 	function GridElement ( parameters ) {
 		
+		gridElementCount++;
+		
 		// handle parameters
 		
 		parameters = parameters || {};
 		
 		// properties
-				
+		
+		this.id = gridElementCount;
 		this.rotationAngle = this.rotationAngleLayout = 0;
+		this.material = main.ensure_not_array( parameters.materials || new THREE.MeshLambertMaterial( { vertexColors: THREE.VertexColors, shading: THREE.SmoothShading } ) );
+		this.geometry = typeof parameters.geometry === 'string' ? main.get_asset_data( parameters.geometry ) : parameters.geometry;
 		
 		// layout
 		
-		generate_layout.call( this, parameters.layout );
+		this.layout = generate_layout.call( this, parameters.layout );
+		
+		// modules matrix from layout
+		
+		this.modules = this.layout.dup();
 		
 		// models
 		
-		generate_models.call( this, parameters );
+		this.models = generate_models.call( this, parameters.models );
+		
+		// customizations
+		console.log( 'new GRID EL ', this, this.id );
+		customize.call( this, parameters.customizations );
 		
 	}
 	
@@ -118,8 +138,10 @@
 	
 	function clone ( c ) {
 		
-		var cGeometry,
-			cGeometryMiniature;
+		var cMaterial,
+			cMaterialCustom,
+			cGeometry,
+			cGeometryCustom;
 		
 		if ( typeof c === 'undefined' ) {
 			
@@ -133,28 +155,33 @@
 			
 			c.rotationAngle = this.rotationAngle;
 			c.rotationAngleLayout = this.rotationAngleLayout;
+			c.material = main.ensure_not_array( _ObjectHelper.clone_materials( this.material ) );
+			c.geometry = _ObjectHelper.clone_geometry( this.geometry );
 			
 			// layout
 			
-			generate_layout.call( c, this.layout );
+			c.layout = generate_layout.call( c, this.layout );
 			
-			// geometry
+			// modules matrix from layout
 			
-			cGeometry = _ObjectHelper.clone_geometry( this.geometry );
+			c.modules = c.layout.dup();
 			
-			if ( this.geometry !== this.geometryMiniature ) {
+			// basic models
+			
+			c.models = generate_models.call( c );
+			
+			// customize
+			console.log('clone customizations');
+			customize.call( c, this.customizations );
+			
+			// handle customizations that need clone
+			
+			if ( this.hasCustomModels ) {
 				
-				cGeometryMiniature = _ObjectHelper.clone_geometry( this.geometryMiniature );
+				c.customizations.material = main.ensure_not_array( _ObjectHelper.clone_materials( this.customizations.material ) );
+				c.customizations.geometry = _ObjectHelper.clone_geometry( this.customizations.geometry );
 				
 			}
-			
-			// models
-			
-			generate_models.call( c, {
-				materials: _ObjectHelper.clone_materials( this.material ),
-				geometry: cGeometry,
-				geometryMiniature: cGeometryMiniature
-			} );
 			
 		}
 		
@@ -168,26 +195,28 @@
     
     =====================================================*/
 	
-	function generate_layout ( layout ) {
+	function generate_layout ( layoutSource ) {
+		
+		var layout;
 		
 		// generate layout as matrix
 		
-		if ( layout instanceof Matrix ) {
+		if ( layoutSource instanceof Matrix ) {
 			
-			this.layout = layout;
+			layout = layoutSource;
 			
 		}
-		else if ( main.is_array( layout ) ) {
+		else if ( main.is_array( layoutSource ) ) {
 			
-			this.layout = $M( layout );
+			layout = $M( layoutSource );
 			
 		}
 		
 		// if layout is not valid, fallback to default 1x1
 		
-		if ( this.layout instanceof Matrix !== true ) {
+		if ( layout instanceof Matrix !== true ) {
 			
-			this.layout = $M( [
+			layout = $M( [
 				[ _GridElement.NODE_SELF ]
 			] );
 			/*
@@ -216,9 +245,7 @@
 			
 		}
 		
-		// modules matrix from layout
-		
-		this.modules = this.layout.dup();
+		return layout;
 		
 	}
 	
@@ -226,55 +253,28 @@
     
     models
     
-    =====================================================*/
+    =====================================================*/	
 	
 	function generate_models ( parameters ) {
 		
-		var model,
-			miniature;
+		var models = [],
+			model;
 		
 		// handle parameters
 		
 		parameters = parameters || {};
-		parameters.model = parameters.model || {};
-		parameters.miniature = parameters.miniature || {};
 		
-		// properties
+		parameters.gridElement = this;
+		parameters.materials = parameters.materials || this.material;
+		parameters.geometry = parameters.geometry || this.geometry;
 		
-		this.material = parameters.model.materials = parameters.miniature.materials = main.ensure_not_array( parameters.materials || new THREE.MeshLambertMaterial( { vertexColors: THREE.VertexColors, shading: THREE.SmoothShading } ) );
+		// if valid properties
 		
-		this.geometry = parameters.model.geometry = parameters.model.geometry || parameters.geometry;
-		this.geometryMiniature = parameters.miniature.geometry = parameters.miniature.geometry || parameters.geometryMiniature || parameters.model.geometry;
-		
-		if ( typeof this.geometry === 'string' ) {
+		if ( parameters.materials && parameters.geometry ) {
 			
-			this.geometry = parameters.model.geometry = main.get_asset_data( this.geometry );
+			// create all models
 			
-		}
-		if ( typeof this.geometryMiniature === 'string' ) {
-			
-			this.geometryMiniature = parameters.miniature.geometry = main.get_asset_data( this.geometryMiniature );
-			
-		}
-		
-		// lists
-		
-		this.models = [];
-		
-		if ( this.geometryMiniature === this.geometry ) {
-			
-			this.miniatures = this.models;
-			
-		}
-		else {
-			
-			this.miniatures = [];
-			
-		}
-		
-		// create all models
-		
-		if ( this.geometry && this.material ) {
+			models = [];
 			
 			each_layout_element.call( this, this.layout, function ( node ) {
 				
@@ -282,19 +282,9 @@
 					
 					// model
 					
-					model = new _Model.Instance( parameters.model );
+					model = new _GridModel.Instance( parameters );
 					
-					this.models.push( model );
-					
-					// miniature
-					
-					if ( this.geometryMiniature !== this.geometry ) {
-						
-						miniature = new _Model.Instance( parameters.miniature );
-						
-						this.miniatures.push( miniature );
-						
-					}
+					models.push( model );
 					
 				}
 				
@@ -302,22 +292,28 @@
 			
 		}
 		
+		return models;
+		
 	}
 	
 	function add_models ( models ) {
+		
+		models = models || this.models;
 		
 		occupy_modules.call( this, models, true );
 		
 	}
 	
-	function remove_models () {
+	function remove_models ( models ) {
 		
 		var i, l,
 			model;
 		
-		for ( i = 0, l = this.models.length; i < l; i++ ) {
+		models = models || this.models;
+		
+		for ( i = 0, l = models.length; i < l; i++ ) {
 			
-			model = this.models[ i ];
+			model = models[ i ];
 			
 			if ( typeof model.parent !== 'undefined' ) {
 				
@@ -327,6 +323,43 @@
 			
 		}
 		
+	}
+	
+	/*===================================================
+    
+    customizations
+    
+    =====================================================*/
+	
+	function customize ( parameters ) {
+		
+		var c;
+		
+		// handle parameters
+		
+		parameters = parameters || {};
+		
+		c = this.customizations = this.hasOwnProperty( 'customizations' ) ? this.customizations : {};
+		console.log( 'customize?', c.material, this, this.id);
+		c.material = parameters.materials || c.material;
+		
+		c.geometry = parameters.geometry || c.geometry || this.geometry;
+		
+		// ensure proper material
+		
+		if ( c.material === true ) {
+			console.log( 'CLONING this material for customize');
+			c.material = main.ensure_not_array( _ObjectHelper.clone_materials( this.material ) );
+			
+		}
+		else if ( c.material instanceof THREE.Material !== true ) {
+			console.log( 'using this material for customize');
+			c.material = this.material;
+			
+		}
+		else {
+			console.log( 'using new material for customize', parameters);
+		}
 	}
 	
 	/*===================================================
@@ -458,22 +491,6 @@
 		
 	}
 	
-	function unoccupy_modules () {
-		
-		// for each module in layout modules add model as occupant
-		
-		each_layout_element.call( this, this.modules, function ( layoutModule ) {
-			
-			if ( layoutModule instanceof _GridModule.Instance ) {
-				
-				layoutModule.occupant = undefined;
-				
-			}
-			
-		} );
-		
-	}
-	
 	function occupy_modules ( models, temporary ) {
 		
 		models = models || this.models;
@@ -500,6 +517,22 @@
 					layoutModule.occupant = model;
 					
 				}
+				
+			}
+			
+		} );
+		
+	}
+	
+	function unoccupy_modules () {
+		
+		// for each module in layout modules add model as occupant
+		
+		each_layout_element.call( this, this.modules, function ( layoutModule ) {
+			
+			if ( layoutModule instanceof _GridModule.Instance ) {
+				
+				layoutModule.occupant = undefined;
 				
 			}
 			

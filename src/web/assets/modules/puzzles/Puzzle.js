@@ -92,6 +92,14 @@
 		_Puzzle.Instance.prototype.constructor = _Puzzle.Instance;
 		_Puzzle.Instance.prototype.on_state_changed = on_state_changed;
 		
+		Object.defineProperty( _Puzzle.Instance.prototype, 'models', { 
+			get: function () {
+				
+				return this.grid.models;
+			
+			}
+		});
+		
 		Object.defineProperty( _Puzzle.Instance.prototype, 'elements', { 
 			get: function () {
 				

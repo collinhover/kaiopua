@@ -13,6 +13,7 @@
 		_Grid = {},
 		_Model,
 		_GridModule,
+		_GridModel,
 		_GridElement,
 		_MathHelper,
 		_ObjectHelper,
@@ -35,6 +36,7 @@
 		requirements: [
 			"assets/modules/core/Model.js",
 			"assets/modules/puzzles/GridModule.js",
+			"assets/modules/puzzles/GridModel.js",
 			"assets/modules/puzzles/GridElement.js",
 			"assets/modules/utils/MathHelper.js",
 			"assets/modules/utils/ObjectHelper.js"
@@ -49,11 +51,12 @@
 	
 	=====================================================*/
 	
-	function init_internal ( m, gm, ge, mh, oh ) {
+	function init_internal ( m, gm, gmodel, ge, mh, oh ) {
 		console.log("internal grid", _Grid);
 		
 		_Model = m;
 		_GridModule = gm;
+		_GridModel = gmodel;
 		_GridElement = ge;
 		_MathHelper = mh;
 		_ObjectHelper = oh;
@@ -105,7 +108,7 @@
 					
 					module = this.modules[ i ];
 					
-					if ( !( module.occupant instanceof _GridElement.Instance ) ) {
+					if ( !module.occupant ) {
 						
 						full = false;
 						break;
@@ -119,11 +122,41 @@
 			}
 		});
 		
+		Object.defineProperty( _Grid.Instance.prototype, 'models', { 
+			get : function () {
+				
+				var i, l,
+					module,
+					model,
+					models = [];
+				
+				// find all models occupying grid
+				
+				for ( i = 0, l = this.modules.length; i < l; i++ ) {
+					
+					module = this.modules[ i ];
+					
+					model = module.occupant;
+					
+					if ( model instanceof _GridModel.Instance && models.indexOf( model ) === -1 ) {
+						
+						models.push( model );
+						
+					}
+					
+				}
+				
+				return models;
+				
+			}
+		});
+		
 		Object.defineProperty( _Grid.Instance.prototype, 'elements', { 
 			get : function () {
 				
 				var i, l,
 					module,
+					model,
 					element,
 					elements = [];
 				
@@ -133,7 +166,8 @@
 					
 					module = this.modules[ i ];
 					
-					element = module.occupant;
+					model = module.occupant;
+					element = model.gridElement;
 					
 					if ( element instanceof _GridElement.Instance && elements.indexOf( element ) === -1 ) {
 						

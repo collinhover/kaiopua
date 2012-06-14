@@ -103,15 +103,20 @@
 	
 	function Plant ( parameters ) {
 		
+		var c;
+		
 		// handle parameters
 		
 		parameters = parameters || {};
 		
 		if ( typeof parameters.geometry === 'undefined' ) {
 			
-			parameters.geometry = _Plant.geometryBase;
+			parameters.geometry = new THREE.CubeGeometry( 30, 50, 30 );
 			
 		}
+		
+		c = parameters.customization = parameters.customization || {};
+		c.geometry = c.geometry || new THREE.CubeGeometry( 60, 120, 60 );//_Plant.geometryBase;
 		
 		// prototype constructor
 		
@@ -144,7 +149,7 @@
 		
 		var i, l,
 			model,
-			miniature;
+			modelCustom;
 		
 		if ( typeof c === 'undefined' ) {
 			
@@ -162,17 +167,19 @@
 			
 			c.timeGrow = this.timeGrow;
 			
-			// for each model
+			// models
 			
 			for ( i = 0, l = c.models.length; i < l; i++ ) {
 				
 				model = c.models[ i ];
-				miniature = c.miniatures[ i ];
-				
-				// set scale to 1
-				
 				model.scale.set( 1, 1, 1 );
-				miniature.scale.set( 1, 1, 1 );
+				
+				if ( c.hasCustomModels ) {
+					
+					modelCustom = c.customizations.models[ i ];
+					modelCustom.scale.set( 1, 1, 1 );
+					
+				}
 				
 			}
 			

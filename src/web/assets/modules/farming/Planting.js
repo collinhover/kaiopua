@@ -16,6 +16,7 @@
 		_Grid,
 		_Puzzle,
 		_GridModule,
+		_GridModel,
 		_Plant,
 		_MathHelper,
 		_ObjectHelper,
@@ -36,6 +37,7 @@
 			"assets/modules/puzzles/Puzzle.js",
 			"assets/modules/puzzles/Grid.js",
 			"assets/modules/puzzles/GridModule.js",
+			"assets/modules/puzzles/GridModel.js",
 			"assets/modules/farming/Plant.js",
 			"assets/modules/utils/MathHelper.js",
 			"assets/modules/utils/ObjectHelper.js"
@@ -50,7 +52,7 @@
     
     =====================================================*/
 	
-	function init_internal ( g, gui, pzl, gr, gm, pl, mh, oh ) {
+	function init_internal ( g, gui, pzl, gr, gm, gmodel, pl, mh, oh ) {
 		console.log('internal planting', _Planting);
 		
 		_Game = g;
@@ -58,6 +60,7 @@
 		_Puzzle = pzl;
 		_Grid = gr;
 		_GridModule = gm;
+		_GridModel = gmodel;
 		_Plant = pl;
 		_MathHelper = mh;
 		_ObjectHelper = oh;
@@ -139,9 +142,10 @@
 	
 	function reset () {
 		
-		// all plants list
+		// plants list
 		
-		this.allPlants = [];
+		this.plants = [];
+		this.plantModels = [];
 		
 		// stop planting
 		
@@ -195,12 +199,12 @@
 			
 			if ( parameters.field === true && typeof this.field !== 'undefined' ) {
 				
-				plantingObjects = plantingObjects.concat( this.field.plants );
+				plantingObjects = plantingObjects.concat( this.field.plantModels );
 				
 			}
 			else {
 				
-				plantingObjects = plantingObjects.concat( this.allPlants );
+				plantingObjects = plantingObjects.concat( this.plantModels );
 				
 			}
 			
@@ -370,11 +374,20 @@
 			
 			targetObject = this.get_planting_object_under_mouse( { modules: false, character: false, plants: true } );
 			
+			// if is a grid model
+			
+			if ( targetObject instanceof _GridModel.Instance ) {
+				
+				targetObject = targetObject.gridElement;
+				
+			}
+			
 			this.plantFromSelection = true;
 			
 		}
 		
 		// if is a plant
+		
 		if ( targetObject instanceof _Plant.Instance ) {
 			
 			// use plant
@@ -665,7 +678,9 @@
 	
 	function change_plant ( plantNew ) {
 		
-		var index;
+		var i, l,
+			index,
+			plantModel;
 		
 		// if new plant is different from one stored in planting
 		
@@ -681,17 +696,33 @@
 				
 				// find if in all plants list
 				
-				index = this.allPlants.indexOf( this.plant );
+				index = this.plants.indexOf( this.plant );
 				
 				// if planted
 				
 				if ( this.plant.planted === true ) {
 					
-					// store in all plants list
+					// plants list
 					
 					if ( index === -1 ) {
 						
-						this.allPlants.push( this.plant );
+						this.plants.push( this.plant );
+						
+					}
+					
+					// plant models list
+					
+					for ( i = 0, l = this.plant.models.length; i < l; i++ ) {
+						
+						plantModel = this.plant.models[ i ];
+						
+						index = this.plantModels.indexOf( plantModel );
+						
+						if ( index === -1 ) {
+							
+							this.plantModels.push( plantModel );
+							
+						}
 						
 					}
 					
@@ -702,11 +733,27 @@
 					
 					this.plant.uproot();
 					
-					// remove from all plants list
+					// all plants list
 					
 					if ( index !== -1 ) {
 						
-						this.allPlants.splice( index, 1 );
+						this.plants.splice( index, 1 );
+						
+					}
+					
+					// plant models list
+					
+					for ( i = 0, l = this.plant.models.length; i < l; i++ ) {
+						
+						plantModel = this.plant.models[ i ];
+						
+						index = this.plantModels.indexOf( plantModel );
+						
+						if ( index !== -1 ) {
+							
+							this.plantModels.splice( index, 1 );
+							
+						}
 						
 					}
 					
