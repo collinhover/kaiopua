@@ -68,7 +68,7 @@
 		
 		parameters.geometry = parameters.geometry || _Cloud.geometries[ Math.round( Math.random() * ( _Cloud.geometries.length - 1 ) ) ];
 		
-		parameters.materials = parameters.materials || new THREE.MeshBasicMaterial( { shading: THREE.NoShading, vertexColors: THREE.VertexColors } );
+		parameters.material = parameters.material || new THREE.MeshBasicMaterial( { shading: THREE.NoShading, vertexColors: THREE.VertexColors } );
 		
 		// prototype constructor
 		

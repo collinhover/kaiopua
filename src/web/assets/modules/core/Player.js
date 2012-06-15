@@ -595,11 +595,11 @@
 				 * TODO: fix for single material case
 				selectedMesh = selectedModel.mesh;
 				
-				materialIndex = selectedMesh.materials.indexOf( selecting.material );
+				materialIndex = selectedMesh.material.indexOf( selecting.material );
 				
 				if ( materialIndex === -1 ) {
 					
-					selectedMesh.materials.push( selecting.material );
+					selectedMesh.material.push( selecting.material );
 					
 				}
 				*/
@@ -680,11 +680,11 @@
 			/* TODO: fix for no multimaterials
 			// remove selecting material
 			
-			materialIndex = targetMesh.materials.indexOf( selecting.material );
+			materialIndex = targetMesh.material.indexOf( selecting.material );
 			
 			if ( materialIndex !== -1 ) {
 				
-				targetMesh.materials.splice( materialIndex, 1 );
+				targetMesh.material.splice( materialIndex, 1 );
 				
 			}
 			*/

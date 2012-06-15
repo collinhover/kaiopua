@@ -95,6 +95,7 @@
 			"assets/modules/puzzles/GridModuleState.js",
 			"assets/modules/puzzles/GridModel.js",
 			"assets/modules/puzzles/GridElement.js",
+			"assets/modules/puzzles/GridElementShapes.js",
 			"assets/modules/farming/Farming.js",
 			"assets/modules/farming/Planting.js",
 			"assets/modules/farming/Field.js",
@@ -538,7 +539,7 @@
 				
 				testObj = new _Model.Instance( {
 					geometry: new THREE.CubeGeometry( 50, 50, 50 ),
-					materials: new THREE.MeshBasicMaterial( { color: 0xFF0000 } )
+					material: new THREE.MeshBasicMaterial( { color: 0xFF0000 } )
 				} );
 				
 				//testObj.position.set( Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius );
@@ -568,7 +569,7 @@
 			var searchRad = 200;
 				testObj = new _Model.Instance( {
 					geometry: new THREE.CubeGeometry( searchRad * 2, searchRad * 2, searchRad * 2 ),
-					materials: new THREE.MeshBasicMaterial ( { color: 0xFF000, opacity: 0.4, transparent: true } )
+					material: new THREE.MeshBasicMaterial ( { color: 0xFF000, opacity: 0.4, transparent: true } )
 				} );
 			
 			scene.add( testObj );
@@ -677,7 +678,7 @@
 							
 							testObj = new _Model.Instance( {
 								geometry: new THREE.SphereGeometry( radius * 10, 50, 50 ),
-								materials: new THREE.MeshNormalMaterial()// { color: 0x00FF00, wireframe: true, wireframeLinewidth: 10 } )
+								material: new THREE.MeshNormalMaterial()// { color: 0x00FF00, wireframe: true, wireframeLinewidth: 10 } )
 							} );
 							
 							octree.add( testObj, true );
@@ -691,7 +692,7 @@
 							
 							testObj = new _Model.Instance( {
 								geometry: new THREE.CubeGeometry( 50, 50, 50 ),
-								materials: new THREE.MeshNormalMaterial()// { color: 0x00FF00, wireframe: true, wireframeLinewidth: 10 } )
+								material: new THREE.MeshNormalMaterial()// { color: 0x00FF00, wireframe: true, wireframeLinewidth: 10 } )
 							} );
 							
 							//testObj.position.set( Math.random() * ( radius * 1.5 ) - radius * 0.75, radius * 0.2 + Math.random() * radius * 0.6, Math.random() * ( radius * 1.5 ) - radius * 0.75 );
@@ -744,7 +745,7 @@
 						
 						testObj = new _Model.Instance( {
 							geometry: new THREE.CubeGeometry( 50, 50, 50 ),
-							materials: new THREE.MeshNormalMaterial()// { color: 0x00FF00, wireframe: true, wireframeLinewidth: 10 } )
+							material: new THREE.MeshNormalMaterial()// { color: 0x00FF00, wireframe: true, wireframeLinewidth: 10 } )
 						} );
 						
 						// position

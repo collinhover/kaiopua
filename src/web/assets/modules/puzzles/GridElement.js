@@ -68,15 +68,14 @@
 		_GridElement.Instance.prototype.clone = clone;
 		
 		_GridElement.Instance.prototype.customize = customize;
+		_GridElement.Instance.prototype.activate = activate;
+		_GridElement.Instance.prototype.deactivate = deactivate;
 		
 		_GridElement.Instance.prototype.rotate = rotate;
 		_GridElement.Instance.prototype.rotate_reset = rotate_reset;
 		_GridElement.Instance.prototype.rotate_layout = rotate_layout;
 		
 		_GridElement.Instance.prototype.change_module = change_module;
-		
-		_GridElement.Instance.prototype.update = update;
-		
 		_GridElement.Instance.prototype.occupy_module = occupy_module;
 		_GridElement.Instance.prototype.test_occupy_module = test_occupy_module;
 		_GridElement.Instance.prototype.each_layout_element = each_layout_element;
@@ -85,8 +84,16 @@
 		_GridElement.Instance.prototype.get_layout_center_location = get_layout_center_location;
 		_GridElement.Instance.prototype.get_layout_center_offset = get_layout_center_offset;
 		
-		Object.defineProperty( _GridModule.Instance.prototype, 'hasCustomModels', { 
-			get: function () { return this.geometry !== this.customizations.geometry; }
+		Object.defineProperty( _GridElement.Instance.prototype, 'customized', { 
+			get: function () { return this.customizations && this.geometry !== this.customizations.geometry; }
+		});
+		
+		Object.defineProperty( _GridElement.Instance.prototype, 'hasCustomModels', { 
+			get: function () { return this.customizations && main.is_array( this.customizations.models ); }
+		});
+		
+		Object.defineProperty( _GridElement.Instance.prototype, 'hasModule', { 
+			get: function () { return this.module instanceof _GridModule.Instance && typeof this.modules !== 'undefined'; }
 		});
 		
 	}
@@ -109,7 +116,7 @@
 		
 		this.id = gridElementCount;
 		this.rotationAngle = this.rotationAngleLayout = 0;
-		this.material = main.ensure_not_array( parameters.materials || new THREE.MeshLambertMaterial( { vertexColors: THREE.VertexColors, shading: THREE.SmoothShading } ) );
+		this.material = parameters.material || new THREE.MeshLambertMaterial( { vertexColors: THREE.VertexColors, shading: THREE.SmoothShading } );
 		this.geometry = typeof parameters.geometry === 'string' ? main.get_asset_data( parameters.geometry ) : parameters.geometry;
 		
 		// layout
@@ -125,7 +132,7 @@
 		this.models = generate_models.call( this, parameters.models );
 		
 		// customizations
-		console.log( 'new GRID EL ', this, this.id );
+		
 		customize.call( this, parameters.customizations );
 		
 	}
@@ -155,7 +162,7 @@
 			
 			c.rotationAngle = this.rotationAngle;
 			c.rotationAngleLayout = this.rotationAngleLayout;
-			c.material = main.ensure_not_array( _ObjectHelper.clone_materials( this.material ) );
+			c.material = _ObjectHelper.clone_material( this.material );
 			c.geometry = _ObjectHelper.clone_geometry( this.geometry );
 			
 			// layout
@@ -176,9 +183,9 @@
 			
 			// handle customizations that need clone
 			
-			if ( this.hasCustomModels ) {
+			if ( this.customized ) {
 				
-				c.customizations.material = main.ensure_not_array( _ObjectHelper.clone_materials( this.customizations.material ) );
+				c.customizations.material = _ObjectHelper.clone_material( this.customizations.material );
 				c.customizations.geometry = _ObjectHelper.clone_geometry( this.customizations.geometry );
 				
 			}
@@ -265,16 +272,14 @@
 		parameters = parameters || {};
 		
 		parameters.gridElement = this;
-		parameters.materials = parameters.materials || this.material;
+		parameters.material = parameters.material || this.material;
 		parameters.geometry = parameters.geometry || this.geometry;
-		
+		console.log( this, 'generate models ', parameters );
 		// if valid properties
 		
-		if ( parameters.materials && parameters.geometry ) {
+		if ( parameters.material && parameters.geometry ) {
 			
 			// create all models
-			
-			models = [];
 			
 			each_layout_element.call( this, this.layout, function ( node ) {
 				
@@ -291,7 +296,7 @@
 			} );
 			
 		}
-		
+		console.log( this, ' ... generated? ', models );
 		return models;
 		
 	}
@@ -340,26 +345,94 @@
 		parameters = parameters || {};
 		
 		c = this.customizations = this.hasOwnProperty( 'customizations' ) ? this.customizations : {};
-		console.log( 'customize?', c.material, this, this.id);
-		c.material = parameters.materials || c.material;
 		
+		c.material = parameters.material || c.material;
 		c.geometry = parameters.geometry || c.geometry || this.geometry;
 		
 		// ensure proper material
 		
 		if ( c.material === true ) {
-			console.log( 'CLONING this material for customize');
-			c.material = main.ensure_not_array( _ObjectHelper.clone_materials( this.material ) );
+			
+			c.material = _ObjectHelper.clone_material( this.material );
 			
 		}
 		else if ( c.material instanceof THREE.Material !== true ) {
-			console.log( 'using this material for customize');
+			
 			c.material = this.material;
 			
 		}
-		else {
-			console.log( 'using new material for customize', parameters);
+		
+		// if custom is different from primary
+		
+		if ( this.customized === true ) {
+			
+			// set dirty
+			
+			c.dirty = true;
+			
+			// if active
+			
+			if ( this.active ) {
+				
+				activate.call( this );
+				
+			}
+			
 		}
+		
+	}
+	
+	/*===================================================
+    
+    active states
+    
+    =====================================================*/
+	
+	function activate () {
+		
+		var c = this.customizations;
+		
+		// if not active or is dirty
+		
+		if ( this.active !== true || c.dirty === true ) {
+			
+			this.active = true;
+			
+			// if is customized 
+			
+			if ( this.customized ) {
+				console.log( this, ' ACTIVATE CUSTOM MODELS ');
+				// if needs customized models
+				
+				if ( this.hasCustomModels !== true ) {
+					
+					c.models = generate_models.call( this, c );
+					console.log( this, ' new CUSTOM MODELS ', c.models );
+					
+					c.dirty = false;
+					
+				}
+				
+				// occupy with customized
+				
+				occupy_modules.call( this, c.models );
+				
+			}
+			
+		}
+		
+	}
+	
+	function deactivate () {
+		
+		var c = this.customizations;
+		
+		this.active = false;
+		
+		// occupy with primary
+		
+		occupy_modules.call( this );
+		
 	}
 	
 	/*===================================================
@@ -462,7 +535,7 @@
 		// if is change
 		
 		if ( this.module !== moduleNew ) {
-			
+			console.log( this, ' change module ' );
 			// for each module in previous layout modules
 			
 			if ( typeof this.modules !== 'undefined' ) {
@@ -479,13 +552,9 @@
 			
 			this.modules = modulesNew;
 			
-			// if module and layouts are valid
+			// occupy
 			
-			if ( this.module instanceof _GridModule.Instance && typeof this.modules !== 'undefined' ) {
-				
-				occupy_modules.call( this );
-			
-			}
+			occupy_modules.call( this );
 			
 		}
 		
@@ -498,29 +567,43 @@
 		var modelCount = 0,
 			model;
 		
-		// for each module in layout modules add model as occupant
+		// if module and layouts are valid
 		
-		each_layout_element.call( this, this.modules, function ( layoutModule ) {
+		if ( this.hasModule ) {
 			
-			if ( layoutModule instanceof _GridModule.Instance ) {
+			// store models as current
+			console.log( this, ' occupy modules ...');
+			if ( temporary !== true ) {
 				
-				model = models[ modelCount ];
-				modelCount++;
-				
-				if ( temporary === true ) {
-					
-					layoutModule.add( model );
-
-				}
-				else {
-					
-					layoutModule.occupant = model;
-					
-				}
-				
+				this.modelsCurrent = models;
+				console.log( this, ' setting models current to ', this.modelsCurrent );
 			}
 			
-		} );
+			// for each module in layout modules add model as occupant
+			
+			each_layout_element.call( this, this.modules, function ( layoutModule ) {
+				
+				if ( layoutModule instanceof _GridModule.Instance ) {
+					
+					model = models[ modelCount ];
+					modelCount++;
+					
+					if ( temporary === true ) {
+						
+						layoutModule.add( model );
+
+					}
+					else {
+						
+						layoutModule.occupant = model;
+						
+					}
+					
+				}
+				
+			} );
+			
+		}
 		
 	}
 	
@@ -538,6 +621,10 @@
 			
 		} );
 		
+		// clear current models
+		
+		this.modelsCurrent = undefined;
+		console.log( this, ' clearing models current' );
 	}
 	
 	function occupy_module ( module ) {
@@ -774,16 +861,6 @@
 		}
 			
 		return success;
-		
-	}
-	
-	/*===================================================
-    
-    update
-    
-    =====================================================*/
-	
-	function update () {
 		
 	}
 	

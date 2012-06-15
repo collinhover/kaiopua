@@ -16,7 +16,7 @@
 		puzzleID = 'Puzzle',
 		puzzleCount = 0,
 		allPuzzles,
-		allPuzzlesSolved,
+		allPuzzlesCompleted,
 		allModules;
 	
 	/*===================================================
@@ -49,14 +49,14 @@
 		// properties
 		
 		allPuzzles = [];
-		allPuzzlesSolved = [];
+		allPuzzlesCompleted = [];
 		
 		Object.defineProperty( _Puzzle, 'allPuzzles', { 
 			get: function () { return allPuzzles.slice( 0 ); }
 		});
 		
-		Object.defineProperty( _Puzzle, 'allPuzzlesSolved', { 
-			get: function () { return allPuzzlesSolved.slice( 0 ); }
+		Object.defineProperty( _Puzzle, 'allPuzzlesCompleted', { 
+			get: function () { return allPuzzlesCompleted.slice( 0 ); }
 		});
 		
 		Object.defineProperty( _Puzzle, 'allModules', { 
@@ -90,12 +90,23 @@
 		_Puzzle.Instance = Puzzle;
 		_Puzzle.Instance.prototype = new _Model.Instance();
 		_Puzzle.Instance.prototype.constructor = _Puzzle.Instance;
+		
+		_Puzzle.Instance.prototype.reset = reset;
+		_Puzzle.Instance.prototype.complete = complete;
 		_Puzzle.Instance.prototype.on_state_changed = on_state_changed;
 		
-		Object.defineProperty( _Puzzle.Instance.prototype, 'models', { 
+		Object.defineProperty( _Puzzle.Instance.prototype, 'isCompleted', { 
 			get: function () {
 				
-				return this.grid.models;
+				return this.grid.isFull;
+			
+			}
+		});
+		
+		Object.defineProperty( _Puzzle.Instance.prototype, 'occupants', { 
+			get: function () {
+				
+				return this.grid.occupants;
 			
 			}
 		});
@@ -118,8 +129,6 @@
 	
 	function Puzzle ( parameters ) {
 		
-		var solved = false;
-		
 		puzzleCount++;
 		
 		// handle parameters
@@ -136,6 +145,7 @@
 		// properties
 		
 		this.id = typeof parameters.id === 'string' ? parameters.id : puzzleID + puzzleCount;
+		this.completed = false;
 		
 		// signals
 		
@@ -147,62 +157,6 @@
 		this.grid.stateChanged.add( this.on_state_changed, this );
 		
 		this.add( this.grid );
-		
-		/*===================================================
-		
-		solved
-		
-		=====================================================*/
-		
-		Object.defineProperty( this, 'isSolved', { 
-			get: function () {
-				
-				solved = this.grid.isFull;
-				
-				return solved;
-			
-			}
-		});
-		
-		this.solve = function () {
-			
-			// set solved
-			
-			solved = this.grid.isFull;
-			
-			// if solved
-			
-			if ( solved === true ) {
-				
-				// add to list
-				
-				if ( allPuzzlesSolved.indexOf( this ) === -1 ) {
-					
-					allPuzzlesSolved.push( this );
-					
-				}
-				
-			}
-			
-		};
-		
-		/*===================================================
-		
-		reset
-		
-		=====================================================*/
-		
-		this.reset = function () {
-			
-			// grid
-			
-			this.grid.reset();
-			
-			// solve
-			
-			this.solve();
-			
-		}
 		
 		// reset self
 		
@@ -219,6 +173,56 @@
 			allPuzzles.push( this );
 			
 			_Puzzle._dirtyPuzzles = true;
+			
+		}
+		
+	}
+	
+	/*===================================================
+	
+	reset
+	
+	=====================================================*/
+	
+	function reset () {
+		
+		// grid
+		
+		this.grid.reset();
+		
+		// properties
+		
+		this.completed = false;
+		
+	}
+	
+	/*===================================================
+	
+	completed
+	
+	=====================================================*/
+	
+	function complete () {
+		
+		// set completed
+		
+		this.completed = this.grid.isFull;
+		console.log( 'puzzle complete?', this.completed, this);
+		// if completed
+		
+		if ( this.completed === true ) {
+			
+			// add to list
+			
+			if ( allPuzzlesCompleted.indexOf( this ) === -1 ) {
+				
+				allPuzzlesCompleted.push( this );
+				
+			}
+			
+			// complete grid
+			
+			this.grid.complete();
 			
 		}
 		

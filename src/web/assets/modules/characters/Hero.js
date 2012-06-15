@@ -69,7 +69,7 @@
 		
 		parameters.model = parameters.modelInfo || {};
 		parameters.model.geometry = main.get_asset_data( "assets/models/Hero.js" );
-		parameters.model.materials = new THREE.MeshLambertMaterial( { color: 0xFFF7E0, ambient: 0xFFF7E0, vertexColors: THREE.VertexColors } );
+		parameters.model.material = new THREE.MeshLambertMaterial( { color: 0xFFF7E0, ambient: 0xFFF7E0, vertexColors: THREE.VertexColors } );
 		parameters.model.shading = THREE.SmoothShading;
 		
 		parameters.model.physics = parameters.model.physics || {};

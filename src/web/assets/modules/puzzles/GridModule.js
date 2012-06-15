@@ -59,6 +59,7 @@
 		_GridModule.Instance.prototype = new _Model.Instance();
 		_GridModule.Instance.prototype.constructor = _GridModule.Instance;
 		_GridModule.Instance.prototype.reset = reset;
+		_GridModule.Instance.prototype.complete = complete;
 		_GridModule.Instance.prototype.set_dirty = set_dirty;
 		
 		_GridModule.Instance.prototype.change_state = change_state;
@@ -133,7 +134,7 @@
 		
 		parameters = parameters || {};
 		
-		parameters.materials = parameters.materials || new THREE.MeshLambertMaterial();
+		parameters.material = parameters.material || new THREE.MeshLambertMaterial();
 		
 		parameters.center = true;
 		
@@ -193,6 +194,12 @@
 		
 	}
 	
+	/*===================================================
+	
+	reset
+	
+	=====================================================*/
+	
 	function reset () {
 		
 		var states = this.states,
@@ -207,6 +214,28 @@
 		// clear occupant
 		
 		this.occupant = undefined;
+		
+	}
+	
+	/*===================================================
+	
+	complete
+	
+	=====================================================*/
+	
+	function complete () {
+		console.log( ' > > module complete', this );
+		var gridElement;
+		
+		// if has occupant
+		
+		if ( typeof this.occupant !== 'undefined' ) {
+			
+			gridElement = this.occupant.gridElement;
+			
+			gridElement.activate();
+			
+		}
 		
 	}
 	

@@ -62,7 +62,7 @@
 		parameters = parameters || {};
 		
 		gridElement = parameters.gridElement;
-		parameters.materials = parameters.materials || gridElement.material;
+		parameters.material = parameters.material || gridElement.material;
 		parameters.geometry = parameters.geometry || gridElement.geometry;
 		
 		// proto

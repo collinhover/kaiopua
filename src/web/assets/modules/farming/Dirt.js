@@ -66,7 +66,7 @@
 		
 		parameters = parameters || {};
 		
-		parameters.materials = parameters.materials || new THREE.MeshLambertMaterial( { map: _Dirt.texture } );
+		parameters.material = parameters.material || new THREE.MeshLambertMaterial( { map: _Dirt.texture } );
 		
 		// prototype constructor
 		

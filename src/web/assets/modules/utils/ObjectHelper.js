@@ -130,7 +130,7 @@
 		
 		// functions
 		
-		_ObjectHelper.clone_materials = clone_materials;
+		_ObjectHelper.clone_material = clone_material;
 		_ObjectHelper.clone_geometry = clone_geometry;
 		_ObjectHelper.clone_morphs = clone_morphs;
 		_ObjectHelper.clone_list = clone_list;
@@ -164,76 +164,63 @@
     
     =====================================================*/
 	
-	function clone_materials ( materials ) {
+	function clone_material ( material ) {
 		
 		var i, l,
-			material,
 			pMat,
-			cMaterials = [];
+			cMaterial;
 		
-		materials = main.ensure_array( materials );
+		// shallow copy material
 		
-		for ( i = 0, l = materials.length; i < l; i++ ) {
+		pMat = main.extend( material, {} );
+		
+		// special properties not handled by shallow copy
+		
+		if ( material.color instanceof THREE.Color ) {
 			
-			material = materials[ i ];
+			pMat.color = material.color.getHex();
 			
-			// shallow copy material
+		}
+		if ( material.ambient instanceof THREE.Color ) {
 			
-			pMat = main.extend( material, {} );
+			pMat.ambient = material.ambient.getHex();
 			
-			// special properties not handled by shallow copy
+		}
+		if ( material.specular instanceof THREE.Color ) {
 			
-			if ( material.color instanceof THREE.Color ) {
-				
-				pMat.color = material.color.getHex();
-				
-			}
-			if ( material.ambient instanceof THREE.Color ) {
-				
-				pMat.ambient = material.ambient.getHex();
-				
-			}
-			if ( material.specular instanceof THREE.Color ) {
-				
-				pMat.specular = material.specular.getHex();
-				
-			}
-			
-			// new material by type
-			
-			if ( material instanceof THREE.MeshBasicMaterial ) {
-				
-				cMaterial = new THREE.MeshBasicMaterial( pMat );
-				
-			}
-			else if ( material instanceof THREE.MeshLambertMaterial ) {
-				
-				cMaterial = new THREE.MeshLambertMaterial( pMat );
-				
-			}
-			else if ( material instanceof THREE.MeshPhongMaterial ) {
-				
-				cMaterial = new THREE.MeshPhongMaterial( pMat );
-				
-			}
-			else if ( material instanceof THREE.MeshFaceMaterial ) {
-				
-				cMaterial = new THREE.MeshFaceMaterial( pMat );
-				
-			}
-			else {
-				
-				cMaterial = new THREE.Material( pMat );
-				
-			}
-			
-			// store
-			
-			cMaterials.push( cMaterial );
+			pMat.specular = material.specular.getHex();
 			
 		}
 		
-		return cMaterials;
+		// new material by type
+		
+		if ( material instanceof THREE.MeshBasicMaterial ) {
+			
+			cMaterial = new THREE.MeshBasicMaterial( pMat );
+			
+		}
+		else if ( material instanceof THREE.MeshLambertMaterial ) {
+			
+			cMaterial = new THREE.MeshLambertMaterial( pMat );
+			
+		}
+		else if ( material instanceof THREE.MeshPhongMaterial ) {
+			
+			cMaterial = new THREE.MeshPhongMaterial( pMat );
+			
+		}
+		else if ( material instanceof THREE.MeshFaceMaterial ) {
+			
+			cMaterial = new THREE.MeshFaceMaterial( pMat );
+			
+		}
+		else {
+			
+			cMaterial = new THREE.Material( pMat );
+			
+		}
+		
+		return cMaterial;
 		
 	}
 	
@@ -252,8 +239,12 @@
 		// materials
 		
 		if ( geometry.materials ) {
-
-			cGeometry.materials = clone_materials( geometry.materials );
+			
+			for ( i = 0, l = geometry.materials.length; i < l; i++ ) {
+				
+				cGeometry.materials.push( clone_material( geometry.materials[ i ] ) );
+				
+			}
 
 		}
 

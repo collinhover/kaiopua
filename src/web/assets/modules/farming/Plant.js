@@ -88,10 +88,10 @@
 		
 		_Plant.Instance.prototype.test_occupy_module = test_occupy_module;
 		
+		_Plant.Instance.prototype.activate = activate;
+		
 		_Plant.Instance.prototype.grow = grow;
 		_Plant.Instance.prototype.uproot = uproot;
-		
-		_Plant.Instance.prototype.update = update;
 		
 	}
 	
@@ -111,11 +111,11 @@
 		
 		if ( typeof parameters.geometry === 'undefined' ) {
 			
-			parameters.geometry = new THREE.CubeGeometry( 30, 50, 30 );
+			parameters.geometry = new THREE.CubeGeometry( 20, 40, 20 );
 			
 		}
 		
-		c = parameters.customization = parameters.customization || {};
+		c = parameters.customizations = parameters.customizations || {};
 		c.geometry = c.geometry || new THREE.CubeGeometry( 60, 120, 60 );//_Plant.geometryBase;
 		
 		// prototype constructor
@@ -412,34 +412,68 @@
 	
 	/*===================================================
     
+    active state
+    
+    =====================================================*/
+	
+	function activate () {
+		
+		var activePrev = this.active;
+		
+		// proto
+		
+		_Plant.Instance.prototype.supr.activate.apply( this, arguments );
+		
+		// if activated
+		
+		if ( this.active !== activePrev ) {
+			
+			// grow
+			
+			this.grow( this.modelsCurrent );
+			
+		}
+		
+	}
+	
+	/*===================================================
+    
     grow
     
     =====================================================*/
 	
-	function grow () {
+	function grow ( models ) {
+		
+		models = models || this.models;
 		
 		var i, l,
 			model;
 		
-		console.log('plant grow!');
+		console.log('plant GROW models', models);
 		
-		// for each model
+		// if has module
 		
-		for ( i = 0, l = this.models.length; i < l; i++ ) {
+		if ( this.hasModule ) {
 			
-			model = this.models[ i ];
+			// for each model
 			
-			// set scale to 0
-			
-			model.scale.set( 0, 0, 0 );
-			
-			// tween scale to 1
-			
-			model.tween_properties( {
-				time: this.timeGrow,
-				easing: TWEEN.Easing.Back.EaseOut,
-				scale: utilVec31Grow.set( 1, 1, 1 )
-			} );
+			for ( i = 0, l = models.length; i < l; i++ ) {
+				
+				model = models[ i ];
+				
+				// set scale to 0
+				
+				model.scale.set( 0, 0, 0 );
+				
+				// tween scale to 1
+				
+				model.tween_properties( {
+					time: this.timeGrow,
+					easing: TWEEN.Easing.Back.EaseOut,
+					scale: utilVec31Grow.set( 1, 1, 1 )
+				} );
+				
+			}
 			
 		}
 		
@@ -456,18 +490,6 @@
 		// clear module
 		
 		this.change_module();
-		
-	}
-	
-	/*===================================================
-    
-    update
-    
-    =====================================================*/
-	
-	function update () {
-		
-		_Plant.Instance.prototype.supr.update.apply( this, arguments );
 		
 	}
 	

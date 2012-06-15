@@ -80,13 +80,7 @@
 			wavesColor,
 			wavesAmbient,
 			wavesSize,
-			wavesMaterialsOpacityBase,
-			wavesMaterialsOpacitySteps,
-			wavesMaterialsDarknessSteps,
-			wavesDarknessColor,
-			materialStep,
 			waves,
-			wavesGeomMaterials,
 			wavesVertsNum,
 			wavesFaces,
 			face,
@@ -113,10 +107,6 @@
 		wavesColor = parameters.wavesColor || 0x0bdafa;
 		wavesAmbient = parameters.wavesAmbient || 0x3492D4;
 		wavesSize = parameters.wavesSize || 10000;
-		wavesMaterialsOpacityBase = parameters.wavesOpacityBase || 0.95;
-		wavesMaterialsOpacitySteps = parameters.wavesOpacitySteps || 40;
-		wavesMaterialsDarknessSteps = parameters.wavesDarknessSteps || 30;
-		wavesDarknessColor = parameters.wavesDarknessColor || 0x341479;
 		wavesInfo.vertsW = wavesVertsW = parameters.wavesVertsW || 100;
 		wavesInfo.vertsH = wavesVertsH = parameters.wavesVertsH || 100;
 		wavesInfo.numHorizontal = wavesNumHorizontal = parameters.wavesNumHorizontal || 80;
@@ -324,7 +314,7 @@
 		
 		_Model.Instance.call( this, {
 			geometry: wavesGeometry,
-			materials: wavesMaterial,
+			material: wavesMaterial,
 			doubleSided: true
 		} );
 		

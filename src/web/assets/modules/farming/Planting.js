@@ -145,7 +145,6 @@
 		// plants list
 		
 		this.plants = [];
-		this.plantModels = [];
 		
 		// stop planting
 		
@@ -165,6 +164,7 @@
 			field,
 			grid,
 			modules,
+			plant,
 			plantingObjects = [],
 			targetObject;
 		
@@ -199,12 +199,18 @@
 			
 			if ( parameters.field === true && typeof this.field !== 'undefined' ) {
 				
-				plantingObjects = plantingObjects.concat( this.field.plantModels );
+				plantingObjects = plantingObjects.concat( this.field.occupants );
 				
 			}
 			else {
 				
-				plantingObjects = plantingObjects.concat( this.plantModels );
+				for ( i = 0, l = this.plants.length; i < l; i++ ) {
+					
+					plant = this.plants[ i ];
+					
+					plantingObjects = plantingObjects.concat( plant.modelsCurrent );
+					
+				}
 				
 			}
 			
@@ -503,9 +509,9 @@
 				plantPlanted = this.plant;
 				plantPlantedNodes = plantPlanted.get_layout_node_total();
 				
-				// stop if plant was selected from field or on field solve
+				// stop if plant was selected from field or on field complete
 				
-				if ( this.plantFromSelection === true || this.field.isSolved === true ) {
+				if ( this.plantFromSelection === true || this.field.isCompleted === true ) {
 					
 					this.stop();
 					
@@ -559,7 +565,7 @@
 	function stop () {
 		console.log('stop PLANTING!');
 		
-		// store field for solve check after stop complete
+		// store field for complete check after stop complete
 		
 		var field = this.field;
 		
@@ -588,12 +594,12 @@
 		_GUI.layers.ui.show();
 		_GUI.layers.ui.set_pointer_events( false );
 		
-		// trigger field to check if solved
+		// trigger field to check if completed
 		
 		if ( field instanceof _Puzzle.Instance ) {
 			
-			field.solve();
-			
+			field.complete();
+			console.log( 'PLANTING: completing field ', field );
 		}
 		
 	}
@@ -710,22 +716,6 @@
 						
 					}
 					
-					// plant models list
-					
-					for ( i = 0, l = this.plant.models.length; i < l; i++ ) {
-						
-						plantModel = this.plant.models[ i ];
-						
-						index = this.plantModels.indexOf( plantModel );
-						
-						if ( index === -1 ) {
-							
-							this.plantModels.push( plantModel );
-							
-						}
-						
-					}
-					
 				}
 				else {
 					
@@ -738,22 +728,6 @@
 					if ( index !== -1 ) {
 						
 						this.plants.splice( index, 1 );
-						
-					}
-					
-					// plant models list
-					
-					for ( i = 0, l = this.plant.models.length; i < l; i++ ) {
-						
-						plantModel = this.plant.models[ i ];
-						
-						index = this.plantModels.indexOf( plantModel );
-						
-						if ( index !== -1 ) {
-							
-							this.plantModels.splice( index, 1 );
-							
-						}
 						
 					}
 					
