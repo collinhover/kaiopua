@@ -186,13 +186,17 @@
 	
 	function reset () {
 		
-		// grid
-		
-		this.grid.reset();
-		
 		// properties
 		
 		this.completed = false;
+		
+		// grid
+		
+		if ( this.grid instanceof _Grid.Instance ) {
+			
+			this.grid.reset();
+			
+		}
 		
 	}
 	
@@ -204,7 +208,7 @@
 	
 	function complete () {
 		
-		// set completed
+		// properties
 		
 		this.completed = this.grid.isFull;
 		console.log( 'puzzle complete?', this.completed, this);
@@ -220,7 +224,11 @@
 				
 			}
 			
-			// complete grid
+		}
+		
+		// grid
+		
+		if ( this.grid instanceof _Grid.Instance ) {
 			
 			this.grid.complete();
 			
@@ -235,7 +243,6 @@
 	=====================================================*/
 	
 	function on_state_changed ( module ) {
-		
 		console.log(' PUZZLE GRID STATE CHANGE for ', this.id );
 		this.stateChanged.dispatch( module );
 		

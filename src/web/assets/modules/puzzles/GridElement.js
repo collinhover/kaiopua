@@ -68,16 +68,18 @@
 		_GridElement.Instance.prototype.clone = clone;
 		
 		_GridElement.Instance.prototype.customize = customize;
-		_GridElement.Instance.prototype.activate = activate;
-		_GridElement.Instance.prototype.deactivate = deactivate;
+		
+		_GridElement.Instance.prototype.occupy_modules = occupy_modules;
+		_GridElement.Instance.prototype.unoccupy_modules = unoccupy_modules;
 		
 		_GridElement.Instance.prototype.rotate = rotate;
 		_GridElement.Instance.prototype.rotate_reset = rotate_reset;
-		_GridElement.Instance.prototype.rotate_layout = rotate_layout;
 		
 		_GridElement.Instance.prototype.change_module = change_module;
 		_GridElement.Instance.prototype.occupy_module = occupy_module;
+		_GridElement.Instance.prototype.test_occupy_module_smart = test_occupy_module_smart;
 		_GridElement.Instance.prototype.test_occupy_module = test_occupy_module;
+		_GridElement.Instance.prototype.show_last_modules_tested = show_last_modules_tested;
 		_GridElement.Instance.prototype.each_layout_element = each_layout_element;
 		
 		_GridElement.Instance.prototype.get_layout_node_total = get_layout_node_total
@@ -118,7 +120,7 @@
 		this.rotationAngle = this.rotationAngleLayout = 0;
 		this.material = parameters.material || new THREE.MeshLambertMaterial( { vertexColors: THREE.VertexColors, shading: THREE.SmoothShading } );
 		this.geometry = typeof parameters.geometry === 'string' ? main.get_asset_data( parameters.geometry ) : parameters.geometry;
-		
+
 		// layout
 		
 		this.layout = generate_layout.call( this, parameters.layout );
@@ -133,7 +135,7 @@
 		
 		// customizations
 		
-		customize.call( this, parameters.customizations );
+		this.customize( parameters.customizations );
 		
 	}
 	
@@ -178,21 +180,69 @@
 			c.models = generate_models.call( c );
 			
 			// customize
-			console.log('clone customizations');
+			
 			customize.call( c, this.customizations );
 			
 			// handle customizations that need clone
 			
 			if ( this.customized ) {
-				
+			
 				c.customizations.material = _ObjectHelper.clone_material( this.customizations.material );
 				c.customizations.geometry = _ObjectHelper.clone_geometry( this.customizations.geometry );
-				
+
 			}
 			
 		}
 		
 		return c;
+		
+	}
+	
+	/*===================================================
+    
+    customizations
+    
+    =====================================================*/
+	
+	function customize ( parameters ) {
+		
+		var c;
+		
+		// handle parameters
+		
+		parameters = parameters || {};
+		
+		c = this.customizations = this.hasOwnProperty( 'customizations' ) ? this.customizations : {};
+		
+		c.material = parameters.material || c.material;
+		c.geometry = parameters.geometry || c.geometry || this.geometry;
+		
+		// ensure proper material
+		
+		if ( c.material === true ) {
+
+			c.material = _ObjectHelper.clone_material( this.material );
+			
+		}
+		else if ( c.material instanceof THREE.Material !== true ) {
+
+			c.material = this.material;
+			
+		}
+		
+		// if custom is different from primary
+		
+		if ( this.customized === true ) {
+			
+			// set dirty
+			
+			this._dirtyCustomizations = true;
+			
+			// occupy
+			
+			this.occupy_modules();
+			
+		}
 		
 	}
 	
@@ -274,7 +324,7 @@
 		parameters.gridElement = this;
 		parameters.material = parameters.material || this.material;
 		parameters.geometry = parameters.geometry || this.geometry;
-		console.log( this, 'generate models ', parameters );
+		
 		// if valid properties
 		
 		if ( parameters.material && parameters.geometry ) {
@@ -296,16 +346,32 @@
 			} );
 			
 		}
-		console.log( this, ' ... generated? ', models );
+		
 		return models;
 		
 	}
 	
 	function add_models ( models ) {
 		
-		models = models || this.models;
+		var modelCount = 0,
+			model;
 		
-		occupy_modules.call( this, models, true );
+		models = models || this.modelsCurrent;
+		
+		// for each module in layout modules add model as occupant
+		
+		each_layout_element.call( this, this.modules, function ( layoutModule ) {
+			
+			if ( layoutModule instanceof _GridModule.Instance ) {
+				
+				model = models[ modelCount ];
+				modelCount++;
+				
+				layoutModule.add( model );
+				
+			}
+			
+		} );
 		
 	}
 	
@@ -314,7 +380,7 @@
 		var i, l,
 			model;
 		
-		models = models || this.models;
+		models = models || this.modelsCurrent;
 		
 		for ( i = 0, l = models.length; i < l; i++ ) {
 			
@@ -330,92 +396,65 @@
 		
 	}
 	
-	/*===================================================
-    
-    customizations
-    
-    =====================================================*/
-	
-	function customize ( parameters ) {
+	function occupy_modules () {
 		
-		var c;
+		var c,
+			modelCount = 0,
+			models,
+			model;
 		
-		// handle parameters
+		// if module and layouts are valid
 		
-		parameters = parameters || {};
-		
-		c = this.customizations = this.hasOwnProperty( 'customizations' ) ? this.customizations : {};
-		
-		c.material = parameters.material || c.material;
-		c.geometry = parameters.geometry || c.geometry || this.geometry;
-		
-		// ensure proper material
-		
-		if ( c.material === true ) {
+		if ( this.hasModule ) {
 			
-			c.material = _ObjectHelper.clone_material( this.material );
+			// get models list
 			
-		}
-		else if ( c.material instanceof THREE.Material !== true ) {
+			// if module active use customized
 			
-			c.material = this.material;
-			
-		}
-		
-		// if custom is different from primary
-		
-		if ( this.customized === true ) {
-			
-			// set dirty
-			
-			c.dirty = true;
-			
-			// if active
-			
-			if ( this.active ) {
+			if ( this.customized === true && this.module.active === true ) {
 				
-				activate.call( this );
-				
-			}
-			
-		}
-		
-	}
-	
-	/*===================================================
-    
-    active states
-    
-    =====================================================*/
-	
-	function activate () {
-		
-		var c = this.customizations;
-		
-		// if not active or is dirty
-		
-		if ( this.active !== true || c.dirty === true ) {
-			
-			this.active = true;
-			
-			// if is customized 
-			
-			if ( this.customized ) {
-				console.log( this, ' ACTIVATE CUSTOM MODELS ');
 				// if needs customized models
 				
-				if ( this.hasCustomModels !== true ) {
+				c = this.customizations;
+				
+				if ( this.hasCustomModels !== true || this._dirtyCustomizations === true ) {
 					
 					c.models = generate_models.call( this, c );
-					console.log( this, ' new CUSTOM MODELS ', c.models );
-					
-					c.dirty = false;
+					this._dirtyCustomizations = false;
 					
 				}
 				
-				// occupy with customized
+				models = c.models;
 				
-				occupy_modules.call( this, c.models );
+			}
+			// else use base models
+			else {
+				
+				models = this.models;
+				
+			}
+			
+			// if does not match current models
+			
+			if ( this.modelsCurrent !== models || this._dirtyModule === true ) {
+				console.log( this, ' OCCUPY modules' );
+				this.modelsCurrent = models;
+				this._dirtyModule = false;
+				
+				// for each module in layout modules add model as occupant
+				
+				each_layout_element.call( this, this.modules, function ( layoutModule ) {
+					
+					if ( layoutModule instanceof _GridModule.Instance ) {
+						
+						model = models[ modelCount ];
+						modelCount++;
+						
+						layoutModule.occupant = model;
+						
+					}
+					
+				} );
 				
 			}
 			
@@ -423,15 +462,19 @@
 		
 	}
 	
-	function deactivate () {
+	function unoccupy_modules () {
 		
-		var c = this.customizations;
+		// for each module in layout modules add model as occupant
 		
-		this.active = false;
-		
-		// occupy with primary
-		
-		occupy_modules.call( this );
+		each_layout_element.call( this, this.modules, function ( layoutModule ) {
+			
+			if ( layoutModule instanceof _GridModule.Instance ) {
+				
+				layoutModule.occupant = undefined;
+				
+			}
+			
+		} );
 		
 	}
 	
@@ -441,10 +484,13 @@
     
     =====================================================*/
 	
-	function rotate ( radians, testModule ) {
+	function rotate ( radians, testModule, show, occupy, force ) {
 		
 		var q = utilQ1Rotate,
-			angle;
+			angle,
+			angleDelta,
+			layoutRotated,
+			safeRotation = true;
 		
 		// add degrees
 		
@@ -458,9 +504,41 @@
 		
 		this.quaternion.multiplySelf( q );
 		*/
-		// rotate layout
+		// angle from current to new
 		
-		this.rotate_layout( this.rotationAngle, testModule );
+		angleDelta = _MathHelper.shortest_rotation_between_angles( this.rotationAngleLayout, this.rotationAngle )
+		
+		// rotate layout by angleDelta
+		
+		layoutRotated = _MathHelper.rotate_matrix2d_90( this.layout, _MathHelper.rad_to_degree( angleDelta ) );
+		
+		// if layout was rotated
+		
+		if ( this.layout.eql( layoutRotated ) !== true || force === true ) {
+			
+			// test new layout
+			
+			testModule = testModule || this.module;
+			
+			if ( testModule instanceof _GridModule.Instance ) {
+			
+				safeRotation = this.test_occupy_module( testModule, show, occupy, layoutRotated );
+				
+			}
+			
+			// if rotation is safe or only testing
+			
+			if ( safeRotation || testModule !== this.module ) {
+				
+				this.rotationAngleLayout += ( Math.PI * 0.5 ) * _MathHelper.round_towards_zero( angleDelta / ( Math.PI * 0.5 ) );
+				
+				this.layout = layoutRotated;
+				
+			}
+			
+		}
+		
+		return safeRotation;
 		
 	}
 	
@@ -483,44 +561,6 @@
 		
 	}
 	
-	function rotate_layout ( angle, testModule ) {
-		
-		var angleDelta = _MathHelper.shortest_rotation_between_angles( this.rotationAngleLayout, angle ),
-			layoutRotated,
-			safeRotation = true;
-		
-		// rotate layout by angleDelta
-		
-		layoutRotated = _MathHelper.rotate_matrix2d_90( this.layout, _MathHelper.rad_to_degree( angleDelta ) );
-		
-		// if layout was rotated
-		
-		if ( this.layout.eql( layoutRotated ) !== true ) {
-			
-			// test new layout
-			
-			testModule = testModule || this.module;
-			
-			if ( testModule instanceof _GridModule.Instance ) {
-			
-				safeRotation = this.test_occupy_module( testModule, true, false, layoutRotated );
-				
-			}
-			
-			// if rotation is safe or only testing
-			
-			if ( safeRotation || testModule !== this.module ) {
-				
-				this.rotationAngleLayout += ( Math.PI * 0.5 ) * _MathHelper.round_towards_zero( angleDelta / ( Math.PI * 0.5 ) );
-				
-				this.layout = layoutRotated;
-				
-			}
-			
-		}
-		
-	}
-	
 	/*===================================================
     
     module
@@ -535,96 +575,41 @@
 		// if is change
 		
 		if ( this.module !== moduleNew ) {
-			console.log( this, ' change module ' );
-			// for each module in previous layout modules
+			console.log( this, ' change module from ', this.module, ' >> to ', moduleNew );
+			// previous
 			
-			if ( typeof this.modules !== 'undefined' ) {
+			if ( this.hasModule ) {
+				
+				// signal
+				
+				this.module.activeChanged.remove( this.occupy_modules, this );
 				
 				// unoccupy
 				
-				unoccupy_modules.call( this );
+				this.unoccupy_modules();
 				
 			}
 			
 			// store
 			
 			this.module = moduleNew;
-			
 			this.modules = modulesNew;
+			this._dirtyModule = true;
+			
+			// signal
+			
+			if ( this.hasModule ) {
+				
+				this.module.activeChanged.add( this.occupy_modules, this );
+				
+			}
 			
 			// occupy
 			
-			occupy_modules.call( this );
+			this.occupy_modules();
 			
 		}
 		
-	}
-	
-	function occupy_modules ( models, temporary ) {
-		
-		models = models || this.models;
-		
-		var modelCount = 0,
-			model;
-		
-		// if module and layouts are valid
-		
-		if ( this.hasModule ) {
-			
-			// store models as current
-			console.log( this, ' occupy modules ...');
-			if ( temporary !== true ) {
-				
-				this.modelsCurrent = models;
-				console.log( this, ' setting models current to ', this.modelsCurrent );
-			}
-			
-			// for each module in layout modules add model as occupant
-			
-			each_layout_element.call( this, this.modules, function ( layoutModule ) {
-				
-				if ( layoutModule instanceof _GridModule.Instance ) {
-					
-					model = models[ modelCount ];
-					modelCount++;
-					
-					if ( temporary === true ) {
-						
-						layoutModule.add( model );
-
-					}
-					else {
-						
-						layoutModule.occupant = model;
-						
-					}
-					
-				}
-				
-			} );
-			
-		}
-		
-	}
-	
-	function unoccupy_modules () {
-		
-		// for each module in layout modules add model as occupant
-		
-		each_layout_element.call( this, this.modules, function ( layoutModule ) {
-			
-			if ( layoutModule instanceof _GridModule.Instance ) {
-				
-				layoutModule.occupant = undefined;
-				
-			}
-			
-		} );
-		
-		// clear current models
-		
-		this.modelsCurrent = undefined;
-		console.log( this, ' clearing models current' );
 	}
 	
 	function occupy_module ( module ) {
@@ -635,40 +620,74 @@
 		
 	}
 	
+	function test_occupy_module_smart ( testModule, show, occupy ) {
+		
+		var rotationAngleStart = this.rotationAngleLayout,
+			rotationAngleStep = Math.PI * 0.5,
+			rotationSteps = 4, // extra step to ensure return to original angle
+			success;
+		
+		// test current angle
+		
+		success = this.test_occupy_module( testModule, false, occupy );
+		
+		// try other angles
+		if ( success !== true && testModule instanceof _GridModule.Instance ) {
+			
+			for ( i = 0; i < rotationSteps; i++ ) {
+				
+				// test invisibly
+				
+				success = this.rotate( rotationAngleStep, testModule, false, occupy, true );
+				
+				// if successful rotation
+				
+				if ( success === true ) {
+					
+					break;
+					
+				}
+				
+			}
+			
+		}
+		
+		// show if needed
+		
+		if ( show === true ) {
+			
+			this.show_last_modules_tested();
+			
+		}
+		
+		return success;
+		
+	}
+	
 	function test_occupy_module ( testModule, show, occupy, testLayout ) {
 		
-		var i, l,
-			modelCount = 0,
-			model,
-			success = 0,
+		var success = 0,
 			dimensions,
 			rows,
 			cols,
 			center,
 			testResults,
-			spreadRecord,
-			testModules,
-			moduleDimensions,
-			modulesWidthTotal = 0,
-			modulesDepthTotal = 0,
-			modulesCount = 0,
-			avgModuleWidth,
-			avgModuleDepth;
+			spreadRecord;
 		
 		// change test modules
 			
 		if ( this.testModule !== testModule ) {
 			
-			// if no new test module add to current module
-			if ( testModule instanceof _GridModule.Instance !== true && this.module instanceof _GridModule.Instance ) {
+			/*// if no new test module add to current module
+			if ( testModule instanceof _GridModule.Instance !== true && this.hasModule ) {
 				
 				add_models.call( this );
 				
 			}
 			// remove models from current module
-			else if ( this.testModule !== this.module ) {
+			else */if ( this.testModule !== this.module ) {
 				
-				remove_models.call( this );
+				remove_models.call( this, this.models );
 				
 			}
 			
@@ -676,18 +695,19 @@
 			// store as test
 			
 			this.testModule = testModule;
+			this.testModules = undefined;
 			
 		}
 		
 		// valid testModule
 		
-		if ( typeof testModule !== 'undefined' ) {
+		if ( this.testModule instanceof _GridModule.Instance ) {
 			
 			// clean testModule's grid
 			
-			if ( typeof testModule.grid !== 'undefined' ) {
+			if ( typeof this.testModule.grid !== 'undefined' ) {
 				
-				testModule.grid.clean();
+				this.testModule.grid.clean();
 				
 			}
 			
@@ -700,48 +720,32 @@
 			center = get_layout_center_location( testLayout );
 			testResults = Matrix.Zero( rows, cols );
 			spreadRecord = testResults.dup();
-			testModules = testResults.dup();
+			this.testModules = testResults.dup();
 			
-			// return recursive test results
+			// get recursive test results
 			
-			success = test_spread( testModule, testLayout, testResults, spreadRecord, center.row, center.col, rows, cols, testModules );
+			success = test_spread( this.testModule, testLayout, testResults, spreadRecord, center.row, center.col, rows, cols, this.testModules );
+			this.testSuccess = Boolean( success );
 			
-			// modules tested
+			// show test results of occupy
 			
-			each_layout_element.call( this, testModules, function ( testLayoutModule ) {
+			if ( show === true ) {
 				
-				if ( testLayoutModule instanceof _GridModule.Instance ) {
-					
-					model = this.models[ modelCount ];
-					modelCount++;
-					
-					// add
-					
-					testLayoutModule.add( model );
-					
-					// show test results of occupy
-					
-					if ( show === true ) {
-						
-						testLayoutModule.show_state( 'occupied', 1 - success );
-						
-					}
-					
-				}
+				this.show_last_modules_tested();
 				
-			} );
+			}
 			
 			// if successful and should occupy
 			
-			if ( success && occupy === true ) {
+			if ( this.testSuccess === true && occupy === true ) {
 				
-				this.change_module( testModule, testModules );
+				this.change_module( this.testModule, this.testModules );
 				
 			}
 			
 		}
 		
-		return Boolean( success );
+		return this.testSuccess;
 		
 	}
 	
@@ -864,6 +868,36 @@
 		
 	}
 	
+	function show_last_modules_tested () {
+		
+		var model,
+			modelCount = 0,
+			success = 1 - Number( this.testSuccess );
+		
+		// if has test results
+		
+		if ( this.testModule instanceof _GridModule.Instance && typeof this.testModules !== 'undefined' ) {
+			
+			each_layout_element.call( this, this.testModules, function ( testLayoutModule ) {
+				
+				if ( testLayoutModule instanceof _GridModule.Instance ) {
+					
+					model = this.models[ modelCount ];
+					modelCount++;
+					
+					// add
+					
+					testLayoutModule.add( model );
+					testLayoutModule.show_state( 'occupied', success );
+					
+				}
+				
+			} );
+			
+		}
+		
+	}
+	
 	/*===================================================
     
     utility
@@ -906,6 +940,7 @@
 		
 		var nodeTotal = 0;
 		
+		layout = layout || this.layout;
 		nodeType = main.is_number( nodeType ) ? nodeType : -1;
 		
 		each_layout_element.call( this, layout, function ( node ) {
@@ -939,6 +974,8 @@
 		var nodeTotal = 0,
 			iTotal = 0,
 			jTotal = 0;
+		
+		layout = layout || this.layout;
 		
 		each_layout_element.call( this, layout, function ( node, i, j ) {
 			

@@ -86,8 +86,6 @@
 		_Grid.Instance.prototype.remove_module = remove_module;
 		_Grid.Instance.prototype.get_modules_with_vertices = get_modules_with_vertices;
 		
-		_Grid.Instance.prototype.on_state_changed = on_state_changed;
-		
 		// get / set
 		
 		Object.defineProperty( _Grid.Instance.prototype, 'puzzle', { 
@@ -353,7 +351,9 @@
 				
 				module.grid = this;
 				
-				module.occupantChanged.add( this.on_state_changed, this );
+				module.occupantAdded.add( on_occupant_added, this );
+				module.occupantRemoved.add( on_occupant_removed, this );
+				module.occupantChanged.add( on_occupant_changed, this );
 				
 			}
 			
@@ -441,7 +441,9 @@
 			
 			module = this.modules[ i ];
 			
-			module.complete();
+			// active
+			
+			module.active = this.puzzle.completed;
 			
 		}
 		
@@ -770,7 +772,21 @@
 	
 	=====================================================*/
 	
-	function on_state_changed ( module ) {
+	function on_occupant_added ( module ) {
+		
+		console.log(' PUZZLE completing for ', this.puzzle.id );
+		this.puzzle.complete();
+		
+	}
+	
+	function on_occupant_removed ( module ) {
+		
+		console.log(' PUZZLE completing for ', this.puzzle.id );
+		this.puzzle.complete();
+		
+	}
+	
+	function on_occupant_changed ( module ) {
 		
 		this.stateChanged.dispatch( this, module );
 		

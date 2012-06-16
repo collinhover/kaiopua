@@ -59,14 +59,16 @@
 		_GridModule.Instance.prototype = new _Model.Instance();
 		_GridModule.Instance.prototype.constructor = _GridModule.Instance;
 		_GridModule.Instance.prototype.reset = reset;
-		_GridModule.Instance.prototype.complete = complete;
 		_GridModule.Instance.prototype.set_dirty = set_dirty;
 		
 		_GridModule.Instance.prototype.change_state = change_state;
 		_GridModule.Instance.prototype.show_state = show_state;
 		_GridModule.Instance.prototype.get_state = get_state;
+		_GridModule.Instance.prototype.get_state_active = get_state_active;
 		
 		_GridModule.Instance.prototype.set_occupant = set_occupant;
+		
+		_GridModule.Instance.prototype.set_active = set_active;
 		
 		_GridModule.Instance.prototype.has_face_or_vertex = has_face_or_vertex;
 		_GridModule.Instance.prototype.get_modules_connected = get_modules_connected;
@@ -117,7 +119,12 @@
 		});
 		
 		Object.defineProperty( _GridModule.Instance.prototype, 'occupied', { 
-			get: function () { return typeof this.occupant !== 'undefined'; }
+			get: function () { return this.get_state_active( 'occupied' ); }//typeof this.occupant !== 'undefined'; }
+		});
+		
+		Object.defineProperty( _GridModule.Instance.prototype, 'active', { 
+			get: function () { return this.get_state_active( 'active' ); },
+			set: function ( active ) { this.set_active( active ); }
 		});
 		
 	}
@@ -156,7 +163,10 @@
 		
 		// signals
 		
+		this.occupantAdded = new signals.Signal();
+		this.occupantRemoved = new signals.Signal();
 		this.occupantChanged = new signals.Signal();
+		this.activeChanged = new signals.Signal();
 		
 		// states
 		
@@ -181,6 +191,9 @@
 			ambient0: _GridModule.colors.vacant,
 			color1: _GridModule.colors.occupied,
 			ambient1: _GridModule.colors.occupied
+		} );
+		this.states.active = new _GridModuleState.Instance( {
+			constant: false
 		} );
 		this.states.water = new _GridModuleState.Instance( {
 			priority: 1,
@@ -214,28 +227,6 @@
 		// clear occupant
 		
 		this.occupant = undefined;
-		
-	}
-	
-	/*===================================================
-	
-	complete
-	
-	=====================================================*/
-	
-	function complete () {
-		console.log( ' > > module complete', this );
-		var gridElement;
-		
-		// if has occupant
-		
-		if ( typeof this.occupant !== 'undefined' ) {
-			
-			gridElement = this.occupant.gridElement;
-			
-			gridElement.activate();
-			
-		}
 		
 	}
 	
@@ -419,6 +410,14 @@
 		
 	}
 	
+	function get_state_active ( id ) {
+		
+		var state = this.get_state( id );
+		
+		return state instanceof _GridModuleState.Instance ? Boolean( state.active ) : false;
+		
+	}
+	
 	function sort_by_priority ( a, b ) {
 		return b.priority - a.priority;
 	}
@@ -445,17 +444,34 @@
 		
 		this._occupant = occupant;
 		
-		// update state
+		// if has new occupant
 		
 		if ( typeof this._occupant !== 'undefined' ) {
 			
 			this.add( this._occupant );
 			this.change_state( [ 'occupied', 'base' ], true );
 			
+			// if did not have previous
+			
+			if ( typeof occupantPrev === 'undefined' ) {
+				
+				this.occupantAdded.dispatch( this );
+				
+			}
+			
 		}
+		// else empty
 		else {
 			
 			this.change_state( [ 'occupied', 'base' ], false );
+			
+			// if had previous
+			
+			if ( typeof occupantPrev !== 'undefined' ) {
+				
+				this.occupantRemoved.dispatch( this );
+				
+			}
 			
 		}
 		
@@ -464,6 +480,35 @@
 		if ( occupant !== occupantPrev ) {
 			
 			this.occupantChanged.dispatch( this );
+			
+		}
+		
+	}
+	
+	/*===================================================
+	
+	active
+	
+	=====================================================*/
+	
+	function set_active ( active ) {
+		
+		var activePrev = this._active,
+			gridElement;
+		
+		// store new
+		
+		this._active = active;
+		
+		// update state
+		
+		this.change_state( 'active', this._active );
+		
+		// if change occured
+		
+		if ( this._active !== activePrev ) {
+			
+			this.activeChanged.dispatch( this );
 			
 		}
 		

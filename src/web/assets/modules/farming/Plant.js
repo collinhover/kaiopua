@@ -78,6 +78,7 @@
 		_Plant.Instance.prototype.constructor = _Plant.Instance;
 		_Plant.Instance.prototype.supr = _GridElement.Instance.prototype;
 		
+		_Plant.Instance.prototype.reset = reset;
 		_Plant.Instance.prototype.clone = clone;
 		
 		_Plant.Instance.prototype.reset_material = reset_material;
@@ -87,11 +88,8 @@
 		_Plant.Instance.prototype.change_module = change_module;
 		
 		_Plant.Instance.prototype.test_occupy_module = test_occupy_module;
-		
-		_Plant.Instance.prototype.activate = activate;
-		
-		_Plant.Instance.prototype.grow = grow;
-		_Plant.Instance.prototype.uproot = uproot;
+		_Plant.Instance.prototype.show_last_modules_tested = show_last_modules_tested;
+		_Plant.Instance.prototype.occupy_modules = occupy_modules;
 		
 	}
 	
@@ -125,17 +123,32 @@
 		// properties
 		
 		this.timeGrow = main.is_number( parameters.timeGrow ) ? parameters.timeGrow : _Plant.timeGrow;
+		this.materialBase = new THREE.MeshLambertMaterial();
+		
+		// ui
+		
+		this.change_seed( parameters.seed );
+		this.change_rotator( parameters.rotator );
+		
+		// reset
+		
+		this.reset();
+		
+	}
+	
+	/*===================================================
+	
+	reset
+	
+	=====================================================*/
+	
+	function reset () {
 		
 		this.planted = false;
 		
-		this.materialBase = new THREE.MeshLambertMaterial();
 		this.materialBase.color.copy( this.material.color );
 		this.materialBase.ambient.copy( this.material.ambient );
 		this.materialBase.vertexColors = this.material.vertexColors;
-		
-		this.change_seed( parameters.seed );
-		
-		this.change_rotator( parameters.rotator );
 		
 	}
 	
@@ -188,6 +201,10 @@
 			
 			c.change_seed( this.seed );
 			c.change_rotator( this.rotator );
+			
+			// reset
+			
+			c.reset();
 			
 		}
 		
@@ -335,32 +352,17 @@
 	
 	function change_module () {
 		
-		// prototype call
-		
-		_Plant.Instance.prototype.supr.change_module.apply( this, arguments );
-		
 		// reset material
 		
 		this.reset_material();
 		
-		// handle planted state
+		// proto
 		
-		if ( this.module instanceof _GridModule.Instance ) {
-			
-			this.planted = true;
-			
-			this.grow();
-			
-		}
-		else {
-			
-			this.planted = false;
-			
-		}
+		_Plant.Instance.prototype.supr.change_module.apply( this, arguments );
 		
 	}
 	
-	function test_occupy_module ( testModule ) {
+	function test_occupy_module ( testModule, show, occupy ) {
 		
 		var success;
 		
@@ -368,9 +370,27 @@
 		
 		success = _Plant.Instance.prototype.supr.test_occupy_module.apply( this, arguments );
 		
+		// if showing and not for occupy
+		
+		if ( show === true && occupy !== true ) {
+			
+			
+			
+		}
+		
+		return success;
+		
+	}
+	
+	function show_last_modules_tested () {
+		
+		// proto
+		
+		_Plant.Instance.prototype.supr.show_last_modules_tested.apply( this, arguments );
+		
 		// if successful
 		
-		if ( success === true ) {
+		if ( this.testSuccess === true ) {
 			
 			this.material.color.copy( _GridModule.colors.vacant );
 			this.material.ambient.copy( _GridModule.colors.vacant );
@@ -383,7 +403,7 @@
 			
 		}
 		// unsuccessful, but tested on an actual module
-		else if ( testModule instanceof _GridModule.Instance ) {
+		else if ( this.testModule instanceof _GridModule.Instance ) {
 			
 			this.material.color.copy( _GridModule.colors.occupied );
 			this.material.ambient.copy( _GridModule.colors.occupied );
@@ -393,9 +413,9 @@
 			this.seed.apply_css( 'background-color', _GridModule.colors.occupied.getContextStyle() );
 			
 			this.seed.show( { opacity: _Plant.opacityOccupiedSeed } );
-			
+		
 		}
-		// unsuccessful, no module
+		// base state
 		else {
 			
 			this.reset_material();
@@ -406,60 +426,26 @@
 				
 		}
 		
-		return success;
-		
 	}
 	
-	/*===================================================
-    
-    active state
-    
-    =====================================================*/
-	
-	function activate () {
-		
-		var activePrev = this.active;
-		
-		// proto
-		
-		_Plant.Instance.prototype.supr.activate.apply( this, arguments );
-		
-		// if activated
-		
-		if ( this.active !== activePrev ) {
-			
-			// grow
-			
-			this.grow( this.modelsCurrent );
-			
-		}
-		
-	}
-	
-	/*===================================================
-    
-    grow
-    
-    =====================================================*/
-	
-	function grow ( models ) {
-		
-		models = models || this.models;
+	function occupy_modules () {
 		
 		var i, l,
 			model;
 		
-		console.log('plant GROW models', models);
+		// proto
+		
+		_Plant.Instance.prototype.supr.occupy_modules.apply( this, arguments );
 		
 		// if has module
 		
 		if ( this.hasModule ) {
-			
+			console.log(' PLANT OCCUPY MODULES' );
 			// for each model
 			
-			for ( i = 0, l = models.length; i < l; i++ ) {
+			for ( i = 0, l = this.modelsCurrent.length; i < l; i++ ) {
 				
-				model = models[ i ];
+				model = this.modelsCurrent[ i ];
 				
 				// set scale to 0
 				
@@ -476,20 +462,6 @@
 			}
 			
 		}
-		
-	}
-	
-	/*===================================================
-    
-    uproot
-    
-    =====================================================*/
-	
-	function uproot () {
-		
-		// clear module
-		
-		this.change_module();
 		
 	}
 	

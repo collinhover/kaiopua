@@ -502,16 +502,16 @@
 			
 			plantSuccessful = this.plant.occupy_module( this.module );
 			
-			// stop on success, else continue
+			// if successful
 			
-			if ( plantSuccessful ) {
-				console.log(' > PLANTING: plant added!', this.plant);
+			if ( plantSuccessful && this.plant instanceof _Plant.Instance ) {
+				console.log(' > PLANTING: plant added!', this.plant );
 				plantPlanted = this.plant;
 				plantPlantedNodes = plantPlanted.get_layout_node_total();
 				
 				// stop if plant was selected from field or on field complete
 				
-				if ( this.plantFromSelection === true || this.field.isCompleted === true ) {
+				if ( this.plantFromSelection === true || ( this.field instanceof _Puzzle.Instance && this.field.isCompleted === true ) ) {
 					
 					this.stop();
 					
@@ -543,11 +543,6 @@
 					this.setup( { plant: plantPlantedClone } );
 					
 				}
-				
-			}
-			else {
-				
-				console.log(' > PLANTING: plant does not fit!', this.plant);
 				
 			}
 			
@@ -597,9 +592,9 @@
 		// trigger field to check if completed
 		
 		if ( field instanceof _Puzzle.Instance ) {
+			//console.log( 'PLANTING: completing field ', field );
+			//field.complete();
 			
-			field.complete();
-			console.log( 'PLANTING: completing field ', field );
 		}
 		
 	}
@@ -676,7 +671,7 @@
 		
 		if ( this.plant instanceof _Plant.Instance ) {
 			
-			this.plant.test_occupy_module( module, true );
+			this.plant.test_occupy_module_smart( module, true );
 			
 		}
 		
@@ -695,7 +690,7 @@
 			// remove last plant
 			
 			if ( this.plant instanceof _Plant.Instance ) {
-				
+				console.log(' > PLANTING: plant changing, current planted?', this.plant.hasModule );
 				// clear last test
 				
 				this.plant.test_occupy_module();
@@ -706,7 +701,7 @@
 				
 				// if planted
 				
-				if ( this.plant.planted === true ) {
+				if ( this.plant.hasModule === true ) {
 					
 					// plants list
 					
@@ -719,9 +714,9 @@
 				}
 				else {
 					
-					// ensure plant is uprooted
+					// clear plant module
 					
-					this.plant.uproot();
+					this.plant.change_module();
 					
 					// all plants list
 					
@@ -754,11 +749,11 @@
 				
 				// if currently planted
 				
-				if ( this.plant.planted === true ) { 
+				if ( this.plant.hasModule === true ) { 
 					
-					// uproot
+					// clear plant module
 						
-					this.plant.uproot();
+					this.plant.change_module();
 					
 				}
 				
@@ -861,7 +856,7 @@
 				
 				// rotate plant
 				
-				plant.rotate( radians, this.module );
+				plant.rotate( radians, this.module, true, false );
 				
 				// if rotator needed
 				
