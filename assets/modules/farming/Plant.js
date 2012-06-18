@@ -17,7 +17,6 @@
 		_Button,
 		_GUI,
 		_ObjectHelper,
-		plantGeometryBase,
 		utilVec31Grow;
 	
 	/*===================================================
@@ -47,7 +46,7 @@
     
     =====================================================*/
 	
-	function init_internal( ge, gm, uie, btn, gui, oh, plant ) {
+	function init_internal( ge, gm, uie, btn, gui, oh, plantGeometry ) {
 		console.log('internal plant', _Plant);
 		
 		_GridElement = ge;
@@ -56,12 +55,12 @@
 		_Button = btn;
 		_GUI = gui;
 		_ObjectHelper = oh;
-		plantGeometryBase = plant;
 		
 		utilVec31Grow = new THREE.Vector3();
 		
 		// properties
 		
+		_Plant.geometryBase = plantGeometry;
 		_Plant.timeGrow = 500;
 		_Plant.timeShow = 125;
 		_Plant.timeHide = 125;
@@ -79,6 +78,7 @@
 		_Plant.Instance.prototype.constructor = _Plant.Instance;
 		_Plant.Instance.prototype.supr = _GridElement.Instance.prototype;
 		
+		_Plant.Instance.prototype.reset = reset;
 		_Plant.Instance.prototype.clone = clone;
 		
 		_Plant.Instance.prototype.reset_material = reset_material;
@@ -88,11 +88,8 @@
 		_Plant.Instance.prototype.change_module = change_module;
 		
 		_Plant.Instance.prototype.test_occupy_module = test_occupy_module;
-		
-		_Plant.Instance.prototype.grow = grow;
-		_Plant.Instance.prototype.uproot = uproot;
-		
-		_Plant.Instance.prototype.update = update;
+		_Plant.Instance.prototype.show_last_modules_tested = show_last_modules_tested;
+		_Plant.Instance.prototype.occupy_modules = occupy_modules;
 		
 	}
 	
@@ -104,17 +101,20 @@
 	
 	function Plant ( parameters ) {
 		
+		var c;
+		
 		// handle parameters
 		
 		parameters = parameters || {};
 		
 		if ( typeof parameters.geometry === 'undefined' ) {
 			
-			parameters.geometry = plantGeometryBase;
-			
-			parameters.layout = [ [ 1 ] ];
+			parameters.geometry = new THREE.CubeGeometry( 20, 40, 20 );
 			
 		}
+		
+		c = parameters.customizations = parameters.customizations || {};
+		c.geometry = c.geometry || new THREE.CubeGeometry( 60, 120, 60 );//_Plant.geometryBase;
 		
 		// prototype constructor
 		
@@ -123,17 +123,32 @@
 		// properties
 		
 		this.timeGrow = main.is_number( parameters.timeGrow ) ? parameters.timeGrow : _Plant.timeGrow;
+		this.materialBase = new THREE.MeshLambertMaterial();
+		
+		// ui
+		
+		this.change_seed( parameters.seed );
+		this.change_rotator( parameters.rotator );
+		
+		// reset
+		
+		this.reset();
+		
+	}
+	
+	/*===================================================
+	
+	reset
+	
+	=====================================================*/
+	
+	function reset () {
 		
 		this.planted = false;
 		
-		this.materialBase = new THREE.MeshLambertMaterial();
 		this.materialBase.color.copy( this.material.color );
 		this.materialBase.ambient.copy( this.material.ambient );
 		this.materialBase.vertexColors = this.material.vertexColors;
-		
-		this.change_seed( parameters.seed );
-		
-		this.change_rotator( parameters.rotator );
 		
 	}
 	
@@ -144,6 +159,10 @@
 	=====================================================*/
 	
 	function clone ( c ) {
+		
+		var i, l,
+			model,
+			modelCustom;
 		
 		if ( typeof c === 'undefined' ) {
 			
@@ -159,14 +178,33 @@
 			
 			// properties
 			
-			c.scale.set( 1, 1, 1 );
 			c.timeGrow = this.timeGrow;
+			
+			// models
+			
+			for ( i = 0, l = c.models.length; i < l; i++ ) {
+				
+				model = c.models[ i ];
+				model.scale.set( 1, 1, 1 );
+				
+				if ( c.hasCustomModels ) {
+					
+					modelCustom = c.customizations.models[ i ];
+					modelCustom.scale.set( 1, 1, 1 );
+					
+				}
+				
+			}
 			
 			// TODO 
 			// actually clone uielements
 			
 			c.change_seed( this.seed );
 			c.change_rotator( this.rotator );
+			
+			// reset
+			
+			c.reset();
 			
 		}
 		
@@ -314,32 +352,17 @@
 	
 	function change_module () {
 		
-		// prototype call
-		
-		_Plant.Instance.prototype.supr.change_module.apply( this, arguments );
-		
 		// reset material
 		
 		this.reset_material();
 		
-		// handle planted state
+		// proto
 		
-		if ( this.module instanceof _GridModule.Instance ) {
-			
-			this.planted = true;
-			
-			this.grow();
-			
-		}
-		else {
-			
-			this.planted = false;
-			
-		}
+		_Plant.Instance.prototype.supr.change_module.apply( this, arguments );
 		
 	}
 	
-	function test_occupy_module ( testModule ) {
+	function test_occupy_module ( testModule, show, occupy ) {
 		
 		var success;
 		
@@ -347,9 +370,27 @@
 		
 		success = _Plant.Instance.prototype.supr.test_occupy_module.apply( this, arguments );
 		
+		// if showing and not for occupy
+		
+		if ( show === true && occupy !== true ) {
+			
+			
+			
+		}
+		
+		return success;
+		
+	}
+	
+	function show_last_modules_tested () {
+		
+		// proto
+		
+		_Plant.Instance.prototype.supr.show_last_modules_tested.apply( this, arguments );
+		
 		// if successful
 		
-		if ( success === true ) {
+		if ( this.testSuccess === true ) {
 			
 			this.material.color.copy( _GridModule.colors.vacant );
 			this.material.ambient.copy( _GridModule.colors.vacant );
@@ -362,7 +403,7 @@
 			
 		}
 		// unsuccessful, but tested on an actual module
-		else if ( testModule instanceof _GridModule.Instance ) {
+		else if ( this.testModule instanceof _GridModule.Instance ) {
 			
 			this.material.color.copy( _GridModule.colors.occupied );
 			this.material.ambient.copy( _GridModule.colors.occupied );
@@ -372,9 +413,9 @@
 			this.seed.apply_css( 'background-color', _GridModule.colors.occupied.getContextStyle() );
 			
 			this.seed.show( { opacity: _Plant.opacityOccupiedSeed } );
-			
+		
 		}
-		// unsuccessful, no module
+		// base state
 		else {
 			
 			this.reset_material();
@@ -385,55 +426,42 @@
 				
 		}
 		
-		return success;
-		
 	}
 	
-	/*===================================================
-    
-    grow
-    
-    =====================================================*/
-	
-	function grow () {
-		console.log('plant grow!');
-		// set scale to 0
+	function occupy_modules () {
 		
-		this.scale.set( 0, 0, 0 );
+		var i, l,
+			model;
 		
-		// tween scale to 1
+		// proto
 		
-		this.tween_properties( {
-			time: this.timeGrow,
-			easing: TWEEN.Easing.Back.EaseOut,
-			scale: utilVec31Grow.set( 1, 1, 1 )
-		} );
+		_Plant.Instance.prototype.supr.occupy_modules.apply( this, arguments );
 		
-	}
-	
-	/*===================================================
-    
-    uproot
-    
-    =====================================================*/
-	
-	function uproot () {
+		// if has module
 		
-		// clear module
-		
-		this.change_module();
-		
-	}
-	
-	/*===================================================
-    
-    update
-    
-    =====================================================*/
-	
-	function update () {
-		
-		_Plant.Instance.prototype.supr.update.apply( this, arguments );
+		if ( this.hasModule ) {
+			console.log(' PLANT OCCUPY MODULES' );
+			// for each model
+			
+			for ( i = 0, l = this.modelsCurrent.length; i < l; i++ ) {
+				
+				model = this.modelsCurrent[ i ];
+				
+				// set scale to 0
+				
+				model.scale.set( 0, 0, 0 );
+				
+				// tween scale to 1
+				
+				model.tween_properties( {
+					time: this.timeGrow,
+					easing: TWEEN.Easing.Back.EaseOut,
+					scale: utilVec31Grow.set( 1, 1, 1 )
+				} );
+				
+			}
+			
+		}
 		
 	}
 	

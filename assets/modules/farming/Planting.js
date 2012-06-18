@@ -16,6 +16,7 @@
 		_Grid,
 		_Puzzle,
 		_GridModule,
+		_GridModel,
 		_Plant,
 		_MathHelper,
 		_ObjectHelper,
@@ -36,6 +37,7 @@
 			"assets/modules/puzzles/Puzzle.js",
 			"assets/modules/puzzles/Grid.js",
 			"assets/modules/puzzles/GridModule.js",
+			"assets/modules/puzzles/GridModel.js",
 			"assets/modules/farming/Plant.js",
 			"assets/modules/utils/MathHelper.js",
 			"assets/modules/utils/ObjectHelper.js"
@@ -50,7 +52,7 @@
     
     =====================================================*/
 	
-	function init_internal ( g, gui, pzl, gr, gm, pl, mh, oh ) {
+	function init_internal ( g, gui, pzl, gr, gm, gmodel, pl, mh, oh ) {
 		console.log('internal planting', _Planting);
 		
 		_Game = g;
@@ -58,6 +60,7 @@
 		_Puzzle = pzl;
 		_Grid = gr;
 		_GridModule = gm;
+		_GridModel = gmodel;
 		_Plant = pl;
 		_MathHelper = mh;
 		_ObjectHelper = oh;
@@ -139,9 +142,9 @@
 	
 	function reset () {
 		
-		// all plants list
+		// plants list
 		
-		this.allPlants = [];
+		this.plants = [];
 		
 		// stop planting
 		
@@ -161,6 +164,7 @@
 			field,
 			grid,
 			modules,
+			plant,
 			plantingObjects = [],
 			targetObject;
 		
@@ -195,12 +199,18 @@
 			
 			if ( parameters.field === true && typeof this.field !== 'undefined' ) {
 				
-				plantingObjects = plantingObjects.concat( this.field.plants );
+				plantingObjects = plantingObjects.concat( this.field.occupants );
 				
 			}
 			else {
 				
-				plantingObjects = plantingObjects.concat( this.allPlants );
+				for ( i = 0, l = this.plants.length; i < l; i++ ) {
+					
+					plant = this.plants[ i ];
+					
+					plantingObjects = plantingObjects.concat( plant.modelsCurrent );
+					
+				}
 				
 			}
 			
@@ -370,11 +380,20 @@
 			
 			targetObject = this.get_planting_object_under_mouse( { modules: false, character: false, plants: true } );
 			
+			// if is a grid model
+			
+			if ( targetObject instanceof _GridModel.Instance ) {
+				
+				targetObject = targetObject.gridElement;
+				
+			}
+			
 			this.plantFromSelection = true;
 			
 		}
 		
 		// if is a plant
+		
 		if ( targetObject instanceof _Plant.Instance ) {
 			
 			// use plant
@@ -483,16 +502,16 @@
 			
 			plantSuccessful = this.plant.occupy_module( this.module );
 			
-			// stop on success, else continue
+			// if successful
 			
-			if ( plantSuccessful ) {
-				console.log(' > PLANTING: plant added!', this.plant);
+			if ( plantSuccessful && this.plant instanceof _Plant.Instance ) {
+				console.log(' > PLANTING: plant added!', this.plant );
 				plantPlanted = this.plant;
 				plantPlantedNodes = plantPlanted.get_layout_node_total();
 				
-				// stop if plant was selected from field or on field solve
+				// stop if plant was selected from field or on field complete
 				
-				if ( this.plantFromSelection === true || this.field.isSolved === true ) {
+				if ( this.plantFromSelection === true || ( this.field instanceof _Puzzle.Instance && this.field.isCompleted === true ) ) {
 					
 					this.stop();
 					
@@ -526,11 +545,6 @@
 				}
 				
 			}
-			else {
-				
-				console.log(' > PLANTING: plant does not fit!', this.plant);
-				
-			}
 			
 		}
 		else {
@@ -546,7 +560,7 @@
 	function stop () {
 		console.log('stop PLANTING!');
 		
-		// store field for solve check after stop complete
+		// store field for complete check after stop complete
 		
 		var field = this.field;
 		
@@ -575,11 +589,11 @@
 		_GUI.layers.ui.show();
 		_GUI.layers.ui.set_pointer_events( false );
 		
-		// trigger field to check if solved
+		// trigger field to check if completed
 		
 		if ( field instanceof _Puzzle.Instance ) {
-			
-			field.solve();
+			//console.log( 'PLANTING: completing field ', field );
+			//field.complete();
 			
 		}
 		
@@ -657,7 +671,7 @@
 		
 		if ( this.plant instanceof _Plant.Instance ) {
 			
-			this.plant.test_occupy_module( module, true );
+			this.plant.test_occupy_module_smart( module, true );
 			
 		}
 		
@@ -665,7 +679,9 @@
 	
 	function change_plant ( plantNew ) {
 		
-		var index;
+		var i, l,
+			index,
+			plantModel;
 		
 		// if new plant is different from one stored in planting
 		
@@ -674,39 +690,39 @@
 			// remove last plant
 			
 			if ( this.plant instanceof _Plant.Instance ) {
-				
+				console.log(' > PLANTING: plant changing, current planted?', this.plant.hasModule );
 				// clear last test
 				
 				this.plant.test_occupy_module();
 				
 				// find if in all plants list
 				
-				index = this.allPlants.indexOf( this.plant );
+				index = this.plants.indexOf( this.plant );
 				
 				// if planted
 				
-				if ( this.plant.planted === true ) {
+				if ( this.plant.hasModule === true ) {
 					
-					// store in all plants list
+					// plants list
 					
 					if ( index === -1 ) {
 						
-						this.allPlants.push( this.plant );
+						this.plants.push( this.plant );
 						
 					}
 					
 				}
 				else {
 					
-					// ensure plant is uprooted
+					// clear plant module
 					
-					this.plant.uproot();
+					this.plant.change_module();
 					
-					// remove from all plants list
+					// all plants list
 					
 					if ( index !== -1 ) {
 						
-						this.allPlants.splice( index, 1 );
+						this.plants.splice( index, 1 );
 						
 					}
 					
@@ -733,11 +749,11 @@
 				
 				// if currently planted
 				
-				if ( this.plant.planted === true ) { 
+				if ( this.plant.hasModule === true ) { 
 					
-					// uproot
+					// clear plant module
 						
-					this.plant.uproot();
+					this.plant.change_module();
 					
 				}
 				
@@ -781,7 +797,7 @@
 			
 			r = this.rotation = {};
 			
-			position.copy( this.plant.matrixWorld.getPosition() );
+			position.copy( this.module.matrixWorld.getPosition() );
 			position = projector.projectVector( position, _Game.camera );
 			
 			r.x0 = ( ( position.x + 1 ) * shared.screenWidth ) * 0.5;
@@ -840,7 +856,7 @@
 				
 				// rotate plant
 				
-				plant.rotate( radians, this.module );
+				plant.rotate( radians, this.module, true, false );
 				
 				// if rotator needed
 				

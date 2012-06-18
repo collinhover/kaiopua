@@ -137,7 +137,7 @@
 		
 		me.parts.sun = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Sun.js"),
-			materials: new THREE.MeshBasicMaterial( { shading: THREE.NoShading, vertexColors: THREE.VertexColors } ),
+			material: new THREE.MeshBasicMaterial( { shading: THREE.NoShading, vertexColors: THREE.VertexColors } ),
 			physics: {
 				bodyType: 'mesh',
 				gravitySource: true
@@ -436,7 +436,7 @@
 				},
 				numElementsMin: 10,
 				hints: [
-					'Some plants have special abilities that will help solve puzzles!'
+					'Some plants have special abilities that will help complete puzzles!'
 				],
 				hintsCombine: true,
 				rewards: [
@@ -474,7 +474,7 @@
 				numElementsMin: 10,
 				hints: [
 					'Some plants will only grow when next to certain other plants!',
-					'Some fields are split into smaller parts. Fields are much easier to solve if you think this way!'
+					'Some fields are split into smaller parts. Fields are much easier to complete if you think this way!'
 				],
 				hintsCombine: true,
 				rewards: [

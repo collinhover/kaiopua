@@ -138,7 +138,7 @@
 	
 	function modify_material ( material, activeLevel ) {
 		
-		var p = this.get_properties( activeLevel );
+		var p = this.get_properties( typeof activeLevel === 'boolean' ? ( activeLevel ? 1 : 0 ) : activeLevel );
 		
 		// valid material
 		

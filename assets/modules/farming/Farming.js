@@ -12,6 +12,7 @@
 		assetPath = "assets/modules/farming/Farming.js",
 		_Farming = {},
 		_Game,
+		_GridElementShapes,
 		_Puzzle,
 		_Planting,
 		_Field,
@@ -35,6 +36,7 @@
 		data: _Farming,
 		requirements: [
 			"assets/modules/core/Game.js",
+			"assets/modules/puzzles/GridElementShapes.js",
 			"assets/modules/puzzles/Puzzle.js",
 			"assets/modules/farming/Planting.js",
 			"assets/modules/farming/Field.js",
@@ -50,101 +52,15 @@
     
     =====================================================*/
 	
-	function init_internal( g, pzl, pl, f, c ) {
+	function init_internal( g, ges, pzl, pl, f, c ) {
 		console.log('internal farming', _Farming);
 		
 		_Game = g;
+		_GridElementShapes = ges;
 		_Puzzle = pzl;
 		_Planting = pl;
 		_Field = f;
 		_Character = c;
-		
-		// properties
-		
-		_Farming.plantParameters = {};
-		
-		Object.defineProperty( _Farming.plantParameters, 'rock', { 
-			get: function () {
-				
-				return {
-					seed: {
-						image: shared.pathToIcons + 'rock_64.png',
-						tooltip: 'Rock'
-					},
-					geometry: "assets/models/Rock.js",
-					layout: [ [ 1 ] ]
-				};
-			
-			}
-		});
-		
-		Object.defineProperty( _Farming.plantParameters, 'taro_001', { 
-			get: function () {
-				
-				return {
-					seed: {
-						image: shared.pathToIcons + 'taro_001_64.png',
-						tooltip: 'Taro'
-					},
-					geometry: "assets/models/Taro_Plant_001.js",
-					layout: [ [ 1 ] ]
-				};
-			
-			}
-		});
-		
-		Object.defineProperty( _Farming.plantParameters, 'taro_002', { 
-			get: function () {
-				
-				return {
-					seed: {
-						image: shared.pathToIcons + 'taro_002_64.png',
-						tooltip: 'Double Taro'
-					},
-					geometry: "assets/models/Taro_Plant_002.js",
-					layout: [
-						[ 0, 1, 0 ],
-						[ 0, 1, 1 ],
-						[ 0, 0, 0 ]
-					]
-				};
-			
-			}
-		});
-		
-		Object.defineProperty( _Farming.plantParameters, 'taro_003', { 
-			get: function () {
-				
-				return {
-					seed: {
-						image: shared.pathToIcons + 'taro_003_64.png',
-						tooltip: 'Triple Taro'
-					},
-					geometry: "assets/models/Taro_Plant_003.js",
-					layout: [
-						[ 0, 1, 0 ],
-						[ 1, 1, 1 ],
-						[ 0, 0, 0 ]
-					]
-				};
-			
-			}
-		});
-		
-		Object.defineProperty( _Farming.plantParameters, 'pineapple_001', { 
-			get: function () {
-				
-				return {
-					seed: {
-						image: shared.pathToIcons + 'pineapple_001_64.png',
-						tooltip: 'Pineapple'
-					},
-					geometry: "assets/models/Pineapple_Plant_001.js",
-					layout: [ [ 1 ] ]
-				};
-			
-			}
-		});
 		
 		// functions
 		
@@ -158,7 +74,7 @@
 		Object.defineProperty( _Farming, 'plantTypesBase', { 
 			get: function () {
 				
-				return [ 'taro_001', 'taro_002' ];
+				return [ 'SHAPE_3x3_000010000', 'SHAPE_3x3_010011000', 'SHAPE_3x3_010111000' ];
 			
 			}
 		} );
@@ -402,7 +318,7 @@
 		
 		var b,
 			m,
-			plantParameters,
+			shapeParameters,
 			type,
 			image,
 			tooltip,
@@ -417,7 +333,7 @@
 			
 			// valid plant type
 			
-			if ( _Farming.plantParameters.hasOwnProperty( plantType ) ) {
+			if ( _GridElementShapes.hasOwnProperty( plantType ) ) {
 				
 				// if exists, remove
 				
@@ -429,14 +345,14 @@
 				
 				// create new
 				
-				plantParameters = _Farming.plantParameters[ plantType ];
+				shapeParameters = _GridElementShapes[ plantType ];
 				
 				button = new _Button.Instance( {
 					id: plantType,
-					image: plantParameters.seed.image || shared.pathToIcons + 'plant_64.png',
+					image: shapeParameters.icon.image || shared.pathToIcons + 'plant_64.png',
 					imageSize: _UIElement.sizes.iconMedium,
 					size: _UIElement.sizes.iconMediumContainer,
-					tooltip: plantParameters.seed.tooltip,
+					tooltip: shapeParameters.icon.tooltip,
 					spacing: _UIElement.sizes.spacing,
 					circle: true,
 					theme: 'green',
@@ -521,7 +437,7 @@
 	
 	function plant_from_ui ( plantType ) {
 		
-		plant( _Player.character, { plant: _Farming.plantParameters[ plantType ] } );
+		plant( _Player.character, { plant: _GridElementShapes[ plantType ] } );
 		
 	}
 	
@@ -706,7 +622,7 @@
 				
 				// valid plant type
 				
-				if ( _Farming.plantParameters.hasOwnProperty( plantType ) ) {
+				if ( _GridElementShapes.hasOwnProperty( plantType ) ) {
 					
 					// if doesn't have plant yet
 					

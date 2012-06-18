@@ -808,11 +808,11 @@
 		} );
 		gridGameplay.add( gpRow1 );
 		
-		make_message_grid_element( 'find', '', gpRow1, 'grid_cell_inner', shared.pathToTextures + 'dirt_128.jpg', 'grid_cell_inner_circle', 'Fields are puzzles', true );
-		make_message_grid_element( 'choose', '', gpRow1, 'grid_cell_inner', shared.pathToIcons + 'game_steps_choose_plant_128.jpg', 'grid_cell_inner_circle', 'Solve fields by using plants', true );
-		make_message_grid_element( 'design', '', gpRow1, 'grid_cell_inner', shared.pathToIcons + 'game_steps_design_128.jpg', 'grid_cell_inner_circle', 'The less plants you need, the better', true );
-		make_message_grid_element( 'grow', '', gpRow1, 'grid_cell_inner', shared.pathToIcons + 'game_steps_grow_128.jpg', 'grid_cell_inner_circle', 'The better the design, the better the reward', true );
-		make_message_grid_element( 'explore', '', gpRow1, 'grid_cell_inner', shared.pathToIcons + 'game_steps_explore_128.jpg', 'grid_cell_inner_circle', "You're on a moon sized space whale!", true );
+		make_message_grid_element( 'Fields are puzzles', '', gpRow1, 'grid_cell_inner', shared.pathToTextures + 'dirt_128.jpg', 'grid_cell_inner_circle' );
+		make_message_grid_element( 'Plant to complete fields', '', gpRow1, 'grid_cell_inner', shared.pathToIcons + 'game_steps_choose_plant_128.jpg', 'grid_cell_inner_circle' );
+		make_message_grid_element( 'Less is more', '', gpRow1, 'grid_cell_inner', shared.pathToIcons + 'game_steps_design_128.jpg', 'grid_cell_inner_circle' );
+		make_message_grid_element( 'Efficiency is rewarding!', '', gpRow1, 'grid_cell_inner', shared.pathToIcons + 'game_steps_grow_128.jpg', 'grid_cell_inner_circle' );
+		make_message_grid_element( 'Gravity is shifty...', '', gpRow1, 'grid_cell_inner', shared.pathToIcons + 'game_steps_explore_128.jpg', 'grid_cell_inner_circle' );
 		
 	}
 	

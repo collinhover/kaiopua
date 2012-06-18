@@ -13,6 +13,7 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/utils/RayHelper.js",
 		_RayHelper = {},
+		_MathHelper,
 		_SceneHelper,
 		utilRay1Casting,
 		utilRay1Localize,
@@ -23,6 +24,10 @@
 		utilVec32Box,
 		utilVec31Casting,
 		utilVec31Collision,
+		utilVec31Distance,
+		utilVec31LinePoint,
+		utilVec32LinePoint,
+		utilVec33LinePoint,
 		utilVec31Triangle,
 		utilVec32Triangle,
 		utilVec33Triangle;
@@ -36,6 +41,7 @@
 	main.asset_register( assetPath, {
 		data: _RayHelper,
 		requirements: [
+			"assets/modules/utils/MathHelper.js",
 			"assets/modules/utils/SceneHelper.js"
 		],
 		callbacksOnReqs: init_internal,
@@ -48,11 +54,12 @@
     
     =====================================================*/
 	
-	function init_internal ( sh ) {
+	function init_internal ( mh, sh ) {
 		console.log('internal ray helper', _RayHelper);
 		
 		// reqs
 		
+		_MathHelper = mh;
 		_SceneHelper = sh;
 		
 		// utility
@@ -66,11 +73,18 @@
 		utilVec32Box = new THREE.Vector3();
 		utilVec31Casting = new THREE.Vector3();
 		utilVec31Collision = new THREE.Vector3();
+		utilVec31Distance = new THREE.Vector3();
+		utilVec31LinePoint = new THREE.Vector3();
+		utilVec32LinePoint = new THREE.Vector3();
+		utilVec33LinePoint = new THREE.Vector3();
 		utilVec31Triangle = new THREE.Vector3();
 		utilVec32Triangle = new THREE.Vector3();
 		utilVec33Triangle = new THREE.Vector3();
 		
 		// functions
+		
+		_RayHelper.distance_from_intersection = distance_from_intersection;
+		_RayHelper.closest_point_from_line_to_point = closest_point_from_line_to_point;
 		
 		_RayHelper.Collider = Collider;
 		_RayHelper.PlaneCollider = PlaneCollider;
@@ -127,6 +141,43 @@
 
 		return rt;
 
+	}
+	
+	function distance_from_intersection ( point, origin, direction, length ) {
+		
+		return Math.sqrt( utilVec31Distance.sub( point, closest_point_from_line_to_point( point, origin, direction, length ) ).lengthSq() );
+		
+	}
+	
+	function closest_point_from_line_to_point ( point, origin, direction, length ) {
+		
+		var dot,
+			dotClamped,
+			originToPoint = utilVec31LinePoint.sub( point, origin ),
+			directionMagnitude = utilVec32LinePoint.copy( direction ).normalize(),
+			pointClosest = utilVec33LinePoint;
+		
+		dot = originToPoint.dot( direction );
+		
+		// if line segment
+		
+		if( main.is_number( length ) && length > 0 ) {
+			
+			dotClamped = _MathHelper.clamp( dot / length, 0, 1 );
+			
+		}
+		// else infinite ray
+		else {
+			
+			length = 1;
+			dotClamped = Math.max( 0, dot );
+			
+		}
+		
+		pointClosest.add( origin, directionMagnitude.multiplyScalar( dotClamped * length ) );
+		
+		return pointClosest;
+		
 	}
 	
 	/*===================================================
@@ -295,7 +346,7 @@
 			
 			if ( parameters.direction instanceof THREE.Vector3 ) {
 				
-				ray.direction.copy( parameters.direction );
+				ray.direction.copy( parameters.direction ).normalize();
 				
 			}
 			
@@ -373,13 +424,12 @@
 		
 		// if using octree
 		
-		if ( typeof octree !== 'undefined' && distance > 0 ) {
+		if ( typeof octree !== 'undefined' ) {
 			
 			// search for potential colliders
 			
-			colliders = main.ensure_array( colliders ).slice( 0 ).concat( octree.search( ray.origin, distance, true ) );
-			//console.log( ' RAYCAST, octree search results from position ', ray.origin.x, ray.origin.y, ray.origin.z, ' + dist ', distance, ' = # ', colliders.length);//, ' + colliders', colliders );
-			
+			colliders = main.ensure_array( colliders ).slice( 0 ).concat( octree.search( ray.origin, distance, true, ray.direction ) );
+			//console.log( ' RAYCAST, octree search results from position ', ray.origin.x, ray.origin.y, ray.origin.z, ' w direction ', ray.direction.x, ray.direction.y, ray.direction.z, ' + dist ', distance, ' = # ', colliders.length, ' + colliders', colliders );
 		}
 		
 		// ray cast colliders

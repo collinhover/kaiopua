@@ -13,6 +13,7 @@
 		_Grid = {},
 		_Model,
 		_GridModule,
+		_GridModel,
 		_GridElement,
 		_MathHelper,
 		_ObjectHelper,
@@ -35,6 +36,7 @@
 		requirements: [
 			"assets/modules/core/Model.js",
 			"assets/modules/puzzles/GridModule.js",
+			"assets/modules/puzzles/GridModel.js",
 			"assets/modules/puzzles/GridElement.js",
 			"assets/modules/utils/MathHelper.js",
 			"assets/modules/utils/ObjectHelper.js"
@@ -49,11 +51,12 @@
 	
 	=====================================================*/
 	
-	function init_internal ( m, gm, ge, mh, oh ) {
+	function init_internal ( m, gm, gmodel, ge, mh, oh ) {
 		console.log("internal grid", _Grid);
 		
 		_Model = m;
 		_GridModule = gm;
+		_GridModel = gmodel;
 		_GridElement = ge;
 		_MathHelper = mh;
 		_ObjectHelper = oh;
@@ -70,6 +73,11 @@
 		_Grid.Instance = Grid;
 		_Grid.Instance.prototype = new _Model.Instance();
 		_Grid.Instance.prototype.constructor = _Grid.Instance;
+		
+		_Grid.Instance.prototype.reset = reset;
+		_Grid.Instance.prototype.clean = clean;
+		_Grid.Instance.prototype.complete = complete;
+		
 		_Grid.Instance.prototype.each_module = each_module;
 		_Grid.Instance.prototype.modify_modules = modify_modules;
 		_Grid.Instance.prototype.add_modules = add_modules;
@@ -77,9 +85,6 @@
 		_Grid.Instance.prototype.remove_modules = remove_modules;
 		_Grid.Instance.prototype.remove_module = remove_module;
 		_Grid.Instance.prototype.get_modules_with_vertices = get_modules_with_vertices;
-		_Grid.Instance.prototype.on_state_changed = on_state_changed;
-		_Grid.Instance.prototype.clean = clean;
-		_Grid.Instance.prototype.reset = reset;
 		
 		// get / set
 		
@@ -105,7 +110,7 @@
 					
 					module = this.modules[ i ];
 					
-					if ( !( module.occupant instanceof _GridElement.Instance ) ) {
+					if ( !module.occupant ) {
 						
 						full = false;
 						break;
@@ -119,11 +124,41 @@
 			}
 		});
 		
+		Object.defineProperty( _Grid.Instance.prototype, 'occupants', { 
+			get : function () {
+				
+				var i, l,
+					module,
+					occupant,
+					occupants = [];
+				
+				// find all models occupying grid
+				
+				for ( i = 0, l = this.modules.length; i < l; i++ ) {
+					
+					module = this.modules[ i ];
+					
+					occupant = module.occupant;
+					
+					if ( occupant && occupants.indexOf( occupant ) === -1 ) {
+						
+						occupants.push( occupant );
+						
+					}
+					
+				}
+				
+				return occupants;
+				
+			}
+		});
+		
 		Object.defineProperty( _Grid.Instance.prototype, 'elements', { 
 			get : function () {
 				
 				var i, l,
 					module,
+					occupant,
 					element,
 					elements = [];
 				
@@ -133,7 +168,8 @@
 					
 					module = this.modules[ i ];
 					
-					element = module.occupant;
+					occupant = module.occupant;
+					element = occupant.gridElement;
 					
 					if ( element instanceof _GridElement.Instance && elements.indexOf( element ) === -1 ) {
 						
@@ -315,7 +351,9 @@
 				
 				module.grid = this;
 				
-				module.occupantChanged.add( this.on_state_changed, this );
+				module.occupantAdded.add( on_occupant_added, this );
+				module.occupantRemoved.add( on_occupant_removed, this );
+				module.occupantChanged.add( on_occupant_changed, this );
 				
 			}
 			
@@ -329,20 +367,101 @@
 	
 	/*===================================================
 	
+	reset
+	
+	=====================================================*/
+	
+	function reset () {
+		
+		var i, l,
+			module,
+			occupant,
+			gridElement;
+		
+		// for each module
+		
+		for ( i = 0, l = this.modules.length; i < l; i++ ) {
+			
+			module = this.modules[ i ];
+			occupant = module.occupant;
+			
+			if ( occupant instanceof _GridModel.Instance ) {
+				
+				gridElement = occupant.gridElement;
+				
+				gridElement.change_module();
+				
+			}
+			else {
+				
+				this.occupant = undefined;
+				
+			}
+			
+		}
+		
+		// clean
+		
+		this.clean( undefined, true );
+		
+	}
+	
+	function clean ( modulesExcluding, force ) {
+		
+		// if dirty
+		
+		if ( this._dirtyModules !== false || force === true ) {
+			
+			each_module.call( this, function ( module ) {
+				
+				module.show_state( false );
+				
+			}, modulesExcluding );
+			
+			this._dirtyModules = false;
+			
+		}
+		
+	}
+	
+	/*===================================================
+	
+	complete
+	
+	=====================================================*/
+	
+	function complete () {
+		console.log( ' > grid complete', this);
+		var i, l,
+			module;
+		
+		// for each module
+		
+		for ( i = 0, l = this.modules.length; i < l; i++ ) {
+			
+			module = this.modules[ i ];
+			
+			// active
+			
+			module.active = this.puzzle.completed;
+			
+		}
+		
+	}
+	
+	/*===================================================
+	
 	modules
 	
 	=====================================================*/
 	
-	function each_module( methods, modulesExcluding ) {
+	function each_module ( callback, modulesExcluding ) {
 		
 		var i, l,
 			j, k,
-			module,
-			method;
+			module;
 		
 		// handle parameters
-		
-		methods = main.ensure_array( methods );
 		
 		modulesExcluding = main.ensure_array( modulesExcluding );
 		
@@ -356,17 +475,9 @@
 			
 			if ( modulesExcluding.indexOf( module ) === -1 ) {
 				
-				// for each method
+				// pass module to callback
 				
-				for ( j = 0, k = methods.length; j < k; j++ ) {
-					
-					method = methods[ j ];
-					
-					// call method in context of module
-					
-					method.call( module );
-					
-				}
+				callback.call( this, module );
 				
 			}
 			
@@ -661,58 +772,23 @@
 	
 	=====================================================*/
 	
-	function on_state_changed ( module ) {
+	function on_occupant_added ( module ) {
+		
+		console.log(' PUZZLE completing for ', this.puzzle.id );
+		this.puzzle.complete();
+		
+	}
+	
+	function on_occupant_removed ( module ) {
+		
+		console.log(' PUZZLE completing for ', this.puzzle.id );
+		this.puzzle.complete();
+		
+	}
+	
+	function on_occupant_changed ( module ) {
 		
 		this.stateChanged.dispatch( this, module );
-		
-	}
-	
-	/*===================================================
-	
-	cleaning
-	
-	=====================================================*/
-	
-	function clean ( modulesExcluding, force ) {
-		
-		// if dirty
-		
-		if ( this._dirtyModules !== false || force === true ) {
-			
-			this.each_module( function () {
-				
-				this.show_state( false );
-				
-			}, modulesExcluding );
-			
-			this._dirtyModules = false;
-			
-		}
-		
-	}
-	
-	function reset () {
-		
-		// for each module
-		
-		this.each_module( function () {
-			
-			if ( this.occupant instanceof _GridElement.Instance ) {
-				
-				this.occupant.change_module();
-				
-			}
-			else if ( typeof this.occupant !== 'undefined' ) {
-				
-				this.occupant = undefined;
-				
-			}
-			
-		} );
-		
-		// clean
-		
-		this.clean( undefined, true );
 		
 	}
 	

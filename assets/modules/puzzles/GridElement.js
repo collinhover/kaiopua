@@ -11,10 +11,11 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/puzzles/GridElement.js",
 		_GridElement = {},
-		_Model,
+		_GridModel,
 		_GridModule,
 		_ObjectHelper,
 		_MathHelper,
+		gridElementCount = 0,
 		rotationAxis,
 		utilQ1Rotate;
 	
@@ -27,7 +28,7 @@
 	main.asset_register( assetPath, { 
 		data: _GridElement,
 		requirements: [
-			"assets/modules/core/Model.js",
+			"assets/modules/puzzles/GridModel.js",
 			"assets/modules/puzzles/GridModule.js",
 			"assets/modules/utils/ObjectHelper.js",
 			"assets/modules/utils/MathHelper.js"
@@ -45,7 +46,7 @@
 	function init_internal( m, gm, oh, mh ) {
 		console.log('internal grid element', _GridElement);
 		
-		_Model = m;
+		_GridModel = m;
 		_GridModule = gm;
 		_ObjectHelper = oh;
 		_MathHelper = mh;
@@ -57,31 +58,45 @@
 		// properties
 		
 		rotationAxis = new THREE.Vector3( 0, 1, 0 );
+		_GridElement.NODE_EMPTY = 0;
+		_GridElement.NODE_SELF = 1;
 		
 		// instance
 		
 		_GridElement.Instance = GridElement;
-		_GridElement.Instance.prototype = new _Model.Instance();
-		_GridElement.Instance.prototype.constructor = _GridElement.Instance;
-		_GridElement.Instance.prototype.supr = _Model.Instance.prototype;
 		
 		_GridElement.Instance.prototype.clone = clone;
 		
+		_GridElement.Instance.prototype.customize = customize;
+		
+		_GridElement.Instance.prototype.occupy_modules = occupy_modules;
+		_GridElement.Instance.prototype.unoccupy_modules = unoccupy_modules;
+		
 		_GridElement.Instance.prototype.rotate = rotate;
 		_GridElement.Instance.prototype.rotate_reset = rotate_reset;
-		_GridElement.Instance.prototype.rotate_layout = rotate_layout;
 		
 		_GridElement.Instance.prototype.change_module = change_module;
-		
-		_GridElement.Instance.prototype.update = update;
-		
 		_GridElement.Instance.prototype.occupy_module = occupy_module;
+		_GridElement.Instance.prototype.test_occupy_module_smart = test_occupy_module_smart;
 		_GridElement.Instance.prototype.test_occupy_module = test_occupy_module;
-		_GridElement.Instance.prototype.each_layout_element = _GridElement.each_layout_element = each_layout_element;
+		_GridElement.Instance.prototype.show_last_modules_tested = show_last_modules_tested;
+		_GridElement.Instance.prototype.each_layout_element = each_layout_element;
 		
 		_GridElement.Instance.prototype.get_layout_node_total = get_layout_node_total
 		_GridElement.Instance.prototype.get_layout_center_location = get_layout_center_location;
 		_GridElement.Instance.prototype.get_layout_center_offset = get_layout_center_offset;
+		
+		Object.defineProperty( _GridElement.Instance.prototype, 'customized', { 
+			get: function () { return this.customizations && this.geometry !== this.customizations.geometry; }
+		});
+		
+		Object.defineProperty( _GridElement.Instance.prototype, 'hasCustomModels', { 
+			get: function () { return this.customizations && main.is_array( this.customizations.models ); }
+		});
+		
+		Object.defineProperty( _GridElement.Instance.prototype, 'hasModule', { 
+			get: function () { return this.module instanceof _GridModule.Instance && typeof this.modules !== 'undefined'; }
+		});
 		
 	}
 	
@@ -93,25 +108,34 @@
 	
 	function GridElement ( parameters ) {
 		
+		gridElementCount++;
+		
 		// handle parameters
 		
 		parameters = parameters || {};
 		
-		// prototype constructor
-		
-		_Model.Instance.call( this, parameters );
-		
 		// properties
 		
+		this.id = gridElementCount;
 		this.rotationAngle = this.rotationAngleLayout = 0;
-		
+		this.material = parameters.material || new THREE.MeshLambertMaterial( { vertexColors: THREE.VertexColors, shading: THREE.SmoothShading } );
+		this.geometry = typeof parameters.geometry === 'string' ? main.get_asset_data( parameters.geometry ) : parameters.geometry;
+
 		// layout
 		
-		this.layout = generate_layout( parameters.layout );
+		this.layout = generate_layout.call( this, parameters.layout );
 		
-		// modules layout
+		// modules matrix from layout
 		
-		this.layoutModules = this.layout.dup();
+		this.modules = this.layout.dup();
+		
+		// models
+		
+		this.models = generate_models.call( this, parameters.models );
+		
+		// customizations
+		
+		this.customize( parameters.customizations );
 		
 	}
 	
@@ -123,6 +147,11 @@
 	
 	function clone ( c ) {
 		
+		var cMaterial,
+			cMaterialCustom,
+			cGeometry,
+			cGeometryCustom;
+		
 		if ( typeof c === 'undefined' ) {
 			
 			c = new _GridElement.Instance();
@@ -131,16 +160,37 @@
 		
 		if ( c instanceof _GridElement.Instance ) {
 			
-			// proto
-			
-			c = _GridElement.Instance.prototype.supr.clone.call( this, c );
-			
 			// properties
 			
 			c.rotationAngle = this.rotationAngle;
 			c.rotationAngleLayout = this.rotationAngleLayout;
-			c.layout = this.layout.dup();
-			c.layoutModules = this.layout.dup();
+			c.material = _ObjectHelper.clone_material( this.material );
+			c.geometry = _ObjectHelper.clone_geometry( this.geometry );
+			
+			// layout
+			
+			c.layout = generate_layout.call( c, this.layout );
+			
+			// modules matrix from layout
+			
+			c.modules = c.layout.dup();
+			
+			// basic models
+			
+			c.models = generate_models.call( c );
+			
+			// customize
+			
+			customize.call( c, this.customizations );
+			
+			// handle customizations that need clone
+			
+			if ( this.customized ) {
+			
+				c.customizations.material = _ObjectHelper.clone_material( this.customizations.material );
+				c.customizations.geometry = _ObjectHelper.clone_geometry( this.customizations.geometry );
+
+			}
 			
 		}
 		
@@ -150,24 +200,72 @@
 	
 	/*===================================================
     
+    customizations
+    
+    =====================================================*/
+	
+	function customize ( parameters ) {
+		
+		var c;
+		
+		// handle parameters
+		
+		parameters = parameters || {};
+		
+		c = this.customizations = this.hasOwnProperty( 'customizations' ) ? this.customizations : {};
+		
+		c.material = parameters.material || c.material;
+		c.geometry = parameters.geometry || c.geometry || this.geometry;
+		
+		// ensure proper material
+		
+		if ( c.material === true ) {
+
+			c.material = _ObjectHelper.clone_material( this.material );
+			
+		}
+		else if ( c.material instanceof THREE.Material !== true ) {
+
+			c.material = this.material;
+			
+		}
+		
+		// if custom is different from primary
+		
+		if ( this.customized === true ) {
+			
+			// set dirty
+			
+			this._dirtyCustomizations = true;
+			
+			// occupy
+			
+			this.occupy_modules();
+			
+		}
+		
+	}
+	
+	/*===================================================
+    
     layout
     
     =====================================================*/
 	
-	function generate_layout ( source ) {
+	function generate_layout ( layoutSource ) {
 		
 		var layout;
 		
-		// generate layout as matrix from source
+		// generate layout as matrix
 		
-		if ( source instanceof Matrix ) {
+		if ( layoutSource instanceof Matrix ) {
 			
-			layout = source;
+			layout = layoutSource;
 			
 		}
-		else if ( main.is_array( source ) ) {
+		else if ( main.is_array( layoutSource ) ) {
 			
-			layout = $M( source );
+			layout = $M( layoutSource );
 			
 		}
 		
@@ -176,17 +274,17 @@
 		if ( layout instanceof Matrix !== true ) {
 			
 			layout = $M( [
-				[ 1 ]
+				[ _GridElement.NODE_SELF ]
 			] );
 			/*
-			layout = $M( [
+			this.layout = $M( [
 				[ 0, 0, 0 ],
 				[ 0, 1, 0 ],
 				[ 0, 0, 0 ]
 			] );
 			*/
 			/*
-			layout = $M( [
+			this.layout = $M( [
 				[ 0, 1, 1, 0, 0 ],
 				[ 0, 0, 0, 1, 0 ],
 				[ 0, 0, 1, 0, 0 ],
@@ -194,19 +292,189 @@
 				[ 0, 0, 0, 0, 0 ]
 			] );
 			*/
-			/*layout = $M( [
+			/*
+			this.layout = $M( [
 				[ Math.round( Math.random() ), Math.round( Math.random() ), Math.round( Math.random() ) ],
 				[ Math.round( Math.random() ), Math.round( Math.random() ), Math.round( Math.random() ) ],
 				[ Math.round( Math.random() ), Math.round( Math.random() ), Math.round( Math.random() ) ]
-			] );*/
+			] );
+			*/
 			
 		}
 		
-		// clamp layout values between 0 and 1, and force all non-zero to snap to 1
-		
-		layout = layout.map( function( x ) { return Math.ceil( _MathHelper.clamp( x, 0, 1 ) ); } );
-		
 		return layout;
+		
+	}
+	
+	/*===================================================
+    
+    models
+    
+    =====================================================*/	
+	
+	function generate_models ( parameters ) {
+		
+		var models = [],
+			model;
+		
+		// handle parameters
+		
+		parameters = parameters || {};
+		
+		parameters.gridElement = this;
+		parameters.material = parameters.material || this.material;
+		parameters.geometry = parameters.geometry || this.geometry;
+		
+		// if valid properties
+		
+		if ( parameters.material && parameters.geometry ) {
+			
+			// create all models
+			
+			each_layout_element.call( this, this.layout, function ( node ) {
+				
+				if ( node === _GridElement.NODE_SELF )  {
+					
+					// model
+					
+					model = new _GridModel.Instance( parameters );
+					
+					models.push( model );
+					
+				}
+				
+			} );
+			
+		}
+		
+		return models;
+		
+	}
+	
+	function add_models ( models ) {
+		
+		var modelCount = 0,
+			model;
+		
+		models = models || this.modelsCurrent;
+		
+		// for each module in layout modules add model as occupant
+		
+		each_layout_element.call( this, this.modules, function ( layoutModule ) {
+			
+			if ( layoutModule instanceof _GridModule.Instance ) {
+				
+				model = models[ modelCount ];
+				modelCount++;
+				
+				layoutModule.add( model );
+				
+			}
+			
+		} );
+		
+	}
+	
+	function remove_models ( models ) {
+		
+		var i, l,
+			model;
+		
+		models = models || this.modelsCurrent;
+		
+		for ( i = 0, l = models.length; i < l; i++ ) {
+			
+			model = models[ i ];
+			
+			if ( typeof model.parent !== 'undefined' ) {
+				
+				model.parent.remove( model );
+				
+			}
+			
+		}
+		
+	}
+	
+	function occupy_modules () {
+		
+		var c,
+			modelCount = 0,
+			models,
+			model;
+		
+		// if module and layouts are valid
+		
+		if ( this.hasModule ) {
+			
+			// get models list
+			
+			// if module active use customized
+			
+			if ( this.customized === true && this.module.active === true ) {
+				
+				// if needs customized models
+				
+				c = this.customizations;
+				
+				if ( this.hasCustomModels !== true || this._dirtyCustomizations === true ) {
+					
+					c.models = generate_models.call( this, c );
+					this._dirtyCustomizations = false;
+					
+				}
+				
+				models = c.models;
+				
+			}
+			// else use base models
+			else {
+				
+				models = this.models;
+				
+			}
+			
+			// if does not match current models
+			
+			if ( this.modelsCurrent !== models || this._dirtyModule === true ) {
+				console.log( this, ' OCCUPY modules' );
+				this.modelsCurrent = models;
+				this._dirtyModule = false;
+				
+				// for each module in layout modules add model as occupant
+				
+				each_layout_element.call( this, this.modules, function ( layoutModule ) {
+					
+					if ( layoutModule instanceof _GridModule.Instance ) {
+						
+						model = models[ modelCount ];
+						modelCount++;
+						
+						layoutModule.occupant = model;
+						
+					}
+					
+				} );
+				
+			}
+			
+		}
+		
+	}
+	
+	function unoccupy_modules () {
+		
+		// for each module in layout modules add model as occupant
+		
+		each_layout_element.call( this, this.modules, function ( layoutModule ) {
+			
+			if ( layoutModule instanceof _GridModule.Instance ) {
+				
+				layoutModule.occupant = undefined;
+				
+			}
+			
+		} );
 		
 	}
 	
@@ -216,15 +484,18 @@
     
     =====================================================*/
 	
-	function rotate ( radians, testModule ) {
+	function rotate ( radians, testModule, show, occupy, force ) {
 		
 		var q = utilQ1Rotate,
-			angle;
+			angle,
+			angleDelta,
+			layoutRotated,
+			safeRotation = true;
 		
 		// add degrees
 		
 		this.rotationAngle = ( this.rotationAngle + radians ) % ( Math.PI * 2 );
-		
+		/*
 		// rotate self
 		// modify degrees based on cardinal right axis
 		
@@ -232,37 +503,10 @@
 		q.setFromAxisAngle( rotationAxis, angle );
 		
 		this.quaternion.multiplySelf( q );
+		*/
+		// angle from current to new
 		
-		// rotate layout
-		
-		this.rotate_layout( this.rotationAngle, testModule );
-		
-	}
-	
-	function rotate_reset () {
-		
-		var angle;
-		
-		// if is not a 1x1 layout
-		// snap self back to last layout rotation angle
-		
-		if ( this.get_layout_node_total() > 1 ) {
-			
-			this.rotationAngle = this.rotationAngleLayout;
-			
-			angle = shared.cardinalAxes.right.x * this.rotationAngle;
-			
-			this.quaternion.setFromAxisAngle( rotationAxis, angle );
-			
-		}
-		
-	}
-	
-	function rotate_layout ( angle, testModule ) {
-		
-		var angleDelta = _MathHelper.shortest_rotation_between_angles( this.rotationAngleLayout, angle ),
-			layoutRotated,
-			safeRotation = true;
+		angleDelta = _MathHelper.shortest_rotation_between_angles( this.rotationAngleLayout, this.rotationAngle )
 		
 		// rotate layout by angleDelta
 		
@@ -270,7 +514,7 @@
 		
 		// if layout was rotated
 		
-		if ( this.layout.eql( layoutRotated ) !== true ) {
+		if ( this.layout.eql( layoutRotated ) !== true || force === true ) {
 			
 			// test new layout
 			
@@ -278,7 +522,7 @@
 			
 			if ( testModule instanceof _GridModule.Instance ) {
 			
-				safeRotation = this.test_occupy_module( testModule, true, false, layoutRotated );
+				safeRotation = this.test_occupy_module( testModule, show, occupy, layoutRotated );
 				
 			}
 			
@@ -294,6 +538,27 @@
 			
 		}
 		
+		return safeRotation;
+		
+	}
+	
+	function rotate_reset () {
+		
+		var angle;
+		
+		// if is not a 1x1 layout
+		// snap self back to last layout rotation angle
+		
+		if ( this.get_layout_node_total( this.layout, _GridElement.NODE_SELF ) > 1 ) {
+			
+			this.rotationAngle = this.rotationAngleLayout;
+			/*
+			angle = shared.cardinalAxes.right.x * this.rotationAngle;
+			
+			this.quaternion.setFromAxisAngle( rotationAxis, angle );
+			*/
+		}
+		
 	}
 	
 	/*===================================================
@@ -302,63 +567,46 @@
     
     =====================================================*/
 	
-	function change_module ( moduleNew, layoutModulesNew ) {
+	function change_module ( moduleNew, modulesNew ) {
+		
+		var models,
+			model;
 		
 		// if is change
 		
 		if ( this.module !== moduleNew ) {
+			console.log( this, ' change module from ', this.module, ' >> to ', moduleNew );
+			// previous
 			
-			// for each module in previous layout modules
-			
-			if ( typeof this.layoutModules !== 'undefined' ) {
+			if ( this.hasModule ) {
+				
+				// signal
+				
+				this.module.activeChanged.remove( this.occupy_modules, this );
 				
 				// unoccupy
 				
-				this.each_layout_element( function ( layoutModule ) {
-					
-					if ( layoutModule instanceof _GridModule.Instance ) {
-						
-						layoutModule.occupant = undefined;
-						
-					}
-					
-				}, this.layoutModules );
+				this.unoccupy_modules();
 				
 			}
 			
 			// store
 			
 			this.module = moduleNew;
+			this.modules = modulesNew;
+			this._dirtyModule = true;
 			
-			this.layoutModules = layoutModulesNew;
+			// signal
 			
-			// if new module and layouts are valid
-			
-			if ( this.module instanceof _GridModule.Instance && typeof this.layoutModules !== 'undefined' ) {
+			if ( this.hasModule ) {
 				
-				// add
-				
-				this.module.add( this );
-				
-				// for each module in layout modules set this as occupant
-				
-				this.each_layout_element( function ( layoutModule ) {
-					
-					if ( layoutModule instanceof _GridModule.Instance ) {
-						
-						layoutModule.occupant = this;
-						
-					}
-					
-				}, this.layoutModules );
+				this.module.activeChanged.add( this.occupy_modules, this );
 				
 			}
-			// remove self from previous
-			else if ( typeof this.parent !== 'undefined' ) {
-				
-				this.parent.remove( this );
 			
-			}
+			// occupy
+			
+			this.occupy_modules();
 			
 		}
 		
@@ -372,120 +620,136 @@
 		
 	}
 	
+	function test_occupy_module_smart ( testModule, show, occupy ) {
+		
+		var rotationAngleStart = this.rotationAngleLayout,
+			rotationAngleStep = Math.PI * 0.5,
+			rotationSteps = 4, // extra step to ensure return to original angle
+			success;
+		
+		// test current angle
+		
+		success = this.test_occupy_module( testModule, false, occupy );
+		
+		// try other angles
+		if ( success !== true && testModule instanceof _GridModule.Instance ) {
+			
+			for ( i = 0; i < rotationSteps; i++ ) {
+				
+				// test invisibly
+				
+				success = this.rotate( rotationAngleStep, testModule, false, occupy, true );
+				
+				// if successful rotation
+				
+				if ( success === true ) {
+					
+					break;
+					
+				}
+				
+			}
+			
+		}
+		
+		// show if needed
+		
+		if ( show === true ) {
+			
+			this.show_last_modules_tested();
+			
+		}
+		
+		return success;
+		
+	}
+	
 	function test_occupy_module ( testModule, show, occupy, testLayout ) {
 		
-		var i, l,
-			success = 0,
+		var success = 0,
 			dimensions,
 			rows,
 			cols,
 			center,
 			testResults,
-			spreadRecord,
-			testLayoutModules,
-			moduleDimensions,
-			modulesWidthTotal = 0,
-			modulesDepthTotal = 0,
-			modulesCount = 0,
-			avgModuleWidth,
-			avgModuleDepth;
+			spreadRecord;
 		
 		// change test modules
 			
 		if ( this.testModule !== testModule ) {
 			
-			// remove self from current parent
-			
-			if ( typeof this.parent !== 'undefined' ) {
+			/*// if no new test module add to current module
+			if ( testModule instanceof _GridModule.Instance !== true && this.hasModule ) {
 				
-				// if no module, remove 
-				if ( this.module instanceof _GridModule.Instance !== true ) {
-					
-					this.parent.remove( this );
-					
-				}
-				
-				// if has module, add to
-				else if ( this.parent !== this.module ) {
-					
-					this.module.add( this );
-					
-				}
+				add_models.call( this );
 				
 			}
+			// remove models from current module
+			else */if ( this.testModule !== this.module ) {
+				
+				remove_models.call( this, this.models );
+				
+			}
+			
 			
 			// store as test
 			
 			this.testModule = testModule;
+			this.testModules = undefined;
 			
 		}
 		
 		// valid testModule
 		
-		if ( typeof testModule !== 'undefined' ) {
-			
-			// add to test module
-			
-			if ( this.parent !== testModule ) {
-				
-				testModule.add( this );
-				
-			}
+		if ( this.testModule instanceof _GridModule.Instance ) {
 			
 			// clean testModule's grid
 			
-			if ( typeof testModule.grid !== 'undefined' ) {
+			if ( typeof this.testModule.grid !== 'undefined' ) {
 				
-				testModule.grid.clean();
+				this.testModule.grid.clean();
 				
 			}
 			
 			// basics
 			
 			testLayout = testLayout || this.layout;
-			dimensions = this.layout.dimensions();
+			dimensions = testLayout.dimensions();
 			rows = dimensions.rows;
 			cols = dimensions.cols;
-			center = this.get_layout_center_location();
+			center = get_layout_center_location( testLayout );
 			testResults = Matrix.Zero( rows, cols );
 			spreadRecord = testResults.dup();
-			testLayoutModules = testResults.dup();
+			this.testModules = testResults.dup();
 			
-			// return recursive test results
+			// get recursive test results
 			
-			success = test_spread( testModule, testLayout, testResults, spreadRecord, center.row, center.col, rows, cols, testLayoutModules );
+			success = test_spread( this.testModule, testLayout, testResults, spreadRecord, center.row, center.col, rows, cols, this.testModules );
+			this.testSuccess = Boolean( success );
 			
-			// show test results of occupy on modules tested
+			// show test results of occupy
 			
 			if ( show === true ) {
 				
-				this.each_layout_element( function ( testLayoutModule ) {
-					
-					if ( testLayoutModule instanceof _GridModule.Instance ) {
-						
-						testLayoutModule.show_state( 'occupied', 1 - success );
-						
-					}
-					
-				}, testLayoutModules );
+				this.show_last_modules_tested();
 				
 			}
 			
 			// if successful and should occupy
 			
-			if ( success && occupy === true ) {
+			if ( this.testSuccess === true && occupy === true ) {
 				
-				this.change_module( testModule, testLayoutModules );
+				this.change_module( this.testModule, this.testModules );
 				
 			}
 			
 		}
 		
-		return Boolean( success );
+		return this.testSuccess;
 		
 	}
 	
-	function test_spread ( testModule, testLayout, testResults, spreadRecord, rowIndex, colIndex, numRows, numCols, testLayoutModules ) {
+	function test_spread ( testModule, testLayout, testResults, spreadRecord, rowIndex, colIndex, numRows, numCols, testModules ) {
 		
 		var i, l,
 			j, k,
@@ -533,7 +797,7 @@
 				
 				// add testModule to layout map
 				
-				testLayoutModules.elements[ rowArr ][ colArr ] = testModule;
+				testModules.elements[ rowArr ][ colArr ] = testModule;
 				
 			}
 			// no module where needed
@@ -584,7 +848,7 @@
 					
 					if ( spreadRecord.e( rowNext, colNext ) !== 1 ) {
 						
-						successNext = test_spread( moduleNext, testLayout, testResults, spreadRecord, rowNext, colNext, numRows, numCols, testLayoutModules );
+						successNext = test_spread( moduleNext, testLayout, testResults, spreadRecord, rowNext, colNext, numRows, numCols, testModules );
 						
 						// record next success while successful
 						
@@ -604,13 +868,33 @@
 		
 	}
 	
-	/*===================================================
-    
-    update
-    
-    =====================================================*/
-	
-	function update () {
+	function show_last_modules_tested () {
+		
+		var model,
+			modelCount = 0,
+			success = 1 - Number( this.testSuccess );
+		
+		// if has test results
+		
+		if ( this.testModule instanceof _GridModule.Instance && typeof this.testModules !== 'undefined' ) {
+			
+			each_layout_element.call( this, this.testModules, function ( testLayoutModule ) {
+				
+				if ( testLayoutModule instanceof _GridModule.Instance ) {
+					
+					model = this.models[ modelCount ];
+					modelCount++;
+					
+					// add
+					
+					testLayoutModule.add( model );
+					testLayoutModule.show_state( 'occupied', success );
+					
+				}
+				
+			} );
+			
+		}
 		
 	}
 	
@@ -620,21 +904,15 @@
     
     =====================================================*/
 	
-	function each_layout_element ( methods, layout ) {
+	function each_layout_element ( layout, callback ) {
 		
 		layout = layout || this.layout;
 		
 		var i, il,
 			j, jl,
-			m, ml,
 			elements = layout.elements,
 			row,
-			node,
-			method;
-		
-		// handle parameters
-		
-		methods = main.ensure_array( methods );
+			node;
 		
 		// for each row
 		
@@ -648,17 +926,9 @@
 				
 				node = row[ j ];
 				
-				// for each node
+				// call method and pass node and row and column indices
 				
-				for ( m = 0, ml = methods.length; m < ml; m++ ) {
-					
-					method = methods[ m ];
-					
-					// call method and pass node and row and column indices
-					
-					method.call( this, node, i, j );
-					
-				}
+				callback.call( this, node, i, j );
 				
 			}
 			
@@ -666,21 +936,22 @@
 		
 	}
 	
-	function get_layout_node_total ( layout ) {
-		
-		layout = layout || this.layout;
+	function get_layout_node_total ( layout, nodeType ) {
 		
 		var nodeTotal = 0;
 		
-		this.each_layout_element( function ( node ) {
+		layout = layout || this.layout;
+		nodeType = main.is_number( nodeType ) ? nodeType : -1;
+		
+		each_layout_element.call( this, layout, function ( node ) {
 			
-			if ( node > 0 ) {
+			if ( ( typeof nodeType === 'undefined' && node > 0 ) || ( main.is_number( nodeType ) ? node === nodeType : node instanceof nodeType ) )  {
 				
-				nodeTotal += node;
+				nodeTotal += 1;
 				
 			}
 			
-		}, layout );
+		} );
 		
 		return nodeTotal;
 		
@@ -700,13 +971,13 @@
 	
 	function get_layout_center_offset ( layout ) {
 		
-		layout = layout || this.layout;
-		
 		var nodeTotal = 0,
 			iTotal = 0,
 			jTotal = 0;
 		
-		this.each_layout_element( function ( node, i, j ) {
+		layout = layout || this.layout;
+		
+		each_layout_element.call( this, layout, function ( node, i, j ) {
 			
 			if ( node > 0 ) {
 				
@@ -716,7 +987,7 @@
 				
 			}
 			
-		}, layout );
+		} );
 		
 		return { row: iTotal / nodeTotal, col: jTotal / nodeTotal };
 		

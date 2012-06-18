@@ -183,8 +183,8 @@
 		var i, l,
 			geometry,
 			materials,
-			materialsToModify,
 			material,
+			materialToModify,
 			rotation,
 			position;
 		
@@ -212,13 +212,9 @@
 		
 		// materials
 		
-		materials = parameters.materials || [];
+		material = main.ensure_not_array( parameters.material || new THREE.MeshLambertMaterial( { vertexColors: THREE.VertexColors, shading: THREE.SmoothShading } ) );
 		
-		if ( materials.hasOwnProperty('length') === false ) {
-			materials = [ materials ];
-		}
-		
-		materialsToModify = materials.slice(0);
+		materials = [ material ];
 		
 		// if has geometry materials
 		
@@ -228,31 +224,22 @@
 			
 			for ( i = 0, l = geometry.materials.length; i < l; i ++) {
 				
-				material = geometry.materials[ i ];
+				materials.push( geometry.materials[ i ] );
 				
-				materialsToModify.push( material );
 			}
-			
-		}
-		
-		// if no materials yet, add default
-		if ( materials.length === 0 ) {
-			
-			materials = [ new THREE.MeshLambertMaterial( { vertexColors: THREE.VertexColors, shading: THREE.SmoothShading } ) ];
-			
-			materialsToModify = materialsToModify.concat( materials );
 			
 		}
 		
 		// material properties
 		
-		for ( i = 0, l = materialsToModify.length; i < l; i ++) {
-			material = materialsToModify[i];
+		for ( i = 0, l = materials.length; i < l; i ++) {
+			
+			materialToModify = materials[i];
 			
 			// morph targets
-			if ( material.hasOwnProperty('morphTargets' ) ) {
+			if ( materialToModify.hasOwnProperty('morphTargets' ) ) {
 				
-				material.morphTargets = geometry.morphTargets && geometry.morphTargets.length > 0 ? true : false;
+				materialToModify.morphTargets = geometry.morphTargets && geometry.morphTargets.length > 0 ? true : false;
 				
 			}
 			
@@ -260,7 +247,7 @@
 			// (1 = flat, 2 = smooth )
 			if ( parameters.hasOwnProperty('shading' ) ) {
 				
-				material.shading = parameters.shading;
+				materialToModify.shading = parameters.shading;
 			
 			}
 		}
@@ -268,7 +255,7 @@
 		// call prototype constructor
 		// default to single material
 		
-		THREE.Mesh.call( this, geometry, materials[0] );
+		THREE.Mesh.call( this, geometry, material );
 		
 		// force use quaternion
 		
@@ -434,7 +421,7 @@
 			
 			// material
 			
-			c.material = _ObjectHelper.clone_materials( material )[ 0 ];
+			c.material = _ObjectHelper.clone_material( material );
 			
 			// three properties
 			
