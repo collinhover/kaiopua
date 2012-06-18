@@ -13,7 +13,9 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/core/Octree.js",
 		_Octree = {},
+		_MathHelper,
 		_SceneHelper,
+		_RayHelper,
 		_ObjectHelper,
 		octreeNodeCount = 0,
 		depthMax = -1,
@@ -41,7 +43,9 @@
 	main.asset_register( assetPath, { 
 		data: _Octree,
 		requirements: [
+			"assets/modules/utils/MathHelper.js",
 			"assets/modules/utils/SceneHelper.js",
+			"assets/modules/utils/RayHelper.js",
 			"assets/modules/utils/ObjectHelper.js"
 		],
 		callbacksOnReqs: init_internal,
@@ -54,9 +58,11 @@
     
     =====================================================*/
 	
-	function init_internal ( sh, oh ) {
+	function init_internal ( mh, sh, rh, oh ) {
 		console.log('internal octree', _Octree);
+		_MathHelper = mh;
 		_SceneHelper = sh;
+		_RayHelper = rh;
 		_ObjectHelper = oh;
 		
 		// properties
@@ -313,7 +319,7 @@
 		
 	};
 	
-	Octree.prototype.search = function ( position, radius, organizeByObject ) {
+	Octree.prototype.search = function ( position, radius, organizeByObject, direction ) {
 		
 		var i, l,
 			node,
@@ -335,7 +341,7 @@
 			
 			node = this.root.nodesByIndex[ this.root.nodesIndices[ i ] ];
 			
-			objects = search.call( node, position, radius, objects );
+			objects = search.call( node, position, radius, objects, direction );
 			
 		}
 		
@@ -513,7 +519,7 @@
 		
 		this.id = octreeNodeCount;
 		this.position = parameters.position instanceof THREE.Vector3 ? parameters.position : new THREE.Vector3();
-		this.radius = main.is_number( parameters.radius ) ? parameters.radius : 0;
+		this.radius = main.is_number( parameters.radius ) && parameters.radius > 0 ? parameters.radius : 1;
 		this.indexOctant = parameters.indexOctant;
 		this.depth = 0;
 		
@@ -552,7 +558,7 @@
 		
 		if ( this.tree.scene ) {
 			
-			this.visual = new THREE.Mesh( new THREE.CubeGeometry( this.radiusOverlap * 2, this.radiusOverlap * 2, this.radiusOverlap * 2 ), new THREE.MeshLambertMaterial( { color: 0xFF0000, wireframe: true, wireframeLinewidth: 10 } ) );
+			this.visual = new THREE.Mesh( new THREE.CubeGeometry( this.radiusOverlap * 2, this.radiusOverlap * 2, this.radiusOverlap * 2 ), new THREE.MeshBasicMaterial( { color: 0xFF0000, wireframe: true, wireframeLinewidth: 10 } ) );
 			this.visual.position.copy( this.position );
 			this.tree.scene.add( this.visual );
 			
@@ -1721,18 +1727,28 @@
     
     =====================================================*/
 	
-	function search ( position, radius, objects ) {
+	function search ( position, radius, objects, direction ) {
 		
 		var i, l,
-			node;
+			node,
+			intersects;
 		
-		//
-		// TODO: account for direction
-		//
+		// test intersects by parameters
 		
-		// if node intersects search sphere
+		if ( direction ) {
+			
+			intersects = intersect_ray.call( this, position, direction, radius );
+			
+		}
+		else {
+			
+			intersects = intersect_sphere.call( this, position, radius );
+			
+		}
 		
-		if ( intersect_sphere.call( this, position, radius ) ) {
+		// if intersects
+		
+		if ( intersects === true ) {
 			
 			// gather objects
 			
@@ -1744,7 +1760,7 @@
 				
 				node = this.nodesByIndex[ this.nodesIndices[ i ] ];
 				
-				objects = search.call( node, position, radius, objects );
+				objects = search.call( node, position, radius, objects, direction );
 				
 			}
 			
@@ -1756,7 +1772,7 @@
 	
 	function intersect_sphere ( position, radius ) {
 		
-		var distance = radius * radius,
+		var	distance = radius * radius,
 			sx = position.x,
 			sy = position.y,
 			sz = position.z;
@@ -1767,12 +1783,14 @@
 		else if ( sx > this.right ) {
 			distance -= Math.pow( sx - this.right, 2 );
 		}
+		
 		if ( sy < this.bottom ) {
 			distance -= Math.pow( sy - this.bottom, 2 );
 		}
 		else if ( sy > this.top ) {
 			distance -= Math.pow( sy - this.top, 2 );
 		}
+		
 		if ( sz < this.back ) {
 			distance -= Math.pow( sz - this.back, 2 );
 		}
@@ -1780,8 +1798,37 @@
 			distance -= Math.pow( sz - this.front, 2 );
 		}
 		
-		return distance > 0;
+		return distance >= 0;
 		
+	}
+	
+	function intersect_ray ( position, direction, distance ) {
+		
+		// ray intersects if this intersects a 0 radius sphere at closest point to this position along ray
+		
+		return intersect_sphere.call( this, _RayHelper.closest_point_from_line_to_point( this.position, position, direction, distance ), 0 );
+		/*
+		var pointClosest;
+		
+		// get closest point to this position along ray
+		
+		pointClosest = _RayHelper.closest_point_from_line_to_point( this.position, position, direction, distance );
+		
+		var mySphere = new THREE.Mesh( new THREE.SphereGeometry( 50 ), new THREE.MeshBasicMaterial( { color: 0x00FFFF, transparent: true, opacity: 0.3 } ) );
+		mySphere.position.copy( this.position );
+		this.tree.scene.add( mySphere );
+		
+		var pointClosestSphere = new THREE.Mesh( new THREE.SphereGeometry( 50 ), new THREE.MeshBasicMaterial( { color: 0x00FFFF, transparent: true, opacity: 0.3 } ) );
+		pointClosestSphere.position.copy( pointClosest );
+		this.tree.scene.add( pointClosestSphere );
+		
+		var testLineGeom = new THREE.Geometry();
+		testLineGeom.vertices.push( new THREE.Vector3().copy( pointClosest ), new THREE.Vector3().copy( this.position ) );
+		testLine = new THREE.Line( testLineGeom, new THREE.LineBasicMaterial( { color: 0x00FFFF, linewidth: 8 } ), THREE.LinePieces );
+		this.tree.scene.add( testLine );
+		
+		return intersect_sphere.call( this, pointClosest, 0 );
+		*/
 	}
 	
 	/*===================================================
