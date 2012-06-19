@@ -125,7 +125,7 @@
 		
 	};
 	
-	Octree.prototype.add = function ( object, splitByFaces ) {
+	Octree.prototype.add = function ( object, useFaces ) {
 		
 		var i, l,
 			index,
@@ -157,7 +157,7 @@
 			
 			// if adding faces of object
 			
-			if ( splitByFaces === true ) {
+			if ( useFaces === true ) {
 				
 				geometry = object.geometry;
 				faces = geometry.faces;
@@ -243,6 +243,30 @@
 		
 	};
 	
+	Octree.prototype.extend = function ( octree ) {
+		
+		var i, l,
+			objectsData,
+			objectData;
+			
+		if ( octree instanceof Octree ) {
+			
+			// for each object data
+			
+			objectsData = octree.objectsData;
+			
+			for ( i = 0, l = objectsData.length; i < l; i++ ) {
+				
+				objectData = objectsData[ i ];
+				
+				this.add( objectData, objectData.useFaces );
+				
+			}
+			
+		}
+		
+	};
+	
 	Octree.prototype.update = function () {
 		
 		var i, l,
@@ -261,7 +285,7 @@
 			
 			// ensure world matrices are updated
 			
-			_ObjectHelper.update_world_matrix( objectData.object );
+			_ObjectHelper.update_world_matrix( object );
 			
 		}
 		
@@ -459,20 +483,20 @@
 		this.object = object;
 		this.faces = face;
 		
-		// properties by type
+		// properties
+		
+		this.radius = 0;
+		this.position = new THREE.Vector3();
+			
+		// initial update
 		
 		if ( this.object instanceof THREE.Object3D ) {
 			
-			// properties
-			
-			this.position = new THREE.Vector3();
-			
-			// initial update
-			
 			this.update();
-			this.positionLast = this.position.clone();
 			
 		}
+		
+		this.positionLast = this.position.clone();
 		
 	}
 	
@@ -486,7 +510,7 @@
 		}
 		else {
 			
-			this.radius = this.object.geometry.boundingSphere.radius;
+			this.radius = this.object.geometry instanceof THREE.Geometry ? this.object.geometry.boundingSphere.radius : this.object.boundRadius;
 			this.position.copy( this.object.matrixWorld.getPosition() );
 			
 		}
@@ -494,6 +518,12 @@
 		this.radius = this.radius * Math.max( this.object.scale.x, this.object.scale.y, this.object.scale.z );
 		
 	};
+	
+	OctreeObjectData.prototype.useFaces = function () {
+		
+		return this.faces instanceof THREE.Face3 || this.faces instanceof THREE.Face4;
+		
+	}
 	
 	/*===================================================
     

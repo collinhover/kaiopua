@@ -14,7 +14,6 @@
 		_Game,
 		_CameraControls,
 		_Hero,
-		_Physics,
 		_Messenger,
 		_ObjectHelper,
 		_MathHelper,
@@ -84,7 +83,6 @@
 			"assets/modules/core/Game.js",
 			"assets/modules/core/CameraControls.js",
 			"assets/modules/characters/Hero.js",
-			"assets/modules/physics/Physics.js",
 			"assets/modules/ui/Messenger.js",
 			"assets/modules/utils/ObjectHelper.js",
 			"assets/modules/utils/MathHelper.js"
@@ -99,7 +97,7 @@
     
     =====================================================*/
 	
-	function init_internal ( g, cc, h, physx, msg, oh, mh ) {
+	function init_internal ( g, cc, h, msg, oh, mh ) {
 		console.log('internal player');
 		
 		if ( ready !== true ) {
@@ -109,7 +107,6 @@
 			_Game = g;
 			_CameraControls = cc;
 			_Hero = h;
-			_Physics = physx;
 			_Messenger = msg;
 			_ObjectHelper = oh;
 			_MathHelper = mh;

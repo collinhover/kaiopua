@@ -12,7 +12,6 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/core/Model.js",
 		_Model = {},
-		_Physics,
 		_RigidBody,
 		_MathHelper,
 		_SceneHelper,
@@ -32,7 +31,6 @@
 	main.asset_register( assetPath, {
 		data: _Model,
 		requirements: [
-			"assets/modules/physics/Physics.js",
 			"assets/modules/physics/RigidBody.js",
 			"assets/modules/utils/MathHelper.js",
 			"assets/modules/utils/SceneHelper.js",
@@ -49,9 +47,8 @@
     
     =====================================================*/
 	
-	function init_internal ( p, rb, mh, sh, oh ) {
+	function init_internal ( rb, mh, sh, oh ) {
 		console.log('internal model', _Model);
-		_Physics = p;
 		_RigidBody = rb;
 		_MathHelper = mh;
 		_SceneHelper = sh;
@@ -65,46 +62,6 @@
 		_Model.Instance.prototype.clone = clone;
 		
 		_Model.Instance.prototype.tween_properties = tween_properties;
-		
-		// catch parent changes and add / remove physics automatically
-		
-		Object.defineProperty( _Model.Instance.prototype, 'parent', { 
-			get : function () { return this._parent; },
-			set : function ( parent ) {
-				
-				// store new parent
-				
-				this._parent = parent;
-				
-				// if is child of scene
-				
-				if ( _SceneHelper.extract_parent_root( this ) instanceof THREE.Scene )  {
-					
-					// add physics
-					
-					_Physics.add( this );
-					
-				}
-				// else default to remove
-				else {
-				
-					// stop morphs
-					
-					if ( typeof this.morphs !== 'undefined' ) {
-						
-						this.morphs.stop();
-						
-					}
-					
-					// remove physics
-					
-					_Physics.remove( this );
-					
-				}
-				
-			}
-			
-		});
 		
 		// catch geometry changes
 		
@@ -298,61 +255,17 @@
 			
 		}
 		
-		// shadows
+		// boolean properties
 		
-		if ( parameters.hasOwnProperty('castShadow') === true ) {
-			
-			this.castShadow = parameters.castShadow;
-			
-		}
+		this.castShadow = typeof parameters.castShadow === 'boolean' ? parameters.castShadow : false;
+		this.receiveShadow = typeof parameters.receiveShadow === 'boolean' ? parameters.receiveShadow : false;
+		this.flipSided = typeof parameters.flipSided === 'boolean' ? parameters.flipSided : false;
+		this.doubleSided = typeof parameters.doubleSided === 'boolean' ? parameters.doubleSided : false;
 		
-		if ( parameters.hasOwnProperty('receiveShadow') === true ) {
-			
-			this.receiveShadow = parameters.receiveShadow;
-			
-		}
-		
-		// flip sided
-		
-		if ( parameters.hasOwnProperty('flipSided') === true ) {
-			
-			this.flipSided = parameters.flipSided;
-			
-		}
-		
-		// double sided
-		
-		if ( parameters.hasOwnProperty('doubleSided') === true ) {
-			
-			this.doubleSided = parameters.doubleSided;
-			
-		}
-		
-		// targetable, default to false
-		
-		if ( parameters.hasOwnProperty( 'targetable' ) ) {
-			
-			this.targetable = parameters.targetable;
-			
-		}
-		else {
-			
-			this.targetable = false;
-			
-		}
-		
-		// interactive, default to false
-		
-		if ( parameters.hasOwnProperty( 'interactive' ) ) {
-			
-			this.interactive = parameters.interactive;
-			
-		}
-		else {
-			
-			this.interactive = false;
-			
-		}
+		this.targetable = typeof parameters.targetable === 'boolean' ? parameters.targetable : false;
+		this.interactive = typeof parameters.interactive === 'boolean' ? parameters.interactive : false;
+		this.addWorldOctree = typeof parameters.addWorldOctree === 'boolean' ? parameters.addWorldOctree : false;
+		this.useFaces = typeof parameters.useFaces === 'boolean' ? parameters.useFaces : false;
 		
 		// morph defaults
 		
@@ -497,6 +410,8 @@
 			
 			c.targetable = this.targetable;
 			c.interactive = this.interactive;
+			c.useOctree = this.useOctree;
+			c.useFaces = this.useFaces;
 			
 			if ( this.hasOwnProperty( 'rigidBody' ) ) {
 				

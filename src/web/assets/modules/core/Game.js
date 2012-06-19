@@ -12,12 +12,12 @@
 		assetPath = "assets/modules/core/Game.js",
 		_Game = {},
 		_ErrorHandler,
+		_Scene,
+		_UIElement,
+		_GUI,
 		_MathHelper,
 		_RayHelper,
-		_Physics,
-		_GUI,
 		_Messenger,
-		_UIElement,
 		_Launcher,
 		_Intro,
         renderer, 
@@ -32,57 +32,56 @@
 		cameraBG,
 		cameraDefault,
 		cameraBGDefault,
-		bg,
+		physics,
 		menus = {},
         currentSection, 
         previousSection,
         paused = false,
 		started = false,
-		utilProjector1Selection,
-		utilRay1Selection,
-		utilVec31Selection,
 		sectionChangePauseTime = 500,
 		introMessageDelayTime = 2000,
-		dependencies = [
+		assetsInit = [
             "assets/modules/utils/ErrorHandler.js",
 		],
-        assetsBasic = [
-			"assets/modules/ui/UIElement.js",
-			"assets/modules/ui/GUI.js",
+        assetsSetup = [
             "js/lib/three/Three.js",
 			"js/lib/Tween.js",
 			"js/lib/jquery.transform2d.min.js",
 			"js/lib/jquery.tipTip.min.js"
         ],
-		assetsThreeExtras = [
+		assetsSetupExtras = [
             "js/lib/three/ThreeExtras.js",
             "js/lib/three/postprocessing/ShaderExtras.js",
             "js/lib/three/postprocessing/EffectComposer.js",
             "js/lib/three/postprocessing/RenderPass.js",
             "js/lib/three/postprocessing/ShaderPass.js",
             "js/lib/three/postprocessing/MaskPass.js",
-            "assets/modules/effects/FocusVignette.js"
-		],
-        assetsLauncher = [
-            "assets/modules/sections/Launcher.js"
-        ],
-        assetsGame = [
+            "assets/modules/effects/FocusVignette.js",
+			"assets/modules/core/Scene.js",
+			"assets/modules/core/Model.js",
 			"assets/modules/core/Octree.js",
 			"assets/modules/physics/Physics.js",
-			"assets/modules/core/Player.js",
-			"assets/modules/core/Model.js",
-			"assets/modules/core/CameraControls.js",
-			"assets/modules/ui/Button.js",
-			"assets/modules/ui/Menu.js",
-			"assets/modules/ui/Inventory.js",
-			"assets/modules/ui/Messenger.js",
+			"assets/modules/physics/RigidBody.js",
+			"assets/modules/ui/UIElement.js",
+			"assets/modules/ui/GUI.js",
 			"assets/modules/utils/MathHelper.js",
 			"assets/modules/utils/VectorHelper.js",
 			"assets/modules/utils/SceneHelper.js",
 			"assets/modules/utils/RayHelper.js",
 			"assets/modules/utils/ObjectHelper.js",
-			"assets/modules/utils/PhysicsHelper.js",
+			"assets/modules/utils/PhysicsHelper.js"
+		],
+        assetsLauncher = [
+            "assets/modules/sections/Launcher.js"
+        ],
+        assetsGame = [
 			"assets/modules/utils/ObjectMaker.js",
+			"assets/modules/core/Player.js",
+			"assets/modules/core/CameraControls.js",
+			"assets/modules/ui/Button.js",
+			"assets/modules/ui/Menu.js",
+			"assets/modules/ui/Inventory.js",
+			"assets/modules/ui/Messenger.js",
 			"assets/modules/characters/Character.js",
 			"assets/modules/characters/Hero.js",
 			"assets/modules/env/World.js",
@@ -220,7 +219,7 @@
 	main.asset_register( assetPath, { 
 		data: _Game,
 		readyAutoUpdate: false,
-		requirements: dependencies,
+		requirements: assetsInit,
 		callbacksOnReqs: init_internal,
 		wait: true
 	});
@@ -256,21 +255,21 @@
 			
 			// start loading
 			
-			load_basics();
+			load_setup();
 			
         }
 		
 	}
 	
-	function load_basics () {
+	function load_setup () {
 		
-		main.asset_require( assetsBasic, [ load_three_extras ], true );
+		main.asset_require( assetsSetup, [ init_setup, load_setup_extras ], true );
 		
 	}
 	
-	function load_three_extras () {
+	function load_setup_extras () {
 		
-		main.asset_require( assetsThreeExtras, [ init_basics, load_launcher ] );
+		main.asset_require( assetsSetupExtras, [ complete_setup, load_launcher ], true );
 		
 	}
 	
@@ -288,24 +287,11 @@
 	
 	/*===================================================
     
-    init with basic assets
+    setup
     
     =====================================================*/
     
-    function init_basics () {
-		
-		var shaderScreen = THREE.ShaderExtras[ "screen" ],
-            shaderFocusVignette = main.get_asset_data("assets/modules/effects/FocusVignette");
-		
-		// utility
-		
-		_UIElement = main.get_asset_data( "assets/modules/ui/UIElement.js" );
-		_GUI = main.get_asset_data( "assets/modules/ui/GUI.js" );
-		_MathHelper = main.get_asset_data( "assets/modules/utils/MathHelper.js" );
-		
-		utilProjector1Selection = new THREE.Projector();
-		utilRay1Selection = new THREE.Ray();
-		utilVec31Selection = new THREE.Vector3();
+    function init_setup () {
 		
 		// cardinal axes
 		
@@ -355,14 +341,32 @@
         shared.renderer = renderer;
         shared.renderTarget = renderTarget;
 		
+    }
+	
+	function complete_setup () {
+		
+		var shaderScreen = THREE.ShaderExtras[ "screen" ],
+            shaderFocusVignette = main.get_asset_data("assets/modules/effects/FocusVignette");
+		
+		// utility
+		
+		_Scene = main.get_asset_data( "assets/modules/core/Scene.js" );
+		_UIElement = main.get_asset_data( "assets/modules/ui/UIElement.js" );
+		_GUI = main.get_asset_data( "assets/modules/ui/GUI.js" );
+		_MathHelper = main.get_asset_data( "assets/modules/utils/MathHelper.js" );
+		
 		// scenes
 		
-		sceneDefault = new THREE.Scene();
-		sceneBGDefault = new THREE.Scene();
-        
+		sceneDefault = new _Scene.Instance();
+		sceneBGDefault = new _Scene.Instance();
+		
         // fog
 		
         sceneDefault.fog = undefined;
+		
+		// physics
+		
+		physics = sceneDefault.physics;
 		
 		// camera
 		
@@ -422,7 +426,7 @@
         
         animate();
 		
-    }
+	}
 	
 	/*===================================================
     
@@ -430,9 +434,9 @@
     
     =====================================================*/
 	
-	function init_launcher ( l ) {
+	function init_launcher () {
 		
-		_Launcher = l;
+		_Launcher = main.get_asset_data( "assets/modules/sections/Launcher.js" );
 		
 		set_section( _Launcher );
 		
@@ -1258,7 +1262,6 @@
 		console.log('start game');
 		// assets
 		
-		_Physics = main.get_asset_data( 'assets/modules/physics/Physics.js' );
 		_Intro = main.get_asset_data( 'assets/modules/sections/Intro.js' );
 		
 		// ui
@@ -1438,8 +1441,10 @@
 			
 			// update physics
 			
-			if ( typeof _Physics !== 'undefined' ) {
-				_Physics.update( timeDelta, timeDeltaMod );
+			if ( physics ) {
+				
+				physics.update( timeDelta, timeDeltaMod );
+				
 			}
 			
 			// update all others

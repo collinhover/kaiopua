@@ -32,11 +32,7 @@
 		utilVec33Update,
 		utilVec34Update,
 		utilVec35Update,
-		utilVec36Update,
-		utilVec31Velocity,
-		utilVec31Offset,
-		utilQ4Offset,
-		utilRay1Casting;
+		utilVec31Velocity;
 	
 	/*===================================================
     
@@ -47,7 +43,6 @@
 	main.asset_register( assetPath, { 
 		data: _Physics,
 		requirements: [
-			"assets/modules/core/Game.js",
 			"assets/modules/core/Octree.js",
 			"assets/modules/physics/RigidBody.js",
 			"assets/modules/utils/MathHelper.js",
@@ -66,7 +61,7 @@
     
     =====================================================*/
 	
-	function init_internal ( game, oc, rb, mh, vh, rh, oh, ph ) {
+	function init_internal ( oc, rb, mh, vh, rh, oh, ph ) {
 		console.log('internal physics');
 		
 		_Octree = oc;
@@ -77,61 +72,74 @@
 		_ObjectHelper = oh;
 		_PhysicsHelper = ph;
 		
-		// octree
-		
-		octree = new _Octree.Instance( {
-			radius: 400,
-			//scene: game.scene
-		} );
-		
-		// utility / conversion objects
-		
-		utilVec31Update = new THREE.Vector3();
-		utilVec32Update = new THREE.Vector3();
-		utilVec33Update = new THREE.Vector3();
-		utilVec34Update = new THREE.Vector3();
-		utilVec35Update = new THREE.Vector3();
-		utilVec36Update = new THREE.Vector3();
-		utilVec31Offset = new THREE.Vector3();
-		utilQ4Offset = new THREE.Quaternion();
-		utilVec31Velocity = new THREE.Vector3();
-		utilRay1Casting = new THREE.Ray();
-		
-		// properties
-		
-		set_world_gravity_source( new THREE.Vector3( 0, 0, 0 ) );
-		set_world_gravity_magnitude( new THREE.Vector3( 0, -1, 0 ) );
-		
-		// functions
-		
-		_Physics.add = add;
-		_Physics.remove = remove;
-		_Physics.start = start;
-		_Physics.stop = stop;
-		_Physics.update = update;
-		
-		// signals
-		
-		shared.signals.physicssafetynetstart = new signals.Signal();
-		shared.signals.physicssafetynetend = new signals.Signal();
-		
 		// properties
 		
 		_Physics.timeWithoutIntersectionThreshold = 500;
 		
-		Object.defineProperty(_Physics, 'worldGravitySource', { 
-			get : function () { return worldGravitySource; },
-			set : set_world_gravity_source
-		});
+		// instance
 		
-		Object.defineProperty(_Physics, 'worldGravityMagnitude', { 
-			get : function () { return worldGravityMagnitude; },
-			set : set_world_gravity_magnitude
-		});
+		_Physics.Instance = Physics;
+		_Physics.Instance.prototype = {};
+		_Physics.Instance.prototype.constructor = _Physics.Instance;
 		
-		Object.defineProperty(_Physics, 'octree', { 
-			get : function () { return octree; }
-		});
+		_Physics.Instance.prototype.add = add;
+		_Physics.Instance.prototype.remove = remove;
+		_Physics.Instance.prototype.modify_bodies = modify_bodies;
+		_Physics.Instance.prototype.update = update;
+		
+		Object.defineProperty( _Physics.Instance.prototype, 'worldGravitySource', { 
+			get : function () { return this._worldGravitySource; },
+			set : function ( source ) {
+				this._worldGravitySource = new THREE.Vector3( source.x, source.y, source.z );
+			}
+		} );
+		
+		Object.defineProperty( _Physics.Instance.prototype, 'worldGravityMagnitude', { 
+			get : function () { return this._worldGravityMagnitude; },
+			set : function ( magnitude ) {
+				this._worldGravityMagnitude = new THREE.Vector3( magnitude.x, magnitude.y, magnitude.z );
+			}
+		} );
+		
+	}
+	
+	/*===================================================
+    
+	instance
+    
+    =====================================================*/
+	
+	function Physics ( parameters ) {
+		
+		// handle parameters
+		
+		parameters = parameters || {};
+		
+		// util
+		
+		this.utilVec31Update = new THREE.Vector3();
+		this.utilVec32Update = new THREE.Vector3();
+		this.utilVec33Update = new THREE.Vector3();
+		this.utilVec34Update = new THREE.Vector3();
+		this.utilVec35Update = new THREE.Vector3();
+		this.utilVec31Velocity = new THREE.Vector3();
+		
+		// octree
+		
+		this.octree = parameters.octree instanceof _Octree.Instance ? parameters.octree : new _Octree.Instance();
+		
+		// properties
+		
+		this.worldGravitySource = parameters.worldGravitySource instanceof THREE.Vector3 ? parameters.worldGravitySource : new THREE.Vector3( 0, 0, 0 );
+		this.worldGravityMagnitude = parameters.worldGravityMagnitude instanceof THREE.Vector3 ? parameters.worldGravityMagnitude : new THREE.Vector3( 0, -1, 0 );
+		this.timeWithoutIntersectionThreshold = main.is_number( parameters.timeWithoutIntersectionThreshold ) ? parameters.timeWithoutIntersectionThreshold : _Physics.timeWithoutIntersectionThreshold;
+		
+		this.bodies = [];
+		this.bodiesGravity = [];
+		this.bodiesDynamic = [];
+		
+		this.safetynetstarted = new signals.Signal();
+		this.safetynetended = new signals.Signal();
 		
 	}
 	
@@ -143,13 +151,13 @@
 	
 	function add ( object ) {
 		
-		modify_bodies( object, true );
+		this.modify_bodies( object, true );
 		
 	}
 	
 	function remove( object ) {
 		
-		modify_bodies( object );
+		this.modify_bodies( object );
 		
 	}
 	
@@ -177,7 +185,7 @@
 				
 				// get indices
 				
-				index = bodies.indexOf( rigidBody );
+				index = this.bodies.indexOf( rigidBody );
 				
 				// if adding
 				
@@ -187,7 +195,7 @@
 					
 					if ( index === -1 ) {
 						
-						bodies.push( rigidBody );
+						this.bodies.push( rigidBody );
 						
 					}
 					
@@ -195,11 +203,11 @@
 					
 					if ( rigidBody.gravitySource === true ) {
 					
-						index = bodiesGravity.indexOf( rigidBody );
+						index = this.bodiesGravity.indexOf( rigidBody );
 						
 						if ( index === -1 ) {
 							
-							bodiesGravity.push( rigidBody );
+							this.bodiesGravity.push( rigidBody );
 							
 							rigidBody.mesh.morphs.play( 'idle', { loop: true, startDelay: true } );
 							
@@ -211,11 +219,11 @@
 					
 					if ( rigidBody.dynamic === true ) {
 						
-						index = bodiesDynamic.indexOf( rigidBody );
+						index = this.bodiesDynamic.indexOf( rigidBody );
 						
 						if ( index === -1 ) {
 							
-							bodiesDynamic.push( rigidBody );
+							this.bodiesDynamic.push( rigidBody );
 							
 						}
 						
@@ -223,7 +231,7 @@
 					// static colliders in octree and split by faces if collider is mesh
 					else {
 						
-						octree.add( object, collider instanceof _RayHelper.MeshCollider ? true : false );
+						this.octree.add( object, collider instanceof _RayHelper.MeshCollider ? true : false );
 						
 					}
 					
@@ -235,7 +243,7 @@
 					
 					if ( index !== -1 ) {
 						
-						bodies.splice( index, 1 );
+						this.bodies.splice( index, 1 );
 						
 					}
 					
@@ -243,11 +251,11 @@
 					
 					if ( rigidBody.gravitySource === true ) {
 					
-						index = bodiesGravity.indexOf( rigidBody );
+						index = this.bodiesGravity.indexOf( rigidBody );
 						
 						if ( index === -1 ) {
 							
-							bodiesGravity.splice( index, 1 );
+							this.bodiesGravity.splice( index, 1 );
 							
 						}
 						
@@ -257,11 +265,11 @@
 					
 					if ( rigidBody.dynamic === true ) {
 						
-						index = bodiesDynamic.indexOf( rigidBody );
+						index = this.bodiesDynamic.indexOf( rigidBody );
 						
 						if ( index !== -1 ) {
 							
-							bodiesDynamic.splice( index, 1 );
+							this.bodiesDynamic.splice( index, 1 );
 							
 						}
 						
@@ -269,7 +277,7 @@
 					// static colliders in octree
 					else {
 						
-						octree.remove( object );
+						this.octree.remove( object );
 						
 					}
 					
@@ -285,7 +293,7 @@
 					
 					child = object.children[ i ];
 					
-					modify_bodies( child, adding );
+					this.modify_bodies( child, adding );
 					
 				}
 				
@@ -297,35 +305,9 @@
 	
 	/*===================================================
     
-    utility functions
+    update
     
     =====================================================*/
-	
-	function set_world_gravity_source ( source ) {
-		worldGravitySource = new THREE.Vector3( source.x, source.y, source.z );
-	}
-	
-	function set_world_gravity_magnitude ( magnitude ) {
-		worldGravityMagnitude = new THREE.Vector3( magnitude.x, magnitude.y, magnitude.z );
-	}
-	
-	/*===================================================
-    
-    start/stop/update functions
-    
-    =====================================================*/
-	
-	function start () {
-		
-		shared.signals.update.add( update );
-		
-	}
-	
-	function stop () {
-		
-		shared.signals.update.remove( update );
-		
-	}
 	
 	function update ( timeDelta, timeDeltaMod ) {
 		
@@ -344,9 +326,9 @@
 		
 		// dynamic bodies
 		
-		for ( i = 0, l = bodiesDynamic.length; i < l; i++ ) {
+		for ( i = 0, l = this.bodiesDynamic.length; i < l; i++ ) {
 			
-			rigidBody = bodiesDynamic[ i ];
+			rigidBody = this.bodiesDynamic[ i ];
 			
 			// properties
 			
@@ -368,15 +350,15 @@
 				
 				gravityOrigin.copy( gravityMesh.matrixWorld.getPosition() );
 				
-				gravityMagnitude.copy( rigidBody.gravityMagnitude || worldGravityMagnitude );
+				gravityMagnitude.copy( rigidBody.gravityMagnitude || this.worldGravityMagnitude );
 				
 			}
 			// else use world gravity
 			else {
 				
-				gravityOrigin.copy( worldGravitySource );
+				gravityOrigin.copy( this.worldGravitySource );
 				
-				gravityMagnitude.copy( worldGravityMagnitude );
+				gravityMagnitude.copy( this.worldGravityMagnitude );
 				
 			}
 			
@@ -410,7 +392,7 @@
 			
 			// update gravity body
 			
-			rigidBody.find_gravity_body( bodiesGravity, timeDelta );
+			rigidBody.find_gravity_body( this.bodiesGravity, timeDelta );
 			
 			// post physics
 			// TODO: correct safety net for octree and non-infinite rays

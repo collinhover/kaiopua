@@ -15,7 +15,6 @@
 		_Model,
 		_WorldIsland,
 		_Player,
-		_Physics,
         _ready = false,
 		waitingToShow = false,
 		camera,
@@ -45,7 +44,6 @@
 		data: intro,
 		requirements: [
 			"assets/modules/core/Game.js",
-			"assets/modules/physics/Physics.js",
 			"assets/modules/env/WorldIsland.js",
 			"assets/modules/core/Player.js",
 			"assets/modules/core/Model.js"
@@ -60,14 +58,13 @@
     
     =====================================================*/
 	
-	function init_internal ( g, physx, w, p, m ) {
+	function init_internal ( g, w, p, m ) {
 		console.log('internal intro');
 		if ( _ready !== true ) {
 			
 			// assets
 			
 			_Game = g;
-			_Physics = physx;
 			_WorldIsland = w;
 			_Player = p;
 			_Model = m;
