@@ -18,21 +18,7 @@
 		_VectorHelper,
 		_ObjectHelper,
 		_PhysicsHelper,
-		ready = false,
-		bodyCount = 0,
-		bodies = [],
-		bodiesDynamic = [],
-		bodiesGravity = [],
-		octree,
-		worldGravitySource,
-		worldGravityMagnitude,
-		scaleSpeedExp = Math.log( 1.5 ),
-		utilVec31Update,
-		utilVec32Update,
-		utilVec33Update,
-		utilVec34Update,
-		utilVec35Update,
-		utilVec31Velocity;
+		scaleSpeedExp = Math.log( 1.5 );
 	
 	/*===================================================
     
@@ -86,20 +72,7 @@
 		_Physics.Instance.prototype.remove = remove;
 		_Physics.Instance.prototype.modify_bodies = modify_bodies;
 		_Physics.Instance.prototype.update = update;
-		
-		Object.defineProperty( _Physics.Instance.prototype, 'worldGravitySource', { 
-			get : function () { return this._worldGravitySource; },
-			set : function ( source ) {
-				this._worldGravitySource = new THREE.Vector3( source.x, source.y, source.z );
-			}
-		} );
-		
-		Object.defineProperty( _Physics.Instance.prototype, 'worldGravityMagnitude', { 
-			get : function () { return this._worldGravityMagnitude; },
-			set : function ( magnitude ) {
-				this._worldGravityMagnitude = new THREE.Vector3( magnitude.x, magnitude.y, magnitude.z );
-			}
-		} );
+		_Physics.Instance.prototype.handle_velocity = handle_velocity;
 		
 	}
 	
@@ -315,12 +288,12 @@
 			j, k,
 			rigidBody,
 			mesh,
-			gravityOrigin = utilVec31Update,
-			gravityMagnitude = utilVec32Update,
-			gravityUp = utilVec33Update,
+			gravityOrigin = this.utilVec31Update,
+			gravityMagnitude = this.utilVec32Update,
+			gravityUp = this.utilVec33Update,
 			velocityGravity,
-			velocityGravityForceUpDir = utilVec34Update,
-			velocityGravityForceUpDirRot = utilVec35Update,
+			velocityGravityForceUpDir = this.utilVec34Update,
+			velocityGravityForceUpDirRot = this.utilVec35Update,
 			velocityMovement,
 			safetynet;
 		
@@ -370,7 +343,7 @@
 			
 			// movement velocity
 			
-			handle_velocity( rigidBody, velocityMovement );
+			this.handle_velocity( rigidBody, velocityMovement );
 			
 			// find up direction
 			
@@ -388,7 +361,7 @@
 			
 			// gravity velocity
 			
-			handle_velocity( rigidBody, velocityGravity );
+			this.handle_velocity( rigidBody, velocityGravity );
 			
 			// update gravity body
 			
@@ -519,8 +492,7 @@
 		var mesh = rigidBody.mesh,
 			position = mesh.position,
 			scale = mesh.scale,
-			scaleExp = scaleSpeedExp,
-			scaleModded = utilVec31Velocity.copy( scale ),
+			scaleModded = this.utilVec31Velocity.copy( scale ),
 			velocityForce = velocity.force,
 			velocityForceRotated = velocity.forceRotated,
 			velocityForceRotatedLength,
@@ -551,9 +523,9 @@
 		
 		// scale velocity
 		
-		scaleModded.x = Math.pow( scaleModded.x, scaleExp );
-		scaleModded.y = Math.pow( scaleModded.y, scaleExp );
-		scaleModded.z = Math.pow( scaleModded.z, scaleExp );
+		scaleModded.x = Math.pow( scaleModded.x, scaleSpeedExp );
+		scaleModded.y = Math.pow( scaleModded.y, scaleSpeedExp );
+		scaleModded.z = Math.pow( scaleModded.z, scaleSpeedExp );
 		
 		velocityForceRotated.multiplySelf( scaleModded );
 		
@@ -579,11 +551,11 @@
 		// get intersection
 		
 		intersection = _RayHelper.raycast( {
-			octree: octree,
+			octree: this.octree,
 			origin: position,
 			direction: velocityForceRotated,
 			offset: velocityOffset,
-			distance: velocityForceRotatedLength + boundingRadius,
+			far: velocityForceRotatedLength + boundingRadius,
 			ignore: mesh
 		} );
 		

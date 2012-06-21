@@ -312,11 +312,11 @@
 	
 		// prototype constructor
 		
-		_Model.Instance.call( this, {
-			geometry: wavesGeometry,
-			material: wavesMaterial,
-			doubleSided: true
-		} );
+		parameters.geometry = wavesGeometry;
+		parameters.material = wavesMaterial;
+		parameters.doubleSided = true;
+		
+		_Model.Instance.call( this, parameters );
 		
     }
     

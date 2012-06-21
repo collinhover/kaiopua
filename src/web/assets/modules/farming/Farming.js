@@ -11,11 +11,8 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/farming/Farming.js",
 		_Farming = {},
-		_Game,
 		_GridElementShapes,
-		_Puzzle,
 		_Planting,
-		_Field,
 		_Character,
 		_Player,
 		_GUI,
@@ -35,11 +32,8 @@
 	main.asset_register( assetPath, { 
 		data: _Farming,
 		requirements: [
-			"assets/modules/core/Game.js",
 			"assets/modules/puzzles/GridElementShapes.js",
-			"assets/modules/puzzles/Puzzle.js",
 			"assets/modules/farming/Planting.js",
-			"assets/modules/farming/Field.js",
 			"assets/modules/characters/Character.js"
 		],
 		callbacksOnReqs: init_internal,
@@ -52,14 +46,11 @@
     
     =====================================================*/
 	
-	function init_internal( g, ges, pzl, pl, f, c ) {
+	function init_internal( ges, pl, c ) {
 		console.log('internal farming', _Farming);
 		
-		_Game = g;
 		_GridElementShapes = ges;
-		_Puzzle = pzl;
 		_Planting = pl;
-		_Field = f;
 		_Character = c;
 		
 		// functions

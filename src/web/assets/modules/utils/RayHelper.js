@@ -14,6 +14,7 @@
 		assetPath = "assets/modules/utils/RayHelper.js",
 		_RayHelper = {},
 		_MathHelper,
+		_VectorHelper,
 		_SceneHelper,
 		utilRay1Casting,
 		utilRay1Localize,
@@ -23,11 +24,21 @@
 		utilVec31Box,
 		utilVec32Box,
 		utilVec31Casting,
-		utilVec31Collision,
-		utilVec31Distance,
+		utilVec31CastMesh,
+		utilVec32CastMesh,
+		utilVec33CastMesh,
+		utilVec34CastMesh,
+		utilVec35CastMesh,
+		utilVec36CastMesh,
+		utilVec37CastMesh,
+		utilVec38CastMesh,
+		utilVec39CastMesh,
 		utilVec31LinePoint,
 		utilVec32LinePoint,
 		utilVec33LinePoint,
+		utilVec31PointFace,
+		utilVec32PointFace,
+		utilVec33PointFace,
 		utilVec31Triangle,
 		utilVec32Triangle,
 		utilVec33Triangle;
@@ -42,6 +53,7 @@
 		data: _RayHelper,
 		requirements: [
 			"assets/modules/utils/MathHelper.js",
+			"assets/modules/utils/VectorHelper.js",
 			"assets/modules/utils/SceneHelper.js"
 		],
 		callbacksOnReqs: init_internal,
@@ -54,12 +66,13 @@
     
     =====================================================*/
 	
-	function init_internal ( mh, sh ) {
+	function init_internal ( mh, vh, sh ) {
 		console.log('internal ray helper', _RayHelper);
 		
 		// reqs
 		
 		_MathHelper = mh;
+		_VectorHelper = vh;
 		_SceneHelper = sh;
 		
 		// utility
@@ -72,11 +85,21 @@
 		utilVec31Box = new THREE.Vector3();
 		utilVec32Box = new THREE.Vector3();
 		utilVec31Casting = new THREE.Vector3();
-		utilVec31Collision = new THREE.Vector3();
-		utilVec31Distance = new THREE.Vector3();
+		utilVec31CastMesh = new THREE.Vector3();
+		utilVec32CastMesh = new THREE.Vector3();
+		utilVec33CastMesh = new THREE.Vector3();
+		utilVec34CastMesh = new THREE.Vector3();
+		utilVec35CastMesh = new THREE.Vector3();
+		utilVec36CastMesh = new THREE.Vector3();
+		utilVec37CastMesh = new THREE.Vector3();
+		utilVec38CastMesh = new THREE.Vector3();
+		utilVec39CastMesh = new THREE.Vector3();
 		utilVec31LinePoint = new THREE.Vector3();
 		utilVec32LinePoint = new THREE.Vector3();
 		utilVec33LinePoint = new THREE.Vector3();
+		utilVec31PointFace = new THREE.Vector3();
+		utilVec32PointFace = new THREE.Vector3();
+		utilVec33PointFace = new THREE.Vector3();
 		utilVec31Triangle = new THREE.Vector3();
 		utilVec32Triangle = new THREE.Vector3();
 		utilVec33Triangle = new THREE.Vector3();
@@ -94,9 +117,6 @@
 		_RayHelper.ObjectColliderOBB = ObjectColliderOBB;
 		
 		_RayHelper.raycast = raycast;
-		_RayHelper.raycast_physics = raycast_physics;
-		_RayHelper.raycast_from_mouse = raycast_from_mouse;
-		_RayHelper.raycast_objects = raycast_objects;
 		
 	}
 	
@@ -145,7 +165,7 @@
 	
 	function distance_from_intersection ( point, origin, direction, length ) {
 		
-		return Math.sqrt( utilVec31Distance.sub( point, closest_point_from_line_to_point( point, origin, direction, length ) ).lengthSq() );
+		return _VectorHelper.distance_to( point, closest_point_from_line_to_point( point, origin, direction, length ) );
 		
 	}
 	
@@ -177,6 +197,32 @@
 		pointClosest.add( origin, directionMagnitude.multiplyScalar( dotClamped * length ) );
 		
 		return pointClosest;
+		
+	}
+	
+	var point_in_face3 = function ( p, a, b, c ) {
+		
+		// http://www.blackpawn.com/texts/pointinpoly/default.html
+		
+		var v0 = utilVec31PointFace.sub( c, a ),
+			v1 = utilVec32PointFace.sub( b, a ),
+			v2 = utilVec33PointFace.sub( p, a ),
+			dot00 = v0.dot( v0 ),
+			dot01 = v0.dot( v1 ),
+			dot02 = v0.dot( v2 ),
+			dot11 = v1.dot( v1 ),
+			dot12 = v1.dot( v2 ),
+			invDenom = 1 / ( dot00 * dot11 - dot01 * dot01 ),
+			u = ( dot11 * dot02 - dot01 * dot12 ) * invDenom,
+			v = ( dot00 * dot12 - dot01 * dot02 ) * invDenom;
+		
+		return ( u >= 0 ) && ( v >= 0 ) && ( u + v < 1 );
+		
+	}
+	
+	function sort_intersections ( a, b ) {
+		
+		return a.distance - b.distance;
 		
 	}
 	
@@ -315,9 +361,16 @@
 		
 		var i, l,
 			ray,
-			origin,
-			direction,
 			ignore,
+			objects,
+			colliders,
+			camera,
+			mouse,
+			mousePosition = utilVec31Casting,
+			projector = utilProjector1Casting,
+			octree,
+			far,
+			hierarchical,
 			intersections = [],
 			intersectionPotential,
 			intersectedObject,
@@ -327,6 +380,13 @@
 		// handle parameters
 		
 		parameters = parameters || {};
+		
+		objects = main.ensure_array( parameters.objects ).slice( 0 );
+		colliders = main.ensure_array( parameters.colliders ).slice( 0 );
+		octree = parameters.octree;
+		hierarchical = parameters.hierarchical;
+		camera = parameters.camera;
+		mouse = parameters.mouse;
 		
 		// ray
 		
@@ -346,7 +406,7 @@
 			
 			if ( parameters.direction instanceof THREE.Vector3 ) {
 				
-				ray.direction.copy( parameters.direction ).normalize();
+				ray.direction.copy( parameters.direction );
 				
 			}
 			
@@ -360,26 +420,76 @@
 			
 		}
 		
-		// cast through physics
+		// if using mouse
 		
-		if ( typeof parameters.colliders !== 'undefined' || typeof parameters.octree !== 'undefined' ) {
+		if ( typeof mouse !== 'undefined' && typeof camera !== 'undefined' ) {
 			
-			intersections = intersections.concat( raycast_physics( parameters ) );
+			// get corrected mouse position
+			
+			mousePosition.x = ( mouse.x / shared.screenWidth ) * 2 - 1;
+			mousePosition.y = -( mouse.y / shared.screenHeight ) * 2 + 1;
+			mousePosition.z = 0.5;
+			
+			// unproject mouse position
+			
+			projector.unprojectVector( mousePosition, camera );
+			
+			// set ray
+
+			ray.origin.copy( camera.position );
+			ray.direction.copy( mousePosition.subSelf( camera.position ) );
 			
 		}
 		
-		// cast through objects
+		// ray length
 		
-		if ( typeof parameters.mouse !== 'undefined' ) {
+		if ( main.is_number( far ) && far > 0 ) {
 			
-			intersections = intersections.concat( raycast_from_mouse( parameters ) );
-			
-		}
-		else if ( typeof parameters.objects !== 'undefined' ) {
-			
-			intersections = intersections.concat( raycast_objects( parameters ) );
+			ray.far = far;
 			
 		}
+		
+		// normalize ray direction
+		
+		ray.direction.normalize();
+		
+		// if using octree
+		
+		if ( typeof octree !== 'undefined' ) {
+			
+			// search for potential colliders
+			
+			colliders = colliders.concat( octree.search( ray.origin, ray.far, true, ray.direction ) );
+			
+		}
+		
+		// objects
+		
+		if ( objects.length > 0 ) {
+		
+			// account for hierarchy and extract all children of objects
+			
+			if ( hierarchical !== false ) {
+				
+				objects = _SceneHelper.extract_children_from_objects( objects, objects );
+				
+			}
+			
+			intersections = intersections.concat( raycast_objects( ray, objects ) );
+			
+		}
+		
+		// colliders
+		
+		if ( colliders.length > 0 ) {
+			
+			intersections = intersections.concat( raycast_colliders( ray, colliders ) );
+			
+		}
+		
+		// sort intersections
+		
+		intersections.sort( sort_intersections );
 		
 		// if all required
 		
@@ -391,20 +501,30 @@
 		// else return nearest
 		else {
 			
-			ignore = main.ensure_array( parameters.ignore );
+			// if any objects to ignore
 			
-			for ( i = 0, l = intersections.length; i < l; i++ ) {
+			if ( main.is_array( ignore ) ) {
 				
-				intersectionPotential = intersections[ i ];
-				
-				intersectedObject = intersectionPotential.mesh || intersectionPotential.object;
-				
-				if ( intersectionPotential.distance < intersectionDistance && ignore.indexOf( intersectedObject ) === -1 ) {
+				for ( i = 0, l = intersections.length; i < l; i++ ) {
 					
-					intersection = intersectionPotential;
-					intersectionDistance = intersectionPotential.distance;
+					intersectionPotential = intersections[ i ];
+					
+					intersectedObject = intersectionPotential.object || intersectionPotential.mesh;
+					
+					if ( ignore.indexOf( intersectedObject ) === -1 ) {
+						
+						intersection = intersectionPotential;
+						break;
+						
+					}
 					
 				}
+			
+			}
+			// else use first
+			else {
+				
+				intersection = intersections[ 0 ];
 				
 			}
 			
@@ -414,153 +534,84 @@
 		
 	}
 	
-	function raycast_physics ( parameters ) {
-		
-		var ray = parameters.ray,
-			octree = parameters.octree,
-			distance = parameters.distance,
-			colliders = parameters.colliders,
-			intersections;
-		
-		// if using octree
-		
-		if ( typeof octree !== 'undefined' ) {
-			
-			// search for potential colliders
-			
-			colliders = main.ensure_array( colliders ).slice( 0 ).concat( octree.search( ray.origin, distance, true, ray.direction ) );
-			//console.log( ' RAYCAST, octree search results from position ', ray.origin.x, ray.origin.y, ray.origin.z, ' w direction ', ray.direction.x, ray.direction.y, ray.direction.z, ' + dist ', distance, ' = # ', colliders.length, ' + colliders', colliders );
-		}
-		
-		// ray cast colliders
-		
-		intersections = raycast_colliders( ray, colliders );
-		//console.log( ' RAYCAST, intersections ', intersections );
-		return intersections;
-		
-	}
-	
-	function raycast_from_mouse ( parameters ) {
-		
-		var ray = parameters.ray,
-			camera = parameters.camera,
-			mouse = parameters.mouse,
-			mousePosition = utilVec31Casting,
-			projector = utilProjector1Casting;
-		
-		// get corrected mouse position
-		
-		mousePosition.x = ( mouse.x / shared.screenWidth ) * 2 - 1;
-		mousePosition.y = -( mouse.y / shared.screenHeight ) * 2 + 1;
-		mousePosition.z = 0.5;
-		
-		// unproject mouse position
-		
-		projector.unprojectVector( mousePosition, camera );
-		
-		// set ray
-
-		ray.origin.copy( camera.position );
-		ray.direction.copy( mousePosition.subSelf( camera.position ) ).normalize();
-		
-		return raycast_objects( parameters );
-		
-	}
-	
-	function raycast_objects ( parameters ) {
-		
-		var ray = parameters.ray,
-			objects = parameters.objects,
-			hierarchical = parameters.hierarchical;
-		
-		// account for hierarchy and extract all children
-		
-		if ( hierarchical !== false ) {
-			
-			objects = _SceneHelper.extract_children_from_objects( objects, objects );
-			
-		}
-		
-		// find intersections
-		
-		return ray.intersectObjects( objects );
-		
-	}
-	
 	/*===================================================
     
     collisions
     
     =====================================================*/
 	
-	function raycast_colliders ( ray, colliders ) {
-
-		var i, l,
-			hits = [],
-			d,
-			collider,
-			colliderRecast,
-			ld = 0;
+	function raycast_objects ( ray, objects ) {
 		
-		if ( main.is_array( colliders ) ) {
+		var i, l,
+			intersections = [],
+			intersection,
+			object;
+		
+		for ( i = 0, l = objects.length; i < l; i++ ) {
+
+			object = objects[ i ];
 			
-			ray.direction.normalize();
+			// ray cast object
 			
-			for ( i = 0, l = colliders.length; i < l; i++ ) {
-
-				collider = colliders[ i ];
+			intersection = raycast_object( ray, object );
+			
+			// store
+			
+			if ( intersection.distance < Number.MAX_VALUE ) {
 				
-				// TODO: allow for return of face colliding with
+				intersections.push( intersection );
 				
-				d = raycast_collider( ray, collider );
-				
-				if ( d < Number.MAX_VALUE ) {
-					
-					collider.distance = d;
-					
-					// redo raycast for any mesh collider with dynamic box
-					
-					if ( collider instanceof MeshCollider && collider.box ) {
-						
-						d = raycast_mesh( ray, collider );
-						
-						if ( d < Number.MAX_VALUE ) {
-							collider.distance = d;
-						}
-						else {
-							collider.distance = Number.MAX_VALUE;
-						}
-						
-					}
-					
-					// check distance
-
-					if ( d > ld )
-						hits.push( collider );
-					else
-						hits.unshift( collider );
-
-					ld = d;
-
-				}
-
 			}
 			
 		}
 		
-		return hits;
+		return intersections;
+		
+	}
+	
+	function raycast_colliders ( ray, colliders ) {
+
+		var i, l,
+			intersections = [],
+			intersection,
+			distance,
+			collider;
+		
+		for ( i = 0, l = colliders.length; i < l; i++ ) {
+
+			collider = colliders[ i ];
+			
+			// ray cast collider
+			
+			intersection = raycast_collider( ray, collider );
+			
+			if ( intersection.distance < Number.MAX_VALUE ) {
+				
+				// redo raycast for any mesh collider with dynamic box
+				
+				if ( collider instanceof MeshCollider && collider.box ) {
+					
+					intersection = raycast_object( ray, collider );//raycast_mesh( ray, collider );
+					
+				}
+				
+				// store
+				
+				if ( intersection.distance < Number.MAX_VALUE ) {
+					
+					intersections.push( intersection );
+					
+				}
+
+			}
+
+		}
+		
+		return intersections;
 
 	}
 
 	function raycast_collider ( ray, collider ) {
-		
-		// ensure collider properties
-		
-		if ( collider.normal instanceof THREE.Vector3 !== true ) {
-			
-			collider.normal = new THREE.Vector3();
-			
-		}
 		
 		// cast by type
 
@@ -586,50 +637,96 @@
 		}
 		else {
 			
-			return raycast_mesh( ray, collider );
+			return raycast_object( ray, collider );//return raycast_mesh( ray, collider );
 			
 		}
 
 	}
 	
-	function raycast_plane ( r, p ) {
+	function raycast_plane ( r, collider ) {
 
-		var t = r.direction.dot( p.normal );
-		var d = p.point.dot( p.normal );
-		var ds;
+		var t = r.direction.dot( collider.normal ),
+			d = collider.point.dot( collider.normal ),
+			ds,
+			intersection = {
+				object: collider.object || collider,
+				distance: Number.MAX_VALUE
+			};
 
-		if( t < 0 ) ds = ( d - r.origin.dot( p.normal ) ) / t;
-		else return Number.MAX_VALUE;
-
-		if( ds > 0 ) return ds;
-		else return Number.MAX_VALUE;
-
-	}
-
-	function raycast_sphere ( r, s ) {
-
-		var e = s.center.clone().subSelf( r.origin );
-		if ( e.lengthSq < s.radiusSq ) return -1;
-
-		var a = e.dot( r.direction.clone() );
-		if ( a <= 0 ) return Number.MAX_VALUE;
-
-		var t = s.radiusSq - ( e.lengthSq() - a * a );
-		if ( t >= 0 ) return Math.abs( a ) - Math.sqrt( t );
-
-		return Number.MAX_VALUE;
-
-	}
-
-	function raycast_box ( ray, ab ) {
+		if( t < 0 ) {
+			
+			ds = ( d - r.origin.dot( collider.normal ) ) / t;
+			
+			if( ds > 0 ) {
+				
+				intersection.distance = ds;
+				
+				return intersection;
+				
+			}
+			
+		}
 		
-		var object = ab.object,
+		return intersection;
+
+	}
+
+	function raycast_sphere ( r, collider ) {
+
+		var e = collider.center.clone().subSelf( r.origin ),
+			a,
+			t,
+			intersection = {
+				object: collider.object || collider,
+				distance: Number.MAX_VALUE
+			};
+		
+		if ( e.lengthSq < collider.radiusSq ) {
+			
+			intersection.distance = -1;
+			
+			return intersection;
+		}
+		
+		a = e.dot( r.direction.clone() );
+		
+		if ( a <= 0 ) {
+			
+			return intersection;
+			
+		}
+
+		t = collider.radiusSq - ( e.lengthSq() - a * a );
+		
+		if ( t >= 0 ) {
+		
+			intersection.distance = Math.abs( a ) - Math.sqrt( t );
+			
+		}
+
+		return intersection;
+
+	}
+
+	function raycast_box ( ray, collider ) {
+		
+		var object = collider.object || collider,
 			rt = localize_ray( ray, object ),
-			abMin = utilVec31Box.copy( ab.min ),
-			abMax = utilVec32Box.copy( ab.max ),
+			abMin = utilVec31Box.copy( collider.min ),
+			abMax = utilVec32Box.copy( collider.max ),
 			origin = rt.origin,
 			direction = rt.direction,
-			scale;
+			scale,
+			xt = 0, yt = 0, zt = 0,
+			xn = 0, yn = 0, zn = 0,
+			ins = true,
+			which,
+			t,
+			intersection = {
+				object: object,
+				distance: Number.MAX_VALUE,
+				normal: new THREE.Vector3()
+			};
 		
 		// account for object
 		
@@ -641,10 +738,6 @@
 			abMax.multiplySelf( scale );
 			
 		}
-		
-		var xt = 0, yt = 0, zt = 0;
-		var xn = 0, yn = 0, zn = 0;
-		var ins = true;
 		
 		if( origin.x < abMin.x ) {
 			
@@ -696,8 +789,8 @@
 		
 		if( ins ) return -1;
 		
-		var which = 0;
-		var t = xt;
+		which = 0;
+		t = xt;
 		
 		if( yt > t ) {
 			
@@ -718,33 +811,35 @@
 			case 0:
 				
 				var y = origin.y + direction.y * t;
-				if ( y < abMin.y || y > abMax.y ) return Number.MAX_VALUE;
+				if ( y < abMin.y || y > abMax.y ) return intersection;
 				var z = origin.z + direction.z * t;
-				if ( z < abMin.z || z > abMax.z ) return Number.MAX_VALUE;
-				ab.normal.set( xn, 0, 0 );
+				if ( z < abMin.z || z > abMax.z ) return intersection;
+				intersection.normal.set( xn, 0, 0 );
 				break;
 				
 			case 1:
 				
 				var x = origin.x + direction.x * t;
-				if ( x < abMin.x || x > abMax.x ) return Number.MAX_VALUE;
+				if ( x < abMin.x || x > abMax.x ) return intersection;
 				var z = origin.z + direction.z * t;
-				if ( z < abMin.z || z > abMax.z ) return Number.MAX_VALUE;
-				ab.normal.set( 0, yn, 0) ;
+				if ( z < abMin.z || z > abMax.z ) return intersection;
+				intersection.normal.set( 0, yn, 0) ;
 				break;
 				
 			case 2:
 				
 				var x = origin.x + direction.x * t;
-				if ( x < abMin.x || x > abMax.x ) return Number.MAX_VALUE;
+				if ( x < abMin.x || x > abMax.x ) return intersection;
 				var y = origin.y + direction.y * t;
-				if ( y < abMin.y || y > abMax.y ) return Number.MAX_VALUE;
-				ab.normal.set( 0, 0, zn );
+				if ( y < abMin.y || y > abMax.y ) return intersection;
+				intersection.normal.set( 0, 0, zn );
 				break;
 				
 		}
 		
-		return t;
+		intersection.distance = t;
+		
+		return intersection;
 		
 	}
 	
@@ -755,16 +850,21 @@
 			p1 = new THREE.Vector3(),
 			p2 = new THREE.Vector3(),
 			p3 = new THREE.Vector3(),
-			object = collider.object,
+			object = collider.object || collider,
 			scale = object.scale,
 			geometry = object.geometry,
 			vertices = geometry.vertices,
 			faces = collider.faces ? main.ensure_array( collider.faces ) : geometry.faces,
 			rayLocal = localize_ray( ray, object ),
-			distMin = Number.MAX_VALUE,
-			collisionNormal = utilVec31Collision,
+			collisionNormal = utilVec31CastMesh,
 			faceDist,
-			faceClosest;
+			minDist = Number.MAX_VALUE,
+			minFace,
+			intersection = {
+				object: object,
+				distance: Number.MAX_VALUE,
+				normal: new THREE.Vector3()
+			};
 		
 		// for each face in collider
 		
@@ -780,39 +880,36 @@
 				
 				p3.copy( vertices[ face.d ] ).multiplySelf( scale );
 				
-				faceDist = raycast_triangle( rayLocal, p0, p1, p3, distMin, collisionNormal, object );
+				faceDist = raycast_triangle( rayLocal, p0, p1, p3, minDist, collisionNormal, object );
 				
-				if( faceDist < distMin ) {
+				if( faceDist < minDist ) {
 					
-					distMin = faceDist;
-					faceClosest = face;
-					collider.normal.copy( collisionNormal );
-					collider.normal.normalize();
+					minDist = faceDist;
+					minFace = face;
+					intersection.normal.copy( collisionNormal );
 					
 				}
 				
-				faceDist = raycast_triangle( rayLocal, p1, p2, p3, distMin, collisionNormal, object );
+				faceDist = raycast_triangle( rayLocal, p1, p2, p3, minDist, collisionNormal, object );
 				
-				if( faceDist < distMin ) {
+				if( faceDist < minDist ) {
 					
-					distMin = faceDist;
-					faceClosest = face;
-					collider.normal.copy( collisionNormal );
-					collider.normal.normalize();
+					minDist = faceDist;
+					minFace = face;
+					intersection.normal.copy( collisionNormal );
 					
 				}
 				
 			}
 			else {
 				
-				faceDist = raycast_triangle( rayLocal, p0, p1, p2, distMin, collisionNormal, object );
+				faceDist = raycast_triangle( rayLocal, p0, p1, p2, minDist, collisionNormal, object );
 				
-				if( faceDist < distMin ) {
+				if( faceDist < minDist ) {
 					
-					distMin = faceDist;
-					faceClosest = face;
-					collider.normal.copy( collisionNormal );
-					collider.normal.normalize();
+					minDist = faceDist;
+					minFace = face;
+					intersection.normal.copy( collisionNormal );
 					
 				}
 				
@@ -820,7 +917,11 @@
 			
 		}
 		
-		return distMin;//{ distance: distMin, face: faceClosest };
+		intersection.distance = minDist;
+		intersection.face = minFace;
+		intersection.normal.normalize();
+		
+		return intersection;
 		
 	}
 
@@ -933,6 +1034,137 @@
 
 		return t;
 
+	}
+	
+	function raycast_object ( ray, collider, hierarchy, intersect ) {
+		
+		var i, l,
+			object = collider.object || collider,
+			objMatrix = object.matrixWorld,
+			geometry = object.geometry,
+			vertices,
+			faces,
+			face,
+			p0 = utilVec31CastMesh,
+			p1 = utilVec32CastMesh,
+			p2 = utilVec33CastMesh,
+			p3 = utilVec34CastMesh,
+			scale = utilVec35CastMesh,
+			scaledRadius,
+			scalar,
+			dot,
+			normal = utilVec36CastMesh,
+			vector = utilVec37CastMesh,
+			directionCopy = utilVec38CastMesh,
+			intersectPoint = utilVec39CastMesh,
+			distance,
+			intersect = intersect || {
+				object: object,
+				distance: Number.MAX_VALUE,
+				point: new THREE.Vector3()
+			};
+		
+		// support hierarchy
+		
+		if ( hierarchy === true ) {
+			
+			for ( var i = 0, l = object.children.length; i < l; i ++ ) {
+				
+				intersect = raycast_object( ray, object.children[ i ], hierarchy, intersect );
+				
+			}
+			
+		}
+		
+		// check distance to ray against scaled bounding radius
+		
+		distance = distance_from_intersection( object.matrixWorld.getPosition(), ray.origin, ray.direction, ray.far );
+		scale.set( object.matrixWorld.getColumnX().length(), object.matrixWorld.getColumnY().length(), object.matrixWorld.getColumnZ().length() );
+		scaledRadius = ( geometry instanceof THREE.Geometry ? geometry.boundingSphere.radius : object.boundRadius ) * Math.max( scale.x, scale.y, scale.z ); 
+		
+		if ( distance > scaledRadius ) {
+			
+			return intersect;
+			
+		}
+		
+		// for each face passed or in geometry
+		
+		object.matrixRotationWorld.extractRotation( object.matrixWorld );
+		
+		vertices = geometry.vertices;
+		faces = collider.faces ? main.ensure_array( collider.faces ) : geometry.faces;
+
+		for ( i = 0, l = faces.length; i < l; i++ ) {
+			
+			face = faces[ i ];
+			
+			directionCopy.copy( ray.direction );
+			
+			// determine if ray intersects the plane of the face
+			// note: this works regardless of the direction of the face normal
+			
+			vector = objMatrix.multiplyVector3( vector.copy( face.centroid ) ).subSelf( ray.origin );
+			normal = object.matrixRotationWorld.multiplyVector3( normal.copy( face.normal ) );
+			dot = directionCopy.dot( normal );
+			
+			// bail if ray and plane are parallel
+			
+			if ( Math.abs( dot ) < 0.0001/*precision*/ ) continue;
+			
+			// calc distance to plane
+			
+			scalar = normal.dot( vector ) / dot;
+			
+			// if negative distance, then plane is behind ray
+			
+			if ( scalar < 0 ) continue;
+			
+			if ( object.doubleSided || ( object.flipSided ? dot > 0 : dot < 0 ) ) {
+				
+				intersectPoint.add( ray.origin, directionCopy.multiplyScalar( scalar ) );
+				
+				distance = _VectorHelper.distance_to( ray.origin, intersectPoint );
+				
+				// ignore face if distance is less than near, greater than far, or greater than a previous distance
+				
+				if ( distance < ray.near || distance > ray.far || distance >= intersect.distance ) continue;
+				
+				objMatrix.multiplyVector3( p0.copy( vertices[ face.a ] ) );
+				objMatrix.multiplyVector3( p1.copy( vertices[ face.b ] ) );
+				objMatrix.multiplyVector3( p2.copy( vertices[ face.c ] ) );
+				
+				if ( face instanceof THREE.Face4 ) {
+					
+					objMatrix.multiplyVector3( p3.copy( vertices[ face.d ] ) );
+					
+					if ( point_in_face3( intersectPoint, p0, p1, p3 ) || point_in_face3( intersectPoint, p1, p2, p3 ) ) {
+						
+						intersect.distance = distance;
+						intersect.face = face;
+						intersect.point.copy( intersectPoint );
+						
+					}
+					
+				}
+				else {
+					
+					if ( point_in_face3( intersectPoint, p0, p1, p2 ) ) {
+						
+						intersect.distance = distance;
+						intersect.face = face;
+						intersect.point.copy( intersectPoint );
+						
+					}
+					
+				}
+				
+			}
+			
+		}
+		
+		return intersect;
+		
 	}
 	
 } (KAIOPUA) );

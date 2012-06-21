@@ -102,7 +102,8 @@
             geometry: new THREE.CubeGeometry( 100, 100, 100 ),
 			material: material,
 			shading: THREE.SmoothShading,
-			flipSided: true
+			flipSided: true,
+			addWorldOctree: false
         }, instance );
         
         return instance;

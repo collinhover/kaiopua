@@ -57,6 +57,8 @@
             "js/lib/three/postprocessing/ShaderPass.js",
             "js/lib/three/postprocessing/MaskPass.js",
             "assets/modules/effects/FocusVignette.js",
+		],
+		assetsCore = [
 			"assets/modules/core/Scene.js",
 			"assets/modules/core/Model.js",
 			"assets/modules/core/Octree.js",
@@ -263,13 +265,19 @@
 	
 	function load_setup () {
 		
-		main.asset_require( assetsSetup, [ init_setup, load_setup_extras ], true );
+		main.asset_require( assetsSetup, [ load_setup_extras ], true );
 		
 	}
 	
 	function load_setup_extras () {
 		
-		main.asset_require( assetsSetupExtras, [ complete_setup, load_launcher ], true );
+		main.asset_require( assetsSetupExtras, [ init_setup, load_core ], true );
+		
+	}
+	
+	function load_core () {
+		
+		main.asset_require( assetsCore, [ init_core, load_launcher ], true );
 		
 	}
 	
@@ -343,7 +351,7 @@
 		
     }
 	
-	function complete_setup () {
+	function init_core () {
 		
 		var shaderScreen = THREE.ShaderExtras[ "screen" ],
             shaderFocusVignette = main.get_asset_data("assets/modules/effects/FocusVignette");
@@ -449,7 +457,7 @@
     =====================================================*/
 	
     function init_game () {
-		
+		console.log( 'init game');
 		var l, m, b;
 		
 		// assets
@@ -827,8 +835,6 @@
 		var controls = new THREE.FirstPersonControls( camera );
 		shared.signals.update.add( function ( timeDelta ) { controls.update( timeDelta ) } );
 		
-		return;
-		
 		// TESTING
 		// octree
 		//
@@ -1135,7 +1141,12 @@
 		
 		parameters = parameters || {};
 		
-		parameters.objects = parameters.objects || scene;
+		if ( typeof parameters.objects === 'undefined' ) {
+			
+			parameters.octree = parameters.octree || scene.octree;
+			
+		}
+		
 		parameters.mouse = parameters.mouse || main.get_mouse();
 		parameters.camera = parameters.camera || camera;
 		
@@ -1335,7 +1346,7 @@
     =====================================================*/
     
     function pause ( preventDefault ) {
-		
+		console.log('GAME PAUSE');
 		// set state
 		
         if (paused === false) {
@@ -1378,9 +1389,9 @@
     }
     
     function resume () {
-		
+		console.log('GAME resume?');
         if ( paused === true && _ErrorHandler.errorState !== true && ( typeof _Messenger === 'undefined' || _Messenger.active !== true ) ) {
-			
+			console.log(' > GAME RESUME');
 			// ui
 			
 			_GUI.transitioner.domElement.off( '.resume' );

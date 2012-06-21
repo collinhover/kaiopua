@@ -13,6 +13,7 @@
 		_VectorHelper = {},
 		_MathHelper,
 		utilVec31Axis,
+		utilVec31Distance,
 		utilQ1Axis;
     
     /*===================================================
@@ -43,10 +44,12 @@
 		// utility
 		
 		utilVec31Axis = new THREE.Vector3();
+		utilVec31Distance = new THREE.Vector3();
 		utilQ1Axis = new THREE.Quaternion();
 		
 		// functions
 		
+		_VectorHelper.distance_to = distance_to;
 		_VectorHelper.rotate_vector3_relative_to = rotate_vector3_relative_to;
 		_VectorHelper.rotate_vector3_to_mesh_rotation = rotate_vector3_to_mesh_rotation;
 		_VectorHelper.q_to_axis = q_to_axis;
@@ -55,6 +58,18 @@
 		_VectorHelper.lerp = lerp;
 		_VectorHelper.lerp_normalized = lerp_normalized;
 		_VectorHelper.lerp_snap = lerp_snap;
+		
+	}
+	
+	/*===================================================
+    
+    distance
+    
+    =====================================================*/
+	
+	function distance_to ( vecFrom, vecTo ) {
+		
+		return Math.sqrt( utilVec31Distance.sub( vecFrom, vecTo ).lengthSq() );
 		
 	}
 	

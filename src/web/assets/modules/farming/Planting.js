@@ -86,6 +86,7 @@
 		
 		_Planting.Instance.prototype.setup = setup;
 		_Planting.Instance.prototype.start = start;
+		_Planting.Instance.prototype.on_mouse_moved = on_mouse_moved;
 		_Planting.Instance.prototype.update = update;
 		_Planting.Instance.prototype.complete = complete;
 		_Planting.Instance.prototype.stop = stop;
@@ -166,6 +167,7 @@
 			modules,
 			plant,
 			plantingObjects = [],
+			mouse = this.mouse,
 			targetObject;
 		
 		// handle parameters
@@ -174,20 +176,7 @@
 		
 		// build array of objects that are involved in planting process
 		
-		if ( parameters.modules !== false ) {
-			
-			if ( parameters.field === true && typeof this.field !== 'undefined' ) {
-				
-				plantingObjects = plantingObjects.concat( this.field.grid.modules );
-				
-			}
-			else {
-				
-				plantingObjects = plantingObjects.concat( _Puzzle.allModules );
-				
-			}
-			
-		}
+		// character
 		
 		if ( parameters.character === true ) {
 			
@@ -195,14 +184,41 @@
 			
 		}
 		
-		if ( parameters.plants === true ) {
+		// current field
+		
+		if ( parameters.field === true && this.field instanceof _Puzzle.Instance ) {
 			
-			if ( parameters.field === true && typeof this.field !== 'undefined' ) {
+			// modules
+			
+			if ( parameters.modules === true ) {
+				
+				plantingObjects = plantingObjects.concat( this.field.grid.modules );
+				
+			}
+			
+			// plants
+			
+			if ( parameters.plants === true ) {
 				
 				plantingObjects = plantingObjects.concat( this.field.occupants );
 				
 			}
-			else {
+			
+		}
+		// else all
+		else {
+			
+			// modules
+			
+			if ( parameters.modules === true ) {
+				
+				plantingObjects = plantingObjects.concat( _Puzzle.allModules );
+				
+			}
+			
+			// plants
+			
+			if ( parameters.plants === true ) {
 				
 				for ( i = 0, l = this.plants.length; i < l; i++ ) {
 					
@@ -221,7 +237,7 @@
 		targetObject = _Game.get_object_under_mouse( {
 			objects: plantingObjects,
 			hierarchical: false,
-			mouse: this.mouse
+			mouse: mouse
 		} );
 		
 		return targetObject;
@@ -431,14 +447,17 @@
 			
 			this.update();
 			
-			shared.signals.mousemoved.add( this.update, this );
+			// signals
+			
+			shared.signals.update.add( this.update, this );
+			shared.signals.mousemoved.add( this.on_mouse_moved, this );
 			
 		}
 		
 	}
 	
-	function update ( skipRotate ) {
-		console.log(' > PLANTING: update planting!');
+	function on_mouse_moved () {
+		console.log(' > PLANTING: mouse move!');
 		var targetObject;
 		
 		// if has plant, update seed position
@@ -452,7 +471,7 @@
 		
 		// if rotating
 		
-		if ( skipRotate !== true && this.rotating === true ) {
+		if ( this.rotating === true ) {
 			
 			this.update_rotate_plant();
 			
@@ -467,6 +486,20 @@
 			// change to new module
 			
 			this.change_module( targetObject );
+			
+		}
+		
+	}
+	
+	function update () {
+		
+		// if has plant and module
+		
+		if ( this.plant instanceof _Plant.Instance && this.module instanceof _GridModule.Instance ) {
+			
+			// show last test between plant and module
+			
+			this.plant.show_last_modules_tested();
 			
 		}
 		
@@ -560,13 +593,10 @@
 	function stop () {
 		console.log('stop PLANTING!');
 		
-		// store field for complete check after stop complete
-		
-		var field = this.field;
-		
 		// stop updating
 		
-		shared.signals.mousemoved.remove( this.update, this );
+		shared.signals.update.remove( this.update, this );
+		shared.signals.mousemoved.remove( on_mouse_moved, this );
 		
 		// stop
 			
@@ -588,14 +618,6 @@
 		
 		_GUI.layers.ui.show();
 		_GUI.layers.ui.set_pointer_events( false );
-		
-		// trigger field to check if completed
-		
-		if ( field instanceof _Puzzle.Instance ) {
-			//console.log( 'PLANTING: completing field ', field );
-			//field.complete();
-			
-		}
 		
 	}
 	
@@ -671,7 +693,7 @@
 		
 		if ( this.plant instanceof _Plant.Instance ) {
 			
-			this.plant.test_occupy_module_smart( module, true );
+			this.plant.test_occupy_module_smart( module );
 			
 		}
 		

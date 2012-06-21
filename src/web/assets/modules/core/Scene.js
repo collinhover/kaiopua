@@ -14,7 +14,8 @@
 		_SceneHelper,
 		_Octree,
 		_Model,
-		_Physics;
+		_Physics,
+		_RigidBody;
     
     /*===================================================
     
@@ -28,7 +29,8 @@
 			"assets/modules/utils/SceneHelper.js",
 			"assets/modules/core/Octree.js",
 			"assets/modules/core/Model.js",
-			'assets/modules/physics/Physics.js'
+			'assets/modules/physics/Physics.js',
+			'assets/modules/physics/RigidBody.js'
 		], 
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -40,7 +42,7 @@
     
     =====================================================*/
 	
-	function init_internal ( sh, oc, mdl, physx ) {
+	function init_internal ( sh, oc, mdl, physx, rb ) {
 		console.log('internal scene', _Scene);
 		
 		// utility
@@ -49,6 +51,7 @@
 		_Octree = oc;
 		_Model = mdl;
 		_Physics = physx;
+		_RigidBody = rb;
 		
 		// instance
 		
@@ -80,7 +83,7 @@
 		
 		// octree
 		
-		this.octree = new _Octree.Instance( { scene: this } );
+		this.octree = new _Octree.Instance( /*{ scene: this }*/ );
 		
 		// physics
 		
@@ -107,18 +110,18 @@
 			// octree
 			
 			if ( object.addWorldOctree === true ) {
-				console.log( 'add object to octree', object, this.octree );
+				
 				this.octree.add( object, object.useFaces );
 				
 			}
 			
 			// physics
 			
-			/*if ( this.physics instanceof _Physics.Instance ) {
+			if ( object.rigidBody instanceof _RigidBody.Instance ) {
 				
 				this.physics.add( object );
 				
-			}*/
+			}
 			
 		}
 		
@@ -140,27 +143,27 @@
 		
 		if ( object instanceof _Model.Instance ) {
 			
+			// stop morphs
+			
+			if ( typeof object.morphs !== 'undefined' ) {
+				
+				object.morphs.stop();
+				
+			}
+			
 			// octree
 			
 			if ( object.addWorldOctree === true ) {
-				console.log( 'REMOVE object from octree', object );
+				
 				this.octree.remove( object );
 				
 			}
 			
 			// physics
 			
-			/*if ( this.physics instanceof _Physics.Instance ) {
+			if ( object.rigidBody instanceof _RigidBody.Instance ) {
 				
 				this.physics.remove( object );
-				
-			}*/
-			
-			// stop morphs
-			
-			if ( typeof object.morphs !== 'undefined' ) {
-				
-				object.morphs.stop();
 				
 			}
 			

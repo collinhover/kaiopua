@@ -115,6 +115,8 @@
 		
 		parameters = parameters || {};
 		
+		parameters.addWorldOctree = false;
+		
 		// prototype constructor
 		
 		_Model.Instance.call( this, parameters );

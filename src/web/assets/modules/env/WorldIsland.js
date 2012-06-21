@@ -129,7 +129,10 @@
 		
 		// water
 		
-		me.parts.waterRing = new _Water.Instance( { wavesTexture: shared.pathToTextures + "water_world_512.png" } );
+		me.parts.waterRing = new _Water.Instance( { 
+			wavesTexture: shared.pathToTextures + "water_world_512.png",
+			addWorldOctree: false
+		} );
 		
 		me.add( me.parts.waterRing );
 		
@@ -471,7 +474,7 @@
 				grid: {
 					modulesGeometry: main.get_asset_data("assets/models/Field_Basics_Split_Grid.js")
 				},
-				numElementsMin: 10,
+				numElementsMin: 13,
 				hints: [
 					'Some plants will only grow when next to certain other plants!',
 					'Some fields are split into smaller parts. Fields are much easier to complete if you think this way!'

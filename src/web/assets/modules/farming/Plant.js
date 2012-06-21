@@ -87,7 +87,6 @@
 		_Plant.Instance.prototype.change_seed = change_seed;
 		_Plant.Instance.prototype.change_module = change_module;
 		
-		_Plant.Instance.prototype.test_occupy_module = test_occupy_module;
 		_Plant.Instance.prototype.show_last_modules_tested = show_last_modules_tested;
 		_Plant.Instance.prototype.occupy_modules = occupy_modules;
 		
@@ -362,68 +361,54 @@
 		
 	}
 	
-	function test_occupy_module ( testModule, show, occupy ) {
+	function show_last_modules_tested ( force ) {
 		
-		var success;
-		
-		// proto
-		
-		success = _Plant.Instance.prototype.supr.test_occupy_module.apply( this, arguments );
-		
-		// if showing and not for occupy
-		
-		if ( show === true && occupy !== true ) {
-			
-			
-			
-		}
-		
-		return success;
-		
-	}
-	
-	function show_last_modules_tested () {
+		var dirtyModuleTest = this._dirtyModuleTest;
 		
 		// proto
 		
 		_Plant.Instance.prototype.supr.show_last_modules_tested.apply( this, arguments );
 		
-		// if successful
-		
-		if ( this.testSuccess === true ) {
+		if ( dirtyModuleTest === true || force === true ) {
 			
-			this.material.color.copy( _GridModule.colors.vacant );
-			this.material.ambient.copy( _GridModule.colors.vacant );
-			this.material.transparent = true;
-			this.material.opacity = _Plant.opacityVacant;
+			// if successful
 			
-			this.seed.apply_css( 'background-color', _GridModule.colors.vacant.getContextStyle() );
-			
-			this.seed.show( { opacity: _Plant.opacityVacantSeed } );
-			
-		}
-		// unsuccessful, but tested on an actual module
-		else if ( this.testModule instanceof _GridModule.Instance ) {
-			
-			this.material.color.copy( _GridModule.colors.occupied );
-			this.material.ambient.copy( _GridModule.colors.occupied );
-			this.material.transparent = true;
-			this.material.opacity = _Plant.opacityOccupied;
-			
-			this.seed.apply_css( 'background-color', _GridModule.colors.occupied.getContextStyle() );
-			
-			this.seed.show( { opacity: _Plant.opacityOccupiedSeed } );
-		
-		}
-		// base state
-		else {
-			
-			this.reset_material();
-			
-			this.seed.apply_css( this.seed.theme.stateLast );
-			
-			this.seed.show( { opacity: _Plant.opacitySeed } );
+			if ( this.testSuccess === true ) {
 				
+				this.material.color.copy( _GridModule.colors.vacant );
+				this.material.ambient.copy( _GridModule.colors.vacant );
+				this.material.transparent = true;
+				this.material.opacity = _Plant.opacityVacant;
+				
+				this.seed.apply_css( 'background-color', _GridModule.colors.vacant.getContextStyle() );
+				
+				this.seed.show( { opacity: _Plant.opacityVacantSeed } );
+				
+			}
+			// unsuccessful, but tested on an actual module
+			else if ( this.testModule instanceof _GridModule.Instance ) {
+				
+				this.material.color.copy( _GridModule.colors.occupied );
+				this.material.ambient.copy( _GridModule.colors.occupied );
+				this.material.transparent = true;
+				this.material.opacity = _Plant.opacityOccupied;
+				
+				this.seed.apply_css( 'background-color', _GridModule.colors.occupied.getContextStyle() );
+				
+				this.seed.show( { opacity: _Plant.opacityOccupiedSeed } );
+			
+			}
+			// base state
+			else {
+				
+				this.reset_material();
+				
+				this.seed.apply_css( this.seed.theme.stateLast );
+				
+				this.seed.show( { opacity: _Plant.opacitySeed } );
+					
+			}
+			
 		}
 		
 	}

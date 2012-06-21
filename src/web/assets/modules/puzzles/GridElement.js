@@ -696,6 +696,7 @@
 			
 			this.testModule = testModule;
 			this.testModules = undefined;
+			this.testSuccess = false;
 			
 		}
 		
@@ -732,6 +733,11 @@
 			if ( show === true ) {
 				
 				this.show_last_modules_tested();
+				
+			}
+			else {
+				
+				this._dirtyModuleTest = true;
 				
 			}
 			
@@ -868,7 +874,7 @@
 		
 	}
 	
-	function show_last_modules_tested () {
+	function show_last_modules_tested ( force ) {
 		
 		var model,
 			modelCount = 0,
@@ -876,7 +882,9 @@
 		
 		// if has test results
 		
-		if ( this.testModule instanceof _GridModule.Instance && typeof this.testModules !== 'undefined' ) {
+		if ( ( this._dirtyModuleTest === true || force === true ) && this.testModule instanceof _GridModule.Instance && typeof this.testModules !== 'undefined' ) {
+			
+			this._dirtyModuleTest = false;
 			
 			each_layout_element.call( this, this.testModules, function ( testLayoutModule ) {
 				

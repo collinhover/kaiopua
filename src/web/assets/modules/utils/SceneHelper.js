@@ -70,7 +70,7 @@
 		var i, l,
 			children;
 			
-		if ( typeof object !== 'undefined' ) {
+		if ( typeof object !== 'undefined' && typeof object.children !== 'undefined' ) {
 			
 			children = object.children;
 			

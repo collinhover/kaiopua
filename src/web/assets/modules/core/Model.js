@@ -264,8 +264,8 @@
 		
 		this.targetable = typeof parameters.targetable === 'boolean' ? parameters.targetable : false;
 		this.interactive = typeof parameters.interactive === 'boolean' ? parameters.interactive : false;
-		this.addWorldOctree = typeof parameters.addWorldOctree === 'boolean' ? parameters.addWorldOctree : false;
-		this.useFaces = typeof parameters.useFaces === 'boolean' ? parameters.useFaces : false;
+		this.addWorldOctree = typeof parameters.addWorldOctree === 'boolean' ? parameters.addWorldOctree : true;
+		this.useFaces = typeof parameters.useFaces === 'boolean' ? parameters.useFaces : true;
 		
 		// morph defaults
 		

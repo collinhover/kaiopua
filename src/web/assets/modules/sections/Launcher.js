@@ -139,13 +139,18 @@
 		
 		// water
 		
-		water = new _Water.Instance();
+		water = new _Water.Instance( { 
+			addWorldOctree: false
+		} );
 		water.quaternion.setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), -Math.PI * 0.65 );
 		
 		// sky
 		
 		sky = new _Sky.Instance( {
 			numClouds: 30,
+			cloudParameters: {
+				addWorldOctree: false
+			},
 			cloudScaleMax: 8,
 			cloudOpacityByDistance: 1,
 			cloudBoundRadius: 5000,
