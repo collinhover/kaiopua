@@ -48,7 +48,8 @@
             rangeRotMinY: -10,
             speedRotX: 0.05,
             speedRotY: 0.05
-        };
+        },
+		eventHandles = {};
     
     /*===================================================
     
@@ -245,9 +246,8 @@
 			
 			shared.renderer.sortObjects = false;
 			
-			shared.signals.mousemoved.add( on_mouse_moved );
-			
-			shared.signals.update.add( update );
+			eventHandles[ 'oninputmove' ] = dojo.connect( window, dojo.touch.move, on_mouse_moved );
+			eventHandles[ 'update' ] = dojo.subscribe( 'update', update );
 			
 		}
 		else {
@@ -266,9 +266,8 @@
 		
 		sky.animate( { stop: true } );
 		
-		shared.signals.mousemoved.remove( on_mouse_moved );
-		
-		shared.signals.update.remove( update );
+		dojo.disconnect( eventHandles[ 'oninputmove' ] );
+		dojo.unsubscribe( eventHandles[ 'update' ] );
 		
     }
     

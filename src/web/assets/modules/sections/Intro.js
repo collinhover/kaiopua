@@ -25,7 +25,8 @@
 		addBGOnShow = [],
 		skybox,
 		ambient,
-		light;
+		light,
+		eventHandles = {};
     
     /*===================================================
     
@@ -141,9 +142,8 @@
 			
 			// signals
 			
-			shared.signals.windowresized.add( resize );
-			
-			shared.signals.update.add( update );
+			eventHandles[ 'onwindowresize' ] = dojo.subscribe( 'onwindowresize', resize );
+			eventHandles[ 'update' ] = dojo.subscribe( 'update', update );
 			
 		}
 		else {
@@ -158,9 +158,8 @@
 		
 		waitingToShow = false;
 		
-		shared.signals.windowresized.remove( resize );
-        
-        shared.signals.update.remove( update );
+		dojo.unsubscribe( eventHandles[ 'onwindowresize' ] );
+		dojo.unsubscribe( eventHandles[ 'update' ] );
 		
     }
     

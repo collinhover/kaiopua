@@ -378,7 +378,7 @@
 					
 					this._alignment = location.toLowerCase();
 					
-					shared.signals.windowresized.add( this.align, this );
+					eventHandles[ 'onwindowresize' ] = dojo.subscribe( 'onwindowresize', this, this.align );
 					
 					this.align();
 					
@@ -387,7 +387,7 @@
 					
 					this._alignment = false;
 					
-					shared.signals.windowresized.remove( this.align, this );
+					dojo.unsubscribe( eventHandles[ 'onwindowresize' ] );
 					
 				}
 				
@@ -614,6 +614,8 @@
 		this.childrenAlwaysVisible = [];
 		
 		// properties
+		
+		this.eventHandles = {};
 		
 		this.timeShow = main.is_number( parameters.timeShow ) ? parameters.timeShow : _UIElement.timeShow;
         this.timeHide = main.is_number( parameters.timeHide ) ? parameters.timeHide : _UIElement.timeHide;
@@ -1367,7 +1369,7 @@
 		
 		callback = parameters.callback;
 		context = parameters.context;
-		
+		if ( this.id === 'transitioner' ) console.log( this, this.id, 'SHOW', parent, time, opacity, this.domElement.css( 'opacity' ), typeof callback, context);
 		// if dom element passed
 		
 		if ( domElement ) {
@@ -1418,16 +1420,16 @@
 	}
 	
 	function on_show ( target, callback, context ) {
-		
+		if ( target.id === 'transitioner' ) console.log( target.id, 'FINISH SHOW', callback, context );
 		if ( target instanceof _UIElement.Instance ) {
 			
 			target.showing = false;
 			
 		}
 		
-		if ( typeof callback !== 'undefined' ) {
+		if ( typeof callback === 'function' ) {
 			
-			callback.call( context );
+			callback.call( context || target );
 			
 		}
 		
@@ -1457,7 +1459,7 @@
 		
 		callback = parameters.callback;
 		context = parameters.context;
-		
+		if ( this.id === 'transitioner' ) console.log( this, this.id, 'HIDE', remove, time, opacity, this.domElement.css( 'opacity' ), typeof callback, context);
 		// if dom element passed
 		
 		if ( domElement ) {
@@ -1496,7 +1498,7 @@
 	}
 	
 	function on_hidden ( target, callback, context, remove ) {
-		
+		if ( target.id === 'transitioner' ) console.log( target.id, 'FINISH HIDE', callback, context, remove );
 		if ( target instanceof _UIElement.Instance ) {
 			
 			if ( remove === true ) {
@@ -1522,7 +1524,7 @@
 		
 		if ( typeof callback !== 'undefined' ) {
 			
-			callback.call( context );
+			callback.call( context || target );
 			
 		}
 		
