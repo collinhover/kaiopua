@@ -45,7 +45,6 @@
 		],
         assetsSetup = [
             "js/lib/three/Three.js",
-			"js/lib/Tween.js",
 			"js/lib/jquery.transform2d.min.js",
 			"js/lib/jquery.tipTip.min.js"
         ],
@@ -180,6 +179,7 @@
 	
     _Game.resume = resume;
     _Game.pause = pause;
+	_Game.stop = stop;
 	
 	_Game.add_to_scene = add_to_scene;
 	_Game.remove_from_scene = remove_from_scene;
@@ -300,7 +300,7 @@
     =====================================================*/
     
     function init_setup () {
-		
+		console.log( 'game init setup');
 		// cardinal axes
 		
 		shared.cardinalAxes = {
@@ -308,20 +308,6 @@
 			forward: new THREE.Vector3( 0, 0, 1 ),
 			right: new THREE.Vector3( -1, 0, 0 )
 		}
-        
-        // game signals
-		
-        shared.signals = shared.signals || {};
-        shared.signals.paused = new signals.Signal();
-        shared.signals.resumed = new signals.Signal();
-        shared.signals.update = new signals.Signal();
-		shared.signals.gamestart = new signals.Signal();
-		shared.signals.gamestop = new signals.Signal();
-		
-		// tween update
-		// wrap because update signal passes time delta, and tween update needs time
-		
-		shared.signals.update.add( function () { TWEEN.update(); } );
 		
 		// renderer
         renderer = new THREE.WebGLRenderer( { antialias: false, clearColor: 0x000000, clearAlpha: 0, maxLights: 4 } );
@@ -352,7 +338,7 @@
     }
 	
 	function init_core () {
-		
+		console.log( 'game init core');
 		var shaderScreen = THREE.ShaderExtras[ "screen" ],
             shaderFocusVignette = main.get_asset_data("assets/modules/effects/FocusVignette");
 		
@@ -421,18 +407,18 @@
 		} );
 		_GUI.layers.display.add( _GUI.renderer );
 		
-		// resize
-		
-		dojo.subscribe( 'onwindowresize', resize );
-		resize( shared.screenWidth, shared.screenHeight );
-		
 		// set ready
 		
 		main.asset_ready( assetPath );
+		
+		// resize
+		
+		dojo.subscribe( 'resize', resize );
+		resize( shared.screenWidth, shared.screenHeight );
         
-		// start drawing
-        
-        animate();
+		// update
+		
+		dojo.subscribe( 'update', update );
 		
 	}
 	
@@ -466,13 +452,13 @@
 		_Messenger = main.get_asset_data( "assets/modules/ui/Messenger.js" );
 		
 		// ui
-		/*
+		
 		l = _GUI.layers;
 		m = _GUI.menus;
 		b = _GUI.buttons;
 		
 		m.start.childrenByID.play.callback = function () {
-			start_game();
+			start();
 		};
 		m.start.childrenByID.play.context = this;
 		
@@ -482,7 +468,7 @@
 		m.main.childrenByID.resume.context = this;
 		
 		b.end.callback = function () {
-			stop_game();
+			stop();
 		};
 		b.end.context = this;
 		
@@ -521,8 +507,7 @@
 		
 		_GUI.show_group( 'constant' );
 		_GUI.show_group( 'start' );
-		*/
-		start_game();
+		
 		//
 		//
 		return;
@@ -702,7 +687,7 @@
 			var facesTest = false;
 			var adding = true;
 			//var intervalID = setInterval( function () {
-			//dojo.subscribe( 'update', function () {
+			//dojo.subscribe( 'Game.update', function () {
 			dojo.subscribe( 'oninputrelease', function () {
 				
 				// adding/removing static
@@ -834,7 +819,7 @@
 		}, 1000 );
 		
 		var controls = new THREE.FirstPersonControls( camera );
-		shared.signals.update.add( function ( timeDelta ) { controls.update( timeDelta ) } );
+		dojo.subscribe( 'Game.update', function ( timeDelta ) { controls.update( timeDelta ) } );
 		
 		// TESTING
 		// octree
@@ -1270,7 +1255,7 @@
     
     =====================================================*/
     
-    function start_game () {
+    function start () {
 		console.log('start game');
 		// assets
 		
@@ -1309,9 +1294,9 @@
 			
 		} );
 		
-		// signal
+		// event
 		
-		shared.signals.gamestart.dispatch();
+		dojo.publish( 'Game.start' );
 		
 		// set started
 		
@@ -1319,16 +1304,16 @@
 		
     }
 	
-	function stop_game () {
+	function stop () {
 		
 		started = false;
 		
 		_GUI.hide_group( 'ingame', { remove: true } );
 		_GUI.hide_group( 'pause', { remove: true } );
 		
-		// signal
+		// event
 		
-		shared.signals.gamestop.dispatch();
+		dojo.publish( 'Game.stop' );
 		
 		// set launcher section
 		
@@ -1353,38 +1338,38 @@
         if (paused === false) {
             console.log(' > GAME PAUSE');
             paused = true;
-			console.log(999);
+			
 			// handle ui
 			
 			if ( started === true ) {
-				console.log(999);
+				
 				_GUI.transitioner.show( { parent: _GUI.layers.overlayUI } );
-				console.log(999);
+				
 				if ( preventDefault !== true ) {
-					console.log(999);
+					
 					_GUI.show_group( 'pause' );
-					console.log(999);
+					
 					// add listener for click on transitioner
 					
 					_GUI.transitioner.domElement.on( 'mouseup.resume touchend.resume', resume );
 					
 				}
-				console.log(999);
+				
 			}
 			else {
-				console.log(999);
+				
 				_GUI.transitioner.show( { parent: _GUI.layers.overlayAll } );
 				
 			}
-			console.log(999);
-			// signal
+			
+			// event
             
-            shared.signals.paused.dispatch();
-			console.log(999);
+			dojo.publish( 'Game.pause' );
+			
 			// render once to ensure user is not surprised when resuming
 			
 			render();
-            console.log(999);
+            
         }
 		
     }
@@ -1396,58 +1381,31 @@
 			// ui
 			
 			_GUI.transitioner.domElement.off( '.resume' );
-			console.log(999);
+			
 			if ( started === true ) {
-				console.log(999);
+				
 				_GUI.hide_group( 'pause', { remove: true, time: 0 } );
 				
 			}
-			console.log(999, _GUI.transitioner);
+			
 			_GUI.transitioner.hide( { remove: true } );
-			console.log(999);
+			
 			paused = false;
-			console.log(999);
-			shared.signals.resumed.dispatch();
-            console.log(999);
+			
+			dojo.publish( 'Game.resume' );
+			
         }
     }
 	
 	/*===================================================
     
-    animate / render
+    update
     
     =====================================================*/
     
-    function animate () {
-    
-    	var timeDelta,
-			timeDeltaMod;
-        
-        window.requestAnimationFrame( animate );
+    function update ( timeDelta, timeDeltaMod ) {
 		
-		// handle time
-		
-		shared.timeLast = shared.time;
-		
-		shared.time = new Date().getTime();
-		
-		timeDelta = shared.time - shared.timeLast;
-		
-		// get time delta modifier from timeDelta vs expected refresh interval
-		
-		timeDeltaMod = _MathHelper.round( timeDelta / shared.timeDeltaExpected, 2 );
-		
-		if ( main.is_number( timeDeltaMod ) !== true ) {
-			
-			timeDeltaMod = 1;
-			
-		}
-		
-		// update time since last interaction
-		
-		shared.timeLastInteraction += timeDelta;
-		
-		// update
+		// if not paused
 		
 		if ( paused !== true ) {
 			
@@ -1459,25 +1417,17 @@
 				
 			}
 			
-			// update all others
+			// update game
 			
-			shared.signals.update.dispatch( timeDelta, timeDeltaMod );
+			dojo.publish( 'Game.update', [ timeDelta, timeDeltaMod ] );
 			
 			// have camera bg mimic camera rotation
 			
 			cameraBG.quaternion.copy( camera.quaternion );
 			
-			// finish frame
+			// render frame
 			
 			render();
-			
-		}
-		
-		// handle gallery mode
-		
-		if ( shared.galleryMode === true && started === true && shared.timeLastInteraction >= shared.timeLastInteractionMax ) {
-			
-			stop_game();
 			
 		}
 			

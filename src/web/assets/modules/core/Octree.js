@@ -533,8 +533,6 @@
 	
 	function OctreeNode ( parameters ) {
 		
-		octreeNodeCount++;
-		
 		// utility
 		
 		this.utilVec31Branch = new THREE.Vector3();
@@ -547,7 +545,7 @@
 		
 		// basic properties
 		
-		this.id = octreeNodeCount;
+		this.id = octreeNodeCount++;
 		this.position = parameters.position instanceof THREE.Vector3 ? parameters.position : new THREE.Vector3();
 		this.radius = main.is_number( parameters.radius ) && parameters.radius > 0 ? parameters.radius : 1;
 		this.indexOctant = parameters.indexOctant;

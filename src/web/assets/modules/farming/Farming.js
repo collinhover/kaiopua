@@ -21,7 +21,8 @@
 		_Button,
 		_Menu,
 		farmers = [],
-		plantsWaitingForUI = [];
+		plantsWaitingForUI = [],
+		eventHandles = {};
 	
 	/*===================================================
     
@@ -72,9 +73,8 @@
 		
 		// reset
 		
+		eventHandles[ 'Game.stop' ] = dojo.subscribe( 'Game.stop', _Farming, _Farming.reset );
 		_Farming.reset();
-		
-		shared.signals.gamestop.add( _Farming.reset, _Farming );
 		
 		// ui
 		
@@ -236,8 +236,9 @@
 		var i, l,
 			farmer,
 			planting,
-			bindings,
-			binding;
+			onplantID,
+			onplantmultiID,
+			onplantselectID;
 			
 		if ( typeof _Farming.menu !== 'undefined' && typeof _Player !== 'undefined' ) {
 			
@@ -246,23 +247,29 @@
 			farmer = get_farmer_by_character( _Player.character, true );
 			planting = farmer.planting;
 			
-			// init bindings list
+			// init eventHandles list
 			
-			bindings = farmer.bindings = farmer.bindings || [];
+			farmer.eventHandles = farmer.eventHandles || {};
 			
-			// remove existing hint bindings
+			// remove existing hint eventHandles
 			
-			for ( i = 0, l = bindings.length; i < l; i++ ) {
+			for ( eventHandleID in farmer.eventHandles ) {
 				
-				binding = bindings[ i ];
-				
-				binding.detach();
+				if ( farmer.eventHandles.hasOwnProperty( eventHandleID ) ) {
+					
+					dojo.unsubscribe( farmer.eventHandles[ eventHandleID ] );
+					
+				}
 				
 			}
 			
-			// add basic hint bindings
+			// add basic hint eventHandles
 			
-			bindings.push( planting.planted.addOnce( function () {
+			onplantID = planting.id + '.Planting.plant';
+			
+			farmer.eventHandles[ onplantID ] = dojo.subscribe( onplantID, function () {
+				
+				dojo.unsubscribe( farmer.eventHandles[ onplantID ] );
 				
 				_Messenger.show_message( {
 					image: shared.pathToIcons + "mouse_left_rev_64.png",
@@ -273,9 +280,13 @@
 					confirmRequired: true
 				} );
 				
-			} ) );
+			} );
 			
-			bindings.push( planting.plantedMulti.addOnce( function () {
+			onplantmultiID = planting.id + '.Planting.plantMulti';
+			
+			farmer.eventHandles[ onplantmultiID ] = dojo.subscribe( onplantmultiID, function () {
+				
+				dojo.unsubscribe( farmer.eventHandles[ onplantmultiID ] );
 				
 				_Messenger.show_message( {
 					image: shared.pathToIcons + "rotate_rev_64.png",
@@ -286,9 +297,13 @@
 					confirmRequired: true
 				} );
 				
-			} ) );
+			} );
 			
-			bindings.push( planting.selected.addOnce( function () {
+			onplantselectID = planting.id + '.Planting.plantSelect';
+			
+			farmer.eventHandles[ onplantselectID ] = dojo.subscribe( onplantselectID, function () {
+				
+				dojo.unsubscribe( farmer.eventHandles[ onplantselectID ] );
 				
 				_Messenger.show_message( { 
 					image: shared.pathToIcons + "close_rev_64.png",
@@ -299,7 +314,7 @@
 					confirmRequired: true
 				} );
 				
-			} ) );
+			} );
 			
 		}
 		

@@ -14,6 +14,7 @@ var KAIOPUA = (function (main) {
 		loader = {},
 		eventHandles = {},
         lastGamma, lastBeta,
+		assetCount = 0,
         libList = [
 			"js/lib/dojo/dojo.js",
 			"js/lib/less-1.3.0.min.js",
@@ -21,7 +22,7 @@ var KAIOPUA = (function (main) {
             "js/lib/RequestAnimationFrame.js",
             "js/lib/requestInterval.js",
             "js/lib/requestTimeout.js",
-            //"js/lib/signals.min.js",
+			"js/lib/Tween.js",
 			"js/lib/sylvester.js"
         ],
 		dojoExtras = [
@@ -124,10 +125,8 @@ var KAIOPUA = (function (main) {
 		// load dojo extras
 		
 		require( dojoExtras, function () {
-			console.log('has dojo extras', dojo.touch, dojox, dojox.gesture);
 			
 			// add listeners for events
-			// each listener dispatches shared signal
 			
 			dojo.connect( 'onfocus', on_focus_gain );
 			dojo.connect( 'onblur', on_focus_lose );
@@ -151,8 +150,6 @@ var KAIOPUA = (function (main) {
 			eventHandles[ 'onwindowdeviceorientation' ] = dojo.connect( window, ( !dojo.isMozilla ? "deviceorientation" : "MozOrientation" ), on_window_device_orientation );
 			dojo.connect( window, 'onresize', on_window_resize );
 			dojo.connect( window, 'onerror', on_error );
-			
-			return;
 			
 			// loader
 			
@@ -245,7 +242,7 @@ var KAIOPUA = (function (main) {
     }
     
     function init_setup ( mh, pb, g ) {
-		
+		console.log( 'init setup');
         // assets
         
 		_MathHelper = mh;
@@ -261,10 +258,6 @@ var KAIOPUA = (function (main) {
         on_window_resize();
 		
 		// begin global update loop
-		
-		dojo.subscribe( 'update', function (timeDelta, timeDeltaMod) {
-			console.log( 'global update with timedelta', timeDelta, timeDeltaMod );
-		} );
 		
 		update();
 		
@@ -677,7 +670,7 @@ var KAIOPUA = (function (main) {
 	
 	=====================================================*/
 	
-	function update() {
+	function update () {
 		
 		var timeDelta,
 			timeDeltaMod;
@@ -706,9 +699,21 @@ var KAIOPUA = (function (main) {
 		
 		shared.timeLastInteraction += timeDelta;
 		
+		// update tween
+		
+		TWEEN.update();
+		
 		// publish update
 		
-		dojo.publish( "update", [ timeDelta, timeDeltaMod ] );
+		dojo.publish( 'update', [ timeDelta, timeDeltaMod ] );
+		
+		// handle gallery mode
+		
+		if ( shared.galleryMode === true && shared.timeLastInteraction >= shared.timeLastInteractionMax && typeof _Game !== 'undefined' && _Game.started === true ) {
+			
+			_Game.stop();
+			
+		}
 		
 	}
 	
@@ -741,7 +746,7 @@ var KAIOPUA = (function (main) {
 	}
     
     function on_input_press( e ) {
-		console.log( 'press', e );
+		//console.log( 'press', e );
 		var mouse;
 		
 		// is touch event
@@ -766,10 +771,11 @@ var KAIOPUA = (function (main) {
         e.preventDefault();
         e.stopPropagation();
         return false;
+		
     }
     
     function on_input_release( e ) {
-		console.log( 'release', e );
+		//console.log( 'release', e );
 		// is touch event
 		
 		if ( is_touch_event( e ) ){
@@ -791,10 +797,11 @@ var KAIOPUA = (function (main) {
         e.preventDefault();
         e.stopPropagation();
         return false;
+		
     }
     
     function on_input_move( e ) {
-		console.log( 'move', e );
+		//console.log( 'move', e );
 		var mouse;
 		
 		// is touch event
@@ -825,10 +832,11 @@ var KAIOPUA = (function (main) {
         e.preventDefault();
         e.stopPropagation();
         return false;
+		
     }
 	
 	function on_input_cancel ( e ) {
-		console.log( 'cancel', e );
+		//console.log( 'cancel', e );
 		var mouse;
 		
 		// is touch event
@@ -854,11 +862,11 @@ var KAIOPUA = (function (main) {
         e.preventDefault();
         e.stopPropagation();
         return false;
+		
     }
 	
 	function on_input_tap ( e ) {
-		
-		console.log( 'tap', e );
+		//console.log( 'tap', e );
 		
         e.preventDefault();
         e.stopPropagation();
@@ -867,8 +875,7 @@ var KAIOPUA = (function (main) {
 	}
 	
 	function on_input_tap_double ( e ) {
-		
-		console.log( 'tapdouble', e );
+		//console.log( 'tapdouble', e );
 		
         e.preventDefault();
         e.stopPropagation();
@@ -877,8 +884,7 @@ var KAIOPUA = (function (main) {
 	}
 	
 	function on_input_tap_hold ( e ) {
-		
-		console.log( 'taphold', e );
+		//console.log( 'taphold', e );
 		
         e.preventDefault();
         e.stopPropagation();
@@ -887,8 +893,7 @@ var KAIOPUA = (function (main) {
 	}
 	
 	function on_input_swipe ( e ) {
-		
-		console.log( 'swipe', e );
+		//console.log( 'swipe', e );
 		
         e.preventDefault();
         e.stopPropagation();
@@ -897,8 +902,7 @@ var KAIOPUA = (function (main) {
 	}
 	
 	function on_input_swipe_end ( e ) {
-		
-		console.log( 'swipeend', e );
+		//console.log( 'swipeend', e );
 		
         e.preventDefault();
         e.stopPropagation();
@@ -907,7 +911,7 @@ var KAIOPUA = (function (main) {
 	}
     
     function on_input_scroll( e ) {
-		console.log( 'scroll', e );
+		//console.log( 'scroll', e );
 		var eo = e.originalEvent || e;
 		
 		// normalize scroll across browsers
@@ -916,13 +920,14 @@ var KAIOPUA = (function (main) {
 		e.wheelDelta = eo.wheelDelta = ( ( eo.detail < 0 || eo.wheelDelta > 0 ) ? 1 : -1 ) * shared.mouseWheelSpeed;
 		e.button = 'mousewheel';
 		
-        dojo.publish( 'oninputscroll', [ e ] );
+        dojo.publish( 'inputScroll', [ e ] );
 		
 		shared.timeLastInteraction = 0;
-        
+		/*
         e.preventDefault();
         e.stopPropagation();
         return false;
+		*/
     }
     
     function on_window_device_orientation( e ) {
@@ -996,7 +1001,7 @@ var KAIOPUA = (function (main) {
     }
 	
 	function on_key_press ( e ) {
-		console.log( 'keypress', e );
+		//console.log( 'keypress', e );
 		dojo.publish( 'onkeypress', [ e ] );
 		
 		shared.timeLastInteraction = 0;
@@ -1010,7 +1015,7 @@ var KAIOPUA = (function (main) {
 	}
 
     function on_key_up( e ) {
-		console.log( 'keyup', e );
+		//console.log( 'keyup', e );
 		dojo.publish( 'onkeyup', [ e ] );
 		
 		shared.timeLastInteraction = 0;
@@ -1023,8 +1028,7 @@ var KAIOPUA = (function (main) {
     }
 	
 	function on_focus_lose ( e ) {
-		console.log( 'blur', e );
-		
+		//console.log( 'blur', e );
 		if ( typeof _Game !== 'undefined' ) {
 			
 			_Game.pause();
@@ -1034,8 +1038,7 @@ var KAIOPUA = (function (main) {
 	}
 	
 	function on_focus_gain ( e ) {
-		console.log( 'focus', e );
-		
+		//console.log( 'focus', e );
 		if ( typeof _Game !== 'undefined' && _Game.started !== true ) {
 			
 			_Game.resume();
@@ -1045,11 +1048,11 @@ var KAIOPUA = (function (main) {
 	}
 
     function on_window_resize( e ) {
-        console.log( 'resize', e );
+		//console.log( 'resize', e );
         shared.screenWidth = $(window).width();
         shared.screenHeight = $(window).height();
         
-		dojo.publish( 'onwindowresize', [ shared.screenWidth, shared.screenHeight ] );
+		dojo.publish( 'resize', [ shared.screenWidth, shared.screenHeight ] );
         
         if (typeof e !== 'undefined') {
             e.preventDefault();
@@ -1059,7 +1062,7 @@ var KAIOPUA = (function (main) {
     }
 	
 	function on_error ( error, url, lineNumber ) {
-		console.log( 'error', error );
+		//console.log( 'error', error );
 		dojo.publish( 'onerror', [ error, url, lineNumber ] );
 		
 		return true;
@@ -1256,7 +1259,7 @@ var KAIOPUA = (function (main) {
 			
 			loader.listCurrent = undefined;
 			
-			dojo.publish( 'onLoadAllComplete' );
+			dojo.publish( 'Loader.allComplete' );
 			
 		}
 		
@@ -1366,13 +1369,9 @@ var KAIOPUA = (function (main) {
 		
 		add_loaded_locations( path );
 		
-		// shared signal
+		// event
 		
-		if (typeof shared !== 'undefined') {
-			
-			dojo.publish( 'onLoadItemComplete', [ path ] );
-			
-		}
+		dojo.publish( 'Loader.itemComplete', [ path ] );
 		
 		// for each list loading
 		
@@ -1472,11 +1471,7 @@ var KAIOPUA = (function (main) {
 		
 		// event
 		
-		if (typeof shared !== 'undefined') {
-			
-			dojo.publish( 'onLoadListComplete', [ listID ] );
-			
-		}
+		dojo.publish( 'Loader.listComplete', [ listID ] );
 		
 		// clear
 		
@@ -1830,9 +1825,9 @@ var KAIOPUA = (function (main) {
 			
 			asset.wait = false;
 			
-			// dispatch event
+			// event
 			
-			dojo.publish( 'onassetready', [ path ] );
+			dojo.publish( 'Asset.ready', [ path ] );
 			
 		}
 		
@@ -1846,8 +1841,8 @@ var KAIOPUA = (function (main) {
 			assetsRequired = [],
 			assetsWaitingFor = [],
 			assetsReady = [],
-			onassetreadyHandle,
-			listeningForReadySignal = false;
+			assetReadyHandle,
+			listeningForReady = false;
 		
 		// get if arguments are not array
 		
@@ -1877,13 +1872,13 @@ var KAIOPUA = (function (main) {
 				
 				if ( assetsWaitingFor.length === 0 && assetsReady.length === requirements.length ) {
 					
-					// remove signal
+					// no longer listening
 					
-					if ( listeningForReadySignal === true ) {
+					if ( listeningForReady === true ) {
 						
-						dojo.unsubscribe( onassetreadyHandle );
+						dojo.unsubscribe( assetReadyHandle );
 						
-						listeningForReadySignal = false;
+						listeningForReady = false;
 						
 					}
 					
@@ -1974,12 +1969,12 @@ var KAIOPUA = (function (main) {
 						on_asset_ready( path );
 						
 					}
-					// asset not ready, listen for ready signal if not already
-					else if ( listeningForReadySignal === false ) {
+					// asset not ready, listen for ready
+					else if ( listeningForReady === false ) {
 						
-						listeningForReadySignal = true;
+						listeningForReady = true;
 						
-						onassetreadyHandle = dojo.subscribe( 'onassetready', on_asset_ready );
+						assetReadyHandle = dojo.subscribe( 'Asset.ready', on_asset_ready );
 						
 					}
 					
@@ -2027,6 +2022,9 @@ var KAIOPUA = (function (main) {
 		
 		parameters.path = path;
 		
+		// properties
+		
+		assetNew.id = assetCount++;
 		assetNew.merge_asset_self( parameters, true );
 		
 		// if asset has path

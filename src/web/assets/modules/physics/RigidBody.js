@@ -109,8 +109,6 @@
 	
 	function RigidBody ( mesh, parameters ) {
 		
-		bodyCount++;
-		
 		var i, l,
 			geometry,
 			vertices,
@@ -143,7 +141,7 @@
 		
 		parameters = parameters || {};
 		
-		this.id = bodyCount;
+		this.id = bodyCount++;
 		
 		this.mesh = mesh;
 		
@@ -342,8 +340,6 @@
 			position: new THREE.Vector3(),
 			quaternion: new THREE.Quaternion()
 		};
-		this.safetynetstart = new signals.Signal();
-		this.safetynetend = new signals.Signal();
 		
 	}
 	

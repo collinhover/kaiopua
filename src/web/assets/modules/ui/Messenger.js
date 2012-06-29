@@ -135,7 +135,7 @@
 		
 		// reset
 		
-		shared.signals.gamestop.add( reset, _Messenger );
+		dojo.subscribe( 'Game.stop', _Messenger, _Messenger.reset );
 		
 		reset();
 		
@@ -157,9 +157,9 @@
 		
 		hide_current_message();
 		
-		// remove signal
+		// remove event
 		
-		shared.signals.resumed.remove( step_message_queue );
+		dojo.unsubscribe( eventHandles[ 'Game.resume' ] );
 		
 	}
 	
@@ -213,7 +213,13 @@
 		}
 		else {
 			
-			shared.signals.resumed.addOnce( step_message_queue );
+			eventHandles[ 'Game.resume' ] = dojo.subscribe( 'Game.resume', function () {
+				
+				dojo.unsubscribe( eventHandles[ 'Game.resume' ] );
+				
+				step_message_queue();
+				
+			} );
 			
 		}
 		
@@ -388,7 +394,7 @@
 		
 		queue.shift();
 		
-		// signals
+		// events
 		
 		dojo.disconnect( eventHandles[ 'onkeyup' ] );
 		dojo.disconnect( eventHandles[ 'oninputrelease' ] );

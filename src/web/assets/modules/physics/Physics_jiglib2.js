@@ -653,21 +653,9 @@ Physics module, handles physics in game using JigLibJS.
 	
 	/*===================================================
     
-    start/stop/update functions
+    update functions
     
     =====================================================*/
-	
-	function start () {
-		
-		shared.signals.update.add( update );
-		
-	}
-	
-	function stop () {
-		
-		shared.signals.update.remove( update );
-		
-	}
 	
 	function update ( timeDelta ) {
 		

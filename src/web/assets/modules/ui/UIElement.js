@@ -378,7 +378,7 @@
 					
 					this._alignment = location.toLowerCase();
 					
-					eventHandles[ 'onwindowresize' ] = dojo.subscribe( 'onwindowresize', this, this.align );
+					this.eventHandles[ 'resize' ] = dojo.subscribe( 'resize', this, this.align );
 					
 					this.align();
 					
@@ -387,7 +387,7 @@
 					
 					this._alignment = false;
 					
-					dojo.unsubscribe( eventHandles[ 'onwindowresize' ] );
+					dojo.unsubscribe( this.eventHandles[ 'resize' ] );
 					
 				}
 				
@@ -633,7 +633,6 @@
 		
 		this.hidden = false;
 		this.isVisible = Boolean( this.domElement.parents( "body" ).length );
-		this.signalOnVisible = shared.signals[ "on_display_" + this.id ] = new signals.Signal();
 		
 		// position
 		
@@ -907,9 +906,9 @@
 					
 				}
 				
-				// dispatch visible signal
+				// visible
 				
-				this.signalOnVisible.dispatch();
+				dojo.publish( this.id + '.UIElement.visible' );
 				
 			}
 			
@@ -1304,7 +1303,15 @@
 			}
 			else {
 				
-				this.signalOnVisible.addOnce( this.align, this );
+				dojo.unsubscribe( this.eventHandles[ this.id + '.UIElement.visible' ] );
+				
+				this.eventHandles[ this.id + '.UIElement.visible' ] = dojo.subscribe( this.id + '.UIElement.visible', this, function () {
+					
+					dojo.unsubscribe( this.eventHandles[ this.id + '.UIElement.visible' ] );
+					
+					this.align();
+					
+				} );
 				
 			}
 			
@@ -1329,11 +1336,15 @@
 		}
 		else {
 			
-			this.signalOnVisible.addOnce( function () {
+			dojo.unsubscribe( this.eventHandles[ this.id + '.UIElement.visible' ] );
+			
+			this.eventHandles[ this.id + '.UIElement.visible' ] = dojo.subscribe( this.id + '.UIElement.visible', this, function () {
+				
+				dojo.unsubscribe( this.eventHandles[ this.id + '.UIElement.visible' ] );
 				
 				this.align_once( alignment, outside, guide );
 				
-			}, this );
+			} );
 			
 		}
 		
@@ -1369,7 +1380,7 @@
 		
 		callback = parameters.callback;
 		context = parameters.context;
-		if ( this.id === 'transitioner' ) console.log( this, this.id, 'SHOW', parent, time, opacity, this.domElement.css( 'opacity' ), typeof callback, context);
+		
 		// if dom element passed
 		
 		if ( domElement ) {
@@ -1420,7 +1431,7 @@
 	}
 	
 	function on_show ( target, callback, context ) {
-		if ( target.id === 'transitioner' ) console.log( target.id, 'FINISH SHOW', callback, context );
+		
 		if ( target instanceof _UIElement.Instance ) {
 			
 			target.showing = false;
@@ -1459,7 +1470,7 @@
 		
 		callback = parameters.callback;
 		context = parameters.context;
-		if ( this.id === 'transitioner' ) console.log( this, this.id, 'HIDE', remove, time, opacity, this.domElement.css( 'opacity' ), typeof callback, context);
+		
 		// if dom element passed
 		
 		if ( domElement ) {
@@ -1498,7 +1509,7 @@
 	}
 	
 	function on_hidden ( target, callback, context, remove ) {
-		if ( target.id === 'transitioner' ) console.log( target.id, 'FINISH HIDE', callback, context, remove );
+		
 		if ( target instanceof _UIElement.Instance ) {
 			
 			if ( remove === true ) {
