@@ -50,6 +50,7 @@
         ],
 		assetsSetupExtras = [
             "js/lib/three/ThreeExtras.js",
+			"js/lib/three/ThreeOctree.js",
             "js/lib/three/postprocessing/ShaderExtras.js",
             "js/lib/three/postprocessing/EffectComposer.js",
             "js/lib/three/postprocessing/RenderPass.js",
@@ -519,19 +520,19 @@
 		var _Model = main.get_asset_data( "assets/modules/core/Model.js" );
 		var _VectorHelper = main.get_asset_data( "assets/modules/utils/VectorHelper.js" );
 		
-		var radius = 1000,
+		var radius = 200,
 			octree = new _Octree.Instance( {
 				radius: radius,
 				scene: scene
 			} ),
 			objects = [],
-			countMax = 40,
+			countMax = 20,
 			testObj,
 			testObjLast,
 			offset = new THREE.Vector3();
 		
 		setTimeout( function () {
-			
+			/*
 			// build octree with max count objects
 			
 			for ( var i = 0; i < countMax; i++ ) {
@@ -541,10 +542,10 @@
 					material: new THREE.MeshBasicMaterial( { color: 0xFF0000 } )
 				} );
 				
-				testObj.position.set( Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius );
+				//testObj.position.set( Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius );
 				//testObj.position.set( Math.random() * -radius * 0.5, Math.random() * -radius * 0.5, Math.random() * -radius * 0.5 );
 				//testObj.position.set( -radius + Math.random() * -radius * 0.25, -radius + Math.random() * -radius * 0.25, -radius + Math.random() * -radius * 0.25 );
-				//testObj.position.set( Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5 );
+				testObj.position.set( Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5 );
 				
 				objects.push( testObj );
 				scene.add( testObj );
@@ -565,7 +566,7 @@
 			
 			// search octree
 			
-			var searchRad = 1000,
+			var searchRad = 500,
 				testObj = new _Model.Instance( {
 					geometry: new THREE.CubeGeometry( searchRad * 2, searchRad * 2, searchRad * 2 ),
 					material: new THREE.MeshBasicMaterial ( { color: 0xFF000, opacity: 0.15, transparent: true } )
@@ -577,8 +578,8 @@
 			testLine = new THREE.Line( testLineGeom, new THREE.LineBasicMaterial( { color: 0xFF00FF, linewidth: 8 } ), THREE.LinePieces );
 			testLine.useQuaternion = true;
 			
-			//scene.add( testObj );
-			scene.add( testLine );
+			scene.add( testObj );
+			//scene.add( testLine );
 			
 			var testCompare = function ( a, b ) {
 				
@@ -629,8 +630,8 @@
 					
 					// new test position
 					
-					//testObj.position.set( Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5 );
-					testObj.position.set( Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius );
+					testObj.position.set( Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5 );
+					//testObj.position.set( Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius );
 					testLine.position.copy( testObj.position );
 					
 					testLine.scale.set( 1, 1, 1 ).multiplyScalar( searchRad );
@@ -649,10 +650,9 @@
 					endSphere.position.copy( searchDirection ).multiplyScalar( searchRad ).addSelf( testObj.position );
 					scene.add( endSphere );
 					
-					
 					// search octree
 					
-					searchObjects = octree.search( testObj.position, searchRad, false, searchDirection );
+					searchObjects = octree.search( testObj.position, searchRad, false );//, searchDirection );
 					avgObjectCount += searchObjects.length;
 					for ( var m = 0, n = searchObjects.length; m < n; m++ ) {
 						
@@ -681,14 +681,14 @@
 				console.log( 'OCTREE SEARCH time: ', (td - tc ), ' + avgObjectCount ', avgObjectCount );
 				
 			}, 100 );
+			*/
 			
-			/*
-			var addRemoveTest = true;
+			var addRemoveTest = false;
 			var facesTest = false;
 			var adding = true;
 			//var intervalID = setInterval( function () {
-			//dojo.subscribe( 'Game.update', function () {
-			dojo.subscribe( 'oninputrelease', function () {
+			dojo.subscribe( 'Game.update', function () {
+			//dojo.connect( document, dojo.touch.press, function () {
 				
 				// adding/removing static
 				if ( addRemoveTest === true ) {
@@ -807,7 +807,7 @@
 				console.log( ' ============================================================================================================');
 				console.log( ' OCTREE: ', octree );
 				console.log( ' ... depth ', octree.depth, ' vs depth end?', octree.depth_end() );
-				console.log( ' ... num octrees: ', octree.octree_count_end() );
+				console.log( ' ... num nodes: ', octree.node_count_end() );
 				console.log( ' ... total objects: ', octree.object_count_end(), ' vs tree objects length: ', octree.objects.length );
 				//octree.to_console();
 				console.log( ' ============================================================================================================');
@@ -815,7 +815,7 @@
 				
 			} );
 			//}, 1000 );
-			*/
+			
 		}, 1000 );
 		
 		var controls = new THREE.FirstPersonControls( camera );
