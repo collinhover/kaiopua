@@ -52,8 +52,9 @@ WebGL
   
 HTML5-Reset  
 Modernizr  
+SignalsJS  
+jQuery  
 ThreeJS  
-Dojo Toolkit  
 
 ---
   
