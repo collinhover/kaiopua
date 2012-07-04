@@ -57,5 +57,5 @@ Dojo Toolkit
 
 ---
   
-*Copyright (C) 2011-2012 Collin Hover*  
-*For full license and information, see [LICENSE](https://github.com/collinhover/kaiopua/blob/master/LICENSE).*  
+*Copyright (C) 2011 Collin Hover*  
+*For full license and information, see [LICENSE](https://github.com/collinhover/kaiopua/blob/master/LICENSE) and [COPYING](https://github.com/collinhover/kaiopua/blob/master/COPYING).*  

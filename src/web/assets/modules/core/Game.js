@@ -50,6 +50,7 @@
         ],
 		assetsSetupExtras = [
             "js/lib/three/ThreeExtras.js",
+			"js/lib/three/ThreeOctree.js",
             "js/lib/three/postprocessing/ShaderExtras.js",
             "js/lib/three/postprocessing/EffectComposer.js",
             "js/lib/three/postprocessing/RenderPass.js",
