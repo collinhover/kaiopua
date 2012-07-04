@@ -23,8 +23,8 @@
 	main.asset_register( assetPath, { 
 		data: _UIElement,
 		requirements: [
-			"js/lib/jquery.transform2d.min.js",
-			"js/lib/jquery.tipTip.min.js"
+			"js/jquery.transform2d.min.js",
+			"js/jquery.tipTip.min.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true

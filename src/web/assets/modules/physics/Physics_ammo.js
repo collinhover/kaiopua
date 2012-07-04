@@ -118,7 +118,7 @@ Physics module, handles physics in game using JigLibJS.
 		data: physics,
 		requirements: [
 			"assets/modules/utils/MathHelper.js",
-			"js/lib/ammo.js"
+			"js/ammo.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true

@@ -14,17 +14,15 @@ var KAIOPUA = (function (main) {
 		loader = {},
         lastGamma, lastBeta,
         libList = [
-            "js/lib/jquery-1.7.1.min.js",
-            "js/lib/RequestAnimationFrame.js",
-            "js/lib/requestInterval.js",
-            "js/lib/requestTimeout.js",
-            "js/lib/signals.min.js",
-			"js/lib/sylvester.js"
+            "js/RequestAnimationFrame.js",
+            "js/requestInterval.js",
+            "js/requestTimeout.js",
+            "js/signals.min.js",
+			"js/sylvester.js"
         ],
         setupList = [
 			"assets/modules/ui/ProgressBar",
-			"assets/modules/core/Game.js",
-			//"assets/modules/utils/Dev.js"
+			"assets/modules/core/Game.js"
         ];
 	
 	/*===================================================

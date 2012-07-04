@@ -44,18 +44,18 @@
             "assets/modules/utils/ErrorHandler.js",
 		],
         assetsSetup = [
-            "js/lib/three/Three.js",
-			"js/lib/Tween.js",
-			"js/lib/jquery.transform2d.min.js",
-			"js/lib/jquery.tipTip.min.js"
+            "js/three/Three.js",
+			"js/Tween.js",
+			"js/jquery.transform2d.min.js",
+			"js/jquery.tipTip.min.js"
         ],
 		assetsSetupExtras = [
-            "js/lib/three/ThreeExtras.js",
-            "js/lib/three/postprocessing/ShaderExtras.js",
-            "js/lib/three/postprocessing/EffectComposer.js",
-            "js/lib/three/postprocessing/RenderPass.js",
-            "js/lib/three/postprocessing/ShaderPass.js",
-            "js/lib/three/postprocessing/MaskPass.js",
+            "js/three/ThreeExtras.js",
+            "js/three/postprocessing/ShaderExtras.js",
+            "js/three/postprocessing/EffectComposer.js",
+            "js/three/postprocessing/RenderPass.js",
+            "js/three/postprocessing/ShaderPass.js",
+            "js/three/postprocessing/MaskPass.js",
             "assets/modules/effects/FocusVignette.js",
 		],
 		assetsCore = [

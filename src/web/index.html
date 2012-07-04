@@ -12,8 +12,6 @@
 <head id="www-collinhover-com" data-template-set="html5-reset">
 
     <meta charset="utf-8">
-	
-	<!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame -->
 	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 	
 	<title>Kai 'Opua</title>
@@ -57,12 +55,13 @@
 		 - Transparency is not recommended (iOS will put a black BG behind the icon) -->
     
 	<!-- CSS: screen, mobile & print are all in the same file -->
-	<link rel="stylesheet" href="css/style.css">
+	<link rel="stylesheet/less" type="text/css" href="css/styles.less">
 	
-	<!-- javascript -->
-	<script src="js/lib/modernizr.2.5.3.min.js"></script>
-	<script src="js/lib/LAB.min.js"></script>
-	<script src="assets/modules/Kaiopua.js"></script>
+	<!-- setup javascript only -->
+	<script src="js/less-1.3.0.min.js" type="text/javascript"></script>
+	<script src="js/modernizr.2.5.3.min.js"></script>
+	
+	<link rel="stylesheet" type="text/css" href="css/bootstrap-scroll-modal.custom.css">
 
 	<!-- Prompt IE 6 users to install Chrome Frame. Remove this if you want to support IE 6.
 		   chromium.org/developers/how-tos/chrome-frame-getting-started -->
@@ -74,197 +73,174 @@
 </head>
 
 <body>
-
-	<div id="wrapper">
+	
+	<!-- header (invisible) -->
+	<header class="visuallyhidden">
 		
-		<!-- game section -->
-		<section id="game" class="unselectable">
+		<h1>Kai 'Opua: an interactive moon-sized Hawaiian space worm that will teach you to be a better designer!</h1>
+		
+	</header>
+	<!-- END header -->
+	
+	<!-- game -->
+	<section id="game" class="unselectable">
+		
+	</section>
+	<!-- END game section -->
+	
+	<!-- ui -->
+	<section id="ui" class="unselectable">
+		
+		<!-- ingame -->
+		<section id="ingame">
 			
-			<!-- game section header -->
-			<header class="visuallyhidden">
+			<!-- active -->
+			<section id="active">
 				
-				<h1>Kai 'Opua: an interactive moon-sized Hawaiian space worm that will teach you to be a better designer!</h1>
-				
-			</header>
-			
-			<!-- preloader message -->
-			<div id='preloading' class='grid info_panel'>
-				
-				<ul>
-					
-					<li>
-						<header class='text_large title_alt'>Hold on, we're loading some things...</header>
-						<div class='grid_cell_inner'>
-							<img src='assets/icons/loading_64.png'>
-						</div>
-						<p>If you're waiting more than 10 seconds,<br/><a href='index.html'>try refreshing the page.</a></p>
-					</li>
-					
-				</ul>
-				
-			</div>
-			
-			<!-- noscript message -->
-			<noscript>
-				
-				<article id="noscript" class="error info_panel">
-					
-					<header class='title_alt text_huge'>Javascript disabled?</header>
-					
-					<p class="error_explanation">
-						We built this website with Javascript, and we can't seem to find it. If you are sure you've turned it on, but you still see this message, try upgrading to one of these friendly browsers:
-					</p>
-					<div class="browsers">
-						<div class="browsers_each chrome">
-							<a href="http://www.google.com/chrome/" target="_blank">Chrome</a>
-						</div>
-						<div class="browsers_each firefox">
-							<a href="http://www.mozilla.org/firefox/" target="_blank">Firefox</a>
-						</div>
-						<div class="browsers_each safari">
-							<a href="http://www.apple.com/safari/" target="_blank">Safari</a>
-						</div>
-					</div>
-				</article>
-			
-			</noscript>
+			</section>
+			<!-- END active -->
 			
 		</section>
+		<!-- END ingame -->
 		
-		<!-- grid template -->
-		<!--
-		<div class='grid info_panel'>
-			
-			<ul>
+		<!-- outgame -->
+		<section id="outgame">
+		
+			<!-- active -->
+			<section id="active">
 				
-				<li class='grid_compartment'>
-					<div class='grid_cell_inner'>
-						<img src="">
+			</section>
+			<!-- END active -->
+			
+			<!-- menus -->
+			<section id="menus">
+				
+			</section>
+			<!-- END menus -->
+			
+		</section>
+		<!-- END outgame -->
+		
+		<!-- transitioner -->
+		<section id="transitioner">
+			
+		</section>
+		<!-- END transitioner -->
+		
+		<!-- overlay -->
+		<section id="overlay">
+			
+			<!-- info -->
+			<section id="info" class="container">
+			
+				<!-- preloader -->
+				<div id='preloader' class="modal hide fade">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">x</button>
+						<h3>Hold on, we're loading some things...</h3>
 					</div>
-					<p>text/label</p>
-				</li>
-				
-				<li class='grid_compartment'>
-					<div class='grid_cell_inner'>
-						<img src="">
+					<div class="modal-body">
+						<img src='assets/icons/loading_64.png'>
+						<p>If you're waiting more than 10 seconds,<br/><a href='index.html'>try refreshing the page.</a></p>
 					</div>
-					<p>text/label</p>
-				</li>
-				
-			</ul>
-			
-			<ul>
-				
-				<li class='grid_compartment'>
-					<div class='grid_cell_inner'>
-						<img src="">
+					<div class="modal-footer">
+						<a href="#" class="btn" data-dismiss="modal">Close</a>
+						<a href="#" class="btn btn-primary">Save changes</a>
 					</div>
-					<p>text/label</p>
-				</li>
+				</div>
+				<!-- END preloader -->
 				
-				<li class='grid_compartment'>
-					<div class='grid_cell_inner'>
-						<img src="">
-					</div>
-					<p>text/label</p>
-				</li>
+				<!-- noscript -->
+				<noscript>
+					
+					<article id="noscript" class="error info_panel">
+						
+						<header class='title_alt text_huge'>Javascript disabled?</header>
+						
+						<p class="error_explanation">
+							We built this website with Javascript, and we can't seem to find it. If you are sure you've turned it on, but you still see this message, try upgrading to one of these friendly browsers:
+						</p>
+						<div class="browsers">
+							<div class="browsers_each chrome">
+								<a href="http://www.google.com/chrome/" target="_blank">Chrome</a>
+							</div>
+							<div class="browsers_each firefox">
+								<a href="http://www.mozilla.org/firefox/" target="_blank">Firefox</a>
+							</div>
+							<div class="browsers_each safari">
+								<a href="http://www.apple.com/safari/" target="_blank">Safari</a>
+							</div>
+						</div>
+					</article>
 				
-			</ul>
-		
-		</div>
-		-->
-		
-		<!-- score template -->
-		<!--
-		<div class='info_panel align_center'>
-			<p>Your score is:</p>
+				</noscript>
+				<!-- END noscript -->
+				
+				<!-- errors -->
+				<div id="errors">
+					
+				</div>
+				<!-- END errors -->
 			
-			<div class='grid align_center'>
-				<ul>
-					<li class='score_counter'>
-						<div class='grid_cell_inner'>
-							<img src="assets/icons/character_rev_64.png">
-						</div>
-						<p class='score_label'>perfect</p>
-					</li>
-					<li class='score_counter'>
-						<div class='grid_cell_inner'>
-							<p class='score_count text_huge'>30</p>
-							<p class='score_label'>total spaces</p>
-						</div>
-					</li>
-					<li class='score_counter'>
-						<div class='grid_cell_inner'>
-							<p class='score_count text_huge count_highlight'>28</p>
-							<div class='score_divider'></div>
-							<p class='score_count score_count_under text_large'>30</p>
-							<p class='score_label'>elements used</p>
-						</div>
-					</li>
-					<li class='score_counter'>
-						<div class='grid_cell_inner'>
-							<p class='score_count text_huge'>25</p>
-							<div class='score_divider'></div>
-							<p class='score_count score_count_under text_large'>30</p>
-							<p class='score_label'>is a perfect</p>
-						</div>
-					</li>
-					<li class='score_counter'>
-						<div class='grid_cell_inner'>
-							<p class='score_label'>you're only</p>
-							<p class='score_count text_huge count_highlight'>3</p>
-							<p class='score_label'>from perfect!</p>
-						</div>
-					</li>
-					<li class='score_counter'>
-						<div class='grid_cell_inner'>
-							<p class='score_count text_huge'>50%</p>
-							<p class='score_label'>score</p>
-						</div>
-					</li>
-				</ul>
-			</div>
-		</div>
-		-->
-		
-		<!-- errors container -->
-		<div id="errors">
+			</section>
+			<!-- END info -->
 			
-		</div>
+		</section>
+		<!-- END overlay -->
 		
-	</div>
-	<!-- end wrapper -->
+		<!-- footer -->
+		<section id="footer">
+			
+			<section id='title' class="container">
 
-	<!-- footer with navigation and copyright -->
-	<footer id="footer_menu" class="sticky_footer unselectable">
+				<!-- logo -->
+				<section id='logo' class="span8 offset2">
+						
+					<span><a href="https://github.com/collinhover/kaiopua" target="_blank">Source Code</a></span>
+					
+					<span id="logo_icona"><img src="assets/icons/whale_rev_64.png" alt="Kai 'Opua"></span>
 
-		<!-- navigation area -->
-		<nav>
-				
-			<span><a href="https://github.com/collinhover/kaiopua" target="_blank">Source Code</a></span>
-			
-			<span id="logo_icona"><img src="assets/icons/whale_rev_64.png" alt="Kai 'Opua"></span>
+					<!-- page header and intro -->
+					<header>
+						
+						<h1>Kai 'Opua</h1>
+						
+					</header>
 
-			<!-- page header and intro -->
-			<header>
+					<span id="logo_iconb"><img src="assets/icons/character_rev_64.png" alt="Kai 'Opua"></span>
+					<span id="logo_iconc"><img src="assets/icons/taro_001_rev_64.png" alt="Kai 'Opua"></span>
+					
+					<span>Share</span>
+					
+					<span class='icon'><a href="http://www.facebook.com/sharer.php?u=http%3A%2F%2Fcollinhover.com&t=Kai 'Opua%3A%20an%20interactive%20moon-sized%20Hawaiian%20space%20worm%20that%20will%20teach%20you%20to%20be%20a%20better%20designer!" target="_blank"><img src="assets/icons/fb_icon.png" alt="Facebook"></a></span>
+					<span class='icon'><a href="http://twitter.com/share?url=http%3A%2F%2Fcollinhover.com&text=Kai 'Opua%3A%20an%20interactive%20moon-sized%20Hawaiian%20space%20worm%20that%20will%20teach%20you%20to%20be%20a%20better%20designer!" target="_blank"><img src="assets/icons/twitter_icon.png" alt="Twitter"></a></span>
+					
+					<p id="copyright"><small>&copy; Copyright <a href="http://www.collinhover.com/" target="_blank">Collin Hover</a> 2011. All Rights Reserved.</small></p>
+					
+				</section>
+				<!-- END logo -->
 				
-				<h1>Kai 'Opua</h1>
-				
-			</header>
-
-			<span id="logo_iconb"><img src="assets/icons/character_rev_64.png" alt="Kai 'Opua"></span>
-			<span id="logo_iconc"><img src="assets/icons/taro_001_rev_64.png" alt="Kai 'Opua"></span>
-			
-			<span>Share</span>
-			
-			<span class='icon'><a href="http://www.facebook.com/sharer.php?u=http%3A%2F%2Fcollinhover.com&t=Kai 'Opua%3A%20an%20interactive%20moon-sized%20Hawaiian%20space%20worm%20that%20will%20teach%20you%20to%20be%20a%20better%20designer!" target="_blank"><img src="assets/icons/fb_icon.png" alt="Facebook"></a></span>
-			<span class='icon'><a href="http://twitter.com/share?url=http%3A%2F%2Fcollinhover.com&text=Kai 'Opua%3A%20an%20interactive%20moon-sized%20Hawaiian%20space%20worm%20that%20will%20teach%20you%20to%20be%20a%20better%20designer!" target="_blank"><img src="assets/icons/twitter_icon.png" alt="Twitter"></a></span>
-			
-		</nav>
+			</section>
+			<!-- END title -->
 		
-		<p class="copyright"><small>&copy; Copyright <a href="http://www.collinhover.com/" target="_blank">Collin Hover</a> 2011. All Rights Reserved.</small></p>
-		
-	</footer>
+		</section>
+		<!-- END footer -->
+	
+	</section>
+	<!-- END ui -->
+	
+	<!-- javascript -->
+	
+	<script src="js/jquery-1.7.2.min.js"></script>
+	<script src="js/bootstrap.min.js"></script>
+	<script src="js/bootstrap-scroll-modal.custom.min.js"></script>
+	<script src="js/LAB.min.js"></script>
+	<script>
+		$(document).ready( function () {
+			$('#preloader').modal( { backdrop:"static", keyboard: false, dynamic: true } );
+		} );
+	</script>
+	<!--<script src="assets/modules/Kaiopua.js"></script>-->
 
 	<!-- google analytics -->
 	<script>

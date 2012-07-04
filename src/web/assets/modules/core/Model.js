@@ -35,7 +35,7 @@
 			"assets/modules/utils/MathHelper.js",
 			"assets/modules/utils/SceneHelper.js",
 			"assets/modules/utils/ObjectHelper.js",
-			"js/lib/Tween.js"
+			"js/Tween.js"
 		], 
 		callbacksOnReqs: init_internal,
 		wait: true
