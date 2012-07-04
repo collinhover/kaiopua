@@ -131,23 +131,23 @@ var KAIOPUA = (function (main) {
 			dojo.connect( 'onfocus', on_focus_gain );
 			dojo.connect( 'onblur', on_focus_lose );
 			
-            dojo.connect( document, dojo.touch.press, on_input_press );
-            dojo.connect( document, dojo.touch.move, on_input_move );
-            dojo.connect( document, dojo.touch.release, on_input_release );
-            dojo.connect( document, dojo.touch.cancel, on_input_cancel );
+            dojo.connect( window, dojo.touch.press, on_input_press );
+            dojo.connect( window, dojo.touch.move, on_input_move );
+            dojo.connect( window, dojo.touch.release, on_input_release );
+            dojo.connect( window, dojo.touch.cancel, on_input_cancel );
 			
-			dojo.connect( document, dojox.gesture.tap, on_input_tap );
-            dojo.connect( document, dojox.gesture.tap.hold, on_input_tap_hold );
-            dojo.connect( document, dojox.gesture.tap.doubletap, on_input_tap_double );
-            dojo.connect( document, dojox.gesture.swipe, on_input_swipe );
-            dojo.connect( document, dojox.gesture.swipe.end, on_input_swipe_end );
+			dojo.connect( window, dojox.gesture.tap, on_input_tap );
+            dojo.connect( window, dojox.gesture.tap.hold, on_input_tap_hold );
+            dojo.connect( window, dojox.gesture.tap.doubletap, on_input_tap_double );
+            dojo.connect( window, dojox.gesture.swipe, on_input_swipe );
+            dojo.connect( window, dojox.gesture.swipe.end, on_input_swipe_end );
 			
-			dojo.connect( document, ( !dojo.isMozilla ? "onmousewheel" : "DOMMouseScroll" ), on_input_scroll );
+			dojo.connect( window, ( !dojo.isMozilla ? "onmousewheel" : "DOMMouseScroll" ), on_input_scroll );
 			
-			dojo.connect( document, 'onkeypress', on_key_press );
-			dojo.connect( document, 'onkeyup', on_key_up );
+			dojo.connect( window, 'onkeypress', on_key_press );
+			dojo.connect( window, 'onkeyup', on_key_up );
 			
-			eventHandles[ 'onwindowdeviceorientation' ] = dojo.connect( document, ( !dojo.isMozilla ? "deviceorientation" : "MozOrientation" ), on_window_device_orientation );
+			eventHandles[ 'onwindowdeviceorientation' ] = dojo.connect( window, ( !dojo.isMozilla ? "deviceorientation" : "MozOrientation" ), on_window_device_orientation );
 			dojo.connect( window, 'onresize', on_window_resize );
 			dojo.connect( window, 'onerror', on_error );
 			
