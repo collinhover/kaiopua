@@ -137,7 +137,7 @@
         
         // resize signal
         resize(shared.screenWidth, shared.screenHeight);
-		dojo.subscribe( 'resize', resize );
+        shared.signals.windowresized.add(resize);
     
         // add dev commands
         _DevCommands.add({

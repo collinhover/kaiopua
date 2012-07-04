@@ -19,8 +19,7 @@
 		open = false,
 		active = false,
 		priority = false,
-		confirmRequired = false,
-		eventHandles = {};
+		confirmRequired = false;
 	
 	/*===================================================
     
@@ -390,8 +389,8 @@
 		
 		// signals
 		
-		dojo.disconnect( eventHandles[ 'onkeyup' ] );
-		dojo.disconnect( eventHandles[ 'oninputrelease' ] );
+		shared.signals.keyup.remove( hide_message );
+		shared.signals.mouseup.remove( hide_message );
 		
 		// clear timeout
 		
@@ -515,12 +514,12 @@
 			opacityHide: _Messenger.pulseOpacityHide
 		} );
 		
-		// events
+		// signals
 		
 		if ( confirmRequired !== true ) {
 			
-			eventHandles[ 'onkeyup' ] = dojo.connect( window, 'onkeyup', hide_message );
-			eventHandles[ 'oninputrelease' ] = dojo.connect( window, dojo.touch.release, hide_message );
+			shared.signals.keyup.add( hide_message );
+			shared.signals.mouseup.add( hide_message );
 			
 		}
 		

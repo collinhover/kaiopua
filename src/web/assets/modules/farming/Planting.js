@@ -20,7 +20,6 @@
 		_Plant,
 		_MathHelper,
 		_ObjectHelper,
-		eventHandles = {},
 		utilVec31Rotate,
 		utilProjector1Rotate;
 	
@@ -448,10 +447,10 @@
 			
 			this.update();
 			
-			// events
+			// signals
 			
-			eventHandles[ 'update' ] = dojo.subscribe( 'update', this, this.update );
-			eventHandles[ 'oninputmove' ] = dojo.connect( window, dojo.touch.move, this, this.on_mouse_moved );
+			shared.signals.update.add( this.update, this );
+			shared.signals.mousemoved.add( this.on_mouse_moved, this );
 			
 		}
 		
@@ -596,8 +595,8 @@
 		
 		// stop updating
 		
-		dojo.disconnect( eventHandles[ 'update' ] );
-		dojo.disconnect( eventHandles[ 'oninputmove' ] );
+		shared.signals.update.remove( this.update, this );
+		shared.signals.mousemoved.remove( on_mouse_moved, this );
 		
 		// stop
 			

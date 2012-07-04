@@ -12,25 +12,16 @@ var KAIOPUA = (function (main) {
 		_Game,
 		_ProgressBar,
 		loader = {},
-		eventHandles = {},
         lastGamma, lastBeta,
         libList = [
-			"js/lib/dojo/dojo.js",
-			"js/lib/less-1.3.0.min.js",
-            "js/lib/jquery-1.7.2.min.js",
+            "js/lib/jquery-1.7.1.min.js",
             "js/lib/RequestAnimationFrame.js",
             "js/lib/requestInterval.js",
             "js/lib/requestTimeout.js",
-            //"js/lib/signals.min.js",
+            "js/lib/signals.min.js",
 			"js/lib/sylvester.js"
         ],
-		dojoExtras = [
-			"dojo/touch",
-			"dojox/gesture/tap",
-			"dojox/gesture/swipe"
-		],
         setupList = [
-			"assets/modules/utils/MathHelper.js",
 			"assets/modules/ui/ProgressBar",
 			"assets/modules/core/Game.js",
 			//"assets/modules/utils/Dev.js"
@@ -121,134 +112,149 @@ var KAIOPUA = (function (main) {
             errorContainer: $('#errors')
         };
         
-		// load dojo extras
+        shared.signals = {
+			
+			focuslose: new signals.Signal(),
+			focusgain: new signals.Signal(),
+    
+            mousedown : new signals.Signal(),
+            mouseup : new signals.Signal(),
+            mousemoved : new signals.Signal(),
+            mousewheel : new signals.Signal(),
+			mouseenter : new signals.Signal(),
+			mouseleave : new signals.Signal(),
+    
+            keydown : new signals.Signal(),
+            keyup : new signals.Signal(),
+    
+            windowresized : new signals.Signal(),
+            
+            loadItemCompleted : new signals.Signal(),
+            loadListCompleted : new signals.Signal(),
+            loadAllCompleted : new signals.Signal(),
+			
+			assetReady : new signals.Signal(),
+            
+            error : new signals.Signal()
+            
+        };
+        
+        // add listeners for events
+        // each listener dispatches shared signal
+		$(window).on( 'blur', on_focus_lose );
+		$(window).on( 'focus', on_focus_gain );
 		
-		require( dojoExtras, function () {
-			console.log('has dojo extras', dojo.touch, dojox, dojox.gesture);
-			
-			// add listeners for events
-			// each listener dispatches shared signal
-			
-			dojo.connect( 'onfocus', on_focus_gain );
-			dojo.connect( 'onblur', on_focus_lose );
-			
-            dojo.connect( window, dojo.touch.press, on_input_press );
-            dojo.connect( window, dojo.touch.move, on_input_move );
-            dojo.connect( window, dojo.touch.release, on_input_release );
-            dojo.connect( window, dojo.touch.cancel, on_input_cancel );
-			
-			dojo.connect( window, dojox.gesture.tap, on_input_tap );
-            dojo.connect( window, dojox.gesture.tap.hold, on_input_tap_hold );
-            dojo.connect( window, dojox.gesture.tap.doubletap, on_input_tap_double );
-            dojo.connect( window, dojox.gesture.swipe, on_input_swipe );
-            dojo.connect( window, dojox.gesture.swipe.end, on_input_swipe_end );
-			
-			dojo.connect( window, ( !dojo.isMozilla ? "onmousewheel" : "DOMMouseScroll" ), on_input_scroll );
-			
-			dojo.connect( window, 'onkeypress', on_key_press );
-			dojo.connect( window, 'onkeyup', on_key_up );
-			
-			eventHandles[ 'onwindowdeviceorientation' ] = dojo.connect( window, ( !dojo.isMozilla ? "deviceorientation" : "MozOrientation" ), on_window_device_orientation );
-			dojo.connect( window, 'onresize', on_window_resize );
-			dojo.connect( window, 'onerror', on_error );
-			
-			return;
-			
-			// loader
-			
-			loader.active = false;
-			loader.listCount = 0;
-			loader.lists = [];
-			loader.listLocations = {};
-			loader.listLoaded = {};
-			loader.listMessages = {};
-			loader.listCallbacks = {};
-			loader.loading = [];
-			loader.loadingListIDs = [];
-			loader.started = [];
-			loader.loaded = [];
-			loader.loadingOrLoaded = [];
-			loader.listCurrent = '';
-			loader.loadTypeBase = 'script';
-			loader.tips = [];
-			
-			Object.defineProperty( main, 'loadingHeader', {
-				set: function ( header ) { 
+        $(document).on( 'mousedown touchstart', on_mouse_down );
+        $(document).on( 'mouseup touchend', on_mouse_up );
+		$(document).on( 'click', on_mouse_click );
+        $(document).on( 'mousemove touchmove', on_mouse_move );
+		$(document).on( 'mouseenter touchenter', on_mouse_enter );
+		$(document).on( 'mouseleave touchleave', on_mouse_leave );
+        $(document).on( 'mousewheel DOMMouseScroll', on_mouse_wheel );
+		$(shared.html.gameContainer).on( 'contextmenu', on_game_context_menu );
+		
+        $(document).on( 'keydown', on_key_down );
+        $(document).on( 'keyup', on_key_up );
+    
+        $(window).on( 'deviceorientation', on_window_device_orientation );
+        $(window).on( 'MozOrientation', on_window_device_orientation);
+    
+        $(window).on( 'resize', on_window_resize );
+		
+		window.onerror = on_error;
+		
+		// loader
+		
+		loader.active = false;
+		loader.listCount = 0;
+		loader.lists = [];
+		loader.listLocations = {};
+		loader.listLoaded = {};
+		loader.listMessages = {};
+		loader.listCallbacks = {};
+		loader.loading = [];
+		loader.loadingListIDs = [];
+		loader.started = [];
+		loader.loaded = [];
+		loader.loadingOrLoaded = [];
+		loader.listCurrent = '';
+		loader.loadTypeBase = 'script';
+		loader.tips = [];
+		
+		Object.defineProperty( main, 'loadingHeader', {
+			set: function ( header ) { 
+				
+				if ( typeof loader.progressBar !== 'undefined' ) {
 					
-					if ( typeof loader.progressBar !== 'undefined' ) {
-						
-						loader.progressBar.header = header;
-						
-					}
+					loader.progressBar.header = header;
 					
 				}
-			});
-			
-			Object.defineProperty( main, 'loadingTips', {
-				set: function ( tips ) { 
+				
+			}
+		});
+		
+		Object.defineProperty( main, 'loadingTips', {
+			set: function ( tips ) { 
+				
+				if ( is_array( tips ) ) {
 					
-					if ( is_array( tips ) ) {
-						
-						loader.tips = tips.slice( 0 );
-						
-					}
+					loader.tips = tips.slice( 0 );
 					
 				}
-			});
-			
-			add_loaded_locations( libList );
-			
-			// public functions
-			
-			main.type = type;
-			main.is_number = is_number;
-			main.is_array = is_array;
-			main.is_image = is_image;
-			main.is_image_ext = is_image_ext;
-			
-			main.extend = extend;
-			main.time_test = time_test;
-			main.get_mouse = get_mouse;
-			main.generate_dom_image = generate_dom_image;
-			
-			main.ensure_array = ensure_array;
-			main.ensure_not_array = ensure_not_array;
-			main.modify_array = modify_array;
-			main.index_of_object_with_property_value = index_of_object_with_property_value;
-			
-			main.get_asset_path = get_asset_path;
-			main.get_ext = get_ext;
-			main.add_default_ext = add_default_ext;
-			main.remove_ext = remove_ext;
-			main.get_alt_path = get_alt_path;
-			
-			main.handle_touch_event = handle_touch_event;
-			
-			main.load = load;
-			main.get_is_loaded = get_is_loaded;
-			main.get_is_loading = get_is_loading;
-			main.get_is_loading_or_loaded = get_is_loading_or_loaded;
-			
-			main.asset_register = asset_register;
-			main.asset_require = asset_require;
-			main.asset_ready = asset_ready;
-			main.set_asset = set_asset;
-			main.get_asset = get_asset;
-			main.get_asset_data = get_asset_data;
-			
-			// load for setup
-			
-			asset_require( setupList, init_setup, true );
-			
-		} );
+				
+			}
+		});
+		
+		add_loaded_locations( libList );
+		
+		// public functions
+		
+		main.type = type;
+		main.is_number = is_number;
+		main.is_array = is_array;
+		main.is_image = is_image;
+		main.is_image_ext = is_image_ext;
+		
+		main.extend = extend;
+		main.time_test = time_test;
+		main.get_mouse = get_mouse;
+		main.generate_dom_image = generate_dom_image;
+		
+		main.ensure_array = ensure_array;
+		main.ensure_not_array = ensure_not_array;
+		main.modify_array = modify_array;
+		main.index_of_object_with_property_value = index_of_object_with_property_value;
+		
+		main.get_asset_path = get_asset_path;
+		main.get_ext = get_ext;
+		main.add_default_ext = add_default_ext;
+		main.remove_ext = remove_ext;
+		main.get_alt_path = get_alt_path;
+		
+		main.handle_touch_event = handle_touch_event;
+		
+		main.load = load;
+		main.get_is_loaded = get_is_loaded;
+		main.get_is_loading = get_is_loading;
+		main.get_is_loading_or_loaded = get_is_loading_or_loaded;
+		
+		main.asset_register = asset_register;
+		main.asset_require = asset_require;
+		main.asset_ready = asset_ready;
+		main.set_asset = set_asset;
+		main.get_asset = get_asset;
+		main.get_asset_data = get_asset_data;
+		
+		// load for setup
+		
+		asset_require( setupList, init_setup, true );
 		
     }
     
-    function init_setup ( mh, pb, g ) {
+    function init_setup ( pb, g ) {
 		
         // assets
         
-		_MathHelper = mh;
 		_ProgressBar = pb;
         _Game = g;
 		
@@ -259,14 +265,6 @@ var KAIOPUA = (function (main) {
         // resize once
 		
         on_window_resize();
-		
-		// begin global update loop
-		
-		dojo.subscribe( 'update', function (timeDelta, timeDeltaMod) {
-			console.log( 'global update with timedelta', timeDelta, timeDeltaMod );
-		} );
-		
-		update();
 		
     }
 	
@@ -672,47 +670,6 @@ var KAIOPUA = (function (main) {
 	}
 	
 	/*===================================================
-	
-	update
-	
-	=====================================================*/
-	
-	function update() {
-		
-		var timeDelta,
-			timeDeltaMod;
-        
-		window.requestAnimationFrame( update );
-		
-		// handle time
-		
-		shared.timeLast = shared.time;
-		
-		shared.time = new Date().getTime();
-		
-		timeDelta = shared.time - shared.timeLast;
-		
-		// get time delta modifier from timeDelta vs expected refresh interval
-		
-		timeDeltaMod = _MathHelper.round( timeDelta / shared.timeDeltaExpected, 2 );
-		
-		if ( is_number( timeDeltaMod ) !== true ) {
-			
-			timeDeltaMod = 1;
-			
-		}
-		
-		// update time since last interaction
-		
-		shared.timeLastInteraction += timeDelta;
-		
-		// publish update
-		
-		dojo.publish( "update", [ timeDelta, timeDeltaMod ] );
-		
-	}
-	
-	/*===================================================
     
     event functions
     
@@ -740,15 +697,15 @@ var KAIOPUA = (function (main) {
 		
 	}
     
-    function on_input_press( e ) {
-		console.log( 'press', e );
+    function on_mouse_down( e ) {
+		
 		var mouse;
 		
 		// is touch event
 		
 		if ( is_touch_event( e ) ) {
 			
-			handle_touch_event( e.originalEvent, on_input_press );
+			handle_touch_event( e.originalEvent, on_mouse_down );
 			
 		}
 		else {
@@ -757,7 +714,7 @@ var KAIOPUA = (function (main) {
 			
 			mouse.down = true;
 		
-			dojo.publish( 'oninputpress', [ e ] );
+			shared.signals.mousedown.dispatch( e );
 			
 		}
 		
@@ -768,13 +725,13 @@ var KAIOPUA = (function (main) {
         return false;
     }
     
-    function on_input_release( e ) {
-		console.log( 'release', e );
+    function on_mouse_up( e ) {
+		
 		// is touch event
 		
 		if ( is_touch_event( e ) ){
 			
-			handle_touch_event( e.originalEvent, on_input_release );
+			handle_touch_event( e.originalEvent, on_mouse_up );
 		}
 		else {
 			
@@ -782,7 +739,7 @@ var KAIOPUA = (function (main) {
 			
 			mouse.down = false;
 			
-			dojo.publish( 'oninputrelease', [ e ] );
+			shared.signals.mouseup.dispatch( e );
         
 		}
 		
@@ -792,16 +749,28 @@ var KAIOPUA = (function (main) {
         e.stopPropagation();
         return false;
     }
+	
+	function on_mouse_click ( e ) {
+		
+		if ( shared.galleryMode === true ) {
+			
+			e.preventDefault();
+			e.stopPropagation();
+			return false;
+			
+		}
+		
+	}
     
-    function on_input_move( e ) {
-		console.log( 'move', e );
+    function on_mouse_move( e ) {
+		
 		var mouse;
 		
 		// is touch event
 		
 		if ( is_touch_event( e ) ){
 			
-			handle_touch_event( e.originalEvent, on_input_move );
+			handle_touch_event( e.originalEvent, on_mouse_move );
 		}
 		else {
 			
@@ -816,7 +785,7 @@ var KAIOPUA = (function (main) {
 			mouse.dx = mouse.x - mouse.lx;
 			mouse.dy = mouse.y - mouse.ly;
 			
-			dojo.publish( 'oninputmove', [ e ] );
+			shared.signals.mousemoved.dispatch( e );
 			
 		}
 		
@@ -827,25 +796,46 @@ var KAIOPUA = (function (main) {
         return false;
     }
 	
-	function on_input_cancel ( e ) {
-		console.log( 'cancel', e );
+	function on_mouse_enter ( e ) {
+		
+		// is touch event
+		
+		if ( is_touch_event( e ) ){
+			
+			handle_touch_event( e.originalEvent, on_mouse_enter );
+		}
+		else {
+			
+			get_mouse( e, true );
+			
+			shared.signals.mouseenter.dispatch( e );
+			
+		}
+        
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }
+	
+	function on_mouse_leave ( e ) {
+		
 		var mouse;
 		
 		// is touch event
 		
 		if ( is_touch_event( e ) ){
 			
-			handle_touch_event( e.originalEvent, on_input_cancel );
+			handle_touch_event( e.originalEvent, on_mouse_leave );
 		}
 		else {
 			
 			mouse = get_mouse( e, true );
 			
-			dojo.publish( 'oninputcancel', [ e ] );
+			shared.signals.mouseleave.dispatch( e );
 			
 			if ( mouse.down === true ) {
 				
-				on_input_release( e );
+				on_mouse_up( e );
 				
 			}
 			
@@ -855,68 +845,17 @@ var KAIOPUA = (function (main) {
         e.stopPropagation();
         return false;
     }
-	
-	function on_input_tap ( e ) {
-		
-		console.log( 'tap', e );
-		
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-		
-	}
-	
-	function on_input_tap_double ( e ) {
-		
-		console.log( 'tapdouble', e );
-		
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-		
-	}
-	
-	function on_input_tap_hold ( e ) {
-		
-		console.log( 'taphold', e );
-		
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-		
-	}
-	
-	function on_input_swipe ( e ) {
-		
-		console.log( 'swipe', e );
-		
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-		
-	}
-	
-	function on_input_swipe_end ( e ) {
-		
-		console.log( 'swipeend', e );
-		
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-		
-	}
     
-    function on_input_scroll( e ) {
-		console.log( 'scroll', e );
+    function on_mouse_wheel( e ) {
+		
 		var eo = e.originalEvent || e;
 		
 		// normalize scroll across browsers
 		// simple implementation, removes acceleration
 		
 		e.wheelDelta = eo.wheelDelta = ( ( eo.detail < 0 || eo.wheelDelta > 0 ) ? 1 : -1 ) * shared.mouseWheelSpeed;
-		e.button = 'mousewheel';
 		
-        dojo.publish( 'oninputscroll', [ e ] );
+        shared.signals.mousewheel.dispatch( e );
 		
 		shared.timeLastInteraction = 0;
         
@@ -924,19 +863,25 @@ var KAIOPUA = (function (main) {
         e.stopPropagation();
         return false;
     }
+	
+	function on_game_context_menu( e ) {
+        
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+		
+    }
     
     function on_window_device_orientation( e ) {
-		
         var i, l, mice, mouse, eCopy, overThreshold, gamma, beta, x, y;
         
         if ( ! e.gamma && !e.beta ) {
                 e.gamma = -(e.x * (180 / Math.PI));
                 e.beta = -(e.y * (180 / Math.PI));
-        }
+        } 
         else if( e.alpha === null && e.beta === null && e.gamma === null ) {
-			
-			dojo.disconnect( eventHandles[ 'onwindowdeviceorientation' ] );
-			
+                $(window).unbind( "deviceorientation", on_window_device_orientation );
+                $(window).unbind( "MozOrientation", on_window_device_orientation );
         }
         
         overThreshold = Math.abs(e.gamma) > 4 || Math.abs(e.beta) > 4;
@@ -979,7 +924,7 @@ var KAIOPUA = (function (main) {
 				
 				eCopy.identifier = i;
 				
-				dojo.publish( 'onwindowdeviceorientation', [ eCopy ] );
+				shared.signals.mousemoved.dispatch( eCopy );
 			
 			}
 			
@@ -994,24 +939,23 @@ var KAIOPUA = (function (main) {
         }
 		
     }
-	
-	function on_key_press ( e ) {
-		console.log( 'keypress', e );
-		dojo.publish( 'onkeypress', [ e ] );
+
+    function on_key_down( e ) {
+		
+        shared.signals.keydown.dispatch( e );
 		
 		shared.timeLastInteraction = 0;
-		
-		/*
+        
+        /*
         e.preventDefault();
         e.stopPropagation();
         return false;
         */
-		
-	}
+    }
 
     function on_key_up( e ) {
-		console.log( 'keyup', e );
-		dojo.publish( 'onkeyup', [ e ] );
+		
+        shared.signals.keyup.dispatch( e );
 		
 		shared.timeLastInteraction = 0;
         
@@ -1023,7 +967,8 @@ var KAIOPUA = (function (main) {
     }
 	
 	function on_focus_lose ( e ) {
-		console.log( 'blur', e );
+		
+		shared.signals.focuslose.dispatch( e );
 		
 		if ( typeof _Game !== 'undefined' ) {
 			
@@ -1034,7 +979,8 @@ var KAIOPUA = (function (main) {
 	}
 	
 	function on_focus_gain ( e ) {
-		console.log( 'focus', e );
+		
+		shared.signals.focusgain.dispatch( e );
 		
 		if ( typeof _Game !== 'undefined' && _Game.started !== true ) {
 			
@@ -1045,11 +991,11 @@ var KAIOPUA = (function (main) {
 	}
 
     function on_window_resize( e ) {
-        console.log( 'resize', e );
+        
         shared.screenWidth = $(window).width();
         shared.screenHeight = $(window).height();
         
-		dojo.publish( 'onwindowresize', [ shared.screenWidth, shared.screenHeight ] );
+        shared.signals.windowresized.dispatch(shared.screenWidth, shared.screenHeight);
         
         if (typeof e !== 'undefined') {
             e.preventDefault();
@@ -1059,8 +1005,8 @@ var KAIOPUA = (function (main) {
     }
 	
 	function on_error ( error, url, lineNumber ) {
-		console.log( 'error', error );
-		dojo.publish( 'onerror', [ error, url, lineNumber ] );
+		
+		shared.signals.error.dispatch( error, url, lineNumber );
 		
 		return true;
 		
@@ -1256,7 +1202,7 @@ var KAIOPUA = (function (main) {
 			
 			loader.listCurrent = undefined;
 			
-			dojo.publish( 'onLoadAllComplete' );
+			shared.signals.loadAllCompleted.dispatch();
 			
 		}
 		
@@ -1370,7 +1316,7 @@ var KAIOPUA = (function (main) {
 		
 		if (typeof shared !== 'undefined') {
 			
-			dojo.publish( 'onLoadItemComplete', [ path ] );
+			shared.signals.loadItemCompleted.dispatch( path );
 			
 		}
 		
@@ -1470,11 +1416,11 @@ var KAIOPUA = (function (main) {
 			
 		}
 		
-		// event
+		// shared signal
 		
 		if (typeof shared !== 'undefined') {
 			
-			dojo.publish( 'onLoadListComplete', [ listID ] );
+			shared.signals.loadListCompleted.dispatch( listID );
 			
 		}
 		
@@ -1830,9 +1776,13 @@ var KAIOPUA = (function (main) {
 			
 			asset.wait = false;
 			
-			// dispatch event
+			// dispatch signal
 			
-			dojo.publish( 'onassetready', [ path ] );
+			if ( typeof shared.signals !== 'undefined' && typeof shared.signals.assetReady !== 'undefined' ) {
+				
+				shared.signals.assetReady.dispatch( path );
+				
+			}
 			
 		}
 		
@@ -1846,7 +1796,6 @@ var KAIOPUA = (function (main) {
 			assetsRequired = [],
 			assetsWaitingFor = [],
 			assetsReady = [],
-			onassetreadyHandle,
 			listeningForReadySignal = false;
 		
 		// get if arguments are not array
@@ -1881,7 +1830,7 @@ var KAIOPUA = (function (main) {
 					
 					if ( listeningForReadySignal === true ) {
 						
-						dojo.unsubscribe( onassetreadyHandle );
+						shared.signals.assetReady.remove( on_asset_ready );
 						
 						listeningForReadySignal = false;
 						
@@ -1979,7 +1928,7 @@ var KAIOPUA = (function (main) {
 						
 						listeningForReadySignal = true;
 						
-						onassetreadyHandle = dojo.subscribe( 'onassetready', on_asset_ready );
+						shared.signals.assetReady.add( on_asset_ready );
 						
 					}
 					

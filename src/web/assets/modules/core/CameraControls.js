@@ -15,7 +15,6 @@
 		_MathHelper,
 		firstPersonDist = 50,
 		rotateRecordedThreshold = 4,
-		eventHandles = {},
 		utilVec31Update,
 		utilVec32Update,
 		utilVec33Update,
@@ -194,7 +193,7 @@
 			
 			// reset
 			
-			dojo.disconnect( eventHandles[ 'oninputmove' ] );
+			shared.signals.mousemoved.remove( rotate_update, this );
 			
 			this.settingsRotation.mouse = undefined;
 			
@@ -216,7 +215,7 @@
 			
 			// update
 			
-			eventHandles[ 'oninputmove' ] = dojo.connect( window, dojo.touch.move, this, rotate_update );
+			shared.signals.mousemoved.add( rotate_update, this );
 			
 		}
 		

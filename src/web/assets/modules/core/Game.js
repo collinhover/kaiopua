@@ -233,12 +233,12 @@
     =====================================================*/
 	
 	function init_internal ( err ) {
-		console.log('internal game', _Game);
+		console.log('internal game');
 		_ErrorHandler = err;
 		
 		// register error listeners
 		
-		dojo.subscribe( 'onerror', on_error );
+		shared.signals.error.add( on_error );
 		
 		// check for errors
         
@@ -423,7 +423,7 @@
 		
 		// resize
 		
-		dojo.subscribe( 'onwindowresize', resize );
+        shared.signals.windowresized.add( resize );
 		resize( shared.screenWidth, shared.screenHeight );
 		
 		// set ready
@@ -466,7 +466,7 @@
 		_Messenger = main.get_asset_data( "assets/modules/ui/Messenger.js" );
 		
 		// ui
-		/*
+		
 		l = _GUI.layers;
 		m = _GUI.menus;
 		b = _GUI.buttons;
@@ -487,7 +487,7 @@
 		b.end.context = this;
 		
 		b.mainMenu.callback = function () {
-			pause();
+			_Game.pause();
 		};
 		b.mainMenu.context = this;
 		
@@ -521,8 +521,7 @@
 		
 		_GUI.show_group( 'constant' );
 		_GUI.show_group( 'start' );
-		*/
-		start_game();
+		
 		//
 		//
 		return;
@@ -702,8 +701,8 @@
 			var facesTest = false;
 			var adding = true;
 			//var intervalID = setInterval( function () {
-			//dojo.subscribe( 'update', function () {
-			dojo.subscribe( 'oninputrelease', function () {
+			//shared.signals.update.add( function () {
+			shared.signals.mouseup.add( function () {
 				
 				// adding/removing static
 				if ( addRemoveTest === true ) {
@@ -1347,44 +1346,44 @@
     =====================================================*/
     
     function pause ( preventDefault ) {
-		console.log('GAME pause?');
+		console.log('GAME PAUSE');
 		// set state
 		
         if (paused === false) {
-            console.log(' > GAME PAUSE');
+            
             paused = true;
-			console.log(999);
+			
 			// handle ui
 			
 			if ( started === true ) {
-				console.log(999);
+				
 				_GUI.transitioner.show( { parent: _GUI.layers.overlayUI } );
-				console.log(999);
+				
 				if ( preventDefault !== true ) {
-					console.log(999);
+					
 					_GUI.show_group( 'pause' );
-					console.log(999);
+					
 					// add listener for click on transitioner
 					
 					_GUI.transitioner.domElement.on( 'mouseup.resume touchend.resume', resume );
 					
 				}
-				console.log(999);
+				
 			}
 			else {
-				console.log(999);
+				
 				_GUI.transitioner.show( { parent: _GUI.layers.overlayAll } );
 				
 			}
-			console.log(999);
+			
 			// signal
             
             shared.signals.paused.dispatch();
-			console.log(999);
+			
 			// render once to ensure user is not surprised when resuming
 			
 			render();
-            console.log(999);
+            
         }
 		
     }
@@ -1396,19 +1395,19 @@
 			// ui
 			
 			_GUI.transitioner.domElement.off( '.resume' );
-			console.log(999);
+			
 			if ( started === true ) {
-				console.log(999);
+				
 				_GUI.hide_group( 'pause', { remove: true, time: 0 } );
 				
 			}
-			console.log(999, _GUI.transitioner);
+			
 			_GUI.transitioner.hide( { remove: true } );
-			console.log(999);
+			
 			paused = false;
-			console.log(999);
+			
 			shared.signals.resumed.dispatch();
-            console.log(999);
+            
         }
     }
 	

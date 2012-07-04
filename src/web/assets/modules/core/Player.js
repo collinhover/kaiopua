@@ -20,7 +20,6 @@
 		ready = false,
 		enabled = false,
 		showing = false,
-		eventHandles = {},
 		cameraControls,
 		actionsMap,
 		keybindings,
@@ -213,7 +212,7 @@
 		// mouse buttons
 		
 		map[ 'mouseleft' ] = {
-			keypress: function ( e ) {
+			keydown: function ( e ) {
 				
 				// modify character action if started
 				
@@ -247,11 +246,11 @@
 			}
 		};
 		map[ 'mousemiddle' ] = {
-			keypress: function ( e ) { console.log('key down: mousemiddle'); },
+			keydown: function ( e ) { console.log('key down: mousemiddle'); },
 			keyup: function ( e ) { console.log('key up: mousemiddle'); }
 		};
 		map[ 'mouseright' ] = {
-			keypress: function ( e ) { cameraControls.rotate( e ); },
+			keydown: function ( e ) { cameraControls.rotate( e ); },
 			keyup: function ( e ) {
 				
 				var rotated = cameraControls.rotating;
@@ -277,22 +276,22 @@
 		// wasd / uldr
 		
 		map[ '38' /*up*/ ] = map[ '87' /*w*/ ] = map[ 'w' ] = {
-			keypress: function () { character_move( 'forward' ); },
+			keydown: function () { character_move( 'forward' ); },
 			keyup: function () { character_move( 'forward', true ); }
 		};
 		
 		map[ '40' /*down*/ ] = map[ '83' /*s*/ ] = map[ 's' ] = {
-			keypress: function () { character_move( 'back' ); },
+			keydown: function () { character_move( 'back' ); },
 			keyup: function () { character_move( 'back', true ); }
 		};
 		
 		map[ '37' /*left*/ ] = map[ '65' /*a*/ ] = map[ 'a' ] = {
-			keypress: function () { character_move( 'turnleft' ); },
+			keydown: function () { character_move( 'turnleft' ); },
 			keyup: function () { character_move( 'turnleft', true ); }
 		};
 		
 		map[ '39' /*right*/ ] = map[ '68' /*d*/ ] = map[ 'd' ] = {
-			keypress: function () { character_move( 'turnright' ); },
+			keydown: function () { character_move( 'turnright' ); },
 			keyup: function () { character_move( 'turnright', true ); }
 		};
 		
@@ -343,12 +342,12 @@
 		};
 		
 		map[ '32' /*space*/ ] = {
-			keypress: function () { character_move( 'up' ); },
+			keydown: function () { character_move( 'up' ); },
 			keyup: function () { character_move( 'up', true ); }
 		};
 		
 		map[ '82' /*r*/ ] = map[ 'r' ] = {
-			keypress: function () { console.log('key down: r'); },
+			keydown: function () { console.log('key down: r'); },
 			keyup: function () { console.log('key up: r'); }
 		};
 		
@@ -402,15 +401,14 @@
 	
 	function allow_control () {
 		
-		// events
+		// signals
 		
-		//dojo.connect( window, dojo.touch.press, on_mouse_pressed );
-       // dojo.connect( window, dojo.touch.release, on_mouse_pressed );
-		eventHandles[ 'oninputpress' ] = dojo.subscribe( 'oninputpress', on_mouse_pressed );
-		eventHandles[ 'oninputrelease' ] = dojo.subscribe( 'oninputrelease', on_mouse_pressed );
-		eventHandles[ 'oninputscroll' ] = dojo.subscribe( 'oninputscroll', on_mouse_pressed );
-		eventHandles[ 'onkeypress' ] = dojo.connect( window, 'onkeypress', on_keyboard_used );
-		eventHandles[ 'onkeyup' ] = dojo.connect( window, 'onkeyup', on_keyboard_used );
+		shared.signals.mousedown.add( on_mouse_pressed );
+		shared.signals.mouseup.add( on_mouse_pressed );
+		shared.signals.mousewheel.add( on_mouse_pressed );
+		
+		shared.signals.keydown.add( on_keyboard_used );
+		shared.signals.keyup.add( on_keyboard_used );
 		
 	}
 	
@@ -420,13 +418,14 @@
 		
 		clear_keys_active();
 		
-		// events
+		// signals
 		
-		dojo.unsubscribe( eventHandles[ 'oninputpress' ] );
-		dojo.unsubscribe( eventHandles[ 'oninputrelease' ] );
-		dojo.unsubscribe( eventHandles[ 'oninputscroll' ] );
-		dojo.disconnect( eventHandles[ 'onkeypress' ] );
-		dojo.disconnect( eventHandles[ 'onkeyup' ] );
+		shared.signals.mousedown.remove( on_mouse_pressed );
+		shared.signals.mouseup.remove( on_mouse_pressed );
+		shared.signals.mousewheel.remove( on_mouse_pressed );
+		
+		shared.signals.keydown.remove( on_keyboard_used );
+		shared.signals.keyup.remove( on_keyboard_used );
 		
 	}
 	
@@ -453,9 +452,9 @@
 			
 			switch ( e.type ) {
 				
-				case 'mousedown': case 'touchstart': type = 'keypress'; break;
+				case 'mousedown': case 'touchstart': type = 'keydown'; break;
 				case 'mouseup': case 'touchend': type = 'keyup'; break;
-				case 'mousewheel': case 'DOMMouseScroll' : type = 'keyup'; break;
+				case 'mousewheel': case 'DOMMouseScroll' : button = 'mousewheel'; type = 'keyup'; break;
 				
 			}
 			
@@ -484,7 +483,7 @@
 			
 			if ( kbInfo.hasOwnProperty( eventType ) === true ) {
 				
-				if ( eventType === 'keypress' ) {
+				if ( eventType === 'keydown' ) {
 					
 					kbInfo.active = true;
 					

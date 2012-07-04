@@ -471,8 +471,7 @@
 	
 	function generate_farmer ( character ) {
 		
-		var farmer,
-			index;
+		var farmer;
 		
 		if ( character instanceof _Character.Instance ) {
 			

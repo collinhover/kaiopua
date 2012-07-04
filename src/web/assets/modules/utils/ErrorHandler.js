@@ -154,18 +154,14 @@
     function process ( origin, lineNumber ) {
         if (errorState === true) {
             // show current
-			
             show( errorCurrent.type, origin, lineNumber );
             
             // set url back to origin link with history states
             // always hide unnecessary information from users
-			
             history.pushState( { "pState": shared.originLink }, '', shared.originLink );
             
-            // trigger error event
-			
-			dojo.publish( 'onerror', [ errorCurrent.type, origin || 'Unknown Origin', lineNumber || 'N/A' ] );
-			
+            // trigger shared error signal
+            shared.signals.error.dispatch(errorCurrent.type, origin || 'Unknown Origin', lineNumber || 'N/A' );
         }
     }
     
