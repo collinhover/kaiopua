@@ -111,6 +111,9 @@
 		this.bodiesGravity = [];
 		this.bodiesDynamic = [];
 		
+		this.safetynetstarted = new signals.Signal();
+		this.safetynetended = new signals.Signal();
+		
 	}
 	
 	/*===================================================
@@ -420,9 +423,10 @@
 				rigidBody.safe = true;
 				
 				// safety net end
+					
+				rigidBody.safetynetend.dispatch();
 				
-				dojo.publish( rigidBody.id + '.RigidBody.safetyNetEnd', [ rigidBody ] );
-				dojo.publish( 'Physics.safetyNetEnd', [ rigidBody ] );
+				shared.signals.physicssafetynetend.dispatch( rigidBody );
 				
 			}		
 			// if velocity gravity force is moving towards source
@@ -432,14 +436,19 @@
 				if ( gravityBodyDistance < rigidBody.radius * 0.5 && !velocityGravityCollision ) {
 					console.log(' SAFETY NET: ', gravityBodyDistance, velocityGravityCollision );
 					// set rigidBody to unsafe, but do not reset to safe position immediately
-					// wait until next update to allow events to be handled first
+					// wait until next update to allow dispatched signals to be handled first
 					
 					rigidBody.safe = false;
 					
 					// safety net start
 					
-					dojo.publish( rigidBody.id + '.RigidBody.safetyNetStart', [ rigidBody ] );
-					dojo.publish( 'Physics.safetyNetStart', [ rigidBody ] );
+					if ( rigidBody.safetynetstart ) {
+						
+						rigidBody.safetynetstart.dispatch();
+						
+					}
+					
+					shared.signals.physicssafetynetstart.dispatch( rigidBody );
 					
 				}
 				// rigidBody is safe

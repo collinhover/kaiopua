@@ -16,7 +16,7 @@
 		_MathHelper,
 		_SceneHelper,
 		_ObjectHelper,
-		modelCount = 0,
+		objectCount = 0,
 		morphDurationBase = 1000,
 		morphDurationPerFrameMinimum = shared.timeDeltaExpected || 1000 / 60,
 		morphsNumMin = 5,
@@ -135,6 +135,8 @@
 	
 	function Model ( parameters ) {
 		
+		objectCount++;
+		
 		var i, l,
 			geometry,
 			materials,
@@ -212,9 +214,8 @@
 		
 		THREE.Mesh.call( this, geometry, material );
 		
-		// properties
+		// force use quaternion
 		
-		this.id = modelCount++;
 		this.useQuaternion = true;
 		
 		// rotation
@@ -297,6 +298,10 @@
 			this.rigidBody = new _RigidBody.Instance( this, parameters.physics );
 			
 		}
+		
+		// id
+		
+		this.id = parameters.id || this.id;
 		
 	}
 	
@@ -916,15 +921,12 @@
 	=====================================================*/
 	
 	function make_morph_updater ( name ) {
-		
 		var updater = {},
 			info;
 		
-		// properties
+		// init updater
 		
-		updater.eventHandles = {};
-		
-		updater.info = info = {
+		info = updater.info = {
 			name: name,
 			updating: false
 		};
@@ -1424,8 +1426,8 @@
 				info.updating = true;
 				
 				info.cleared = false;
-				
-				updater.eventHandles[ 'Game.update' ] = dojo.subscribe( 'Game.update', updater, updater.update );
+					
+				shared.signals.update.add( updater.update );
 				
 			}
 			
@@ -1438,8 +1440,8 @@
 			if ( info.updating === true ) {
 				
 				info.updating = false;
-				
-				dojo.unsubscribe( updater.eventHandles[ 'Game.update' ] );
+					
+				shared.signals.update.remove( updater.update );
 				
 			}
 			

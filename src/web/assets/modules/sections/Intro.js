@@ -140,10 +140,10 @@
 			
 			//_Player.cameraMode = 'freelook';
 			
-			// events
+			// signals
 			
-			eventHandles[ 'resize' ] = dojo.subscribe( 'resize', resize );
-			eventHandles[ 'Game.update' ] = dojo.subscribe( 'Game.update', update );
+			eventHandles[ 'onwindowresize' ] = dojo.subscribe( 'onwindowresize', resize );
+			eventHandles[ 'update' ] = dojo.subscribe( 'update', update );
 			
 		}
 		else {
@@ -158,8 +158,8 @@
 		
 		waitingToShow = false;
 		
-		dojo.unsubscribe( eventHandles[ 'resize' ] );
-		dojo.unsubscribe( eventHandles[ 'Game.update' ] );
+		dojo.unsubscribe( eventHandles[ 'onwindowresize' ] );
+		dojo.unsubscribe( eventHandles[ 'update' ] );
 		
     }
     

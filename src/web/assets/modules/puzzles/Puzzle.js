@@ -13,6 +13,7 @@
 		_Puzzle = {},
 		_Model,
 		_Grid,
+		puzzleID = 'Puzzle',
 		puzzleCount = 0,
 		allPuzzles,
 		allPuzzlesCompleted,
@@ -92,6 +93,7 @@
 		
 		_Puzzle.Instance.prototype.reset = reset;
 		_Puzzle.Instance.prototype.complete = complete;
+		_Puzzle.Instance.prototype.on_state_changed = on_state_changed;
 		
 		Object.defineProperty( _Puzzle.Instance.prototype, 'isCompleted', { 
 			get: function () {
@@ -127,6 +129,8 @@
 	
 	function Puzzle ( parameters ) {
 		
+		puzzleCount++;
+		
 		// handle parameters
 		
 		parameters = parameters || {};
@@ -140,12 +144,17 @@
 		
 		// properties
 		
-		this.id = puzzleCount++;
+		this.id = typeof parameters.id === 'string' ? parameters.id : puzzleID + puzzleCount;
 		this.completed = false;
+		
+		// signals
+		
+		this.stateChanged = new signals.Signal();
 		
 		// grid
 		
 		this.grid = new _Grid.Instance( parameters.grid );
+		this.grid.stateChanged.add( this.on_state_changed, this );
 		
 		this.add( this.grid );
 		
@@ -153,7 +162,7 @@
 		
 		this.reset();
 		
-		dojo.subscribe( 'Game.stop', this, this.reset );
+		shared.signals.gamestop.add( this.reset, this );
 		
 		// add to global list
 		
@@ -224,6 +233,18 @@
 			this.grid.complete();
 			
 		}
+		
+	}
+	
+	/*===================================================
+	
+	state
+	
+	=====================================================*/
+	
+	function on_state_changed ( module ) {
+		console.log(' PUZZLE GRID STATE CHANGE for ', this.id );
+		this.stateChanged.dispatch( module );
 		
 	}
 	

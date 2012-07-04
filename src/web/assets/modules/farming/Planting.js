@@ -20,7 +20,9 @@
 		_Plant,
 		_MathHelper,
 		_ObjectHelper,
-		plantingCount = 0;
+		eventHandles = {},
+		utilVec31Rotate,
+		utilProjector1Rotate;
 	
 	/*===================================================
     
@@ -63,6 +65,9 @@
 		_Plant = pl;
 		_MathHelper = mh;
 		_ObjectHelper = oh;
+		
+		utilVec31Rotate = new THREE.Vector3();
+		utilProjector1Rotate = new THREE.Projector();
 		
 		// properties
 		
@@ -111,19 +116,19 @@
 		
 		this.character = character;
 		
-		// util
-		
-		this.utilVec31Rotate = new THREE.Vector3();
-		this.utilProjector1Rotate = new THREE.Projector();
-		
 		// properties
 		
-		this.id = plantingCount++;
-		this.eventHandles = {};
 		this.rotationSpeed = _Planting.rotationSpeed;
 		this.rotationDistanceMin = _Planting.rotationDistanceMin;
 		this.rotationStartThreshold = _Planting.rotationStartThreshold;
 		this.rotationDirChangeThreshold = _Planting.rotationDirChangeThreshold;
+		
+		// signals
+		
+		this.planted = new signals.Signal();
+		this.plantedSingle = new signals.Signal();
+		this.plantedMulti = new signals.Signal();
+		this.selected = new signals.Signal();
 		
 		// reset
 		
@@ -416,7 +421,7 @@
 			
 			if ( this.plantFromSelection === true ) {
 				
-				dojo.publish( this.id + '.Planting.plantSelect', [ targetObject ] );
+				this.selected.dispatch( targetObject );
 				
 			}
 			
@@ -445,8 +450,8 @@
 			
 			// events
 			
-			this.eventHandles[ 'Game.update' ] = dojo.subscribe( 'Game.update', this, this.update );
-			this.eventHandles[ 'oninputmove' ] = dojo.connect( window, dojo.touch.move, this, this.on_mouse_moved );
+			eventHandles[ 'update' ] = dojo.subscribe( 'update', this, this.update );
+			eventHandles[ 'oninputmove' ] = dojo.connect( window, dojo.touch.move, this, this.on_mouse_moved );
 			
 		}
 		
@@ -546,20 +551,20 @@
 					
 				}
 				
-				// on plant
+				// planted signal
 				
-				dojo.publish( this.id + '.Planting.plant', [ plantPlanted ] );
+				this.planted.dispatch( plantPlanted );
 				
-				// also by type
+				// also signal by type
 				
 				if ( plantPlantedNodes > 1 ) {
 					
-					dojo.publish( this.id + '.Planting.plantMulti', [ plantPlanted ] );
+					this.plantedMulti.dispatch( plantPlanted );
 					
 				}
 				else {
 					
-					dojo.publish( this.id + '.Planting.plantSingle', [ plantPlanted ] );
+					this.plantedSingle.dispatch( plantPlanted );
 					
 				}
 				
@@ -591,8 +596,8 @@
 		
 		// stop updating
 		
-		dojo.unsubscribe( this.eventHandles[ 'Game.update' ] );
-		dojo.disconnect( this.eventHandles[ 'oninputmove' ] );
+		dojo.disconnect( eventHandles[ 'update' ] );
+		dojo.disconnect( eventHandles[ 'oninputmove' ] );
 		
 		// stop
 			
@@ -801,8 +806,8 @@
 	
 	function start_rotate_plant () {
 		
-		var position = this.utilVec31Rotate,
-			projector = this.utilProjector1Rotate,
+		var position = utilVec31Rotate,
+			projector = utilProjector1Rotate,
 			r;
 		
 		if ( this.rotating !== true && this.module instanceof _GridModule.Instance ) {

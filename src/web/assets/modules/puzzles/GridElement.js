@@ -108,17 +108,18 @@
 	
 	function GridElement ( parameters ) {
 		
+		gridElementCount++;
+		
 		// handle parameters
 		
 		parameters = parameters || {};
 		
 		// properties
 		
-		this.id = gridElementCount++;
+		this.id = gridElementCount;
 		this.rotationAngle = this.rotationAngleLayout = 0;
 		this.material = parameters.material || new THREE.MeshLambertMaterial( { vertexColors: THREE.VertexColors, shading: THREE.SmoothShading } );
 		this.geometry = typeof parameters.geometry === 'string' ? main.get_asset_data( parameters.geometry ) : parameters.geometry;
-		this.eventHandles = {};
 
 		// layout
 		
@@ -579,9 +580,9 @@
 			
 			if ( this.hasModule ) {
 				
-				// event
+				// signal
 				
-				dojo.unsubscribe( this.eventHandles[ this.module.id + '.GridModule.activeChanged' ] );
+				this.module.activeChanged.remove( this.occupy_modules, this );
 				
 				// unoccupy
 				
@@ -595,11 +596,11 @@
 			this.modules = modulesNew;
 			this._dirtyModule = true;
 			
-			// event
+			// signal
 			
 			if ( this.hasModule ) {
 				
-				this.eventHandles[ this.module.id + '.GridModule.activeChanged' ] = dojo.subscribe( this.module.id + '.GridModule.activeChanged', this, this.occupy_modules );
+				this.module.activeChanged.add( this.occupy_modules, this );
 				
 			}
 			
@@ -952,7 +953,7 @@
 		
 		each_layout_element.call( this, layout, function ( node ) {
 			
-			if ( ( nodeType === -1 && node > 0 ) || ( main.is_number( nodeType ) ? node === nodeType : node instanceof nodeType ) )  {
+			if ( ( typeof nodeType === 'undefined' && node > 0 ) || ( main.is_number( nodeType ) ? node === nodeType : node instanceof nodeType ) )  {
 				
 				nodeTotal += 1;
 				

@@ -14,7 +14,6 @@
 		_Model,
 		_GridModuleState,
 		_ObjectHelper,
-		moduleCount = 0,
 		states;
 	
 	/*===================================================
@@ -158,10 +157,16 @@
 		
 		_Model.Instance.call( this, parameters );
 		
-		// properties
+		// store grid reference
 		
-		this.id = moduleCount++;
 		this.grid = parameters.grid;
+		
+		// signals
+		
+		this.occupantAdded = new signals.Signal();
+		this.occupantRemoved = new signals.Signal();
+		this.occupantChanged = new signals.Signal();
+		this.activeChanged = new signals.Signal();
 		
 		// states
 		
@@ -450,7 +455,7 @@
 			
 			if ( typeof occupantPrev === 'undefined' ) {
 				
-				dojo.publish( this.id + '.GridModule.occupantAdded', [ this._occupant ] );
+				this.occupantAdded.dispatch( this );
 				
 			}
 			
@@ -464,7 +469,7 @@
 			
 			if ( typeof occupantPrev !== 'undefined' ) {
 				
-				dojo.publish( this.id + '.GridModule.occupantRemoved', [ this._occupant ] );
+				this.occupantRemoved.dispatch( this );
 				
 			}
 			
@@ -474,7 +479,7 @@
 		
 		if ( occupant !== occupantPrev ) {
 			
-			dojo.publish( this.id + '.GridModule.occupantChanged', [ this._occupant ] );
+			this.occupantChanged.dispatch( this );
 			
 		}
 		
@@ -503,7 +508,7 @@
 		
 		if ( this._active !== activePrev ) {
 			
-			dojo.publish( this.id + '.GridModule.activeChanged', [ this._active ] );
+			this.activeChanged.dispatch( this );
 			
 		}
 		

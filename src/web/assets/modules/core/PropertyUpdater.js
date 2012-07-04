@@ -54,16 +54,16 @@
 				
 				this._parent = parent;
 				
-				// parent will handle update
+				// remove signal, parent will handle update
 				if ( this._parent instanceof _PropertyUpdater.Instance ) {
 					
-					dojo.unsubscribe( this.eventHandles[ 'Game.update' ] );
+					shared.signals.update.remove( this.update, this );
 					
 				}
-				// handle own update
+				// add signal to handle own update
 				else if ( this.updating === true ) {
 					
-					this.eventHandles[ 'Game.update' ] = dojo.subscribe( 'Game.update', this, this.update );
+					shared.signals.update.add( this.update, this );
 					
 				}
 				
@@ -89,8 +89,6 @@
 		
 		this.updating = false;
 		
-		this.eventHandles = {};
-		
 		this.children = [];
 		
 	}
@@ -109,11 +107,11 @@
 			
 			this.updating = true;
 			
-			// event
+			// signal
 			
 			if ( this.parent instanceof _PropertyUpdater.Instance !== true ) {
 				
-				this.eventHandles[ 'Game.update' ] = dojo.subscribe( 'Game.update', this, this.update );
+				shared.signals.update.add( this.update, this );
 				
 			}
 			
@@ -125,9 +123,9 @@
 		
 		this.updating = false;
 		
-		// event
+		// signal
 		
-		dojo.unsubscribe( this.eventHandles[ 'Game.update' ] );
+		shared.signals.update.remove( this.update, this );
 		
 		// detach
 		

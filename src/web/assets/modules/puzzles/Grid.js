@@ -86,9 +86,6 @@
 		_Grid.Instance.prototype.remove_module = remove_module;
 		_Grid.Instance.prototype.get_modules_with_vertices = get_modules_with_vertices;
 		
-		_Grid.Instance.prototype.on_occupant_added = on_occupant_added;
-		_Grid.Instance.prototype.on_occupant_removed = on_occupant_removed;
-		
 		// get / set
 		
 		Object.defineProperty( _Grid.Instance.prototype, 'puzzle', { 
@@ -229,6 +226,10 @@
 		
 		this.puzzle = parameters.puzzle;
 		
+		// signal
+		
+		this.stateChanged = new signals.Signal();
+		
 		// init modules
 		
 		this.modules = [];
@@ -350,8 +351,9 @@
 				
 				module.grid = this;
 				
-				dojo.subscribe( module.id + '.GridModule.occupantAdded', this, this.on_occupant_added );
-				dojo.subscribe( module.id + '.GridModule.occupantRemoved', this, this.on_occupant_removed );
+				module.occupantAdded.add( on_occupant_added, this );
+				module.occupantRemoved.add( on_occupant_removed, this );
+				module.occupantChanged.add( on_occupant_changed, this );
 				
 			}
 			
@@ -781,6 +783,12 @@
 		
 		console.log(' PUZZLE completing for ', this.puzzle.id );
 		this.puzzle.complete();
+		
+	}
+	
+	function on_occupant_changed ( module ) {
+		
+		this.stateChanged.dispatch( this, module );
 		
 	}
 	

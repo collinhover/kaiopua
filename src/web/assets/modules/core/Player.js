@@ -27,8 +27,7 @@
 		keybindingsDefault,
 		character,
 		following = [],
-		selecting = {},
-		eventHandles = {};
+		selecting;
 	
 	/*===================================================
     
@@ -115,6 +114,8 @@
 			
 			// selecting
 			
+			selecting = {};
+			
 			selecting.opacityMin = 0.2;
 			selecting.opacityMax = 0.6;
 			selecting.opacityStart = selecting.opacityMin;
@@ -134,9 +135,9 @@
 			
 			init_controls();
 			
-			// events
+			// signals
 			
-			eventHandles[ 'Game.pause' ] = dojo.subscribe( 'Game.pause', pause );
+			shared.signals.paused.add( pause );
 			
 			ready = true;
 			
@@ -172,7 +173,7 @@
 		
 		if ( character.rigidBody ) {
 			
-			dojo.subscribe( character.rigidBody.id + '.RigidBody.safetyNetStart', this, character_on_safety_net );
+			character.rigidBody.safetynetstart.add( character_on_safety_net, this );
 			
 		}
 		
@@ -403,11 +404,13 @@
 		
 		// events
 		
+		//dojo.connect( window, dojo.touch.press, on_mouse_pressed );
+       // dojo.connect( window, dojo.touch.release, on_mouse_pressed );
+		eventHandles[ 'oninputpress' ] = dojo.subscribe( 'oninputpress', on_mouse_pressed );
+		eventHandles[ 'oninputrelease' ] = dojo.subscribe( 'oninputrelease', on_mouse_pressed );
+		eventHandles[ 'oninputscroll' ] = dojo.subscribe( 'oninputscroll', on_mouse_pressed );
 		eventHandles[ 'onkeypress' ] = dojo.connect( window, 'onkeypress', on_keyboard_used );
 		eventHandles[ 'onkeyup' ] = dojo.connect( window, 'onkeyup', on_keyboard_used );
-		eventHandles[ 'oninputpress' ] = dojo.connect( window, dojo.touch.press, on_mouse_pressed );
-		eventHandles[ 'oninputrelease' ] = dojo.connect( window, dojo.touch.release, on_mouse_pressed );
-		eventHandles[ 'inputScroll' ] = dojo.subscribe( 'inputScroll', on_mouse_pressed );
 		
 	}
 	
@@ -419,11 +422,11 @@
 		
 		// events
 		
+		dojo.unsubscribe( eventHandles[ 'oninputpress' ] );
+		dojo.unsubscribe( eventHandles[ 'oninputrelease' ] );
+		dojo.unsubscribe( eventHandles[ 'oninputscroll' ] );
 		dojo.disconnect( eventHandles[ 'onkeypress' ] );
 		dojo.disconnect( eventHandles[ 'onkeyup' ] );
-		dojo.disconnect( eventHandles[ 'oninputpress' ] );
-		dojo.disconnect( eventHandles[ 'oninputrelease' ] );
-		dojo.unsubscribe( eventHandles[ 'inputScroll' ] );
 		
 	}
 	
@@ -442,8 +445,7 @@
 				
 				case 2: button = 'mouseright'; break;
 				case 1: button = 'mousemiddle'; break;
-				case 'mousewheel': button = 'mousewheel'; break;
-				default: button = 'mouseleft'; break;
+				case 0: button = 'mouseleft'; break;
 				
 			}
 			
@@ -452,7 +454,8 @@
 			switch ( e.type ) {
 				
 				case 'mousedown': case 'touchstart': type = 'keypress'; break;
-				case 'mousewheel': case 'DOMMouseScroll' : default: type = 'keyup'; break;
+				case 'mouseup': case 'touchend': type = 'keyup'; break;
+				case 'mousewheel': case 'DOMMouseScroll' : type = 'keyup'; break;
 				
 			}
 			
@@ -464,7 +467,7 @@
 	
 	function on_keyboard_used ( e ) {
 		
-		trigger_key( String( e.charOrCode || e.key || e.keyCode ).toLowerCase(), e.type );
+		trigger_key( (e.key || e.keyCode).toString().toLowerCase(), e.type );
 		
 	}
 	
@@ -758,13 +761,13 @@
 		
 		disable();
 		
-		eventHandles[ 'Game.resume' ] = dojo.subscribe( 'Game.resume', resume );
+		shared.signals.resumed.add( resume );
 		
 	}
 	
 	function resume () {
-		
-		dojo.unsubscribe( eventHandles[ 'Game.resume' ] );
+			
+		shared.signals.resumed.remove( resume );
 		
 		enable();
 		
@@ -776,7 +779,7 @@
 			
 			enabled = true;
 			
-			eventHandles[ 'Game.update' ] = dojo.subscribe( 'Game.update', update );
+			shared.signals.update.add( update );
 		
 		}
 		
@@ -798,7 +801,7 @@
 		
 		// pause updating
 		
-		dojo.unsubscribe( eventHandles[ 'Game.update' ] );
+		shared.signals.update.remove( update );
 		
 	}
 	

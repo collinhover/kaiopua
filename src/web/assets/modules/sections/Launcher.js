@@ -247,7 +247,7 @@
 			shared.renderer.sortObjects = false;
 			
 			eventHandles[ 'oninputmove' ] = dojo.connect( window, dojo.touch.move, on_mouse_moved );
-			eventHandles[ 'Game.update' ] = dojo.subscribe( 'Game.update', update );
+			eventHandles[ 'update' ] = dojo.subscribe( 'update', update );
 			
 		}
 		else {
@@ -267,7 +267,7 @@
 		sky.animate( { stop: true } );
 		
 		dojo.disconnect( eventHandles[ 'oninputmove' ] );
-		dojo.unsubscribe( eventHandles[ 'Game.update' ] );
+		dojo.unsubscribe( eventHandles[ 'update' ] );
 		
     }
     

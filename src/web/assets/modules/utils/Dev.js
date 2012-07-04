@@ -135,7 +135,7 @@
         // turn dev off initially
         togglePanel();
         
-        // resize
+        // resize signal
         resize(shared.screenWidth, shared.screenHeight);
 		dojo.subscribe( 'resize', resize );
     

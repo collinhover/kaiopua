@@ -70,11 +70,13 @@
 	
 	function GridModuleState ( parameters ) {
 		
+		stateCount++;
+		
 		// handle parameters
 		
 		parameters = parameters || {};
 		
-		this.id = stateCount++;
+		this.id = parameters.id || 'state' + stateCount;
 		
 		this.active = parameters.active || 0;
 		
