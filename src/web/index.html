@@ -82,34 +82,30 @@
 	<!-- END header -->
 	
 	<!-- game -->
-	<section id="game" class="unselectable">
+	<div id="game" class="unselectable">
 		
-	</section>
-	<!-- END game section -->
+	</div>
+	<!-- END game -->
 	
 	<!-- transitioner -->
-	<section id="transitioner">
+	<div id="transitioner">
 		
-	</section>
+	</div>
 	<!-- END transitioner -->
 	
 	<!-- ui -->
-	<section id="ui" class="unselectable">
+	<div id="ui" class="unselectable">
 		
 		<!-- ingame -->
-		<section id="ingame">
-			
-			<!-- active -->
-			<section id="active">
-				
-			</section>
-			<!-- END active -->
+		<div id="ingame">
 			
 			<!-- preloader -->
-			<div id='preloader' class="hero-unit container container-center">
-				<h1>Welcome to Kai 'Opua!</h1>
-				<p><img src='assets/icons/loading_64.png'>Hold on, we're loading a few things...</p>
-				<p><small>(if you've been waiting too long, <a href='index.html' class="btn btn-large">refresh</a> and we'll try to load faster!)</small></p>
+			<div id='preloader' class="container container-center">
+				<div class="hero-unit">
+					<h1 class="logo_type">Welcome to Kai 'Opua</h1>
+					<p><img src='assets/icons/loading_64.png'>Hold on, we're loading a few things...</p>
+					<p><small>(if you've been waiting too long, <a href='index.html' class="btn btn-large">refresh</a> and we'll try to load faster!)</small></p>
+				</div>
 			</div>
 			<!-- END preloader -->
 			
@@ -145,105 +141,251 @@
 			</div>
 			<!-- END errors -->
 			
-		</section>
+		</div>
 		<!-- END ingame -->
 		
 		<!-- outgame -->
-		<section id="outgame">
+		<div id="outgame">
 		
 			<!-- active -->
-			<section id="active">
+			<div id="active">
 				
-			</section>
+			</div>
 			<!-- END active -->
 			
-			<!-- menus -->
-			<section id="menus">
-				
-				<div id="menuNav" class="subnav navbar-flush">
-				  <div class="navbar-inner">
-					<div class="container">
+			<div id="menuNav" class="subnav navbar-flush">
+				<div class="navbar-inner">
+					<div class="container container-center">
 						<ul class="nav nav-pills">
-						  <li>
-							<a href="#farming" data-toggle="pill" class="nav-icon">
-								<img src="assets/icons/farming_64.png" alt="Kai 'Opua">
-								<p class=".navbar-text">Farming</p>
-							</a>
+							<li>
+								<a href="#farming" data-toggle="pill" class="nav-icon">
+									<img src="assets/icons/farming_64.png" alt="Kai 'Opua">
+									<p class=".navbar-text">Farming</p>
+								</a>
 							</li>
-						  <li>
-							<a href="#companions" data-toggle="pill" class="nav-icon">
-								<img src="assets/icons/companion_64.png" alt="Kai 'Opua">
-								<p class=".navbar-text">Companions</p>
-							</a>
+							<!--<li>
+								<a href="#companions" data-toggle="pill" class="nav-icon">
+									<img src="assets/icons/companion_64.png" alt="Kai 'Opua">
+									<p class=".navbar-text">Companions</p>
+								</a>
 							</li>
-						  <li>
-							<a href="#house" data-toggle="pill" class="nav-icon">
-								<img src="assets/icons/home_64.png" alt="Kai 'Opua">
-								<p class=".navbar-text">House</p>
-							</a>
+							<li>
+								<a href="#house" data-toggle="pill" class="nav-icon">
+									<img src="assets/icons/home_64.png" alt="Kai 'Opua">
+									<p class=".navbar-text">House</p>
+								</a>
+							</li>-->
+							<li>
+								<a href="#map" data-toggle="pill" class="nav-icon">
+									<img src="assets/icons/map_64.png" alt="Kai 'Opua">
+									<p class=".navbar-text">Map</p>
+								</a>
 							</li>
-						  <li>
-							<a href="#map" data-toggle="pill" class="nav-icon">
-								<img src="assets/icons/whale_64.png" alt="Kai 'Opua">
-								<p class=".navbar-text">Map</p>
-							</a>
-							</li>
-						  <li>
-							<a href="#options" data-toggle="pill" class="nav-icon">
-								<img src="assets/icons/cog_64.png" alt="Kai 'Opua">
-								<p class=".navbar-text">Options</p>
-							</a>
+							<li>
+								<a href="#options" data-toggle="pill" class="nav-icon">
+									<img src="assets/icons/cog_64.png" alt="Kai 'Opua">
+									<p class=".navbar-text">Options</p>
+								</a>
 							</li>
 						</ul>
 					</div>
-				  </div>
 				</div>
-				<!-- Plants, Companions, House, Map, Options <li class="divider-vertical"></li> -->
-			</section>
+			</div>
+			
+			<!-- menus -->
+			<div id="menus" class="container">
+				
+				<!-- farming -->
+				<section id="farming">
+					
+					<header class="subhead">
+						<div class="alert alert-success icon"><img src="assets/icons/farming_64.png" alt="Kai 'Opua"></div>
+						<h1>Farming</h1>
+						<p class="lead">Here you can examine the field you're working on and customize the things you've planted in it, as well as explore your collection of plantable objects.</p>
+						<div class="subnav">
+							<div class="navbar-inner">
+								<div class="container">
+									<ul class="nav nav-pills">
+										<li><a href="#field">Current Field</a></li>
+										<li><a href="#plant">Plant Customization</a></li>
+										<li><a href="#collection">Collection</a></li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</header>
+					<!-- field -->
+					<section id="field">
+						
+						<div class="page-header">
+							<h1>Current Field <small>click on the colored shapes to customize the object you've planted there</small></h1>
+						</div>
+						
+						<div class="row">
+							<div id="fieldGrid" class="span12 grid-gutterless">
+								<div class="row container-center well">
+									<ul class="span3 thumbnails">
+										<li class="span1">
+											<a href="#" class="thumbnail">
+												<img src="http://placehold.it/100" alt="">
+											</a>
+										</li>
+										<li class="span1">
+											<a href="#" class="thumbnail">
+												<img src="http://placehold.it/100" alt="">
+											</a>
+										</li>
+										<li class="span1">
+											<a href="#" class="thumbnail">
+												<img src="http://placehold.it/100" alt="">
+											</a>
+										</li>
+										<li class="span1">
+											<a href="#" class="thumbnail">
+												<img src="http://placehold.it/100" alt="">
+											</a>
+										</li>
+										<li class="span1">
+											<a href="#" class="thumbnail">
+												<img src="http://placehold.it/100" alt="">
+											</a>
+										</li>
+										<li class="span1">
+											<a href="#" class="thumbnail">
+												<img src="http://placehold.it/100" alt="">
+											</a>
+										</li>
+										<li class="span1">
+											<a href="#" class="thumbnail">
+												<img src="http://placehold.it/100" alt="">
+											</a>
+										</li>
+										<li class="span1">
+											<a href="#" class="thumbnail">
+												<img src="http://placehold.it/100" alt="">
+											</a>
+										</li>
+										<li class="span1">
+											<a href="#" class="thumbnail">
+												<img src="http://placehold.it/100" alt="">
+											</a>
+										</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+						
+					</section>
+					<!-- END field -->
+					<!-- plant -->
+					<section id="plant">
+						
+						<div class="page-header">
+							<h1>Plant Customization <small>reshape, rotate, or delete an object you've planted in the current field</small></h1>
+						</div>
+						
+						<div id="portraits" class="row">
+							<div class="span6 offset3">
+								<ul class="thumbnails">
+									<li class="span3">
+										<div id="shapePortrait" class="thumbnail">
+											<img src="http://placehold.it/260x300" alt="">
+										</div>
+									</li>
+									<li class="span3">
+										<div id="fieldPortrait" class="thumbnail">
+											<img src="http://placehold.it/260x300" alt="">
+										</div>
+									</li>
+								</ul>
+							</div>
+						</div>
+						
+						<div id="overview" class="row">
+							<div id="fieldId" class="span4">
+								fieldId
+							</div>
+							<div id="plantType" class="span4">
+								plantType
+							</div>
+							<div id="shapeType" class="span4">
+								shapeType
+							</div>
+						</div>
+						
+						<div id="details" class="row">
+							<div class="span3">
+								<div id="plantPortrait" class="thumbnail">
+									<img src="http://placehold.it/260x300" alt="">
+								</div>
+								<div id="plantInfo">
+									<h3 id="plantType">plantType</h3>
+									<p id="plantHints"><span class="label label-success">Hint</span>Place plants that have similar colors together.</p>
+									<p id="plantFacts"><span class="label label-info">Fact</span>This plant represents family in Hawaii.</p>
+								</div>
+							</div>
+							<div id="plantCustomizations" class="span9">
+								
+							</div>
+						</div>
+						
+					</section>
+					<!-- END plant -->
+					<!-- collection -->
+					<section id="collection">
+						
+					</section>
+					<!-- END collection -->
+				</section>
+				<!-- END farming -->
+				
+			</div>
 			<!-- END menus -->
 			
-		</section>
+		</div>
 		<!-- END outgame -->
-		
-		<!-- footer -->
-		<section id="footer">
 			
-			<section id='title' class="container container-center">
-
-				<!-- logo -->
-				<section id='logo' class="nav">
-						
-					<span><a href="https://github.com/collinhover/kaiopua" target="_blank">Source Code</a></span>
-					
-					<span id="logo_icona"><img src="assets/icons/whale_rev_64.png" alt="Kai 'Opua"></span>
-
-					<!-- page header and intro -->
-					<header>
-						
-						<h1>Kai 'Opua</h1>
-						
-					</header>
-
-					<span id="logo_iconb"><img src="assets/icons/character_rev_64.png" alt="Kai 'Opua"></span>
-					<span id="logo_iconc"><img src="assets/icons/taro_rev_64.png" alt="Kai 'Opua"></span>
-					
-					<span>Share</span>
-					
-					<span class='icon'><a href="http://www.facebook.com/sharer.php?u=http%3A%2F%2Fcollinhover.com&t=Kai 'Opua%3A%20an%20interactive%20moon-sized%20Hawaiian%20space%20worm%20that%20will%20teach%20you%20to%20be%20a%20better%20designer!" target="_blank"><img src="assets/icons/fb_icon.png" alt="Facebook"></a></span>
-					<span class='icon'><a href="http://twitter.com/share?url=http%3A%2F%2Fcollinhover.com&text=Kai 'Opua%3A%20an%20interactive%20moon-sized%20Hawaiian%20space%20worm%20that%20will%20teach%20you%20to%20be%20a%20better%20designer!" target="_blank"><img src="assets/icons/twitter_icon.png" alt="Twitter"></a></span>
-					
-					<p id="copyright"><small>&copy; Copyright <a href="http://www.collinhover.com/" target="_blank">Collin Hover</a> 2011. All Rights Reserved.</small></p>
-					
-				</section>
-				<!-- END logo -->
+		<!-- footer -->
+		<div id="footer" class="navbar navbar-flush">
+			<div class="navbar-inner">
 				
-			</section>
-			<!-- END title -->
-		
-		</section>
-		<!-- END footer -->
-	
-	</section>
+				<div id='title' class="container container-center">
+
+					<!-- logo -->
+					<div id='logo' class="nav">
+							
+						<span><a href="https://github.com/collinhover/kaiopua" target="_blank">Source Code</a></span>
+						
+						<span id="logo_icona"><img src="assets/icons/whale_rev_64.png" alt="Kai 'Opua"></span>
+
+						<!-- page header and intro -->
+						<header>
+							
+							<h1 class="logo_type">Kai 'Opua</h1>
+							
+						</header>
+
+						<span id="logo_iconb"><img src="assets/icons/character_rev_64.png" alt="Kai 'Opua"></span>
+						<span id="logo_iconc"><img src="assets/icons/taro_rev_64.png" alt="Kai 'Opua"></span>
+						
+						<span>Share</span>
+						
+						<span class='icon'><a href="http://www.facebook.com/sharer.php?u=http%3A%2F%2Fcollinhover.com&t=Kai 'Opua%3A%20an%20interactive%20moon-sized%20Hawaiian%20space%20worm%20that%20will%20teach%20you%20to%20be%20a%20better%20designer!" target="_blank"><img src="assets/icons/fb_icon.png" alt="Facebook"></a></span>
+						<span class='icon'><a href="http://twitter.com/share?url=http%3A%2F%2Fcollinhover.com&text=Kai 'Opua%3A%20an%20interactive%20moon-sized%20Hawaiian%20space%20worm%20that%20will%20teach%20you%20to%20be%20a%20better%20designer!" target="_blank"><img src="assets/icons/twitter_icon.png" alt="Twitter"></a></span>
+						
+						<p id="copyright"><small>&copy; Copyright <a href="http://www.collinhover.com/" target="_blank">Collin Hover</a> 2011. All Rights Reserved.</small></p>
+						
+					</div>
+					<!-- END logo -->
+					
+				</div>
+				<!-- END title -->
+			
+			</div>
+			<!-- END footer -->
+			
+		</div>
+	</div>
 	<!-- END ui -->
 	
 	<!-- javascript -->
@@ -252,9 +394,9 @@
 	<script src="js/jquery-1.7.2.min.js"></script>
 	<script src="js/jquery.contentchanged.js"></script>
 	<script src="js/jquery.imagesloaded.min.js"></script>
-	<!--<script src="js/bootstrap.min.js"></script>
+	<script src="js/bootstrap.min.js"></script>
 	<script src="js/bootstrap-scroll-modal.custom.js"></script>
-	<script>
+	<!--<script>
 		$(document).ready( function () {
 			$('#preloader').modal( { backdrop:"static", keyboard: false, dynamic: true } );
 		} );
