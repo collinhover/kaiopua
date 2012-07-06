@@ -105,8 +105,8 @@
 	  
 	  resize: function ( e ) {
 		this.$elementWrapper.css( { 
-			'margin-left': Math.max( -$( window ).width() * 0.5, -this.$element.width() * 0.5 ), 
-			'margin-top': Math.max( -$( window ).height() * 0.5, -this.$element.height() * 0.5 ) 
+			'margin-left': Math.max( -$( window ).width() * 0.5, -this.$element.outerWidth( true ) * 0.5 ), 
+			'margin-top': Math.max( -$( window ).height() * 0.5, -this.$element.outerHeight( true ) * 0.5 ) 
 		} );
 	  }
 
@@ -134,6 +134,7 @@
       .hide()
       .trigger('hidden')
 	
+	this.$element.off( 'shown.resizemodal contentchanged.resizemodal' );
 	$(window).off( 'resize.modal' );
 	
     backdrop.call(this)
@@ -153,7 +154,17 @@
         this.$elementWrapper = $('<div class="modal-wrapper" />')
           .prependTo(this.$backdrop)
           .delegate('[data-dismiss="modal"]', 'click.dismiss.modal', $.proxy(this.hide, this))
+		
         this.$element.prependTo(this.$elementWrapper)
+		
+		// on shown and if has content changed plugin
+		this.$element.on( 'shown.resizemodal contentchanged.resizemodal', $.proxy(this.resize, this));
+		
+		// if has images loaded plugin
+		if ( this.$element.imagesLoaded ) {
+			this.$element.imagesLoaded($.proxy(this.resize, this));
+		}
+		
 		$(window).on('resize.modal', $.proxy(this.resize, this));
       } else {
         this.$element.prependTo(this.$backdrop)

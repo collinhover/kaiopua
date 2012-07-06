@@ -7,8 +7,6 @@
 <!--[if gt IE 9]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <!-- the "no-js" class is for Modernizr. -->
 
-<!-- various icons by YummyGum: http://yummygum.com/ -->
-
 <head id="www-collinhover-com" data-template-set="html5-reset">
 
     <meta charset="utf-8">
@@ -42,7 +40,7 @@
 	-->
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 
-	<link rel="shortcut icon" href="assets/icons/whale_64.ico">
+	<link rel="shortcut icon" href="favicon.ico">
 	<!-- This is the traditional favicon.
 		 - size: 16x16 or 32x32
 		 - transparency is OK
@@ -54,14 +52,15 @@
 		 - To prevent iOS from applying its styles to the icon name it thusly: apple-touch-icon-precomposed.png
 		 - Transparency is not recommended (iOS will put a black BG behind the icon) -->
     
-	<!-- CSS: screen, mobile & print are all in the same file -->
+	<!-- LESS -->
 	<link rel="stylesheet/less" type="text/css" href="css/styles.less">
+	<script src="js/less-1.3.0.min.js" type="text/javascript"></script>
+	
+	<!-- CSS -->
+	<link rel="stylesheet" type="text/css" href="css/bootstrap-scroll-modal.custom.css">
 	
 	<!-- setup javascript only -->
-	<script src="js/less-1.3.0.min.js" type="text/javascript"></script>
 	<script src="js/modernizr.2.5.3.min.js"></script>
-	
-	<link rel="stylesheet" type="text/css" href="css/bootstrap-scroll-modal.custom.css">
 
 	<!-- Prompt IE 6 users to install Chrome Frame. Remove this if you want to support IE 6.
 		   chromium.org/developers/how-tos/chrome-frame-getting-started -->
@@ -88,6 +87,12 @@
 	</section>
 	<!-- END game section -->
 	
+	<!-- transitioner -->
+	<section id="transitioner">
+		
+	</section>
+	<!-- END transitioner -->
+	
 	<!-- ui -->
 	<section id="ui" class="unselectable">
 		
@@ -99,6 +104,46 @@
 				
 			</section>
 			<!-- END active -->
+			
+			<!-- preloader -->
+			<div id='preloader' class="hero-unit container container-center">
+				<h1>Welcome to Kai 'Opua!</h1>
+				<p><img src='assets/icons/loading_64.png'>Hold on, we're loading a few things...</p>
+				<p><small>(if you've been waiting too long, <a href='index.html' class="btn btn-large">refresh</a> and we'll try to load faster!)</small></p>
+			</div>
+			<!-- END preloader -->
+			
+			<!-- noscript -->
+			<noscript>
+				
+				<article id="noscript" class="error info_panel">
+					
+					<header class='title_alt text_huge'>Javascript disabled?</header>
+					
+					<p class="error_explanation">
+						We built this website with Javascript, and we can't seem to find it. If you are sure you've turned it on, but you still see this message, try upgrading to one of these friendly browsers:
+					</p>
+					<div class="browsers">
+						<div class="browsers_each chrome">
+							<a href="http://www.google.com/chrome/" target="_blank">Chrome</a>
+						</div>
+						<div class="browsers_each firefox">
+							<a href="http://www.mozilla.org/firefox/" target="_blank">Firefox</a>
+						</div>
+						<div class="browsers_each safari">
+							<a href="http://www.apple.com/safari/" target="_blank">Safari</a>
+						</div>
+					</div>
+				</article>
+			
+			</noscript>
+			<!-- END noscript -->
+			
+			<!-- errors -->
+			<div id="errors">
+				
+			</div>
+			<!-- END errors -->
 			
 		</section>
 		<!-- END ingame -->
@@ -115,86 +160,58 @@
 			<!-- menus -->
 			<section id="menus">
 				
+				<div id="menuNav" class="subnav navbar-flush">
+				  <div class="navbar-inner">
+					<div class="container">
+						<ul class="nav nav-pills">
+						  <li>
+							<a href="#farming" data-toggle="pill" class="nav-icon">
+								<img src="assets/icons/farming_64.png" alt="Kai 'Opua">
+								<p class=".navbar-text">Farming</p>
+							</a>
+							</li>
+						  <li>
+							<a href="#companions" data-toggle="pill" class="nav-icon">
+								<img src="assets/icons/companion_64.png" alt="Kai 'Opua">
+								<p class=".navbar-text">Companions</p>
+							</a>
+							</li>
+						  <li>
+							<a href="#house" data-toggle="pill" class="nav-icon">
+								<img src="assets/icons/home_64.png" alt="Kai 'Opua">
+								<p class=".navbar-text">House</p>
+							</a>
+							</li>
+						  <li>
+							<a href="#map" data-toggle="pill" class="nav-icon">
+								<img src="assets/icons/whale_64.png" alt="Kai 'Opua">
+								<p class=".navbar-text">Map</p>
+							</a>
+							</li>
+						  <li>
+							<a href="#options" data-toggle="pill" class="nav-icon">
+								<img src="assets/icons/cog_64.png" alt="Kai 'Opua">
+								<p class=".navbar-text">Options</p>
+							</a>
+							</li>
+						</ul>
+					</div>
+				  </div>
+				</div>
+				<!-- Plants, Companions, House, Map, Options <li class="divider-vertical"></li> -->
 			</section>
 			<!-- END menus -->
 			
 		</section>
 		<!-- END outgame -->
 		
-		<!-- transitioner -->
-		<section id="transitioner">
-			
-		</section>
-		<!-- END transitioner -->
-		
-		<!-- overlay -->
-		<section id="overlay">
-			
-			<!-- info -->
-			<section id="info" class="container">
-			
-				<!-- preloader -->
-				<div id='preloader' class="modal hide fade">
-					<div class="modal-header">
-						<button type="button" class="close" data-dismiss="modal">x</button>
-						<h3>Hold on, we're loading some things...</h3>
-					</div>
-					<div class="modal-body">
-						<img src='assets/icons/loading_64.png'>
-						<p>If you're waiting more than 10 seconds,<br/><a href='index.html'>try refreshing the page.</a></p>
-					</div>
-					<div class="modal-footer">
-						<a href="#" class="btn" data-dismiss="modal">Close</a>
-						<a href="#" class="btn btn-primary">Save changes</a>
-					</div>
-				</div>
-				<!-- END preloader -->
-				
-				<!-- noscript -->
-				<noscript>
-					
-					<article id="noscript" class="error info_panel">
-						
-						<header class='title_alt text_huge'>Javascript disabled?</header>
-						
-						<p class="error_explanation">
-							We built this website with Javascript, and we can't seem to find it. If you are sure you've turned it on, but you still see this message, try upgrading to one of these friendly browsers:
-						</p>
-						<div class="browsers">
-							<div class="browsers_each chrome">
-								<a href="http://www.google.com/chrome/" target="_blank">Chrome</a>
-							</div>
-							<div class="browsers_each firefox">
-								<a href="http://www.mozilla.org/firefox/" target="_blank">Firefox</a>
-							</div>
-							<div class="browsers_each safari">
-								<a href="http://www.apple.com/safari/" target="_blank">Safari</a>
-							</div>
-						</div>
-					</article>
-				
-				</noscript>
-				<!-- END noscript -->
-				
-				<!-- errors -->
-				<div id="errors">
-					
-				</div>
-				<!-- END errors -->
-			
-			</section>
-			<!-- END info -->
-			
-		</section>
-		<!-- END overlay -->
-		
 		<!-- footer -->
 		<section id="footer">
 			
-			<section id='title' class="container">
+			<section id='title' class="container container-center">
 
 				<!-- logo -->
-				<section id='logo' class="span8 offset2">
+				<section id='logo' class="nav">
 						
 					<span><a href="https://github.com/collinhover/kaiopua" target="_blank">Source Code</a></span>
 					
@@ -208,7 +225,7 @@
 					</header>
 
 					<span id="logo_iconb"><img src="assets/icons/character_rev_64.png" alt="Kai 'Opua"></span>
-					<span id="logo_iconc"><img src="assets/icons/taro_001_rev_64.png" alt="Kai 'Opua"></span>
+					<span id="logo_iconc"><img src="assets/icons/taro_rev_64.png" alt="Kai 'Opua"></span>
 					
 					<span>Share</span>
 					
@@ -231,15 +248,17 @@
 	
 	<!-- javascript -->
 	
-	<script src="js/jquery-1.7.2.min.js"></script>
-	<script src="js/bootstrap.min.js"></script>
-	<script src="js/bootstrap-scroll-modal.custom.min.js"></script>
 	<script src="js/LAB.min.js"></script>
+	<script src="js/jquery-1.7.2.min.js"></script>
+	<script src="js/jquery.contentchanged.js"></script>
+	<script src="js/jquery.imagesloaded.min.js"></script>
+	<!--<script src="js/bootstrap.min.js"></script>
+	<script src="js/bootstrap-scroll-modal.custom.js"></script>
 	<script>
 		$(document).ready( function () {
 			$('#preloader').modal( { backdrop:"static", keyboard: false, dynamic: true } );
 		} );
-	</script>
+	</script>-->
 	<!--<script src="assets/modules/Kaiopua.js"></script>-->
 
 	<!-- google analytics -->
