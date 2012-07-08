@@ -96,6 +96,34 @@
 	box-shadow: @shadowH @shadowV @shadowBlur @shadowSpread @shadowColor;
 }
 
+/* type 
+-------------------------*/
+
+.center-type {
+	display: table;
+	
+	[class^="center-typeInner"], [class*=" center-typeInner"] {
+		display: table-cell; 
+		vertical-align: middle; 
+		text-align: center;
+		width: 100%;
+		margin: 0 auto;
+		
+		p {
+			margin: 0;
+		}
+	}
+	
+	.center-typeInnerImg {
+		width: auto;
+		
+		p {
+			padding: 5px;
+		}
+		
+	}
+}
+
 /* html / body
 -------------------------------------------------------------------------------*/
 
@@ -132,6 +160,59 @@ html, body {
 
 /* Hide visually and from screenreaders, but maintain layout */
 .invisible { visibility: hidden; }
+
+/* icons 
+-------------------------*/
+
+[class^="iconk-"], [class*=" iconk-"] {
+	display: inline-block;
+	width: 14px;
+	height: 14px;
+	line-height: 14px;
+	vertical-align: text-top;
+	padding: 5px;
+}
+
+.iconk-small {
+	width: 24px;
+	height: 24px;
+}
+
+.iconk-medium {
+	width: 32px;
+	height: 32px;
+}
+
+.iconk-large {
+	width: 46px;
+	height: 46px;
+}
+
+.iconk-huge {
+	width: 52px;
+	height: 52px;
+}
+
+.iconk-giant {
+	width: 64px;
+	height: 64px;
+}
+
+.iconk-topRight {
+	position: relative;
+	top: -2px;
+	right: -21px;
+	line-height: 18px;
+	float: right;
+	padding: 0;
+}
+
+/* buttons 
+-------------------------*/
+
+.btn {
+	
+}
 
 /* containers 
 -------------------------*/
@@ -175,15 +256,8 @@ section {
 	min-width: 80px;
 	min-height: 80px;
 	
-	img {
-		width: 48px;
-		height: 48px;
-		padding: 5px;
-		display: inline-block;
-	}
-	
 	p {
-		margin: 0;
+		margin: 10px 0 0 0;
 	}
 }
 
@@ -303,7 +377,16 @@ section {
 	
 	h1 {
 		margin-bottom: 9px;
-		font-size: 54px;
+		font-size: 56px;
+		font-weight: bold;
+		letter-spacing: -1px;
+		line-height: 1;
+	}
+	
+	h2 {
+		margin-top: 6px;
+		margin-bottom: 9px;
+		font-size: 40px;
 		font-weight: bold;
 		letter-spacing: -1px;
 		line-height: 1;
@@ -318,9 +401,7 @@ section {
 		margin: 0;
 	}
 	
-	.icon {
-		width: 40px;
-		height: 40px;
+	[class^="iconk-"], [class*=" iconk-"] {
 		float: left;
 		margin: 0 10px 0 0;
 	}
@@ -334,6 +415,10 @@ section {
 	
 	li {
 		margin: 0;
+		
+		p {
+			margin-top: 10px;
+		}
 	}
 	
 	// Fixed grid
@@ -366,6 +451,14 @@ section {
 		}
 		
 	}
+	
+	.well {
+		
+		.thumbnails {
+			margin-bottom: 0px;
+		}
+		
+	}
 }
 
 /* sections 
@@ -393,6 +486,7 @@ section {
 		min-height: @minHeight;
 		.clearfix();
 		margin-top: -104px;
+		margin-bottom: 60px;
 		
 		#active {
 			
@@ -521,4 +615,48 @@ section {
 		
 	}
 
+}
+
+/* field 
+-------------------------*/
+
+.field-rewardsList {
+	
+	p {
+		margin: 0;
+	}
+	
+}
+
+/* plant 
+-------------------------*/
+
+#plantOverview {
+	margin-bottom: 10px;
+}
+
+#plantTools {
+	
+	h3 {
+		margin-bottom: 10px;
+	}
+	
+	p {
+		margin: 0;
+	}
+}
+
+/* collection 
+-------------------------*/
+
+#plantPotentialInfo {
+
+	#plantPotentialTitle {
+		margin-bottom: 20px;
+	}
+	
+	#plantPotentialInfoText {
+		margin-bottom: 20px;
+	}
+	
 }
