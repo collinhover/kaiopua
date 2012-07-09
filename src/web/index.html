@@ -153,399 +153,511 @@
 			</div>
 			<!-- END active -->
 			
-			<div id="menuNav" class="subnav navbar-flush">
-				<div class="navbar-inner">
-					<div class="container container-center">
-						<ul class="nav nav-pills">
-							<li>
-								<a href="#farming" data-toggle="pill" class="nav-icon">
-									<img src="assets/icons/farming_64.png" class="iconk-large">
-									<p class=".navbar-text">Farming</p>
-								</a>
-							</li>
-							<!--<li>
-								<a href="#companions" data-toggle="pill" class="nav-icon">
-									<img src="assets/icons/companion_64.png" class="iconk-large">
-									<p class=".navbar-text">Companions</p>
-								</a>
-							</li>
-							<li>
-								<a href="#house" data-toggle="pill" class="nav-icon">
-									<img src="assets/icons/home_64.png" class="iconk-large">
-									<p class=".navbar-text">House</p>
-								</a>
-							</li>-->
-							<li>
-								<a href="#map" data-toggle="pill" class="nav-icon">
-									<img src="assets/icons/map_64.png" class="iconk-large">
-									<p class=".navbar-text">Map</p>
-								</a>
-							</li>
-							<li>
-								<a href="#options" data-toggle="pill" class="nav-icon">
-									<img src="assets/icons/cog_64.png" class="iconk-large">
-									<p class=".navbar-text">Options</p>
-								</a>
-							</li>
-						</ul>
+			<div id="menuNav">
+				<div class="container">
+					<div class="navbar navbar-flush">
+						<div class="navbar-inner">
+							<div class="container">
+								<div class="valign-expand">
+									<div class="valign-cell">
+										<ul class="nav nav-pills pull-left">
+											<li>
+												<a href="#farming" id="buttonFarming" class="nav-icon">
+													<div class="valign">
+														<div class="valign-cell"><img src="assets/icons/farming_rev_64.png" class="iconk-large"></div>
+														<div class="valign-cell"><p>Farming</p></div>
+													</div>
+												</a>
+											</li>
+											<li>
+												<a href="#map" id="buttonMap" class="nav-icon">
+													<div class="valign">
+														<div class="valign-cell"><img src="assets/icons/map_rev_64.png" class="iconk-large"></div>
+														<div class="valign-cell"><p>Map</p></div>
+													</div>
+												</a>
+											</li>
+											<li>
+												<a href="#options" id="buttonOptions" class="nav-icon">
+													<div class="valign">
+														<div class="valign-cell"><img src="assets/icons/cog_rev_64.png" class="iconk-large"></div>
+														<div class="valign-cell"><p>Options</p></div>
+													</div>
+												</a>
+											</li>
+										</ul>
+									</div>
+									<div class="valign-cell">
+										<div class="valign pull-right">
+											<div class="valign-cell">
+												<ul class="nav nav-pills pull-left">
+													<li>
+														<a href="#game" id="buttonResumeGame">
+															<div class="valign">
+																<div class="valign-cell"><img src="assets/icons/play_rev_64.png" alt="Kai 'Opua" id="logoIcon1" class="iconk-small"></div>
+																<div class="valign-cell"><p>Resume</p></div>
+															</div>
+														</a>
+													</li>
+												</ul>
+											</div>
+											<div class="valign-cell">
+												<a href="#game" id="buttonResumeGame" class="logo">
+													<img src="assets/icons/whale_rev_64.png" alt="Kai 'Opua" id="logoIcon1" class="iconk-large logo-icon">
+													<h1 class="logo-type">Kai 'Opua</h1>
+													<img src="assets/icons/character_rev_64.png" alt="Kai 'Opua" id="logoIcon2" class="iconk-large logo-icon">
+													<img src="assets/icons/taro_rev_64.png" alt="Kai 'Opua" id="logoIcon3" class="iconk-medium logo-icon">
+												</a>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
 			
 			<!-- menus -->
-			<div id="menus" class="container">
+			<div id="menus">
 				
 				<!-- farming -->
-				<section id="farming">
+				<section id="farming" class="menu">
 					
-					<header class="subhead">
+					<header class="subhead container">
 						<div class="alert alert-success iconk-large"><img src="assets/icons/farming_64.png"></div>
 						<h1>Farming</h1>
 						<p class="lead">Here you can examine the field you're working on and the things you've planted in it, as well as your collection of plants.</p>
-						<div class="subnav">
+						<div id="farmingNav" class="subnavbar">
 							<div class="navbar-inner">
 								<div class="container">
-									<ul class="nav nav-pills">
-										<li><a href="#tools">Tools</a></li>
+									<ul class="nav nav-pills pull-left">
+										<li><a href="#fieldTools">Field Tools</a></li>
 										<li><a href="#field">Field</a></li>
+										<li><a href="#plantTools">Plant Tools</a></li>
 										<li><a href="#plant">Plant</a></li>
 										<li><a href="#collection">Collection</a></li>
+									</ul>
+									<ul class="nav nav-pills pull-right">
+										<li><a href="#farming"><h6>top</h6></a></li>
 									</ul>
 								</div>
 							</div>
 						</div>
 					</header>
 					
-					<!-- tools -->
-					<section id="tools">
-						
-						<div class="page-header">
-							<h1>Tools <small>to help you improve your fields and plants</small></h1>
-						</div>
-						
-						<div id="plantTools" class="row">
-							<div class="span2">
-								<div class="well">
-									<img src="assets/icons/tap_128.png" alt="">
-								</div>
-								<div class="container-center">
-									<p><small>while in ANY mode</small></p>
-									<h3>single tap</h3>
-									<button id="plantToolsSelect" class="btn btn-primary">
-										<div class="center-type">
-											<img src="assets/icons/info_rev_64.png" class="iconk-small">
-											<div class="center-typeInnerImg"><p>Select</p></div>
-										</div>
-									</button>
-								</div>
+					<!-- fieldTools -->
+					<section id="fieldTools" class="tools">
+						<div class="container">
+							<div class="page-header">
+								<h1>Field Tools <small>multiple ways to work with fields</small></h1>
 							</div>
-							<div class="span2">
-								<div class="well">
-									<img src="assets/icons/drag_move_128.png" alt="">
+							
+							<div class="row">
+								<div class="span2">
+									<div class="well">
+										<img src="assets/icons/tiki_128.png" alt="">
+									</div>
+									<div class="container-center">
+										<p><small>each field has</small></p>
+										<h3>a tiki statue</h3>
+									</div>
 								</div>
-								<div class="container-center">
-									<p><small>while in MOVE mode</small></p>
-									<h3>press and drag</h3>
-									<button id="plantToolsMove" class="btn">
-										<div class="center-type">
-											<img src="assets/icons/move_64.png" class="iconk-small">
-											<div class="center-typeInnerImg"><p>Move</p></div>
-										</div>
-									</button>
+								<div class="span2">
+									<div class="well">
+										<img src="assets/icons/drag_move_up_128.png" alt="">
+									</div>
+									<div class="container-center">
+										<p><small>to start</small></p>
+										<h3>drag up</h3>
+										<a href="#game" id="buttonResumeGame" class="btn btn-primary">
+											<div class="valign">
+												<div class="valign-cell"><img src="assets/icons/arrow_up_rev_64.png" class="iconk-small"></div>
+												<div class="valign-cell"><p>Start</p></div>
+											</div>
+										</a>
+									</div>
 								</div>
-							</div>
-							<div class="span2">
-								<div class="well">
-									<img src="assets/icons/drag_rotate_128.png" alt="">
-								</div>
-								<div class="container-center">
-									<p><small>while in ROTATE mode</small></p>
-									<h3>press and drag</h3>
-									<button id="plantToolsRotate" class="btn">
-										<div class="center-type">
-											<img src="assets/icons/rotate_64.png" class="iconk-small">
-											<div class="center-typeInnerImg"><p>Rotate</p></div>
-										</div>
-									</button>
-								</div>
-							</div>
-							<div class="span2">
-								<div class="well">
-									<img src="assets/icons/tap_double_128.png" alt="">
-								</div>
-								<div class="container-center">
-									<p><small>while in ANY mode</small></p>
-									<h3>double tap</h3>
-									<button id="plantToolsDelete" class="btn btn-danger">
-										<div class="center-type">
-											<img src="assets/icons/close_rev_64.png" class="iconk-small">
-											<div class="center-typeInnerImg"><p>Delete</p></div>
-										</div>
-									</button>
+								<div class="span2">
+									<div class="well">
+										<img src="assets/icons/drag_move_down_128.png" alt="">
+									</div>
+									<div class="container-center">
+										<p><small>to finish</small></p>
+										<h3>drag down</h3>
+										<a href="#game" id="buttonResumeGame" class="btn">
+											<div class="valign">
+												<div class="valign-cell"><img src="assets/icons/arrow_down_64.png" class="iconk-small"></div>
+												<div class="valign-cell"><p>Finish</p></div>
+											</div>
+										</a>
+									</div>
 								</div>
 							</div>
 						</div>
-						
 					</section>
 					<!-- END tools -->
 					<!-- field -->
 					<section id="field">
-						
-						<div class="page-header">
-							<h1>Field <small>overview, 2D map, and rewards for the current field</small></h1>
-						</div>
-						
-						<div id="fieldOverview" class="row">
-							<div class="span4">
-								<h3>Field</h3>
-								<p id="fieldId">Tutorial Field</p>
-								<h3>Score <small><span id="fieldScore">40</span>%</small></h3>
-								<div class="progress progress-success progress-striped">
-									<div id="fieldScoreBar" class="bar" style="width: 40%;"></div>
+						<div class="container">
+							<div class="page-header">
+								<h1>Field <small>overview, 2D map, and rewards for the current field</small></h1>
+							</div>
+							<div id="fieldChoose" class="container-center">
+								<div class="alert alert-block alert-warning">
+									<h4 class="alert-heading">No Field Active!</h4>
+									You're not working on a field right now, but the field tools section will show you how to get started.
 								</div>
 							</div>
-							<div id="fieldPlants" class="span3">
-								<h3>Objects Planted</h3>
-								<div class="row">
-									<div class="span1 subhead container-center">
-										<h2 id="fieldPlantCount">0</h2>
-										<p>used</p>
+							<div id="fieldCurrent">
+								<div id="fieldOverview" class="row">
+									<div class="span4">
+										<h3>Name</h3>
+										<p id="fieldId">Tutorial Field</p>
+										<h3>Score <small><span id="fieldScore">40</span>%</small></h3>
+										<div class="progress progress-success progress-striped">
+											<div id="fieldScoreBar" class="bar" style="width: 40%;"></div>
+										</div>
 									</div>
-									<div class="span1 container-center" >
-										<br />
-										<h2><small style="vertical-align:text-bottom;">vs</small></h2>
+									<div id="fieldPlants" class="span3">
+										<h3>Objects Planted</h3>
+										<div class="row">
+											<div class="span1 subhead container-center">
+												<h2 id="fieldPlantCount">0</h2>
+												<p>used</p>
+											</div>
+											<div class="span1 container-center" >
+												<br />
+												<h2><small style="vertical-align:text-bottom;">vs</small></h2>
+											</div>
+											<div class="span1 subhead container-center">
+												<h2 id="fieldPlantGoal">10</h2>
+												<p>goal</p>
+											</div>
+										</div>
 									</div>
-									<div class="span1 subhead container-center">
-										<h2 id="fieldPlantGoal">10</h2>
-										<p>goal</p>
+									<div id="fieldStatus" class="span5">
+										<h3>Status <small><span id="started" class="field-statusText">started</span>, <span id="planting" class="field-statusText">planting</span></small></h3>
+										<img src="assets/icons/farming_64.png" id="started" class="field-statusIcon well iconk-giant">
+										<img src="assets/icons/waiting_64.png" id="planting" class="field-statusIcon well iconk-giant">
 									</div>
 								</div>
-							</div>
-							<div id="fieldStatus" class="span5">
-								<h3>Status <small><span id="started" class="field-statusText">started</span>, <span id="planting" class="field-statusText">planting</span></small></h3>
-								<img src="assets/icons/farming_64.png" id="started" class="field-statusIcon well iconk-giant">
-								<img src="assets/icons/waiting_64.png" id="planting" class="field-statusIcon well iconk-giant">
-							</div>
-						</div>
-						
-						<h2>Field Map <small>click on the colored shapes to customize the object you've planted there</small></h2>
-						
-						<div id="fieldGrid" class="row">
-							<div class="span12 grid-gutterless">
-								<div class="row container-center well">
-									<ul class="span3 thumbnails">
-										<li class="span1">
-											<a href="#" class="thumbnail">
-												<img src="http://placehold.it/100" alt="">
-											</a>
-										</li>
-										<li class="span1">
-											<a href="#" class="thumbnail">
-												<img src="http://placehold.it/100" alt="">
-											</a>
-										</li>
-										<li class="span1">
-											<a href="#" class="thumbnail">
-												<img src="http://placehold.it/100" alt="">
-											</a>
-										</li>
-										<li class="span1">
-											<a href="#" class="thumbnail">
-												<img src="http://placehold.it/100" alt="">
-											</a>
-										</li>
-										<li class="span1">
-											<a href="#" class="thumbnail">
-												<img src="http://placehold.it/100" alt="">
-											</a>
-										</li>
-										<li class="span1">
-											<a href="#" class="thumbnail">
-												<img src="http://placehold.it/100" alt="">
-											</a>
-										</li>
-										<li class="span1">
-											<a href="#" class="thumbnail">
-												<img src="http://placehold.it/100" alt="">
-											</a>
-										</li>
-										<li class="span1">
-											<a href="#" class="thumbnail">
-												<img src="http://placehold.it/100" alt="">
-											</a>
-										</li>
-										<li class="span1">
-											<a href="#" class="thumbnail">
-												<img src="http://placehold.it/100" alt="">
-											</a>
-										</li>
-									</ul>
+								
+								<h3>Field Map <small>click on the colored shapes to customize the object you've planted there</small></h3>
+								
+								<div id="fieldGrid" class="row">
+									<div class="span12 grid-gutterless">
+										<div class="row container-center well">
+											<ul class="span3 thumbnails thumbnails1">
+												<li class="span1">
+													<a href="#" class="thumbnail">
+														<img src="assets/textures/dirt_128.jpg" alt="">
+													</a>
+												</li>
+												<li class="span1">
+													<a href="#" class="thumbnail">
+														<img src="assets/textures/dirt_128.jpg" alt="">
+													</a>
+												</li>
+												<li class="span1">
+													<a href="#" class="thumbnail">
+														<img src="assets/textures/dirt_128.jpg" alt="">
+													</a>
+												</li>
+												<li class="span1">
+													<a href="#" class="thumbnail">
+														<img src="assets/textures/dirt_128.jpg" alt="">
+													</a>
+												</li>
+												<li class="span1">
+													<a href="#" class="thumbnail">
+														<img src="assets/textures/dirt_128.jpg" alt="">
+													</a>
+												</li>
+												<li class="span1">
+													<a href="#" class="thumbnail">
+														<img src="assets/textures/dirt_128.jpg" alt="">
+													</a>
+												</li>
+												<li class="span1">
+													<a href="#" class="thumbnail">
+														<img src="assets/textures/dirt_128.jpg" alt="">
+													</a>
+												</li>
+												<li class="span1">
+													<a href="#" class="thumbnail">
+														<img src="assets/textures/dirt_128.jpg" alt="">
+													</a>
+												</li>
+												<li class="span1">
+													<a href="#" class="thumbnail">
+														<img src="assets/textures/dirt_128.jpg" alt="">
+													</a>
+												</li>
+											</ul>
+										</div>
+									</div>
 								</div>
-							</div>
-						</div>
-						
-						<h2>Rewards <small>the less plants you use to fill the field, the more you earn</small></h2>
-						<div id="fieldRewards" class="row">
-							<div class="span4">
-								<div id="fieldRewardsOkay" class="field-rewardsEarnedStatus alert alert-block alert-success">
-									<i class="field-rewardsEarnedStatusIcon iconk-topRight icon-ok-sign"></i>
-									<h3>Okay <small>(0 - 79%)</small></h3>
-									<div class="field-rewardsList row">
-										<div class="span1 container-center">
-											<img src="assets/icons/grid_element_3x3_base_64.png" class="iconk-large">
-											<p>Split</p>
-											<h6>Field</h6>
+								
+								<h3>Rewards <small>the less plants you use to fill the field, the more you earn</small></h3>
+								<div id="fieldRewards" class="row">
+									<div class="span4">
+										<div id="fieldRewardsOkay">
+											<h4>Okay <small>(0 - 79%)</small></h4>
+											<div class="field-rewardsList row">
+												<div class="span4">
+													<div class="well well-success">
+														<div class="row">
+															<i class="field-rewardsEarnedStatusIcon iconk-topRight icon-ok-sign"></i>
+															<div class="span1 container-center">
+																<img src="assets/icons/grid_element_3x3_base_64.png" class="iconk-large">
+																<p>Split</p>
+																<h6>Field</h6>
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+									<div class="span4">
+										<div id="fieldRewardsGood">
+											<h4>Good <small>(80 - 99%)</small></h4>
+											<div class="field-rewardsList row">
+												<div class="span4">
+													<div class="well">
+														<div class="row">
+															<div class="span1 container-center">
+																<i class="field-rewardsEarnedStatusIcon iconk-topRight icon-ok-sign hidden"></i>
+																<img src="assets/icons/grid_element_3x3_001010000_64.png" class="iconk-large">
+																<p>Two Step</p>
+																<h6>Shape</h6>
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+									<div class="span4">
+										<div id="fieldRewardsPerfect">
+											<h4>Perfect <small>(100%)</small></h4>
+											<div class="field-rewardsList row">
+												<div class="span4">
+													<div class="well">
+														<div class="row">
+															<div class="span1 container-center">
+																<i class="field-rewardsEarnedStatusIcon iconk-topRight icon-ok-sign hidden"></i>
+																<img src="assets/icons/pineapple_64.png" class="iconk-large">
+																<p>Pineapple</p>
+																<h6>Plant</h6>
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
 										</div>
 									</div>
 								</div>
 							</div>
-							<div class="span4">
-								<div id="fieldRewardsGood" class="field-rewardsEarnedStatus">
-									<i class="field-rewardsEarnedStatusIcon iconk-topRight icon-ok-sign hidden"></i>
-									<h3>Good <small>(80 - 99%)</small></h3>
-									<div class="field-rewardsList row">
-										<div class="span1 container-center">
-											<img src="assets/icons/grid_element_3x3_001010000_64.png" class="iconk-large">
-											<p>Two Step</p>
-											<h6>Shape</h6>
-										</div>
-									</div>
-								</div>
-							</div>
-							<div class="span4">
-								<div id="fieldRewardsPerfect" class="field-rewardsEarnedStatus">
-									<i class="field-rewardsEarnedStatusIcon iconk-topRight icon-ok-sign hidden"></i>
-									<h3>Perfect <small>(100%)</small></h3>
-									<div class="field-rewardsList row">
-										<div class="span1 container-center">
-											<img src="assets/icons/pineapple_64.png" class="iconk-large">
-											<p>Pineapple</p>
-											<h6>Plant</h6>
-										</div>
-									</div>
-								</div>
-							</div>
 						</div>
-						
 					</section>
 					<!-- END field -->
-					<!-- plant -->
-					<section id="plant">
-						
-						<div class="page-header">
-							<h1>Plant <small>examine an object you've planted in the current field</small></h1>
-						</div>
-						
-						<div id="plantPreview" class="row">
-							<div class="span12 grid-gutterless">
-								<div class="row container-center well">
-									<ul class="span2 thumbnails">
-										<li class="span2">
-											<div id="plant3DPortrait" class="thumbnail">
-												<img src="http://placehold.it/260x300">
+					
+					<!-- plantTools -->
+					<section id="plantTools" class="tools">
+						<div class="container">
+							<div class="page-header">
+								<h1>Plant Tools <small>multiple ways to change your plants</small></h1>
+							</div>
+							
+							<div class="row">
+								<div class="span2">
+									<div class="well">
+										<img src="assets/icons/tap_128.png" alt="">
+									</div>
+									<div class="container-center">
+										<p><small>while in ANY mode</small></p>
+										<h3>single tap</h3>
+										<button id="buttonPlantToolsSelect" class="btn btn-primary">
+											<div class="valign">
+												<div class="valign-cell"><img src="assets/icons/info_rev_64.png" class="iconk-small"></div>
+												<div class="valign-cell"><p>Select</p></div>
 											</div>
-										</li>
-									</ul>
+										</button>
+									</div>
+								</div>
+								<div class="span2">
+									<div class="well">
+										<img src="assets/icons/drag_move_128.png" alt="">
+									</div>
+									<div class="container-center">
+										<p><small>while in MOVE mode</small></p>
+										<h3>drag</h3>
+										<button id="buttonPlantToolsMove" class="btn">
+											<div class="valign">
+												<div class="valign-cell"><img src="assets/icons/move_64.png" class="iconk-small"></div>
+												<div class="valign-cell"><p>Move</p></div>
+											</div>
+										</button>
+									</div>
+								</div>
+								<div class="span2">
+									<div class="well">
+										<img src="assets/icons/drag_rotate_128.png" alt="">
+									</div>
+									<div class="container-center">
+										<p><small>while in ROTATE mode</small></p>
+										<h3>drag in circles</h3>
+										<button id="buttonPlantToolsRotate" class="btn">
+											<div class="valign">
+												<div class="valign-cell"><img src="assets/icons/rotate_64.png" class="iconk-small"></div>
+												<div class="valign-cell"><p>Rotate</p></div>
+											</div>
+										</button>
+									</div>
+								</div>
+								<div class="span2">
+									<div class="well">
+										<img src="assets/icons/tap_double_128.png" alt="">
+									</div>
+									<div class="container-center">
+										<p><small>while in ANY mode</small></p>
+										<h3>double tap</h3>
+										<button id="buttonPlantToolsDelete" class="btn btn-danger">
+											<div class="valign">
+												<div class="valign-cell"><img src="assets/icons/close_rev_64.png" class="iconk-small"></div>
+												<div class="valign-cell"><p>Delete</p></div>
+											</div>
+										</button>
+									</div>
 								</div>
 							</div>
 						</div>
-						
-						<div id="plantOverview" class="row">
-							<div class="span4">
-								<img src="assets/icons/grid_element_3x3_000010000_64.png" id="plantShapeIcon" class="pull-left iconk-large">
-								<h2 id="plantShape">Single Square</h2>
-								<h6>shape</h6>
+					</section>
+					<!-- END plantTools -->
+					
+					<!-- plant -->
+					<section id="plant">
+						<div class="container">
+							<div class="page-header">
+								<h1>Plant <small>examine an object you've planted in the current field</small></h1>
 							</div>
-							<div class="span4">
-								<img src="assets/icons/taro_64.png" id="plantTypeIcon" class="pull-left iconk-large">
-								<h2 id="plantType">Taro</h2>
-								<h6>plant</h6>
+							
+							<div id="plantPreview" class="row">
+								<div class="span12 grid-gutterless">
+									<div class="row container-center well">
+										<ul class="span2 thumbnails">
+											<li class="span2">
+												<div id="plant3DPortrait" class="thumbnail">
+													<img src="http://placehold.it/260x300">
+												</div>
+											</li>
+										</ul>
+									</div>
+								</div>
 							</div>
-							<div class="span4">
-								<h3 class="pull-right"><small>in the <span id="fieldId">Tutorial</span> Field, at location <span id="plantFieldLocation">1</span></small></h3>
+							
+							<div id="plantOverview" class="row">
+								<div class="span4">
+									<img src="assets/icons/grid_element_3x3_000010000_64.png" id="plantShapeIcon" class="pull-left iconk-large">
+									<h2 id="plantShape">Single Square</h2>
+									<h6>shape</h6>
+								</div>
+								<div class="span4">
+									<img src="assets/icons/taro_64.png" id="plantTypeIcon" class="pull-left iconk-large">
+									<h2 id="plantType">Taro</h2>
+									<h6>plant</h6>
+								</div>
+								<div class="span4">
+									<h3 class="pull-right"><small>in the <span id="fieldId">Tutorial</span> Field, at location <span id="plantFieldLocation">1</span></small></h3>
+								</div>
 							</div>
 						</div>
-						
 					</section>
 					<!-- END plant -->
 					<!-- collection -->
 					<section id="collection">
-						
-						<div class="page-header">
-							<h1>Customize <small>change the current plant into any other plant in your collection</small></h1>
-						</div>
-						<div id="plantCustomization" class="row">
-							<div class="span3">
-								<div class="row">
-									<div class="span2 well">
-										<div id="plantPotential3DPortrait" >
-											<img src="http://placehold.it/260x300">
+						<div class="container">
+							<div class="page-header">
+								<h1>Customize <small>explore plants in your collection and swap them out with the current plant</small></h1>
+							</div>
+							<div id="plantCustomization" class="row">
+								<div class="span3">
+									<h3>Selection</h3>
+									<div class="row">
+										<div class="span2 well">
+											<div id="plantCustom3DPortrait" >
+												<img src="http://placehold.it/260x300">
+											</div>
 										</div>
 									</div>
-								</div>
-								<div id="plantPotentialInfo">
-									<div id="plantPotentialTitle" class="center-type">
-										<img src="assets/icons/taro_64.png" id="plantPotentialTypeIcon" class="iconk-large">
-										<div id="plantPotentialType" class="center-typeInnerImg"><h2>Taro</h2><h6>Plant</h6></div>
-									</div>
-									<h2><small>Knowledge</small></h2>
-									<p id="plantPotentialInfoText">Information about plant</p>
-									<button id="plantCustomizeChange" class="btn btn-primary">
-										<div class="center-type">
-											<img src="assets/icons/confirm_rev_64.png" class="iconk-small">
-											<div class="center-typeInnerImg"><p>Change</p></div>
+									<div id="plantCustomInfo">
+										<div class="page-header">
+											<div id="plantCustomTitle" class="valign">
+												<div class="valign-cell"><img src="assets/icons/taro_64.png" id="plantCustomTypeIcon" class="iconk-large"></div>
+												<div id="plantCustomType" class="valign-cell"><h2>Taro</h2><h6>Plant</h6></div>
+											</div>
 										</div>
-									</button>
+										<h2><small>Knowledge</small></h2>
+										<p id="plantCustomInfoText">Information about plant</p>
+										<button id="buttonPlantCustomChange" class="btn btn-primary">
+											<div class="valign">
+												<div class="valign-cell"><img src="assets/icons/confirm_rev_64.png" class="iconk-small"></div>
+												<div class="valign-cell"><p>Swap</p></div>
+											</div>
+										</button>
+									</div>
 								</div>
-							</div>
-							<div id="plantCollection" class="span9 grid-gutterless">
-								<div class="row container-center well">
-									<ul class="span8 thumbnails">
-										<li class="span1">
-											<a href="#" class="thumbnail">
-												<img src="http://placehold.it/100" alt="">
-											</a>
-										</li>
-										<li class="span1">
-											<a href="#" class="thumbnail">
-												<img src="http://placehold.it/100" alt="">
-											</a>
-										</li>
-										<li class="span1">
-											<a href="#" class="thumbnail">
-												<img src="http://placehold.it/100" alt="">
-											</a>
-										</li>
-										<li class="span1">
-											<a href="#" class="thumbnail">
-												<img src="http://placehold.it/100" alt="">
-											</a>
-										</li>
-										<li class="span1">
-											<a href="#" class="thumbnail">
-												<img src="http://placehold.it/100" alt="">
-											</a>
-										</li>
-										<li class="span1">
-											<a href="#" class="thumbnail">
-												<img src="http://placehold.it/100" alt="">
-											</a>
-										</li>
-										<li class="span1">
-											<a href="#" class="thumbnail">
-												<img src="http://placehold.it/100" alt="">
-											</a>
-										</li>
-										<li class="span1">
-											<a href="#" class="thumbnail">
-												<img src="http://placehold.it/100" alt="">
-											</a>
-										</li>
-									</ul>
+								<div id="plantCollection" class="span9 grid-gutterless">
+									<h3>Collection</h3>
+									<div class="row container-center well">
+										<ul class="span8 thumbnails thumbnails4">
+											<li class="span1">
+												<a href="#" class="thumbnail">
+													<img src="http://placehold.it/100" alt="">
+												</a>
+											</li>
+											<li class="span1">
+												<a href="#" class="thumbnail">
+													<img src="http://placehold.it/100" alt="">
+												</a>
+											</li>
+											<li class="span1">
+												<a href="#" class="thumbnail">
+													<img src="http://placehold.it/100" alt="">
+												</a>
+											</li>
+											<li class="span1">
+												<a href="#" class="thumbnail">
+													<img src="http://placehold.it/100" alt="">
+												</a>
+											</li>
+											<li class="span1">
+												<a href="#" class="thumbnail">
+													<img src="http://placehold.it/100" alt="">
+												</a>
+											</li>
+											<li class="span1">
+												<a href="#" class="thumbnail">
+													<img src="http://placehold.it/100" alt="">
+												</a>
+											</li>
+											<li class="span1">
+												<a href="#" class="thumbnail">
+													<img src="http://placehold.it/100" alt="">
+												</a>
+											</li>
+											<li class="span1">
+												<a href="#" class="thumbnail">
+													<img src="http://placehold.it/100" alt="">
+												</a>
+											</li>
+										</ul>
+									</div>
 								</div>
 							</div>
 						</div>
-						
 					</section>
 					<!-- END collection -->
 				</section>
@@ -606,13 +718,16 @@
 	<script src="js/jquery-1.7.2.min.js"></script>
 	<script src="js/jquery.contentchanged.js"></script>
 	<script src="js/jquery.imagesloaded.min.js"></script>
+	<script src="js/jquery.sticky.js"></script>
 	<script src="js/bootstrap.min.js"></script>
 	<script src="js/bootstrap-scroll-modal.custom.js"></script>
-	<!--<script>
+	<script>
 		$(document).ready( function () {
-			$('#preloader').modal( { backdrop:"static", keyboard: false, dynamic: true } );
+			$("#menuNav").sticky( { topSpacing:0 } );
+			$("#farmingNav").sticky( { topSpacing: $("#menuNav").height() } );
+			//$('#preloader').modal( { backdrop:"static", keyboard: false, dynamic: true } );
 		} );
-	</script>-->
+	</script>
 	<!--<script src="assets/modules/Kaiopua.js"></script>-->
 
 	<!-- google analytics -->
