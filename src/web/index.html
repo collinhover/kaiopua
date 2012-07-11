@@ -82,7 +82,7 @@
 	<!-- END header -->
 	
 	<!-- game -->
-	<div id="game" class="unselectable">
+	<div id="game" class="container unselectable">
 		
 	</div>
 	<!-- END game -->
@@ -94,20 +94,174 @@
 	<!-- END transitioner -->
 	
 	<!-- ui -->
-	<div id="ui" class="unselectable">
+	<div id="ui" class="container unselectable">
 		
-		<!-- ingame -->
-		<div id="ingame">
+		<!-- inGame -->
+		<div id="inGame">
 			
-			<!-- preloader -->
-			<div id='preloader' class="container container-center">
-				<div class="hero-unit">
-					<h1 class="logo_type">Welcome to Kai 'Opua</h1>
-					<p><img src='assets/icons/waiting_64.png'>Hold on, we're loading a few things...</p>
-					<p><small>(if you've been waiting too long, <a href='index.html' class="btn btn-large">refresh</a> and we'll try to load faster!)</small></p>
+			<!-- menuNav -->
+			<div id="menuNav">
+				<div class="container">
+					<div class="navbar navbar-flush">
+						<div class="navbar-inner">
+							<div class="container">
+								
+								<div class="logo-group pull-right">
+									<div class="btn-group">
+										<a class="logo dropdown-toggle"  data-toggle="dropdown">
+											<img src="assets/icons/whale_rev_64.png" alt="Kai 'Opua" id="logoIcon1" class="iconk-large logo-icon">
+											<h1 class="logo-type">Kai 'Opua</h1>
+											<img src="assets/icons/character_rev_64.png" alt="Kai 'Opua" id="logoIcon2" class="iconk-large logo-icon">
+											<img src="assets/icons/taro_rev_64.png" alt="Kai 'Opua" id="logoIcon3" class="iconk-medium logo-icon">
+										</a>
+										<span class="caret"></span>
+										<ul class="dropdown-menu">
+											<li>
+												<a href="https://github.com/collinhover/kaiopua" target="_blank">
+													<div class="valign">
+														<div class="valign-cell"><img src="assets/icons/github_64.png" class="iconk-small"></div>
+														<div class="valign-cell"><p>Get the Code</p></div>
+													</div>
+												</a>
+											</li>
+											<li>
+												<a href="http://www.facebook.com/sharer.php?u=http%3A%2F%2Fcollinhover.com&t=Kai 'Opua%3A%20an%20interactive%20moon-sized%20Hawaiian%20space%20worm%20that%20will%20teach%20you%20to%20be%20a%20better%20designer!" target="_blank">
+													<div class="valign">
+														<div class="valign-cell"><img src="assets/icons/facebook_64.png" class="iconk-small"></div>
+														<div class="valign-cell"><p>Like</p></div>
+													</div>
+												</a>
+											</li>
+											<li>
+												<a href="http://twitter.com/share?url=http%3A%2F%2Fcollinhover.com&text=Kai 'Opua%3A%20an%20interactive%20moon-sized%20Hawaiian%20space%20worm%20that%20will%20teach%20you%20to%20be%20a%20better%20designer!" target="_blank">
+													<div class="valign">
+														<div class="valign-cell"><img src="assets/icons/twitter_64.png" class="iconk-small"></div>
+														<div class="valign-cell"><p>Share</p></div>
+													</div>
+												</a>
+											</li>
+										</ul>
+									</div>
+								</div>
+								
+								<div class="pull-left">
+									<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+										<span class="icon-bar"></span>
+										<span class="icon-bar"></span>
+										<span class="icon-bar"></span>
+									</a>
+								</div>
+								
+								<div class="nav-collapse">
+									<ul class="nav nav-pills">
+										<li>
+											<a href="#farming" id="buttonFarming" class="nav-icon">
+												<div class="valign">
+													<div class="valign-cell"><img src="assets/icons/farming_rev_64.png" class="iconk-large"></div>
+													<div class="valign-cell"><p>Farming</p></div>
+												</div>
+											</a>
+										</li>
+										<li>
+											<a href="#map" id="buttonMap" class="nav-icon">
+												<div class="valign">
+													<div class="valign-cell"><img src="assets/icons/map_rev_64.png" class="iconk-large"></div>
+													<div class="valign-cell"><p>Map</p></div>
+												</div>
+											</a>
+										</li>
+										<li>
+											<a href="#options" id="buttonOptions" class="nav-icon">
+												<div class="valign">
+													<div class="valign-cell"><img src="assets/icons/cog_rev_64.png" class="iconk-large"></div>
+													<div class="valign-cell"><p>Options</p></div>
+												</div>
+											</a>
+										</li>
+										<li>
+											<a href="#game" id="buttonPauseGame">
+												<div class="valign">
+													<div class="valign-cell iconk-large"><img src="assets/icons/pause_rev_64.png" alt="Kai 'Opua" id="logoIcon1" class="iconk-small"></div>
+													<div class="valign-cell"><p>Pause</p></div>
+												</div>
+											</a>
+										</li>
+										<li>
+											<a href="#game" id="buttonResumeGame">
+												<div class="valign">
+													<div class="valign-cell iconk-large"><img src="assets/icons/play_rev_64.png" alt="Kai 'Opua" id="logoIcon1" class="iconk-small"></div>
+													<div class="valign-cell"><p>Resume</p></div>
+												</div>
+											</a>
+										</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</div>
 				</div>
 			</div>
-			<!-- END preloader -->
+			<!-- END menuNav -->
+			
+			<!-- inactive -->
+			<div id="inactive">
+				<!-- worker -->
+				<div id='worker' class="active-item collapse">
+					<div class="hero-unit squire-unit">
+						<div class="valign">
+							<div class="valign-cell">
+								<p id="workerProgressTextWork" class="progress-text"><small>loading...</small></p>
+							</div>
+							<div class="valign-cell">
+								<div class="work">
+									<div class="valign">
+										<div class="valign-cell">
+											<p id="workerProgressTextWork" class="progress-text"><img src='assets/icons/waiting_64.png' class="iconk-medium"></p>
+										</div>
+										<div id="workerProgressBarWork" class="valign-cell progress-bar">
+											<img src='assets/icons/bar_vertical_color_64.png' class="iconk-tiny iconk-widthFollow iconk-tight">
+											<img src='assets/icons/bar_vertical_color_64.png' class="iconk-tiny iconk-widthFollow iconk-tight">
+											<img src='assets/icons/bar_vertical_color_64.png' class="iconk-tiny iconk-widthFollow iconk-tight">
+											<img src='assets/icons/bar_vertical_color_64.png' class="iconk-tiny iconk-widthFollow iconk-tight">
+											<img src='assets/icons/bar_vertical_color_64.png' class="iconk-tiny iconk-widthFollow iconk-tight">
+											<img src='assets/icons/bar_vertical_color_64.png' class="iconk-tiny iconk-widthFollow iconk-tight">
+											<img src='assets/icons/bar_vertical_color_64.png' class="iconk-tiny iconk-widthFollow iconk-tight">
+										</div>
+									</div>
+									<div class="valign">
+										<div class="valign-cell">
+											<p id="workerProgressTextComplete" class="progress-text"><img src='assets/icons/confirm_64.png' class="iconk-medium"></p>
+										</div>
+										<div id="workerProgressBarComplete" class="valign-cell progress-bar">
+											<img src='assets/icons/bar_vertical_64.png' class="iconk-tiny iconk-widthFollow iconk-tight">
+											<img src='assets/icons/bar_vertical_64.png' class="iconk-tiny iconk-widthFollow iconk-tight">
+											<img src='assets/icons/bar_vertical_64.png' class="iconk-tiny iconk-widthFollow iconk-tight">
+											<img src='assets/icons/bar_vertical_64.png' class="iconk-tiny iconk-widthFollow iconk-tight">
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- END worker -->
+			</div>
+			<!-- END inactive -->
+			
+			<!-- active -->
+			<div id="active" class="container container-center">
+				<!-- preloader -->
+				<div id="preloader" class="active-item collapse in">
+					<div class="hero-unit squire-unit">
+						<h1 class="logo-type">Welcome to Kai 'Opua</h1>
+						<p><img src='assets/icons/waiting_64.png' class="iconk-huge">Hold on, we're loading a few things...</p>
+						<p><small>(if you've been waiting too long, <a href='index.html' class="btn btn-large">refresh</a> and we'll try to load faster!)</small></p>
+					</div>
+				</div>
+				<!-- END preloader -->
+				
+			</div>
+			<!-- END active -->
 			
 			<!-- noscript -->
 			<noscript>
@@ -142,118 +296,10 @@
 			<!-- END errors -->
 			
 		</div>
-		<!-- END ingame -->
+		<!-- END inGame -->
 		
-		<!-- outgame -->
-		<div id="outgame">
-		
-			<!-- active -->
-			<div id="active">
-				
-			</div>
-			<!-- END active -->
-			
-			<div id="menuNav">
-				<div class="container">
-					<div class="navbar navbar-flush">
-						<div class="navbar-inner">
-							<div class="container">
-								<div class="valign-expand">
-									<div class="valign-cell">
-										<ul class="nav nav-pills pull-left">
-											<li>
-												<a href="#farming" id="buttonFarming" class="nav-icon">
-													<div class="valign">
-														<div class="valign-cell"><img src="assets/icons/farming_rev_64.png" class="iconk-large"></div>
-														<div class="valign-cell"><p>Farming</p></div>
-													</div>
-												</a>
-											</li>
-											<li>
-												<a href="#map" id="buttonMap" class="nav-icon">
-													<div class="valign">
-														<div class="valign-cell"><img src="assets/icons/map_rev_64.png" class="iconk-large"></div>
-														<div class="valign-cell"><p>Map</p></div>
-													</div>
-												</a>
-											</li>
-											<li>
-												<a href="#options" id="buttonOptions" class="nav-icon">
-													<div class="valign">
-														<div class="valign-cell"><img src="assets/icons/cog_rev_64.png" class="iconk-large"></div>
-														<div class="valign-cell"><p>Options</p></div>
-													</div>
-												</a>
-											</li>
-										</ul>
-									</div>
-									<div class="valign-cell">
-										<div class="valign pull-right">
-											<div class="valign-cell">
-												<ul class="nav nav-pills pull-left">
-													<li>
-														<a href="#game" id="buttonPauseGame">
-															<div class="valign">
-																<div class="valign-cell"><img src="assets/icons/pause_rev_64.png" alt="Kai 'Opua" id="logoIcon1" class="iconk-small"></div>
-																<div class="valign-cell"><p>Pause</p></div>
-															</div>
-														</a>
-													</li>
-													<li>
-														<a href="#game" id="buttonResumeGame">
-															<div class="valign">
-																<div class="valign-cell"><img src="assets/icons/play_rev_64.png" alt="Kai 'Opua" id="logoIcon1" class="iconk-small"></div>
-																<div class="valign-cell"><p>Resume</p></div>
-															</div>
-														</a>
-													</li>
-												</ul>
-											</div>
-											<div class="valign-cell logo-group">
-												<div class="btn-group">
-													<a id="buttonResumeGame" class="logo dropdown-toggle"  data-toggle="dropdown">
-														<img src="assets/icons/whale_rev_64.png" alt="Kai 'Opua" id="logoIcon1" class="iconk-large logo-icon">
-														<h1 class="logo-type">Kai 'Opua</h1>
-														<img src="assets/icons/character_rev_64.png" alt="Kai 'Opua" id="logoIcon2" class="iconk-large logo-icon">
-														<img src="assets/icons/taro_rev_64.png" alt="Kai 'Opua" id="logoIcon3" class="iconk-medium logo-icon">
-													</a>
-													<span class="caret"></span>
-													<ul class="dropdown-menu">
-														<li>
-															<a href="https://github.com/collinhover/kaiopua" target="_blank">
-																<div class="valign">
-																	<div class="valign-cell"><img src="assets/icons/github_64.png" class="iconk-small"></div>
-																	<div class="valign-cell"><p>Get the Code</p></div>
-																</div>
-															</a>
-														</li>
-														<li>
-															<a href="http://www.facebook.com/sharer.php?u=http%3A%2F%2Fcollinhover.com&t=Kai 'Opua%3A%20an%20interactive%20moon-sized%20Hawaiian%20space%20worm%20that%20will%20teach%20you%20to%20be%20a%20better%20designer!" target="_blank">
-																<div class="valign">
-																	<div class="valign-cell"><img src="assets/icons/facebook_64.png" class="iconk-small"></div>
-																	<div class="valign-cell"><p>Like</p></div>
-																</div>
-															</a>
-														</li>
-														<li>
-															<a href="http://twitter.com/share?url=http%3A%2F%2Fcollinhover.com&text=Kai 'Opua%3A%20an%20interactive%20moon-sized%20Hawaiian%20space%20worm%20that%20will%20teach%20you%20to%20be%20a%20better%20designer!" target="_blank">
-																<div class="valign">
-																	<div class="valign-cell"><img src="assets/icons/twitter_64.png" class="iconk-small"></div>
-																	<div class="valign-cell"><p>Share</p></div>
-																</div>
-															</a>
-														</li>
-													</ul>
-												</div>
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
+		<!-- outGame -->
+		<div id="outGame">
 			
 			<!-- menus -->
 			<div id="menus">
@@ -264,7 +310,7 @@
 					<header class="subhead container">
 						<div class="alert alert-success iconk-large"><img src="assets/icons/farming_64.png"></div>
 						<h1>Farming</h1>
-						<p class="lead">Here you can examine the field you're working on and the things you've planted in it, as well as your collection of plants.</p>
+						<p class="lead">examine the field you're working on, modify the things you've planted, and browse your plant collection</p>
 						<div id="farmingNav" class="subnavbar">
 							<div class="navbar-inner">
 								<div class="container">
@@ -710,7 +756,7 @@
 			<!-- END menus -->
 			
 		</div>
-		<!-- END outgame -->
+		<!-- END outGame -->
 			
 		<!-- footer -->
 		<div id="footer" class="container">
@@ -728,6 +774,7 @@
 	<!-- javascript -->
 	
 	<script src="js/LAB.min.js"></script>
+	<!--<script src="assets/modules/Kaiopua.js"></script>-->
 	<script src="js/jquery-1.7.2.min.js"></script>
 	<script src="js/jquery.contentchanged.js"></script>
 	<script src="js/jquery.imagesloaded.min.js"></script>
@@ -736,12 +783,35 @@
 	<script src="js/bootstrap-scroll-modal.custom.js"></script>
 	<script>
 		$(document).ready( function () {
+			
+			// sticky navigation bars
+			
 			$("#menuNav").sticky( { topSpacing:0 } );
 			$("#farmingNav").sticky( { topSpacing: $("#menuNav").height() } );
+			
+			// handle active items
+			$('.active-item').on('show', function () {
+				$('#active').append( this );
+			});
+			$('.active-item').on('hidden', function () {
+				$('#inactive').append( this );
+			});
+			$(".active-item").collapse({ toggle: false });
+			
+			// show worker
+			
+			setTimeout( function () {
+				$("#worker").collapse('show');
+				
+				setTimeout( function () {
+					$("#preloader").collapse('hide');
+				}, 1000 );
+				
+			}, 5000 );
+			
 			//$('#preloader').modal( { backdrop:"static", keyboard: false, dynamic: true } );
 		} );
 	</script>
-	<!--<script src="assets/modules/Kaiopua.js"></script>-->
 
 	<!-- google analytics -->
 	<script>

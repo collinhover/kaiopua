@@ -32,8 +32,7 @@
 
 @displayFontFamily: 'CoustardRegular', @sansFontFamily;
 
-@minWidth: @gridRowWidth;
-@minHeight: 500px;
+@minHeight: 600px;
 
 .fullWidth {
 	position: relative;
@@ -44,7 +43,12 @@
 .fullHeight {
 	position: relative;
 	height: 100%;
-	min-height: 100%;
+	min-height: @minHeight;
+}
+
+.fullMin {
+	min-width: 100%;
+	min-height: @minHeight;
 }
 
 .fullscreen {
@@ -53,32 +57,35 @@
 	margin: 0;
 	padding: 0;
 }
+
 .fullscreenMin {
 	.fullscreen;
-	min-width: @minWidth;
-	min-height: @minHeight;
+	.fullMin;
 }
-.fullscreenTopLeft {
-	.fullscreenMin;
+
+.fullscreenTopLeftNoWidth {
+	.fullHeight;
+	.fullMin;
 	position: absolute;
 	left: 0;
 	top: 0;
-}
-.fullscreenFixed {
-	.fullscreenMin;
-	position: fixed;
-	top: 0;
-	left: 0;
-}
-.fullscreenCleared {
-	.fullscreenMin;
-	.clearfix();
 }
 
 .inline-block {
 	display:inline-block;
 	*display:inline;
 	zoom:1;
+}
+
+/* rounded 
+-------------------------*/
+
+.rounded-top (@radius) {
+	.border-radius(@radius @radius 0 0);
+}
+
+.rounded-bottom (@radius) {
+	.border-radius(0 0 @radius @radius);
 }
 
 /* type 
@@ -189,6 +196,19 @@ html, body {
 	padding: 0;
 }
 
+.iconk-widthFollow {
+	width: auto;
+}
+.iconk-heightFollow{
+	height: auto;
+}
+
+.iconk-tight {
+	display: block;
+	float: left;
+	padding: 1px;
+}
+
 /* anchors 
 -------------------------*/
 
@@ -200,12 +220,12 @@ a {
 -------------------------*/
 
 section {
-	padding-top: 40px;
-	padding-bottom: 40px;
-	border-top: 50px solid transparent;
-    margin-top: -50px;
+	padding-top: 50px;
+	padding-bottom: 30px;
+	border-top: 70px solid transparent;
+    margin-top: -70px;
     -webkit-background-clip: padding-box;
-    -moz-background-clip: padding;
+    -moz-background-clip: padding-box;
     background-clip: padding-box;
 }
 
@@ -262,6 +282,38 @@ section {
 
 .well-success {
 	background-color: @successBackground;
+}
+
+/* hero unit 
+-------------------------*/
+
+.squire-unit {
+	padding: 30px;
+	margin: 0;
+	.border-radius(0);
+}
+
+/* activity 
+-------------------------*/
+
+#inactive {
+	display: none;
+}
+
+#active {
+	
+	.active-item {
+		margin: 0;
+		
+		&:last-child {
+			.rounded-bottom(15px);
+		}
+	}
+	
+	.active-item + .active-item {
+		margin-top: 10px;
+	}
+	
 }
 
 /* navbar 
@@ -344,6 +396,7 @@ section {
 	}
 	
 	&.is-sticky {
+		margin: 0;
 		border-color: #D5D5D5;
 		border-width: 0 0 1px;
 		-webkit-border-radius: 0;
@@ -370,12 +423,6 @@ section {
 	
 	p {
 		margin: 10px 0 0 0;
-	}
-}
-
-.nav-collapse {
-	.nav-icon {
-		margin: 3px 0 3px 0;
 	}
 }
 
@@ -443,8 +490,23 @@ section {
 	
 }
 
-/* thumbnails 
+/* grid 
 -------------------------*/
+
+/* responsive override */
+
+@media (min-width: 0px) and (max-width: 979px) {
+
+  // Fixed grid
+  #grid > .core(42px, 20px);
+
+  // Fluid grid
+  #grid > .fluid(5.801104972%, 2.762430939%);
+
+  // Input grid
+  #grid > .input(42px, 20px);
+
+}
 
 .grid-gutterless {
 	
@@ -456,7 +518,6 @@ section {
 		}
 	}
 	
-	// Fixed grid
 	#grid > .core(78px, 0px);
 	
 	@media (min-width: 1200px) {
@@ -466,7 +527,7 @@ section {
 		
 	}
 	
-	@media (min-width: 768px) and (max-width: 979px) {
+	@media (min-width: 0px) and (max-width: 979px) {
 		
 		// Fixed grid
 		#grid > .core(60px, 0px);
@@ -524,102 +585,99 @@ section {
 -------------------------*/
 
 #game {
-	.fullscreenTopLeft;
+	.fullscreenTopLeftNoWidth;
 	overflow:hidden;
+	z-index: 1000;
 }
 
 #ui {
-	.fullscreenTopLeft;
+	.fullscreenTopLeftNoWidth;
 	
-	#ingame {
-		.fullscreenCleared;
+	#inGame {
+		.fullscreenMin;
+		background: whiteSmoke;
+		overflow:hidden;
+		z-index: 1001;
+	}
+	
+	#menuNav {
+		.fullWidth;
+		#gradient > .vertical(@navbarBackgroundHighlight, @navbarBackground);
+		.box-shadow(~"0 1px 3px rgba(0,0,0,.25), inset 0 -1px 0 rgba(0,0,0,.1)");
+		z-index: 9999;
 		
-		#preloader {
-			margin-top: 60px;
+		.navbar-inner {
+			.box-shadow(~"none");
+		}
+		
+		.btn-navbar {
+			float: none;
+			margin-top: 50%;
+		}
+		
+		.nav {
+			
+			li {
+				a {
+					
+					&:hover {
+						
+					}
+					
+					img {
+						padding: 0;
+					}
+					
+				}
+				
+				&.active {
+					a, a:hover {
+						
+					}
+				}
+			}
+			
 		}
 		
 	}
 	
-	#outgame {
-		.fullWidth;
+	#outGame {
+		min-width: 100%;
 		min-height: @minHeight;
 		.clearfix();
-		margin-top: -70px;
-		
-		#active {
-			
-		}
-		
-		#menuNav {
-			.fullWidth;
-			#gradient > .vertical(@navbarBackgroundHighlight, @navbarBackground);
-			.box-shadow(~"0 1px 3px rgba(0,0,0,.25), inset 0 -1px 0 rgba(0,0,0,.1)");
-			
-			.navbar-inner {
-				.box-shadow(~"none");
-			}
-			
-			.nav {
-				
-				li {
-					a {
-						
-						&:hover {
-							
-						}
-						
-						img {
-							padding: 0;
-						}
-						
-					}
-					
-					&.active {
-						a, a:hover {
-							
-						}
-					}
-				}
-				
-			}				
-			
-		}
 		
 		#menus {
 			
 		}
 		
 	}
-	
+		
 	#preloader {
 		
 	}
 	
-	#transitioner {
-		.fullscreenFixed;
-		background: @whiteDarker;
-		display: none;
-	}
-
-	#overlay {
-		.fullscreenFixed;
+	#worker {
+		position: relative;
 		
-		#info {
-			margin-top: 50px;
-			margin-bottom: 50px;
-
-			#errors {
-				
-			}
+		.work {
+			margin-top: 15px;
 			
+			.progress-text {
+				padding: 0 15px 0 0;
+			}
 		}
 		
+	}
+	
+	#transitioner {
+		.fullscreenTopLeftNoWidth;
+		background: @whiteDarker;
+		display: none;
 	}
 	
 	#footer {
 		font-size: 13px;
 		position: relative;
-		z-index: 9999;
 		margin-top: 10px;
 		padding-top: 20px;
 		padding-bottom: 20px;
@@ -634,7 +692,7 @@ section {
 .logo-group {
 	
 	.logo {
-		padding: 0 10px;
+		padding-top: 10px;
 		opacity: 0.5;
 		color: @white;
 		cursor: pointer;
