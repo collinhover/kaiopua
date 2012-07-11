@@ -192,6 +192,14 @@
 											<div class="valign-cell">
 												<ul class="nav nav-pills pull-left">
 													<li>
+														<a href="#game" id="buttonPauseGame">
+															<div class="valign">
+																<div class="valign-cell"><img src="assets/icons/pause_rev_64.png" alt="Kai 'Opua" id="logoIcon1" class="iconk-small"></div>
+																<div class="valign-cell"><p>Pause</p></div>
+															</div>
+														</a>
+													</li>
+													<li>
 														<a href="#game" id="buttonResumeGame">
 															<div class="valign">
 																<div class="valign-cell"><img src="assets/icons/play_rev_64.png" alt="Kai 'Opua" id="logoIcon1" class="iconk-small"></div>
@@ -201,13 +209,42 @@
 													</li>
 												</ul>
 											</div>
-											<div class="valign-cell">
-												<a href="#game" id="buttonResumeGame" class="logo">
-													<img src="assets/icons/whale_rev_64.png" alt="Kai 'Opua" id="logoIcon1" class="iconk-large logo-icon">
-													<h1 class="logo-type">Kai 'Opua</h1>
-													<img src="assets/icons/character_rev_64.png" alt="Kai 'Opua" id="logoIcon2" class="iconk-large logo-icon">
-													<img src="assets/icons/taro_rev_64.png" alt="Kai 'Opua" id="logoIcon3" class="iconk-medium logo-icon">
-												</a>
+											<div class="valign-cell logo-group">
+												<div class="btn-group">
+													<a id="buttonResumeGame" class="logo dropdown-toggle"  data-toggle="dropdown">
+														<img src="assets/icons/whale_rev_64.png" alt="Kai 'Opua" id="logoIcon1" class="iconk-large logo-icon">
+														<h1 class="logo-type">Kai 'Opua</h1>
+														<img src="assets/icons/character_rev_64.png" alt="Kai 'Opua" id="logoIcon2" class="iconk-large logo-icon">
+														<img src="assets/icons/taro_rev_64.png" alt="Kai 'Opua" id="logoIcon3" class="iconk-medium logo-icon">
+													</a>
+													<span class="caret"></span>
+													<ul class="dropdown-menu">
+														<li>
+															<a href="https://github.com/collinhover/kaiopua" target="_blank">
+																<div class="valign">
+																	<div class="valign-cell"><img src="assets/icons/github_64.png" class="iconk-small"></div>
+																	<div class="valign-cell"><p>Get the Code</p></div>
+																</div>
+															</a>
+														</li>
+														<li>
+															<a href="http://www.facebook.com/sharer.php?u=http%3A%2F%2Fcollinhover.com&t=Kai 'Opua%3A%20an%20interactive%20moon-sized%20Hawaiian%20space%20worm%20that%20will%20teach%20you%20to%20be%20a%20better%20designer!" target="_blank">
+																<div class="valign">
+																	<div class="valign-cell"><img src="assets/icons/facebook_64.png" class="iconk-small"></div>
+																	<div class="valign-cell"><p>Like</p></div>
+																</div>
+															</a>
+														</li>
+														<li>
+															<a href="http://twitter.com/share?url=http%3A%2F%2Fcollinhover.com&text=Kai 'Opua%3A%20an%20interactive%20moon-sized%20Hawaiian%20space%20worm%20that%20will%20teach%20you%20to%20be%20a%20better%20designer!" target="_blank">
+																<div class="valign">
+																	<div class="valign-cell"><img src="assets/icons/twitter_64.png" class="iconk-small"></div>
+																	<div class="valign-cell"><p>Share</p></div>
+																</div>
+															</a>
+														</li>
+													</ul>
+												</div>
 											</div>
 										</div>
 									</div>
@@ -232,9 +269,8 @@
 							<div class="navbar-inner">
 								<div class="container">
 									<ul class="nav nav-pills pull-left">
-										<li><a href="#fieldTools">Field Tools</a></li>
+										<li><a href="#fieldTools">Tools</a></li>
 										<li><a href="#field">Field</a></li>
-										<li><a href="#plantTools">Plant Tools</a></li>
 										<li><a href="#plant">Plant</a></li>
 										<li><a href="#collection">Collection</a></li>
 									</ul>
@@ -252,7 +288,6 @@
 							<div class="page-header">
 								<h1>Field Tools <small>multiple ways to work with fields</small></h1>
 							</div>
-							
 							<div class="row">
 								<div class="span2">
 									<div class="well">
@@ -268,14 +303,8 @@
 										<img src="assets/icons/drag_move_up_128.png" alt="">
 									</div>
 									<div class="container-center">
-										<p><small>to start</small></p>
-										<h3>drag up</h3>
-										<a href="#game" id="buttonResumeGame" class="btn btn-primary">
-											<div class="valign">
-												<div class="valign-cell"><img src="assets/icons/arrow_up_rev_64.png" class="iconk-small"></div>
-												<div class="valign-cell"><p>Start</p></div>
-											</div>
-										</a>
+										<p><small>drag statue up</small></p>
+										<h3>to start</h3>
 									</div>
 								</div>
 								<div class="span2">
@@ -283,40 +312,106 @@
 										<img src="assets/icons/drag_move_down_128.png" alt="">
 									</div>
 									<div class="container-center">
-										<p><small>to finish</small></p>
-										<h3>drag down</h3>
-										<a href="#game" id="buttonResumeGame" class="btn">
-											<div class="valign">
-												<div class="valign-cell"><img src="assets/icons/arrow_down_64.png" class="iconk-small"></div>
-												<div class="valign-cell"><p>Finish</p></div>
-											</div>
-										</a>
+										<p><small>drag statue down</small></p>
+										<h3>to finish</h3>
 									</div>
 								</div>
 							</div>
 						</div>
 					</section>
-					<!-- END tools -->
+					<!-- END fieldTools -->
+					<!-- plantTools -->
+					<section id="plantTools" class="tools">
+						<div class="container">
+							<div class="page-header">
+								<h1>Plant Tools <small>a single tap to control any plant</small></h1>
+							</div>
+							<div class="row">
+								<div class="span2">
+									<div class="well">
+										<img src="assets/icons/tap_128.png" alt="">
+									</div>
+									<div class="container-center">
+										<p><small>while in ANY mode</small></p>
+										<h3>single tap</h3>
+										<button id="buttonPlantToolsSelect" class="btn btn-primary">
+											<div class="valign">
+												<div class="valign-cell"><img src="assets/icons/info_rev_64.png" class="iconk-small"></div>
+												<div class="valign-cell"><p>Select</p></div>
+											</div>
+										</button>
+									</div>
+								</div>
+								<div class="span2">
+									<div class="well">
+										<img src="assets/icons/drag_move_128.png" alt="">
+									</div>
+									<div class="container-center">
+										<p><small>while in MOVE mode</small></p>
+										<h3>drag</h3>
+										<button id="buttonPlantToolsMove" class="btn">
+											<div class="valign">
+												<div class="valign-cell"><img src="assets/icons/move_64.png" class="iconk-small"></div>
+												<div class="valign-cell"><p>Move</p></div>
+											</div>
+										</button>
+									</div>
+								</div>
+								<div class="span2">
+									<div class="well">
+										<img src="assets/icons/drag_rotate_128.png" alt="">
+									</div>
+									<div class="container-center">
+										<p><small>while in ROTATE mode</small></p>
+										<h3>drag in circles</h3>
+										<button id="buttonPlantToolsRotate" class="btn">
+											<div class="valign">
+												<div class="valign-cell"><img src="assets/icons/rotate_64.png" class="iconk-small"></div>
+												<div class="valign-cell"><p>Rotate</p></div>
+											</div>
+										</button>
+									</div>
+								</div>
+								<div class="span2">
+									<div class="well">
+										<img src="assets/icons/tap_double_128.png" alt="">
+									</div>
+									<div class="container-center">
+										<p><small>while in ANY mode</small></p>
+										<h3>double tap</h3>
+										<button id="buttonPlantToolsDelete" class="btn btn-danger">
+											<div class="valign">
+												<div class="valign-cell"><img src="assets/icons/close_rev_64.png" class="iconk-small"></div>
+												<div class="valign-cell"><p>Delete</p></div>
+											</div>
+										</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</section>
+					<!-- END plantTools -->
+					
 					<!-- field -->
 					<section id="field">
 						<div class="container">
 							<div class="page-header">
-								<h1>Field <small>overview, 2D map, and rewards for the current field</small></h1>
+								<h1>Field <small>overview, 2D map, and rewards for the active field</small></h1>
 							</div>
-							<div id="fieldChoose" class="container-center">
-								<div class="alert alert-block alert-warning">
-									<h4 class="alert-heading">No Field Active!</h4>
-									You're not working on a field right now, but the field tools section will show you how to get started.
-								</div>
+							
+							<div id="fieldActiveWarning" class="alert alert-block alert-warning">
+								<h4 class="alert-heading">Hold up!</h4>
+								You're not working on a field right now, but the tools section will show you how to get started.
 							</div>
-							<div id="fieldCurrent">
+							
+							<div id="fieldActive">
 								<div id="fieldOverview" class="row">
 									<div class="span4">
 										<h3>Name</h3>
 										<p id="fieldId">Tutorial Field</p>
-										<h3>Score <small><span id="fieldScore">40</span>%</small></h3>
+										<h3>Score <small><span id="fieldScore">0</span>%</small></h3>
 										<div class="progress progress-success progress-striped">
-											<div id="fieldScoreBar" class="bar" style="width: 40%;"></div>
+											<div id="fieldScoreBar" class="bar" style="width: 0%;"></div>
 										</div>
 									</div>
 									<div id="fieldPlants" class="span3">
@@ -331,14 +426,13 @@
 												<h2><small style="vertical-align:text-bottom;">vs</small></h2>
 											</div>
 											<div class="span1 subhead container-center">
-												<h2 id="fieldPlantGoal">10</h2>
+												<h2 id="fieldPlantGoal">0</h2>
 												<p>goal</p>
 											</div>
 										</div>
 									</div>
 									<div id="fieldStatus" class="span5">
-										<h3>Status <small><span id="started" class="field-statusText">started</span>, <span id="planting" class="field-statusText">planting</span></small></h3>
-										<img src="assets/icons/farming_64.png" id="started" class="field-statusIcon well iconk-giant">
+										<h3>Status <small><span id="fieldStatusWaiting" class="field-statusText">waiting</span></small></h3>
 										<img src="assets/icons/waiting_64.png" id="planting" class="field-statusIcon well iconk-giant">
 									</div>
 								</div>
@@ -411,7 +505,7 @@
 															<i class="field-rewardsEarnedStatusIcon iconk-topRight icon-ok-sign"></i>
 															<div class="span1 container-center">
 																<img src="assets/icons/grid_element_3x3_base_64.png" class="iconk-large">
-																<p>Split</p>
+																<p>Field</p>
 																<h6>Field</h6>
 															</div>
 														</div>
@@ -429,8 +523,8 @@
 														<div class="row">
 															<div class="span1 container-center">
 																<i class="field-rewardsEarnedStatusIcon iconk-topRight icon-ok-sign hidden"></i>
-																<img src="assets/icons/grid_element_3x3_001010000_64.png" class="iconk-large">
-																<p>Two Step</p>
+																<img src="assets/icons/grid_element_3x3_000010000_64.png" class="iconk-large">
+																<p>Shape</p>
 																<h6>Shape</h6>
 															</div>
 														</div>
@@ -448,8 +542,8 @@
 														<div class="row">
 															<div class="span1 container-center">
 																<i class="field-rewardsEarnedStatusIcon iconk-topRight icon-ok-sign hidden"></i>
-																<img src="assets/icons/pineapple_64.png" class="iconk-large">
-																<p>Pineapple</p>
+																<img src="assets/icons/plant_64.png" class="iconk-large">
+																<p>Plant</p>
 																<h6>Plant</h6>
 															</div>
 														</div>
@@ -464,115 +558,52 @@
 					</section>
 					<!-- END field -->
 					
-					<!-- plantTools -->
-					<section id="plantTools" class="tools">
-						<div class="container">
-							<div class="page-header">
-								<h1>Plant Tools <small>multiple ways to change your plants</small></h1>
-							</div>
-							
-							<div class="row">
-								<div class="span2">
-									<div class="well">
-										<img src="assets/icons/tap_128.png" alt="">
-									</div>
-									<div class="container-center">
-										<p><small>while in ANY mode</small></p>
-										<h3>single tap</h3>
-										<button id="buttonPlantToolsSelect" class="btn btn-primary">
-											<div class="valign">
-												<div class="valign-cell"><img src="assets/icons/info_rev_64.png" class="iconk-small"></div>
-												<div class="valign-cell"><p>Select</p></div>
-											</div>
-										</button>
-									</div>
-								</div>
-								<div class="span2">
-									<div class="well">
-										<img src="assets/icons/drag_move_128.png" alt="">
-									</div>
-									<div class="container-center">
-										<p><small>while in MOVE mode</small></p>
-										<h3>drag</h3>
-										<button id="buttonPlantToolsMove" class="btn">
-											<div class="valign">
-												<div class="valign-cell"><img src="assets/icons/move_64.png" class="iconk-small"></div>
-												<div class="valign-cell"><p>Move</p></div>
-											</div>
-										</button>
-									</div>
-								</div>
-								<div class="span2">
-									<div class="well">
-										<img src="assets/icons/drag_rotate_128.png" alt="">
-									</div>
-									<div class="container-center">
-										<p><small>while in ROTATE mode</small></p>
-										<h3>drag in circles</h3>
-										<button id="buttonPlantToolsRotate" class="btn">
-											<div class="valign">
-												<div class="valign-cell"><img src="assets/icons/rotate_64.png" class="iconk-small"></div>
-												<div class="valign-cell"><p>Rotate</p></div>
-											</div>
-										</button>
-									</div>
-								</div>
-								<div class="span2">
-									<div class="well">
-										<img src="assets/icons/tap_double_128.png" alt="">
-									</div>
-									<div class="container-center">
-										<p><small>while in ANY mode</small></p>
-										<h3>double tap</h3>
-										<button id="buttonPlantToolsDelete" class="btn btn-danger">
-											<div class="valign">
-												<div class="valign-cell"><img src="assets/icons/close_rev_64.png" class="iconk-small"></div>
-												<div class="valign-cell"><p>Delete</p></div>
-											</div>
-										</button>
-									</div>
-								</div>
-							</div>
-						</div>
-					</section>
-					<!-- END plantTools -->
-					
 					<!-- plant -->
 					<section id="plant">
 						<div class="container">
 							<div class="page-header">
-								<h1>Plant <small>examine an object you've planted in the current field</small></h1>
+								<h1>Plant <small>examine an object you've planted in the active field</small></h1>
 							</div>
 							
-							<div id="plantPreview" class="row">
-								<div class="span12 grid-gutterless">
-									<div class="row container-center well">
-										<ul class="span2 thumbnails">
-											<li class="span2">
-												<div id="plant3DPortrait" class="thumbnail">
-													<img src="http://placehold.it/260x300">
-												</div>
-											</li>
-										</ul>
+							<div id="plantActiveWarning" class="alert alert-block alert-warning">
+								<h4 class="alert-heading">Hold up!</h4>
+								You're not customizing a plant right now. Tap on a plant in game or use the field map to select one.
+							</div>
+							
+							<div id="plantActive">
+								
+								<div class="row">
+									<div class="span12 grid-gutterless">
+										<div class="row container-center well">
+											<ul class="span2 thumbnails">
+												<li class="span2">
+													<div id="plant3DPortrait" class="thumbnail">
+														<img src="http://placehold.it/260x300">
+													</div>
+												</li>
+											</ul>
+										</div>
 									</div>
 								</div>
+								
+								<div id="plantOverview" class="row">
+									<div class="span4">
+										<img src="assets/icons/grid_element_3x3_000010000_64.png" id="plantShapeIcon" class="pull-left iconk-large">
+										<h2 id="plantShape">Single Square</h2>
+										<h6>shape</h6>
+									</div>
+									<div class="span4">
+										<img src="assets/icons/taro_64.png" id="plantTypeIcon" class="pull-left iconk-large">
+										<h2 id="plantType">Taro</h2>
+										<h6>plant</h6>
+									</div>
+									<div class="span4">
+										<h3 class="pull-right"><small>in the <span id="fieldId">Tutorial</span> Field, at location <span id="plantFieldLocation">1</span></small></h3>
+									</div>
+								</div>
+							
 							</div>
 							
-							<div id="plantOverview" class="row">
-								<div class="span4">
-									<img src="assets/icons/grid_element_3x3_000010000_64.png" id="plantShapeIcon" class="pull-left iconk-large">
-									<h2 id="plantShape">Single Square</h2>
-									<h6>shape</h6>
-								</div>
-								<div class="span4">
-									<img src="assets/icons/taro_64.png" id="plantTypeIcon" class="pull-left iconk-large">
-									<h2 id="plantType">Taro</h2>
-									<h6>plant</h6>
-								</div>
-								<div class="span4">
-									<h3 class="pull-right"><small>in the <span id="fieldId">Tutorial</span> Field, at location <span id="plantFieldLocation">1</span></small></h3>
-								</div>
-							</div>
 						</div>
 					</section>
 					<!-- END plant -->
@@ -580,33 +611,45 @@
 					<section id="collection">
 						<div class="container">
 							<div class="page-header">
-								<h1>Customize <small>explore plants in your collection and swap them out with the current plant</small></h1>
+								<h1>Collection <small>explore plants in your collection and use them to customize your active plant</small></h1>
 							</div>
-							<div id="plantCustomization" class="row">
+							<div class="row">
 								<div class="span3">
 									<h3>Selection</h3>
-									<div class="row">
-										<div class="span2 well">
-											<div id="plantCustom3DPortrait" >
-												<img src="http://placehold.it/260x300">
-											</div>
-										</div>
+									<div id="plantCustomizationWarning" class="alert alert-block alert-info">
+										<h4 class="alert-heading">Check it out:</h4>
+										Tap a plant in your collection to get more information.
 									</div>
-									<div id="plantCustomInfo">
-										<div class="page-header">
-											<div id="plantCustomTitle" class="valign">
-												<div class="valign-cell"><img src="assets/icons/taro_64.png" id="plantCustomTypeIcon" class="iconk-large"></div>
-												<div id="plantCustomType" class="valign-cell"><h2>Taro</h2><h6>Plant</h6></div>
+									<div id="plantCustomization">
+										<div class="row">
+											<div class="span2 well">
+												<div id="plantCustom3DPortrait" >
+													<img src="http://placehold.it/260x300">
+												</div>
 											</div>
 										</div>
-										<h2><small>Knowledge</small></h2>
-										<p id="plantCustomInfoText">Information about plant</p>
-										<button id="buttonPlantCustomChange" class="btn btn-primary">
-											<div class="valign">
-												<div class="valign-cell"><img src="assets/icons/confirm_rev_64.png" class="iconk-small"></div>
-												<div class="valign-cell"><p>Swap</p></div>
+										<div id="plantCustomInfo">
+											<div class="page-header">
+												<div id="plantCustomTitle" class="valign">
+													<div class="valign-cell"><img src="assets/icons/taro_64.png" id="plantCustomTypeIcon" class="iconk-large"></div>
+													<div id="plantCustomType" class="valign-cell"><h2>Taro</h2><h6>Plant</h6></div>
+												</div>
 											</div>
-										</button>
+											<h2><small>Knowledge</small></h2>
+											<p id="plantCustomInfoText">Information about plant</p>
+											<div id="plantActiveWarning" class="alert alert-block alert-warning">
+												<h4 class="alert-heading">Hold up!</h4>
+												You're not customizing a plant right now. Tap on a plant in game or use the field map to select one.
+											</div>
+											<div id="plantActive">
+												<a href="#plant" id="buttonPlantCustomChange" class="btn btn-primary">
+													<div class="valign">
+														<div class="valign-cell"><img src="assets/icons/confirm_rev_64.png" class="iconk-small"></div>
+														<div class="valign-cell"><p>Customize</p></div>
+													</div>
+												</a>
+											</div>
+										</div>
 									</div>
 								</div>
 								<div id="plantCollection" class="span9 grid-gutterless">
@@ -670,45 +713,15 @@
 		<!-- END outgame -->
 			
 		<!-- footer -->
-		<div id="footer" class="navbar navbar-flush">
-			<div class="navbar-inner">
-				
-				<div id='title' class="container container-center">
-
-					<!-- logo -->
-					<div id='logo' class="nav">
-							
-						<span><a href="https://github.com/collinhover/kaiopua" target="_blank">Source Code</a></span>
-						
-						<span id="logo_icona"><img src="assets/icons/whale_rev_64.png" alt="Kai 'Opua"></span>
-
-						<!-- page header and intro -->
-						<header>
-							
-							<h1 class="logo_type">Kai 'Opua</h1>
-							
-						</header>
-
-						<span id="logo_iconb"><img src="assets/icons/character_rev_64.png" alt="Kai 'Opua"></span>
-						<span id="logo_iconc"><img src="assets/icons/taro_rev_64.png" alt="Kai 'Opua"></span>
-						
-						<span>Share</span>
-						
-						<span class='icon'><a href="http://www.facebook.com/sharer.php?u=http%3A%2F%2Fcollinhover.com&t=Kai 'Opua%3A%20an%20interactive%20moon-sized%20Hawaiian%20space%20worm%20that%20will%20teach%20you%20to%20be%20a%20better%20designer!" target="_blank"><img src="assets/icons/fb_icon.png" alt="Facebook"></a></span>
-						<span class='icon'><a href="http://twitter.com/share?url=http%3A%2F%2Fcollinhover.com&text=Kai 'Opua%3A%20an%20interactive%20moon-sized%20Hawaiian%20space%20worm%20that%20will%20teach%20you%20to%20be%20a%20better%20designer!" target="_blank"><img src="assets/icons/twitter_icon.png" alt="Twitter"></a></span>
-						
-						<p id="copyright"><small>&copy; Copyright <a href="http://www.collinhover.com/" target="_blank">Collin Hover</a> 2011. All Rights Reserved.</small></p>
-						
-					</div>
-					<!-- END logo -->
-					
+		<div id="footer" class="container">
+			<div class="row">
+				<div class="span12">
+					<p>Kai 'Opua is an open source project with the core goal of creating a universal design education tool that may teach players to better understand design concepts</p>
+					<p><small>Designed and developed by <a href="http://www.collinhover.com/" target="_blank">Collin Hover</a></small></p>
 				</div>
-				<!-- END title -->
-			
 			</div>
-			<!-- END footer -->
-			
 		</div>
+		<!-- END footer -->
 	</div>
 	<!-- END ui -->
 	

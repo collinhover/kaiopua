@@ -193,7 +193,7 @@ html, body {
 -------------------------*/
 
 a {
-	display: block;
+	display: inline-block;
 }
 
 /* containers 
@@ -545,7 +545,6 @@ section {
 		min-height: @minHeight;
 		.clearfix();
 		margin-top: -70px;
-		margin-bottom: 60px;
 		
 		#active {
 			
@@ -618,73 +617,13 @@ section {
 	}
 	
 	#footer {
-		.box-shadow(~"0 1px 3px rgba(0,0,0,.25), inset 0 -1px 0 rgba(0,0,0,.1)");
-		color: @grayLighter;
+		font-size: 13px;
 		position: relative;
 		z-index: 9999;
-		
-		a:hover {
-			color: @blueLight;
-		}
-		
-		#title {
-			
-			header {
-				float: left;
-				margin-top: 0;
-			}
-			
-			#logo {
-				padding-top: 22px;
-				margin: 0;
-				
-				span {
-					float: left; 
-					padding-left: 20px;
-					padding-right: 20px;
-					margin: 14px 10px 0 10px;
-				}
-				
-				.icon {
-					padding: 0;
-					margin: 10px 25px 0 -20px;
-					border: none;
-				}
-				
-				#logo_icona {
-					width: 48px;
-					height: 48px;
-					margin-left: -30px;
-					margin-right: -5px;
-					margin-top: -4px;
-				}
-				
-				#logo_iconb {
-					width: 48px;
-					height: 48px;
-					margin-left: -20px;
-					margin-right: -32px;
-					margin-top: -9px;
-				}
-				
-				#logo_iconc {
-					width: 32px;
-					height: 32px;
-					margin-left: -16px;
-					margin-right: -32px;
-					margin-top: 7px;
-				}
-				
-			}
-			
-			#copyright {
-				text-align: center;
-				padding-bottom: 10px;
-				clear:both;
-			}
-			
-		}
-		
+		margin-top: 10px;
+		padding-top: 20px;
+		padding-bottom: 20px;
+		border-top: 1px solid #E5E5E5;
 	}
 
 }
@@ -692,38 +631,67 @@ section {
 /* logo 
 -------------------------*/
 
-.logo {
-	padding: 0 10px;
-	opacity: 0.5;
-	color: @white;
-	.clearfix();
+.logo-group {
 	
-	&:hover {
+	.logo {
+		padding: 0 10px;
+		opacity: 0.5;
 		color: @white;
-		text-decoration: none;
+		cursor: pointer;
+		.clearfix();
+		
+		&:hover {
+			color: @white;
+			text-decoration: none;
+		}
+		
+		h1 {
+			float: left;
+			margin-top: 12px;
+		}
+		
+		#logoIcon1 {
+			margin-right: 5px;
+		}
+
+		#logoIcon2 {
+			margin-left: -5px;
+			margin-top: -5px;
+		}
+
+		#logoIcon3 {
+			margin-left: -18px;
+			margin-top: 8px;
+		}
+
+		.logo-icon {
+			float: left;
+		}
+		
 	}
 	
-	h1 {
-		float: left;
-		margin-top: 12px;
+	.open {
+		
+		.logo {
+			opacity: 1;
+		}
+		
 	}
 	
-	#logoIcon1 {
-		margin-right: 5px;
-	}
-
-	#logoIcon2 {
-		margin-left: -5px;
-		margin-top: -5px;
-	}
-
-	#logoIcon3 {
-		margin-left: -18px;
-		margin-top: 8px;
-	}
-
-	.logo-icon {
-		float: left;
+	.btn-group {
+		padding: 0;
+		
+		.dropdown-toggle {
+			border: 0;
+			box-shadow: none;
+		}
+		
+		.caret {
+			position: absolute;
+			bottom: 15px;
+			right: 0;
+			border-top-color: @white;
+		}
 	}
 	
 }
@@ -783,13 +751,13 @@ section {
 /* collection 
 -------------------------*/
 
-#plantPotentialInfo {
+#plantCustomInfo {
 	
 	.page-header {
 		margin-top: 0;
 	}
 	
-	#plantPotentialInfoText {
+	#plantCustomInfoText {
 		margin-bottom: 20px;
 	}
 	
