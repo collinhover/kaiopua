@@ -92,13 +92,24 @@ THREE.EffectComposer.prototype = {
 	},
 
 	reset: function ( renderTarget ) {
+		
+		var width, height;
 
 		this.renderTarget1 = renderTarget;
 
 		if ( this.renderTarget1 === undefined ) {
+			
+			width = window.innerWidth;
+			height = window.innerHeight;
 
-			this.renderTarget1 = new THREE.WebGLRenderTarget( window.innerWidth, window.innerHeight, this.renderTargetParameters );
+			this.renderTarget1 = new THREE.WebGLRenderTarget( width, height, this.renderTargetParameters );
 
+		}
+		else {
+			
+			width = this.renderTarget1.width;
+			height = this.renderTarget1.height;
+			
 		}
 
 		this.renderTarget2 = this.renderTarget1.clone();
@@ -106,12 +117,12 @@ THREE.EffectComposer.prototype = {
 		this.writeBuffer = this.renderTarget1;
 		this.readBuffer = this.renderTarget2;
 
-		THREE.EffectComposer.quad.scale.set( window.innerWidth, window.innerHeight, 1 );
+		THREE.EffectComposer.quad.scale.set( width, height, 1 );
 
-		THREE.EffectComposer.camera.left = window.innerWidth / - 2;
-		THREE.EffectComposer.camera.right = window.innerWidth / 2;
-		THREE.EffectComposer.camera.top = window.innerHeight / 2;
-		THREE.EffectComposer.camera.bottom = window.innerHeight / - 2;
+		THREE.EffectComposer.camera.left = width / - 2;
+		THREE.EffectComposer.camera.right = width / 2;
+		THREE.EffectComposer.camera.top = height / 2;
+		THREE.EffectComposer.camera.bottom = height / - 2;
 
 		THREE.EffectComposer.camera.updateProjectionMatrix();
 

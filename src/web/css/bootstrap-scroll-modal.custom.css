@@ -10,13 +10,6 @@
   overflow: auto;
   background-color: rgba(0, 0, 0, 0.8);
 }
-.modal-backdrop.fade {
-  background-color: rgba(0, 0, 0, 0.0);
-}
-.modal-backdrop,
-.modal-backdrop.fade.in {
-  background: rgba(0, 0, 0, 0.8);
-}
 .modal-backdrop.fade.in {
   opacity: 1.0;
   filter: alpha(opacity=100);

@@ -13,8 +13,6 @@
 		_Game = {},
 		_ErrorHandler,
 		_Scene,
-		_UIElement,
-		_GUI,
 		_MathHelper,
 		_RayHelper,
 		_Messenger,
@@ -38,6 +36,7 @@
         previousSection,
         paused = false,
 		started = false,
+		transitionTime = 500,
 		sectionChangePauseTime = 500,
 		introMessageDelayTime = 2000,
 		assetsInit = [
@@ -52,7 +51,7 @@
 		assetsSetupExtras = [
             "js/three/ThreeExtras.js",
             "js/three/postprocessing/ShaderExtras.js",
-            "js/three/postprocessing/EffectComposer.js",
+            "js/three/postprocessing/EffectComposer.custom.js",
             "js/three/postprocessing/RenderPass.js",
             "js/three/postprocessing/ShaderPass.js",
             "js/three/postprocessing/MaskPass.js",
@@ -64,8 +63,6 @@
 			"assets/modules/core/Octree.js",
 			"assets/modules/physics/Physics.js",
 			"assets/modules/physics/RigidBody.js",
-			"assets/modules/ui/UIElement.js",
-			"assets/modules/ui/GUI.js",
 			"assets/modules/utils/MathHelper.js",
 			"assets/modules/utils/VectorHelper.js",
 			"assets/modules/utils/SceneHelper.js",
@@ -178,6 +175,8 @@
     
 	// functions
 	
+	_Game.start = start;
+	_Game.stop = stop;
     _Game.resume = resume;
     _Game.pause = pause;
 	
@@ -289,7 +288,7 @@
 	
 	function load_game () {
 		
-		main.asset_require( assetsGame, init_game, true, _GUI.layers.ui.domElement );
+		main.asset_require( assetsGame, init_game, true );
 		
 	}
 	
@@ -312,20 +311,16 @@
         // game signals
 		
         shared.signals = shared.signals || {};
-        shared.signals.paused = new signals.Signal();
-        shared.signals.resumed = new signals.Signal();
-        shared.signals.update = new signals.Signal();
+        shared.signals.gamePaused = new signals.Signal();
+        shared.signals.gameResumed = new signals.Signal();
+        shared.signals.gameUpdate = new signals.Signal();
 		shared.signals.gamestart = new signals.Signal();
 		shared.signals.gamestop = new signals.Signal();
 		
-		// tween update
-		// wrap because update signal passes time delta, and tween update needs time
-		
-		shared.signals.update.add( function () { TWEEN.update(); } );
-		
 		// renderer
+		
         renderer = new THREE.WebGLRenderer( { antialias: false, clearColor: 0x000000, clearAlpha: 0, maxLights: 4 } );
-        renderer.setSize( shared.screenWidth, shared.screenHeight );
+        renderer.setSize( shared.gameWidth, shared.gameHeight );
         renderer.autoClear = false;
 		
 		// shadows
@@ -343,7 +338,7 @@
 		renderer.shadowMapSoft = true;
 		*/
         // render target
-        renderTarget = new THREE.WebGLRenderTarget( shared.screenWidth, shared.screenHeight, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter } );
+        renderTarget = new THREE.WebGLRenderTarget( shared.gameWidth, shared.gameHeight, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter } );
         
         // share renderer
         shared.renderer = renderer;
@@ -359,8 +354,6 @@
 		// utility
 		
 		_Scene = main.get_asset_data( "assets/modules/core/Scene.js" );
-		_UIElement = main.get_asset_data( "assets/modules/ui/UIElement.js" );
-		_GUI = main.get_asset_data( "assets/modules/ui/GUI.js" );
 		_MathHelper = main.get_asset_data( "assets/modules/utils/MathHelper.js" );
 		
 		// scenes
@@ -378,8 +371,8 @@
 		
 		// camera
 		
-		cameraDefault = new THREE.PerspectiveCamera(60, shared.screenWidth / shared.screenHeight, 1, 20000);
-		cameraBGDefault = new THREE.PerspectiveCamera(60, shared.screenWidth / shared.screenHeight, 1, 20000);
+		cameraDefault = new THREE.PerspectiveCamera(60, shared.gameWidth / shared.gameHeight, 1, 20000);
+		cameraBGDefault = new THREE.PerspectiveCamera(60, shared.gameWidth / shared.gameHeight, 1, 20000);
 		
 		cameraDefault.useQuaternion = cameraBGDefault.useQuaternion = true;
 		
@@ -398,8 +391,8 @@
 		
         renderPasses.screen.renderToScreen = true;
 		
-        renderPasses.focusVignette.uniforms[ "screenWidth" ].value = shared.screenWidth;
-        renderPasses.focusVignette.uniforms[ "screenHeight" ].value = shared.screenHeight;
+        renderPasses.focusVignette.uniforms[ "screenWidth" ].value = shared.gameWidth;
+        renderPasses.focusVignette.uniforms[ "screenHeight" ].value = shared.gameHeight;
         renderPasses.focusVignette.uniforms[ "vingenettingOffset" ].value = 0.6;
         renderPasses.focusVignette.uniforms[ "vingenettingDarkening" ].value = 0.5;
         renderPasses.focusVignette.uniforms[ "sampleDistance" ].value = 0.1;
@@ -413,26 +406,29 @@
         
         set_render_processing();
 		
-		// add basic ui to display
+		// add renderer to display
 		
-		_GUI.renderer = new _UIElement.Instance( {
-			id: 'renderer',
-			domElement: renderer.domElement 
-		} );
-		_GUI.layers.display.add( _GUI.renderer );
+		shared.domElements.$game.append( renderer.domElement );
+		
+		// ui
+		
+		$('#buttonPauseGame').on( 'mouseup touchend', pause );
+		$('#buttonResumeGame').on( 'mouseup touchend', resume );
+		
+		shared.domElements.$pauseMessage = $('#pauseMessage');
 		
 		// resize
 		
         shared.signals.windowresized.add( resize );
-		resize( shared.screenWidth, shared.screenHeight );
+		resize();
 		
 		// set ready
 		
 		main.asset_ready( assetPath );
         
-		// start drawing
+		// start updating
         
-        animate();
+        shared.signals.update.add( update );
 		
 	}
 	
@@ -464,7 +460,7 @@
 		
 		_RayHelper = main.get_asset_data( "assets/modules/utils/RayHelper.js" );
 		_Messenger = main.get_asset_data( "assets/modules/ui/Messenger.js" );
-		
+		/*
 		// ui
 		
 		l = _GUI.layers;
@@ -502,13 +498,11 @@
 		// setup ui groups
 		
 		_GUI.add_to_group( 'start', [
-			{ child: m.start, parent: l.ui },
-			{ child: m.footer, parent: _GUI.container }
+			{ child: m.start, parent: l.ui }
 		] );
 		
 		_GUI.add_to_group( 'pause', [
-			{ child: m.main, parent: l.uiPriority },
-			{ child: m.footer, parent: _GUI.container }
+			{ child: m.main, parent: l.uiPriority }
 		] );
 		
 		_GUI.add_to_group( 'ingame', [
@@ -521,325 +515,7 @@
 		
 		_GUI.show_group( 'constant' );
 		_GUI.show_group( 'start' );
-		
-		//
-		//
-		return;
-		//
-		// TESTING
-		// octree
-		
-		var _Octree = main.get_asset_data( "assets/modules/core/Octree.js" );
-		var _Model = main.get_asset_data( "assets/modules/core/Model.js" );
-		var _VectorHelper = main.get_asset_data( "assets/modules/utils/VectorHelper.js" );
-		
-		var radius = 1000,
-			octree = new _Octree.Instance( {
-				radius: radius,
-				scene: scene
-			} ),
-			objects = [],
-			countMax = 40,
-			testObj,
-			testObjLast,
-			offset = new THREE.Vector3();
-		
-		setTimeout( function () {
-			
-			// build octree with max count objects
-			
-			for ( var i = 0; i < countMax; i++ ) {
-				
-				testObj = new _Model.Instance( {
-					geometry: new THREE.CubeGeometry( 50, 50, 50 ),
-					material: new THREE.MeshBasicMaterial( { color: 0xFF0000 } )
-				} );
-				
-				testObj.position.set( Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius );
-				//testObj.position.set( Math.random() * -radius * 0.5, Math.random() * -radius * 0.5, Math.random() * -radius * 0.5 );
-				//testObj.position.set( -radius + Math.random() * -radius * 0.25, -radius + Math.random() * -radius * 0.25, -radius + Math.random() * -radius * 0.25 );
-				//testObj.position.set( Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5 );
-				
-				objects.push( testObj );
-				scene.add( testObj );
-				
-			}
-			
-			var ta = new Date().getTime();
-			
-			for ( var i = 0; i < objects.length; i++ ) {
-				
-				octree.add( objects[ i ] );
-				
-			}
-			
-			var tb = new Date().getTime();
-			
-			console.log( 'OCTREE BUILD time: ', ( tb - ta ) );
-			
-			// search octree
-			
-			var searchRad = 1000,
-				testObj = new _Model.Instance( {
-					geometry: new THREE.CubeGeometry( searchRad * 2, searchRad * 2, searchRad * 2 ),
-					material: new THREE.MeshBasicMaterial ( { color: 0xFF000, opacity: 0.15, transparent: true } )
-				} ),
-				testLineGeom = new THREE.Geometry(),
-				testLine;
-			
-			testLineGeom.vertices.push( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 1, 0 ) );
-			testLine = new THREE.Line( testLineGeom, new THREE.LineBasicMaterial( { color: 0xFF00FF, linewidth: 8 } ), THREE.LinePieces );
-			testLine.useQuaternion = true;
-			
-			//scene.add( testObj );
-			scene.add( testLine );
-			
-			var testCompare = function ( a, b ) {
-				
-				var i, l,
-					delta = new THREE.Vector3();
-				
-				for ( i = 0, l = 20; i < l; i++ ) {
-					
-					delta.add( a.position || a.matrix.getPosition(), b.position || b.matrix.getPosition() );
-					
-				}
-				
-			};
-			
-			var testCount = 0;
-			var testCountMax = 1;
-			var searchesPerTest = 1;
-			var searchObjects = [];
-			var searchDirection = new THREE.Vector3( Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1 ).normalize();
-			var testIntervalID = setInterval( function () {
-				
-				if ( testCount === testCountMax ) {
-					
-					clearInterval( testIntervalID );
-					return;
-					
-				}
-				
-				testCount++;
-				
-				var avgObjectCount = 0;
-				
-				var tc = new Date().getTime();
-				
-				for ( var i = 0, l = searchesPerTest; i < l; i++ ) {
-					
-					// clean previous search objects
-					
-					if ( searchObjects.length > 0 ) {
-						
-						for ( var m = 0, n = searchObjects.length; m < n; m++ ) {
-							
-							searchObjects[ m ].object.material.color.setRGB( 255, 0, 0 );
-							
-						}
-						
-					}
-					
-					// new test position
-					
-					//testObj.position.set( Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5 );
-					testObj.position.set( Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius, Math.random() * ( radius * 2 ) - radius );
-					testLine.position.copy( testObj.position );
-					
-					testLine.scale.set( 1, 1, 1 ).multiplyScalar( searchRad );
-					var qshift = _VectorHelper.q_to_axis( searchDirection, testLine.up );
-					if ( qshift instanceof THREE.Quaternion ) {
-						testLine.quaternion.multiplySelf( qshift );
-					}
-					testLine.quaternion.multiplyVector3( testLine.up.set( 0, 1, 0 ) );
-					
-					
-					var startSphere = new THREE.Mesh( new THREE.SphereGeometry( 75 ), new THREE.MeshBasicMaterial( { color: 0xFF0000, transparent: true, opacity: 0.3 } ) );
-					startSphere.position.copy( testObj.position );
-					scene.add( startSphere );
-					
-					var endSphere = new THREE.Mesh( new THREE.SphereGeometry( 75 ), new THREE.MeshBasicMaterial( { color: 0x00FF00, transparent: true, opacity: 0.3 } ) );
-					endSphere.position.copy( searchDirection ).multiplyScalar( searchRad ).addSelf( testObj.position );
-					scene.add( endSphere );
-					
-					
-					// search octree
-					
-					searchObjects = octree.search( testObj.position, searchRad, false, searchDirection );
-					avgObjectCount += searchObjects.length;
-					for ( var m = 0, n = searchObjects.length; m < n; m++ ) {
-						
-						var so = testCompare( testObj, searchObjects[ m ] );
-						searchObjects[ m ].object.material.color.setRGB( 0, 255, 0 );
-						
-					}
-					
-					// search all objects
-					
-					//avgObjectCount += objects.length;
-					//for ( var m = 0, n = objects.length; m < n; m++ ) {
-						
-					//	var so = testCompare( testObj, objects[ m ] );
-					//	objects[ m ].material.color.setRGB( 0, 255, 0 );
-						
-					//}
-					//console.log( ' OCTREE SEARCH from ', testObj.position.x, testObj.position.y, testObj.position.z, ' w direction ', searchDirection.x, searchDirection.y, searchDirection.z, ' + radius: ', searchRad, ' gives objects ', searchObjects );
-					
-				}
-				
-				avgObjectCount = avgObjectCount / searchesPerTest;
-				
-				var td = new Date().getTime();
-				
-				console.log( 'OCTREE SEARCH time: ', (td - tc ), ' + avgObjectCount ', avgObjectCount );
-				
-			}, 100 );
-			
-			/*
-			var addRemoveTest = true;
-			var facesTest = false;
-			var adding = true;
-			//var intervalID = setInterval( function () {
-			//shared.signals.update.add( function () {
-			shared.signals.mouseup.add( function () {
-				
-				// adding/removing static
-				if ( addRemoveTest === true ) {
-					
-					// if is adding
-					
-					if ( adding === true ) {
-						
-						// add new
-						
-						if ( facesTest === true ) {
-							
-							var ta = new Date().getTime();
-							
-							testObj = new _Model.Instance( {
-								geometry: new THREE.SphereGeometry( radius * 10, 50, 50 ),
-								material: new THREE.MeshNormalMaterial()// { color: 0x00FF00, wireframe: true, wireframeLinewidth: 10 } )
-							} );
-							
-							octree.add( testObj, true );
-							
-							var tb = new Date().getTime();
-			
-							console.log( 'OCTREE faces BUILD time: ', ( tb - ta ) );
-							
-						}
-						else {
-							
-							testObj = new _Model.Instance( {
-								geometry: new THREE.CubeGeometry( 50, 50, 50 ),
-								material: new THREE.MeshNormalMaterial()// { color: 0x00FF00, wireframe: true, wireframeLinewidth: 10 } )
-							} );
-							
-							//testObj.position.set( Math.random() * ( radius * 1.5 ) - radius * 0.75, radius * 0.2 + Math.random() * radius * 0.6, Math.random() * ( radius * 1.5 ) - radius * 0.75 );
-							//testObj.position.set( Math.random() * ( radius * 1.5 ) - radius * 0.75, Math.random() * ( radius * 1.5 ) - radius * 0.75, Math.random() * ( radius * 1.5 ) - radius * 0.75 );
-							//testObj.position.set( Math.random() * -radius * 0.5, Math.random() * -radius * 0.5, Math.random() * -radius * 0.5 );
-							//testObj.position.set( -radius + Math.random() * -radius * 0.25, -radius + Math.random() * -radius * 0.25, -radius + Math.random() * -radius * 0.25 );
-							testObj.position.set( Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5 );
-							
-							octree.add( testObj );
-							
-						}
-						
-						objects.push( testObj );
-						scene.add( testObj );
-						
-						// if at max
-						
-						if ( objects.length === countMax ) {
-							
-							adding = false;
-							
-						}
-						
-					}
-					// else is removing
-					else {
-						
-						testObj = objects.shift();
-						
-						scene.remove( testObj );
-						octree.remove( testObj );
-						
-						// if at min
-						
-						if ( objects.length === 0 ) {
-							
-							adding = true;
-							
-						}
-						
-					}
-					
-				}
-				// moving test
-				else {
-					
-					if ( objects.length !== countMax ) {
-						
-						// add new
-						
-						testObj = new _Model.Instance( {
-							geometry: new THREE.CubeGeometry( 50, 50, 50 ),
-							material: new THREE.MeshNormalMaterial()// { color: 0x00FF00, wireframe: true, wireframeLinewidth: 10 } )
-						} );
-						
-						// position
-						
-						testObj.position.set( Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5, Math.random() * ( radius * 10 ) - radius * 5 );
-						
-						// add as last
-						
-						octree.add( testObj );
-						objects.push( testObj );
-						scene.add( testObj );
-						
-					}
-					else {
-						
-						for ( var i = 0, l = objects.length; i < l; i++ ) {
-							
-							testObj = objects[ i ];
-							
-							//testObj.position.x += 10;
-							//testObj.position.y += 10;
-							testObj.position.z += 10;
-							
-						}
-						
-						octree.update();
-						
-					}
-					
-				}
-				
-				console.log( ' ============================================================================================================');
-				console.log( ' OCTREE: ', octree );
-				console.log( ' ... depth ', octree.depth, ' vs depth end?', octree.depth_end() );
-				console.log( ' ... num octrees: ', octree.octree_count_end() );
-				console.log( ' ... total objects: ', octree.object_count_end(), ' vs tree objects length: ', octree.objects.length );
-				//octree.to_console();
-				console.log( ' ============================================================================================================');
-				console.log( ' ');
-				
-			} );
-			//}, 1000 );
-			*/
-		}, 1000 );
-		
-		var controls = new THREE.FirstPersonControls( camera );
-		shared.signals.update.add( function ( timeDelta ) { controls.update( timeDelta ) } );
-		
-		// TESTING
-		// octree
-		//
-		//
-		//
+		*/
 		
     }
 	
@@ -861,7 +537,7 @@
 		
 		// init composer
 		
-		renderComposer = new THREE.EffectComposer( renderer );
+		renderComposer = new THREE.EffectComposer( renderer, renderTarget );
 		
 		// check that passes camera and scene match current
 		
@@ -1189,7 +865,7 @@
 					
 				}
 				
-				section.resize(shared.screenWidth, shared.screenHeight);
+				section.resize(shared.gameWidth, shared.gameHeight);
 				
                 section.show();
 				
@@ -1207,7 +883,7 @@
 		
 		// pause game while switching
 		
-		pause();
+		pause( true );
 		
         // hide current section
         if (typeof currentSection !== 'undefined') {
@@ -1218,7 +894,11 @@
             
             previousSection.hide();
             
-			_GUI.transitioner.show( { parent: _GUI.layers.overlayAll, opacity: 1 } );
+			main.dom_fade( {
+				element: shared.domElements.$transitioner,
+				time: transitionTime,
+				opacity: 1
+			} );
             
         }
 		
@@ -1249,7 +929,7 @@
 					
 					newSectionCallback();
 					
-				}, _GUI.transitioner.timeShow );
+				}, transitionTime );
 			
 			}
 			// no previous section, create new immediately
@@ -1269,24 +949,22 @@
     
     =====================================================*/
     
-    function start_game () {
+    function start () {
 		console.log('start game');
 		// assets
 		
 		_Intro = main.get_asset_data( 'assets/modules/sections/Intro.js' );
 		
-		// ui
-		
-		_GUI.hide_group( 'start', { remove: true } );
+		// TODO: hide launcher ui
         
 		// set intro section
 		
         set_section( _Intro, function () {
 			
-			_GUI.show_group( 'ingame' );
+			// TODO: show in game ui
 			
-			// show intro messages
-			
+			// TODO: show intro messages
+			/*
 			window.requestTimeout( function () {
 				
 				_Messenger.show_message( { 
@@ -1305,7 +983,7 @@
 				} );
 				
 			}, introMessageDelayTime );
-			
+			*/
 		} );
 		
 		// signal
@@ -1318,12 +996,11 @@
 		
     }
 	
-	function stop_game () {
+	function stop () {
 		
 		started = false;
 		
-		_GUI.hide_group( 'ingame', { remove: true } );
-		_GUI.hide_group( 'pause', { remove: true } );
+		// TODO: clear in game ui
 		
 		// signal
 		
@@ -1333,7 +1010,7 @@
 		
         set_section( _Launcher, function () {
 		
-			_GUI.show_group( 'start' );
+			// TODO: show launcher ui
 			
 		});
 		
@@ -1353,32 +1030,47 @@
             
             paused = true;
 			
-			// handle ui
+			// swap pause/resume buttons
 			
-			if ( started === true ) {
+			$('#buttonPauseGame').addClass( 'hidden' );
+			$('#buttonResumeGame').removeClass( 'hidden' );
+			
+			// transitioner
+			
+			main.dom_fade( {
+				element: shared.domElements.$transitioner,
+				time: transitionTime,
+				opacity: 0.75
+			} );
+			
+			// default actions
+			
+			if ( preventDefault !== true ) {
 				
-				_GUI.transitioner.show( { parent: _GUI.layers.overlayUI } );
+				// add listener for click on transitioner
 				
-				if ( preventDefault !== true ) {
-					
-					_GUI.show_group( 'pause' );
-					
-					// add listener for click on transitioner
-					
-					_GUI.transitioner.domElement.on( 'mouseup.resume touchend.resume', resume );
-					
+				shared.domElements.$transitioner.on( 'mouseup.resume touchend.resume', resume );
+				
+				// show pause message
+				
+				if ( !shared.domElements.$pauseMessage.hasClass('in') ) {
+					shared.domElements.$pauseMessage.collapse( 'show' );
+					shared.domElements.$pauseMessage.on( 'mouseup.resume touchend.resume', resume );
 				}
 				
 			}
-			else {
+			
+			// when started
+			
+			if ( started === true ) {
 				
-				_GUI.transitioner.show( { parent: _GUI.layers.overlayAll } );
+				
 				
 			}
 			
 			// signal
             
-            shared.signals.paused.dispatch();
+            shared.signals.gamePaused.dispatch();
 			
 			// render once to ensure user is not surprised when resuming
 			
@@ -1392,63 +1084,57 @@
 		console.log('GAME resume?');
         if ( paused === true && _ErrorHandler.errorState !== true && ( typeof _Messenger === 'undefined' || _Messenger.active !== true ) ) {
 			console.log(' > GAME RESUME');
-			// ui
+			// transitioner
 			
-			_GUI.transitioner.domElement.off( '.resume' );
+			shared.domElements.$transitioner.off( '.resume' );
+			main.dom_fade( {
+				element: shared.domElements.$transitioner,
+				time: transitionTime,
+				opacity: 0
+			} );
+			
+			// swap pause/resume buttons
+			
+			$('#buttonPauseGame').removeClass( 'hidden' );
+			$('#buttonResumeGame').addClass( 'hidden' );
+			
+			// pause modal
+			
+			if ( shared.domElements.$pauseMessage.hasClass('in') ) {
+				shared.domElements.$pauseMessage.off( '.resume' );
+				shared.domElements.$pauseMessage.collapse( 'hide' );
+			}
+			
+			// when started
 			
 			if ( started === true ) {
 				
-				_GUI.hide_group( 'pause', { remove: true, time: 0 } );
+				
 				
 			}
 			
-			_GUI.transitioner.hide( { remove: true } );
-			
 			paused = false;
 			
-			shared.signals.resumed.dispatch();
+			shared.signals.gameResumed.dispatch();
             
         }
     }
 	
 	/*===================================================
     
-    animate / render
+    update / render
     
     =====================================================*/
     
-    function animate () {
-    
-    	var timeDelta,
-			timeDeltaMod;
-        
-        window.requestAnimationFrame( animate );
-		
-		// handle time
-		
-		shared.timeLast = shared.time;
-		
-		shared.time = new Date().getTime();
-		
-		timeDelta = shared.time - shared.timeLast;
-		
-		// get time delta modifier from timeDelta vs expected refresh interval
-		
-		timeDeltaMod = _MathHelper.round( timeDelta / shared.timeDeltaExpected, 2 );
-		
-		if ( main.is_number( timeDeltaMod ) !== true ) {
-			
-			timeDeltaMod = 1;
-			
-		}
-		
-		// update time since last interaction
-		
-		shared.timeLastInteraction += timeDelta;
+    function update ( timeDelta, timeDeltaMod ) {
 		
 		// update
 		
 		if ( paused !== true ) {
+			
+			// tween update
+			
+			TWEEN.update();
 			
 			// update physics
 			
@@ -1460,7 +1146,7 @@
 			
 			// update all others
 			
-			shared.signals.update.dispatch( timeDelta, timeDeltaMod );
+			shared.signals.gameUpdate.dispatch( timeDelta, timeDeltaMod );
 			
 			// have camera bg mimic camera rotation
 			
@@ -1471,20 +1157,12 @@
 			render();
 			
 		}
-		
-		// handle gallery mode
-		
-		if ( shared.galleryMode === true && started === true && shared.timeLastInteraction >= shared.timeLastInteractionMax ) {
-			
-			stop_game();
-			
-		}
 			
     }
 	
 	function render() {
 		
-		renderer.setViewport( 0, 0, shared.screenWidth, shared.screenHeight );
+		renderer.setViewport( 0, 0, shared.gameWidth, shared.gameHeight );
 		
         renderer.clear();
         
@@ -1492,30 +1170,33 @@
 		
 	}
     
-    function resize( W, H ) {
+    function resize() {
+		
+		var gameWidth = shared.gameWidth = shared.domElements.$game.width(),
+			gameHeight = shared.gameHeight = shared.domElements.$game.height();
 		
 		// render passes
 		
-		renderPasses.focusVignette.uniforms[ "screenWidth" ].value = W;
-        renderPasses.focusVignette.uniforms[ "screenHeight" ].value = H;
+		renderPasses.focusVignette.uniforms[ "screenWidth" ].value = gameWidth;
+        renderPasses.focusVignette.uniforms[ "screenHeight" ].value = gameHeight;
         
         // renderer
 		
-        renderer.setSize( W, H );
-        renderTarget.width = W;
-        renderTarget.height = H;
+        renderer.setSize( gameWidth, gameHeight );
+        renderTarget.width = gameWidth;
+        renderTarget.height = gameHeight;
 		
 		// cameras
 		
-		camera.aspect = W / H;
+		camera.aspect = gameWidth / gameHeight;
         camera.updateProjectionMatrix();
 		
-		cameraBG.aspect = W / H;
+		cameraBG.aspect = gameWidth / gameHeight;
         cameraBG.updateProjectionMatrix();
         
 		// composer
 		
-        renderComposer.reset();
+        renderComposer.reset( renderTarget );
 		
 		// re-render
 		
@@ -1533,9 +1214,9 @@
 		
 		var result = false;
 		
-		if ( _GUI && _GUI.layers.display instanceof _UIElement.Instance ) {
+		if ( shared.domElements.$game ) {
 			
-			result = _GUI.layers.display.domElement.find( e.target ).length > 0;
+			result = shared.domElements.$game.find( e.target ).length > 0;
 			
 		}
 		

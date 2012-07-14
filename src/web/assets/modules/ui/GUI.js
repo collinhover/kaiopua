@@ -148,7 +148,7 @@
 		// container
 		
 		_GUI.container = new _UIElement.Instance( { 
-			domElement: shared.html.gameContainer,
+			domElement: shared.domElements.$gameContainer,
 			fullwindow: true
 		} );
 		
@@ -164,17 +164,6 @@
 			timeHide: 500,
 			opacityShow: 0.75
         } );
-		
-		// footer
-		
-		m.footer = new _UIElement.Instance( { 
-			domElement: shared.html.footerMenu
-		} );
-		
-		m.footer.width = m.footer.domElement.width();
-		m.footer.height = m.footer.domElement.height();
-		m.footer.domElement.removeClass( 'sticky_footer' );
-		m.footer.alignment = 'bottomcenter';
 		
 		// layers
 		
@@ -214,14 +203,14 @@
         } );
 		
 		l.errors = new _UIElement.Instance( { 
-			domElement: shared.html.errorContainer,
+			domElement: shared.domElements.$errors,
 			pointerEvents: false,
 			fullwindow: true
 		} );
 		
 		// build core structure
 		
-		_GUI.container.add( l.display, l.overlayDisplay, l.ui, l.overlayUI, l.uiPriority, l.overlayAll, l.errors, _GUI.menus.footer );
+		_GUI.container.add( l.display, l.overlayDisplay, l.ui, l.overlayUI, l.uiPriority, l.overlayAll, l.errors );
 		
 	}
 	

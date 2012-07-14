@@ -10,18 +10,23 @@ var KAIOPUA = (function (main) {
     
     var shared = main.shared = main.shared || {},
 		_Game,
-		_ProgressBar,
 		loader = {},
+		worker = {},
         lastGamma, lastBeta,
         libList = [
             "js/RequestAnimationFrame.js",
             "js/requestInterval.js",
             "js/requestTimeout.js",
             "js/signals.min.js",
-			"js/sylvester.js"
+			"js/sylvester.js",
+			"js/jquery.contentchanged.js",
+			"js/jquery.imagesloaded.min.js",
+			"js/jquery.sticky.js",
+			"js/jquery.easing-1.3.min.js",
+			"js/bootstrap.min.js",
+			"js/bootstrap-scroll-modal.custom.js"
         ],
         setupList = [
-			"assets/modules/ui/ProgressBar",
 			"assets/modules/core/Game.js"
         ];
 	
@@ -82,8 +87,6 @@ var KAIOPUA = (function (main) {
 		
         // shared
         shared.mice = [];
-        shared.screenWidth = $(window).width();
-        shared.screenHeight = $(window).height();
         shared.originLink = window.location.pathname.toString();
 		shared.pathToAssets = 'assets/';
 		shared.pathToModules = shared.pathToAssets + 'modules/';
@@ -96,6 +99,7 @@ var KAIOPUA = (function (main) {
         shared.time = new Date().getTime();
         shared.timeLast = shared.time;
         shared.timeDeltaExpected = 1000 / 60;
+		shared.timeDeltaModDec = Math.pow( 10, 2 );
 		shared.mouseWheelSpeed = 120;
 		
 		shared.multitouch = false;
@@ -104,12 +108,24 @@ var KAIOPUA = (function (main) {
 		shared.timeLastInteraction = 0;
 		shared.timeLastInteractionMax = 300000;
 		
-        shared.html = {
-            footerMenu: $('#footer_menu'),
-            gameContainer: $('#game'),
-            errorContainer: $('#errors')
-        };
-        
+		shared.domFadeTime = 500;
+		shared.domCollapseTime = 300;
+		shared.domEasing = 'easeInOutCubic';
+		
+        shared.domElements = {};
+		shared.domElements.$game = $('#game');
+		shared.domElements.$transitioner = $('#transitioner');
+		shared.domElements.$errors = $('#errors');
+		shared.domElements.$ui = $('#ui');
+		shared.domElements.$inGame = $( '#inGame' );
+		shared.domElements.$outGame = $( '#outGame' );
+		shared.domElements.$inactive = $( '#inactive' );
+		shared.domElements.$active = $( '#active' );
+		shared.domElements.$navMain = $('#navMain');
+		
+		shared.supports = {};
+		shared.supports.pointerEvents = css_property_supported( 'pointer-events' );
+       
         shared.signals = {
 			
 			focuslose: new signals.Signal(),
@@ -126,6 +142,8 @@ var KAIOPUA = (function (main) {
             keyup : new signals.Signal(),
     
             windowresized : new signals.Signal(),
+			
+			update: new signals.Signal(),
             
             loadItemCompleted : new signals.Signal(),
             loadListCompleted : new signals.Signal(),
@@ -149,7 +167,7 @@ var KAIOPUA = (function (main) {
 		$(document).on( 'mouseenter touchenter', on_mouse_enter );
 		$(document).on( 'mouseleave touchleave', on_mouse_leave );
         $(document).on( 'mousewheel DOMMouseScroll', on_mouse_wheel );
-		$(shared.html.gameContainer).on( 'contextmenu', on_game_context_menu );
+		$(shared.domElements.$gameContainer).on( 'contextmenu', on_game_context_menu );
 		
         $(document).on( 'keydown', on_key_down );
         $(document).on( 'keyup', on_key_up );
@@ -161,110 +179,227 @@ var KAIOPUA = (function (main) {
 		
 		window.onerror = on_error;
 		
-		// loader
+		// wait for document
 		
-		loader.active = false;
-		loader.listCount = 0;
-		loader.lists = [];
-		loader.listLocations = {};
-		loader.listLoaded = {};
-		loader.listMessages = {};
-		loader.listCallbacks = {};
-		loader.loading = [];
-		loader.loadingListIDs = [];
-		loader.started = [];
-		loader.loaded = [];
-		loader.loadingOrLoaded = [];
-		loader.listCurrent = '';
-		loader.loadTypeBase = 'script';
-		loader.tips = [];
+		$(document).ready( function () {
+			
+			// resize once
+			
+			on_window_resize();
+			
+			// begin updating
+			
+			update();
 		
-		Object.defineProperty( main, 'loadingHeader', {
-			set: function ( header ) { 
-				
-				if ( typeof loader.progressBar !== 'undefined' ) {
+			// loader
+			
+			loader.active = false;
+			loader.listCount = 0;
+			loader.lists = [];
+			loader.listLocations = {};
+			loader.listLoaded = {};
+			loader.listMessages = {};
+			loader.listCallbacks = {};
+			loader.loading = [];
+			loader.loadingListIDs = [];
+			loader.started = [];
+			loader.loaded = [];
+			loader.loadingOrLoaded = [];
+			loader.listCurrent = '';
+			loader.loadTypeBase = 'script';
+			loader.tips = [];
+			
+			Object.defineProperty( main, 'loadingHeader', {
+				set: function ( header ) { 
 					
-					loader.progressBar.header = header;
+					if ( typeof loader.progressBar !== 'undefined' ) {
+						
+						loader.progressBar.header = header;
+						
+					}
 					
 				}
-				
-			}
-		});
-		
-		Object.defineProperty( main, 'loadingTips', {
-			set: function ( tips ) { 
-				
-				if ( is_array( tips ) ) {
+			});
+			
+			Object.defineProperty( main, 'loadingTips', {
+				set: function ( tips ) { 
 					
-					loader.tips = tips.slice( 0 );
+					if ( is_array( tips ) ) {
+						
+						loader.tips = tips.slice( 0 );
+						
+					}
 					
 				}
+			});
+			
+			add_loaded_locations( libList );
+			
+			// ui
+			
+			// sticky navigation bars
+			
+			$("#navMain").sticky( { topSpacing:0 } );
+			$("#navFarming").sticky( { topSpacing: $("#navMain").height() } );
+			
+			// handle active items
+			
+			$('.active-item').on('show.active', function () {
+				$('#active').append( this );
+			});
+			$('.active-item').on('hidden.active', function () {
+				$('#inactive').append( this );
+			});
+			$(".active-item").collapse({ toggle: false });
+			
+			// handle disabled items only if pointer-events are not supported
+			
+			if ( shared.supports.pointerEvents === false ) {
+				
+				dom_ignore_pointer( $(".disabled"), true );
 				
 			}
-		});
-		
-		add_loaded_locations( libList );
-		
-		// public functions
-		
-		main.type = type;
-		main.is_number = is_number;
-		main.is_array = is_array;
-		main.is_image = is_image;
-		main.is_image_ext = is_image_ext;
-		
-		main.extend = extend;
-		main.time_test = time_test;
-		main.get_mouse = get_mouse;
-		main.generate_dom_image = generate_dom_image;
-		
-		main.ensure_array = ensure_array;
-		main.ensure_not_array = ensure_not_array;
-		main.modify_array = modify_array;
-		main.index_of_object_with_property_value = index_of_object_with_property_value;
-		
-		main.get_asset_path = get_asset_path;
-		main.get_ext = get_ext;
-		main.add_default_ext = add_default_ext;
-		main.remove_ext = remove_ext;
-		main.get_alt_path = get_alt_path;
-		
-		main.handle_touch_event = handle_touch_event;
-		
-		main.load = load;
-		main.get_is_loaded = get_is_loaded;
-		main.get_is_loading = get_is_loading;
-		main.get_is_loading_or_loaded = get_is_loading_or_loaded;
-		
-		main.asset_register = asset_register;
-		main.asset_require = asset_require;
-		main.asset_ready = asset_ready;
-		main.set_asset = set_asset;
-		main.get_asset = get_asset;
-		main.get_asset_data = get_asset_data;
-		
-		// load for setup
-		
-		asset_require( setupList, init_setup, true );
+			
+			// init worker
+			
+			worker.$domElement =  $("#worker");
+			worker.$progressStarted = worker.$domElement.find( "#workerProgressBarStarted" );
+			worker.$progressCompleted = worker.$domElement.find( "#workerProgressBarCompleted" );
+			worker.taskCount = 0;
+			worker.tasksStartedIds = [];
+			worker.tasksStarted = {};
+			worker.tasksCompleted = {};
+			worker.collapseDelay = 1000;
+			
+			worker_reset();
+			worker.$domElement.on( 'show.taskStart', function () {
+				
+				worker.hidden = false;
+				
+			} );
+			worker.$domElement.on( 'hidden.reset', function () {
+				
+				worker.hidden = true;
+				worker_reset();
+				
+			} );
+			
+			// public functions
+			
+			main.type = type;
+			main.is_number = is_number;
+			main.is_array = is_array;
+			main.is_image = is_image;
+			main.is_image_ext = is_image_ext;
+			
+			main.extend = extend;
+			main.time_test = time_test;
+			main.get_mouse = get_mouse;
+			
+			main.ensure_array = ensure_array;
+			main.ensure_not_array = ensure_not_array;
+			main.modify_array = modify_array;
+			main.index_of_object_with_property_value = index_of_object_with_property_value;
+			
+			main.css_property_supported = css_property_supported;
+			main.dom_generate_image = dom_generate_image;
+			main.dom_ignore_pointer = dom_ignore_pointer;
+			main.dom_fade = dom_fade;
+			main.dom_collapse = dom_collapse;
+			
+			main.handle_touch_event = handle_touch_event;
+			
+			main.worker_reset = worker_reset;
+			main.worker_start_task = worker_start_task;
+			main.worker_complete_task = worker_complete_task;
+			
+			main.load = load;
+			main.get_is_loaded = get_is_loaded;
+			main.get_is_loading = get_is_loading;
+			main.get_is_loading_or_loaded = get_is_loading_or_loaded;
+			
+			main.get_asset_path = get_asset_path;
+			main.get_ext = get_ext;
+			main.add_default_ext = add_default_ext;
+			main.remove_ext = remove_ext;
+			main.get_alt_path = get_alt_path;
+			
+			main.asset_register = asset_register;
+			main.asset_require = asset_require;
+			main.asset_ready = asset_ready;
+			main.set_asset = set_asset;
+			main.get_asset = get_asset;
+			main.get_asset_data = get_asset_data;
+			
+			// hide preloader
+			
+			$("#preloader").collapse('hide');
+			$("#preloader").on( 'hidden.init', function () {
+				
+				$( this ).off( 'hidden.init' );
+				
+				// start loading setup
+				
+				asset_require( setupList, init_setup, true );
+				
+			} );
+			
+		} );
 		
     }
     
-    function init_setup ( pb, g ) {
+    function init_setup ( g ) {
 		
         // assets
         
-		_ProgressBar = pb;
         _Game = g;
 		
-		// create progress bar for loading
-		
-		loader.progressBar = new _ProgressBar.Instance();
-        
-        // resize once
-		
-        on_window_resize();
-		
     }
+	
+	function update () {
+		
+		var timeDelta,
+			timeDeltaMod;
+        
+        window.requestAnimationFrame( update );
+		
+		// handle time
+		
+		shared.timeLast = shared.time;
+		
+		shared.time = new Date().getTime();
+		
+		timeDelta = shared.time - shared.timeLast;
+		
+		// get time delta modifier from timeDelta vs expected refresh interval
+		
+		timeDeltaMod = Math.round( ( timeDelta / shared.timeDeltaExpected ) * shared.timeDeltaModDec ) / shared.timeDeltaModDec;
+		
+		if ( is_number( timeDeltaMod ) !== true ) {
+			
+			timeDeltaMod = 1;
+			
+		}
+		
+		// signal
+		
+		shared.signals.update.dispatch( timeDelta, timeDeltaMod );
+		
+		// handle gallery mode
+		
+		shared.timeLastInteraction += timeDelta;
+		
+		if ( shared.galleryMode === true && shared.timeLastInteraction >= shared.timeLastInteractionMax ) {
+			
+			if ( typeof _Game !== 'undefined' && _Game.started === true ) {
+				
+				_Game.stop();
+				
+			}
+			
+		}
+		
+	}
 	
 	/*===================================================
     
@@ -470,41 +605,6 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function generate_dom_image ( path, callback, context, image ) {
-		
-		var loadCallback = function () {
-			
-			if ( typeof callback === 'function' ) {
-				
-				callback.call( context, image );
-				
-			}
-			
-		};
-		
-		if ( is_image( image ) !== true ) {
-			
-			image = new Image();
-			
-		}
-		
-		image.crossOrigin = '';
-		image.src = path;
-		
-		if ( image.complete ) {
-			
-			loadCallback();
-		}
-		else {
-			
-			image.onload = loadCallback;
-			
-		}
-		
-		return image;
-		
-    }
-	
 	/*===================================================
     
     array / object helpers
@@ -587,6 +687,205 @@ var KAIOPUA = (function (main) {
 		}
 		
 		return index;
+		
+	}
+	
+	/*===================================================
+    
+    css
+    
+    =====================================================*/
+	
+	function css_property_supported ( property ) {
+		
+		var i, l,
+			propertyCamel,
+			propertySupported;
+		
+		// format property to camel case
+		
+		propertyCamel = str_to_camel( property );
+		
+		// use modernizr to check for correct css
+		
+		propertySupported = Modernizr.prefixed( propertyCamel );
+		
+		// cast to opposite boolean twice and return if supported
+		
+		return !!propertySupported;
+		
+	}
+	
+	function str_to_camel ( str ) {
+		
+		// code based on camelize from prototype library
+		
+		var parts = str.split('-'), 
+			len = parts.length, 
+			camelized;
+		
+		if (len == 1) {
+			
+			return parts[0];
+			
+		}
+
+		camelized = str.charAt(0) == '-' ? parts[0].charAt(0).toUpperCase() + parts[0].substring(1) : parts[0];
+		
+		for (var i = 1; i < len; i++) {
+			
+			camelized += parts[i].charAt(0).toUpperCase() + parts[i].substring(1);
+			
+		}
+		
+		return camelized;
+		
+	}
+	
+	/*===================================================
+    
+    dom
+    
+    =====================================================*/
+	
+	function dom_ignore_pointer ( $domElement, state ) {
+		
+		// use native pointer-events when available
+		
+		if ( shared.supports.pointerEvents ) {
+			
+			if ( state === true ) {
+				
+				$domElement.addClass( 'ignore-pointer' );
+				
+			}
+			else {
+				
+				$domElement.removeClass( 'ignore-pointer' );
+			
+			}
+			
+		}
+		else {
+			
+			// fallback in-case browser does not support pointer-events property
+			// this method is incredibly slow, as it has to hide domElement, retrigger event to find what is under, then show again
+			
+			if ( state === true ) {
+				
+				$domElement.on( 'mousedown.pointer touchstart.pointer mouseup.pointer touchend.pointer click.pointer mouseenter.pointer touchenter.pointer mouseleave.pointer touchleave.pointer', 
+					function ( e ) { 
+						
+						e.preventDefault();
+						e.stopPropagation();
+						
+						$domElement.stop( true ).addClass( 'invisible' );
+						
+						$( document.elementFromPoint( e.clientX, e.clientY ) ).trigger( e );
+						
+						$domElement.stop( true ).removeClass( 'invisible' );
+						
+						return false;
+						
+					}
+				);
+				
+			}
+			else {
+				
+				$domElement.off( '.pointer' );
+				
+			}
+			
+		}
+		
+	}
+	
+	function dom_generate_image ( path, callback, context, image ) {
+		
+		var loadCallback = function () {
+			
+			if ( typeof callback === 'function' ) {
+				
+				callback.call( context, image );
+				
+			}
+			
+		};
+		
+		if ( is_image( image ) !== true ) {
+			
+			image = new Image();
+			
+		}
+		
+		image.crossOrigin = '';
+		image.src = path;
+		
+		if ( image.complete ) {
+			
+			loadCallback();
+		}
+		else {
+			
+			image.onload = loadCallback;
+			
+		}
+		
+		return image;
+		
+    }
+	
+	function dom_fade( parameters ) {
+		
+		var $element,
+			time,
+			opacity,
+			easing,
+			callback;
+		
+		// handle parameters
+		
+		parameters = parameters || {};
+		
+		$element = $( parameters.element );
+		
+		if ( $element.length > 0 ) {
+			
+			time = is_number( parameters.time ) ? parameters.time : shared.domFadeTime;
+			opacity = is_number( parameters.opacity ) ? parameters.opacity : 1;
+			easing = typeof parameters.easing === 'string' ? parameters.easing : shared.domEasing;
+			callback = parameters.callback;
+			
+			// fade to opacity
+			
+			$element.stop( true ).removeClass( 'hidden' ).fadeTo( time, opacity, easing, function () {
+				
+				// if faded out completely, hide
+				
+				if ( opacity === 0 ) {
+					
+					$element.addClass( 'hidden' );
+					
+				}
+				
+				// do callback
+				
+				if ( typeof callback === 'function' ) {
+					
+					callback();
+					
+				}
+				
+			} );
+			
+		}
+		
+	}
+	
+	function dom_collapse( parameters ) {
+		
+		
 		
 	}
 	
@@ -718,9 +1017,11 @@ var KAIOPUA = (function (main) {
 		
 		shared.timeLastInteraction = 0;
         
+		/*
         e.preventDefault();
         e.stopPropagation();
         return false;
+		*/
     }
     
     function on_mouse_up( e ) {
@@ -743,9 +1044,11 @@ var KAIOPUA = (function (main) {
 		
 		shared.timeLastInteraction = 0;
 		
+		/*
         e.preventDefault();
         e.stopPropagation();
         return false;
+		*/
     }
 	
 	function on_mouse_click ( e ) {
@@ -789,9 +1092,11 @@ var KAIOPUA = (function (main) {
 		
 		shared.timeLastInteraction = 0;
         
+		/*
         e.preventDefault();
         e.stopPropagation();
         return false;
+		*/
     }
 	
 	function on_mouse_enter ( e ) {
@@ -810,9 +1115,11 @@ var KAIOPUA = (function (main) {
 			
 		}
         
+		/*
         e.preventDefault();
         e.stopPropagation();
         return false;
+		*/
     }
 	
 	function on_mouse_leave ( e ) {
@@ -839,9 +1146,11 @@ var KAIOPUA = (function (main) {
 			
 		}
         
+        /*
         e.preventDefault();
         e.stopPropagation();
         return false;
+		*/
     }
     
     function on_mouse_wheel( e ) {
@@ -856,10 +1165,11 @@ var KAIOPUA = (function (main) {
         shared.signals.mousewheel.dispatch( e );
 		
 		shared.timeLastInteraction = 0;
-        
+        /*
         e.preventDefault();
         e.stopPropagation();
         return false;
+		*/
     }
 	
 	function on_game_context_menu( e ) {
@@ -980,18 +1290,15 @@ var KAIOPUA = (function (main) {
 		
 		shared.signals.focusgain.dispatch( e );
 		
-		if ( typeof _Game !== 'undefined' && _Game.started !== true ) {
-			
-			_Game.resume();
-			
-		}
-		
 	}
 
     function on_window_resize( e ) {
         
         shared.screenWidth = $(window).width();
         shared.screenHeight = $(window).height();
+		
+		shared.gameWidth = shared.domElements.$game.width(),
+		shared.gameHeight = shared.domElements.$game.height();
         
         shared.signals.windowresized.dispatch(shared.screenWidth, shared.screenHeight);
         
@@ -1012,7 +1319,128 @@ var KAIOPUA = (function (main) {
 	
 	/*===================================================
 	
-	loading functions
+	worker
+	
+	=====================================================*/
+	
+	function worker_reset () {
+		
+		worker.tasksStartedIds = [];
+		worker.tasksStarted = [];
+		worker.tasksCompleted = [];
+		worker.$progressStarted.empty();
+		worker.$progressCompleted.empty();
+		
+	}
+	
+	function worker_start_task ( id ) {
+		
+		var $task,
+			id;
+		
+		// if does not have task yet
+		
+		if ( typeof id === 'string' && id.length > 0 && worker.tasksStarted.hasOwnProperty( id ) !== true ) {
+			
+			worker.taskCount++;
+			
+			// clear collapse delay
+			
+			if ( typeof worker.collapseTimeoutId !== 'undefined' ) {
+				
+				window.clearTimeout( worker.collapseTimeoutId );
+				worker.collapseTimeoutId = undefined;
+				
+			}
+			
+			// show if hidden
+			
+			if ( worker.hidden !== false ) {
+				
+				worker.$domElement.collapse( 'show' );
+				
+			}
+			
+			//worker.$domElement.collapse( 'show' );
+			
+			// init task
+			
+			$task = $( '<img src="assets/icons/bar_vertical_color_64.png" id="' + id + '" class="iconk-tiny iconk-widthFollow iconk-tight">' );
+			
+			// store
+			
+			worker.tasksStartedIds.push( id );
+			worker.tasksStarted[ id ] = $task;
+			
+			// add into worker started progress bar
+			
+			worker.$progressStarted.append( $task );
+			
+		}
+		
+	}
+	
+	function worker_complete_task ( id ) {
+		
+		var $taskStarted,
+			$task,
+			index;
+		
+		// if has task
+		
+		if ( typeof id === 'string' && id.length > 0 && worker.tasksStarted.hasOwnProperty( id ) ) {
+			
+			// remove previous
+			
+			index = worker.tasksStartedIds.indexOf( id );
+			if ( index !== -1 ) {
+				worker.tasksStartedIds.splice( index, 1 );
+			}
+			worker.tasksStarted[ id ].remove();
+			delete worker.tasksStarted[ id ];
+			
+			// init task
+			
+			$task = $( '<img src="assets/icons/bar_vertical_64.png" id="' + id + '" class="iconk-tiny iconk-widthFollow iconk-tight">' );
+			
+			// store
+			
+			worker.tasksCompleted[ id ] = $task;
+			
+			// add into worker completed progress bar
+			
+			worker.$progressCompleted.append( $task );
+			
+			// check length of tasks started
+			
+			if ( worker.tasksStartedIds.length === 0 ) {
+				
+				// clear collapse delay
+				
+				if ( typeof worker.collapseTimeoutId !== 'undefined' ) {
+					
+					window.clearTimeout( worker.collapseTimeoutId );
+					worker.collapseTimeoutId = undefined;
+					
+				}
+				
+				// collapse after delay
+				
+				worker.collapseTimeoutId = window.setTimeout( function () {
+					
+					worker.$domElement.collapse( 'hide' );
+					
+				}, worker.collapseDelay );
+				
+			}
+			
+		}
+		
+	}
+	
+	/*===================================================
+	
+	loading
 	
 	=====================================================*/
 	
@@ -1068,6 +1496,8 @@ var KAIOPUA = (function (main) {
 					loader.loading.push( path );
 					
 					loader.loadingListIDs.push( listID );
+					
+					worker_start_task( path );
 					
 					newLocations = true;
 					
@@ -1251,7 +1681,7 @@ var KAIOPUA = (function (main) {
 				
 				// load
 				
-				data = generate_dom_image( path, function ( image ) {
+				data = dom_generate_image( path, function ( image ) {
 					
 					data = image;
 					
@@ -1302,6 +1732,10 @@ var KAIOPUA = (function (main) {
 		
 		loadType = get_load_type( location );
 		
+		// complete task
+		
+		worker_complete_task( path );
+		
 		// register asset
 		
 		asset_register( path, { data: data } );
@@ -1343,17 +1777,6 @@ var KAIOPUA = (function (main) {
 				// add location to loaded list
 				
 				loadedList.push( location );
-				
-				// if is current list
-				
-				if ( listID === loader.listCurrent ) {
-					
-					// update progress bar
-					if ( typeof loader.progressBar !== 'undefined' ) {
-						loader.progressBar.update_progress( loadedList.length / ( locationsList.length + loadedList.length ) );
-					}
-					
-				}
 				
 				// if current list is complete, defer until all checked
 				
@@ -1786,7 +2209,7 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function asset_require( requirements, callbackList, waitForAssetsReady, loaderUIContainer, assetSource ) {
+	function asset_require( requirements, callbackList, waitForAssetsReady, assetSource ) {
 		
 		var callback_outer,
 			on_asset_ready,
@@ -1880,14 +2303,6 @@ var KAIOPUA = (function (main) {
 				path,
 				asset;
 			
-			// hide loader ui
-			
-			if ( typeof loaderUIContainer !== 'undefined' ) {
-				
-				loader.progressBar.hide( { remove: true } );
-				
-			}
-			
 			// find all assets
 			
 			for ( i = 0, l = requirements.length; i < l; i++ ) {
@@ -1944,14 +2359,6 @@ var KAIOPUA = (function (main) {
 			
 		};
 		
-		// show loader ui
-		
-		if ( typeof loaderUIContainer !== 'undefined' ) {
-			
-			loader.progressBar.show( { parent: loaderUIContainer } );
-			
-		}
-		
 		// pass all requirements to loader
 		
 		load( requirements, callback_outer );
@@ -1997,7 +2404,7 @@ var KAIOPUA = (function (main) {
 			
 			if ( this.requirements.length > 0 ) {
 				
-				asset_require( this.requirements, this.callbacksOnReqs, this.wait, this.loaderUIContainer, this );
+				asset_require( this.requirements, this.callbacksOnReqs, this.wait, this );
 			
 			}
 			
@@ -2084,8 +2491,6 @@ var KAIOPUA = (function (main) {
 				this.requirements = this.requirements.concat( ensure_array( asset.requirements ) );
 				
 				this.callbacksOnReqs = this.callbacksOnReqs.concat( ensure_array( asset.callbacksOnReqs ) );
-				
-				this.loaderUIContainer = this.loaderUIContainer || asset.loaderUIContainer;
 				
 			}
 			

@@ -2024,7 +2024,7 @@
 				
 			}
 			
-			domElement = main.generate_dom_image( parameters.src, imgCallback, imgContext );
+			domElement = main.dom_generate_image( parameters.src, imgCallback, imgContext );
 			
 		}
 		// all other types

@@ -111,7 +111,7 @@
     
     // remove error state
     function clear () {
-        shared.html.errorContainer.empty();
+        shared.domElements.$errors.empty();
         errorCurrent = {};
         errorState = false;
     }
@@ -181,7 +181,7 @@
     
     // show error to user
     function show ( error, origin, lineNumber ) {
-        var errorType, header, explanation, nerdtalk, extra, article, articleHeight, footerModifier = 0, animSpeed = 500;
+        var errorType, header, explanation, nerdtalk, extra, article, articleHeight, animSpeed = 500;
         
         // does id not match a specific error
         if ( errorTypes.hasOwnProperty( error ) ) {
@@ -216,14 +216,11 @@
         // add to display
         $(article).append(header);
         $(article).append(explanation);
-        shared.html.errorContainer.append(article);
+        shared.domElements.$errors.append(article);
         
         // set height and negative margin-top
         // no need to position, css top/left at 50%
         articleHeight = $(header).outerHeight() + $(explanation).outerHeight();
-        if (typeof shared.html.staticMenu !== 'undefined') {
-            footerModifier = shared.html.staticMenu.outerHeight() * 0.5;   
-        }
         
         // append extra if needed
         if(typeof extra !== 'undefined') {
@@ -250,7 +247,7 @@
         $(explanation).fadeOut(0).fadeIn(animSpeed);
         $(article).animate({
             'height': articleHeight, 
-            'margin-top': Math.round(-((articleHeight * 0.5) + footerModifier))
+            'margin-top': Math.round(-articleHeight * 0.5)
         }, animSpeed);
         
         // store

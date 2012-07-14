@@ -158,7 +158,7 @@
 		
 		// remove signal
 		
-		shared.signals.resumed.remove( step_message_queue );
+		shared.signals.gameResumed.remove( step_message_queue );
 		
 	}
 	
@@ -170,7 +170,7 @@
 	
 	function get_is_show_safe () {
 		
-		return open === true || _Game.paused !== true;
+		return open === true || _Game.gamePaused !== true;
 		
 	}
 	
@@ -212,7 +212,7 @@
 		}
 		else {
 			
-			shared.signals.resumed.addOnce( step_message_queue );
+			shared.signals.gameResumed.addOnce( step_message_queue );
 			
 		}
 		
@@ -264,7 +264,7 @@
 			
 			if ( typeof pImage === 'string' ) {
 				
-				imageElement = main.generate_dom_image( pImage, function () {
+				imageElement = main.dom_generate_image( pImage, function () {
 					
 					image.align();
 					container.align();

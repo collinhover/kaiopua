@@ -822,13 +822,13 @@ Physics module, handles physics in game using JigLibJS.
 	
 	function start () {
 		
-		shared.signals.update.add( update );
+		shared.signals.gameUpdate.add( update );
 		
 	}
 	
 	function stop () {
 		
-		shared.signals.update.remove( update );
+		shared.signals.gameUpdate.remove( update );
 		
 	}
 	

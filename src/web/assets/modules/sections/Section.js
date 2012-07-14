@@ -116,7 +116,7 @@
 			
 			shared.signals.windowresized.add( resize );
 			
-			shared.signals.update.add( update );
+			shared.signals.gameUpdate.add( update );
 			
 		}
 		else {
@@ -132,7 +132,7 @@
 		
         shared.signals.windowresized.remove( resize );
         
-        shared.signals.update.remove( update );
+        shared.signals.gameUpdate.remove( update );
         
     }
     

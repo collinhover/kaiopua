@@ -136,7 +136,7 @@
 			
 			// signals
 			
-			shared.signals.paused.add( pause );
+			shared.signals.gamePaused.add( pause );
 			
 			ready = true;
 			
@@ -331,7 +331,7 @@
 		map[ '27' /*escape*/ ] = {
 			keyup: function () {
 				
-				if ( _Game.paused === true ) {
+				if ( _Game.gamePaused === true ) {
 					_Game.resume();
 				}
 				else {
@@ -760,13 +760,13 @@
 		
 		disable();
 		
-		shared.signals.resumed.add( resume );
+		shared.signals.gameResumed.add( resume );
 		
 	}
 	
 	function resume () {
 			
-		shared.signals.resumed.remove( resume );
+		shared.signals.gameResumed.remove( resume );
 		
 		enable();
 		
@@ -778,7 +778,7 @@
 			
 			enabled = true;
 			
-			shared.signals.update.add( update );
+			shared.signals.gameUpdate.add( update );
 		
 		}
 		
@@ -800,7 +800,7 @@
 		
 		// pause updating
 		
-		shared.signals.update.remove( update );
+		shared.signals.gameUpdate.remove( update );
 		
 	}
 	

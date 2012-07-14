@@ -449,7 +449,7 @@
 			
 			// signals
 			
-			shared.signals.update.add( this.update, this );
+			shared.signals.gameUpdate.add( this.update, this );
 			shared.signals.mousemoved.add( this.on_mouse_moved, this );
 			
 		}
@@ -595,7 +595,7 @@
 		
 		// stop updating
 		
-		shared.signals.update.remove( this.update, this );
+		shared.signals.gameUpdate.remove( this.update, this );
 		shared.signals.mousemoved.remove( on_mouse_moved, this );
 		
 		// stop

@@ -88,7 +88,7 @@
 	.border-radius(0 0 @radius @radius);
 }
 
-/* type 
+/* valign 
 -------------------------*/
 
 [class^="valign"], [class*=" valign"]{
@@ -140,7 +140,7 @@ html, body {
 -------------------------*/
 
 /* Hide from both screenreaders and browsers: h5bp.com/u */
-.hidden { display: none !important; visibility: hidden; }
+.hidden { display: none !important; visibility: hidden !important; }
 
 /* Hide only visually, but have it available for screenreaders: h5bp.com/v */
 .visuallyhidden { border: 0; clip: rect(0 0 0 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; width: 1px; }
@@ -209,11 +209,29 @@ html, body {
 	padding: 1px;
 }
 
+/* ignores 
+-------------------------*/
+
+.ignore-pointer {
+	cursor: default;
+	pointer-events: none;
+}
+
 /* anchors 
 -------------------------*/
 
 a {
 	display: inline-block;
+}
+
+a, .navbar .nav > li > a {
+	
+	.disabled, &.disabled, &.disabled:hover {
+		opacity: 0.5;
+		color: @white;
+		//.ignore-pointer;
+	}
+	
 }
 
 /* containers 
@@ -287,33 +305,17 @@ section {
 /* hero unit 
 -------------------------*/
 
+.hero-unit {
+	h2 {
+		margin-bottom: 0;
+		font-size: 30px;
+		line-height: 1.5;
+	}
+}
+
 .squire-unit {
 	padding: 30px;
 	margin: 0;
-	.border-radius(0);
-}
-
-/* activity 
--------------------------*/
-
-#inactive {
-	display: none;
-}
-
-#active {
-	
-	.active-item {
-		margin: 0;
-		
-		&:last-child {
-			.rounded-bottom(15px);
-		}
-	}
-	
-	.active-item + .active-item {
-		margin-top: 10px;
-	}
-	
 }
 
 /* navbar 
@@ -413,7 +415,17 @@ section {
 
 .nav {
 	margin: 0;
+}
+
+.nav-inline {
+	display: block;
+	float: left;
+	.clearfix();
 	
+	li {	
+		display: block;
+		float: left;
+	}
 }
 
 .nav-icon {
@@ -590,17 +602,16 @@ section {
 	z-index: 1000;
 }
 
+#transitioner {
+	.fullscreenTopLeftNoWidth;
+	background: @gray;
+	z-index: 1002;
+}
+
 #ui {
 	.fullscreenTopLeftNoWidth;
 	
-	#inGame {
-		.fullscreenMin;
-		background: whiteSmoke;
-		overflow:hidden;
-		z-index: 1001;
-	}
-	
-	#menuNav {
+	#navMain {
 		.fullWidth;
 		#gradient > .vertical(@navbarBackgroundHighlight, @navbarBackground);
 		.box-shadow(~"0 1px 3px rgba(0,0,0,.25), inset 0 -1px 0 rgba(0,0,0,.1)");
@@ -624,7 +635,7 @@ section {
 						
 					}
 					
-					img {
+					[class^="iconk-"], [class*=" iconk-"] {
 						padding: 0;
 					}
 					
@@ -641,7 +652,43 @@ section {
 		
 	}
 	
+	#inactive {
+		display: none;
+	}
+
+	#active {
+		position: relative;
+		z-index: 9998;
+		
+		.active-item {
+			margin: 0;
+			
+			.hero-unit, .squire-unit {
+				.border-radius(0);
+			}
+			
+			&:last-child {
+				.hero-unit, .squire-unit {
+					.rounded-bottom(15px);
+				}
+			}
+		}
+		
+		.active-item + .active-item {
+			margin-top: 10px;
+		}
+		
+	}
+	
+	#inGame {
+		.fullscreenTopLeftNoWidth;
+		overflow:hidden;
+		z-index: 1001;
+	}
+	
 	#outGame {
+		position: absolute;
+		top: 100%;
 		min-width: 100%;
 		min-height: @minHeight;
 		.clearfix();
@@ -660,19 +707,11 @@ section {
 		position: relative;
 		
 		.work {
-			margin-top: 15px;
-			
-			.progress-text {
-				padding: 0 15px 0 0;
+			.progress-bar {
+				margin-top: 14px;
 			}
 		}
 		
-	}
-	
-	#transitioner {
-		.fullscreenTopLeftNoWidth;
-		background: @whiteDarker;
-		display: none;
 	}
 	
 	#footer {
@@ -693,7 +732,7 @@ section {
 	
 	.logo {
 		padding-top: 10px;
-		opacity: 0.5;
+		opacity: 0.75;
 		color: @white;
 		cursor: pointer;
 		.clearfix();
@@ -756,6 +795,36 @@ section {
 
 .logo-type {
 	font-family: @displayFontFamily;
+}
+
+/* errors
+-------------------------*/
+
+.browsers {
+    position: relative;
+	
+	.browser-icon {
+		background-position: 50% 0;
+		background-repeat:no-repeat;
+		padding-top:95px;
+		width: 95px;
+		margin: 0 20px 0 20px;
+	}
+
+	.chrome {
+		.browser-icon;
+		background-image:url(../assets/icons/browsers_chrome.png);
+	}
+
+	.firefox {
+		.browser-icon;
+		background-image:url(../assets/icons/browsers_firefox.png);
+	}
+
+	.safari {
+		.browser-icon;
+		background-image:url(../assets/icons/browsers_safari.png);
+	}
 }
 
 /* farming 

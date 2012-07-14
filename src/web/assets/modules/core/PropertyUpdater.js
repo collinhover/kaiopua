@@ -57,13 +57,13 @@
 				// remove signal, parent will handle update
 				if ( this._parent instanceof _PropertyUpdater.Instance ) {
 					
-					shared.signals.update.remove( this.update, this );
+					shared.signals.gameUpdate.remove( this.update, this );
 					
 				}
 				// add signal to handle own update
 				else if ( this.updating === true ) {
 					
-					shared.signals.update.add( this.update, this );
+					shared.signals.gameUpdate.add( this.update, this );
 					
 				}
 				
@@ -111,7 +111,7 @@
 			
 			if ( this.parent instanceof _PropertyUpdater.Instance !== true ) {
 				
-				shared.signals.update.add( this.update, this );
+				shared.signals.gameUpdate.add( this.update, this );
 				
 			}
 			
@@ -125,7 +125,7 @@
 		
 		// signal
 		
-		shared.signals.update.remove( this.update, this );
+		shared.signals.gameUpdate.remove( this.update, this );
 		
 		// detach
 		

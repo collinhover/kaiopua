@@ -247,7 +247,7 @@
 			
 			shared.signals.mousemoved.add( on_mouse_moved );
 			
-			shared.signals.update.add( update );
+			shared.signals.gameUpdate.add( update );
 			
 		}
 		else {
@@ -268,7 +268,7 @@
 		
 		shared.signals.mousemoved.remove( on_mouse_moved );
 		
-		shared.signals.update.remove( update );
+		shared.signals.gameUpdate.remove( update );
 		
     }
     

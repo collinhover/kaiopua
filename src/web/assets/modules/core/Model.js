@@ -1427,7 +1427,7 @@
 				
 				info.cleared = false;
 					
-				shared.signals.update.add( updater.update );
+				shared.signals.gameUpdate.add( updater.update );
 				
 			}
 			
@@ -1441,7 +1441,7 @@
 				
 				info.updating = false;
 					
-				shared.signals.update.remove( updater.update );
+				shared.signals.gameUpdate.remove( updater.update );
 				
 			}
 			
