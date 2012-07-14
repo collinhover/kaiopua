@@ -19,12 +19,11 @@ var KAIOPUA = (function (main) {
             "js/requestTimeout.js",
             "js/signals.min.js",
 			"js/sylvester.js",
+			"js/jquery.easing-1.3.min.js",
 			"js/jquery.contentchanged.js",
 			"js/jquery.imagesloaded.min.js",
 			"js/jquery.sticky.js",
-			"js/jquery.easing-1.3.min.js",
-			"js/bootstrap.min.js",
-			"js/bootstrap-scroll-modal.custom.js"
+			"js/bootstrap.min.js"
         ],
         setupList = [
 			"assets/modules/core/Game.js"
@@ -109,8 +108,9 @@ var KAIOPUA = (function (main) {
 		shared.timeLastInteractionMax = 300000;
 		
 		shared.domFadeTime = 500;
-		shared.domCollapseTime = 300;
-		shared.domEasing = 'easeInOutCubic';
+		shared.domCollapseTime = 500;
+		shared.domFadeEasing = 'easeInOutCubic';
+		shared.domCollapseEasing = 'easeOutCubic';
 		
         shared.domElements = {};
 		shared.domElements.$game = $('#game');
@@ -130,6 +130,8 @@ var KAIOPUA = (function (main) {
 			
 			focuslose: new signals.Signal(),
 			focusgain: new signals.Signal(),
+			
+			scroll: new signals.Signal(),
     
             mousedown : new signals.Signal(),
             mouseup : new signals.Signal(),
@@ -159,6 +161,8 @@ var KAIOPUA = (function (main) {
         // each listener dispatches shared signal
 		$(window).on( 'blur', on_focus_lose );
 		$(window).on( 'focus', on_focus_gain );
+		
+		$(window).on( 'scroll', on_scroll );
 		
         $(document).on( 'mousedown touchstart', on_mouse_down );
         $(document).on( 'mouseup touchend', on_mouse_up );
@@ -245,12 +249,15 @@ var KAIOPUA = (function (main) {
 			// handle active items
 			
 			$('.active-item').on('show.active', function () {
-				$('#active').append( this );
+				shared.domElements.$active.append( this );
 			});
 			$('.active-item').on('hidden.active', function () {
-				$('#inactive').append( this );
+				shared.domElements.$inactive.append( this );
 			});
-			$(".active-item").collapse({ toggle: false });
+			dom_collapse( { 
+				element: shared.domElements.$inactive.find('.active-item'),
+				initHidden: true
+			} );
 			
 			// handle disabled items only if pointer-events are not supported
 			
@@ -272,14 +279,8 @@ var KAIOPUA = (function (main) {
 			worker.collapseDelay = 1000;
 			
 			worker_reset();
-			worker.$domElement.on( 'show.taskStart', function () {
-				
-				worker.hidden = false;
-				
-			} );
 			worker.$domElement.on( 'hidden.reset', function () {
 				
-				worker.hidden = true;
 				worker_reset();
 				
 			} );
@@ -333,7 +334,9 @@ var KAIOPUA = (function (main) {
 			
 			// hide preloader
 			
-			$("#preloader").collapse('hide');
+			dom_collapse( {
+				element: $("#preloader"),
+			} );
 			$("#preloader").on( 'hidden.init', function () {
 				
 				$( this ).off( 'hidden.init' );
@@ -842,30 +845,19 @@ var KAIOPUA = (function (main) {
 			time,
 			opacity,
 			easing,
-			callback;
-		
-		// handle parameters
-		
-		parameters = parameters || {};
-		
-		$element = $( parameters.element );
-		
-		if ( $element.length > 0 ) {
-			
-			time = is_number( parameters.time ) ? parameters.time : shared.domFadeTime;
-			opacity = is_number( parameters.opacity ) ? parameters.opacity : 1;
-			easing = typeof parameters.easing === 'string' ? parameters.easing : shared.domEasing;
-			callback = parameters.callback;
-			
-			// fade to opacity
-			
-			$element.stop( true ).removeClass( 'hidden' ).fadeTo( time, opacity, easing, function () {
+			callback,
+			fadeComplete = function () {
 				
 				// if faded out completely, hide
 				
 				if ( opacity === 0 ) {
 					
-					$element.addClass( 'hidden' );
+					$element.addClass( 'hidden' ).trigger( 'hidden' );
+					
+				}
+				else {
+					
+					$element.trigger( 'shown' );
 					
 				}
 				
@@ -877,7 +869,37 @@ var KAIOPUA = (function (main) {
 					
 				}
 				
-			} );
+			};
+		
+		// handle parameters
+		
+		parameters = parameters || {};
+		
+		$element = $( parameters.element );
+		
+		if ( $element.length > 0 ) {
+			
+			time = is_number( parameters.time ) ? parameters.time : shared.domFadeTime;
+			opacity = is_number( parameters.opacity ) ? parameters.opacity : 1;
+			easing = typeof parameters.easing === 'string' ? parameters.easing : shared.domFadeEasing;
+			callback = parameters.callback;
+			
+			// fade to opacity
+			
+			$element.stop( true ).removeClass( 'hidden' );
+			
+			if ( opacity === 0 ) {
+				
+				$element.trigger( 'hide' );
+				
+			}
+			else {
+				
+				$element.trigger( 'show' );
+				
+			}
+			
+			$element.fadeTo( time, opacity, easing, fadeComplete );
 			
 		}
 		
@@ -885,7 +907,91 @@ var KAIOPUA = (function (main) {
 	
 	function dom_collapse( parameters ) {
 		
+		var $element,
+			$placeholder,
+			time,
+			show,
+			isCollapsed,
+			easing,
+			callback,
+			collapseComplete = function () {
+				
+				// if shown or hidden
+				
+				if ( show === true ) {
+					
+					$element.trigger( 'shown' );
+					
+				}
+				else {
+					
+					$element.addClass( 'hidden' ).trigger( 'hidden' );
+					
+				}
+				
+				// do callback
+				
+				if ( typeof callback === 'function' ) {
+					
+					callback();
+					
+				}
+				
+			};
 		
+		// handle parameters
+		
+		parameters = parameters || {};
+		
+		$element = $( parameters.element );
+		show = typeof parameters.show === 'boolean' ? parameters.show : false;
+		
+		// if valid element
+		
+		if ( $element.length > 0 ) {
+			
+			isCollapsed = $element.hasClass( 'collapsed' );
+			
+			// if for initialize
+			
+			if ( parameters.initHidden === true ) {
+				
+				$element.after( '<div id="collapsePlaceholder"></div>' ).appendTo( 'body' ).removeClass('hidden').data( 'collapseHeight', $element.height() ).addClass( 'collapsed' ).slideUp( 0 ).addClass('hidden').each( function () {
+					
+					$( '#collapsePlaceholder' ).filter( ':first' ).before( this ).remove();
+					
+				} );
+				
+			}
+			// if valid element and not already collapsing / collapsed to same state
+			else if ( isCollapsed === show ) {
+				
+				time = is_number( parameters.time ) ? parameters.time : shared.domCollapseTime;
+				easing = typeof parameters.easing === 'string' ? parameters.easing : shared.domCollapseEasing;
+				callback = parameters.callback;
+				
+				// fade to opacity
+				
+				$element.stop( true, isCollapsed ).removeClass( 'hidden collapsed' );
+				
+				if ( show === true ) {
+					
+					// get element actual height
+					
+					// set
+					
+					$element.trigger( 'show' ).slideDown( time, easing, collapseComplete );
+				
+				}
+				else {
+					
+					$element.addClass( 'collapsed' ).trigger( 'hide' ).slideUp( time, easing, collapseComplete );
+					
+				}
+				
+			}
+			
+		}
 		
 	}
 	
@@ -1278,17 +1384,17 @@ var KAIOPUA = (function (main) {
 		
 		shared.signals.focuslose.dispatch( e );
 		
-		if ( typeof _Game !== 'undefined' ) {
-			
-			_Game.pause();
-			
-		}
-		
 	}
 	
 	function on_focus_gain ( e ) {
 		
 		shared.signals.focusgain.dispatch( e );
+		
+	}
+	
+	function on_scroll ( e ) {
+		
+		shared.signals.scroll.dispatch( $( window ).scrollLeft(), $( window ).scrollTop() );
 		
 	}
 
@@ -1355,13 +1461,10 @@ var KAIOPUA = (function (main) {
 			
 			// show if hidden
 			
-			if ( worker.hidden !== false ) {
-				
-				worker.$domElement.collapse( 'show' );
-				
-			}
-			
-			//worker.$domElement.collapse( 'show' );
+			main.dom_collapse( {
+				element: worker.$domElement,
+				show: true
+			} );
 			
 			// init task
 			
@@ -1428,7 +1531,9 @@ var KAIOPUA = (function (main) {
 				
 				worker.collapseTimeoutId = window.setTimeout( function () {
 					
-					worker.$domElement.collapse( 'hide' );
+					main.dom_collapse( {
+						element: worker.$domElement
+					} );
 					
 				}, worker.collapseDelay );
 				

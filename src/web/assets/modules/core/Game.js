@@ -412,10 +412,30 @@
 		
 		// ui
 		
+		// if focus lost, pause game
+		
+		shared.signals.focuslose.add( pause );
+		
+		// pause / resume buttons
+		
 		$('#buttonPauseGame').on( 'mouseup touchend', pause );
 		$('#buttonResumeGame').on( 'mouseup touchend', resume );
 		
+		// pause message
+		
 		shared.domElements.$pauseMessage = $('#pauseMessage');
+		
+		// pause if page scrolled too far
+		
+		shared.signals.scroll.add( function ( x, y ) {
+			
+			if ( y >= shared.domElements.$game.height() * 0.5 ) {
+				
+				pause();
+				
+			}
+			
+		} );
 		
 		// resize
 		
@@ -1053,10 +1073,11 @@
 				
 				// show pause message
 				
-				if ( !shared.domElements.$pauseMessage.hasClass('in') ) {
-					shared.domElements.$pauseMessage.collapse( 'show' );
-					shared.domElements.$pauseMessage.on( 'mouseup.resume touchend.resume', resume );
-				}
+				main.dom_collapse( {
+					element: shared.domElements.$pauseMessage,
+					show: true
+				} );
+				shared.domElements.$pauseMessage.on( 'mouseup.resume touchend.resume', resume );
 				
 			}
 			
@@ -1100,10 +1121,10 @@
 			
 			// pause modal
 			
-			if ( shared.domElements.$pauseMessage.hasClass('in') ) {
-				shared.domElements.$pauseMessage.off( '.resume' );
-				shared.domElements.$pauseMessage.collapse( 'hide' );
-			}
+			shared.domElements.$pauseMessage.off( '.resume' );
+			main.dom_collapse( {
+				element: shared.domElements.$pauseMessage
+			} );
 			
 			// when started
 			
