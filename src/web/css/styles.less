@@ -32,6 +32,7 @@
 
 @displayFontFamily: 'CoustardRegular', @sansFontFamily;
 
+@backgroundColor: @white;
 @minHeight: 600px;
 
 .fullWidth {
@@ -123,7 +124,7 @@ html {
 
 html, body {
 	.fullscreen;
-    background-color: @white;
+    background-color: @backgroundColor;
 }
 
 /* unselectable 
@@ -155,10 +156,14 @@ html, body {
 -------------------------*/
 
 .ignore-pointer {
-	cursor: default;
+	cursor: default !important;
 	pointer-events: none;
 }
 
+.disabled {
+	opacity: 0.5;
+	.ignore-pointer;
+}
 
 /* icons 
 -------------------------*/
@@ -222,10 +227,6 @@ html, body {
 -------------------------*/
 
 .btn {
-	
-	.disabled, &.disabled, &.disabled:hover {
-		.ignore-pointer;
-	}
 	
 }
 
@@ -309,11 +310,14 @@ a {
 }
 
 a, .navbar .nav > li > a {
+	cursor: pointer;
+	
+	&:hover {
+		cursor: pointer;
+	}
 	
 	.disabled, &.disabled, &.disabled:hover {
-		opacity: 0.5;
 		color: @white;
-		.ignore-pointer;
 	}
 	
 }
@@ -321,21 +325,16 @@ a, .navbar .nav > li > a {
 /* containers 
 -------------------------*/
 
-section {
-	padding-top: 50px;
-	padding-bottom: 30px;
-	border-top: 70px solid transparent;
-    margin-top: -70px;
-    -webkit-background-clip: padding-box;
-    -moz-background-clip: padding-box;
-    background-clip: padding-box;
-}
-
 .menu {
 	
-	section {
-		border-top: 80px solid transparent;
-		margin-top: -80px;
+	header, section {
+		padding-top: 50px;
+		padding-bottom: 30px;
+		border-top: 70px solid transparent;
+		margin-top: -70px;
+		-webkit-background-clip: padding-box;
+		-moz-background-clip: padding-box;
+		background-clip: padding-box;
 	}
 	
 }
@@ -409,15 +408,7 @@ section {
 		min-height: 0;
 		padding: 0;
 		width: 100%;
-		background-color: @whiteDarker; /* Old browsers */
-		background-repeat: repeat-x; /* Repeat the gradient */
-		background-image: -moz-linear-gradient(top, @grayLighter 0%, @whiteDarker 100%); /* FF3.6+ */
-		background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%,@grayLighter), color-stop(100%,@whiteDarker)); /* Chrome,Safari4+ */
-		background-image: -webkit-linear-gradient(top, @grayLighter 0%,@whiteDarker 100%); /* Chrome 10+,Safari 5.1+ */
-		background-image: -ms-linear-gradient(top, @grayLighter 0%,@whiteDarker 100%); /* IE10+ */
-		background-image: -o-linear-gradient(top, @grayLighter 0%,@whiteDarker 100%); /* Opera 11.10+ */
-		filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='@grayLighter', endColorstr='@whiteDarker',GradientType=0 ); /* IE6-9 */
-		background-image: linear-gradient(top, @grayLighter 0%,@whiteDarker 100%); /* W3C */
+		#gradient > .vertical( @grayLighter, @whiteDarker );
 		border: 1px solid darken(@whiteDarker, 3%);
 		.box-shadow(~"none");
 	}
@@ -714,10 +705,6 @@ section {
 			
 			li {
 				a {
-					
-					&:hover {
-						
-					}
 					
 					[class^="iconk-"], [class*=" iconk-"] {
 						padding: 0;

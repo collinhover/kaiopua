@@ -27,37 +27,43 @@
                 documentHeight = $document.height(),
                 dwh = documentHeight - windowHeight,
                 extra = (scrollTop > dwh) ? dwh - scrollTop : 0;
+			
             for (var i = 0; i < sticked.length; i++) {
                 var s = sticked[i],
                     elementTop = s.stickyWrapper.offset().top,
                     etse = elementTop - s.topSpacing - extra;
-                if (scrollTop <= etse) {
-                    if (s.currentTop !== null) {
-                        s.stickyElement
-                            .css('position', '')
-                            .css('top', '')
-                            .removeClass(s.className + " " + s.classNameNav);
-                        s.stickyElement.parent().removeClass(s.className);
-                        s.currentTop = null;
-                    }
-                }
-                else {
-                    var newTop = documentHeight - s.stickyElement.outerHeight()
-                        - s.topSpacing - s.bottomSpacing - scrollTop - extra;
-                    if (newTop < 0) {
-                        newTop = newTop + s.topSpacing;
-                    } else {
-                        newTop = s.topSpacing;
-                    }
-                    if (s.currentTop != newTop) {
-                        s.stickyElement
-                            .css('position', 'fixed')
-                            .css('top', newTop)
-                            .addClass(s.className + ( s.stickyElement.is(".navbar,.subnavbar") ? " " + s.classNameNav : "" ) );
-                        s.stickyElement.parent().addClass(s.className);
-                        s.currentTop = newTop;
-                    }
-                }
+				
+				if ( s.stickyElement.not(":hidden").length > 0 ) {
+					if (scrollTop <= etse) {
+						if (s.currentTop !== null) {
+							s.stickyElement
+								.css('position', '')
+								.css('top', '')
+								.removeClass(s.className + " " + s.classNameNav);
+							s.stickyElement.parent().removeClass(s.className);
+							s.currentTop = null;
+						}
+					}
+					else {
+						var newTop = documentHeight - s.stickyElement.outerHeight()
+							- s.topSpacing - s.bottomSpacing - scrollTop - extra;
+						if (newTop < 0) {
+							newTop = newTop + s.topSpacing;
+						} else {
+							newTop = s.topSpacing;
+						}
+						if (s.currentTop != newTop) {
+							s.stickyElement
+								.css('position', 'fixed')
+								.css('top', newTop)
+								.addClass(s.className + ( s.stickyElement.is(".navbar,.subnavbar") ? " " + s.classNameNav : "" ) );
+							s.stickyElement.parent().addClass(s.className);
+							s.currentTop = newTop;
+						}
+					}
+					
+				}
+				
             }
         },
         resizer = function() {

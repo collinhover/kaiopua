@@ -423,8 +423,15 @@
 		shared.domElements.$buttonFarmingMenu = $('#buttonFarmingMenu');
 		shared.domElements.$buttonOptionsMenu = $('#buttonOptionsMenu');
 		shared.domElements.$buttonsNavMenus = shared.domElements.$navMenus.find( ".nav li a" ).not( shared.domElements.$buttonPauseGame ).not( shared.domElements.$buttonResumeGame );
+		shared.domElements.$menuFarming = $('#menuFarming');
+		shared.domElements.$menuOptions = $('#menuOptions');
 		shared.domElements.$menus = shared.domElements.$outGame.find( '.menu' );
 		shared.domElements.$pauseMessage = $('#pauseMessage');
+		
+		// show menus nav
+		main.dom_fade( {
+			element: shared.domElements.$navMenus.find( '.nav' ).filter( '.hidden' ),
+		} );
 		
 		// pause / resume
 		
@@ -434,18 +441,6 @@
 		// if focus lost, pause game
 		
 		shared.signals.focuslose.add( pause );
-		
-		// pause if page scrolled too far
-		
-		shared.signals.scroll.add( function ( x, y ) {
-			
-			if ( y >= shared.domElements.$game.height() * 0.5 ) {
-				
-				pause();
-				
-			}
-			
-		} );
 		
 		// primary action items
 		
@@ -463,15 +458,53 @@
 		
 		// menu buttons
 		
-		shared.domElements.$buttonsNavMenus.on( 'mouseup touchend', set_menu );
+		shared.domElements.$buttonFarmingMenu.on( 'mouseup touchend', function () {
+			set_menu( { menu: shared.domElements.$menuFarming } );
+		} );
+		shared.domElements.$buttonOptionsMenu.on( 'mouseup touchend', function () {
+			set_menu( { menu: shared.domElements.$menuOptions } );
+		} );
 		
 		// menus
-		
+		/*
 		main.dom_collapse( { 
 			element: shared.domElements.$menus,
 			initHidden: true
 		} );
+		*/
+		// all links that point to a location in page
 		
+		$( 'a[href^="#"]' ).each( function () {
+			
+			var $element = $( this ),
+				$target;
+			
+			// if is same-page target
+			
+			if ( window.location.hostname === $element.prop( 'hostname' ) ) {
+				
+				$target = $( $element.attr( 'href' ) );
+				
+				// remove href
+				
+				$element.attr( 'href', '#' ).attr( 'onclick', 'return false;' );
+				
+				// add listeners to scroll to target smoothly
+				
+				$element.on( 'mouseup touchend', function () {
+					
+					// scroll to top position
+					
+					$.scrollTo( $target, shared.domScrollTime, {
+						easing: 'easeInOutCubic'
+					} );
+					
+				} );
+				
+			}
+				
+		} );
+			
 		// resize
 		
         shared.signals.windowresized.add( resize );
@@ -519,6 +552,7 @@
 		// ui
 		
 		$( '#buttonStart' ).on( 'mouseup touchend', start );
+		$( '#buttonExitGame' ).on( 'mouseup touchend', stop );
 		
 		// fade start menu in after short delay
 		
@@ -1023,6 +1057,8 @@
 			hash,
 			$menu,
 			$menuPrevious,
+			menuCollapseParameters,
+			topPosition,
 			isMenuNew = false,
 			isMenuNewValid = false,
 			isMenuPreviousValid = false;
@@ -1041,7 +1077,7 @@
 		}
 		else {
 			
-			$menu = $( parameters.menuId );
+			$menu = $( parameters.menu );
 			
 		}
 		
@@ -1057,62 +1093,48 @@
 		
 		isMenuNewValid = typeof $menu !== 'undefined' && $menu.length > 0;
 		isMenuNew = isMenuNewValid && !$menu.is( $menuPrevious );
+		isMenuPreviousValid = typeof $menuPrevious !== 'undefined' && $menuPrevious.length > 0;
 		
-		// if new menu or close override
+		// show new
 		
-		if ( isMenuNew || parameters.close === true ) {
+		if ( isMenuNew === true ) {
 			
-			isMenuPreviousValid = typeof $menuPrevious !== 'undefined' && $menuPrevious.length > 0;
+			menuCollapseParameters = {
+				element: $menu,
+				show: true
+			};
+		
+			// if no previous menu, open instantly
 			
-			// collapse previous
-			
-			if ( isMenuPreviousValid === true ) {
+			if ( isMenuPreviousValid !== true ) {
 				
-				if ( isMenuNewValid === true ) {
-					
-					main.dom_fade( {
-						element: $menuPrevious,
-						time: 0,
-						opacity: 0
-					} );
-					
-				}
-				else {
-					
-					/*
-					main.dom_collapse( {
-						element: $menuPrevious,
-						show: true,
-						time: 0
-					} );*/
-					main.dom_fade( {
-						element: $menuPrevious,
-						opacity: 0
-					} );
-					
-				}
-				
+				menuCollapseParameters.time = 0;
+			
 			}
 			
-			// show new
+			main.dom_collapse( menuCollapseParameters );
 			
-			if ( isMenuNew === true ) {
-				
-				/*
-				main.dom_collapse( {
-					element: $menuPrevious,
-					show: true,
-					time: 0
-				} );*/
-				main.dom_fade( {
-					element: $menu
-				} );
-				
-			}
-		
 		}
 		
-		$( window ).trigger( 'scroll' );
+		// get top position as minimum offset top of previous and new
+		
+		topPosition = Math.min( ( isMenuPreviousValid === true ? $menuPrevious.offset().top : Number.MAX_VALUE ), ( isMenuNewValid ? $menu.offset().top : 0 ) );
+		
+		// collapse previous
+		
+		if ( isMenuPreviousValid === true && ( isMenuNew === true || parameters.close === true ) ) {
+			
+			main.dom_collapse( {
+				element: $menuPrevious
+			} );
+			
+		}
+		
+		// scroll to top position
+		
+		$.scrollTo( { top: topPosition, left: 0 }, shared.domScrollTime, {
+			easing: 'easeInOutCubic'
+		} );
 		
 	}
 	
@@ -1123,78 +1145,86 @@
     =====================================================*/
     
     function start () {
-		console.log('start game');
-		// assets
-		
-		_Intro = main.get_asset_data( 'assets/modules/sections/Intro.js' );
-		
-		// hide start nav
-		
-		main.dom_fade( {
-			element: shared.domElements.$navStart,
-			opacity: 0
-		} );
-        
-		// set intro section
-		
-        set_section( _Intro, function () {
+		console.log('GAME start?');
+		if ( started === false ) {
+			console.log(' > GAME START');
+			// set started
 			
-			// TODO: show in game ui
+			started = true;
 			
-			// TODO: show intro messages
-			/*
-			window.requestTimeout( function () {
+			// assets
+			
+			_Intro = main.get_asset_data( 'assets/modules/sections/Intro.js' );
+			
+			// hide start nav
+			
+			main.dom_fade( {
+				element: shared.domElements.$navStart,
+				opacity: 0
+			} );
+			
+			// set intro section
+			
+			set_section( _Intro, function () {
 				
-				_Messenger.show_message( { 
-					image: shared.pathToIcons + "character_rev_64.png",
-					title: "Hey, welcome to Kai 'Opua!",
-					body: _GUI.messages.gameplay,
-					priority: true,
-					transitionerOpacity: 0.9
-				} );
+				// TODO: show in game ui
 				
-				_Messenger.show_message( {
-					title: "Here's how to play:",
-					body: _GUI.messages.controls,
-					priority: true,
-					transitionerOpacity: 0.9
-				} );
-				
-			}, introMessageDelayTime );
-			*/
-		} );
-		
-		// signal
-		
-		shared.signals.gamestart.dispatch();
-		
-		// set started
-		
-		started = true;
+				// TODO: show intro messages
+				/*
+				window.requestTimeout( function () {
+					
+					_Messenger.show_message( { 
+						image: shared.pathToIcons + "character_rev_64.png",
+						title: "Hey, welcome to Kai 'Opua!",
+						body: _GUI.messages.gameplay,
+						priority: true,
+						transitionerOpacity: 0.9
+					} );
+					
+					_Messenger.show_message( {
+						title: "Here's how to play:",
+						body: _GUI.messages.controls,
+						priority: true,
+						transitionerOpacity: 0.9
+					} );
+					
+				}, introMessageDelayTime );
+				*/
+			} );
+			
+			// signal
+			
+			shared.signals.gamestart.dispatch();
+			
+		}
 		
     }
 	
 	function stop () {
-		
-		started = false;
-		
-		// TODO: clear in game ui
-		
-		// signal
-		
-		shared.signals.gamestop.dispatch();
-		
-		// set launcher section
-		
-        set_section( _Launcher, function () {
-		
-			// show start menu
+		console.log('GAME stop?');
+		if ( started === true ) {
+			console.log('> GAME STOP');
+			started = false;
 			
-			main.dom_fade( {
-				element: shared.domElements.$navStart
-			} );
+			// TODO: clear in game ui
 			
-		});
+			// signal
+			
+			shared.signals.gamestop.dispatch();
+			
+			// set launcher section
+			
+			set_section( _Launcher, function () {
+			
+				// show start menu
+				
+				main.dom_fade( {
+					element: shared.domElements.$navStart
+				} );
+				
+			});
+		
+		}
 		
 	}
 	
@@ -1203,25 +1233,37 @@
     pause / resume
     
     =====================================================*/
+	
+	function on_scroll ( x, y ) {
+		
+		// pause if page scrolled too far
+		
+		if ( y >= shared.domElements.$game.height() * 0.5 ) {
+			
+			pause();
+			
+		}
+		
+	}
     
     function pause ( preventDefault ) {
-		console.log('GAME PAUSE');
+		console.log('GAME pause?');
 		// set state
 		
         if (paused === false) {
-            
+            console.log('> GAME PAUSE');
             paused = true;
 			
-			// swap pause/resume buttons
+			// stop listening for scroll
+			
+			shared.signals.scroll.remove( on_scroll );
+			
+			// hide pause button
 			
 			main.dom_fade( {
 				element: shared.domElements.$buttonPauseGame,
 				opacity: 0,
 				time: 0
-			} );
-			main.dom_fade( {
-				element: shared.domElements.$buttonResumeGame,
-				opacity: 1
 			} );
 			
 			// transitioner
@@ -1235,6 +1277,13 @@
 			// default actions
 			
 			if ( preventDefault !== true ) {
+				
+				// show resume button
+				
+				main.dom_fade( {
+					element: shared.domElements.$buttonResumeGame,
+					opacity: 1
+				} );
 				
 				// add listener for click on transitioner
 				
@@ -1283,16 +1332,19 @@
 				opacity: 0
 			} );
 			
-			// swap pause/resume buttons
+			// hide resume button
 			
-			main.dom_fade( {
-				element: shared.domElements.$buttonPauseGame,
-				opacity: 1
-			} );
 			main.dom_fade( {
 				element: shared.domElements.$buttonResumeGame,
 				opacity: 0,
 				time: 0
+			} );
+			
+			// show pause button
+			
+			main.dom_fade( {
+				element: shared.domElements.$buttonPauseGame,
+				opacity: 1
 			} );
 			
 			// pause modal
@@ -1300,6 +1352,23 @@
 			shared.domElements.$pauseMessage.off( '.resume' );
 			main.dom_collapse( {
 				element: shared.domElements.$pauseMessage
+			} );
+			
+			// scroll to top
+			
+			$.scrollTo( shared.domElements.$game, shared.domScrollTime, {
+				easing: 'easeInOutCubic',
+				onAfter: function () {
+					
+					// if not paused
+					if ( paused === false ) {
+						
+						// start listening for scroll
+						shared.signals.scroll.add( on_scroll );
+						
+					}
+					
+				}
 			} );
 			
 			// when started

@@ -144,9 +144,9 @@
 							</div>
 							
 							<div class="nav-collapse">
-								<ul class="nav nav-pills">
+								<ul class="nav nav-pills hidden">
 									<li>
-										<a href="#farming" id="buttonFarmingMenu" class="nav-icon">
+										<a id="buttonFarmingMenu" class="nav-icon">
 											<div class="valign">
 												<div class="valign-cell"><img src="assets/icons/farming_rev_64.png" class="iconk-large"></div>
 												<div class="valign-cell"><p>Farming</p></div>
@@ -154,7 +154,7 @@
 										</a>
 									</li>
 									<li>
-										<a href="#map" id="buttonMapMenu" class="nav-icon disabled">
+										<a id="buttonMapMenu" class="nav-icon disabled">
 											<div class="valign">
 												<div class="valign-cell"><img src="assets/icons/map_rev_64.png" class="iconk-large"></div>
 												<div class="valign-cell"><p>Map</p></div>
@@ -162,7 +162,7 @@
 										</a>
 									</li>
 									<li>
-										<a href="#options" id="buttonOptionsMenu" class="nav-icon">
+										<a id="buttonOptionsMenu" class="nav-icon">
 											<div class="valign">
 												<div class="valign-cell"><img src="assets/icons/cog_rev_64.png" class="iconk-large"></div>
 												<div class="valign-cell"><p>Options</p></div>
@@ -170,7 +170,7 @@
 										</a>
 									</li>
 									<li>
-										<a href="#game" id="buttonPauseGame" class="hidden">
+										<a id="buttonPauseGame" class="hidden">
 											<div class="valign">
 												<div class="valign-cell iconk-large"><img src="assets/icons/pause_rev_64.png" class="iconk-small"></div>
 												<div class="valign-cell"><p>Pause</p></div>
@@ -178,7 +178,7 @@
 										</a>
 									</li>
 									<li>
-										<a href="#game" id="buttonResumeGame" class="hidden">
+										<a id="buttonResumeGame" class="hidden">
 											<div class="valign">
 												<div class="valign-cell iconk-large"><img src="assets/icons/play_rev_64.png" class="iconk-small"></div>
 												<div class="valign-cell"><p>Resume</p></div>
@@ -197,7 +197,7 @@
 		<!-- status inactive -->
 		<div id="statusInactive" class="hidden">
 			
-			<div id='worker' class="status-item">
+			<div id='worker' class="status-item hidden">
 				<div class="hero-unit squire-unit">
 					<div class="row">
 						<div class="span11">
@@ -221,7 +221,7 @@
 				</div>
 			</div>
 			
-			<div id='pauseMessage' class="status-item">
+			<div id='pauseMessage' class="status-item hidden">
 				<div class="hero-unit squire-unit">
 					<h1 class="logo-type">Paused</h1>
 					<p><small>We noticed you needed a pause. No worries, take as long as you need!</small></p>
@@ -320,8 +320,8 @@
 			<!-- menus -->
 			<div id="menus">
 				
-				<!-- farming -->
-				<section id="farming" class="menu hidden">
+				<!-- menuFarming -->
+				<section id="menuFarming" class="menu hidden">
 					
 					<header class="subhead container">
 						<div class="alert alert-success iconk-large"><img src="assets/icons/farming_64.png"></div>
@@ -337,7 +337,7 @@
 										<li><a href="#collection">Collection</a></li>
 									</ul>
 									<ul class="nav nav-pills pull-right">
-										<li><a href="#farming"><h6>top</h6></a></li>
+										<li><a href="#menuFarming"><h6>top</h6></a></li>
 									</ul>
 								</div>
 							</div>
@@ -784,10 +784,10 @@
 					</section>
 					<!-- END collection -->
 				</section>
-				<!-- END farming -->
+				<!-- END menuFarming -->
 				
-				<!-- options -->
-				<section id="options" class="menu hidden">
+				<!-- menuOptions -->
+				<section id="menuOptions" class="menu hidden">
 					
 					<header class="subhead container">
 						<div class="alert alert-warning iconk-large"><img src="assets/icons/cog_64.png"></div>
@@ -802,7 +802,7 @@
 										<li><a href="#controls">Controls</a></li>
 									</ul>
 									<ul class="nav nav-pills pull-right">
-										<li><a href="#farming"><h6>top</h6></a></li>
+										<li><a href="#menuOptions"><h6>top</h6></a></li>
 									</ul>
 								</div>
 							</div>
@@ -817,7 +817,7 @@
 							</div>
 							<div class="row">
 								<div class="span12">
-									<form class="well">
+									<div class="well">
 										<textarea id="progressCode" class="span11 input-xlarge" rows="5"></textarea>
 										<div class="btn-group">
 											<button id="buttonSaveCode" class="btn btn-large btn-primary disabled">
@@ -832,17 +832,17 @@
 													<div class="valign-cell"><p>Load Current Code</p></div>
 												</div>
 											</button>
-											<button id="buttonExit" class="btn btn-large">
+											<button id="buttonExitGame" class="btn btn-large">
 												<div class="valign">
 													<div class="valign-cell"><img src="assets/icons/exit_64.png" class="iconk-small"></div>
 													<div class="valign-cell"><p>Exit Game</p></div>
 												</div>
 											</button>
 										</div>
-									</form>
+									</div>
 									<div class="alert alert-block alert-info">
 										<h4 class="alert-heading">Check it out:</h4>
-										When you generate a code, it will also appear in your web address so you can bookmark your progress!
+										When you generate a save code, it will also appear in your web address so you can bookmark your progress.
 									</div>
 								</div>
 							</div>
@@ -899,9 +899,7 @@
 												</td>
 												<td>
 													<div class="iconk-small iconk-widthFollow">
-														<div class="progress progress-striped progress-info span6">
-															<div class="bar" style="width: 100%;"></div>
-														</div>
+														<input type="range" name="slider" id="sliderVolume" value="100" min="0" max="100"  />
 													</div>
 												</td>
 											</tr>
@@ -932,6 +930,7 @@
 					<!-- END controls -->
 					
 				</section>
+				<!-- END menuOptions -->
 				
 			</div>
 			<!-- END menus -->

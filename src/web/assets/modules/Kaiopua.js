@@ -19,10 +19,12 @@ var KAIOPUA = (function (main) {
             "js/requestTimeout.js",
             "js/signals.min.js",
 			"js/sylvester.js",
+			"js/jquery.mobile.custom.min.js",
 			"js/jquery.easing-1.3.min.js",
 			"js/jquery.contentchanged.js",
 			"js/jquery.imagesloaded.min.js",
-			"js/jquery.sticky.js",
+			"js/jquery.sticky.custom.js",
+			"js/jquery.scrollTo-1.4.2.custom.js",
 			"js/bootstrap.min.js"
         ],
         setupList = [
@@ -109,8 +111,9 @@ var KAIOPUA = (function (main) {
 		
 		shared.domFadeTime = 500;
 		shared.domCollapseTime = 500;
+		shared.domScrollTime = 500;
 		shared.domFadeEasing = 'easeInOutCubic';
-		shared.domCollapseEasing = 'easeOutCubic';
+		shared.domCollapseEasing = 'easeInOutCubic';
 		
         shared.domElements = {};
 		shared.domElements.$game = $('#game');
@@ -254,11 +257,12 @@ var KAIOPUA = (function (main) {
 			$('.status-item').on('hidden.active', function () {
 				shared.domElements.$statusInactive.append( this );
 			});
+			/*
 			dom_collapse( { 
 				element: shared.domElements.$statusInactive.find('.status-item'),
 				initHidden: true
 			} );
-			
+			*/
 			// handle disabled items only if pointer-events are not supported
 			
 			if ( shared.supports.pointerEvents === false ) {
@@ -847,6 +851,7 @@ var KAIOPUA = (function (main) {
 			opacity,
 			easing,
 			callback,
+			isHidden,
 			fadeComplete = function () {
 				
 				// if faded out completely, hide
@@ -889,12 +894,24 @@ var KAIOPUA = (function (main) {
 			easing = typeof parameters.easing === 'string' ? parameters.easing : shared.domFadeEasing;
 			callback = parameters.callback;
 			
+			isHidden = $element.hasClass( 'hidden' );
+			
 			// stop animations
 			
 			$element.stop( true ).removeClass( 'hidden' );
 			
 			actions = $element.find( 'a, button' );
 			dom_ignore_pointer( actions, false );
+			
+			// if should start at 0 opacity
+			
+			if ( isHidden === true || parameters.initHidden === true ) {
+				
+				$element.fadeTo( 0, 0 );
+				
+			}
+			
+			// handle opacity
 			
 			if ( opacity === 0 ) {
 				
@@ -919,99 +936,125 @@ var KAIOPUA = (function (main) {
 	
 	function dom_collapse( parameters ) {
 		
-		var $element,
-			$placeholder,
-			actions,
+		var $elements,
 			time,
 			show,
-			isCollapsed,
 			easing,
-			callback,
-			collapseComplete = function () {
-				
-				// if shown or hidden
-				
-				if ( show === true ) {
-					
-					$element.trigger( 'shown' );
-					
-				}
-				else {
-					
-					$element.addClass( 'hidden' ).trigger( 'hidden' );
-					
-					// reenable all buttons and links
-					
-					dom_ignore_pointer( actions, false );
-					
-				}
-				
-				// do callback
-				
-				if ( typeof callback === 'function' ) {
-					
-					callback();
-					
-				}
-				
-			};
+			callback;
 		
 		// handle parameters
 		
 		parameters = parameters || {};
 		
-		$element = $( parameters.element );
+		$elements = $( parameters.element );
 		show = typeof parameters.show === 'boolean' ? parameters.show : false;
+		time = is_number( parameters.time ) ? parameters.time : shared.domCollapseTime;
+		easing = typeof parameters.easing === 'string' ? parameters.easing : shared.domCollapseEasing;
+		callback = parameters.callback;
 		
-		// if valid element
+		// for each element
 		
-		if ( $element.length > 0 ) {
+		$elements.each( function () {
+			
+			var $element = $( this ),
+				isCollapsed,
+				$placeholder,
+				isHidden,
+				heightCurrent,
+				heightTarget = 0,
+				collapseComplete = function () {
+					
+					// if shown or hidden
+					
+					if ( show === true ) {
+						
+						$element.css( 'height', '' ).trigger( 'shown' );
+						
+					}
+					else {
+						
+						$element.addClass( 'hidden' ).trigger( 'hidden' );
+						
+						// enable pointer
+						
+						dom_ignore_pointer( $element, false );
+						
+					}
+					
+					// do callback
+					
+					if ( typeof callback === 'function' ) {
+						
+						callback();
+						
+					}
+					
+				};
+			
+			// if should start from hidden
+			
+			isHidden = $element.hasClass( 'hidden' );
+			
+			if ( isHidden === true || parameters.initHidden === true ) {
+				
+				$element.css( { height : 0 } ).addClass( 'collapsed' ).addClass('hidden');
+				
+			}
+			
+			// if valid element and not already collapsing / collapsed to same state
 			
 			isCollapsed = $element.hasClass( 'collapsed' );
 			
-			// if for initialize
-			
-			if ( parameters.initHidden === true ) {
+			if ( isCollapsed === show ) {
 				
-				$element.after( '<div id="collapsePlaceholder"></div>' ).appendTo( 'body' ).removeClass('hidden').data( 'collapseHeight', $element.height() ).addClass( 'collapsed' ).slideUp( 0 ).addClass('hidden').each( function () {
-					
-					$( '#collapsePlaceholder' ).filter( ':first' ).before( this ).remove();
-					
-				} );
+				// stop any previous animation
 				
-			}
-			// if valid element and not already collapsing / collapsed to same state
-			else if ( isCollapsed === show ) {
-				
-				time = is_number( parameters.time ) ? parameters.time : shared.domCollapseTime;
-				easing = typeof parameters.easing === 'string' ? parameters.easing : shared.domCollapseEasing;
-				callback = parameters.callback;
-				
-				// fade to opacity
-				
-				$element.stop( true, isCollapsed ).removeClass( 'hidden collapsed' );
-				
-				actions = $element.find( 'a, button' );
-				dom_ignore_pointer( actions, false );
+				$element.stop( true ).removeClass( 'hidden collapsed' );
 				
 				if ( show === true ) {
 					
-					$element.trigger( 'show' ).slideDown( time, easing, collapseComplete );
+					// add placeholder after element and add element to body
+					
+					$placeholder = $( '<div id="collapsePlaceholder"></div>' );
+					$element.after( $placeholder ).appendTo( 'body' );
+					
+					// find correct current height and target height
+					
+					heightCurrent = $element.height();
+					$element.css( 'height', '' );
+					heightTarget = $element.height();
+					$element.css( 'height', heightCurrent );
+					
+					// place element back to correct place and delete placeholder
+					
+					$placeholder.before( $element ).remove();
+					
+					// enable pointer
+					
+					dom_ignore_pointer( $element, false );
+					
+					// show
+					
+					$element.trigger( 'show' );
 				
 				}
 				else {
 					
-					// temporarily disable all buttons and links
+					// temporarily ignore pointer
 					
-					dom_ignore_pointer( actions, true );
+					dom_ignore_pointer( $element, true );
 					
-					$element.addClass( 'collapsed' ).trigger( 'hide' ).slideUp( time, easing, collapseComplete );
+					$element.addClass( 'collapsed' ).trigger( 'hide' );
 					
 				}
 				
+				// animate
+				
+				$element.animate( { height: heightTarget }, { duration: time, easing: easing, complete: collapseComplete } );
+				
 			}
 			
-		}
+		} );
 		
 	}
 	
