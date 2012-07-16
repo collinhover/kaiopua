@@ -119,9 +119,9 @@ var KAIOPUA = (function (main) {
 		shared.domElements.$ui = $('#ui');
 		shared.domElements.$inGame = $( '#inGame' );
 		shared.domElements.$outGame = $( '#outGame' );
-		shared.domElements.$inactive = $( '#inactive' );
-		shared.domElements.$active = $( '#active' );
-		shared.domElements.$navMain = $('#navMain');
+		shared.domElements.$statusInactive = $( '#statusInactive' );
+		shared.domElements.$statusActive = $( '#statusActive' );
+		shared.domElements.$navMenus = $('#navMenus');
 		
 		shared.supports = {};
 		shared.supports.pointerEvents = css_property_supported( 'pointer-events' );
@@ -243,19 +243,19 @@ var KAIOPUA = (function (main) {
 			
 			// sticky navigation bars
 			
-			$("#navMain").sticky( { topSpacing:0 } );
-			$("#navFarming").sticky( { topSpacing: $("#navMain").height() } );
+			shared.domElements.$navMenus.sticky( { topSpacing:0 } );
+			$(".subnav-sticky").sticky( { topSpacing: $("#navMenus").height() } );
 			
-			// handle active items
+			// handle statusActive items
 			
-			$('.active-item').on('show.active', function () {
-				shared.domElements.$active.append( this );
+			$('.status-item').on('show.active', function () {
+				shared.domElements.$statusActive.append( this );
 			});
-			$('.active-item').on('hidden.active', function () {
-				shared.domElements.$inactive.append( this );
+			$('.status-item').on('hidden.active', function () {
+				shared.domElements.$statusInactive.append( this );
 			});
 			dom_collapse( { 
-				element: shared.domElements.$inactive.find('.active-item'),
+				element: shared.domElements.$statusInactive.find('.status-item'),
 				initHidden: true
 			} );
 			
@@ -751,7 +751,7 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
-	function dom_ignore_pointer ( $domElement, state ) {
+	function dom_ignore_pointer ( $element, state ) {
 		
 		// use native pointer-events when available
 		
@@ -759,12 +759,12 @@ var KAIOPUA = (function (main) {
 			
 			if ( state === true ) {
 				
-				$domElement.addClass( 'ignore-pointer' );
+				$element.addClass( 'ignore-pointer' );
 				
 			}
 			else {
 				
-				$domElement.removeClass( 'ignore-pointer' );
+				$element.removeClass( 'ignore-pointer' );
 			
 			}
 			
@@ -772,21 +772,21 @@ var KAIOPUA = (function (main) {
 		else {
 			
 			// fallback in-case browser does not support pointer-events property
-			// this method is incredibly slow, as it has to hide domElement, retrigger event to find what is under, then show again
+			// this method is incredibly slow, as it has to hide element, retrigger event to find what is under, then show again
 			
 			if ( state === true ) {
 				
-				$domElement.on( 'mousedown.pointer touchstart.pointer mouseup.pointer touchend.pointer click.pointer mouseenter.pointer touchenter.pointer mouseleave.pointer touchleave.pointer', 
+				$element.on( 'mousedown.pointer touchstart.pointer mouseup.pointer touchend.pointer click.pointer mouseenter.pointer touchenter.pointer mouseleave.pointer touchleave.pointer', 
 					function ( e ) { 
 						
 						e.preventDefault();
 						e.stopPropagation();
 						
-						$domElement.stop( true ).addClass( 'invisible' );
+						$element.stop( true ).addClass( 'invisible' );
 						
 						$( document.elementFromPoint( e.clientX, e.clientY ) ).trigger( e );
 						
-						$domElement.stop( true ).removeClass( 'invisible' );
+						$element.stop( true ).removeClass( 'invisible' );
 						
 						return false;
 						
@@ -796,7 +796,7 @@ var KAIOPUA = (function (main) {
 			}
 			else {
 				
-				$domElement.off( '.pointer' );
+				$element.off( '.pointer' );
 				
 			}
 			
@@ -842,6 +842,7 @@ var KAIOPUA = (function (main) {
 	function dom_fade( parameters ) {
 		
 		var $element,
+			actions,
 			time,
 			opacity,
 			easing,
@@ -853,6 +854,10 @@ var KAIOPUA = (function (main) {
 				if ( opacity === 0 ) {
 					
 					$element.addClass( 'hidden' ).trigger( 'hidden' );
+					
+					// reenable all buttons and links
+					
+					dom_ignore_pointer( actions, false );
 					
 				}
 				else {
@@ -884,13 +889,20 @@ var KAIOPUA = (function (main) {
 			easing = typeof parameters.easing === 'string' ? parameters.easing : shared.domFadeEasing;
 			callback = parameters.callback;
 			
-			// fade to opacity
+			// stop animations
 			
 			$element.stop( true ).removeClass( 'hidden' );
+			
+			actions = $element.find( 'a, button' );
+			dom_ignore_pointer( actions, false );
 			
 			if ( opacity === 0 ) {
 				
 				$element.trigger( 'hide' );
+				
+				// temporarily disable all buttons and links
+				
+				dom_ignore_pointer( actions, true );
 				
 			}
 			else {
@@ -909,6 +921,7 @@ var KAIOPUA = (function (main) {
 		
 		var $element,
 			$placeholder,
+			actions,
 			time,
 			show,
 			isCollapsed,
@@ -926,6 +939,10 @@ var KAIOPUA = (function (main) {
 				else {
 					
 					$element.addClass( 'hidden' ).trigger( 'hidden' );
+					
+					// reenable all buttons and links
+					
+					dom_ignore_pointer( actions, false );
 					
 				}
 				
@@ -974,16 +991,19 @@ var KAIOPUA = (function (main) {
 				
 				$element.stop( true, isCollapsed ).removeClass( 'hidden collapsed' );
 				
+				actions = $element.find( 'a, button' );
+				dom_ignore_pointer( actions, false );
+				
 				if ( show === true ) {
-					
-					// get element actual height
-					
-					// set
 					
 					$element.trigger( 'show' ).slideDown( time, easing, collapseComplete );
 				
 				}
 				else {
+					
+					// temporarily disable all buttons and links
+					
+					dom_ignore_pointer( actions, true );
 					
 					$element.addClass( 'collapsed' ).trigger( 'hide' ).slideUp( time, easing, collapseComplete );
 					

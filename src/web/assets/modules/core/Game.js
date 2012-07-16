@@ -37,6 +37,7 @@
         paused = false,
 		started = false,
 		transitionTime = 500,
+		navStartDelayTime = 500,
 		sectionChangePauseTime = 500,
 		introMessageDelayTime = 2000,
 		assetsInit = [
@@ -174,6 +175,8 @@
     =====================================================*/
     
 	// functions
+	
+	_Game.set_menu = set_menu;
 	
 	_Game.start = start;
 	_Game.stop = stop;
@@ -412,18 +415,25 @@
 		
 		// ui
 		
+		shared.domElements.$primaryActionsActive = $( '#primaryActionsActive' );
+		shared.domElements.$primaryActionsInactive = $( '#primaryActionsInactive' );
+		shared.domElements.$navStart = $( '#navStart' );
+		shared.domElements.$buttonPauseGame = $('#buttonPauseGame');
+		shared.domElements.$buttonResumeGame = $('#buttonResumeGame');
+		shared.domElements.$buttonFarmingMenu = $('#buttonFarmingMenu');
+		shared.domElements.$buttonOptionsMenu = $('#buttonOptionsMenu');
+		shared.domElements.$buttonsNavMenus = shared.domElements.$navMenus.find( ".nav li a" ).not( shared.domElements.$buttonPauseGame ).not( shared.domElements.$buttonResumeGame );
+		shared.domElements.$menus = shared.domElements.$outGame.find( '.menu' );
+		shared.domElements.$pauseMessage = $('#pauseMessage');
+		
+		// pause / resume
+		
+		shared.domElements.$buttonPauseGame.on( 'mouseup touchend', pause );
+		shared.domElements.$buttonResumeGame.on( 'mouseup touchend', resume );
+		
 		// if focus lost, pause game
 		
 		shared.signals.focuslose.add( pause );
-		
-		// pause / resume buttons
-		
-		$('#buttonPauseGame').on( 'mouseup touchend', pause );
-		$('#buttonResumeGame').on( 'mouseup touchend', resume );
-		
-		// pause message
-		
-		shared.domElements.$pauseMessage = $('#pauseMessage');
 		
 		// pause if page scrolled too far
 		
@@ -435,6 +445,31 @@
 				
 			}
 			
+		} );
+		
+		// primary action items
+		
+		$('.primaryAction-item').on('show.active', function () {
+			shared.domElements.$primaryActionsActive.append( this );
+		});
+		$('.primaryAction-item').on('hidden.active', function () {
+			shared.domElements.$primaryActionsInactive.append( this );
+		});
+		main.dom_fade( { 
+			element: shared.domElements.$primaryActionsInactive.find('.primaryAction-item'),
+			opacity: 0,
+			time: 0
+		} );
+		
+		// menu buttons
+		
+		shared.domElements.$buttonsNavMenus.on( 'mouseup touchend', set_menu );
+		
+		// menus
+		
+		main.dom_collapse( { 
+			element: shared.domElements.$menus,
+			initHidden: true
 		} );
 		
 		// resize
@@ -480,9 +515,22 @@
 		
 		_RayHelper = main.get_asset_data( "assets/modules/utils/RayHelper.js" );
 		_Messenger = main.get_asset_data( "assets/modules/ui/Messenger.js" );
-		/*
+		
 		// ui
 		
+		$( '#buttonStart' ).on( 'mouseup touchend', start );
+		
+		// fade start menu in after short delay
+		
+		setTimeout( function () {
+			
+			main.dom_fade( {
+				element: shared.domElements.$navStart
+			} );
+			
+		}, navStartDelayTime );
+		
+		/*
 		l = _GUI.layers;
 		m = _GUI.menus;
 		b = _GUI.buttons;
@@ -968,6 +1016,111 @@
     start / stop game
     
     =====================================================*/
+	
+	function set_menu ( parameters ) {
+		
+		var currentTarget,
+			hash,
+			$menu,
+			$menuPrevious,
+			isMenuNew = false,
+			isMenuNewValid = false,
+			isMenuPreviousValid = false;
+		
+		// handle parameters
+		
+		parameters = parameters || {};
+		
+		currentTarget = parameters.currentTarget;
+		
+		if ( typeof currentTarget !== 'undefined' ) {
+			
+			hash = currentTarget.hash;
+			$menu = $( hash );
+			
+		}
+		else {
+			
+			$menu = $( parameters.menuId );
+			
+		}
+		
+		// get previous
+		
+		$menuPrevious = shared.domElements.$currentMenu;
+		
+		// store new as current
+		
+		shared.domElements.$currentMenu = $menu;
+		
+		// compare new and previous
+		
+		isMenuNewValid = typeof $menu !== 'undefined' && $menu.length > 0;
+		isMenuNew = isMenuNewValid && !$menu.is( $menuPrevious );
+		
+		// if new menu or close override
+		
+		if ( isMenuNew || parameters.close === true ) {
+			
+			isMenuPreviousValid = typeof $menuPrevious !== 'undefined' && $menuPrevious.length > 0;
+			
+			// collapse previous
+			
+			if ( isMenuPreviousValid === true ) {
+				
+				if ( isMenuNewValid === true ) {
+					
+					main.dom_fade( {
+						element: $menuPrevious,
+						time: 0,
+						opacity: 0
+					} );
+					
+				}
+				else {
+					
+					/*
+					main.dom_collapse( {
+						element: $menuPrevious,
+						show: true,
+						time: 0
+					} );*/
+					main.dom_fade( {
+						element: $menuPrevious,
+						opacity: 0
+					} );
+					
+				}
+				
+			}
+			
+			// show new
+			
+			if ( isMenuNew === true ) {
+				
+				/*
+				main.dom_collapse( {
+					element: $menuPrevious,
+					show: true,
+					time: 0
+				} );*/
+				main.dom_fade( {
+					element: $menu
+				} );
+				
+			}
+		
+		}
+		
+		$( window ).trigger( 'scroll' );
+		
+	}
+	
+	/*===================================================
+    
+    start / stop game
+    
+    =====================================================*/
     
     function start () {
 		console.log('start game');
@@ -975,7 +1128,12 @@
 		
 		_Intro = main.get_asset_data( 'assets/modules/sections/Intro.js' );
 		
-		// TODO: hide launcher ui
+		// hide start nav
+		
+		main.dom_fade( {
+			element: shared.domElements.$navStart,
+			opacity: 0
+		} );
         
 		// set intro section
 		
@@ -1030,7 +1188,11 @@
 		
         set_section( _Launcher, function () {
 		
-			// TODO: show launcher ui
+			// show start menu
+			
+			main.dom_fade( {
+				element: shared.domElements.$navStart
+			} );
 			
 		});
 		
@@ -1052,8 +1214,15 @@
 			
 			// swap pause/resume buttons
 			
-			$('#buttonPauseGame').addClass( 'hidden' );
-			$('#buttonResumeGame').removeClass( 'hidden' );
+			main.dom_fade( {
+				element: shared.domElements.$buttonPauseGame,
+				opacity: 0,
+				time: 0
+			} );
+			main.dom_fade( {
+				element: shared.domElements.$buttonResumeGame,
+				opacity: 1
+			} );
 			
 			// transitioner
 			
@@ -1116,8 +1285,15 @@
 			
 			// swap pause/resume buttons
 			
-			$('#buttonPauseGame').removeClass( 'hidden' );
-			$('#buttonResumeGame').addClass( 'hidden' );
+			main.dom_fade( {
+				element: shared.domElements.$buttonPauseGame,
+				opacity: 1
+			} );
+			main.dom_fade( {
+				element: shared.domElements.$buttonResumeGame,
+				opacity: 0,
+				time: 0
+			} );
 			
 			// pause modal
 			

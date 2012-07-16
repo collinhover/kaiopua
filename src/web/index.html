@@ -90,8 +90,8 @@
 	<!-- ui -->
 	<div id="ui" class="container unselectable">
 		
-		<!-- navMain -->
-		<div id="navMain">
+		<!-- navMenus -->
+		<div id="navMenus">
 			<div class="container">
 				<div class="navbar navbar-flush">
 					<div class="navbar-inner">
@@ -146,7 +146,7 @@
 							<div class="nav-collapse">
 								<ul class="nav nav-pills">
 									<li>
-										<a href="#farming" id="buttonFarming" class="nav-icon">
+										<a href="#farming" id="buttonFarmingMenu" class="nav-icon">
 											<div class="valign">
 												<div class="valign-cell"><img src="assets/icons/farming_rev_64.png" class="iconk-large"></div>
 												<div class="valign-cell"><p>Farming</p></div>
@@ -154,7 +154,7 @@
 										</a>
 									</li>
 									<li>
-										<a href="#map" id="buttonMap" class="nav-icon disabled">
+										<a href="#map" id="buttonMapMenu" class="nav-icon disabled">
 											<div class="valign">
 												<div class="valign-cell"><img src="assets/icons/map_rev_64.png" class="iconk-large"></div>
 												<div class="valign-cell"><p>Map</p></div>
@@ -162,7 +162,7 @@
 										</a>
 									</li>
 									<li>
-										<a href="#options" id="buttonOptions" class="nav-icon">
+										<a href="#options" id="buttonOptionsMenu" class="nav-icon">
 											<div class="valign">
 												<div class="valign-cell"><img src="assets/icons/cog_rev_64.png" class="iconk-large"></div>
 												<div class="valign-cell"><p>Options</p></div>
@@ -192,12 +192,12 @@
 				</div>
 			</div>
 		</div>
-		<!-- END navMain -->
+		<!-- END navMenus -->
 		
-		<!-- inactive -->
-		<div id="inactive">
+		<!-- status inactive -->
+		<div id="statusInactive" class="hidden">
 			
-			<div id='worker' class="active-item">
+			<div id='worker' class="status-item">
 				<div class="hero-unit squire-unit">
 					<div class="row">
 						<div class="span11">
@@ -221,7 +221,7 @@
 				</div>
 			</div>
 			
-			<div id='pauseMessage' class="active-item">
+			<div id='pauseMessage' class="status-item">
 				<div class="hero-unit squire-unit">
 					<h1 class="logo-type">Paused</h1>
 					<p><small>We noticed you needed a pause. No worries, take as long as you need!</small></p>
@@ -231,10 +231,10 @@
 		</div>
 		<!-- END inactive -->
 		
-		<!-- active -->
-		<div id="active" class="container container-center">
+		<!-- status active -->
+		<div id="statusActive" class="container container-center">
 			
-			<div id="preloader" class="active-item">
+			<div id="preloader" class="status-item">
 				<div class="hero-unit squire-unit">
 					<h1 class="logo-type">Welcome to Kai 'Opua</h1>
 					<p><img src='assets/icons/waiting_64.png' class="iconk-huge">Hold on, we're loading a few things...</p>
@@ -242,7 +242,7 @@
 				</div>
 			</div>
 			
-			<div id="noscript" class="active-item">
+			<div id="noscript" class="status-item">
 				<div class="hero-unit squire-unit error">
 					<h2 class="error-header logo-type">Javascript disabled?</h2>
 					<p><small class="error-body">Sorry, but we can't seem to find Javascript... if you are sure you've turned it on, try upgrading to one of these friendly browsers:</small></p>
@@ -272,6 +272,39 @@
 			</div>
 			END errors -->
 			
+			<div id="primaryActionsInactive" class="hidden">
+				
+				<div id="navStart" class="primaryAction-item">
+					<ul class="nav nav-inline nav-buttons">
+						<li>
+							<button id="buttonLoad" class="btn btn-large btn-inverse btn-circle-large disabled">
+								<img src="assets/icons/load_rev_64.png" class="iconk-large">
+								<h2><small>load</small></h2>
+							</button>
+						</li>
+						<li>
+							<button id="buttonStart" class="btn btn-huge btn-inverse btn-circle-giant">
+								<img src="assets/icons/face_smile_rev_64.png" class="iconk-giant">
+								<h2 class="logo-type">Start</h2>
+							</button>
+						</li>
+						<li>
+							<button id="buttonContinue" class="btn btn-large btn-inverse btn-circle-large disabled">
+								<img src="assets/icons/rock_rev_64.png" class="iconk-large">
+								<p><small>continue</small></p>
+							</button>
+						</li>
+					</ul>
+				</div>
+				
+			</div>
+			
+			<div id="primaryActionsActive" class="container container-center">
+				
+				
+				
+			</div>
+			
 		</div>
 		<!-- END inGame -->
 		
@@ -288,13 +321,13 @@
 			<div id="menus">
 				
 				<!-- farming -->
-				<section id="farming" class="menu">
+				<section id="farming" class="menu hidden">
 					
 					<header class="subhead container">
 						<div class="alert alert-success iconk-large"><img src="assets/icons/farming_64.png"></div>
 						<h1>Farming</h1>
 						<p class="lead">Examine the field you're working on, modify the things you've planted, and browse your plant collection</p>
-						<div id="navFarming" class="subnavbar">
+						<div id="navFarming" class="subnavbar subnav-sticky">
 							<div class="navbar-inner">
 								<div class="container">
 									<ul class="nav nav-pills pull-left">
@@ -363,12 +396,6 @@
 									<div class="container-center">
 										<p><small>while in ANY mode</small></p>
 										<h3>single tap</h3>
-										<button id="buttonPlantToolsSelect" class="btn btn-primary">
-											<div class="valign">
-												<div class="valign-cell"><img src="assets/icons/info_rev_64.png" class="iconk-small"></div>
-												<div class="valign-cell"><p>Select</p></div>
-											</div>
-										</button>
 									</div>
 								</div>
 								<div class="span2">
@@ -378,12 +405,6 @@
 									<div class="container-center">
 										<p><small>while in MOVE mode</small></p>
 										<h3>drag</h3>
-										<button id="buttonPlantToolsMove" class="btn">
-											<div class="valign">
-												<div class="valign-cell"><img src="assets/icons/move_64.png" class="iconk-small"></div>
-												<div class="valign-cell"><p>Move</p></div>
-											</div>
-										</button>
 									</div>
 								</div>
 								<div class="span2">
@@ -393,12 +414,6 @@
 									<div class="container-center">
 										<p><small>while in ROTATE mode</small></p>
 										<h3>drag in circles</h3>
-										<button id="buttonPlantToolsRotate" class="btn">
-											<div class="valign">
-												<div class="valign-cell"><img src="assets/icons/rotate_64.png" class="iconk-small"></div>
-												<div class="valign-cell"><p>Rotate</p></div>
-											</div>
-										</button>
 									</div>
 								</div>
 								<div class="span2">
@@ -408,6 +423,42 @@
 									<div class="container-center">
 										<p><small>while in ANY mode</small></p>
 										<h3>double tap</h3>
+									</div>
+								</div>
+							</div>
+							<div class="row">
+								<div class="span2">
+									<div class="container-center">
+										<button id="buttonPlantToolsSelect" class="btn btn-primary">
+											<div class="valign">
+												<div class="valign-cell"><img src="assets/icons/info_rev_64.png" class="iconk-small"></div>
+												<div class="valign-cell"><p>Select</p></div>
+											</div>
+										</button>
+									</div>
+								</div>
+								<div class="span2">
+									<div class="container-center">
+										<button id="buttonPlantToolsMove" class="btn">
+											<div class="valign">
+												<div class="valign-cell"><img src="assets/icons/move_64.png" class="iconk-small"></div>
+												<div class="valign-cell"><p>Move</p></div>
+											</div>
+										</button>
+									</div>
+								</div>
+								<div class="span2">
+									<div class="container-center">
+										<button id="buttonPlantToolsRotate" class="btn">
+											<div class="valign">
+												<div class="valign-cell"><img src="assets/icons/rotate_64.png" class="iconk-small"></div>
+												<div class="valign-cell"><p>Rotate</p></div>
+											</div>
+										</button>
+									</div>
+								</div>
+								<div class="span2">
+									<div class="container-center">
 										<button id="buttonPlantToolsDelete" class="btn btn-danger">
 											<div class="valign">
 												<div class="valign-cell"><img src="assets/icons/close_rev_64.png" class="iconk-small"></div>
@@ -735,6 +786,153 @@
 				</section>
 				<!-- END farming -->
 				
+				<!-- options -->
+				<section id="options" class="menu hidden">
+					
+					<header class="subhead container">
+						<div class="alert alert-warning iconk-large"><img src="assets/icons/cog_64.png"></div>
+						<h1>Options</h1>
+						<p class="lead">Handle your game data, fiddle with settings, and change controls</p>
+						<div id="navOptions" class="subnavbar subnav-sticky">
+							<div class="navbar-inner">
+								<div class="container">
+									<ul class="nav nav-pills pull-left">
+										<li><a href="#data">Save & Load</a></li>
+										<li><a href="#settings">Settings</a></li>
+										<li><a href="#controls">Controls</a></li>
+									</ul>
+									<ul class="nav nav-pills pull-right">
+										<li><a href="#farming"><h6>top</h6></a></li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</header>
+					
+					<!-- data -->
+					<section id="data">
+						<div class="container">
+							<div class="page-header">
+								<h1>Save & Load <small>keep track of your progress and start right where you left off</small></h1>
+							</div>
+							<div class="row">
+								<div class="span12">
+									<form class="well">
+										<textarea id="progressCode" class="span11 input-xlarge" rows="5"></textarea>
+										<div class="btn-group">
+											<button id="buttonSaveCode" class="btn btn-large btn-primary disabled">
+												<div class="valign">
+													<div class="valign-cell"><img src="assets/icons/save_rev_64.png" class="iconk-small"></div>
+													<div class="valign-cell"><p>Generate Save Code</p></div>
+												</div>
+											</button>
+											<button id="buttonLoadCode" class="btn btn-large disabled">
+												<div class="valign">
+													<div class="valign-cell"><img src="assets/icons/load_64.png" class="iconk-small"></div>
+													<div class="valign-cell"><p>Load Current Code</p></div>
+												</div>
+											</button>
+											<button id="buttonExit" class="btn btn-large">
+												<div class="valign">
+													<div class="valign-cell"><img src="assets/icons/exit_64.png" class="iconk-small"></div>
+													<div class="valign-cell"><p>Exit Game</p></div>
+												</div>
+											</button>
+										</div>
+									</form>
+									<div class="alert alert-block alert-info">
+										<h4 class="alert-heading">Check it out:</h4>
+										When you generate a code, it will also appear in your web address so you can bookmark your progress!
+									</div>
+								</div>
+							</div>
+						</div>
+					</section>
+					<!-- END data -->
+					
+					<!-- settings -->
+					<section id="settings">
+						<div class="container">
+							<div class="page-header">
+								<h1>Settings <small>edit game presets</small></h1>
+							</div>
+							<div class="row">
+								<div class="span12">
+									<table class="table table-bordered table-striped">
+										<tbody>
+											<tr>
+												<td>
+													<div class="valign">
+														<div class="valign-cell"><img src="assets/icons/accessibility_64.png" class="iconk-small"></div>
+														<div class="valign-cell"><p>Difficulty</p></div>
+													</div>
+												</td>
+												<td>
+													<div class="btn-group iconk-small iconk-widthFollow" data-toggle="buttons-radio">
+														<button id="buttonDifficultyLow" class="btn btn-primary">Novice</button>
+														<button id="buttonDifficultyMedium" class="btn btn-primary active">Student</button>
+														<button id="buttonDifficultyHigh" class="btn btn-primary">Master</button>
+													</div>
+												</td>
+											</tr>
+											<tr>
+												<td>
+													<div class="valign">
+														<div class="valign-cell"><img src="assets/icons/computer_64.png" class="iconk-small"></div>
+														<div class="valign-cell"><p>Graphics Quality</p></div>
+													</div>
+												</td>
+												<td>
+													<div class="btn-group iconk-small iconk-widthFollow" data-toggle="buttons-radio">
+														<button id="buttonGraphicsLow" class="btn btn-primary">Low</button>
+														<button id="buttonGraphicsMedium" class="btn btn-primary">Medium</button>
+														<button id="buttonGraphicsHigh" class="btn btn-primary active">High</button>
+													</div>
+												</td>
+											</tr>
+											<tr>
+												<td>
+													<div class="valign">
+														<div class="valign-cell"><img src="assets/icons/sound_64.png" class="iconk-small"></div>
+														<div class="valign-cell"><p>Volume</p></div>
+													</div>
+												</td>
+												<td>
+													<div class="iconk-small iconk-widthFollow">
+														<div class="progress progress-striped progress-info span6">
+															<div class="bar" style="width: 100%;"></div>
+														</div>
+													</div>
+												</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+					</section>
+					<!-- END settings -->
+					
+					<!-- controls -->
+					<section id="controls">
+						<div class="container">
+							<div class="page-header">
+								<h1>Controls <small>change the way you interact with the game</small></h1>
+							</div>
+							<div class="row">
+								<div class="span12">
+									<div id="controlsWarning" class="alert alert-block alert-warning">
+										<h4 class="alert-heading">Hold up!</h4>
+										We don't support changing controls for your device, but we're working on it.
+									</div>
+								</div>
+							</div>
+						</div>
+					</section>
+					<!-- END controls -->
+					
+				</section>
+				
 			</div>
 			<!-- END menus -->
 			
@@ -742,7 +940,7 @@
 			<div id="footer" class="container">
 				<div class="row">
 					<div class="span12">
-						<p>Kai 'Opua is made with the intent tp be an open source universal education tool that may teach players to better understand design concepts.</p>
+						<p>Kai 'Opua is an open source universal education tool that is intended to teach players to better understand design concepts.</p>
 						<p><small>Designed and developed by <a href="http://www.collinhover.com/" target="_blank">Collin Hover</a></small></p>
 					</div>
 				</div>

@@ -151,6 +151,15 @@ html, body {
 /* Hide visually and from screenreaders, but maintain layout */
 .invisible { visibility: hidden; }
 
+/* ignores 
+-------------------------*/
+
+.ignore-pointer {
+	cursor: default;
+	pointer-events: none;
+}
+
+
 /* icons 
 -------------------------*/
 
@@ -209,12 +218,87 @@ html, body {
 	padding: 1px;
 }
 
-/* ignores 
+/* buttons 
 -------------------------*/
 
-.ignore-pointer {
-	cursor: default;
-	pointer-events: none;
+.btn {
+	
+	.disabled, &.disabled, &.disabled:hover {
+		.ignore-pointer;
+	}
+	
+}
+
+.btn-huge {
+	padding: 14px 20px;
+	font-size: 32px;
+	.border-radius( 10px );
+}
+
+.btn-outline {
+	background: none;
+	border-width: 1px;
+	border-color: @grayDark;
+	color: @grayDark;
+	text-shadow: none;
+	.box-shadow( none );
+	
+	&:hover {
+		color: @grayDarker;
+		border-color: @grayDark;
+		background: none;
+	}
+}
+
+.btn-outlineRev {
+	.btn-outline;
+	border-color: @whiteDarker;
+	color: @whiteDarker;
+	
+	&:hover {
+		color: @white;
+		border-color: @whiteDarker;
+		background: none;
+	}
+}
+
+.btn-radiusless {
+	.border-radius( 0 );
+}
+
+.btn-circle-small {
+	width: 80px;
+	height: 80px;
+	padding: 6px;
+	.border-radius( 40px );
+}
+
+.btn-circle-medium {
+	width: 96px;
+	height: 96px;
+	padding: 10px;
+	.border-radius( 48px );
+}
+
+.btn-circle-large {
+	width: 128px;
+	height: 128px;
+	padding: 12px;
+	.border-radius( 64px );
+}
+
+.btn-circle-huge {
+	width: 144px;
+	height: 144px;
+	padding: 16px;
+	.border-radius( 72px );
+}
+
+.btn-circle-giant {
+	width: 160px;
+	height: 160px;
+	padding: 20px;
+	.border-radius( 80px );
 }
 
 /* anchors 
@@ -275,13 +359,6 @@ section {
 		.inline-block;
 		float: none;
 	}
-	
-}
-
-/* buttons 
--------------------------*/
-
-.btn {
 	
 }
 
@@ -418,13 +495,20 @@ section {
 }
 
 .nav-inline {
-	display: block;
-	float: left;
-	.clearfix();
+	display: inline-block;
+	float: none;
+	margin-bottom: -2px;
 	
 	li {	
-		display: block;
-		float: left;
+		display: inline-block;
+		float: none;
+		vertical-align: middle;
+	}
+}
+
+.nav-buttons {
+	li {
+		margin: 5px;
 	}
 }
 
@@ -611,7 +695,7 @@ section {
 #ui {
 	.fullscreenTopLeftNoWidth;
 	
-	#navMain {
+	#navMenus {
 		.fullWidth;
 		#gradient > .vertical(@navbarBackgroundHighlight, @navbarBackground);
 		.box-shadow(~"0 1px 3px rgba(0,0,0,.25), inset 0 -1px 0 rgba(0,0,0,.1)");
@@ -652,15 +736,15 @@ section {
 		
 	}
 	
-	#inactive {
-		display: none;
+	#statusInactive {
+		
 	}
 
-	#active {
+	#statusActive {
 		position: relative;
 		z-index: 9998;
 		
-		.active-item {
+		.status-item {
 			margin: 0;
 			
 			.hero-unit, .squire-unit {
@@ -674,7 +758,7 @@ section {
 			}
 		}
 		
-		.active-item + .active-item {
+		.status-item + .status-item {
 			margin-top: 10px;
 		}
 		
@@ -684,13 +768,36 @@ section {
 		.fullscreenTopLeftNoWidth;
 		overflow:hidden;
 		z-index: 1001;
+		
+		#primaryActionsInactive {
+			
+		}
+		
+		#primaryActionsActive {
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			
+			.primaryAction-item {
+				padding: 20px;
+				margin-bottom: 10px;
+			}
+			
+			
+			
+		}
+		
+		#navStart {
+			
+		}
+		
 	}
 	
 	#outGame {
 		position: absolute;
 		top: 100%;
 		min-width: 100%;
-		min-height: @minHeight;
 		.clearfix();
 		
 		#menus {
@@ -831,61 +938,64 @@ section {
 -------------------------*/
 
 #farming {
-	
-}
 
-/* tools 
--------------------------*/
-
-.tools {
-	
-	h3 {
-		margin-bottom: 10px;
-	}
-	
-	p {
-		margin: 0;
-	}
-}
-
-/* field 
--------------------------*/
-
-#fieldRewards {
-	
-	h4 {
-		margin-top: 9px;
-		margin-bottom: 4px;
-	}
-
-	.field-rewardsList {
+	.tools {
+		
+		h3 {
+			margin-bottom: 10px;
+		}
 		
 		p {
 			margin: 0;
+		}
+	}
+
+	#fieldRewards {
+		
+		h4 {
+			margin-top: 9px;
+			margin-bottom: 4px;
+		}
+
+		.field-rewardsList {
+			
+			p {
+				margin: 0;
+			}
+			
+		}
+		
+	}
+
+	#plantOverview {
+		margin-bottom: 10px;
+	}
+
+	#plantCustomInfo {
+		
+		.page-header {
+			margin-top: 0;
+		}
+		
+		#plantCustomInfoText {
+			margin-bottom: 20px;
 		}
 		
 	}
 	
 }
 
-/* plant 
+/* options 
 -------------------------*/
 
-#plantOverview {
-	margin-bottom: 10px;
-}
-
-/* collection 
--------------------------*/
-
-#plantCustomInfo {
+#options {
 	
-	.page-header {
-		margin-top: 0;
+	#data {
+		
+		#progressCode {
+			max-width: 100%;
+			max-height: 300px;
+		}
+		
 	}
-	
-	#plantCustomInfoText {
-		margin-bottom: 20px;
-	}
-	
 }

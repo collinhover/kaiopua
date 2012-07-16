@@ -38,12 +38,12 @@
             ry: 0, 
             rangeTransMaxX: 500, 
             rangeTransMinX: -500,
-            rangeTransMaxY: 250, 
-            rangeTransMinY: -250,
+            rangeTransMaxY: -175, 
+            rangeTransMinY: -175,
             speedTransX: 0.01, 
             speedTransY: 0.01,
-            rangeRotMaxX: 0,
-            rangeRotMinX: -25,
+            rangeRotMaxX: -16,
+            rangeRotMinX: -16,
             rangeRotMaxY: 10,
             rangeRotMinY: -10,
             speedRotX: 0.05,
@@ -189,7 +189,7 @@
     
     /*===================================================
     
-    mouse functions
+    view shift
     
     =====================================================*/
     
@@ -206,6 +206,22 @@
         viewShift.ry = (1 - pctX) * viewShift.rangeRotMaxY + (pctX) * viewShift.rangeRotMinY;
         
     }
+	
+	function view_shift_update ( instant ) {
+		
+		camera.position.z += (  viewShift.x - camera.position.z ) * ( instant === true ? 1 : viewShift.speedTransX );
+        camera.position.y += ( -viewShift.y - camera.position.y ) * ( instant === true ? 1 : viewShift.speedTransY );
+        
+        camRotationOffset.z += ( viewShift.rx - camRotationOffset.z ) * ( instant === true ? 1 : viewShift.speedRotX );
+        camRotationOffset.y += ( viewShift.ry - camRotationOffset.y ) * ( instant === true ? 1 : viewShift.speedRotY );
+		
+		// update rotation
+		
+		camRotationOffsetQ.setFromEuler( camRotationOffset ).normalize();
+        
+		camera.quaternion.set( 0, 0, 0, 1 ).multiplySelf( camRotationOffsetQ ).multiplySelf( camRotationBaseQ );
+		
+	}
     
     /*===================================================
     
@@ -248,6 +264,11 @@
 			shared.signals.mousemoved.add( on_mouse_moved );
 			
 			shared.signals.gameUpdate.add( update );
+			
+			// shift view to starting position
+			
+			on_mouse_moved();
+			view_shift_update( true );
 			
 		}
 		else {
@@ -296,17 +317,7 @@
     
     function update ( timeDelta ) {
 		
-        camera.position.z += (  viewShift.x - camera.position.z ) * viewShift.speedTransX;
-        camera.position.y += ( -viewShift.y - camera.position.y ) * viewShift.speedTransY;
-        
-        camRotationOffset.z += ( viewShift.rx - camRotationOffset.z ) * viewShift.speedRotX;
-        camRotationOffset.y += ( viewShift.ry - camRotationOffset.y ) * viewShift.speedRotY;
-		
-		// update rotation
-		
-		camRotationOffsetQ.setFromEuler( camRotationOffset ).normalize();
-        
-		camera.quaternion.set( 0, 0, 0, 1 ).multiplySelf( camRotationOffsetQ ).multiplySelf( camRotationBaseQ );
+		view_shift_update();
 		
     }
 	
