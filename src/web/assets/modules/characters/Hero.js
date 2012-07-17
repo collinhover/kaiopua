@@ -170,7 +170,7 @@
 		
 		parameters.targetsNumMax = targetsNumMax;
 		
-		targetsNum = main.assets.modules.core.Player.select_from_mouse_position( parameters );
+		targetsNum = main.assets.modules.core.Player.select( parameters );
 		
 		// start scale updating, if not already
 		
@@ -184,12 +184,12 @@
 				
 				update: function ( e ) {
 					
-					var mouseOriginal = parameters.mouse;
-					var mouseNew = shared.mice[ e.identifier ];
+					var pointerOriginal = parameters.pointer;
+					var pointerNew = shared.mice[ e.identifier ];
 					
-					// check mouse given by identifier vs mouse used originally
+					// check pointer given by identifier vs pointer used originally
 					
-					if ( mouseNew === mouseOriginal ) {
+					if ( pointerNew === pointerOriginal ) {
 					
 						scale_update( parameters );
 						
@@ -218,7 +218,7 @@
 			
 			// signals
 			
-			shared.signals.mousemoved.add( adObj.update );
+			shared.signals.gamePointerMoved.add( adObj.update );
 			
 		}
 	
@@ -226,7 +226,7 @@
 	
 	function select_and_scale_end ( parameters ) {
 		
-		var mouse = parameters.mouse,
+		var pointer = parameters.pointer,
 			character = parameters.character,
 			actionData = character.actionData,
 			adObj;
@@ -239,7 +239,7 @@
 			
 			// signals
 				
-			shared.signals.mousemoved.remove( adObj.update );
+			shared.signals.gamePointerMoved.remove( adObj.update );
 			
 			// clear action data object
 			
@@ -256,7 +256,7 @@
 	function scale_update ( parameters ) {
 		
 		var i, l,
-			mouse = parameters.mouse,
+			pointer = parameters.pointer,
 			character = parameters.character,
 			actionData = character.actionData,
 			adObj,
@@ -268,8 +268,8 @@
 			scaleRecords,
 			scaleRecord,
 			scaleDelta,
-			mouseDelta,
-			mouseDeltaDivisorY = shared.screenHeight * 0.1;
+			pointerDelta,
+			pointerDeltaDivisorY = shared.screenHeight * 0.1;
 		
 		if ( typeof actionData.select_and_scale !== 'undefined' ) {
 			
@@ -279,13 +279,13 @@
 			
 			scaleRecords = adObj.scaleRecords;
 			
-			// mouse change
+			// pointer change
 			
-			mouseDelta = ( mouse.dx - mouse.dy ) * 0.5;
+			pointerDelta = ( pointer.dx - pointer.dy ) * 0.5;
 			
 			// scale change
 			
-			scaleDelta = mouseDelta / mouseDeltaDivisorY;
+			scaleDelta = pointerDelta / pointerDeltaDivisorY;
 			
 			// for all interactive targets
 			for ( i = 0, l = targets.length; i < l; i ++ ) {
@@ -333,7 +333,7 @@
 			scaleSnapOriginAboveDist = (scaleMax - scaleOrigin) * scaleSnapOriginPct,
 			scaleSnapOriginBelowDist = (scaleOrigin - scaleMin) * scaleSnapOriginPct;
 		
-		// scale based on mouse position change
+		// scale based on pointer position change
 		
 		scaleX = scaleRecord.x = Math.max( scaleMin, Math.min( scaleMax, scaleRecord.x + scaleDelta ) );
 		scaleY = scaleRecord.y = Math.max( scaleMin, Math.min( scaleMax, scaleRecord.y + scaleDelta ) );

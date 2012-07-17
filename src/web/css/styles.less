@@ -155,14 +155,22 @@ html, body {
 /* ignores 
 -------------------------*/
 
+* {
+	pointer-events: auto;
+}
+
 .ignore-pointer {
-	cursor: default !important;
 	pointer-events: none;
 }
 
 .disabled {
+	cursor: default !important;
 	opacity: 0.5;
 	.ignore-pointer;
+	
+	* {
+		.ignore-pointer;
+	}
 }
 
 /* icons 
@@ -680,7 +688,7 @@ a, .navbar .nav > li > a {
 #transitioner {
 	.fullscreenTopLeftNoWidth;
 	background: @gray;
-	z-index: 1002;
+	z-index: 3000;
 }
 
 #ui {
@@ -754,7 +762,7 @@ a, .navbar .nav > li > a {
 	#inGame {
 		.fullscreenTopLeftNoWidth;
 		overflow:hidden;
-		z-index: 1001;
+		z-index: 2000;
 		
 		#primaryActionsInactive {
 			

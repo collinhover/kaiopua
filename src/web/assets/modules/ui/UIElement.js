@@ -378,7 +378,7 @@
 					
 					this._alignment = location.toLowerCase();
 					
-					shared.signals.windowresized.add( this.align, this );
+					shared.signals.windowResized.add( this.align, this );
 					
 					this.align();
 					
@@ -387,7 +387,7 @@
 					
 					this._alignment = false;
 					
-					shared.signals.windowresized.remove( this.align, this );
+					shared.signals.windowResized.remove( this.align, this );
 					
 				}
 				

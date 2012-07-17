@@ -365,8 +365,8 @@
 			objects,
 			colliders,
 			camera,
-			mouse,
-			mousePosition = utilVec31Casting,
+			pointer,
+			pointerPosition = utilVec31Casting,
 			projector = utilProjector1Casting,
 			octree,
 			far,
@@ -386,7 +386,7 @@
 		octree = parameters.octree;
 		hierarchical = parameters.hierarchical;
 		camera = parameters.camera;
-		mouse = parameters.mouse;
+		pointer = parameters.pointer;
 		
 		// ray
 		
@@ -420,24 +420,24 @@
 			
 		}
 		
-		// if using mouse
+		// if using pointer
 		
-		if ( typeof mouse !== 'undefined' && typeof camera !== 'undefined' ) {
+		if ( typeof pointer !== 'undefined' && typeof camera !== 'undefined' ) {
 			
-			// get corrected mouse position
+			// get corrected pointer position
 			
-			mousePosition.x = ( mouse.x / shared.screenWidth ) * 2 - 1;
-			mousePosition.y = -( mouse.y / shared.screenHeight ) * 2 + 1;
-			mousePosition.z = 0.5;
+			pointerPosition.x = ( pointer.x / shared.screenWidth ) * 2 - 1;
+			pointerPosition.y = -( pointer.y / shared.screenHeight ) * 2 + 1;
+			pointerPosition.z = 0.5;
 			
-			// unproject mouse position
+			// unproject pointer position
 			
-			projector.unprojectVector( mousePosition, camera );
+			projector.unprojectVector( pointerPosition, camera );
 			
 			// set ray
 
 			ray.origin.copy( camera.position );
-			ray.direction.copy( mousePosition.subSelf( camera.position ) );
+			ray.direction.copy( pointerPosition.subSelf( camera.position ) );
 			
 		}
 		
@@ -806,35 +806,32 @@
 			
 		}
 		
-		switch( which ) {
+		if( which === 0 ) {
 			
-			case 0:
-				
-				var y = origin.y + direction.y * t;
-				if ( y < abMin.y || y > abMax.y ) return intersection;
-				var z = origin.z + direction.z * t;
-				if ( z < abMin.z || z > abMax.z ) return intersection;
-				intersection.normal.set( xn, 0, 0 );
-				break;
-				
-			case 1:
-				
-				var x = origin.x + direction.x * t;
-				if ( x < abMin.x || x > abMax.x ) return intersection;
-				var z = origin.z + direction.z * t;
-				if ( z < abMin.z || z > abMax.z ) return intersection;
-				intersection.normal.set( 0, yn, 0) ;
-				break;
-				
-			case 2:
-				
-				var x = origin.x + direction.x * t;
-				if ( x < abMin.x || x > abMax.x ) return intersection;
-				var y = origin.y + direction.y * t;
-				if ( y < abMin.y || y > abMax.y ) return intersection;
-				intersection.normal.set( 0, 0, zn );
-				break;
-				
+			var y = origin.y + direction.y * t;
+			if ( y < abMin.y || y > abMax.y ) return intersection;
+			var z = origin.z + direction.z * t;
+			if ( z < abMin.z || z > abMax.z ) return intersection;
+			intersection.normal.set( xn, 0, 0 );
+			
+		}
+		else if ( which === 1 ) {
+			
+			var x = origin.x + direction.x * t;
+			if ( x < abMin.x || x > abMax.x ) return intersection;
+			var z = origin.z + direction.z * t;
+			if ( z < abMin.z || z > abMax.z ) return intersection;
+			intersection.normal.set( 0, yn, 0) ;
+			
+		}
+		else if ( which === 2 ) {
+			
+			var x = origin.x + direction.x * t;
+			if ( x < abMin.x || x > abMax.x ) return intersection;
+			var y = origin.y + direction.y * t;
+			if ( y < abMin.y || y > abMax.y ) return intersection;
+			intersection.normal.set( 0, 0, zn );
+			
 		}
 		
 		intersection.distance = t;

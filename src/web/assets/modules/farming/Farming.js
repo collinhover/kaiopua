@@ -15,13 +15,8 @@
 		_Planting,
 		_Character,
 		_Player,
-		_GUI,
 		_Messenger,
-		_UIElement,
-		_Button,
-		_Menu,
-		farmers = [],
-		plantsWaitingForUI = [];
+		farmers = [];
 	
 	/*===================================================
     
@@ -74,17 +69,13 @@
 		
 		_Farming.reset();
 		
-		shared.signals.gamestop.add( _Farming.reset, _Farming );
+		shared.signals.gameStopped.add( _Farming.reset, _Farming );
 		
 		// ui
 		
 		main.asset_require( [
 				"assets/modules/core/Player.js",
-				"assets/modules/ui/GUI.js",
-				"assets/modules/ui/Messenger.js",
-				"assets/modules/ui/UIElement.js",
-				"assets/modules/ui/Button.js",
-				"assets/modules/ui/Menu.js"
+				"assets/modules/ui/Messenger.js"
 			],
 			init_farming_ui,
 			true
@@ -165,53 +156,13 @@
 	
 	=====================================================*/
 	
-	function init_farming_ui( p, gui, msg, uie, btn, mn ) {
+	function init_farming_ui( p, msg ) {
 		console.log('internal farming ui');
 		var i, l,
 			b, m;
 		
 		_Player = p;
-		_GUI = gui;
 		_Messenger = msg;
-		_UIElement = uie;
-		_Button = btn;
-		_Menu = mn;
-		
-		b = _GUI.buttons;
-		m = _GUI.menus;
-		
-		// menu
-		
-		_Farming.menu = m.farming = new _Menu.Instance( {
-            id: 'farming',
-			openAlone: false
-        } );
-		
-		_Farming.menu.buttonOpen = new _Button.Instance( {
-			id: 'open',
-			image: shared.pathToIcons + 'farming_64.png',
-			imageSize: _UIElement.sizes.iconMedium,
-			size: _UIElement.sizes.iconMediumContainer,
-			tooltip: 'Farming',
-			spacing: _UIElement.sizes.spacing,
-			circle: true
-		} );
-		
-		_Farming.menu.buttonClose = _GUI.generate_button_close();
-		_Farming.menu.buttonClose.alignment = 'topleft';
-		_Farming.menu.buttonClose.alignmentGuide = _Farming.menu.buttonOpen;
-		_Farming.menu.buttonClose.spacingLeft = -_Farming.menu.buttonClose.width;
-		
-		_Farming.menu.arrange_line( {
-			childrenPerLine: 5
-		} );
-		
-		_Farming.menu.alignmentOpen = 'lefttop';
-		_Farming.menu.alignmentClosed = false;
-		_Farming.menu.alignmentGuide = _Farming.menu.buttonOpen;
-		_Farming.menu.alignmentOutside = true;
-		
-		m.navigation.add( _Farming.menu, 0 );
 		
 		// create farmer for player
 		
@@ -220,14 +171,6 @@
 		// reset
 		
 		reset_farming_ui();
-		
-		// handle plants waiting for UI
-		
-		for ( i = 0, l = plantsWaitingForUI.length; i < l; i++ ) {
-			
-			add_plant_to_ui( plantsWaitingForUI[ i ] );
-			
-		}
 		
 	}
 	
@@ -239,7 +182,7 @@
 			bindings,
 			binding;
 			
-		if ( typeof _Farming.menu !== 'undefined' && typeof _Player !== 'undefined' ) {
+		if ( typeof _Player !== 'undefined' ) {
 			
 			// get player farmer
 			
@@ -260,45 +203,58 @@
 				
 			}
 			
-			// add basic hint bindings
+			// TODO: add basic hint bindings
 			
 			bindings.push( planting.planted.addOnce( function () {
-				
+				/*
 				_Messenger.show_message( {
-					image: shared.pathToIcons + "mouse_left_rev_64.png",
+					image: shared.pathToIcons + "tap_rev_128.png",
 					title: "Planting Basics: Selecting",
-					body: "You can <span class='highlight'>select and move</span> plants you've already planted with a <span class='highlight'>single click.</span>",
+					body: "You can <span class='highlight'>select</span> plants you've already planted with a <span class='highlight'>single tap.</span>",
 					priority: true,
 					transitionerOpacity: 0.9,
 					confirmRequired: true
 				} );
-				
+				*/
+			} ) );
+			
+			bindings.push( planting.planted.addOnce( function () {
+				/*
+				_Messenger.show_message( {
+					image: shared.pathToIcons + "tap_rev_128.png",
+					title: "Planting Basics: Selecting",
+					body: "To <span class='highlight'>move</span> a plant, change into move mode, then <span class='highlight'>tap, hold, and drag</span> in any direction.",
+					priority: true,
+					transitionerOpacity: 0.9,
+					confirmRequired: true
+				} );
+				*/
 			} ) );
 			
 			bindings.push( planting.plantedMulti.addOnce( function () {
-				
+				/*
 				_Messenger.show_message( {
 					image: shared.pathToIcons + "rotate_rev_64.png",
 					title: "Planting Basics: Rotating",
-					body: "To <span class='highlight'>rotate</span> a plant, first select it, then <span class='highlight'>hold click and drag.</span>",
+					body: "To <span class='highlight'>rotate</span> a plant, change into rotate mode, then <span class='highlight'>tap, hold, and drag</span> in circles.",
 					priority: true,
 					transitionerOpacity: 0.9,
 					confirmRequired: true
 				} );
-				
+				*/
 			} ) );
 			
 			bindings.push( planting.selected.addOnce( function () {
-				
+				/*
 				_Messenger.show_message( { 
 					image: shared.pathToIcons + "close_rev_64.png",
 					title: "Planting Basics: Removing",
-					body: "If you want to <span class='highlight'>remove</span> a plant, first select it, then <span class='highlight'>click it outside any field.</span>",
+					body: "To <span class='highlight'>delete</span> a plant, <span class='highlight'>double tap it</span> or move and drop it outside of its field.",
 					priority: true,
 					transitionerOpacity: 0.9,
 					confirmRequired: true
 				} );
-				
+				*/
 			} ) );
 			
 		}
@@ -307,74 +263,22 @@
 	
 	function add_plant_to_ui ( plantType ) {
 		
-		var b,
-			m,
-			shapeParameters,
-			type,
-			image,
-			tooltip,
-			button;
+		var shapeParameters;
 		
-		// is ui ready
+		// valid plant type
 		
-		if ( typeof _Farming.menu !== 'undefined' ) {
+		if ( _GridElementShapes.hasOwnProperty( plantType ) ) {
 			
-			b = _GUI.buttons;
-			m = _GUI.menus;
+			// if exists, remove
 			
-			// valid plant type
+			// create new
 			
-			if ( _GridElementShapes.hasOwnProperty( plantType ) ) {
-				
-				// if exists, remove
-				
-				if ( _Farming.menu.childrenByID.hasOwnProperty( plantType ) ) {
-					
-					remove_plant_from_ui( plantType );
-					
-				}
-				
-				// create new
-				
-				shapeParameters = _GridElementShapes[ plantType ];
-				
-				button = new _Button.Instance( {
-					id: plantType,
-					image: shapeParameters.icon.image || shared.pathToIcons + 'plant_64.png',
-					imageSize: _UIElement.sizes.iconMedium,
-					size: _UIElement.sizes.iconMediumContainer,
-					tooltip: shapeParameters.icon.tooltip,
-					spacing: _UIElement.sizes.spacing,
-					circle: true,
-					theme: 'green',
-					callback: plant_from_ui,
-					context: _Farming,
-					data: plantType
-				} );
-				
-				_Farming.menu.add( button );
-				
-				// if not starter plant, show indicator
-				
-				if ( _Farming.plantTypesBase.indexOf( plantType ) === -1 ) {
-					
-					button.indicator = true;
-					
-				}
-				
-			}
+			shapeParameters = _GridElementShapes[ plantType ];
 			
-		}
-		// else add to waiting list
-		else {
+			// add to menu
 			
-			plantsWaitingForUI = plantsWaitingForUI || [];
 			
-			if ( plantsWaitingForUI.indexOf( plantType ) === -1 ) {
-				
-				plantsWaitingForUI.push( plantType );
-				
-			}
+			// if not starter plant, show indicator
 			
 		}
 		
@@ -382,47 +286,7 @@
 	
 	function remove_plant_from_ui ( plantType ) {
 		
-		var b,
-			m,
-			index,
-			plantButton,
-			type,
-			image,
-			tooltip,
-			button;
-		
-		// is ui ready
-		
-		if ( typeof _Farming.menu !== 'undefined' ) {
-			
-			b = _GUI.buttons;
-			m = _GUI.menus;
-			
-			// if plant in menu
-			
-			if ( _Farming.menu.childrenByID.hasOwnProperty( plantType ) ) {
-				
-				plantButton = _Farming.menu.childrenByID[ plantType ];
-				
-				plantButton.indicator = false;
-				
-				plantButton.hide( { remove: true, time: 0 } );
-				
-			}
-			
-		}
-		// else if on waiting list
-		else if ( main.type( plantsWaitingForUI ) === 'array' && plantsWaitingForUI.length > 0 ) {
-			
-			index = plantsWaitingForUI.indexOf( plantType );
-			
-			if ( index !== -1 ) {
-				
-				plantsWaitingForUI.splice( index, 1 );
-				
-			}
-			
-		}
+		// remove if plant in menu
 		
 	}
 	

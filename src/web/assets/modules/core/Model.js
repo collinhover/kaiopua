@@ -1012,7 +1012,7 @@
 				
 				if ( startDelay ) {
 					
-					info.startDelayID = requestTimeout( updater.resume, startDelay );
+					info.startTimeoutHandle = requestTimeout( updater.resume, startDelay );
 					
 				}
 				else {
@@ -1170,19 +1170,19 @@
 			
 			// loop delay
 			
-			if ( typeof info.loopDelayID !== 'undefined' ) {
+			if ( typeof info.loopTimeoutHandle !== 'undefined' ) {
 				
-				clearRequestTimeout( info.loopDelayID );
-				info.loopDelayID = undefined;
+				clearRequestTimeout( info.loopTimeoutHandle );
+				info.loopTimeoutHandle = undefined;
 				
 			}
 			
 			// start delay
 			
-			if ( typeof info.startDelayID !== 'undefined' ) {
+			if ( typeof info.startTimeoutHandle !== 'undefined' ) {
 				
-				clearRequestTimeout( info.startDelayID );
-				info.startDelayID = undefined;
+				clearRequestTimeout( info.startTimeoutHandle );
+				info.startTimeoutHandle = undefined;
 				
 			}
 			
@@ -1210,7 +1210,7 @@
 				
 				updater.stop();
 				
-				info.loopDelayID = requestTimeout( updater.handleLooping, delay );
+				info.loopTimeoutHandle = requestTimeout( updater.handleLooping, delay );
 				
 			}
 			// else resume
@@ -1427,7 +1427,7 @@
 				
 				info.cleared = false;
 					
-				shared.signals.gameUpdate.add( updater.update );
+				shared.signals.gameUpdated.add( updater.update );
 				
 			}
 			
@@ -1441,7 +1441,7 @@
 				
 				info.updating = false;
 					
-				shared.signals.gameUpdate.remove( updater.update );
+				shared.signals.gameUpdated.remove( updater.update );
 				
 			}
 			

@@ -186,16 +186,16 @@
 	
 	function rotate ( e, end ) {
 		
-		var mouse;
+		var pointer;
 		
 		// end rotation
 		if ( end === true ) {
 			
 			// reset
 			
-			shared.signals.mousemoved.remove( rotate_update, this );
+			shared.signals.gamePointerMoved.remove( rotate_update, this );
 			
-			this.settingsRotation.mouse = undefined;
+			this.settingsRotation.pointer = undefined;
 			
 			this.rotating = false;
 			
@@ -203,9 +203,9 @@
 		// start rotation
 		else {
 			
-			// store mouse
+			// store pointer
 			
-			this.settingsRotation.mouse = main.get_mouse( ( e ? e.identifier : 0 ) );
+			this.settingsRotation.pointer = main.get_pointer( e );
 			
 			// reset properties
 			
@@ -215,7 +215,7 @@
 			
 			// update
 			
-			shared.signals.mousemoved.add( rotate_update, this );
+			shared.signals.gamePointerMoved.add( rotate_update, this );
 			
 		}
 		
@@ -231,15 +231,15 @@
 			rotDeltaTotal = pRot.deltaTotal,
 			rotDeltaX,
 			rotDeltaY,
-			mouse = pRot.mouse;
+			pointer = pRot.pointer;
 		
 		// pitch
 		
-		rotDelta.x = _MathHelper.clamp( rotDelta.x + mouse.dy * rotDeltaSpeed, rotDeltaMin.x, rotDeltaMax.x );
+		rotDelta.x = _MathHelper.clamp( rotDelta.x + pointer.dy * rotDeltaSpeed, rotDeltaMin.x, rotDeltaMax.x );
 		
 		// yaw
 		
-		rotDelta.y = _MathHelper.clamp( rotDelta.y - mouse.dx * rotDeltaSpeed, rotDeltaMin.y, rotDeltaMax.y );
+		rotDelta.y = _MathHelper.clamp( rotDelta.y - pointer.dx * rotDeltaSpeed, rotDeltaMin.y, rotDeltaMax.y );
 		
 		// if totals above start threshold
 		
@@ -360,7 +360,7 @@
 		rotOffset.x = _MathHelper.degree_between_180( rotOffset.x );
 		rotOffset.y = _MathHelper.degree_between_180( rotOffset.y );
 		
-		// check if should switch between third and first
+		// check if should change between third and first
 		
 		if ( posOffset.z - firstPersonDist <= posOffsetMin.z ) {
 			
@@ -422,7 +422,7 @@
 		}
 		// if player is not in first person and moving but not rotating camera
 		// move rotation offset back towards original
-		else if ( typeof pRot.mouse === 'undefined' && player.moving === true ) {
+		else if ( typeof pRot.pointer === 'undefined' && player.moving === true ) {
 			
 			this.rotate_revert();
 			

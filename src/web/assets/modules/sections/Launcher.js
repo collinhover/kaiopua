@@ -193,11 +193,11 @@
     
     =====================================================*/
     
-    function on_mouse_moved ( e ) {
+    function on_pointer_moved ( e ) {
         
-        var mouse = main.get_mouse( e ),
-			pctX = ( mouse.x / shared.screenWidth ),
-            pctY = ( mouse.y / shared.screenHeight );
+        var pointer = main.get_pointer( e ),
+			pctX = ( pointer.x / shared.screenWidth ),
+            pctY = ( pointer.y / shared.screenHeight );
         
         viewShift.x = pctX * viewShift.rangeTransMaxX + (1 - pctX) * viewShift.rangeTransMinX;
         viewShift.y = pctY * viewShift.rangeTransMaxY + (1 - pctY) * viewShift.rangeTransMinY;
@@ -261,13 +261,13 @@
 			
 			shared.renderer.sortObjects = false;
 			
-			shared.signals.mousemoved.add( on_mouse_moved );
+			shared.signals.gamePointerMoved.add( on_pointer_moved );
 			
-			shared.signals.gameUpdate.add( update );
+			shared.signals.gameUpdated.add( update );
 			
 			// shift view to starting position
 			
-			on_mouse_moved();
+			on_pointer_moved();
 			view_shift_update( true );
 			
 		}
@@ -287,9 +287,9 @@
 		
 		sky.animate( { stop: true } );
 		
-		shared.signals.mousemoved.remove( on_mouse_moved );
+		shared.signals.gamePointerMoved.remove( on_pointer_moved );
 		
-		shared.signals.gameUpdate.remove( update );
+		shared.signals.gameUpdated.remove( update );
 		
     }
     

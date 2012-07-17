@@ -88,10 +88,10 @@
 	<!-- END game -->
 	
 	<!-- ui -->
-	<div id="ui" class="container unselectable">
+	<div id="ui" class="container ignore-pointer">
 		
 		<!-- navMenus -->
-		<div id="navMenus">
+		<div id="navMenus" class="unselectable">
 			<div class="container">
 				<div class="navbar navbar-flush">
 					<div class="navbar-inner">
@@ -153,8 +153,8 @@
 											</div>
 										</a>
 									</li>
-									<li>
-										<a id="buttonMapMenu" class="nav-icon disabled">
+									<li class="disabled">
+										<a id="buttonMapMenu" class="nav-icon">
 											<div class="valign">
 												<div class="valign-cell"><img src="assets/icons/map_rev_64.png" class="iconk-large"></div>
 												<div class="valign-cell"><p>Map</p></div>
@@ -232,7 +232,7 @@
 		<!-- END inactive -->
 		
 		<!-- status active -->
-		<div id="statusActive" class="container container-center">
+		<div id="statusActive" class="container container-center ignore-pointer">
 			
 			<div id="preloader" class="status-item">
 				<div class="hero-unit squire-unit">
@@ -264,7 +264,7 @@
 		<!-- END active -->
 		
 		<!-- inGame -->
-		<div id="inGame">
+		<div id="inGame" class="unselectable ignore-pointer">
 			
 			<!-- errors
 			<div id="errors">
@@ -274,22 +274,22 @@
 			
 			<div id="primaryActionsInactive" class="hidden">
 				
-				<div id="navStart" class="primaryAction-item">
-					<ul class="nav nav-inline nav-buttons">
-						<li>
-							<button id="buttonLoad" class="btn btn-large btn-inverse btn-circle-large disabled">
+				<div id="navStart" class="primaryAction-item ignore-pointer">
+					<ul class="nav nav-inline nav-buttons ignore-pointer">
+						<li class="disabled">
+							<button id="buttonLoad" class="btn btn-large btn-inverse btn-circle-large">
 								<img src="assets/icons/load_rev_64.png" class="iconk-large">
 								<h2><small>load</small></h2>
 							</button>
 						</li>
-						<li>
-							<button id="buttonStart" class="btn btn-huge btn-inverse btn-circle-giant">
+						<li id="buttonStart">
+							<button class="btn btn-huge btn-inverse btn-circle-giant">
 								<img src="assets/icons/face_smile_rev_64.png" class="iconk-giant">
 								<h2 class="logo-type">Start</h2>
 							</button>
 						</li>
-						<li>
-							<button id="buttonContinue" class="btn btn-large btn-inverse btn-circle-large disabled">
+						<li class="disabled">
+							<button id="buttonContinue" class="btn btn-large btn-inverse btn-circle-large">
 								<img src="assets/icons/rock_rev_64.png" class="iconk-large">
 								<p><small>continue</small></p>
 							</button>
@@ -299,9 +299,7 @@
 				
 			</div>
 			
-			<div id="primaryActionsActive" class="container container-center">
-				
-				
+			<div id="primaryActionsActive" class="container container-center ignore-pointer">
 				
 			</div>
 			
@@ -309,7 +307,7 @@
 		<!-- END inGame -->
 		
 		<!-- transitioner -->
-		<div id="transitioner">
+		<div id="transitioner" class="unselectable">
 			
 		</div>
 		<!-- END transitioner -->
@@ -573,7 +571,7 @@
 									</div>
 								</div>
 								
-								<h3>Rewards <small>the less plants you use to fill the field, the more you earn</small></h3>
+								<h3>Rewards <small>the fewer plants you use to fill the field, the more you earn</small></h3>
 								<div id="fieldRewards" class="row">
 									<div class="span4">
 										<div id="fieldRewardsOkay">

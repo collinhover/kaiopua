@@ -575,16 +575,6 @@
 				
 				velocityForceRotated.multiplyScalar( velocityForceScalar );
 				
-				// setting force to 0 causes instability, ex: stuttering through world and run/falling when going downhill
-				// but halves effective octree search radius, so fewer raycast checks
-				// safe to set if jumping
-				
-				//if ( mesh && mesh.movement && mesh.movement.jump && mesh.movement.jump.active === true ) {
-					
-					//velocity.force.set( 0, 0, 0 );
-					
-				//}
-				
 				velocity.moving = false;
 				
 				velocity.collision = intersection;

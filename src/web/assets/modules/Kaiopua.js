@@ -87,7 +87,7 @@ var KAIOPUA = (function (main) {
     function init_basics () {
 		
         // shared
-        shared.mice = [];
+        shared.pointers = [];
         shared.originLink = window.location.pathname.toString();
 		shared.pathToAssets = 'assets/';
 		shared.pathToModules = shared.pathToAssets + 'modules/';
@@ -101,13 +101,13 @@ var KAIOPUA = (function (main) {
         shared.timeLast = shared.time;
         shared.timeDeltaExpected = 1000 / 60;
 		shared.timeDeltaModDec = Math.pow( 10, 2 );
-		shared.mouseWheelSpeed = 120;
+		shared.pointerWheelSpeed = 120;
 		
 		shared.multitouch = false;
 		
         shared.galleryMode = false;
-		shared.timeLastInteraction = 0;
-		shared.timeLastInteractionMax = 300000;
+		shared.timeSinceInteraction = 0;
+		shared.timeSinceInteractionMax = 300000;
 		
 		shared.domFadeTime = 500;
 		shared.domCollapseTime = 500;
@@ -131,24 +131,17 @@ var KAIOPUA = (function (main) {
        
         shared.signals = {
 			
-			focuslose: new signals.Signal(),
-			focusgain: new signals.Signal(),
+			focusLost: new signals.Signal(),
+			focusGained: new signals.Signal(),
 			
-			scroll: new signals.Signal(),
+			scrolled: new signals.Signal(),
     
-            mousedown : new signals.Signal(),
-            mouseup : new signals.Signal(),
-            mousemoved : new signals.Signal(),
-            mousewheel : new signals.Signal(),
-			mouseenter : new signals.Signal(),
-			mouseleave : new signals.Signal(),
+            keyPressed : new signals.Signal(),
+            keyReleased : new signals.Signal(),
     
-            keydown : new signals.Signal(),
-            keyup : new signals.Signal(),
-    
-            windowresized : new signals.Signal(),
+            windowResized : new signals.Signal(),
 			
-			update: new signals.Signal(),
+			updated: new signals.Signal(),
             
             loadItemCompleted : new signals.Signal(),
             loadListCompleted : new signals.Signal(),
@@ -160,29 +153,21 @@ var KAIOPUA = (function (main) {
             
         };
         
-        // add listeners for events
+        // add listeners for global events
         // each listener dispatches shared signal
-		$(window).on( 'blur', on_focus_lose );
-		$(window).on( 'focus', on_focus_gain );
 		
-		$(window).on( 'scroll', on_scroll );
+		$(window).on( 'blur', on_focus_lost );
+		$(window).on( 'focus', on_focus_gained );
 		
-        $(document).on( 'mousedown touchstart', on_mouse_down );
-        $(document).on( 'mouseup touchend', on_mouse_up );
-		$(document).on( 'click', on_mouse_click );
-        $(document).on( 'mousemove touchmove', on_mouse_move );
-		$(document).on( 'mouseenter touchenter', on_mouse_enter );
-		$(document).on( 'mouseleave touchleave', on_mouse_leave );
-        $(document).on( 'mousewheel DOMMouseScroll', on_mouse_wheel );
-		$(shared.domElements.$gameContainer).on( 'contextmenu', on_game_context_menu );
+		$(window).on( 'scroll scrollstop', on_scrolled );
 		
-        $(document).on( 'keydown', on_key_down );
-        $(document).on( 'keyup', on_key_up );
+        $(document).on( 'keydown', on_key_pressed );
+        $(document).on( 'keyup', on_key_released );
     
-        $(window).on( 'deviceorientation', on_window_device_orientation );
-        $(window).on( 'MozOrientation', on_window_device_orientation);
+        $(window).on( 'orientationchange', on_window_device_orientation );
+        $(window).on( 'MozOrientation', on_window_device_orientation );
     
-        $(window).on( 'resize', on_window_resize );
+        $(window).on( 'resize', on_window_resized );
 		
 		window.onerror = on_error;
 		
@@ -192,7 +177,7 @@ var KAIOPUA = (function (main) {
 			
 			// resize once
 			
-			on_window_resize();
+			on_window_resized();
 			
 			// begin updating
 			
@@ -252,22 +237,16 @@ var KAIOPUA = (function (main) {
 			// handle statusActive items
 			
 			$('.status-item').on('show.active', function () {
-				shared.domElements.$statusActive.append( this );
-			});
-			$('.status-item').on('hidden.active', function () {
-				shared.domElements.$statusInactive.append( this );
-			});
-			/*
-			dom_collapse( { 
-				element: shared.domElements.$statusInactive.find('.status-item'),
-				initHidden: true
-			} );
-			*/
+					shared.domElements.$statusActive.append( this );
+				}).on('hidden.active', function () {
+					shared.domElements.$statusInactive.append( this );
+				});
+			
 			// handle disabled items only if pointer-events are not supported
 			
 			if ( shared.supports.pointerEvents === false ) {
 				
-				dom_ignore_pointer( $(".disabled"), true );
+				dom_ignore_pointer( $(".ignore-pointer, .disabled"), true );
 				
 			}
 			
@@ -296,10 +275,11 @@ var KAIOPUA = (function (main) {
 			main.is_array = is_array;
 			main.is_image = is_image;
 			main.is_image_ext = is_image_ext;
+			main.is_touch_event = is_touch_event;
 			
 			main.extend = extend;
 			main.time_test = time_test;
-			main.get_mouse = get_mouse;
+			main.get_pointer = get_pointer;
 			
 			main.ensure_array = ensure_array;
 			main.ensure_not_array = ensure_not_array;
@@ -390,13 +370,13 @@ var KAIOPUA = (function (main) {
 		
 		// signal
 		
-		shared.signals.update.dispatch( timeDelta, timeDeltaMod );
+		shared.signals.updated.dispatch( timeDelta, timeDeltaMod );
 		
 		// handle gallery mode
 		
-		shared.timeLastInteraction += timeDelta;
+		shared.timeSinceInteraction += timeDelta;
 		
-		if ( shared.galleryMode === true && shared.timeLastInteraction >= shared.timeLastInteractionMax ) {
+		if ( shared.galleryMode === true && shared.timeSinceInteraction >= shared.timeSinceInteractionMax ) {
 			
 			if ( typeof _Game !== 'undefined' && _Game.started === true ) {
 				
@@ -585,30 +565,24 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function get_mouse ( parameters, allowNew ) {
-		
-		return mouse = shared.mice[ 0 ] = shared.mice[ 0 ] || { 
-			x: 0,
-			lx: 0,
-			y: 0,
-			ly: 0,
-			down: false 
-		};
+	function get_pointer ( parameters ) {
 		
 		parameters = parameters || {};
 		
 		var id = parameters.identifier = ( shared.multitouch === true && parameters.identifier ) ? parameters.identifier : 0,
-			mouse;
+			pointer = shared.pointers[ id ];
+
+		if ( typeof pointer === 'undefined' ) {
+			
+			pointer = shared.pointers[ id ] = {};
+			pointer.x = pointer.lx = shared.screenWidth * 0.5;
+			pointer.y = pointer.ly = shared.screenHeight * 0.5;
+			pointer.down = false;
+			pointer.ingame = false;
 		
-		mouse = shared.mice[ id ] = ( allowNew !== true || id < shared.mice.length ) ? shared.mice[ id ] : { 
-			x: 0,
-			lx: 0,
-			y: 0,
-			ly: 0,
-			down: false 
-		};
+		}
 		
-		return mouse;
+		return pointer;
 		
 	}
 	
@@ -780,7 +754,7 @@ var KAIOPUA = (function (main) {
 			
 			if ( state === true ) {
 				
-				$element.on( 'mousedown.pointer touchstart.pointer mouseup.pointer touchend.pointer click.pointer mouseenter.pointer touchenter.pointer mouseleave.pointer touchleave.pointer', 
+				$element.on( 'vmousedown.pointer vmouseup.pointer tap.pointer vmouseover.pointer vmouseout.pointer', 
 					function ( e ) { 
 						
 						e.preventDefault();
@@ -994,16 +968,16 @@ var KAIOPUA = (function (main) {
 			// if should start from hidden
 			
 			isHidden = $element.hasClass( 'hidden' );
+			isCollapsed = $element.hasClass( 'collapsed' );
 			
-			if ( isHidden === true || parameters.initHidden === true ) {
+			if ( isCollapsed !== true && ( isHidden === true || parameters.initHidden === true ) ) {
 				
 				$element.css( { height : 0 } ).addClass( 'collapsed' ).addClass('hidden');
+				isCollapsed = true;
 				
 			}
 			
 			// if valid element and not already collapsing / collapsed to same state
-			
-			isCollapsed = $element.hasClass( 'collapsed' );
 			
 			if ( isCollapsed === show ) {
 				
@@ -1163,194 +1137,10 @@ var KAIOPUA = (function (main) {
 		
 	}
     
-    function on_mouse_down( e ) {
-		
-		var mouse;
-		
-		// is touch event
-		
-		if ( is_touch_event( e ) ) {
-			
-			handle_touch_event( e.originalEvent, on_mouse_down );
-			
-		}
-		else {
-			
-			mouse = get_mouse( e, true );
-			
-			mouse.down = true;
-		
-			shared.signals.mousedown.dispatch( e );
-			
-		}
-		
-		shared.timeLastInteraction = 0;
-        
-		/*
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-		*/
-    }
-    
-    function on_mouse_up( e ) {
-		
-		// is touch event
-		
-		if ( is_touch_event( e ) ){
-			
-			handle_touch_event( e.originalEvent, on_mouse_up );
-		}
-		else {
-			
-			mouse = get_mouse( e, true );
-			
-			mouse.down = false;
-			
-			shared.signals.mouseup.dispatch( e );
-        
-		}
-		
-		shared.timeLastInteraction = 0;
-		
-		/*
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-		*/
-    }
-	
-	function on_mouse_click ( e ) {
-		
-		if ( shared.galleryMode === true ) {
-			
-			e.preventDefault();
-			e.stopPropagation();
-			return false;
-			
-		}
-		
-	}
-    
-    function on_mouse_move( e ) {
-		
-		var mouse;
-		
-		// is touch event
-		
-		if ( is_touch_event( e ) ){
-			
-			handle_touch_event( e.originalEvent, on_mouse_move );
-		}
-		else {
-			
-			mouse = get_mouse( e, true );
-			
-			mouse.lx = mouse.x;
-			mouse.ly = mouse.y;
-			
-			mouse.x = e.clientX;
-			mouse.y = e.clientY;
-			
-			mouse.dx = mouse.x - mouse.lx;
-			mouse.dy = mouse.y - mouse.ly;
-			
-			shared.signals.mousemoved.dispatch( e );
-			
-		}
-		
-		shared.timeLastInteraction = 0;
-        
-		/*
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-		*/
-    }
-	
-	function on_mouse_enter ( e ) {
-		
-		// is touch event
-		
-		if ( is_touch_event( e ) ){
-			
-			handle_touch_event( e.originalEvent, on_mouse_enter );
-		}
-		else {
-			
-			get_mouse( e, true );
-			
-			shared.signals.mouseenter.dispatch( e );
-			
-		}
-        
-		/*
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-		*/
-    }
-	
-	function on_mouse_leave ( e ) {
-		
-		var mouse;
-		
-		// is touch event
-		
-		if ( is_touch_event( e ) ){
-			
-			handle_touch_event( e.originalEvent, on_mouse_leave );
-		}
-		else {
-			
-			mouse = get_mouse( e, true );
-			
-			shared.signals.mouseleave.dispatch( e );
-			
-			if ( mouse.down === true ) {
-				
-				on_mouse_up( e );
-				
-			}
-			
-		}
-        
-        /*
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-		*/
-    }
-    
-    function on_mouse_wheel( e ) {
-		
-		var eo = e.originalEvent || e;
-		
-		// normalize scroll across browsers
-		// simple implementation, removes acceleration
-		
-		e.wheelDelta = eo.wheelDelta = ( ( eo.detail < 0 || eo.wheelDelta > 0 ) ? 1 : -1 ) * shared.mouseWheelSpeed;
-		
-        shared.signals.mousewheel.dispatch( e );
-		
-		shared.timeLastInteraction = 0;
-        /*
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-		*/
-    }
-	
-	function on_game_context_menu( e ) {
-        
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-		
-    }
-    
     function on_window_device_orientation( e ) {
-        var i, l, mice, mouse, eCopy, overThreshold, gamma, beta, x, y;
+        var i, l, pointers, pointer, eCopy, overThreshold, gamma, beta, x, y;
+		
+		shared.timeSinceInteraction = 0;
         
         if ( ! e.gamma && !e.beta ) {
                 e.gamma = -(e.x * (180 / Math.PI));
@@ -1367,14 +1157,14 @@ var KAIOPUA = (function (main) {
         
         if ( lastGamma !== gamma || lastBeta !== beta) {
 			
-			mice = shared.mice;
+			pointers = shared.pointers;
 			
-			for ( i = 0, l = mice.length; i < l; i += 1 ) {
+			for ( i = 0, l = pointers.length; i < l; i += 1 ) {
 				
-				mouse = mice[ i ];
+				pointer = pointers[ i ];
 			
-				x = Math.round( 1.5 * gamma ) + mouse.x;
-				y = ( - Math.round( 1.5 * beta ) ) + mouse.y;
+				x = Math.round( 1.5 * gamma ) + pointer.x;
+				y = ( - Math.round( 1.5 * beta ) ) + pointer.y;
 				
 				if( Math.abs( x ) > window.innerWidth ) {
 						if( x < 0 ) {
@@ -1394,74 +1184,61 @@ var KAIOPUA = (function (main) {
 						}
 				}
 				
-				mouse.x = x;
-				mouse.y = y;
+				pointer.x = x;
+				pointer.y = y;
 				
 				eCopy = extend( e, {} );
 				
 				eCopy.identifier = i;
 				
-				shared.signals.mousemoved.dispatch( eCopy );
+				shared.signals.gamePointerMoved.dispatch( eCopy );
 			
 			}
 			
 			lastGamma = gamma;
 			lastBeta = beta;
 			
-			shared.timeLastInteraction = 0;
-            
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
         }
 		
     }
 
-    function on_key_down( e ) {
+    function on_key_pressed( e ) {
 		
-        shared.signals.keydown.dispatch( e );
+		shared.timeSinceInteraction = 0;
 		
-		shared.timeLastInteraction = 0;
-        
-        /*
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-        */
+        shared.signals.keyPressed.dispatch( e );
+		
     }
 
-    function on_key_up( e ) {
+    function on_key_released( e ) {
 		
-        shared.signals.keyup.dispatch( e );
+		shared.timeSinceInteraction = 0;
 		
-		shared.timeLastInteraction = 0;
-        
-        /*
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-        */
+        shared.signals.keyReleased.dispatch( e );
+		
     }
 	
-	function on_focus_lose ( e ) {
+	function on_focus_lost ( e ) {
 		
-		shared.signals.focuslose.dispatch( e );
-		
-	}
-	
-	function on_focus_gain ( e ) {
-		
-		shared.signals.focusgain.dispatch( e );
+		shared.signals.focusLost.dispatch( e );
 		
 	}
 	
-	function on_scroll ( e ) {
+	function on_focus_gained ( e ) {
 		
-		shared.signals.scroll.dispatch( $( window ).scrollLeft(), $( window ).scrollTop() );
+		shared.signals.focusGained.dispatch( e );
+		
+	}
+	
+	function on_scrolled ( e ) {
+		
+		shared.timeSinceInteraction = 0;
+		
+		shared.signals.scrolled.dispatch( $( window ).scrollLeft(), $( window ).scrollTop() );
 		
 	}
 
-    function on_window_resize( e ) {
+    function on_window_resized( e ) {
         
         shared.screenWidth = $(window).width();
         shared.screenHeight = $(window).height();
@@ -1469,7 +1246,7 @@ var KAIOPUA = (function (main) {
 		shared.gameWidth = shared.domElements.$game.width(),
 		shared.gameHeight = shared.domElements.$game.height();
         
-        shared.signals.windowresized.dispatch(shared.screenWidth, shared.screenHeight);
+        shared.signals.windowResized.dispatch(shared.screenWidth, shared.screenHeight);
         
         if (typeof e !== 'undefined') {
             e.preventDefault();
@@ -1515,10 +1292,10 @@ var KAIOPUA = (function (main) {
 			
 			// clear collapse delay
 			
-			if ( typeof worker.collapseTimeoutId !== 'undefined' ) {
+			if ( typeof worker.collapseTimeoutHandle !== 'undefined' ) {
 				
-				window.clearTimeout( worker.collapseTimeoutId );
-				worker.collapseTimeoutId = undefined;
+				window.clearTimeout( worker.collapseTimeoutHandle );
+				worker.collapseTimeoutHandle = undefined;
 				
 			}
 			
@@ -1583,16 +1360,16 @@ var KAIOPUA = (function (main) {
 				
 				// clear collapse delay
 				
-				if ( typeof worker.collapseTimeoutId !== 'undefined' ) {
+				if ( typeof worker.collapseTimeoutHandle !== 'undefined' ) {
 					
-					window.clearTimeout( worker.collapseTimeoutId );
-					worker.collapseTimeoutId = undefined;
+					window.clearTimeout( worker.collapseTimeoutHandle );
+					worker.collapseTimeoutHandle = undefined;
 					
 				}
 				
 				// collapse after delay
 				
-				worker.collapseTimeoutId = window.setTimeout( function () {
+				worker.collapseTimeoutHandle = window.setTimeout( function () {
 					
 					main.dom_collapse( {
 						element: worker.$domElement

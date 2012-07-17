@@ -162,7 +162,7 @@
 		
 		this.reset();
 		
-		shared.signals.gamestop.add( this.reset, this );
+		shared.signals.gameStopped.add( this.reset, this );
 		
 		// add to global list
 		

@@ -78,9 +78,6 @@
 			"assets/modules/utils/ObjectMaker.js",
 			"assets/modules/core/Player.js",
 			"assets/modules/core/CameraControls.js",
-			"assets/modules/ui/Button.js",
-			"assets/modules/ui/Menu.js",
-			"assets/modules/ui/Inventory.js",
 			"assets/modules/ui/Messenger.js",
 			"assets/modules/characters/Character.js",
 			"assets/modules/characters/Hero.js",
@@ -186,9 +183,7 @@
 	_Game.add_to_scene = add_to_scene;
 	_Game.remove_from_scene = remove_from_scene;
 	
-	_Game.get_object_under_mouse = get_object_under_mouse;
-	
-	_Game.is_event_in_game = is_event_in_game;
+	_Game.get_object_under_pointer = get_object_under_pointer;
 	
 	// getters and setters
 	
@@ -314,11 +309,29 @@
         // game signals
 		
         shared.signals = shared.signals || {};
+		
         shared.signals.gamePaused = new signals.Signal();
         shared.signals.gameResumed = new signals.Signal();
-        shared.signals.gameUpdate = new signals.Signal();
-		shared.signals.gamestart = new signals.Signal();
-		shared.signals.gamestop = new signals.Signal();
+        shared.signals.gameUpdated = new signals.Signal();
+		shared.signals.gameStarted = new signals.Signal();
+		shared.signals.gameStopped = new signals.Signal();
+		
+		shared.signals.gamePointerPressed = new signals.Signal();
+		shared.signals.gamePointerReleased = new signals.Signal();
+		shared.signals.gamePointerTapped = new signals.Signal();
+		shared.signals.gamePointerHeld = new signals.Signal();
+		shared.signals.gamePointerMoved = new signals.Signal();
+		shared.signals.gamePointerWheel = new signals.Signal();
+		
+		// game events
+		
+		shared.domElements.$game.on( 'vmousedown', on_pointer_pressed )
+			.on( 'vmouseup vmousecancel', on_pointer_released )
+			.on( 'tap', on_pointer_tapped )
+			.on( 'taphold', on_pointer_held )
+			.on( 'vmousemove', on_pointer_moved )
+			.on( 'mousewheel DOMMouseScroll', on_pointer_wheel )
+			.on( 'contextmenu', on_context_menu );
 		
 		// renderer
 		
@@ -429,18 +442,19 @@
 		shared.domElements.$pauseMessage = $('#pauseMessage');
 		
 		// show menus nav
+		
 		main.dom_fade( {
-			element: shared.domElements.$navMenus.find( '.nav' ).filter( '.hidden' ),
+			element: shared.domElements.$navMenus.find( '.nav.hidden' )
 		} );
 		
 		// pause / resume
 		
-		shared.domElements.$buttonPauseGame.on( 'mouseup touchend', pause );
-		shared.domElements.$buttonResumeGame.on( 'mouseup touchend', resume );
+		shared.domElements.$buttonPauseGame.on( 'tap', pause );
+		shared.domElements.$buttonResumeGame.on( 'tap', resume );
 		
 		// if focus lost, pause game
 		
-		shared.signals.focuslose.add( pause );
+		shared.signals.focusLost.add( pause );
 		
 		// primary action items
 		
@@ -458,20 +472,13 @@
 		
 		// menu buttons
 		
-		shared.domElements.$buttonFarmingMenu.on( 'mouseup touchend', function () {
+		shared.domElements.$buttonFarmingMenu.on( 'tap', function () {
 			set_menu( { menu: shared.domElements.$menuFarming } );
 		} );
-		shared.domElements.$buttonOptionsMenu.on( 'mouseup touchend', function () {
+		shared.domElements.$buttonOptionsMenu.on( 'tap', function () {
 			set_menu( { menu: shared.domElements.$menuOptions } );
 		} );
 		
-		// menus
-		/*
-		main.dom_collapse( { 
-			element: shared.domElements.$menus,
-			initHidden: true
-		} );
-		*/
 		// all links that point to a location in page
 		
 		$( 'a[href^="#"]' ).each( function () {
@@ -491,7 +498,7 @@
 				
 				// add listeners to scroll to target smoothly
 				
-				$element.on( 'mouseup touchend', function () {
+				$element.on( 'tap', function () {
 					
 					// scroll to top position
 					
@@ -507,7 +514,7 @@
 			
 		// resize
 		
-        shared.signals.windowresized.add( resize );
+        shared.signals.windowResized.add( resize );
 		resize();
 		
 		// set ready
@@ -516,7 +523,7 @@
         
 		// start updating
         
-        shared.signals.update.add( update );
+        shared.signals.updated.add( update );
 		
 	}
 	
@@ -551,8 +558,8 @@
 		
 		// ui
 		
-		$( '#buttonStart' ).on( 'mouseup touchend', start );
-		$( '#buttonExitGame' ).on( 'mouseup touchend', stop );
+		$( '#buttonStart' ).on( 'tap', start );
+		$( '#buttonExitGame' ).on( 'tap', stop );
 		
 		// fade start menu in after short delay
 		
@@ -620,6 +627,183 @@
 		*/
 		
     }
+	
+	/*===================================================
+    
+    event functions
+    
+    =====================================================*/
+	
+	function on_pointer_pressed( e ) {
+		
+		var pointer;
+		
+		// is touch event
+		
+		if ( main.is_touch_event( e ) ) {
+			
+			main.handle_touch_event( e.originalEvent, on_pointer_pressed );
+			
+		}
+		else {
+			
+			shared.timeSinceInteraction = 0;
+			
+			pointer = main.get_pointer( e );
+			pointer.down = true;
+			
+			shared.signals.gamePointerPressed.dispatch( e );
+			
+		}
+        
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+		
+    }
+    
+    function on_pointer_released( e ) {
+		
+		// is touch event
+		
+		if ( main.is_touch_event( e ) ){
+			
+			main.handle_touch_event( e.originalEvent, on_pointer_released );
+		}
+		else {
+			
+			shared.timeSinceInteraction = 0;
+			
+			pointer = main.get_pointer( e );
+			pointer.down = false;
+			
+			shared.signals.gamePointerReleased.dispatch( e );
+        
+		}
+		
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+		
+    }
+	
+	function on_pointer_tapped ( e ) {
+		
+		// is touch event
+		
+		if ( main.is_touch_event( e ) ){
+			
+			main.handle_touch_event( e.originalEvent, on_pointer_tapped );
+		}
+		else {
+			
+			shared.timeSinceInteraction = 0;
+			
+			shared.signals.gamePointerTapped.dispatch( e );
+			
+		}
+		
+		e.preventDefault();
+        e.stopPropagation();
+        return false;
+		
+	}
+	
+	function on_pointer_held ( e ) {
+		
+		// is touch event
+		
+		if ( main.is_touch_event( e ) ){
+			
+			main.handle_touch_event( e.originalEvent, on_pointer_held );
+		}
+		else {
+			
+			shared.timeSinceInteraction = 0;
+			
+			shared.signals.gamePointerHeld.dispatch( e );
+			
+		}
+		
+		e.preventDefault();
+        e.stopPropagation();
+        return false;
+		
+	}
+    
+    function on_pointer_moved( e ) {
+		
+		var pointer;
+		
+		// is touch event
+		
+		if ( main.is_touch_event( e ) ){
+			
+			main.handle_touch_event( e.originalEvent, on_pointer_moved );
+		}
+		else {
+			
+			shared.timeSinceInteraction = 0;
+			
+			pointer = main.get_pointer( e );
+			
+			pointer.lx = pointer.x;
+			pointer.ly = pointer.y;
+			
+			pointer.x = e.pageX;
+			pointer.y = e.pageY;
+			
+			pointer.dx = pointer.x - pointer.lx;
+			pointer.dy = pointer.y - pointer.ly;
+			
+			shared.signals.gamePointerMoved.dispatch( e );
+			
+		}
+        
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+		
+    }
+	
+	function on_pointer_wheel ( e ) {
+		
+		var eo = e.originalEvent || e;
+		
+		shared.timeSinceInteraction = 0;
+		
+		// normalize scroll across browsers
+		// simple implementation, removes acceleration
+		
+		e.wheelDelta = eo.wheelDelta = ( ( eo.detail < 0 || eo.wheelDelta > 0 ) ? 1 : -1 ) * shared.pointerWheelSpeed;
+		
+        shared.signals.gamePointerWheel.dispatch( e );
+        
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+		
+    }
+	
+	function on_context_menu ( e ) {
+		
+		e.preventDefault();
+        e.stopPropagation();
+        return false;
+		
+	}
+	
+	function on_scrolled ( x, y ) {
+		
+		// pause if page scrolled too far
+		
+		if ( y >= shared.domElements.$game.height() * 0.5 ) {
+			
+			pause();
+			
+		}
+		
+	}
 	
 	/*===================================================
     
@@ -907,11 +1091,11 @@
 	
 	/*===================================================
     
-    mouse functions
+    pointer functions
     
     =====================================================*/
 	
-	function get_object_under_mouse ( parameters ) {
+	function get_object_under_pointer ( parameters ) {
 		
 		var intersection;
 		
@@ -925,7 +1109,7 @@
 			
 		}
 		
-		parameters.mouse = parameters.mouse || main.get_mouse();
+		parameters.pointer = parameters.pointer || main.get_pointer();
 		parameters.camera = parameters.camera || camera;
 		
 		// intersection
@@ -983,7 +1167,7 @@
 				
 			};
 		
-		// pause game while switching
+		// pause game while changing sections
 		
 		pause( true );
 		
@@ -1145,9 +1329,9 @@
     =====================================================*/
     
     function start () {
-		console.log('GAME start?');
+		
 		if ( started === false ) {
-			console.log(' > GAME START');
+			console.log('GAME: START');
 			// set started
 			
 			started = true;
@@ -1194,23 +1378,23 @@
 			
 			// signal
 			
-			shared.signals.gamestart.dispatch();
+			shared.signals.gameStarted.dispatch();
 			
 		}
 		
     }
 	
 	function stop () {
-		console.log('GAME stop?');
+		
 		if ( started === true ) {
-			console.log('> GAME STOP');
+			console.log('GAME: STOP');
 			started = false;
 			
 			// TODO: clear in game ui
 			
 			// signal
 			
-			shared.signals.gamestop.dispatch();
+			shared.signals.gameStopped.dispatch();
 			
 			// set launcher section
 			
@@ -1234,29 +1418,16 @@
     
     =====================================================*/
 	
-	function on_scroll ( x, y ) {
-		
-		// pause if page scrolled too far
-		
-		if ( y >= shared.domElements.$game.height() * 0.5 ) {
-			
-			pause();
-			
-		}
-		
-	}
-    
     function pause ( preventDefault ) {
-		console.log('GAME pause?');
 		// set state
 		
         if (paused === false) {
-            console.log('> GAME PAUSE');
+            console.log('GAME: PAUSE');
             paused = true;
 			
 			// stop listening for scroll
 			
-			shared.signals.scroll.remove( on_scroll );
+			shared.signals.scrolled.remove( on_scrolled );
 			
 			// hide pause button
 			
@@ -1287,7 +1458,7 @@
 				
 				// add listener for click on transitioner
 				
-				shared.domElements.$transitioner.on( 'mouseup.resume touchend.resume', resume );
+				shared.domElements.$transitioner.on( 'tap.resume', resume );
 				
 				// show pause message
 				
@@ -1295,7 +1466,7 @@
 					element: shared.domElements.$pauseMessage,
 					show: true
 				} );
-				shared.domElements.$pauseMessage.on( 'mouseup.resume touchend.resume', resume );
+				shared.domElements.$pauseMessage.on( 'tap.resume', resume );
 				
 			}
 			
@@ -1320,9 +1491,9 @@
     }
     
     function resume () {
-		console.log('GAME resume?');
+		
         if ( paused === true && _ErrorHandler.errorState !== true && ( typeof _Messenger === 'undefined' || _Messenger.active !== true ) ) {
-			console.log(' > GAME RESUME');
+			console.log('GAME: RESUME');
 			// transitioner
 			
 			shared.domElements.$transitioner.off( '.resume' );
@@ -1364,7 +1535,7 @@
 					if ( paused === false ) {
 						
 						// start listening for scroll
-						shared.signals.scroll.add( on_scroll );
+						shared.signals.scrolled.add( on_scrolled );
 						
 					}
 					
@@ -1412,7 +1583,7 @@
 			
 			// update all others
 			
-			shared.signals.gameUpdate.dispatch( timeDelta, timeDeltaMod );
+			shared.signals.gameUpdated.dispatch( timeDelta, timeDeltaMod );
 			
 			// have camera bg mimic camera rotation
 			
@@ -1475,20 +1646,6 @@
 	utility
 	
 	=====================================================*/
-	
-	function is_event_in_game ( e ) {
-		
-		var result = false;
-		
-		if ( shared.domElements.$game ) {
-			
-			result = shared.domElements.$game.find( e.target ).length > 0;
-			
-		}
-		
-		return result;
-		
-	}
 	
 	function on_error ( error, url, lineNumber ) {
         

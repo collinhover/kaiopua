@@ -13,9 +13,6 @@
 		_Plant = {},
 		_GridElement,
 		_GridModule,
-		_UIElement,
-		_Button,
-		_GUI,
 		_ObjectHelper,
 		utilVec31Grow;
 	
@@ -30,9 +27,6 @@
 		requirements: [
 			"assets/modules/puzzles/GridElement.js",
 			"assets/modules/puzzles/GridModule.js",
-			"assets/modules/ui/UIElement.js",
-			"assets/modules/ui/Button.js",
-			"assets/modules/ui/GUI.js",
 			"assets/modules/utils/ObjectHelper.js",
 			{ path: "assets/models/Taro_Plant_001.js", type: 'model' }
 		],
@@ -46,14 +40,11 @@
     
     =====================================================*/
 	
-	function init_internal( ge, gm, uie, btn, gui, oh, plantGeometry ) {
+	function init_internal( ge, gm, oh, plantGeometry ) {
 		console.log('internal plant', _Plant);
 		
 		_GridElement = ge;
 		_GridModule = gm;
-		_UIElement = uie;
-		_Button = btn;
-		_GUI = gui;
 		_ObjectHelper = oh;
 		
 		utilVec31Grow = new THREE.Vector3();
@@ -83,7 +74,6 @@
 		
 		_Plant.Instance.prototype.reset_material = reset_material;
 		
-		_Plant.Instance.prototype.change_rotator = change_rotator;
 		_Plant.Instance.prototype.change_seed = change_seed;
 		_Plant.Instance.prototype.change_module = change_module;
 		
@@ -127,7 +117,6 @@
 		// ui
 		
 		this.change_seed( parameters.seed );
-		this.change_rotator( parameters.rotator );
 		
 		// reset
 		
@@ -195,12 +184,6 @@
 				
 			}
 			
-			// TODO 
-			// actually clone uielements
-			
-			c.change_seed( this.seed );
-			c.change_rotator( this.rotator );
-			
 			// reset
 			
 			c.reset();
@@ -217,113 +200,26 @@
     
     =====================================================*/
 	
-	function change_rotator ( parameters ) {
-		
-		var parentPrevious = false;
-		
-		// if exists, hide/clear
-		
-		if ( this.rotator instanceof _UIElement.Instance ) {
-			
-			parentPrevious = this.rotator.parent;
-			
-			this.rotator.hide( { remove: true, time: 0 } );
-			
-		}
-		
-		// if is uielement
-		if ( parameters instanceof _UIElement.Instance ) {
-		
-			this.rotator = parameters;
-			
-		}
-		// else create uielement
-		else {
-			
-			// handle parameters
-			
-			parameters = parameters || {};
-			
-			parameters.id = parameters.id || 'plant_rotator';
-			parameters.image = parameters.image || shared.pathToIcons + 'rotate_64.png';
-			parameters.imageSize = main.is_number( parameters.imageSize ) ? parameters.imageSize : _UIElement.sizes.iconLarge;
-			parameters.width = main.is_number( parameters.width ) ? parameters.width : _UIElement.sizes.iconLargeContainer;
-			parameters.height = main.is_number( parameters.height ) ? parameters.height : _UIElement.sizes.iconLargeContainer;
-			parameters.timeShow = main.is_number( parameters.timeShow ) ? parameters.timeShow : _Plant.timeShow;
-			parameters.timeHide = main.is_number( parameters.timeHide ) ? parameters.timeHide : _Plant.timeHide;
-			parameters.opacityShow = main.is_number( parameters.opacityShow ) ? parameters.opacityShow : _Plant.opacityRotator;
-			parameters.pointerEvents = false;
-			parameters.circle = true;
-			
-			this.rotator = new _Button.Instance( parameters );
-			
-			this.rotator.hide( { time: 0 } );
-			
-			if ( parentPrevious ) {
-				
-				this.rotator.show( { parent: parentPrevious } );
-				
-			}
-			
-		}
-		
-	}
-	
-	/*===================================================
-    
-    seed
-    
-    =====================================================*/
-	
 	function change_seed( parameters ) {
 		
-		var parentPrevious = false;
+		// if exists, remove
 		
-		// if exists, hide/clear
-		
-		if ( this.seed instanceof _UIElement.Instance ) {
+		if ( this.$seed ) {
 			
-			parentPrevious = this.seed.parent;
 			
-			this.seed.hide( { remove: true, time: 0 } );
 			
 		}
 		
-		// if is uielement
-		if ( parameters instanceof _UIElement.Instance ) {
+		// handle parameters
 		
-			this.seed = parameters;
-			
-		}
-		// else create uielement
-		else {
-			
-			// handle parameters
-			
-			parameters = parameters || {};
-			
-			parameters.id = parameters.id || 'plant_seed';
-			parameters.image = parameters.image || shared.pathToIcons + 'plant_64.png';
-			parameters.imageSize = main.is_number( parameters.imageSize ) ? parameters.imageSize : _UIElement.sizes.iconMedium;
-			parameters.width = main.is_number( parameters.width ) ? parameters.width : _UIElement.sizes.iconMediumContainer;
-			parameters.height = main.is_number( parameters.height ) ? parameters.height : _UIElement.sizes.iconMediumContainer;
-			parameters.timeShow = main.is_number( parameters.timeShow ) ? parameters.timeShow : _Plant.timeShow;
-			parameters.timeHide = main.is_number( parameters.timeHide ) ? parameters.timeHide : _Plant.timeHide;
-			parameters.opacityShow = main.is_number( parameters.opacityShow ) ? parameters.opacityShow : _Plant.opacitySeed;
-			parameters.pointerEvents = false;
-			parameters.circle = true;
-			
-			this.seed = new _Button.Instance( parameters );
-			
-			this.seed.hide( { time: 0 } );
-			
-			if ( parentPrevious ) {
-				
-				this.seed.show( { parent: parentPrevious } );
-				
-			}
-			
-		}
+		parameters = parameters || {};
+		//parameters.$element
+		//parameters.image = parameters.image || shared.pathToIcons + 'plant_64.png';
+		parameters.timeShow = main.is_number( parameters.timeShow ) ? parameters.timeShow : _Plant.timeShow;
+		parameters.timeHide = main.is_number( parameters.timeHide ) ? parameters.timeHide : _Plant.timeHide;
+		parameters.opacityShow = main.is_number( parameters.opacityShow ) ? parameters.opacityShow : _Plant.opacitySeed;
+		
+		// create new
 		
 	}
 	
@@ -380,9 +276,7 @@
 				this.material.transparent = true;
 				this.material.opacity = _Plant.opacityVacant;
 				
-				this.seed.apply_css( 'background-color', _GridModule.colors.vacant.getContextStyle() );
-				
-				this.seed.show( { opacity: _Plant.opacityVacantSeed } );
+				//this.$seed = this.$seedSuccess
 				
 			}
 			// unsuccessful, but tested on an actual module
@@ -393,9 +287,7 @@
 				this.material.transparent = true;
 				this.material.opacity = _Plant.opacityOccupied;
 				
-				this.seed.apply_css( 'background-color', _GridModule.colors.occupied.getContextStyle() );
-				
-				this.seed.show( { opacity: _Plant.opacityOccupiedSeed } );
+				//this.$seed = this.$seedFail
 			
 			}
 			// base state
@@ -403,9 +295,7 @@
 				
 				this.reset_material();
 				
-				this.seed.apply_css( this.seed.theme.stateLast );
-				
-				this.seed.show( { opacity: _Plant.opacitySeed } );
+				//this.$seed = this.$seedBase
 					
 			}
 			

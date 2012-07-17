@@ -12,7 +12,6 @@
 		assetPath = "assets/modules/farming/Planting.js",
 		_Planting = {},
 		_Game,
-		_GUI,
 		_Grid,
 		_Puzzle,
 		_GridModule,
@@ -33,7 +32,6 @@
 		data: _Planting,
 		requirements: [
 			"assets/modules/core/Game.js",
-			"assets/modules/ui/GUI.js",
 			"assets/modules/puzzles/Puzzle.js",
 			"assets/modules/puzzles/Grid.js",
 			"assets/modules/puzzles/GridModule.js",
@@ -52,11 +50,10 @@
     
     =====================================================*/
 	
-	function init_internal ( g, gui, pzl, gr, gm, gmodel, pl, mh, oh ) {
+	function init_internal ( g, pzl, gr, gm, gmodel, pl, mh, oh ) {
 		console.log('internal planting', _Planting);
 		
 		_Game = g;
-		_GUI = gui;
 		_Puzzle = pzl;
 		_Grid = gr;
 		_GridModule = gm;
@@ -86,12 +83,12 @@
 		
 		_Planting.Instance.prototype.setup = setup;
 		_Planting.Instance.prototype.start = start;
-		_Planting.Instance.prototype.on_mouse_moved = on_mouse_moved;
+		_Planting.Instance.prototype.on_pointer_moved = on_pointer_moved;
 		_Planting.Instance.prototype.update = update;
 		_Planting.Instance.prototype.complete = complete;
 		_Planting.Instance.prototype.stop = stop;
 		
-		_Planting.Instance.prototype.get_planting_object_under_mouse = get_planting_object_under_mouse;
+		_Planting.Instance.prototype.get_planting_object_under_pointer = get_planting_object_under_pointer;
 		
 		_Planting.Instance.prototype.change_field = change_field;
 		_Planting.Instance.prototype.change_module = change_module;
@@ -159,7 +156,7 @@
 	
 	=====================================================*/
 	
-	function get_planting_object_under_mouse ( parameters ) {
+	function get_planting_object_under_pointer ( parameters ) {
 		
 		var i, l,
 			field,
@@ -167,7 +164,7 @@
 			modules,
 			plant,
 			plantingObjects = [],
-			mouse = this.mouse,
+			pointer = this.pointer,
 			targetObject;
 		
 		// handle parameters
@@ -232,12 +229,12 @@
 			
 		}
 		
-		// find if any planting objects under mouse
+		// find if any planting objects under pointer
 		
-		targetObject = _Game.get_object_under_mouse( {
+		targetObject = _Game.get_object_under_pointer( {
 			objects: plantingObjects,
 			hierarchical: false,
-			mouse: mouse
+			pointer: pointer
 		} );
 		
 		return targetObject;
@@ -256,9 +253,9 @@
 		
 		parameters = parameters || {};
 		
-		// store mouse
+		// store pointer
 				
-		this.mouse = main.get_mouse( parameters.event );
+		this.pointer = main.get_pointer( parameters.event );
 		
 		// if step rotate
 		
@@ -391,10 +388,10 @@
 			}
 		
 		}
-		// else if any plants under mouse
+		// else if any plants under pointer
 		else {
 			
-			targetObject = this.get_planting_object_under_mouse( { modules: false, character: false, plants: true } );
+			targetObject = this.get_planting_object_under_pointer( { modules: false, character: false, plants: true } );
 			
 			// if is a grid model
 			
@@ -439,9 +436,9 @@
 			
 			this.started = true;
 			
-			// dim ui to focus on planting
+			// TODO: dim ui to focus on planting
 					
-			_GUI.layers.ui.hide( { opacity: 0.25, callback: function () { _GUI.layers.ui.set_pointer_events( false, true ); } } );
+			
 			
 			// start updating planting
 			
@@ -449,23 +446,22 @@
 			
 			// signals
 			
-			shared.signals.gameUpdate.add( this.update, this );
-			shared.signals.mousemoved.add( this.on_mouse_moved, this );
+			shared.signals.gameUpdated.add( this.update, this );
+			shared.signals.gamePointerMoved.add( this.on_pointer_moved, this );
 			
 		}
 		
 	}
 	
-	function on_mouse_moved () {
-		console.log(' > PLANTING: mouse move!');
+	function on_pointer_moved () {
+		console.log(' > PLANTING: pointer move!');
 		var targetObject;
 		
 		// if has plant, update seed position
 		
 		if ( this.plant instanceof _Plant.Instance ) {
 			
-			this.plant.seed.x = this.mouse.x - this.plant.seed.outerWidthHalf;
-			this.plant.seed.y = this.mouse.y - this.plant.seed.outerHeightHalf;
+			//this.plant.$seed
 			
 		}
 		
@@ -479,9 +475,9 @@
 		// else regular update
 		else {
 			
-			// find if any planting objects under mouse
+			// find if any planting objects under pointer
 			
-			targetObject = this.get_planting_object_under_mouse( { modules: true } );
+			targetObject = this.get_planting_object_under_pointer( { modules: true } );
 			
 			// change to new module
 			
@@ -513,9 +509,9 @@
 			plantPlantedNodes,
 			plantPlantedClone;
 		
-		// find if any planting objects under mouse
+		// find if any planting objects under pointer
 				
-		targetObject = this.get_planting_object_under_mouse( { modules: true } );
+		targetObject = this.get_planting_object_under_pointer( { modules: true } );
 		
 		// if target is valid
 		
@@ -595,8 +591,8 @@
 		
 		// stop updating
 		
-		shared.signals.gameUpdate.remove( this.update, this );
-		shared.signals.mousemoved.remove( on_mouse_moved, this );
+		shared.signals.gameUpdated.remove( this.update, this );
+		shared.signals.gamePointerMoved.remove( on_pointer_moved, this );
 		
 		// stop
 			
@@ -614,10 +610,9 @@
 		
 		this.change_module();
 		
-		// return ui to normal state
+		// TODO: return ui to normal state
 		
-		_GUI.layers.ui.show();
-		_GUI.layers.ui.set_pointer_events( false );
+		
 		
 	}
 	
@@ -752,11 +747,11 @@
 				
 				// hide seed
 				
-				this.plant.seed.hide( { remove: true, time: 0 } );
+				//this.plant.$seed
 				
 				// cursor
 				
-				_GUI.container.apply_css( 'cursor', 'auto' );
+				shared.domElements.$game.css( 'cursor', 'auto' );
 				
 			}
 			
@@ -781,11 +776,11 @@
 				
 				// show seed
 				
-				this.plant.seed.show( { parent: _GUI.layers.uiPriority } );
+				//this.plant.$seed
 				
 				// cursor
 				
-				_GUI.container.apply_css( 'cursor', 'pointer' );
+				shared.domElements.$game.css( 'cursor', 'pointer' );
 				
 				// start planting
 			
@@ -837,22 +832,22 @@
 		
 		var plant = this.plant,
 			r = this.rotation,
-			mouse = this.mouse,
-			mx = mouse.x,
-			my = mouse.y,
-			mDist = Math.sqrt( Math.pow( mouse.x - r.x0, 2 ) + Math.pow( mouse.y - r.y0, 2 ) ),
+			pointer = this.pointer,
+			mx = pointer.x,
+			my = pointer.y,
+			mDist = Math.sqrt( Math.pow( pointer.x - r.x0, 2 ) + Math.pow( pointer.y - r.y0, 2 ) ),
 			ax, ay, bx, by,
 			angleA, angleB, radians;
 		
 		// keep track of last 2 locations
 		
 		r.x2 = r.x1;
-		r.x1 = mouse.x;
+		r.x1 = pointer.x;
 		
 		r.y2 = r.y1;
-		r.y1 = mouse.y;
+		r.y1 = pointer.y;
 		
-		// if has 3 numbers to work with, and mouse is at least minimum distance from rotation point
+		// if has 3 numbers to work with, and pointer is at least minimum distance from rotation point
 		
 		if ( main.is_number( r.x2 ) && mDist >= this.rotationDistanceMin ) {
 			
@@ -880,19 +875,11 @@
 				
 				plant.rotate( radians, this.module, true, false );
 				
-				// if rotator needed
+				// rotate seed
 				
 				if ( r.rotated !== true ) {
 					
-					// hide seed temporarily
-					
-					this.plant.seed.hide( { remove: true, time: 0 } );
-					
-					// rotator
-					
-					this.plant.rotator.show( { parent: _GUI.layers.uiPriority } );
-					
-					this.plant.rotator.set_position( r.x0 - this.plant.rotator.widthHalf, r.y0 - this.plant.rotator.heightHalf );
+					//this.plant.$seed
 					
 				}
 				
@@ -910,9 +897,7 @@
 		console.log(' > PLANTING: rotation STOP ');
 		if ( this.plant instanceof _Plant.Instance ) {
 			
-			this.plant.seed.show( { parent: _GUI.layers.uiPriority } );
-				
-			this.plant.rotator.hide( { remove: true } );
+			//this.plant.$seed
 			
 			this.plant.rotate_reset();
 		
