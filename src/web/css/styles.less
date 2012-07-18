@@ -156,6 +156,7 @@ html, body {
 -------------------------*/
 
 * {
+	position: relative;
 	pointer-events: auto;
 }
 
@@ -231,11 +232,34 @@ html, body {
 	padding: 1px;
 }
 
+/* badges 
+-------------------------*/
+
+.badge-top {
+	position: absolute;
+	top: 4px;
+}
+
+.badge-bottom {
+	position: absolute;
+	bottom: 4px;
+}
+
+.badge-left {
+	position: absolute;
+	left: 2px;
+}
+
+.badge-right {
+	position: absolute;
+	right: 2px;
+}
+
 /* buttons 
 -------------------------*/
 
 .btn {
-	
+	z-index: 1;
 }
 
 .btn-huge {
@@ -315,6 +339,7 @@ html, body {
 
 a {
 	display: inline-block;
+	z-index: 1;
 }
 
 a, .navbar .nav > li > a {
@@ -322,10 +347,6 @@ a, .navbar .nav > li > a {
 	
 	&:hover {
 		cursor: pointer;
-	}
-	
-	.disabled, &.disabled, &.disabled:hover {
-		color: @white;
 	}
 	
 }
@@ -358,8 +379,6 @@ a, .navbar .nav > li > a {
 	.nav {
 		.inline-block;
 		float: none;
-		margin-bottom: -2px;
-		
 	}
 	
 	.thumbnails {
@@ -405,12 +424,15 @@ a, .navbar .nav > li > a {
 /* navbar 
 -------------------------*/
 
-
+.navbar {
+	z-index: 3;
+}
 
 /* subnavbar 
 -------------------------*/
 
 .subnavbar {
+	z-index: 2;
 	
 	.navbar-inner {
 		min-height: 0;
@@ -538,12 +560,12 @@ a, .navbar .nav > li > a {
 }
 
 .is-sticky {
-	z-index: 1020;
 	
 	.subnavbar, &.subnavbar {
 		.fullWidth;
 		z-index: 1010;
 	}
+	
 }
 
 /* subhead 
@@ -775,11 +797,12 @@ a, .navbar .nav > li > a {
 			right: 0;
 			
 			.primaryAction-item {
-				padding: 20px;
-				margin-bottom: 10px;
+				padding: 10px;
 			}
 			
-			
+			.primaryAction-item:last-child {
+				margin-bottom: 20px;
+			}
 			
 		}
 		
@@ -903,7 +926,7 @@ a, .navbar .nav > li > a {
 -------------------------*/
 
 .browsers {
-    position: relative;
+    margin-bottom: 9px;
 	
 	.browser-icon {
 		background-position: 50% 0;

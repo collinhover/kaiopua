@@ -197,6 +197,41 @@
 		<!-- status inactive -->
 		<div id="statusInactive" class="hidden">
 			
+			<div id="errorGeneral" class="status-item hidden">
+				<div class="hero-unit squire-unit error">
+					<h2 class="error-header logo-type">Well, this is embarrassing!</h2>
+					<p class="error-body">We tried to catch every bug, but it looks like one got through. Please let us know by <a href='https://github.com/collinhover/kaiopua/issues' target='_blank'>submitting an issue</a> report.</p>
+					<p><small>(you can also try to <a href='index.html' class="btn btn-large">refresh</a> to fix the problem)</small></p>
+				</div>
+			</div>
+			
+			<div id="errorWebGLBrowser" class="status-item hidden">
+				<div class="hero-unit squire-unit error">
+					<h2 class="error-header logo-type">Oops, we need WebGL!</h2>
+					<p class="error-body">We're sorry, but it appears that your browser does not support WebGL. For more information visit <a href='http://get.webgl.org' target='_blank'>Get WebGL</a> or try upgrading to one of these friendly browsers:</p>
+					<ul class="nav nav-inline browsers">
+						<li>
+							<a href="http://www.google.com/chrome/" target="_blank" class="chrome">Chrome</a>
+						</li>
+						<li>
+							<a href="http://www.mozilla.org/firefox/" target="_blank" class="firefox">Firefox</a>
+						</li>
+						<li>
+							<a href="http://www.apple.com/safari/" target="_blank" class="safari">Safari</a>
+						</li>
+					</ul>
+					<p><small>(you can also try to <a href='index.html' class="btn btn-large">refresh</a> to fix the problem)</small></p>
+				</div>
+			</div>
+			
+			<div id="errorWebGLComputer" class="status-item hidden">
+				<div class="hero-unit squire-unit error">
+					<h2 class="error-header logo-type">Oops, we need WebGL!</h2>
+					<p class="error-body">Although your browser seems to support WebGL, it appears as if your computer does not. For more information visit the <a href='http://get.webgl.org/troubleshooting/' target='_blank'>WebGL troubleshooting</a> page.</p>
+					<p><small>(you can also try to <a href='index.html' class="btn btn-large">refresh</a> to fix the problem)</small></p>
+				</div>
+			</div>
+			
 			<div id='worker' class="status-item hidden">
 				<div class="hero-unit squire-unit">
 					<div class="row">
@@ -266,36 +301,90 @@
 		<!-- inGame -->
 		<div id="inGame" class="unselectable ignore-pointer">
 			
-			<!-- errors
-			<div id="errors">
-				
-			</div>
-			END errors -->
-			
 			<div id="primaryActionsInactive" class="hidden">
 				
-				<div id="navStart" class="primaryAction-item ignore-pointer">
-					<ul class="nav nav-inline nav-buttons ignore-pointer">
-						<li class="disabled">
-							<button id="buttonLoad" class="btn btn-large btn-inverse btn-circle-large">
-								<img src="assets/icons/load_rev_64.png" class="iconk-large">
-								<h2><small>load</small></h2>
-							</button>
-						</li>
-						<li id="buttonStart">
-							<button class="btn btn-huge btn-inverse btn-circle-giant">
-								<img src="assets/icons/face_smile_rev_64.png" class="iconk-giant">
-								<h2 class="logo-type">Start</h2>
-							</button>
-						</li>
-						<li class="disabled">
-							<button id="buttonContinue" class="btn btn-large btn-inverse btn-circle-large">
-								<img src="assets/icons/rock_rev_64.png" class="iconk-large">
-								<p><small>continue</small></p>
-							</button>
-						</li>
-					</ul>
-				</div>
+				<ul id="navStart"  class="primaryAction-item nav nav-inline nav-buttons ignore-pointer">
+					<li id="buttonLoad" class="disabled">
+						<button class="btn btn-large btn-inverse btn-circle-large">
+							<img src="assets/icons/load_rev_64.png" class="iconk-large">
+							<h2><small>load</small></h2>
+						</button>
+					</li>
+					<li id="buttonStart">
+						<button class="btn btn-huge btn-inverse btn-circle-giant">
+							<img src="assets/icons/face_smile_rev_64.png" class="iconk-giant">
+							<h2 class="logo-type">Start</h2>
+						</button>
+					</li>
+					<li id="buttonContinue" class="disabled">
+						<button class="btn btn-large btn-inverse btn-circle-large">
+							<img src="assets/icons/rock_rev_64.png" class="iconk-large">
+							<p><small>continue</small></p>
+						</button>
+					</li>
+				</ul>
+				
+				<ul id="navShapesActive" class="primaryAction-item nav nav-inline nav-buttons ignore-pointer hidden">
+					
+				</ul>
+				
+				<ul id="navShapesInactive" class="primaryAction-item nav nav-inline nav-buttons ignore-pointer hidden">
+					<li id="buttonPlantShapeMonomino">
+						<button class="btn btn-large btn-inverse btn-circle-small">
+							<img src="assets/icons/shape_monomino_rev_64.png" class="iconk-large">
+						</button>
+					</li>
+					<li id="buttonPlantShapeDomino">
+						<button class="btn btn-large btn-inverse btn-circle-small">
+							<img src="assets/icons/shape_domino_rev_64.png" class="iconk-large">
+						</button>
+					</li>
+					<li id="buttonPlantShapeTrominoI">
+						<button class="btn btn-large btn-inverse btn-circle-small">
+							<img src="assets/icons/shape_tromino_i_rev_64.png" class="iconk-large">
+						</button>
+					</li>
+					<li id="buttonPlantShapeTrominoL">
+						<button class="btn btn-large btn-inverse btn-circle-small">
+							<img src="assets/icons/shape_tromino_l_rev_64.png" class="iconk-large">
+						</button>
+					</li>
+					<li id="buttonPlantShapeTetrominoI">
+						<button class="btn btn-large btn-inverse btn-circle-small">
+							<img src="assets/icons/shape_tetromino_i_rev_64.png" class="iconk-large">
+						</button>
+					</li>
+					<li id="buttonPlantShapeTetrominoJ">
+						<button class="btn btn-large btn-inverse btn-circle-small">
+							<img src="assets/icons/shape_tetromino_j_rev_64.png" class="iconk-large">
+						</button>
+					</li>
+					<li id="buttonPlantShapeTetrominoL">
+						<button class="btn btn-large btn-inverse btn-circle-small">
+							<img src="assets/icons/shape_tetromino_l_rev_64.png" class="iconk-large">
+						</button>
+					</li>
+					<li id="buttonPlantShapeTetrominoO">
+						<button class="btn btn-large btn-inverse btn-circle-small">
+							<img src="assets/icons/shape_tetromino_o_rev_64.png" class="iconk-large">
+						</button>
+					</li>
+					<li id="buttonPlantShapeTetrominoS">
+						<button class="btn btn-large btn-inverse btn-circle-small">
+							<img src="assets/icons/shape_tetromino_s_rev_64.png" class="iconk-large">
+						</button>
+					</li>
+					<li id="buttonPlantShapeTetrominoT">
+						<button class="btn btn-large btn-inverse btn-circle-small">
+							<img src="assets/icons/shape_tetromino_t_rev_64.png" class="iconk-large">
+						</button>
+					</li>
+					<li id="buttonPlantShapeTetrominoZ">
+						<button class="btn btn-large btn-inverse btn-circle-small">
+							<img src="assets/icons/shape_tetromino_z_rev_64.png" class="iconk-large">
+						</button>
+					</li>
+				</ul>
 				
 			</div>
 			
