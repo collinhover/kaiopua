@@ -212,43 +212,35 @@
 		
 		parameters = parameters || {};
 		
-		parameters.center = true;
-		
 		// prototype constructor
 		
 		_Model.Instance.call( this, parameters );
 		
 		// properties
 		
-		this.vertexDistanceMergeLimit = main.is_number( parameters.vertexDistanceMergeLimit ) ? parameters.vertexDistanceMergeLimit : 5;
-		
-		// store puzzle reference
-		
+		this.modules = [];
 		this.puzzle = parameters.puzzle;
+		this.vertexDistanceMergeLimit = main.is_number( parameters.vertexDistanceMergeLimit ) ? parameters.vertexDistanceMergeLimit : 5;
 		
 		// signal
 		
 		this.stateChanged = new signals.Signal();
 		
-		// init modules
+		// handle modulesGeometry
 		
-		this.modules = [];
+		modulesGeometry = parameters.modulesGeometry;
 		
-		// if parameters passed modules as string
-		
-		if ( typeof parameters.modulesGeometry === 'string' ) {
+		if ( typeof modulesGeometry === 'string' ) {
 			
-			parameters.modulesGeometry = main.get_asset_data( parameters.modulesGeometry );
+			modulesGeometry = main.get_asset_data( modulesGeometry );
 			
 		}
-		
-		// if parameters passed modules as geometry
-		
-		if ( parameters.modulesGeometry instanceof THREE.Geometry ) {
+		console.log( modulesGeometry );
+		if ( modulesGeometry instanceof THREE.Geometry ) {
 			
-			// store original modules geometry
+			// store original modules modulesGeometry
 			
-			this.modulesGeometry = parameters.modulesGeometry;
+			this.modulesGeometry = modulesGeometry;
 			
 			// create new module for each face
 			
@@ -256,7 +248,7 @@
 			vertices = this.modulesGeometry.vertices;
 			faceUvs = this.modulesGeometry.faceUvs[ 0 ];
 			faceVertexUvs = this.modulesGeometry.faceVertexUvs[ 0 ];
-			console.log(this.puzzle.id, 'grid CREATING MODULES');
+			console.log(this.puzzle, this.puzzle.name, 'grid CREATING MODULES');
 			for ( i = 0, l = faces.length; i < l; i++ ) {
 				
 				face = faces[ i ];
@@ -333,9 +325,14 @@
 				
 				// init
 				
-				moduleInstance = typeof parameters.moduleInstance !== 'undefined' && parameters.moduleInstance.prototype instanceof _GridModule.Instance ? parameters.moduleInstance : _GridModule.Instance;
+				this.moduleInstance = typeof parameters.moduleInstance !== 'undefined' && parameters.moduleInstance.prototype instanceof _GridModule.Instance ? parameters.moduleInstance : _GridModule.Instance;
 				
-				module = new moduleInstance( { geometry: moduleGeometry } );
+				module = new this.moduleInstance( { 
+					geometry: moduleGeometry,
+					physics: {
+						bodyType: 'mesh'
+					}
+				} );
 				
 				// store
 				

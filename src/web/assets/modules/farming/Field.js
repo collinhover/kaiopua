@@ -104,14 +104,13 @@
 	
 	function Field ( parameters ) {
 		
-		var pGrid;
+		var parametersGrid;
 		
 		// handle parameters
 		
 		parameters = parameters || {};
 		
-		pGrid = parameters.grid = parameters.grid || {};
-		pGrid.moduleInstance = _Dirt.Instance;
+		parameters.moduleInstance = _Dirt.Instance;
 		
 		// prototype constructor
 		
@@ -128,7 +127,7 @@
 		
 		// create score map
 		
-		this.scoreMap = generate_score_map( parameters.scores );
+		this.scoreMap = build_score_map( parameters.scores );
 		this.scoreMap = add_rewards_to_scores( this.scoreMap, parameters.rewards );
 		
 		// reset
@@ -450,7 +449,7 @@
 	
 	=====================================================*/
 	
-	function generate_score_map ( parameters ) {
+	function build_score_map ( parameters ) {
 		
 		var i, l,
 			scoreBase = _Field.scores.base,

@@ -1,7 +1,7 @@
 /*
  *
  * Dirt.js
- * Basic grid module of field.
+ * Type of puzzle grid module.
  *
  * @author Collin Hover / http://collinhover.com/
  *

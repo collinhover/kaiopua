@@ -146,7 +146,7 @@
 		_ObjectHelper.face_bounding_radius = face_bounding_radius;
 		
 		_ObjectHelper.center_offset = center_offset;
-		_ObjectHelper.object_center = object_center;
+		_ObjectHelper.center = center;
 		
 		_ObjectHelper.rotation_offset = rotation_offset;
 		_ObjectHelper.center_rotation = center_rotation;
@@ -665,7 +665,7 @@
 		
 	}
 	
-	function object_center ( object ) {
+	function center ( object ) {
 		
 		var offset = center_offset( object ),
 			offsetMat4 = utilMat41Center.makeTranslation( offset.x, offset.y, offset.z );

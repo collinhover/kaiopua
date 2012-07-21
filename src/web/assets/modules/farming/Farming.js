@@ -57,10 +57,10 @@
 		_Farming.give_plants = give_plants;
 		_Farming.remove_plants = remove_plants;
 		
-		Object.defineProperty( _Farming, 'plantTypesBase', { 
+		Object.defineProperty( _Farming, 'plantShapesBase', { 
 			get: function () {
 				
-				return [ 'SHAPE_3x3_000010000', 'SHAPE_3x3_010011000', 'SHAPE_3x3_010111000' ];
+				return [ 'MONOMINO', 'DOMINO', 'TROMINO_L' ];
 			
 			}
 		} );
@@ -124,11 +124,11 @@
 				
 				plantsToRemove = plants.slice( 0 );
 				
-				// remove all non-starter plants
+				// remove all non-starter plant shapes
 				
-				for ( j = 0, k = _Farming.plantTypesBase.length; j < k; j++ ) {
+				for ( j = 0, k = _Farming.plantShapesBase.length; j < k; j++ ) {
 					
-					index = plantsToRemove.indexOf( _Farming.plantTypesBase[ j ] );
+					index = plantsToRemove.indexOf( _Farming.plantShapesBase[ j ] );
 					
 					if ( index !== -1 ) {
 						
@@ -249,7 +249,7 @@
 				_Messenger.show_message( { 
 					image: shared.pathToIcons + "close_rev_64.png",
 					title: "Planting Basics: Removing",
-					body: "To <span class='highlight'>delete</span> a plant, <span class='highlight'>double tap it</span> or move and drop it outside of its field.",
+					body: "To <span class='highlight'>delete</span> a plant, <span class='highlight'>double tap it</span> or move and drop it outside of the field.",
 					priority: true,
 					transitionerOpacity: 0.9,
 					confirmRequired: true
@@ -355,9 +355,9 @@
 				
 				farmers.push( farmer );
 				
-				// give starter plants
+				// give starter plant shapes
 				
-				give_plants( _Farming.plantTypesBase, character );
+				give_plants( _Farming.plantShapesBase, character );
 				
 			}
 			// if found, use existing

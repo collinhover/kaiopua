@@ -78,6 +78,7 @@
 			"assets/modules/utils/ObjectMaker.js",
 			"assets/modules/core/Player.js",
 			"assets/modules/core/CameraControls.js",
+			"assets/modules/core/Actions.js",
 			"assets/modules/ui/Messenger.js",
 			"assets/modules/characters/Character.js",
 			"assets/modules/characters/Hero.js",
@@ -86,6 +87,7 @@
 			"assets/modules/env/Water.js",
 			"assets/modules/env/Sky.js",
 			"assets/modules/puzzles/Puzzle.js",
+			"assets/modules/puzzles/PuzzleBuilder.js",
 			"assets/modules/puzzles/Grid.js",
 			"assets/modules/puzzles/GridModule.js",
 			"assets/modules/puzzles/GridModuleState.js",
@@ -94,7 +96,6 @@
 			"assets/modules/puzzles/GridElementShapes.js",
 			"assets/modules/farming/Farming.js",
 			"assets/modules/farming/Planting.js",
-			"assets/modules/farming/Field.js",
 			"assets/modules/farming/Dirt.js",
 			"assets/modules/farming/Plant.js",
 			"assets/modules/sections/Intro.js",
@@ -133,8 +134,9 @@
 			{ path: "assets/models/Volcano_Rocks_005.js", type: 'model' },
 			{ path: "assets/models/Field_Tutorial.js", type: 'model' },
 			{ path: "assets/models/Field_Tutorial_Grid.js", type: 'model' },
-			{ path: "assets/models/Field_Basics_Split.js", type: 'model' },
-			{ path: "assets/models/Field_Basics_Split_Grid.js", type: 'model' },
+			{ path: "assets/models/Field_Rolling_Hills.js", type: 'model' },
+			{ path: "assets/models/Field_Rolling_Hills_Grid.js", type: 'model' },
+			{ path: "assets/models/Field_Rolling_Hills_Toggle.js", type: 'model' },
 			{ path: "assets/models/Field_Basics_Abilities.js", type: 'model' },
 			{ path: "assets/models/Field_Basics_Abilities_Grid.js", type: 'model' },
 			"assets/textures/skybox_world_posx.jpg",
@@ -183,7 +185,8 @@
 	_Game.add_to_scene = add_to_scene;
 	_Game.remove_from_scene = remove_from_scene;
 	
-	_Game.get_object_under_pointer = get_object_under_pointer;
+	_Game.get_pointer_intersection = get_pointer_intersection;
+	_Game.get_pointer_object = get_pointer_object;
 	
 	// getters and setters
 	
@@ -647,12 +650,12 @@
 		}
 		else {
 			
-			shared.timeSinceInteraction = 0;
-			
-			pointer = main.get_pointer( e );
+			pointer = main.reposition_pointer( e );
+			pointer.pressx = pointer.x;
+			pointer.pressy = pointer.y;
 			pointer.down = true;
 			
-			shared.signals.gamePointerPressed.dispatch( e );
+			shared.signals.gamePointerPressed.dispatch( e, pointer );
 			
 		}
         
@@ -664,6 +667,8 @@
     
     function on_pointer_released( e ) {
 		
+		var pointer;
+		
 		// is touch event
 		
 		if ( main.is_touch_event( e ) ){
@@ -672,12 +677,10 @@
 		}
 		else {
 			
-			shared.timeSinceInteraction = 0;
-			
-			pointer = main.get_pointer( e );
+			pointer = main.reposition_pointer( e );
 			pointer.down = false;
 			
-			shared.signals.gamePointerReleased.dispatch( e );
+			shared.signals.gamePointerReleased.dispatch( e, pointer );
         
 		}
 		
@@ -689,6 +692,8 @@
 	
 	function on_pointer_tapped ( e ) {
 		
+		var pointer;
+		
 		// is touch event
 		
 		if ( main.is_touch_event( e ) ){
@@ -697,9 +702,9 @@
 		}
 		else {
 			
-			shared.timeSinceInteraction = 0;
+			pointer = main.reposition_pointer( e );
 			
-			shared.signals.gamePointerTapped.dispatch( e );
+			shared.signals.gamePointerTapped.dispatch( e, pointer );
 			
 		}
 		
@@ -711,6 +716,13 @@
 	
 	function on_pointer_held ( e ) {
 		
+		var pointer,
+			shift,
+			minx,
+			maxx,
+			miny,
+			maxy;
+		
 		// is touch event
 		
 		if ( main.is_touch_event( e ) ){
@@ -719,9 +731,21 @@
 		}
 		else {
 			
-			shared.timeSinceInteraction = 0;
+			// only dispatch held if position current is still close enough to position when pressed
 			
-			shared.signals.gamePointerHeld.dispatch( e );
+			pointer = main.get_pointer( e );
+			
+			shift = shared.pointerHoldPositionShift;
+			minx = pointer.pressx - shift;
+			maxx = pointer.pressx + shift;
+			miny = pointer.pressy - shift;
+			maxy = pointer.pressy + shift;
+			
+			if ( pointer.x >= minx && pointer.x <= maxx && pointer.y >= miny && pointer.y <= maxy ) {
+				
+				shared.signals.gamePointerHeld.dispatch( e, pointer );
+				
+			}
 			
 		}
 		
@@ -743,20 +767,9 @@
 		}
 		else {
 			
-			shared.timeSinceInteraction = 0;
+			pointer = main.reposition_pointer( e );
 			
-			pointer = main.get_pointer( e );
-			
-			pointer.lx = pointer.x;
-			pointer.ly = pointer.y;
-			
-			pointer.x = e.pageX;
-			pointer.y = e.pageY;
-			
-			pointer.dx = pointer.x - pointer.lx;
-			pointer.dy = pointer.y - pointer.ly;
-			
-			shared.signals.gamePointerMoved.dispatch( e );
+			shared.signals.gamePointerMoved.dispatch( e, pointer );
 			
 		}
         
@@ -1095,7 +1108,7 @@
     
     =====================================================*/
 	
-	function get_object_under_pointer ( parameters ) {
+	function get_pointer_intersection ( parameters ) {
 		
 		var intersection;
 		
@@ -1114,7 +1127,13 @@
 		
 		// intersection
 		
-		intersection = _RayHelper.raycast( parameters );
+		return _RayHelper.raycast( parameters );
+		
+	}
+	
+	function get_pointer_object ( parameters ) {
+		
+		var intersection = get_pointer_intersection( parameters );
 		
 		if ( typeof intersection !== 'undefined' ) {
 			

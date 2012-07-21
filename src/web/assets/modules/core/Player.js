@@ -17,6 +17,7 @@
 		_Messenger,
 		_ObjectHelper,
 		_MathHelper,
+		_KeyHelper,
 		ready = false,
 		enabled = false,
 		showing = false,
@@ -24,6 +25,7 @@
 		actionsMap,
 		keybindings,
 		keybindingsDefault,
+		actions,
 		character,
 		following = [],
 		selecting;
@@ -65,6 +67,10 @@
 		get : function () { return cameraControls.camera; }
 	});
 	
+	Object.defineProperty(_Player, 'actions', { 
+		get : function () { return actions; }
+	});
+	
 	Object.defineProperty(_Player, 'character', { 
 		get : function () { return character; }
 	});
@@ -82,10 +88,12 @@
 		requirements: [
 			"assets/modules/core/Game.js",
 			"assets/modules/core/CameraControls.js",
+			"assets/modules/core/Actions.js",
 			"assets/modules/characters/Hero.js",
 			"assets/modules/ui/Messenger.js",
 			"assets/modules/utils/ObjectHelper.js",
-			"assets/modules/utils/MathHelper.js"
+			"assets/modules/utils/MathHelper.js",
+			"assets/modules/utils/KeyHelper.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -97,7 +105,7 @@
     
     =====================================================*/
 	
-	function init_internal ( g, cc, h, msg, oh, mh ) {
+	function init_internal ( g, cc, ac, h, msg, oh, mh, kh ) {
 		console.log('internal player');
 		
 		if ( ready !== true ) {
@@ -106,10 +114,12 @@
 			
 			_Game = g;
 			_CameraControls = cc;
+			_Actions = ac;
 			_Hero = h;
 			_Messenger = msg;
 			_ObjectHelper = oh;
 			_MathHelper = mh;
+			_KeyHelper = kh;
 			
 			// selecting
 			
@@ -129,6 +139,8 @@
 			init_cameracontrols();
 			
 			init_character();
+			
+			init_actions();
 			
 			init_keybindings();
 			
@@ -199,6 +211,129 @@
 	
 	/*===================================================
     
+    actions
+    
+    =====================================================*/
+	
+	function init_actions () {
+		
+		actions = new _Actions.Instance();
+		
+		// add actions
+		
+		// pointer
+		
+		actions.add( 'pointer', {
+			callbacks: {
+				down: function ( parameters ) {
+					
+					// start rotating camera if character is not acting
+					
+					if ( character.actions.is_active( 'pointer' ) !== true ) {
+						
+						cameraControls.rotate( parameters.event );
+						
+					}
+					
+				},
+				up: function ( parameters ) {
+					
+					// stop camera rotate
+					
+					cameraControls.rotate( parameters.event, true );
+					
+				}
+			}
+		} );
+		
+		actions.add( 'pointerwheel', {
+			callbacks: {
+				up: function ( parameters ) {
+					cameraControls.zoom( parameters.event );
+				}
+			}
+		} );
+		
+		// wasd / arrows
+		
+		actions.add( 'w up_arrow', {
+			callbacks: {
+				down: function () {
+					character_move( 'forward' );
+				},
+				up: function () {
+					character_move( 'forward', true );
+				}
+			}
+		} );
+		
+		actions.add( 's down_arrow', {
+			callbacks: {
+				down: function () {
+					character_move( 'back' );
+				},
+				up: function () {
+					character_move( 'back', true );
+				}
+			}
+		} );
+		
+		actions.add( 'a left_arrow', {
+			callbacks: {
+				down: function () {
+					character_move( 'turnleft' );
+				},
+				up: function () {
+					character_move( 'turnleft', true );
+				}
+			}
+		} );
+		
+		actions.add( 'd right_arrow', {
+			callbacks: {
+				down: function () {
+					character_move( 'turnright' );
+				},
+				up: function () {
+					character_move( 'turnright', true );
+				}
+			}
+		} );
+		
+		// jump
+		
+		actions.add( 'space', {
+			callbacks: {
+				down: function () {
+					character_move( 'up' );
+				},
+				up: function () {
+					character_move( 'up', true );
+				}
+			}
+		} );
+		
+		// misc
+		
+		actions.add( 'escape', {
+			callbacks: {
+				up: function () {
+					
+					if ( _Game.paused === true ) {
+						_Game.resume();
+					}
+					else {
+						_Game.pause();
+					}
+					
+				}
+			}
+		} );
+		
+	}
+	
+	/*===================================================
+    
     keybindings
     
     =====================================================*/
@@ -211,131 +346,38 @@
 		
 		// pointer
 		
-		map[ 'pointer' ] = {
-			down: function ( e ) {
-				
-				// modify character action if started
-				
-				character.action( '001', { event: e, stop: !enabled } );
-				
-				// start rotating camera if character is not acting
-				
-				if ( character.get_is_performing_action( '001' ) !== true ) {
-					
-					cameraControls.rotate( e );
-					
-				}
-				
-			},
-			up: function ( e ) {
-				
-				var rotated = cameraControls.rotating;
-				
-				// stop camera rotate
-				
-				cameraControls.rotate( e, true );
-				
-				// start character action if camera was not just rotated
-				
-				if ( rotated !== true ) {
-					
-					character.action( '002', { event: e, stop: !enabled } );
-					
-				}
-				
-			}
-		};
-		map[ 'pointerwheel' ] = {
-			up: function ( e ) {
-				cameraControls.zoom( e );
-			}
-		};
+		map[ 'pointer' ] = 'pointer';
+		map[ 'pointerwheel' ] = 'pointerwheel';
 		
 		// wasd / arrows
 		
-		map[ '38' /*up*/ ] = map[ '87' /*w*/ ] = map[ 'w' ] = {
-			down: function () { character_move( 'forward' ); },
-			up: function () { character_move( 'forward', true ); }
-		};
-		
-		map[ '40' /*down*/ ] = map[ '83' /*s*/ ] = map[ 's' ] = {
-			down: function () { character_move( 'back' ); },
-			up: function () { character_move( 'back', true ); }
-		};
-		
-		map[ '37' /*left*/ ] = map[ '65' /*a*/ ] = map[ 'a' ] = {
-			down: function () { character_move( 'turnleft' ); },
-			up: function () { character_move( 'turnleft', true ); }
-		};
-		
-		map[ '39' /*right*/ ] = map[ '68' /*d*/ ] = map[ 'd' ] = {
-			down: function () { character_move( 'turnright' ); },
-			up: function () { character_move( 'turnright', true ); }
-		};
+		map[ 'w' ] = map[ 'up_arrow' ] = 'w';
+		map[ 's' ] = map[ 'down_arrow' ] = 's';
+		map[ 'a' ] = map[ 'left_arrow' ] = 'a';
+		map[ 'd' ] = map[ 'right_arrow' ] = 'd';
 		
 		// qe
 		
-		map[ '81' /*q*/ ] = map[ 'q' ] = {
-			up: function () { console.log('key up: q'); }
-		};
-		
-		map[ '69' /*e*/ ] = map[ 'e' ] = {
-			up: function () { console.log('key up: e'); }
-		};
+		map[ 'q' ] = 'q';
+		map[ 'e' ] = 'e';
 		
 		// numbers
 		
-		map[ '49' /*1*/ ] = map[ '1' ] = {
-			up: function () { console.log('key up: 1'); }
-		};
-		map[ '50' /*2*/ ] = map[ '2' ] = {
-			up: function () { console.log('key up: 2'); }
-		};
-		map[ '51' /*3*/ ] = map[ '3' ] = {
-			up: function () { console.log('key up: 3'); }
-		};
-		map[ '52' /*4*/ ] = map[ '4' ] = {
-			up: function () { console.log('key up: 4'); }
-		};
-		map[ '53' /*5*/ ] = map[ '5' ] = {
-			up: function () { console.log('key up: 5'); }
-		};
-		map[ '54' /*6*/ ] = map[ '6' ] = {
-			up: function () { console.log('key up: 6'); }
-		};
+		map[ '1' ] = '1';
+		map[ '2' ] = '2';
+		map[ '3' ] = '3';
+		map[ '4' ] = '4';
+		map[ '5' ] = '5';
+		map[ '6' ] = '6';
 		
 		// misc
 		
-		map[ '27' /*escape*/ ] = {
-			up: function () {
-				
-				if ( _Game.paused === true ) {
-					_Game.resume();
-				}
-				else {
-					_Game.pause();
-				}
-			
-			}
-		};
-		
-		map[ '32' /*space*/ ] = {
-			down: function () { character_move( 'up' ); },
-			up: function () { character_move( 'up', true ); }
-		};
-		
-		map[ '82' /*r*/ ] = map[ 'r' ] = {
-			down: function () { console.log('key down: r'); },
-			up: function () { console.log('key up: r'); }
-		};
-		
-		map[ '70' /*f*/ ] = map[ 'f' ] = {
-			up: function () { console.log('key up: f'); }
-		};
+		map[ 'escape' ] = 'escape'
+		map[ 'space' ] = 'space';
 		
 		// set list of keys that are always available
 		
-		map.alwaysAvailable = ['27'];
+		map.alwaysAvailable = ['escape'];
 		
 		// set default as current
 		
@@ -373,6 +415,8 @@
 	
 	function init_controls () {
 		
+		// start control immediately
+		
 		allow_control();
 		
 	}
@@ -383,6 +427,8 @@
 		
 		shared.signals.gamePointerPressed.add( trigger_key );
 		shared.signals.gamePointerReleased.add( trigger_key );
+		shared.signals.gamePointerTapped.add( trigger_key );
+		shared.signals.gamePointerHeld.add( trigger_key );
 		shared.signals.gamePointerWheel.add( trigger_key );
 		
 		shared.signals.keyPressed.add( trigger_key );
@@ -394,12 +440,14 @@
 		
 		// clear keys
 		
-		clear_keys_active();
+		actions.clear_active();
 		
 		// signals
 		
 		shared.signals.gamePointerPressed.remove( trigger_key );
 		shared.signals.gamePointerReleased.remove( trigger_key );
+		shared.signals.gamePointerTapped.remove( trigger_key );
+		shared.signals.gamePointerHeld.remove( trigger_key );
 		shared.signals.gamePointerWheel.remove( trigger_key );
 		
 		shared.signals.keyPressed.remove( trigger_key );
@@ -407,14 +455,22 @@
 		
 	}
 	
+	/*===================================================
+    
+    actions
+    
+    =====================================================*/
+	
 	function trigger_key ( e ) {
 		
 		var kbMap = keybindings,
-			kbInfo,
-			id,
+			keyCode,
+			keyName,
+			keyNameActual,
 			state,
 			type,
-			isAlwaysAvailable;
+			isAlwaysAvailable,
+			cameraRotated;
 		
 		// check for meta keys
 		
@@ -422,95 +478,75 @@
 			return;
 		}
 		
-		// get id by type
+		// handle by type
 		
 		type = ( e.type + '' );
 		
+		// special cases for pointer / mouse
+		
 		if ( type === 'vmousedown' ) {
 			
-			id = 'pointer';
+			keyName = 'pointer';
 			state = 'down';
 			
 		}
 		else if ( type === 'vmouseup' ) {
 			
-			id = 'pointer';
+			keyName = 'pointer';
 			state = 'up';
+			
+		}
+		else if ( type === 'tap' ) {
+			
+			keyName = 'pointer';
+			state = 'tap';
+			
+		}
+		else if ( type === 'taphold' ) {
+			
+			keyName = 'pointer';
+			state = 'hold';
 			
 		}
 		else if ( type === 'mousewheel' || type === 'DOMMouseScroll' ) {
 			
-			id = 'pointerwheel';
+			keyName = 'pointerwheel';
 			state = 'up';
 			
 		}
+		// fallback to key press
 		else {
 			
-			id = ( ( e.which || e.key || e.keyCode ) + '' ).toLowerCase();
+			keyCode = ( ( e.which || e.key || e.keyCode ) + '' ).toLowerCase();
+			keyName = _KeyHelper.key( keyCode );
 			
 			state = type.toLowerCase();
 			state = state.replace( 'key', '', 1 );
 			
 		}
 		
-		// get if key is always available
+		// get mapped key name
 		
-		isAlwaysAvailable = kbMap.alwaysAvailable.indexOf( id ) !== -1;
+		keyNameActual = kbMap[ keyName ] || keyName;
 		
-		// trigger by name
+		// if enabled or key is always available
 		
-		if ( kbMap.hasOwnProperty( id ) === true && ( enabled === true || isAlwaysAvailable ) ) {
+		isAlwaysAvailable = kbMap.alwaysAvailable.indexOf( keyNameActual ) !== -1;
+		
+		if ( enabled === true || isAlwaysAvailable ) {
 			
-			kbInfo = kbMap[ id ];
+			parameters = {
+				event: e,
+				bubble: isAlwaysAvailable || _Game.paused
+			};
 			
-			if ( kbInfo.hasOwnProperty( state ) === true ) {
-				
-				if ( state === 'down' ) {
-					
-					kbInfo.active = true;
-					
-				}
-				else {
-					
-					kbInfo.active = false;
-					
-				}
-				
-				// call keybinding for state
-				
-				kbInfo[ state ].call( this, e );
-				
-				// stop event if key used is not always available and game is not paused
-				
-				if ( isAlwaysAvailable !== true && _Game.paused !== true ) {
-					
-					e.preventDefault();
-					e.stopPropagation();
-					return false;
-					
-				}
-				
-			}
+			// perform character action
 			
-		}
-		
-	}
-	
-	function clear_keys_active () {
-		
-		var id,
-			kbInfo;
-		
-		for ( id in keybindings ) {
+			character.actions.execute( keyNameActual, state, parameters );
 			
-			kbInfo = keybindings[ id ];
+			// perform action
 			
-			if ( kbInfo.active === true && kbInfo.hasOwnProperty( 'up' ) ) {
-				
-				kbInfo.active = false;
-				kbInfo[ 'up' ].call( this );
-				
-			}
+			actions.execute( keyNameActual, state, parameters );
 			
 		}
 		
@@ -553,7 +589,7 @@
 		
 		// select
 			
-		selectedModel = _Game.get_object_under_pointer( pointer );
+		selectedModel = _Game.get_pointer_object( pointer );
 		
 		// if a selection was made
 		
@@ -781,13 +817,10 @@
 		
 		enabled = false;
 		
-		// clear keys
+		// clear actions
 		
-		clear_keys_active();
-		
-		// clear character actions
-		
-		character.stop_action();
+		actions.clear_active();
+		character.actions.clear_active();
 		
 		// pause updating
 		

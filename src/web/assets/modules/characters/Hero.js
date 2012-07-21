@@ -13,7 +13,7 @@
 		_Hero = {},
 		_Character,
 		_Game,
-		_Farming;
+		_Planting;
 	
 	/*===================================================
     
@@ -26,7 +26,7 @@
 		requirements: [
 			"assets/modules/characters/Character.js",
 			"assets/modules/core/Game.js",
-			"assets/modules/farming/Farming.js"
+			"assets/modules/farming/Planting.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -38,12 +38,12 @@
     
     =====================================================*/
 	
-	function init_internal( c, g, f ) {
+	function init_internal( c, g, pl ) {
 		console.log('internal hero', _Hero);
 		
 		_Character = c;
 		_Game = g;
-		_Farming = f;
+		_Planting = pl;
 		
 		_Hero.Instance = Hero;
 		_Hero.Instance.prototype = new _Character.Instance();
@@ -65,7 +65,7 @@
 		
 		parameters = parameters || {};
 		
-		parameters.id = 'kaiopua_hero';
+		parameters.name = 'Hero';
 		
 		parameters.model = parameters.modelInfo || {};
 		parameters.model.geometry = main.get_asset_data( "assets/models/Hero.js" );
@@ -90,57 +90,23 @@
 		
 		_Character.Instance.call( this, parameters );
 		
-		// add to actions
+		// properties
 		
-		this.add_action( { 
-			callback: rotate_plant,
-			context: this,
-			activeCheck: is_planting_rotating,
-			activeCheckContext: this,
-			actionsNames: [ '001', 'rotate_plant' ]
+		this.planting = new _Planting.Instance();
+		
+		// actions
+		
+		this.actions.add( 'pointer', {
+			callbacks: {
+				down: $.proxy( me.planting.select_plant, me.planting ),
+				hold: $.proxy( me.planting.select_field, me.planting )
+			},
+			activeChecks: {
+				down: function () {
+					return me.planting.started;
+				}
+			}
 		} );
-		
-		this.add_action( { 
-			callback: plant,
-			context: this,
-			activeCheck: is_planting,
-			activeCheckContext: this,
-			actionsNames: [ '002', 'plant' ]
-		} );
-		
-	}
-	
-	/*===================================================
-	
-	farming
-	
-	=====================================================*/
-	
-	function plant ( parameters ) {
-		
-		return _Farming.plant( this, parameters );
-		
-	}
-	
-	function rotate_plant ( parameters ) {
-		
-		parameters = parameters || {};
-		
-		parameters.rotate = true;
-		
-		return plant.call( this, parameters );
-		
-	}
-	
-	function is_planting () {
-		
-		return _Farming.is_character_planting( this, 'planting' );
-		
-	}
-	
-	function is_planting_rotating () {
-		
-		return _Farming.is_character_planting( this, 'rotating' );
 		
 	}
 	

@@ -14,8 +14,7 @@
 		_World,
         _Game,
 		_Model,
-		_Field,
-		_Farming,
+		_PuzzleBuilder,
 		_Water,
 		_Sky,
 		_ObjectMaker,
@@ -384,114 +383,35 @@
 		
 		/*===================================================
 		
-		fields
+		puzzles
 		
 		=====================================================*/
 		
 		main.asset_require( [
-				"assets/modules/farming/Field.js",
-				"assets/modules/farming/Farming.js"
+				"assets/modules/puzzles/PuzzleBuilder.js"
 			],
-			init_fields,
+			init_puzzles,
 			true
 		);
 		
-		function init_fields ( fld, frm ) {
+		function init_puzzles ( pb ) {
 			
-			_Field = fld;
-			_Farming = frm;
+			_PuzzleBuilder = pb;
 			
 			// tutorial
 			
-			me.parts.fieldTutorial = new _Field.Instance( {
-				id: 'Tutorial',
-				geometry: main.get_asset_data("assets/models/Field_Tutorial.js"),
-				physics: {
-					bodyType: 'mesh'
-				},
-				grid: {
-					modulesGeometry: main.get_asset_data("assets/models/Field_Tutorial_Grid.js")
-				},
-				numElementsMin: 0,
-				rewards: [
-					{
-						image: shared.pathToIcons + 'plant_rev_64.png',
-						label: 'New Plant!',
-						callback: _Farming.give_plants,
-						context: _Farming,
-						data: 'taro_003'
-					}
-				]
-			});
-			
-			me.parts.body.add( me.parts.fieldTutorial );
+			me.parts.puzzleTutorial = _PuzzleBuilder.build( 'Tutorial' );
+			me.parts.body.add( me.parts.puzzleTutorial );
 			
 			// basics abilities
 			
-			me.parts.fieldBasicsAbilities = new _Field.Instance( {
-				id: 'Abilities',
-				geometry: main.get_asset_data("assets/models/Field_Basics_Abilities.js"),
-				physics: {
-					bodyType: 'mesh'
-				},
-				grid: {
-					modulesGeometry: main.get_asset_data("assets/models/Field_Basics_Abilities_Grid.js")
-				},
-				numElementsMin: 10,
-				hints: [
-					'Some plants have special abilities that will help complete puzzles!'
-				],
-				hintsCombine: true,
-				rewards: [
-					{
-						image: shared.pathToIcons + 'plant_rev_64.png',
-						label: 'New Plant!',
-						callback: _Farming.give_plants,
-						context: _Farming,
-						data: 'rock'
-					},
-					false,
-					{
-						image: shared.pathToIcons + 'plant_rev_64.png',
-						label: 'New Plant!',
-						callback: _Farming.give_plants,
-						context: _Farming,
-						data: 'pineapple_001'
-					}
-				]
-			});
+			me.parts.puzzleBasicsAbilities = _PuzzleBuilder.build( 'Abilities' );
+			me.parts.body.add( me.parts.puzzleBasicsAbilities );
 			
-			me.parts.body.add( me.parts.fieldBasicsAbilities );
+			// rolling hills
 			
-			// basics split
-			
-			me.parts.fieldBasicsSplit = new _Field.Instance( {
-				id: 'Split',
-				geometry: main.get_asset_data("assets/models/Field_Basics_Split.js"),
-				physics: {
-					bodyType: 'mesh'
-				},
-				grid: {
-					modulesGeometry: main.get_asset_data("assets/models/Field_Basics_Split_Grid.js")
-				},
-				numElementsMin: 13,
-				hints: [
-					'Some plants will only grow when next to certain other plants!',
-					'Some fields are split into smaller parts. Fields are much easier to complete if you think this way!'
-				],
-				hintsCombine: true,
-				rewards: [
-					{
-						image: shared.pathToIcons + 'plant_rev_64.png',
-						label: 'New Plant!',
-						callback: _Farming.give_plants,
-						context: _Farming,
-						data: 'pineapple_001'
-					}
-				]
-			});
-			
-			me.parts.body.add( me.parts.fieldBasicsSplit );
+			me.parts.puzzleRollingHills = _PuzzleBuilder.build( 'RollingHills' );
+			me.parts.body.add( me.parts.puzzleRollingHills );
 			
 		}
 		

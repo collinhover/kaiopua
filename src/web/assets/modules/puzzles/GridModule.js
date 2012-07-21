@@ -144,9 +144,7 @@
 		parameters.material = parameters.material || new THREE.MeshLambertMaterial();
 		
 		parameters.center = true;
-		
 		parameters.centerRotation = true;
-		
 		parameters.normalizeFaces = true;
 		
 		/*parameters.physics = {

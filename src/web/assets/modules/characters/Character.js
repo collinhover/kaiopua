@@ -12,8 +12,9 @@
 		assetPath = "assets/modules/characters/Character.js",
 		_Character = {},
 		_Model,
+		_Actions,
 		_MathHelper,
-		characterIDBase = 'kaiopua_character',
+		characterName = 'Character',
 		utilQ1Rotate;
 	
 	/*===================================================
@@ -27,6 +28,7 @@
 		requirements: [
 			"assets/modules/core/Game.js",
 			"assets/modules/core/Model.js",
+			"assets/modules/core/Actions.js",
 			"assets/modules/utils/MathHelper.js"
 		],
 		callbacksOnReqs: init_internal,
@@ -39,12 +41,13 @@
     
     =====================================================*/
 	
-	function init_internal ( g, m, mh ) {
-		console.log('internal character', _Character);
+	function init_internal ( g, m, ac, mh ) {
+		console.log('internal Character', _Character);
 		// modules
 		
 		_Game = g;
 		_Model = m;
+		_Actions = ac;
 		_MathHelper = mh;
 		
 		// utility
@@ -56,18 +59,17 @@
 		_Character.Instance = Character;
 		_Character.Instance.prototype = new _Model.Instance();
 		_Character.Instance.prototype.constructor = _Character.Instance;
+		
 		_Character.Instance.prototype.move_state_change = move_state_change;
 		_Character.Instance.prototype.rotate_by_delta = rotate_by_delta;
+		_Character.Instance.prototype.stop_jumping = stop_jumping;
 		_Character.Instance.prototype.morph_cycle = morph_cycle;
-		_Character.Instance.prototype.action = action;
-		_Character.Instance.prototype.add_action = add_action;
-		_Character.Instance.prototype.stop_action = stop_action;
-		_Character.Instance.prototype.get_is_performing_action = get_is_performing_action;
-		_Character.Instance.prototype.show = show;
-		_Character.Instance.prototype.hide = hide;
+		
 		_Character.Instance.prototype.update = update;
 		_Character.Instance.prototype.update_followers = update_followers;
-		_Character.Instance.prototype.stop_jumping = stop_jumping;
+		
+		_Character.Instance.prototype.show = show;
+		_Character.Instance.prototype.hide = hide;
 		
 		Object.defineProperty( _Character.Instance.prototype, 'scene', { 
 			get : function () { return this._scene; },
@@ -104,8 +106,7 @@
 	
 	function Character ( parameters ) {
 		
-		var me = this,
-			parametersModel,
+		var parametersModel,
 			parametersMovement,
 			movement,
 			move,
@@ -132,13 +133,13 @@
 		
 		// prototype constructor
 		
-		_Model.Instance.call( me, parametersModel );
+		_Model.Instance.call( this, parametersModel );
 		
 		// movement
 		
 		parametersMovement = parameters.movement || {};
 		
-		movement = me.movement = {};
+		movement = this.movement = {};
 		
 		// move
 		
@@ -156,14 +157,14 @@
 		move.vector = new THREE.Vector3();
 		
 		// rotate
-		rotate = me.movement.rotate = {};
+		rotate = this.movement.rotate = {};
 		rotate.speed = parametersMovement.rotateSpeed || 0.015;
 		rotate.direction = new THREE.Vector3();
 		rotate.delta = new THREE.Quaternion();
 		rotate.vector = new THREE.Quaternion();
 		
 		// jump
-		jump = me.movement.jump = {};
+		jump = this.movement.jump = {};
 		jump.speedStart = parametersMovement.jumpSpeedStart || 6;
 		jump.speedEnd = parametersMovement.jumpSpeedEnd || 0;
 		jump.timeTotal = 0;
@@ -179,7 +180,7 @@
 		jump.active = false;
 		
 		// state
-		state = me.movement.state = {};
+		state = this.movement.state = {};
 		state.up = 0;
 		state.down = 0;
 		state.left = 0;
@@ -194,16 +195,10 @@
 		
 		// properties
 		
-		me.id = parameters.id || characterIDBase;
-		
-		me.actions = {};
-		me.actionsNames = [];
-		
-		me.showing = false;
-		
-		me.followers = [];
-		
-		me.targeting = {
+		this.name = parameters.name || characterName;
+		this.showing = false;
+		this.followers = [];
+		this.targeting = {
 			
 			targets: [],
 			targetsToRemove: [],
@@ -211,132 +206,7 @@
 			
 		};
 		
-	}
-	
-	/*===================================================
-	
-	actions
-	
-	=====================================================*/
-	
-	function action ( actionName, parameters ) {
-		
-		var action;
-		
-		// if action type is in actions map, do it
-		if ( this.actions.hasOwnProperty( actionName ) ) {
-			
-			action = this.actions[ actionName ];
-			
-			if ( typeof action.callback === 'function' ) {
-				
-				action.callback.call( action.context, parameters );
-				
-			}
-			
-		}
-		
-	}
-	
-	function add_action () {
-		
-		var i, l,
-			j, k,
-			parameters,
-			actionsNames,
-			actionName;
-		
-		for ( i = 0, l = arguments.length; i < l; i++ ) {
-			
-			parameters = arguments[ i ];
-			
-			if ( main.type( parameters ) === 'object' ) {
-				
-				actionsNames = main.ensure_array( parameters.actionsNames );
-				
-				// for each action name
-				
-				for ( j = 0, k = actionsNames.length; j < k; j++ ) {
-					
-					actionName = actionsNames[ j ];
-					
-					// add to actions map
-					
-					this.actions[ actionName ] = {
-						callback: parameters.callback,
-						context: parameters.context || this,
-						activeCheck: parameters.activeCheck,
-						activeCheckContext: parameters.activeCheckContext || this
-					};
-					
-					// store name
-					
-					if ( this.actionsNames.indexOf( actionName ) === -1 ) {
-						
-						this.actionsNames.push( actionName );
-						
-					}
-				
-				}
-				
-			}
-			
-		}
-		
-	}
-	
-	function get_is_performing_action ( actionsNames ) {
-		
-		var i, l,
-			actionName,
-			action,
-			acting = false;
-		
-		actionsNames = typeof actionsNames !== 'undefined' ? main.ensure_array( actionsNames ) : this.actionsNames;
-		
-		for ( i = 0, l = actionsNames.length; i < l; i++ ) {
-			
-			actionName = actionsNames[ i ];
-			
-			action = this.actions[ actionName ];
-			
-			if ( typeof action.activeCheck === 'function' && action.activeCheck.call( action.activeCheckContext ) === true ) {
-				
-				acting = true;
-				
-				break;
-				
-			}
-			
-		}
-		
-		return acting;
-		
-	}
-	
-	function stop_action ( actionsNames ) {
-		
-		var i, l,
-			actionName,
-			action;
-		
-		// trigger stop for all actions that are active
-		
-		actionsNames = typeof actionsNames !== 'undefined' ? main.ensure_array( actionsNames ) : this.actionsNames;
-		
-		for ( i = 0, l = actionsNames.length; i < l; i++ ) {
-			
-			actionName = actionsNames[ i ];
-			
-			action = this.actions[ actionName ];
-			
-			if ( typeof action.activeCheck === 'function' && action.activeCheck.call( action.activeCheckContext ) === true ) {
-				
-				this.action( actionName, { stop: true } );
-				
-			}
-				
-		}
+		this.actions = new _Actions.Instance();
 		
 	}
 	

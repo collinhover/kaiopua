@@ -102,6 +102,7 @@ var KAIOPUA = (function (main) {
         shared.timeDeltaExpected = 1000 / 60;
 		shared.timeDeltaModDec = Math.pow( 10, 2 );
 		shared.pointerWheelSpeed = 120;
+		shared.pointerHoldPositionShift = 10;
 		
 		shared.multitouch = false;
 		
@@ -279,7 +280,6 @@ var KAIOPUA = (function (main) {
 			
 			main.extend = extend;
 			main.time_test = time_test;
-			main.get_pointer = get_pointer;
 			
 			main.ensure_array = ensure_array;
 			main.ensure_not_array = ensure_not_array;
@@ -292,6 +292,8 @@ var KAIOPUA = (function (main) {
 			main.dom_fade = dom_fade;
 			main.dom_collapse = dom_collapse;
 			
+			main.get_pointer = get_pointer;
+			main.reposition_pointer = reposition_pointer;
 			main.handle_touch_event = handle_touch_event;
 			
 			main.worker_reset = worker_reset;
@@ -562,27 +564,6 @@ var KAIOPUA = (function (main) {
 		console.log( message, ' > time test ( x', iterations, '): ', (tb - ta) );
 		
 		return result;
-		
-	}
-	
-	function get_pointer ( parameters ) {
-		
-		parameters = parameters || {};
-		
-		var id = parameters.identifier = ( shared.multitouch === true && parameters.identifier ) ? parameters.identifier : 0,
-			pointer = shared.pointers[ id ];
-
-		if ( typeof pointer === 'undefined' ) {
-			
-			pointer = shared.pointers[ id ] = {};
-			pointer.x = pointer.lx = shared.screenWidth * 0.5;
-			pointer.y = pointer.ly = shared.screenHeight * 0.5;
-			pointer.down = false;
-			pointer.ingame = false;
-		
-		}
-		
-		return pointer;
 		
 	}
 	
@@ -1114,6 +1095,50 @@ var KAIOPUA = (function (main) {
     event functions
     
     =====================================================*/
+	
+	function get_pointer ( parameters ) {
+		
+		parameters = parameters || {};
+		
+		var id = parameters.identifier = ( shared.multitouch === true && parameters.identifier ) ? parameters.identifier : 0,
+			pointer = shared.pointers[ id ];
+
+		if ( typeof pointer === 'undefined' ) {
+			
+			pointer = shared.pointers[ id ] = {};
+			pointer.x = pointer.lx = shared.screenWidth * 0.5;
+			pointer.y = pointer.ly = shared.screenHeight * 0.5;
+			pointer.down = false;
+			pointer.ingame = false;
+		
+		}
+		
+		return pointer;
+		
+	}
+	
+	function reposition_pointer ( e ) {
+		
+		shared.timeSinceInteraction = 0;
+		
+		var pointer = main.get_pointer( e );
+		
+		if ( e && is_number( e.pageX ) && is_number( e.pageY ) ) {
+			
+			pointer.lx = pointer.x;
+			pointer.ly = pointer.y;
+			
+			pointer.x = e.pageX;
+			pointer.y = e.pageY;
+			
+			pointer.dx = pointer.x - pointer.lx;
+			pointer.dy = pointer.y - pointer.ly;
+			
+		}
+		
+		return pointer;
+		
+	}
 	
 	function handle_touch_event ( e, eventActual ) {
 		

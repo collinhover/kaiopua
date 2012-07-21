@@ -1,7 +1,7 @@
 /*
  *
  * Planting.js
- * Basic activity of farming.
+ * Gives character ability to plant.
  *
  * @author Collin Hover / http://collinhover.com/
  *
@@ -14,6 +14,7 @@
 		_Game,
 		_Grid,
 		_Puzzle,
+		_ToggleSwitch,
 		_GridModule,
 		_GridModel,
 		_Plant,
@@ -33,6 +34,7 @@
 		requirements: [
 			"assets/modules/core/Game.js",
 			"assets/modules/puzzles/Puzzle.js",
+			"assets/modules/puzzles/ToggleSwitch.js",
 			"assets/modules/puzzles/Grid.js",
 			"assets/modules/puzzles/GridModule.js",
 			"assets/modules/puzzles/GridModel.js",
@@ -50,11 +52,12 @@
     
     =====================================================*/
 	
-	function init_internal ( g, pzl, gr, gm, gmodel, pl, mh, oh ) {
+	function init_internal ( g, pzl, ts, gr, gm, gmodel, pl, mh, oh ) {
 		console.log('internal planting', _Planting);
 		
 		_Game = g;
 		_Puzzle = pzl;
+		_ToggleSwitch = ts;
 		_Grid = gr;
 		_GridModule = gm;
 		_GridModel = gmodel;
@@ -77,6 +80,10 @@
 		_Planting.Instance = Planting;
 		
 		_Planting.Instance.prototype.reset = reset;
+		
+		_Planting.Instance.prototype.select_plant = select_plant;
+		_Planting.Instance.prototype.select_field = select_field;
+		
 		_Planting.Instance.prototype.step = step;
 		_Planting.Instance.prototype.step_rotate = step_rotate;
 		_Planting.Instance.prototype.step_placement = step_placement;
@@ -90,7 +97,7 @@
 		
 		_Planting.Instance.prototype.get_planting_object_under_pointer = get_planting_object_under_pointer;
 		
-		_Planting.Instance.prototype.change_field = change_field;
+		_Planting.Instance.prototype.change_puzzle = change_puzzle;
 		_Planting.Instance.prototype.change_module = change_module;
 		_Planting.Instance.prototype.change_plant = change_plant;
 		
@@ -106,11 +113,7 @@
     
     =====================================================*/
 	
-	function Planting ( character ) {
-		
-		// store character reference
-		
-		this.character = character;
+	function Planting () {
 		
 		// properties
 		
@@ -152,92 +155,50 @@
 	
 	/*===================================================
 	
-	target
+	select
 	
 	=====================================================*/
 	
-	function get_planting_object_under_pointer ( parameters ) {
+	function select_plant ( parameters ) {
 		
-		var i, l,
-			field,
-			grid,
-			modules,
-			plant,
-			plantingObjects = [],
-			pointer = this.pointer,
-			targetObject;
+		this.step( parameters );
+		
+	}
+	
+	function select_field ( parameters ) {
+		
+		var targetObject;
 		
 		// handle parameters
 		
 		parameters = parameters || {};
 		
-		// build array of objects that are involved in planting process
-		
-		// character
-		
-		if ( parameters.character === true ) {
-			
-			plantingObjects.push( this.character );
-			
-		}
-		
-		// current field
-		
-		if ( parameters.field === true && this.field instanceof _Puzzle.Instance ) {
-			
-			// modules
-			
-			if ( parameters.modules === true ) {
-				
-				plantingObjects = plantingObjects.concat( this.field.grid.modules );
-				
-			}
-			
-			// plants
-			
-			if ( parameters.plants === true ) {
-				
-				plantingObjects = plantingObjects.concat( this.field.occupants );
-				
-			}
-			
-		}
-		// else all
-		else {
-			
-			// modules
-			
-			if ( parameters.modules === true ) {
-				
-				plantingObjects = plantingObjects.concat( _Puzzle.allModules );
-				
-			}
-			
-			// plants
-			
-			if ( parameters.plants === true ) {
-				
-				for ( i = 0, l = this.plants.length; i < l; i++ ) {
-					
-					plant = this.plants[ i ];
-					
-					plantingObjects = plantingObjects.concat( plant.modelsCurrent );
-					
-				}
-				
-			}
-			
-		}
-		
-		// find if any planting objects under pointer
-		
-		targetObject = _Game.get_object_under_pointer( {
-			objects: plantingObjects,
+		targetObject = _Game.get_pointer_object( {
+			objects: _Puzzle.allToggleSwitches,
 			hierarchical: false,
-			pointer: pointer
+			pointer: main.get_pointer( parameters.event )
 		} );
 		
-		return targetObject;
+		// if toggle switch found
+		
+		if ( targetObject instanceof _ToggleSwitch.Instance ) {
+			
+			// change to new puzzle
+			console.log( 'target object is toggle switch!');
+			this.change_puzzle( targetObject.target );
+			
+			// toggle switch
+			
+			
+			
+			// toggle not necessary?
+			
+			
+			
+			
+			targetObject.toggle();
+			
+		}
 		
 	}
 	
@@ -248,27 +209,33 @@
 	=====================================================*/
 	
 	function step ( parameters ) {
-		console.log(' > PLANTING: STEP');
+		
 		// handle parameters
 		
 		parameters = parameters || {};
 		
-		// store pointer
+		// if has active puzzle
+		
+		if ( this.puzzle instanceof _Puzzle.Instance ) {
+			console.log(' > PLANTING: STEP');
+			// store pointer
+					
+			this.pointer = main.get_pointer( parameters.event );
+			
+			// if step rotate
+			
+			if ( parameters.rotate === true ) {
 				
-		this.pointer = main.get_pointer( parameters.event );
+				this.step_rotate( parameters );
+				
+			}
+			// else step placement
+			else {
+				
+				this.step_placement( parameters );
+				
+			}
 		
-		// if step rotate
-		
-		if ( parameters.rotate === true ) {
-			
-			this.step_rotate( parameters );
-			
-		}
-		// else step placement
-		else {
-			
-			this.step_placement( parameters );
-			
 		}
 		
 	}
@@ -391,7 +358,7 @@
 		// else if any plants under pointer
 		else {
 			
-			targetObject = this.get_planting_object_under_pointer( { modules: false, character: false, plants: true } );
+			targetObject = this.get_planting_object_under_pointer( { modules: false, plants: true } );
 			
 			// if is a grid model
 			
@@ -538,9 +505,9 @@
 				plantPlanted = this.plant;
 				plantPlantedNodes = plantPlanted.get_layout_node_total();
 				
-				// stop if plant was selected from field or on field complete
+				// stop if plant was selected from puzzle or on puzzle complete
 				
-				if ( this.plantFromSelection === true || ( this.field instanceof _Puzzle.Instance && this.field.isCompleted === true ) ) {
+				if ( this.plantFromSelection === true || ( this.puzzle instanceof _Puzzle.Instance && this.puzzle.isCompleted === true ) ) {
 					
 					this.stop();
 					
@@ -606,7 +573,7 @@
 		
 		this.change_plant();
 		
-		// clear module / field
+		// clear module / puzzle
 		
 		this.change_module();
 		
@@ -618,27 +585,82 @@
 	
 	/*===================================================
 	
+	target
+	
+	=====================================================*/
+	
+	function get_planting_object_under_pointer ( parameters ) {
+		
+		var i, l,
+			puzzle,
+			grid,
+			modules,
+			plant,
+			plantingObjects = [],
+			pointer = this.pointer,
+			targetObject;
+		
+		// handle parameters
+		
+		parameters = parameters || {};
+		
+		// if has puzzle build array of objects that are involved in planting process
+		
+		if ( this.puzzle instanceof _Puzzle.Instance ) {
+			
+			// modules
+			
+			if ( parameters.modules === true ) {
+				
+				plantingObjects = plantingObjects.concat( this.puzzle.grid.modules );
+				
+			}
+			
+			// plants
+			
+			if ( parameters.plants === true ) {
+				
+				plantingObjects = plantingObjects.concat( this.puzzle.occupants );
+				
+			}
+			
+			// find if any planting objects under pointer
+			
+			targetObject = _Game.get_pointer_object( {
+				objects: plantingObjects,
+				hierarchical: false,
+				pointer: pointer
+			} );
+			
+		}
+		
+		return targetObject;
+		
+	}
+	
+	/*===================================================
+	
 	planting changes
 	
 	=====================================================*/
 	
-	function change_field ( field ) {
+	function change_puzzle ( puzzle ) {
 		
-		// if new field
+		// if new puzzle
 		
-		if ( this.field !== field ) {
+		if ( this.puzzle !== puzzle ) {
 			
-			// clear previous field grid
+			// toggle previous puzzle grid
 			
-			if ( this.field instanceof _Puzzle.Instance ) {
+			if ( this.puzzle instanceof _Puzzle.Instance ) {
 				
-				this.field.grid.clean();
+				this.puzzle.toggleSwitch.toggle();
 				
 			}
 			
-			// store new field
+			// store new puzzle
 			
-			this.field = field;
+			this.puzzle = puzzle;
 			
 		}
 		
@@ -647,7 +669,7 @@
 	function change_module ( module ) {
 		
 		var grid,
-			field;
+			puzzle;
 		
 		// if is new module
 		
@@ -657,30 +679,6 @@
 			// store new module
 			
 			this.module = module;
-			
-			// if valid module
-			
-			if ( module instanceof _GridModule.Instance ) {
-				
-				// get grid
-				
-				if ( module.grid instanceof _Grid.Instance ) {
-					
-					grid = module.grid;
-					
-				}
-				
-				// get field
-				
-				field = grid.puzzle;
-				
-				console.log(' > PLANTING: intersected module is', module, ', with ', module.connectedList.length, ' connected modules', module.connected );
-				
-			}
-			
-			// change field
-			
-			this.change_field( field );
 			
 		}
 		

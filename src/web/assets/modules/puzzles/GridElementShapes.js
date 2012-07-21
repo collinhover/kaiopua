@@ -1,8 +1,7 @@
 /*
  *
  * GridElementShapes.js
- * List of all basic parameters of each grid element shape.
- * Names = 'shape' + size (ex: '3x3') + 2D array from left to right, top to bottom of 1s for shape module and 0s for nothing
+ * List of all basic parameters of each polyomino grid element shape.
  *
  * @author Collin Hover / http://collinhover.com/
  *
@@ -12,94 +11,150 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/puzzles/GridElementShapes.js",
 		_GridElementShapes = {};
+	
+	/*===================================================
     
-    /*===================================================
-    
-    public properties
+    public
     
     =====================================================*/
 	
 	init_internal();
 	
 	main.asset_register( assetPath, { 
-		data: _GridElementShapes
+		data: _GridElementShapes,
+		/*requirements: [
+			"assets/modules/core/Game.js",
+			"assets/modules/core/CameraControls.js",
+			"assets/modules/characters/Hero.js",
+			"assets/modules/ui/Messenger.js",
+			"assets/modules/utils/ObjectHelper.js",
+			"assets/modules/utils/MathHelper.js"
+		],
+		callbacksOnReqs: init_internal,
+		wait: true*/
 	} );
 	
 	/*===================================================
     
-    internal init
+    init
     
     =====================================================*/
 	
-	function init_internal () {
-		console.log('internal grid element shapes', _GridElementShapes);
+	function init_internal() {
+		console.log( 'internal GridElementShapes' );
+		// shapes
 		
-		// functions
-		
-		_GridElementShapes.SHAPE_3x3_000010000 = SHAPE_3x3_000010000;
-		_GridElementShapes.SHAPE_3x3_010011000 = SHAPE_3x3_010011000;
-		_GridElementShapes.SHAPE_3x3_010111000 = SHAPE_3x3_010111000;
-		
-		Object.defineProperty( _GridElementShapes, 'SHAPE_3x3_000010000', { 
-			get: SHAPE_3x3_000010000
+		Object.defineProperty(_GridElementShapes, 'MONOMINO', { 
+			value : {
+				layout: [ [ 1 ] ]
+			}
 		});
-		Object.defineProperty( _GridElementShapes, 'SHAPE_3x3_010011000', { 
-			get: SHAPE_3x3_010011000
+		Object.defineProperty(_GridElementShapes, 'DOMINO', { 
+			value : {
+				layout: [
+					[ 0, 1, 0 ],
+					[ 0, 1, 0 ],
+					[ 0, 0, 0 ]
+				]
+			}
 		});
-		Object.defineProperty( _GridElementShapes, 'SHAPE_3x3_010111000', { 
-			get: SHAPE_3x3_010111000
+		Object.defineProperty(_GridElementShapes, 'TROMINO_I', { 
+			value : {
+				layout: [
+					[ 0, 1, 0 ],
+					[ 0, 1, 0 ],
+					[ 0, 1, 0 ]
+				]
+			}
+		});
+		Object.defineProperty(_GridElementShapes, 'TROMINO_L', { 
+			value : {
+				layout: [
+					[ 0, 1, 0 ],
+					[ 0, 1, 1 ],
+					[ 0, 0, 0 ]
+				]
+			}
+		});
+		Object.defineProperty(_GridElementShapes, 'TETROMINO_J', { 
+			value : {
+				layout: [
+					[ 0, 1, 0 ],
+					[ 0, 1, 0 ],
+					[ 1, 1, 0 ]
+				]
+			}
+		});
+		Object.defineProperty(_GridElementShapes, 'TETROMINO_L', { 
+			value : {
+				layout: [
+					[ 0, 1, 0 ],
+					[ 0, 1, 0 ],
+					[ 0, 1, 1 ]
+				]
+			}
+		});
+		Object.defineProperty(_GridElementShapes, 'TETROMINO_S', { 
+			value : {
+				layout: [
+					[ 0, 1, 1 ],
+					[ 1, 1, 0 ],
+					[ 0, 0, 0 ]
+				]
+			}
+		});
+		Object.defineProperty(_GridElementShapes, 'TETROMINO_Z', { 
+			value : {
+				layout: [
+					[ 1, 1, 0 ],
+					[ 0, 1, 1 ],
+					[ 0, 0, 0 ]
+				]
+			}
+		});
+		Object.defineProperty(_GridElementShapes, 'TETROMINO_T', { 
+			value : {
+				layout: [
+					[ 1, 1, 1 ],
+					[ 0, 1, 0 ],
+					[ 0, 0, 0 ]
+				]
+			}
+		});
+		Object.defineProperty(_GridElementShapes, 'TETROMINO_O', { 
+			value : {
+				layout: [
+					[ 0, 1, 1 ],
+					[ 0, 1, 1 ],
+					[ 0, 0, 0 ]
+				]
+			}
+		});
+		Object.defineProperty(_GridElementShapes, 'TETROMINO_I', { 
+			value : {
+				layout: [
+					[ 0, 0, 1, 0 ],
+					[ 0, 0, 1, 0 ],
+					[ 0, 0, 1, 0 ],
+					[ 0, 0, 1, 0 ]
+				]
+			}
 		});
 		
 	}
 	
 	/*===================================================
     
-    3x3
+    name
     
     =====================================================*/
 	
-	function SHAPE_3x3_000010000 () {
-		
-		return {
-			icon: {
-				image: shared.pathToIcons + 'grid_element_3x3_000010000_64.png',
-				tooltip: 'Single'
-			},
-			layout: [ [ 1 ] ]
-		};
 	
-	}
 	
-	function SHAPE_3x3_010011000 () {
-		
-		return {
-			icon: {
-				image: shared.pathToIcons + 'grid_element_3x3_010011000_64.png',
-				tooltip: 'Elbow'
-			},
-			layout: [
-				[ 0, 1, 0 ],
-				[ 0, 1, 1 ],
-				[ 0, 0, 0 ]
-			]
-		};
-	
-	}
-	
-	function SHAPE_3x3_010111000 () {
-		
-		return {
-			icon: {
-				image: shared.pathToIcons + 'grid_element_3x3_010111000_64.png',
-				tooltip: 'Tee'
-			},
-			layout: [
-				[ 0, 1, 0 ],
-				[ 1, 1, 1 ],
-				[ 0, 0, 0 ]
-			]
-		};
-	
-	}
+	/*===================================================
+    
+    dom
+    
+    =====================================================*/
 	
 } (KAIOPUA) );

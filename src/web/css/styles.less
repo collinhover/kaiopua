@@ -127,8 +127,15 @@ html, body {
     background-color: @backgroundColor;
 }
 
-/* unselectable 
+
+/* global utility 
 -------------------------*/
+
+* {
+	position: relative;
+	pointer-events: auto;
+}
+
 .unselectable {
     -webkit-user-select: none;
     -khtml-user-select: none;
@@ -136,9 +143,6 @@ html, body {
     -o-user-select: none;
     user-select: none;   
 }
-
-/* hidden elements 
--------------------------*/
 
 /* Hide from both screenreaders and browsers: h5bp.com/u */
 .hidden { display: none !important; visibility: hidden !important; }
@@ -152,21 +156,25 @@ html, body {
 /* Hide visually and from screenreaders, but maintain layout */
 .invisible { visibility: hidden; }
 
-/* ignores 
--------------------------*/
-
-* {
-	position: relative;
-	pointer-events: auto;
-}
-
 .ignore-pointer {
 	pointer-events: none;
 }
 
+.dim {
+	
+	&:not(.disabled):not(.active) {
+		opacity: 0.4;
+		
+		&:hover {
+			opacity: 1;
+		}
+	}
+	
+}
+
 .disabled {
 	cursor: default !important;
-	opacity: 0.5;
+	opacity: 0.65;
 	.ignore-pointer;
 	
 	* {
@@ -392,6 +400,7 @@ a, .navbar .nav > li > a {
 -------------------------*/
 
 .alert {
+	margin-bottom: 9px;
 	
 	.alert-action {
 		margin-top: 15px;
@@ -400,6 +409,12 @@ a, .navbar .nav > li > a {
 
 /* wells 
 -------------------------*/
+
+.well {
+	.alert:last-child {
+		margin-bottom: 0;
+	}
+}
 
 .well-success {
 	background-color: @successBackground;
@@ -419,6 +434,11 @@ a, .navbar .nav > li > a {
 .squire-unit {
 	padding: 30px;
 	margin: 0;
+}
+
+.hero-type {
+	font-size: 60px;
+	line-height: 1;
 }
 
 /* navbar 
@@ -653,14 +673,19 @@ a, .navbar .nav > li > a {
 	
 	[class^="thumbnails"], [class*=" thumbnails"] {
 		float: none;
+		margin-left: 0;
 		
 		.thumbnail {
 			margin: 3px;
 			padding: 0;
 			border: none;
-			-webkit-border-radius: 0;
-			-moz-border-radius: 0;
-			border-radius: 0;
+			.border-radius(0);
+		}
+		
+		&.shadowless {
+			.thumbnail, &:hover {
+				.box-shadow(none);
+			}
 		}
 		
 	}
@@ -955,7 +980,7 @@ a, .navbar .nav > li > a {
 /* farming 
 -------------------------*/
 
-#farming {
+#menuFarming {
 
 	.tools {
 		
@@ -1006,7 +1031,7 @@ a, .navbar .nav > li > a {
 /* options 
 -------------------------*/
 
-#options {
+#menuOptions {
 	
 	#data {
 		
