@@ -18,20 +18,13 @@
     
     =====================================================*/
 	
-	init_internal();
-	
 	main.asset_register( assetPath, { 
 		data: _GridElementShapes,
-		/*requirements: [
-			"assets/modules/core/Game.js",
-			"assets/modules/core/CameraControls.js",
-			"assets/modules/characters/Hero.js",
-			"assets/modules/ui/Messenger.js",
-			"assets/modules/utils/ObjectHelper.js",
-			"assets/modules/utils/MathHelper.js"
+		requirements: [
+			"assets/modules/puzzles/GridElement.js"
 		],
 		callbacksOnReqs: init_internal,
-		wait: true*/
+		wait: true
 	} );
 	
 	/*===================================================

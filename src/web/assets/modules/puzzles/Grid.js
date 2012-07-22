@@ -169,12 +169,17 @@
 					module = this.modules[ i ];
 					
 					occupant = module.occupant;
-					element = occupant.gridElement;
 					
-					if ( element instanceof _GridElement.Instance && elements.indexOf( element ) === -1 ) {
+					if ( occupant ) {
 						
-						elements.push( element );
+						element = occupant.gridElement;
 						
+						if ( element instanceof _GridElement.Instance && elements.indexOf( element ) === -1 ) {
+							
+							elements.push( element );
+							
+						}
+					
 					}
 					
 				}

@@ -54,19 +54,24 @@
 		_Puzzle.hints = [];
 		
 		_Puzzle.scores = {};
+		_Puzzle.scores.base = {
+			threshold: 0,
+			icon: 'plant',
+			status: "Started"
+		};
 		_Puzzle.scores.okay = {
 			threshold: 0,
-			icon: shared.pathToIcons + 'face_okay_rev_64.png',
+			icon: 'face_okay',
 			status: "Okay"
 		};
 		_Puzzle.scores.good = {
 			threshold: 0.8,
-			icon: shared.pathToIcons + 'face_smile_rev_64.png',
+			icon: 'face_smile',
 			status: 'Good'
 		};
 		_Puzzle.scores.perfect = {
 			threshold: 1,
-			icon: shared.pathToIcons + 'face_laugh_rev_64.png',
+			icon: 'face_laugh',
 			status: 'Perfect'
 		};
 		
@@ -104,11 +109,25 @@
 		_Puzzle.Instance.prototype.constructor = _Puzzle.Instance;
 		
 		_Puzzle.Instance.prototype.reset = reset;
+		
 		_Puzzle.Instance.prototype.toggle = toggle;
 		_Puzzle.Instance.prototype.activate = activate;
 		_Puzzle.Instance.prototype.deactivate = deactivate;
+		
+		_Puzzle.Instance.prototype.add_shape = add_shape;
+		_Puzzle.Instance.prototype.remove_shape = remove_shape;
+		
+		_Puzzle.Instance.prototype.clean = clean;
+		
 		_Puzzle.Instance.prototype.complete = complete;
-		_Puzzle.Instance.prototype.on_state_changed = on_state_changed;
+		
+		Object.defineProperty( _Puzzle.Instance.prototype, 'ready', { 
+			get: function () {
+				
+				return this.shapes.length === this.numShapesRequired;
+			
+			}
+		});
 		
 		Object.defineProperty( _Puzzle.Instance.prototype, 'isCompleted', { 
 			get: function () {
@@ -156,8 +175,38 @@
 		
 		this.id = puzzleCount++;
 		this.name = typeof parameters.name === 'string' ? parameters.name : puzzleNameBase;
-		this.numElementsMin = parameters.numElementsMin;
+		
+		// grid
+		
+		parameters.grid = typeof parameters.grid === 'string' || parameters.grid instanceof THREE.Geometry ? { modulesGeometry: parameters.grid } : ( parameters.grid || {} );
+		parameters.grid.puzzle = this;
+		
+		this.grid = new _Grid.Instance( parameters.grid );
+		this.add( this.grid );
+		
+		// toggle
+		
+		parameters.toggleSwitch = typeof parameters.toggleSwitch === 'string' || parameters.toggleSwitch instanceof THREE.Geometry ? { geometry: parameters.toggleSwitch } : ( parameters.toggleSwitch || {} );
+		parameters.toggleSwitch.target = this;
+		
+		this.toggleSwitch = new _ToggleSwitch.Instance( parameters.toggleSwitch );
+		this.toggleSwitch.stateChanged.add( this.toggle, this );
+		this.add( this.toggleSwitch );
+		
+		// additional properties
+		
+		this.numGridModules = this.grid.modules.length;
+		this.numElementsMin = main.is_number( parameters.numElementsMin ) && parameters.numElementsMin > 0 ? parameters.numElementsMin : this.numGridModules;
+		this.shapesEnabled = main.ensure_array( parameters.shapesEnabled );
+		this.shapesDisabled = main.ensure_array( parameters.shapesDisabled );
+		this.shapes = [];
+		this.numShapesRequired = main.is_number( parameters.numShapesRequired ) && parameters.numShapesRequired > 0 ? parameters.numShapesRequired : 1;
+		if ( this.shapesEnabled.length > 0 && this.numShapesRequired > this.shapesEnabled.length ) {
 			
+			this.numShapesRequired = this.shapesEnabled.length;
+			
+		}
+		
 		this.hints = {
 			list: main.type( parameters.hints ) === 'array' ? ( parameters.hintsCombine === true ? [].concat( parameters.hints, _Puzzle.hints ) : parameters.hints ) : _Puzzle.hints,
 			used: []
@@ -169,24 +218,8 @@
 		// signals
 		
 		this.stateChanged = new signals.Signal();
-		
-		// grid
-		
-		parameters.grid = typeof parameters.grid === 'string' || parameters.grid instanceof THREE.Geometry ? { modulesGeometry: parameters.grid } : ( parameters.grid || {} );
-		parameters.grid.puzzle = this;
-		
-		this.grid = new _Grid.Instance( parameters.grid );
-		this.grid.stateChanged.add( this.on_state_changed, this );
-		this.add( this.grid );
-		
-		// toggle
-		
-		parameters.toggleSwitch = typeof parameters.toggleSwitch === 'string' || parameters.toggleSwitch instanceof THREE.Geometry ? { geometry: parameters.toggleSwitch } : ( parameters.toggleSwitch || {} );
-		parameters.toggleSwitch.target = this;
-		
-		this.toggleSwitch = new _ToggleSwitch.Instance( parameters.toggleSwitch );
-		this.toggleSwitch.stateChanged.add( this.toggle, this );
-		this.add( this.toggleSwitch );
+		this.shapesReady = new signals.Signal();
+		this.shapesNeeded = new signals.Signal();
 		
 		// reset self
 		
@@ -217,9 +250,10 @@
 		
 		// properties
 		
-		this.completed = false;
-		this.perfect = false;
-		this.score = this.scoreLast = 0;
+		this.started = this.completed = this.perfect = false;
+		this.score = this.scoreLast = this.scorePct = 0;
+		this.scoreStatus = _Puzzle.scores.base.status;
+		this.scoreIcon = _Puzzle.scores.base.icon;
 		this.scoreMap = reset_score_map( this.scoreMap );
 		
 		// grid
@@ -230,15 +264,15 @@
 	
 	/*===================================================
 	
-	activate
+	toggle
 	
 	=====================================================*/
 	
 	function toggle () {
 		
-		// clean grid
+		// clean puzzle
 		
-		this.grid.clean();
+		this.clean();
 		
 		// set active state
 		
@@ -256,14 +290,108 @@
 	}
 	
 	function activate () {
-		
 		console.log( this, this.name, ' ACTIVATED!' );
+		this.started = true;
+		
+		// TODO: start spawning farmer enemies that plant bad plants or destroy plants?
+		
+		// signal
+		
+		this.stateChanged.dispatch( this.started );
+		
+		// check shape count
+		
+		if ( this.ready ) {
+			
+			this.shapesReady.dispatch( this );
+			
+		}
+		else {
+			
+			this.shapesNeeded.dispatch( this );
+			
+		}
 		
 	}
 	
 	function deactivate () {
-		
 		console.log( this, this.name, ' deactivated :(' );
+		this.started = false;
+		
+		// signal
+		
+		this.stateChanged.dispatch( this.started );
+		
+	}
+	
+	/*===================================================
+	
+	shapes
+	
+	=====================================================*/
+	
+	function add_shape ( shape ) {
+		
+		var added = false;
+		
+		if ( this.ready !== true ) {
+			
+			// doesnt have shape yet and is an enabled shape
+			
+			if ( this.shapes.indexOf( shape ) === -1 && ( this.shapesEnabled.length === 0 || this.shapesEnabled.indexOf( shape ) !== -1 ) && ( this.shapesDisabled.length === 0 || this.shapesDisabled.indexOf( shape ) === -1 ) ) {
+				
+				this.shapes.push( shape );
+				added = true;
+				
+			}
+			
+			if ( this.ready ) {
+				
+				this.shapesReady.dispatch( this );
+				
+			}
+			
+		}
+		
+		return added;
+		
+	}
+	
+	function remove_shape ( shape ) {
+		
+		var removed = false,
+			index;
+		
+		index = this.shapes.indexOf( shape );
+		
+		if ( index !== -1 ) {
+			
+			this.shapes.splice( index, 1 );
+			removed = true;
+			
+		}
+		
+		this.shapesNeeded.dispatch( this );
+		
+		return removed;
+	
+	}
+	
+	/*===================================================
+	
+	clean
+	
+	=====================================================*/
+	
+	function clean () {
+		
+		// TODO: remove any shapes in puzzle not in shapes list
+		
+		
+		
+		// clean grid
+		
+		this.grid.clean();
 		
 	}
 	
@@ -278,18 +406,14 @@
 		var i, l,
 			j, k,
 			elements,
-			numElementsBase = this.grid.modules.length,
 			numElementsUsed,
-			numElementsDiff,
 			numElementsMin,
 			numElementsToMin,
 			title,
 			hint,
-			scorePct,
 			scoreInfo,
 			scoreIndex,
 			scoreHighestInfo,
-			scoreStatus,
 			scoreIcon,
 			rewards,
 			rewardInfo,
@@ -313,17 +437,13 @@
 			
 			// compare num elements used to base num required
 			
-			numElementsDiff = numElementsBase - numElementsUsed;
-			
-			numElementsMin = main.is_number( this.numElementsMin ) && this.numElementsMin > 0 ? this.numElementsMin : numElementsBase;
-			
-			numElementsToMin = Math.max( 0, numElementsUsed - numElementsMin );
+			numElementsToMin = Math.max( 0, numElementsUsed - this.numElementsMin );
 			
 			// store score
 			
 			this.scoreLast = this.score;
 			
-			this.score = Math.min( 1, 1 - numElementsToMin / ( numElementsBase - numElementsMin ) );
+			this.score = Math.min( 1, 1 - numElementsToMin / ( this.numGridModules - numElementsMin ) );
 			
 			if ( isNaN( this.score ) || this.score < 0 ) {
 				
@@ -331,7 +451,7 @@
 				
 			}
 			
-			scorePct = Math.round( this.score * 100 ) + "%";
+			this.scorePct = Math.round( this.score * 100 ) + "%";
 			
 			// use score map to determine status/icon/rewards
 			
@@ -369,9 +489,9 @@
 				
 			}
 			
-			scoreStatus = scoreHighestInfo.status;
+			this.scoreStatus = scoreHighestInfo.status;
 			
-			scoreIcon = scoreHighestInfo.icon;
+			this.scoreIcon = scoreHighestInfo.icon;
 			
 			// perfect score
 			if ( scoreIndex === this.scoreMap.length - 1 ) {
@@ -420,10 +540,10 @@
 			}
 			
 			//
-			// TODO: use for dom > numElementsBase, numElementsMin, numElementsUsed, scorePct, scoreIcon, scoreStatus, title, hint
+			// TODO: use for ui > this.numGridModules, this.numElementsMin, numElementsUsed, this.scorePct, scoreIcon, this.scoreStatus, title, hint
 			//
 			console.log( 'PUZZLE COMPLETE INFO: ' );
-			console.log( 'numElementsBase ', numElementsBase, 'numElementsMin', numElementsMin, ' numElementsUsed ', numElementsUsed, ' scoreLast ', this.scoreLast, ' score ', this.score, 'scorePct', scorePct, ' scoreIcon', scoreIcon, ' scoreStatus', scoreStatus, 'title', title, 'hint', hint );
+			console.log( 'this.numGridModules', this.numGridModules, 'this.numElementsMin', this.numElementsMin, ' numElementsUsed ', numElementsUsed, ' scoreLast ', this.scoreLast, ' score ', this.score, 'scorePct', this.scorePct, ' scoreIcon', scoreIcon, ' this.scoreStatus', this.scoreStatus, 'title', title, 'hint', hint );
 			
 			// show all rewards
 			// give all enabled rewards
@@ -440,7 +560,7 @@
 					
 					reward = rewardList[ j ];
 					
-					// TODO: show dom > reward.image, reward.label
+					// TODO: show ui > reward.image, reward.label
 					
 					if ( rewardInfo.enabled === true ) {
 						
@@ -527,18 +647,6 @@
 			this.grid.complete();
 			
 		}
-		
-	}
-	
-	/*===================================================
-	
-	state
-	
-	=====================================================*/
-	
-	function on_state_changed ( module ) {
-		console.log(' PUZZLE GRID STATE CHANGE for ', this.id );
-		this.stateChanged.dispatch( module );
 		
 	}
 	

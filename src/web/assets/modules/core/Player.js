@@ -180,6 +180,11 @@
 		
 		character = new _Hero.Instance();
 		
+		// listen for planting puzzle changes
+		
+		character.planting.puzzleStarted.add( on_puzzle_started );
+		character.planting.puzzleStopped.add( on_puzzle_stopped );
+		
 		// add handler for physics safety net
 		
 		if ( character.rigidBody ) {
@@ -225,7 +230,7 @@
 		
 		actions.add( 'pointer', {
 			callbacks: {
-				down: function ( parameters ) {
+				drag: function ( parameters ) {
 					
 					// start rotating camera if character is not acting
 					
@@ -236,20 +241,17 @@
 					}
 					
 				},
-				up: function ( parameters ) {
+				dragend: function ( parameters ) {
 					
 					// stop camera rotate
 					
 					cameraControls.rotate( parameters.event, true );
 					
-				}
-			}
-		} );
-		
-		actions.add( 'pointerwheel', {
-			callbacks: {
-				up: function ( parameters ) {
+				},
+				wheel: function ( parameters ) {
+					
 					cameraControls.zoom( parameters.event );
+					
 				}
 			}
 		} );
@@ -347,7 +349,6 @@
 		// pointer
 		
 		map[ 'pointer' ] = 'pointer';
-		map[ 'pointerwheel' ] = 'pointerwheel';
 		
 		// wasd / arrows
 		
@@ -425,10 +426,12 @@
 		
 		// signals
 		
-		shared.signals.gamePointerPressed.add( trigger_key );
-		shared.signals.gamePointerReleased.add( trigger_key );
 		shared.signals.gamePointerTapped.add( trigger_key );
+		shared.signals.gamePointerDoubleTapped.add( trigger_key );
 		shared.signals.gamePointerHeld.add( trigger_key );
+		shared.signals.gamePointerDragStarted.add( trigger_key );
+		shared.signals.gamePointerDragged.add( trigger_key );
+		shared.signals.gamePointerDragEnded.add( trigger_key );
 		shared.signals.gamePointerWheel.add( trigger_key );
 		
 		shared.signals.keyPressed.add( trigger_key );
@@ -444,10 +447,12 @@
 		
 		// signals
 		
-		shared.signals.gamePointerPressed.remove( trigger_key );
-		shared.signals.gamePointerReleased.remove( trigger_key );
 		shared.signals.gamePointerTapped.remove( trigger_key );
+		shared.signals.gamePointerDoubleTapped.remove( trigger_key );
 		shared.signals.gamePointerHeld.remove( trigger_key );
+		shared.signals.gamePointerDragStarted.remove( trigger_key );
+		shared.signals.gamePointerDragged.remove( trigger_key );
+		shared.signals.gamePointerDragEnded.remove( trigger_key );
 		shared.signals.gamePointerWheel.remove( trigger_key );
 		
 		shared.signals.keyPressed.remove( trigger_key );
@@ -484,34 +489,16 @@
 		
 		// special cases for pointer / mouse
 		
-		if ( type === 'vmousedown' ) {
+		if ( type === 'tap' || type === 'doubletap' || type === 'hold' || type === 'dragstart' || type === 'drag' || type === 'dragend' ) {
 			
 			keyName = 'pointer';
-			state = 'down';
-			
-		}
-		else if ( type === 'vmouseup' ) {
-			
-			keyName = 'pointer';
-			state = 'up';
-			
-		}
-		else if ( type === 'tap' ) {
-			
-			keyName = 'pointer';
-			state = 'tap';
-			
-		}
-		else if ( type === 'taphold' ) {
-			
-			keyName = 'pointer';
-			state = 'hold';
+			state = type;
 			
 		}
 		else if ( type === 'mousewheel' || type === 'DOMMouseScroll' ) {
 			
-			keyName = 'pointerwheel';
-			state = 'up';
+			keyName = 'pointer';
+			state = 'wheel';
 			
 		}
 		// fallback to key press
@@ -549,6 +536,189 @@
 			actions.execute( keyNameActual, state, parameters );
 			
 		}
+		
+	}
+	
+	/*===================================================
+    
+    ui
+    
+    =====================================================*/
+	
+	function on_puzzle_started ( puzzle ) {
+		
+		console.log( 'puzzle started', puzzle );
+		
+		// modify ui to reflect new puzzle
+		
+		main.dom_collapse( {
+			element: $( "#fieldActiveWarning" ),
+			time: 0
+		} );
+		
+		main.dom_collapse( {
+			element: $( "#fieldActive" ),
+			show: true,
+			time: 0
+		} );
+		
+		// overview
+		
+		$( "#fieldActiveName" ).html( puzzle.name );
+		$( "#fieldActiveScoreBar" ).css( 'width', this.scorePct + '%' );
+		$( "#fieldActiveElementCount" ).html( puzzle.elements.length );
+		$( "#fieldActiveNumElementsMin" ).html( puzzle.numElementsMin );
+		
+		// shapes
+		
+		$( "#fieldActiveShapesRequired" ).html( puzzle.numShapesRequired );
+		
+		$( "#fieldActiveShapesPicker button" ).on( 'tap.toggleShape', on_toggle_shape );
+		
+		$.each($('#fieldActiveShapesPicker button').data('events'), function(i, event){
+			console.log( event );
+			$.each(event, function(i, handler){
+
+				console.log( ' > ', handler );
+
+			});
+
+		});
+		
+		// puzzle ready status
+		
+		puzzle.shapesNeeded.add( on_puzzle_waiting );
+		
+		if ( puzzle.ready !== true ) {
+			
+			on_puzzle_waiting( puzzle );
+			
+		}
+		else {
+			
+			on_puzzle_ready( puzzle );
+			
+		}
+		
+	}
+	
+	function on_toggle_shape ( e ) {
+		
+		var puzzle = character.planting.puzzle,
+			$button = $( e.currentTarget ),
+			shape = $button.attr( 'id' ),
+			shapesChanged;
+		console.log( 'toggle shape, puzzle is ', puzzle, ' e ', e, 'button is ', $button, ' and shape is ', shape );
+		// if valid puzzle
+		
+		if ( puzzle ) {
+			
+			// add / remove shapes based on whether button active
+			
+			if ( $button.hasClass( 'active' ) ) {
+				
+				shapesChanged = puzzle.remove_shape( shape );
+				console.log( 'removing shape', shape, ' shapesChanged? ', shapesChanged );
+			}
+			else {
+				
+				shapesChanged = puzzle.add_shape( shape );
+				console.log( 'adding shape', shape, ' shapesChanged? ', shapesChanged );
+			}
+			
+			// toggle button active if shapes changed
+			
+			if ( shapesChanged === true ) {
+				
+				$button.toggleClass( 'active' );
+				
+			}
+			
+		}
+		
+	}
+	
+	function on_puzzle_waiting ( puzzle ) {
+		
+		console.log( 'puzzle waiting', puzzle );
+		
+		puzzle.shapesReady.add( on_puzzle_ready );
+		
+		// trigger farming menu
+		
+		shared.domElements.$buttonFarmingMenu.trigger( 'tap' );
+		
+		// scroll to field
+		
+		$.scrollTo( shared.domElements.$field, shared.domScrollTime, {
+			easing: 'easeInOutCubic'
+		} );
+		
+		// update status
+		
+		$( "#fieldActiveStatusIcons img" ).addClass( 'hidden' );
+		$( "#fieldActiveStatusText" ).html( 'waiting' );
+		$( "#fieldActiveStatusIcons #waiting" ).removeClass( 'hidden' );
+		
+		// hide map and rewards
+		
+		main.dom_collapse( {
+			element: $( "#fieldActiveMap, #fieldActiveRewards" )
+		} );
+		
+	}
+	
+	function on_puzzle_ready ( puzzle ) {
+		
+		console.log( 'puzzle ready', puzzle );
+		
+		puzzle.shapesReady.remove( on_puzzle_ready );
+		
+		// update status
+		
+		$( "#fieldActiveStatusIcons img" ).addClass( 'hidden' );
+		$( "#fieldActiveStatusText" ).html( 'ready' );
+		$( "#fieldActiveStatusIcons #ready" ).removeClass( 'hidden' );
+		
+		// hide shapes required warning
+		
+		main.dom_collapse( {
+			element: $( "#fieldActiveShapesRequiredWarning" ),
+			time: 0
+		} );
+		
+		// show map and rewards
+		
+		main.dom_collapse( {
+			element: $( "#fieldActiveMap, #fieldActiveRewards" ),
+			show: true
+		} );
+		
+	}
+	
+	function on_puzzle_stopped ( puzzle ) {
+		
+		console.log( 'puzzle stopped', puzzle );
+		
+		// shapes
+		
+		$( "#fieldActiveShapesPicker button" ).off( '.toggleShape' );
+		
+		puzzle.shapesNeeded.remove( on_puzzle_waiting );
+		puzzle.shapesReady.remove( on_puzzle_ready );
+		
+		// remove puzzle from ui
+		
+		main.dom_collapse( {
+			element: $( "#fieldActive, #fieldActiveMap, #fieldActiveRewards" ),
+			time: 0
+		} );
+		
+		main.dom_collapse( {
+			element: $( "#fieldActiveWarning" ),
+			show: true,
+			time: 0
+		} );
 		
 	}
 	

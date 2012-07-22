@@ -229,8 +229,8 @@
 		
 		this.callbacks = parameters.callbacks || {};
 		
-		this.callbackNameActive = parameters.callbackNameActive || 'down';
-		this.callbackNameInactive = parameters.callbackNameInactive && parameters.callbackNameInactive !== this.callbackNameActive ? parameters.callbackNameInactive : 'up';
+		this.callbackNameActive = parameters.callbackNameActive || 'tap';
+		this.callbackNameInactive = parameters.callbackNameInactive && parameters.callbackNameInactive !== this.callbackNameActive ? parameters.callbackNameInactive : 'release';
 		
 		this.active = false; 
 		this.activeChecks = parameters.activeChecks || {};

@@ -29,35 +29,43 @@
                 extra = (scrollTop > dwh) ? dwh - scrollTop : 0;
 			
             for (var i = 0; i < sticked.length; i++) {
-                var s = sticked[i],
-                    elementTop = s.stickyWrapper.offset().top,
-                    etse = elementTop - s.topSpacing - extra;
+                var s = sticked[i];
 				
 				if ( s.stickyElement.not(":hidden").length > 0 ) {
+					
+					var elementTop = s.stickyWrapper.offset().top,
+						topSpacing = ( typeof s.topSpacing === 'function' ? s.topSpacing() : s.topSpacing ),
+						etse = elementTop - topSpacing - extra;
+					
 					if (scrollTop <= etse) {
 						if (s.currentTop !== null) {
 							s.stickyElement
 								.css('position', '')
 								.css('top', '')
 								.removeClass(s.className + " " + s.classNameNav);
-							s.stickyElement.parent().removeClass(s.className);
+							s.stickyWrapper
+								.css('height', '' )
+								.removeClass(s.className);
 							s.currentTop = null;
 						}
 					}
 					else {
-						var newTop = documentHeight - s.stickyElement.outerHeight()
-							- s.topSpacing - s.bottomSpacing - scrollTop - extra;
+						var bottomSpacing = ( typeof s.bottomSpacing === 'function' ? s.bottomSpacing() : s.bottomSpacing ),
+							newTop = documentHeight - s.stickyElement.outerHeight() - topSpacing - bottomSpacing - scrollTop - extra;
+						
 						if (newTop < 0) {
-							newTop = newTop + s.topSpacing;
+							newTop = newTop + topSpacing;
 						} else {
-							newTop = s.topSpacing;
+							newTop = topSpacing;
 						}
 						if (s.currentTop != newTop) {
 							s.stickyElement
 								.css('position', 'fixed')
 								.css('top', newTop)
 								.addClass(s.className + ( s.stickyElement.is(".navbar,.subnavbar") ? " " + s.classNameNav : "" ) );
-							s.stickyElement.parent().addClass(s.className);
+							s.stickyWrapper
+								.css('height', s.stickyElement.outerHeight( true ) )
+								.addClass(s.className);
 							s.currentTop = newTop;
 						}
 					}
@@ -80,16 +88,15 @@
                         .attr('id', stickyId + '-sticky-wrapper')
                         .addClass(o.wrapperClassName);
                     stickyElement.wrapAll(wrapper);
-                    var stickyWrapper = stickyElement.parent();
-                    stickyWrapper.css('height', stickyElement.outerHeight());
+                    
                     sticked.push({
                         topSpacing: o.topSpacing,
                         bottomSpacing: o.bottomSpacing,
                         stickyElement: stickyElement,
                         currentTop: null,
-                        stickyWrapper: stickyWrapper,
+                        stickyWrapper: stickyElement.parent(),
                         className: o.className,
-						classNameNav: o.classNameNav + ( o.bottomSpacing > o.topSpacing ? 'bottom' : 'top' )
+						classNameNav: o.classNameNav + ( ( typeof o.bottomSpacing === 'function' ? o.bottomSpacing() : o.bottomSpacing ) > ( typeof o.topSpacing === 'function' ? o.topSpacing() : o.topSpacing ) ? 'bottom' : 'top' )
                     });
                 });
             },

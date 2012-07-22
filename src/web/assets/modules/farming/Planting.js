@@ -17,7 +17,7 @@
 		_ToggleSwitch,
 		_GridModule,
 		_GridModel,
-		_Plant,
+		_GridElement,
 		_MathHelper,
 		_ObjectHelper,
 		utilVec31Rotate,
@@ -38,7 +38,7 @@
 			"assets/modules/puzzles/Grid.js",
 			"assets/modules/puzzles/GridModule.js",
 			"assets/modules/puzzles/GridModel.js",
-			"assets/modules/farming/Plant.js",
+			"assets/modules/puzzles/GridElement.js",
 			"assets/modules/utils/MathHelper.js",
 			"assets/modules/utils/ObjectHelper.js"
 		],
@@ -52,7 +52,7 @@
     
     =====================================================*/
 	
-	function init_internal ( g, pzl, ts, gr, gm, gmodel, pl, mh, oh ) {
+	function init_internal ( g, pzl, ts, gr, gm, gmodel, ge, mh, oh ) {
 		console.log('internal planting', _Planting);
 		
 		_Game = g;
@@ -61,7 +61,7 @@
 		_Grid = gr;
 		_GridModule = gm;
 		_GridModel = gmodel;
-		_Plant = pl;
+		_GridElement = ge;
 		_MathHelper = mh;
 		_ObjectHelper = oh;
 		
@@ -124,10 +124,13 @@
 		
 		// signals
 		
+		this.puzzleStarted = new signals.Signal();
+		this.puzzleStopped = new signals.Signal();
+		
 		this.planted = new signals.Signal();
 		this.plantedSingle = new signals.Signal();
 		this.plantedMulti = new signals.Signal();
-		this.selected = new signals.Signal();
+		this.plantSelected = new signals.Signal();
 		
 		// reset
 		
@@ -167,13 +170,15 @@
 	
 	function select_field ( parameters ) {
 		
-		var targetObject;
+		var toggleSwitch;
 		
 		// handle parameters
 		
 		parameters = parameters || {};
 		
-		targetObject = _Game.get_pointer_object( {
+		// find puzzle toggle switch under pointer
+		
+		toggleSwitch = _Game.get_pointer_object( {
 			objects: _Puzzle.allToggleSwitches,
 			hierarchical: false,
 			pointer: main.get_pointer( parameters.event )
@@ -181,22 +186,11 @@
 		
 		// if toggle switch found
 		
-		if ( targetObject instanceof _ToggleSwitch.Instance ) {
+		if ( toggleSwitch instanceof _ToggleSwitch.Instance ) {
 			
-			// change to new puzzle
-			console.log( 'target object is toggle switch!');
-			this.change_puzzle( targetObject.target );
+			// change puzzle
 			
-			// toggle switch
-			
-			
-			
-			// toggle not necessary?
-			
-			
-			
-			
-			targetObject.toggle();
+			this.change_puzzle( toggleSwitch.target );
 			
 		}
 		
@@ -302,7 +296,7 @@
 				
 				// if has plant
 				
-				if ( this.plant instanceof _Plant.Instance ) {
+				if ( this.plant instanceof _GridElement.Instance ) {
 					
 					console.log(' > PLANTING: step has plant: ', this.plant);
 					
@@ -332,8 +326,7 @@
 	
 	function setup ( parameters ) {
 		
-		var targetObject,
-			selected;
+		var targetObject;
 		
 		// properties
 		
@@ -343,14 +336,14 @@
 		
 		if ( parameters && parameters.plant ) {
 			
-			if ( parameters.plant instanceof _Plant.Instance ) {
+			if ( parameters.plant instanceof _GridElement.Instance ) {
 				
 				targetObject = parameters.plant;
 				
 			}
 			else {
 				
-				targetObject = new _Plant.Instance( parameters.plant );
+				targetObject = new _GridElement.Instance( parameters.plant );
 				
 			}
 		
@@ -374,7 +367,7 @@
 		
 		// if is a plant
 		
-		if ( targetObject instanceof _Plant.Instance ) {
+		if ( targetObject instanceof _GridElement.Instance ) {
 			
 			// use plant
 			
@@ -384,7 +377,7 @@
 			
 			if ( this.plantFromSelection === true ) {
 				
-				this.selected.dispatch( targetObject );
+				this.plantSelected.dispatch( targetObject );
 				
 			}
 			
@@ -396,7 +389,7 @@
 		
 		// if has not started planting and plant is valid
 		
-		if ( this.started !== true && this.plant instanceof _Plant.Instance ) {
+		if ( this.started !== true && this.plant instanceof _GridElement.Instance ) {
 			console.log('start PLANTING!');
 			
 			// set started
@@ -414,7 +407,7 @@
 			// signals
 			
 			shared.signals.gameUpdated.add( this.update, this );
-			shared.signals.gamePointerMoved.add( this.on_pointer_moved, this );
+			shared.signals.gamePointerDragged.add( this.on_pointer_moved, this );
 			
 		}
 		
@@ -426,7 +419,7 @@
 		
 		// if has plant, update seed position
 		
-		if ( this.plant instanceof _Plant.Instance ) {
+		if ( this.plant instanceof _GridElement.Instance ) {
 			
 			//this.plant.$seed
 			
@@ -458,7 +451,7 @@
 		
 		// if has plant and module
 		
-		if ( this.plant instanceof _Plant.Instance && this.module instanceof _GridModule.Instance ) {
+		if ( this.plant instanceof _GridElement.Instance && this.module instanceof _GridModule.Instance ) {
 			
 			// show last test between plant and module
 			
@@ -500,7 +493,7 @@
 			
 			// if successful
 			
-			if ( plantSuccessful && this.plant instanceof _Plant.Instance ) {
+			if ( plantSuccessful && this.plant instanceof _GridElement.Instance ) {
 				console.log(' > PLANTING: plant added!', this.plant );
 				plantPlanted = this.plant;
 				plantPlantedNodes = plantPlanted.get_layout_node_total();
@@ -559,7 +552,7 @@
 		// stop updating
 		
 		shared.signals.gameUpdated.remove( this.update, this );
-		shared.signals.gamePointerMoved.remove( on_pointer_moved, this );
+		shared.signals.gamePointerDragged.remove( on_pointer_moved, this );
 		
 		// stop
 			
@@ -604,7 +597,7 @@
 		
 		parameters = parameters || {};
 		
-		// if has puzzle build array of objects that are involved in planting process
+		// build array of objects that are involved in planting process
 		
 		if ( this.puzzle instanceof _Puzzle.Instance ) {
 			
@@ -646,21 +639,73 @@
 	
 	function change_puzzle ( puzzle ) {
 		
+		var puzzleNew,
+			puzzleLast;
+		
 		// if new puzzle
 		
-		if ( this.puzzle !== puzzle ) {
+		if ( this.puzzle !== puzzle && puzzle instanceof _Puzzle.Instance ) {
 			
-			// toggle previous puzzle grid
+			puzzleNew = true;
+			puzzleLast = this.puzzle;
 			
-			if ( this.puzzle instanceof _Puzzle.Instance ) {
+			// change
+			
+			this.puzzle = puzzle;
+			
+		}
+		// else toggle current off
+		else if ( typeof puzzle === 'undefined' || this.puzzle === puzzle || ( this.puzzle instanceof _Puzzle.Instance && this.puzzle.started === false ) ) {
+			
+			puzzleLast = this.puzzle;
+			
+			// clear current
+			
+			this.puzzle = undefined;
+			
+		}
+		
+		// handle last puzzle
+		
+		if ( puzzleLast instanceof _Puzzle.Instance ) {
+			
+			// remove state change listener
+			
+			puzzleLast.stateChanged.remove( this.change_puzzle, this );
+			
+			// toggle off
+			
+			if ( puzzleLast.started === true ) {
+				
+				puzzleLast.toggleSwitch.toggle();
+			
+			}
+			
+			// signal
+			
+			this.puzzleStopped.dispatch( puzzleLast );
+			
+		}
+		
+		// handle new puzzle
+		
+		if ( puzzleNew === true ) {
+			
+			// toggle on
+			
+			if ( this.puzzle.started !== true ) {
 				
 				this.puzzle.toggleSwitch.toggle();
 				
 			}
 			
-			// store new puzzle
+			// listen for state change
 			
-			this.puzzle = puzzle;
+			this.puzzle.stateChanged.add( this.change_puzzle, this );
+			
+			// signal
+			
+			this.puzzleStarted.dispatch( this.puzzle );
 			
 		}
 		
@@ -684,7 +729,7 @@
 		
 		// test module
 		
-		if ( this.plant instanceof _Plant.Instance ) {
+		if ( this.plant instanceof _GridElement.Instance ) {
 			
 			this.plant.test_occupy_module_smart( module );
 			
@@ -704,7 +749,7 @@
 			
 			// remove last plant
 			
-			if ( this.plant instanceof _Plant.Instance ) {
+			if ( this.plant instanceof _GridElement.Instance ) {
 				console.log(' > PLANTING: plant changing, current planted?', this.plant.hasModule );
 				// clear last test
 				
@@ -760,7 +805,7 @@
 			
 			// if new plant
 			
-			if ( this.plant instanceof _Plant.Instance ) {
+			if ( this.plant instanceof _GridElement.Instance ) {
 				
 				// if currently planted
 				
@@ -893,7 +938,7 @@
 	
 	function stop_rotate_plant () {
 		console.log(' > PLANTING: rotation STOP ');
-		if ( this.plant instanceof _Plant.Instance ) {
+		if ( this.plant instanceof _GridElement.Instance ) {
 			
 			//this.plant.$seed
 			

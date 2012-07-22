@@ -261,7 +261,7 @@
 			
 			shared.renderer.sortObjects = false;
 			
-			shared.signals.gamePointerMoved.add( on_pointer_moved );
+			shared.signals.gamePointerDragged.add( on_pointer_moved );
 			
 			shared.signals.gameUpdated.add( update );
 			
@@ -287,7 +287,7 @@
 		
 		sky.animate( { stop: true } );
 		
-		shared.signals.gamePointerMoved.remove( on_pointer_moved );
+		shared.signals.gamePointerDragged.remove( on_pointer_moved );
 		
 		shared.signals.gameUpdated.remove( update );
 		

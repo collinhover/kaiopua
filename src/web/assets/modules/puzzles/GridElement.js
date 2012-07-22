@@ -16,8 +16,7 @@
 		_ObjectHelper,
 		_MathHelper,
 		gridElementCount = 0,
-		rotationAxis,
-		utilQ1Rotate;
+		rotationAxis;
 	
 	/*===================================================
     
@@ -51,19 +50,26 @@
 		_ObjectHelper = oh;
 		_MathHelper = mh;
 		
-		// utils
-		
-		utilQ1Rotate = new THREE.Quaternion();
-		
 		// properties
+		
+		_GridElement.sizeBase = new THREE.Vector3( 20, 40, 20 );
+		_GridElement.timeGrow = 500;
+		_GridElement.timeShow = 125;
+		_GridElement.timeHide = 125;
+		_GridElement.opacityVacant = 0.5;
+		_GridElement.opacityOccupied = 0.5;
 		
 		rotationAxis = new THREE.Vector3( 0, 1, 0 );
 		_GridElement.NODE_EMPTY = 0;
 		_GridElement.NODE_SELF = 1;
 		
+		
 		// instance
 		
 		_GridElement.Instance = GridElement;
+		
+		_GridElement.Instance.prototype.reset = reset;
+		_GridElement.Instance.prototype.reset_material = reset_material;
 		
 		_GridElement.Instance.prototype.clone = clone;
 		
@@ -108,7 +114,7 @@
 	
 	function GridElement ( parameters ) {
 		
-		gridElementCount++;
+		var c;
 		
 		// handle parameters
 		
@@ -116,11 +122,15 @@
 		
 		// properties
 		
-		this.id = gridElementCount;
+		this.id = gridElementCount++;
 		this.rotationAngle = this.rotationAngleLayout = 0;
+		this.geometry = typeof parameters.geometry === 'string' ? main.get_asset_data( parameters.geometry ) : ( parameters.geometry || new THREE.CubeGeometry( _GridElement.sizeBase.x, _GridElement.sizeBase.y, _GridElement.sizeBase.z ) );
 		this.material = parameters.material || new THREE.MeshLambertMaterial( { vertexColors: THREE.VertexColors, shading: THREE.SmoothShading } );
-		this.geometry = typeof parameters.geometry === 'string' ? main.get_asset_data( parameters.geometry ) : parameters.geometry;
-
+		this.materialBase = _ObjectHelper.clone_material( this.material );
+		
+		this.timeGrow = main.is_number( parameters.timeGrow ) ? parameters.timeGrow : _Plant.timeGrow;
+		this.utilQ1Rotate = new THREE.Quaternion();
+		
 		// layout
 		
 		this.layout = generate_layout.call( this, parameters.layout );
@@ -135,7 +145,36 @@
 		
 		// customizations
 		
+		//c = parameters.customizations = parameters.customizations || {};
+		//c.geometry = c.geometry || new THREE.CubeGeometry( 60, 120, 60 );
+		
 		this.customize( parameters.customizations );
+		
+		// reset
+		
+		this.reset();
+		
+	}
+	
+	/*===================================================
+	
+	reset
+	
+	=====================================================*/
+	
+	function reset () {
+		
+		this.reset_material();
+		
+	}
+	
+	function reset_material () {
+		
+		this.material.color.copy( this.materialBase.color );
+		this.material.ambient.copy( this.materialBase.ambient );
+		this.material.vertexColors = this.materialBase.vertexColors;
+		this.material.transparent = false;
+		this.material.opacity = 1;
 		
 	}
 	
@@ -147,10 +186,13 @@
 	
 	function clone ( c ) {
 		
-		var cMaterial,
+		var i, l,
+			cMaterial,
 			cMaterialCustom,
 			cGeometry,
-			cGeometryCustom;
+			cGeometryCustom,
+			model,
+			modelCustom;
 		
 		if ( typeof c === 'undefined' ) {
 			
@@ -162,6 +204,7 @@
 			
 			// properties
 			
+			c.timeGrow = this.timeGrow;
 			c.rotationAngle = this.rotationAngle;
 			c.rotationAngleLayout = this.rotationAngleLayout;
 			c.material = _ObjectHelper.clone_material( this.material );
@@ -191,6 +234,26 @@
 				c.customizations.geometry = _ObjectHelper.clone_geometry( this.customizations.geometry );
 
 			}
+			
+			// models
+			
+			for ( i = 0, l = c.models.length; i < l; i++ ) {
+				
+				model = c.models[ i ];
+				model.scale.set( 1, 1, 1 );
+				
+				if ( c.hasCustomModels ) {
+					
+					modelCustom = c.customizations.models[ i ];
+					modelCustom.scale.set( 1, 1, 1 );
+					
+				}
+				
+			}
+			
+			// reset
+			
+			c.reset();
 			
 		}
 		
@@ -447,10 +510,22 @@
 					
 					if ( layoutModule instanceof _GridModule.Instance ) {
 						
-						model = models[ modelCount ];
+						model = this.modelsCurrent[ modelCount ];
 						modelCount++;
 						
 						layoutModule.occupant = model;
+						
+						// set scale to 0
+						
+						model.scale.set( 0, 0, 0 );
+						
+						// tween scale to 1
+						
+						model.tween_properties( {
+							time: this.timeGrow,
+							easing: TWEEN.Easing.Back.EaseOut,
+							scale: utilVec31Grow.set( 1, 1, 1 )
+						} );
 						
 					}
 					
@@ -576,6 +651,11 @@
 		
 		if ( this.module !== moduleNew ) {
 			console.log( this, ' change module from ', this.module, ' >> to ', moduleNew );
+			
+			// reset material
+			
+			this.reset_material();
+			
 			// previous
 			
 			if ( this.hasModule ) {
@@ -886,6 +966,8 @@
 			
 			this._dirtyModuleTest = false;
 			
+			// for each module
+			
 			each_layout_element.call( this, this.testModules, function ( testLayoutModule ) {
 				
 				if ( testLayoutModule instanceof _GridModule.Instance ) {
@@ -901,6 +983,34 @@
 				}
 				
 			} );
+			
+			// handle this material
+			
+			// if successful
+			
+			if ( this.testSuccess === true ) {
+				
+				this.material.color.copy( _GridModule.colors.vacant );
+				this.material.ambient.copy( _GridModule.colors.vacant );
+				this.material.transparent = true;
+				this.material.opacity = _Plant.opacityVacant;
+				
+			}
+			// unsuccessful, but tested on an actual module
+			else if ( this.testModule instanceof _GridModule.Instance ) {
+				
+				this.material.color.copy( _GridModule.colors.occupied );
+				this.material.ambient.copy( _GridModule.colors.occupied );
+				this.material.transparent = true;
+				this.material.opacity = _Plant.opacityOccupied;
+			
+			}
+			// base state
+			else {
+				
+				this.reset_material();
+					
+			}
 			
 		}
 		

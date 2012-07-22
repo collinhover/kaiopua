@@ -12,7 +12,6 @@
 		assetPath = "assets/modules/puzzles/PuzzleBuilder.js",
 		_PuzzleBuilder = {},
 		_Puzzle,
-		_Farming,
 		_Dirt;
 	
 	/*===================================================
@@ -25,7 +24,6 @@
 		data: _PuzzleBuilder,
 		requirements: [
 			"assets/modules/puzzles/Puzzle.js",
-			"assets/modules/farming/Farming.js",
 			"assets/modules/farming/Dirt.js"
 		],
 		callbacksOnReqs: init_internal,
@@ -38,11 +36,10 @@
     
     =====================================================*/
 	
-	function init_internal( pzl, fm, dt ) {
+	function init_internal( pzl, dt ) {
 		console.log( 'internal PuzzleBuilder' );
 		
 		_Puzzle = pzl;
-		_Farming = fm;
 		_Dirt = dt;
 		
 		// functions
@@ -70,8 +67,7 @@
 					{
 						image: shared.pathToIcons + 'plant_rev_64.png',
 						label: 'New Plant!',
-						callback: _Farming.give_plants,
-						context: _Farming,
+						//callback: _Farming.give_plants,
 						data: 'taro_003'
 					}
 				]
@@ -98,16 +94,14 @@
 					{
 						image: shared.pathToIcons + 'plant_rev_64.png',
 						label: 'New Plant!',
-						callback: _Farming.give_plants,
-						context: _Farming,
+						//callback: _Farming.give_plants,
 						data: 'rock'
 					},
 					false,
 					{
 						image: shared.pathToIcons + 'plant_rev_64.png',
 						label: 'New Plant!',
-						callback: _Farming.give_plants,
-						context: _Farming,
+						//callback: _Farming.give_plants,
 						data: 'pineapple_001'
 					}
 				]
@@ -128,6 +122,7 @@
 				toggleSwitch: "assets/models/Field_Rolling_Hills_Toggle.js",
 				moduleInstance: _Dirt.Instance,
 				numElementsMin: 13,
+				numShapesRequired: 3,
 				hints: [
 					'Some plants will only grow when next to certain other plants!',
 					'Some puzzles are split into smaller parts. Puzzles are much easier to complete if you think this way!'
@@ -137,8 +132,7 @@
 					{
 						image: shared.pathToIcons + 'plant_rev_64.png',
 						label: 'New Plant!',
-						callback: _Farming.give_plants,
-						context: _Farming,
+						//callback: _Farming.give_plants,
 						data: 'pineapple_001'
 					}
 				]

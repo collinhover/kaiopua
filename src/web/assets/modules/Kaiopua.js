@@ -19,14 +19,17 @@ var KAIOPUA = (function (main) {
             "js/requestTimeout.js",
             "js/signals.min.js",
 			"js/sylvester.js",
-			"js/jquery.mobile.custom.min.js",
+			"js/hammer.js",
+			"js/bootstrap.min.js"
+        ],
+		jqueryPluginsList = [
+			"js/jquery.specialevent.hammer.js",
 			"js/jquery.easing-1.3.min.js",
 			"js/jquery.contentchanged.js",
 			"js/jquery.imagesloaded.min.js",
 			"js/jquery.sticky.custom.js",
 			"js/jquery.scrollTo-1.4.2.custom.js",
-			"js/bootstrap.min.js"
-        ],
+		],
         setupList = [
 			"assets/modules/core/Game.js"
         ];
@@ -82,7 +85,7 @@ var KAIOPUA = (function (main) {
 	$LAB.setGlobalDefaults({ CacheBust: true });
 	
     // load scripts
-    $LAB.script( libList ).wait( init_basics );
+    $LAB.script( libList ).wait().script( jqueryPluginsList ).wait( init_basics );
     
     function init_basics () {
 		
@@ -233,8 +236,12 @@ var KAIOPUA = (function (main) {
 			// sticky navigation bars
 			
 			shared.domElements.$navMenus.sticky( { topSpacing:0 } );
-			$(".subnav-sticky").sticky( { topSpacing: $("#navMenus").height() } );
-			
+			$(".subnav-sticky").sticky( { 
+				topSpacing: function () {
+					return $("#navMenus").outerHeight( true );
+				}
+			} );
+				
 			// handle statusActive items
 			
 			$('.status-item').on('show.active', function () {
@@ -1106,10 +1113,11 @@ var KAIOPUA = (function (main) {
 		if ( typeof pointer === 'undefined' ) {
 			
 			pointer = shared.pointers[ id ] = {};
+			pointer.id = id;
 			pointer.x = pointer.lx = shared.screenWidth * 0.5;
 			pointer.y = pointer.ly = shared.screenHeight * 0.5;
-			pointer.down = false;
-			pointer.ingame = false;
+			pointer.angle = pointer.distance = pointer.distanceX = pointer.distanceY = 0;
+			pointer.direction = 'none';
 		
 		}
 		
@@ -1121,18 +1129,30 @@ var KAIOPUA = (function (main) {
 		
 		shared.timeSinceInteraction = 0;
 		
-		var pointer = main.get_pointer( e );
+		var pointer = main.get_pointer( e ),
+			position;
 		
-		if ( e && is_number( e.pageX ) && is_number( e.pageY ) ) {
+		if ( e && e.position ) {
+			
+			position = e.position;
+			
+			if ( is_array( position ) && position[ pointer.id ] ) {
+				
+				position = position[ pointer.id ];
+				
+			}
 			
 			pointer.lx = pointer.x;
 			pointer.ly = pointer.y;
 			
-			pointer.x = e.pageX;
-			pointer.y = e.pageY;
+			pointer.x = position.x;
+			pointer.y = position.y;
 			
-			pointer.dx = pointer.x - pointer.lx;
-			pointer.dy = pointer.y - pointer.ly;
+			pointer.angle = e.angle || 0;
+			pointer.distance = e.distance || 0;
+			pointer.distanceX = e.distanceX || 0;//pointer.x - pointer.lx;
+			pointer.distanceY = e.distanceY || 0;//pointer.y - pointer.ly;
+			pointer.direction = e.direction || 'none';
 			
 		}
 		
@@ -1216,7 +1236,7 @@ var KAIOPUA = (function (main) {
 				
 				eCopy.identifier = i;
 				
-				shared.signals.gamePointerMoved.dispatch( eCopy );
+				shared.signals.gamePointerDragged.dispatch( eCopy );
 			
 			}
 			

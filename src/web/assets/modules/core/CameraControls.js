@@ -193,7 +193,7 @@
 			
 			// reset
 			
-			shared.signals.gamePointerMoved.remove( rotate_update, this );
+			shared.signals.gamePointerDragged.remove( rotate_update, this );
 			
 			this.settingsRotation.pointer = undefined;
 			
@@ -215,7 +215,7 @@
 			
 			// update
 			
-			shared.signals.gamePointerMoved.add( rotate_update, this );
+			shared.signals.gamePointerDragged.add( rotate_update, this );
 			
 		}
 		
@@ -235,11 +235,11 @@
 		
 		// pitch
 		
-		rotDelta.x = _MathHelper.clamp( rotDelta.x + pointer.dy * rotDeltaSpeed, rotDeltaMin.x, rotDeltaMax.x );
+		rotDelta.x = _MathHelper.clamp( rotDelta.x + pointer.distanceY * rotDeltaSpeed, rotDeltaMin.x, rotDeltaMax.x );
 		
 		// yaw
 		
-		rotDelta.y = _MathHelper.clamp( rotDelta.y - pointer.dx * rotDeltaSpeed, rotDeltaMin.y, rotDeltaMax.y );
+		rotDelta.y = _MathHelper.clamp( rotDelta.y - pointer.distanceX * rotDeltaSpeed, rotDeltaMin.y, rotDeltaMax.y );
 		
 		// if totals above start threshold
 		

@@ -170,7 +170,7 @@
 			
 			this.state = true;
 			
-			this.stateChanged.dispatch( this.state );
+			this.stateChanged.dispatch( this );
 			
 		}
 		
@@ -182,7 +182,7 @@
 			
 			this.state = false;
 			
-			this.stateChanged.dispatch( this.state );
+			this.stateChanged.dispatch( this );
 			
 		}
 		

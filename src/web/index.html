@@ -312,7 +312,7 @@
 					</li>
 					<li id="buttonStart">
 						<button class="btn btn-huge btn-inverse btn-circle-giant">
-							<img src="assets/icons/face_smile_rev_64.png" class="iconk-giant">
+							<img src="assets/icons/face_perfect_rev_64.png" class="iconk-giant">
 							<h2 class="logo-type">Start</h2>
 						</button>
 					</li>
@@ -506,133 +506,201 @@
 								<p>You're not working on a field right now, but the tools section will show you how to get started.</p>
 							</div>
 							
-							<div id="fieldActive">
+							<div id="fieldActive" class="hidden">
 								<div id="fieldActiveOverview" class="row">
-									<div class="span4">
-										<h3>Name</h3>
-										<p id="fieldActiveId">Tutorial Field</p>
-										<h3>Score <small><span id="fieldActiveScore">0</span>%</small></h3>
+									<div class="span6">
+										<h6>Name</h6>
+										<h1 id="fieldActiveName" class="logo-type hero-type">Tutorial Field</h1>
+										<h6>Score</h6>
 										<div class="progress progress-success progress-striped">
 											<div id="fieldActiveScoreBar" class="bar" style="width: 0%;"></div>
 										</div>
 									</div>
 									<div id="fieldActivePlants" class="span3">
-										<h3>Objects Planted</h3>
-										<div class="row">
-											<div class="span1 subhead container-center">
-												<h2 id="fieldActivePlantCount">0</h2>
-												<p>used</p>
-											</div>
-											<div class="span1 container-center" >
-												<br />
-												<h2><small style="vertical-align:text-bottom;">vs</small></h2>
-											</div>
-											<div class="span1 subhead container-center">
-												<h2 id="fieldActivePlantGoal">0</h2>
-												<p>goal</p>
+										<h6>Plants</h6>
+										<div class="well well-success">
+											<div class="row">
+												<div class="span1 container-center">
+													<h2 id="fieldActivePlantCount" class="squire-type">0</h2>
+													<p>planted</p>
+												</div>
+												<div class="pull-right">
+													<div class="span1 container-center">
+														<h2 id="fieldActiveNumElementsMin" class="squire-type">0</h2>
+														<p>goal</p>
+													</div>
+												</div>
 											</div>
 										</div>
 									</div>
-									<div id="fieldActiveStatus" class="span5">
-										<h3>Status <small><span id="fieldActiveStatusWaiting" class="field-statusText">waiting</span></small></h3>
-										<img src="assets/icons/waiting_64.png" id="planting" class="field-statusIcon well iconk-giant">
+									<div id="fieldActiveStatus" class="span3">
+										<h6>Status: <span id="fieldActiveStatusText">waiting</span></h6>
+										<div class="well">
+											<div id="fieldActiveStatusIcons">
+												<img src="assets/icons/waiting_64.png" id="waiting" class="field-statusIcon iconk-giant">
+												<img src="assets/icons/confirm_64.png" id="ready" class="field-statusIcon iconk-giant hidden">
+												<img src="assets/icons/face_okay_64.png" id="okay" class="field-statusIcon iconk-giant hidden">
+												<img src="assets/icons/face_good_64.png" id="good" class="field-statusIcon iconk-giant hidden">
+												<img src="assets/icons/face_perfect_64.png" id="perfect" class="field-statusIcon iconk-giant hidden">
+											</div>
+										</div>
 									</div>
 								</div>
 								
 								<h3>Plant Shapes<small> choose the shapes of the objects planted in this field</small></h3>
-								<div id="fieldActivePlantShapesPicker">
-									<div class="row">
-										<div class="span12">
-											<div class="alert alert-block alert-info">
-												<button type="button" class="close" data-dismiss="alert">&times;</button>
-												<strong>Check it out:</strong> You've got to choose as many shapes as the field requires and plant at least 1 of each before you complete the field.
-											</div>
+								<div class="row">
+									<div class="span12">
+										<div id="fieldActiveShapesRequiredWarning" class="alert alert-block alert-info">
+											<button type="button" class="close" data-dismiss="alert">&times;</button>
+											<strong>Check it out:</strong> You've got to choose as many shapes as the field requires before you can start planting in it. (choose below)
 										</div>
 									</div>
-									<div class="row">
-										<div id="fieldActivePlantShapesHint" class="span1 container-center">
-											<p><small>Requires</small></p>
-											<h1 id="fieldActivePlantShapesMax" class="hero-type">1</h1>
+								</div>
+								<div class="row">
+									<div class="span1 container-center">
+										<p><small>(required)</small></p>
+										<h1 id="fieldActiveShapesRequired" class="hero-type">1</h1>
+									</div>
+									<div id="fieldActiveShapesPicker" class="span11">
+										<div class="grid-gutterless">
+											<ul class="thumbnails thumbnails4 shadowless">
+												<li class="span1">
+													<div class="thumbnail">
+														<button id="monomino" class="btn btn-inverse btn-circle-small dim">
+															<img src="assets/icons/shape_monomino_rev_64.png" class="iconk-large">
+														</button>
+													</div>
+												</li>
+												<li class="span1">
+													<div class="thumbnail">
+														<button id="buttonPlantShapeDomino" class="btn btn-inverse btn-circle-small dim">
+															<img src="assets/icons/shape_domino_rev_64.png" class="iconk-large">
+														</button>
+													</div>
+												</li>
+												<li class="span1">
+													<div class="thumbnail">
+														<button id="buttonPlantShapeTrominoI" class="btn btn-inverse btn-circle-small dim">
+															<img src="assets/icons/shape_tromino_i_rev_64.png" class="iconk-large">
+														</button>
+													</div>
+												</li>
+												<li class="span1">
+													<div class="thumbnail">
+														<button id="buttonPlantShapeTrominoL" class="btn btn-inverse btn-circle-small dim">
+															<img src="assets/icons/shape_tromino_l_rev_64.png" class="iconk-large">
+														</button>
+													</div>
+												</li>
+												<li class="span1">
+													<div class="thumbnail">
+														<button id="buttonPlantShapeTetrominoI" class="btn btn-inverse btn-circle-small dim">
+															<img src="assets/icons/shape_tetromino_i_rev_64.png" class="iconk-large">
+														</button>
+													</div>
+												</li>
+												<li class="span1">
+													<div class="thumbnail">
+														<button id="buttonPlantShapeTetrominoJ" class="btn btn-inverse btn-circle-small dim">
+															<img src="assets/icons/shape_tetromino_j_rev_64.png" class="iconk-large">
+														</button>
+													</div>
+												</li>
+												<li class="span1">
+													<div class="thumbnail">
+														<button id="buttonPlantShapeTetrominoL" class="btn btn-inverse btn-circle-small dim">
+															<img src="assets/icons/shape_tetromino_l_rev_64.png" class="iconk-large">
+														</button>
+													</div>
+												</li>
+												<li class="span1">
+													<div class="thumbnail">
+														<button id="buttonPlantShapeTetrominoO" class="btn btn-inverse btn-circle-small dim">
+															<img src="assets/icons/shape_tetromino_o_rev_64.png" class="iconk-large">
+														</button>
+													</div>
+												</li>
+												<li class="span1">
+													<div class="thumbnail">
+														<button id="buttonPlantShapeTetrominoS" class="btn btn-inverse btn-circle-small dim">
+															<img src="assets/icons/shape_tetromino_s_rev_64.png" class="iconk-large">
+														</button>
+													</div>
+												</li>
+												<li class="span1">
+													<div class="thumbnail">
+														<button id="buttonPlantShapeTetrominoT" class="btn btn-inverse btn-circle-small dim">
+															<img src="assets/icons/shape_tetromino_t_rev_64.png" class="iconk-large">
+														</button>
+													</div>
+												</li>
+												<li class="span1">
+													<div class="thumbnail">
+														<button id="buttonPlantShapeTetrominoZ" class="btn btn-inverse btn-circle-small dim">
+															<img src="assets/icons/shape_tetromino_z_rev_64.png" class="iconk-large">
+														</button>
+													</div>
+												</li>
+											</ul>
 										</div>
-										<div id="fieldActivePlantShapes" class="span11">
-											<div class="grid-gutterless">
-												<ul class="thumbnails thumbnails4 shadowless">
+									</div>
+								</div>
+								
+								<div id="fieldActiveMap" class="hidden">
+									<h3>Field Map <small>click on the colored shapes to customize the object you've planted there</small></h3>
+									<div class="alert alert-block alert-info">
+										<button type="button" class="close" data-dismiss="alert">&times;</button>
+										<strong>Check it out:</strong> You'll need to fill every space and use at least 1 of each of the shapes you chose to complete the field!
+									</div>
+									
+									<div id="fieldActiveMapGrid" class="row">
+										<div class="span12">
+											<div class="container-center grid-gutterless well">
+												<ul class="span3 thumbnails thumbnails1">
 													<li class="span1">
-														<div class="thumbnail">
-															<button id="buttonPlantShapeMonomino" class="btn btn-inverse btn-circle-small dim">
-																<img src="assets/icons/shape_monomino_rev_64.png" class="iconk-large">
-															</button>
-														</div>
+														<a href="#" class="thumbnail">
+															<img src="assets/textures/dirt_128.jpg" alt="">
+														</a>
 													</li>
 													<li class="span1">
-														<div class="thumbnail">
-															<button id="buttonPlantShapeDomino" class="btn btn-inverse btn-circle-small dim">
-																<img src="assets/icons/shape_domino_rev_64.png" class="iconk-large">
-															</button>
-														</div>
+														<a href="#" class="thumbnail">
+															<img src="assets/textures/dirt_128.jpg" alt="">
+														</a>
 													</li>
 													<li class="span1">
-														<div class="thumbnail">
-															<button id="buttonPlantShapeTrominoI" class="btn btn-inverse btn-circle-small dim">
-																<img src="assets/icons/shape_tromino_i_rev_64.png" class="iconk-large">
-															</button>
-														</div>
+														<a href="#" class="thumbnail">
+															<img src="assets/textures/dirt_128.jpg" alt="">
+														</a>
 													</li>
 													<li class="span1">
-														<div class="thumbnail">
-															<button id="buttonPlantShapeTrominoL" class="btn btn-inverse btn-circle-small dim">
-																<img src="assets/icons/shape_tromino_l_rev_64.png" class="iconk-large">
-															</button>
-														</div>
+														<a href="#" class="thumbnail">
+															<img src="assets/textures/dirt_128.jpg" alt="">
+														</a>
 													</li>
 													<li class="span1">
-														<div class="thumbnail">
-															<button id="buttonPlantShapeTetrominoI" class="btn btn-inverse btn-circle-small dim">
-																<img src="assets/icons/shape_tetromino_i_rev_64.png" class="iconk-large">
-															</button>
-														</div>
+														<a href="#" class="thumbnail invisible">
+															<img src="assets/textures/dirt_128.jpg" alt="">
+														</a>
 													</li>
 													<li class="span1">
-														<div class="thumbnail">
-															<button id="buttonPlantShapeTetrominoJ" class="btn btn-inverse btn-circle-small dim">
-																<img src="assets/icons/shape_tetromino_j_rev_64.png" class="iconk-large">
-															</button>
-														</div>
+														<a href="#" class="thumbnail">
+															<img src="assets/textures/dirt_128.jpg" alt="">
+														</a>
 													</li>
 													<li class="span1">
-														<div class="thumbnail">
-															<button id="buttonPlantShapeTetrominoL" class="btn btn-inverse btn-circle-small dim">
-																<img src="assets/icons/shape_tetromino_l_rev_64.png" class="iconk-large">
-															</button>
-														</div>
+														<a href="#" class="thumbnail">
+															<img src="assets/textures/dirt_128.jpg" alt="">
+														</a>
 													</li>
 													<li class="span1">
-														<div class="thumbnail">
-															<button id="buttonPlantShapeTetrominoO" class="btn btn-inverse btn-circle-small dim">
-																<img src="assets/icons/shape_tetromino_o_rev_64.png" class="iconk-large">
-															</button>
-														</div>
+														<a href="#" class="thumbnail">
+															<img src="assets/textures/dirt_128.jpg" alt="">
+														</a>
 													</li>
 													<li class="span1">
-														<div class="thumbnail">
-															<button id="buttonPlantShapeTetrominoS" class="btn btn-inverse btn-circle-small dim">
-																<img src="assets/icons/shape_tetromino_s_rev_64.png" class="iconk-large">
-															</button>
-														</div>
-													</li>
-													<li class="span1">
-														<div class="thumbnail">
-															<button id="buttonPlantShapeTetrominoT" class="btn btn-inverse btn-circle-small dim">
-																<img src="assets/icons/shape_tetromino_t_rev_64.png" class="iconk-large">
-															</button>
-														</div>
-													</li>
-													<li class="span1">
-														<div class="thumbnail">
-															<button id="buttonPlantShapeTetrominoZ" class="btn btn-inverse btn-circle-small dim">
-																<img src="assets/icons/shape_tetromino_z_rev_64.png" class="iconk-large">
-															</button>
-														</div>
+														<a href="#" class="thumbnail invisible">
+															<img src="assets/textures/dirt_128.jpg" alt="">
+														</a>
 													</li>
 												</ul>
 											</div>
@@ -640,118 +708,60 @@
 									</div>
 								</div>
 								
-								<h3>Field Map <small>click on the colored shapes to customize the object you've planted there</small></h3>
-								<div class="alert alert-block alert-info">
-									<button type="button" class="close" data-dismiss="alert">&times;</button>
-									<strong>Check it out:</strong> You'll need to fill every space in a field to complete it.
-								</div>
-								
-								<div id="fieldActiveGrid" class="row">
-									<div class="span12">
-										<div class="container-center grid-gutterless well">
-											<ul class="span3 thumbnails thumbnails1">
-												<li class="span1">
-													<a href="#" class="thumbnail">
-														<img src="assets/textures/dirt_128.jpg" alt="">
-													</a>
-												</li>
-												<li class="span1">
-													<a href="#" class="thumbnail">
-														<img src="assets/textures/dirt_128.jpg" alt="">
-													</a>
-												</li>
-												<li class="span1">
-													<a href="#" class="thumbnail">
-														<img src="assets/textures/dirt_128.jpg" alt="">
-													</a>
-												</li>
-												<li class="span1">
-													<a href="#" class="thumbnail">
-														<img src="assets/textures/dirt_128.jpg" alt="">
-													</a>
-												</li>
-												<li class="span1">
-													<a href="#" class="thumbnail">
-														<img src="assets/textures/dirt_128.jpg" alt="">
-													</a>
-												</li>
-												<li class="span1">
-													<a href="#" class="thumbnail">
-														<img src="assets/textures/dirt_128.jpg" alt="">
-													</a>
-												</li>
-												<li class="span1">
-													<a href="#" class="thumbnail">
-														<img src="assets/textures/dirt_128.jpg" alt="">
-													</a>
-												</li>
-												<li class="span1">
-													<a href="#" class="thumbnail">
-														<img src="assets/textures/dirt_128.jpg" alt="">
-													</a>
-												</li>
-												<li class="span1">
-													<a href="#" class="thumbnail">
-														<img src="assets/textures/dirt_128.jpg" alt="">
-													</a>
-												</li>
-											</ul>
-										</div>
-									</div>
-								</div>
-								
-								<h3>Rewards <small>the less plants you use to fill a field, the better the reward</small></h3>
-								<div id="fieldActiveRewards" class="row">
-									<div class="span4">
-										<div id="fieldActiveRewardsOkay">
-											<h4>Okay <small>(0 - 79%)</small></h4>
-											<div class="field-rewardsList row">
-												<div class="span4">
-													<div class="well well-success">
-														<div class="row">
-															<i class="field-rewardsEarnedStatusIcon iconk-topRight icon-ok-sign"></i>
-															<div class="span1 container-center">
-																<img src="assets/icons/grid_64.png" class="iconk-large">
-																<p>Field</p>
-																<h6>Field</h6>
+								<div id="fieldActiveRewards" class="hidden">
+									<h3>Rewards <small>the less plants you use to fill a field, the better the reward</small></h3>
+									<div class="row">
+										<div class="span4">
+											<div id="fieldActiveRewardsOkay">
+												<h4>Okay <small>(0 - 79%)</small></h4>
+												<div class="field-rewardsList row">
+													<div class="span4">
+														<div class="well well-success">
+															<div class="row">
+																<i class="field-rewardsEarnedStatusIcon iconk-topRight icon-ok-sign"></i>
+																<div class="span1 container-center">
+																	<img src="assets/icons/grid_64.png" class="iconk-large">
+																	<p>Field</p>
+																	<h6>Field</h6>
+																</div>
 															</div>
 														</div>
 													</div>
 												</div>
 											</div>
 										</div>
-									</div>
-									<div class="span4">
-										<div id="fieldActiveRewardsGood">
-											<h4>Good <small>(80 - 99%)</small></h4>
-											<div class="field-rewardsList row">
-												<div class="span4">
-													<div class="well">
-														<div class="row">
-															<div class="span1 container-center">
-																<i class="field-rewardsEarnedStatusIcon iconk-topRight icon-ok-sign hidden"></i>
-																<img src="assets/icons/shape_monomino_64.png" class="iconk-large">
-																<p>Shape</p>
-																<h6>Shape</h6>
+										<div class="span4">
+											<div id="fieldActiveRewardsGood">
+												<h4>Good <small>(80 - 99%)</small></h4>
+												<div class="field-rewardsList row">
+													<div class="span4">
+														<div class="well">
+															<div class="row">
+																<div class="span1 container-center">
+																	<i class="field-rewardsEarnedStatusIcon iconk-topRight icon-ok-sign hidden"></i>
+																	<img src="assets/icons/shape_monomino_64.png" class="iconk-large">
+																	<p>Shape</p>
+																	<h6>Shape</h6>
+																</div>
 															</div>
 														</div>
 													</div>
 												</div>
 											</div>
 										</div>
-									</div>
-									<div class="span4">
-										<div id="fieldActiveRewardsPerfect">
-											<h4>Perfect <small>(100%)</small></h4>
-											<div class="field-rewardsList row">
-												<div class="span4">
-													<div class="well">
-														<div class="row">
-															<div class="span1 container-center">
-																<i class="field-rewardsEarnedStatusIcon iconk-topRight icon-ok-sign hidden"></i>
-																<img src="assets/icons/plant_64.png" class="iconk-large">
-																<p>Plant</p>
-																<h6>Plant</h6>
+										<div class="span4">
+											<div id="fieldActiveRewardsPerfect">
+												<h4>Perfect <small>(100%)</small></h4>
+												<div class="field-rewardsList row">
+													<div class="span4">
+														<div class="well">
+															<div class="row">
+																<div class="span1 container-center">
+																	<i class="field-rewardsEarnedStatusIcon iconk-topRight icon-ok-sign hidden"></i>
+																	<img src="assets/icons/plant_64.png" class="iconk-large">
+																	<p>Plant</p>
+																	<h6>Plant</h6>
+																</div>
 															</div>
 														</div>
 													</div>
@@ -805,7 +815,7 @@
 										<h6>plant</h6>
 									</div>
 									<div class="span4">
-										<h3 class="pull-right"><small>in the <span id="fieldActiveId">Tutorial</span> Field, at location <span id="plantActiveFieldLocation">1</span></small></h3>
+										<h3 class="pull-right"><small>in the <span id="fieldActiveName">Tutorial</span> Field, at location <span id="plantActiveFieldLocation">1</span></small></h3>
 									</div>
 								</div>
 							

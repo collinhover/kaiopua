@@ -98,11 +98,11 @@
 		
 		this.actions.add( 'pointer', {
 			callbacks: {
-				down: $.proxy( me.planting.select_plant, me.planting ),
+				tap: $.proxy( me.planting.select_plant, me.planting ),
 				hold: $.proxy( me.planting.select_field, me.planting )
 			},
 			activeChecks: {
-				down: function () {
+				drag: function () {
 					return me.planting.started;
 				}
 			}
@@ -184,7 +184,7 @@
 			
 			// signals
 			
-			shared.signals.gamePointerMoved.add( adObj.update );
+			shared.signals.gamePointerDragged.add( adObj.update );
 			
 		}
 	
@@ -205,7 +205,7 @@
 			
 			// signals
 				
-			shared.signals.gamePointerMoved.remove( adObj.update );
+			shared.signals.gamePointerDragged.remove( adObj.update );
 			
 			// clear action data object
 			
@@ -247,7 +247,7 @@
 			
 			// pointer change
 			
-			pointerDelta = ( pointer.dx - pointer.dy ) * 0.5;
+			pointerDelta = ( pointer.distanceX - pointer.distanceY ) * 0.5;
 			
 			// scale change
 			
