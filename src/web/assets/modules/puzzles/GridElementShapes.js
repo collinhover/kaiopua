@@ -18,13 +18,10 @@
     
     =====================================================*/
 	
+	init_internal();
+	
 	main.asset_register( assetPath, { 
-		data: _GridElementShapes,
-		requirements: [
-			"assets/modules/puzzles/GridElement.js"
-		],
-		callbacksOnReqs: init_internal,
-		wait: true
+		data: _GridElementShapes
 	} );
 	
 	/*===================================================
@@ -34,120 +31,119 @@
     =====================================================*/
 	
 	function init_internal() {
+		
+		var shape,
+			$buttons;
 		console.log( 'internal GridElementShapes' );
+		
 		// shapes
 		
-		Object.defineProperty(_GridElementShapes, 'MONOMINO', { 
-			value : {
-				layout: [ [ 1 ] ]
-			}
-		});
-		Object.defineProperty(_GridElementShapes, 'DOMINO', { 
-			value : {
-				layout: [
-					[ 0, 1, 0 ],
-					[ 0, 1, 0 ],
-					[ 0, 0, 0 ]
-				]
-			}
-		});
-		Object.defineProperty(_GridElementShapes, 'TROMINO_I', { 
-			value : {
-				layout: [
-					[ 0, 1, 0 ],
-					[ 0, 1, 0 ],
-					[ 0, 1, 0 ]
-				]
-			}
-		});
-		Object.defineProperty(_GridElementShapes, 'TROMINO_L', { 
-			value : {
-				layout: [
-					[ 0, 1, 0 ],
-					[ 0, 1, 1 ],
-					[ 0, 0, 0 ]
-				]
-			}
-		});
-		Object.defineProperty(_GridElementShapes, 'TETROMINO_J', { 
-			value : {
-				layout: [
-					[ 0, 1, 0 ],
-					[ 0, 1, 0 ],
-					[ 1, 1, 0 ]
-				]
-			}
-		});
-		Object.defineProperty(_GridElementShapes, 'TETROMINO_L', { 
-			value : {
-				layout: [
-					[ 0, 1, 0 ],
-					[ 0, 1, 0 ],
-					[ 0, 1, 1 ]
-				]
-			}
-		});
-		Object.defineProperty(_GridElementShapes, 'TETROMINO_S', { 
-			value : {
-				layout: [
-					[ 0, 1, 1 ],
-					[ 1, 1, 0 ],
-					[ 0, 0, 0 ]
-				]
-			}
-		});
-		Object.defineProperty(_GridElementShapes, 'TETROMINO_Z', { 
-			value : {
-				layout: [
-					[ 1, 1, 0 ],
-					[ 0, 1, 1 ],
-					[ 0, 0, 0 ]
-				]
-			}
-		});
-		Object.defineProperty(_GridElementShapes, 'TETROMINO_T', { 
-			value : {
-				layout: [
-					[ 1, 1, 1 ],
-					[ 0, 1, 0 ],
-					[ 0, 0, 0 ]
-				]
-			}
-		});
-		Object.defineProperty(_GridElementShapes, 'TETROMINO_O', { 
-			value : {
-				layout: [
-					[ 0, 1, 1 ],
-					[ 0, 1, 1 ],
-					[ 0, 0, 0 ]
-				]
-			}
-		});
-		Object.defineProperty(_GridElementShapes, 'TETROMINO_I', { 
-			value : {
-				layout: [
-					[ 0, 0, 1, 0 ],
-					[ 0, 0, 1, 0 ],
-					[ 0, 0, 1, 0 ],
-					[ 0, 0, 1, 0 ]
-				]
-			}
-		});
+		_GridElementShapes.all = [];
 		
+		// monomino
+		
+		_GridElementShapes.monomino = {
+			layout: [ [ 1 ] ]
+		};
+		
+		// domino
+		
+		_GridElementShapes.domino = {
+			layout: [
+				[ 0, 1, 0 ],
+				[ 0, 1, 0 ],
+				[ 0, 0, 0 ]
+			]
+		};
+		
+		// tromino
+		
+		_GridElementShapes.trominoI = {
+			layout: [
+				[ 0, 1, 0 ],
+				[ 0, 1, 0 ],
+				[ 0, 1, 0 ]
+			]
+		};
+		_GridElementShapes.trominoL = {
+			layout: [
+				[ 0, 1, 0 ],
+				[ 0, 1, 1 ],
+				[ 0, 0, 0 ]
+			]
+		};
+		
+		// tetromino
+		
+		_GridElementShapes.tetrominoJ = {
+			layout: [
+				[ 0, 1, 0 ],
+				[ 0, 1, 0 ],
+				[ 1, 1, 0 ]
+			]
+		};
+		_GridElementShapes.tetrominoL = {
+			layout: [
+				[ 0, 1, 0 ],
+				[ 0, 1, 0 ],
+				[ 0, 1, 1 ]
+			]
+		};
+		_GridElementShapes.tetrominoS = {
+			layout: [
+				[ 0, 1, 1 ],
+				[ 1, 1, 0 ],
+				[ 0, 0, 0 ]
+			]
+		};
+		_GridElementShapes.tetrominoZ = {
+			layout: [
+				[ 1, 1, 0 ],
+				[ 0, 1, 1 ],
+				[ 0, 0, 0 ]
+			]
+		};
+		_GridElementShapes.tetrominoT = {
+			layout: [
+				[ 1, 1, 1 ],
+				[ 0, 1, 0 ],
+				[ 0, 0, 0 ]
+			]
+		};
+		_GridElementShapes.tetrominoO = {
+			layout: [
+				[ 0, 1, 1 ],
+				[ 0, 1, 1 ],
+				[ 0, 0, 0 ]
+			]
+		};
+		_GridElementShapes.tetrominoI = {
+			layout: [
+				[ 0, 0, 1, 0 ],
+				[ 0, 0, 1, 0 ],
+				[ 0, 0, 1, 0 ],
+				[ 0, 0, 1, 0 ]
+			]
+		};
+		
+		
+		// for each shape
+		
+		for ( shape in _GridElementShapes ) {
+			
+			if ( _GridElementShapes.hasOwnProperty( shape ) && shape !== 'all' ) {
+				
+				_GridElementShapes.all.push( shape );
+				
+				// disable and hide all shape buttons
+				
+				$buttons = _GridElementShapes[ shape ].$buttons = $( ".shape-" + shape ).addClass( "disabled hidden" ).data( 'shape', shape );
+				_GridElementShapes[ shape ].$buttonsPuzzleActive = shared.domElements.$puzzleActiveShapes.find( $buttons );
+				_GridElementShapes[ shape ].$buttonsShapePicker = shared.domElements.$puzzleActiveShapesPicker.find( $buttons );
+				
+			}
+			
+		}
 	}
-	
-	/*===================================================
-    
-    name
-    
-    =====================================================*/
-	
-	
-	
-	/*===================================================
-    
-    dom
-    
-    =====================================================*/
 	
 } (KAIOPUA) );

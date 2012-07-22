@@ -53,12 +53,12 @@
 		Object.defineProperty(_PuzzleBuilder.parameters, 'Tutorial', { 
 			value : {
 				name: 'Tutorial',
-				geometry: "assets/models/Field_Tutorial.js",
+				geometry: "assets/models/Puzzle_Tutorial.js",
 				physics: {
 					bodyType: 'mesh'
 				},
 				grid: {
-					modulesGeometry: "assets/models/Field_Tutorial_Grid.js",
+					modulesGeometry: "assets/models/Puzzle_Tutorial_Grid.js",
 					moduleInstance: _Dirt.Instance
 				},
 				moduleInstance: _Dirt.Instance,
@@ -77,12 +77,12 @@
 		Object.defineProperty(_PuzzleBuilder.parameters, 'Abilities', { 
 			value : {
 				name: 'Abilities',
-				geometry: "assets/models/Field_Basics_Abilities.js",
+				geometry: "assets/models/Puzzle_Basics_Abilities.js",
 				physics: {
 					bodyType: 'mesh'
 				},
 				grid: {
-					modulesGeometry: "assets/models/Field_Basics_Abilities_Grid.js",
+					modulesGeometry: "assets/models/Puzzle_Basics_Abilities_Grid.js",
 					moduleInstance: _Dirt.Instance
 				},
 				numElementsMin: 10,
@@ -111,15 +111,15 @@
 		Object.defineProperty(_PuzzleBuilder.parameters, 'RollingHills', { 
 			value : {
 				name: 'Rolling Hills',
-				geometry: "assets/models/Field_Rolling_Hills.js",
+				geometry: "assets/models/Puzzle_Rolling_Hills.js",
 				physics: {
 					bodyType: 'mesh'
 				},
 				grid: {
-					modulesGeometry: "assets/models/Field_Rolling_Hills_Grid.js",
+					modulesGeometry: "assets/models/Puzzle_Rolling_Hills_Grid.js",
 					moduleInstance: _Dirt.Instance
 				},
-				toggleSwitch: "assets/models/Field_Rolling_Hills_Toggle.js",
+				toggleSwitch: "assets/models/Puzzle_Rolling_Hills_Toggle.js",
 				moduleInstance: _Dirt.Instance,
 				numElementsMin: 13,
 				numShapesRequired: 3,

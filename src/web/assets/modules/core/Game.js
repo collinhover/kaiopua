@@ -116,13 +116,11 @@
 			{ path: "assets/models/Palm_Trees.js", type: 'model' },
 			{ path: "assets/models/Kukui_Tree.js", type: 'model' },
 			{ path: "assets/models/Kukui_Trees.js", type: 'model' },
-			{ path: "assets/models/Taro_Plant_001.js", type: 'model' },
-			{ path: "assets/models/Taro_Plant_002.js", type: 'model' },
-			{ path: "assets/models/Taro_Plant_003.js", type: 'model' },
-			{ path: "assets/models/Pineapple_Plant_001.js", type: 'model' },
-			{ path: "assets/models/Rock.js", type: 'model' },
-			{ path: "assets/models/Rock_Purple.js", type: 'model' },
-			{ path: "assets/models/Rock_Blue.js", type: 'model' },
+			{ path: "assets/models/Plant_Taro.js", type: 'model' },
+			{ path: "assets/models/Plant_Pineapple.js", type: 'model' },
+			{ path: "assets/models/Plant_Rock.js", type: 'model' },
+			{ path: "assets/models/Plant_Rock_Purple.js", type: 'model' },
+			{ path: "assets/models/Plant_Rock_Blue.js", type: 'model' },
 			{ path: "assets/models/Volcano_Large.js", type: 'model' },
 			{ path: "assets/models/Volcano_Small.js", type: 'model' },
 			{ path: "assets/models/Volcano_Rocks_001.js", type: 'model' },
@@ -130,13 +128,13 @@
 			{ path: "assets/models/Volcano_Rocks_003.js", type: 'model' },
 			{ path: "assets/models/Volcano_Rocks_004.js", type: 'model' },
 			{ path: "assets/models/Volcano_Rocks_005.js", type: 'model' },
-			{ path: "assets/models/Field_Tutorial.js", type: 'model' },
-			{ path: "assets/models/Field_Tutorial_Grid.js", type: 'model' },
-			{ path: "assets/models/Field_Rolling_Hills.js", type: 'model' },
-			{ path: "assets/models/Field_Rolling_Hills_Grid.js", type: 'model' },
-			{ path: "assets/models/Field_Rolling_Hills_Toggle.js", type: 'model' },
-			{ path: "assets/models/Field_Basics_Abilities.js", type: 'model' },
-			{ path: "assets/models/Field_Basics_Abilities_Grid.js", type: 'model' },
+			{ path: "assets/models/Puzzle_Tutorial.js", type: 'model' },
+			{ path: "assets/models/Puzzle_Tutorial_Grid.js", type: 'model' },
+			{ path: "assets/models/Puzzle_Rolling_Hills.js", type: 'model' },
+			{ path: "assets/models/Puzzle_Rolling_Hills_Grid.js", type: 'model' },
+			{ path: "assets/models/Puzzle_Rolling_Hills_Toggle.js", type: 'model' },
+			{ path: "assets/models/Puzzle_Basics_Abilities.js", type: 'model' },
+			{ path: "assets/models/Puzzle_Basics_Abilities_Grid.js", type: 'model' },
 			"assets/textures/skybox_world_posx.jpg",
             "assets/textures/skybox_world_negx.jpg",
 			"assets/textures/skybox_world_posy.jpg",
@@ -436,18 +434,38 @@
 		shared.domElements.$primaryActionsActive = $( '#primaryActionsActive' );
 		shared.domElements.$primaryActionsInactive = $( '#primaryActionsInactive' );
 		shared.domElements.$navStart = $( '#navStart' );
-		shared.domElements.$buttonPauseGame = $('#buttonPauseGame');
-		shared.domElements.$buttonResumeGame = $('#buttonResumeGame');
-		shared.domElements.$buttonFarmingMenu = $('#buttonFarmingMenu');
-		shared.domElements.$buttonOptionsMenu = $('#buttonOptionsMenu');
-		shared.domElements.$buttonsNavMenus = shared.domElements.$navMenus.find( ".nav li a" ).not( shared.domElements.$buttonPauseGame ).not( shared.domElements.$buttonResumeGame );
+		shared.domElements.$buttonGamePause = $('.button-gamePause');
+		shared.domElements.$buttonGameResume = $('.button-gameResume');
+		shared.domElements.$buttonFarmingMenu = $('.button-farmingMenu');
+		shared.domElements.$buttonOptionsMenu = $('.button-optionsMenu');
+		shared.domElements.$buttonsNavMenus = shared.domElements.$navMenus.find( ".nav li a" ).not( shared.domElements.$buttonGamePause ).not( shared.domElements.$buttonGameResume );
 		shared.domElements.$menuFarming = $('#menuFarming');
 		shared.domElements.$menuOptions = $('#menuOptions');
 		shared.domElements.$menus = shared.domElements.$outGame.find( '.menu' );
 		shared.domElements.$pauseMessage = $('#pauseMessage');
-		shared.domElements.$tools = $('#fieldTools');
-		shared.domElements.$field = $('#field');
+		
+		// ui menus
+		
+		shared.domElements.$tools = $('#puzzleTools');
+		
+		shared.domElements.$puzzle = $('#puzzle');
+		shared.domElements.$puzzleActive = $( "#puzzleActive" );
+		shared.domElements.$puzzleActiveWarning = $( "#puzzleActiveWarning" );
+		shared.domElements.$puzzleActiveName = $( ".puzzle-active-name" );
+		shared.domElements.$puzzleActiveScoreBar = $( "#puzzleActiveScoreBar" );
+		shared.domElements.$puzzleActiveElementCount = $( ".puzzle-active-elementCount" );
+		shared.domElements.$puzzleActiveNumElementsMin = $( ".puzzle-active-numElementsMin" );
+		shared.domElements.$puzzleActiveNumShapesRequired = $( ".puzzle-active-numShapesRequired" );
+		shared.domElements.$puzzleActiveShapes = $( "#puzzleActiveShapes" );
+		shared.domElements.$puzzleActiveShapesRequiredWarning = $( "#puzzleActiveShapesRequiredWarning" );
+		shared.domElements.$puzzleActiveShapesPicker = $( "#puzzleActiveShapesPicker" );
+		shared.domElements.$puzzleActiveStatusIcons = $( "#puzzleActiveStatusIcons img" );
+		shared.domElements.$puzzleActiveStatusText = $( "#puzzleActiveStatusText" );
+		shared.domElements.$puzzleActiveMap = $( "#puzzleActiveMap" );
+		shared.domElements.$puzzleActiveRewards = $( "#puzzleActiveRewards" );
+		
 		shared.domElements.$plant = $('#plant');
+		
 		shared.domElements.$collection = $('#collection');
 		
 		// show menus nav
@@ -458,8 +476,8 @@
 		
 		// pause / resume
 		
-		shared.domElements.$buttonPauseGame.on( 'tap', pause );
-		shared.domElements.$buttonResumeGame.on( 'tap', resume );
+		shared.domElements.$buttonGamePause.on( 'tap', pause );
+		shared.domElements.$buttonGameResume.on( 'tap', resume );
 		
 		// if focus lost, pause game
 		
@@ -473,11 +491,6 @@
 		$('.primaryAction-item').on('hidden.active', function () {
 			shared.domElements.$primaryActionsInactive.append( this );
 		});
-		main.dom_fade( { 
-			element: shared.domElements.$primaryActionsInactive.find('.primaryAction-item'),
-			opacity: 0,
-			time: 0
-		} );
 		
 		// menu buttons
 		
@@ -1459,7 +1472,7 @@
 			// hide pause button
 			
 			main.dom_fade( {
-				element: shared.domElements.$buttonPauseGame,
+				element: shared.domElements.$buttonGamePause,
 				opacity: 0,
 				time: 0
 			} );
@@ -1479,7 +1492,7 @@
 				// show resume button
 				
 				main.dom_fade( {
-					element: shared.domElements.$buttonResumeGame,
+					element: shared.domElements.$buttonGameResume,
 					opacity: 1
 				} );
 				
@@ -1533,7 +1546,7 @@
 			// hide resume button
 			
 			main.dom_fade( {
-				element: shared.domElements.$buttonResumeGame,
+				element: shared.domElements.$buttonGameResume,
 				opacity: 0,
 				time: 0
 			} );
@@ -1541,7 +1554,7 @@
 			// show pause button
 			
 			main.dom_fade( {
-				element: shared.domElements.$buttonPauseGame,
+				element: shared.domElements.$buttonGamePause,
 				opacity: 1
 			} );
 			

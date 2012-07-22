@@ -18,6 +18,7 @@
 		_GridModule,
 		_GridModel,
 		_GridElement,
+		_GridElementShapes,
 		_MathHelper,
 		_ObjectHelper,
 		utilVec31Rotate,
@@ -39,6 +40,7 @@
 			"assets/modules/puzzles/GridModule.js",
 			"assets/modules/puzzles/GridModel.js",
 			"assets/modules/puzzles/GridElement.js",
+			"assets/modules/puzzles/GridElementShapes.js",
 			"assets/modules/utils/MathHelper.js",
 			"assets/modules/utils/ObjectHelper.js"
 		],
@@ -52,7 +54,7 @@
     
     =====================================================*/
 	
-	function init_internal ( g, pzl, ts, gr, gm, gmodel, ge, mh, oh ) {
+	function init_internal ( g, pzl, ts, gr, gm, gmodel, ge, ges, mh, oh ) {
 		console.log('internal planting', _Planting);
 		
 		_Game = g;
@@ -62,6 +64,7 @@
 		_GridModule = gm;
 		_GridModel = gmodel;
 		_GridElement = ge;
+		_GridElementShapes = ges;
 		_MathHelper = mh;
 		_ObjectHelper = oh;
 		
@@ -81,8 +84,14 @@
 		
 		_Planting.Instance.prototype.reset = reset;
 		
+		_Planting.Instance.prototype.add_collection_plant = add_collection_plant;
+		_Planting.Instance.prototype.remove_collection_plant = remove_collection_plant;
+		_Planting.Instance.prototype.add_collection_shape = add_collection_shape;
+		_Planting.Instance.prototype.remove_collection_shape = remove_collection_shape;
+		
 		_Planting.Instance.prototype.select_plant = select_plant;
-		_Planting.Instance.prototype.select_field = select_field;
+		_Planting.Instance.prototype.select_puzzle = select_puzzle;
+		_Planting.Instance.prototype.activate_puzzle = activate_puzzle;
 		
 		_Planting.Instance.prototype.step = step;
 		_Planting.Instance.prototype.step_rotate = step_rotate;
@@ -121,10 +130,13 @@
 		this.rotationDistanceMin = _Planting.rotationDistanceMin;
 		this.rotationStartThreshold = _Planting.rotationStartThreshold;
 		this.rotationDirChangeThreshold = _Planting.rotationDirChangeThreshold;
+		this.plants = [];
+		this.shapes = [];
 		
 		// signals
 		
 		this.puzzleStarted = new signals.Signal();
+		this.puzzleSelected = new signals.Signal();
 		this.puzzleStopped = new signals.Signal();
 		
 		this.planted = new signals.Signal();
@@ -146,13 +158,93 @@
 	
 	function reset () {
 		
-		// plants list
+		var i, l;
 		
-		this.plants = [];
+		// clear collection
+		// plants
+		
+		for ( i = 0, l = this.plants.length; i < l; i++ ) {
+			
+			this.remove_collection_plant( this.plants[ i ] );
+			
+		}
+		
+		// shapes
+		
+		for ( i = 0, l = this.shapes.length; i < l; i++ ) {
+			
+			this.remove_collection_shape( this.shapes[ i ] );
+			
+		}
+		
+		// create collection
+		// plants
+		
+		this.add_collection_plant( 'taro' );
+		this.add_collection_plant( 'rock' );
+		
+		// shapes
+		
+		this.add_collection_shape( 'monomino' );
+		this.add_collection_shape( 'domino' );
+		this.add_collection_shape( 'trominoL' );
+		this.add_collection_shape( 'tetrominoT' );
 		
 		// stop planting
 		
 		this.stop();
+		
+	}
+	
+	/*===================================================
+	
+	collection
+	
+	=====================================================*/
+	
+	function add_collection_plant ( plant ) {
+		
+		
+		
+	}
+	
+	function remove_collection_plant ( plant ) {
+		
+		
+		
+	}
+	
+	function add_collection_shape ( shape ) {
+		
+		// if valid shape
+		
+		if ( _GridElementShapes.hasOwnProperty( shape ) ) {
+			
+			this.shapes.push( shape );
+			
+			// shape picker buttons
+			
+			_GridElementShapes[ shape ].$buttonsShapePicker.removeClass( "disabled hidden" );
+			
+		}
+		
+	}
+	
+	function remove_collection_shape ( shape ) {
+		
+		var index;
+		
+		index = this.shapes.indexOf( shape );
+		
+		if ( index !== -1 ) {
+			
+			this.shapes.splice( index, 1 );
+			
+			// shape picker buttons
+			
+			_GridElementShapes[ shape ].$buttonsShapePicker.addClass( "disabled hidden" );
+			
+		}
 		
 	}
 	
@@ -168,9 +260,10 @@
 		
 	}
 	
-	function select_field ( parameters ) {
+	function select_puzzle ( parameters ) {
 		
-		var toggleSwitch;
+		var toggleSwitch,
+			puzzle;
 		
 		// handle parameters
 		
@@ -188,11 +281,34 @@
 		
 		if ( toggleSwitch instanceof _ToggleSwitch.Instance ) {
 			
+			puzzle = toggleSwitch.target;
+			
 			// change puzzle
 			
-			this.change_puzzle( toggleSwitch.target );
+			if ( parameters.change === true ) {
+				
+				this.change_puzzle( puzzle );
+				
+			}
+			// select
+			else {
+				
+				this.puzzleSelected.dispatch( puzzle );
+				
+			}
 			
 		}
+		
+	}
+	
+	function activate_puzzle ( parameters ) {
+		
+		// handle parameters
+		
+		parameters = parameters || {};
+		parameters.change = true;
+		
+		this.select_puzzle( parameters );
 		
 	}
 	

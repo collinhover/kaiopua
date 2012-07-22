@@ -167,13 +167,13 @@
     
     =====================================================*/
 	
-	function execute ( name, callbackName, parameters ) {
+	function execute ( name, eventName, parameters ) {
 		
 		// if action exists
 		
 		if ( this.map.hasOwnProperty( name ) ) {
 			
-			this.map[ name].execute( callbackName, parameters );
+			this.map[ name].execute( eventName, parameters );
 		
 		}
 		
@@ -221,27 +221,45 @@
 	
 	function Action ( parameters ) {
 		
+		var eventName;
+		
 		// handle parameters
 		
 		parameters = parameters || {};
 		
 		// properties
 		
-		this.callbacks = parameters.callbacks || {};
+		this.eventCallbacks = parameters.eventCallbacks || {};
 		
-		this.callbackNameActive = parameters.callbackNameActive || 'tap';
-		this.callbackNameInactive = parameters.callbackNameInactive && parameters.callbackNameInactive !== this.callbackNameActive ? parameters.callbackNameInactive : 'release';
+		this.eventNameActive = parameters.eventNameActive;
+		this.eventNameInactive = parameters.eventNameInactive;
 		
 		this.active = false; 
 		this.activeChecks = parameters.activeChecks || {};
+		
+		// for each list of eventCallbacks
+		
+		for ( eventName in this.eventCallbacks ) {
+			
+			if ( this.eventCallbacks.hasOwnProperty( eventName ) ) {
+				
+				// ensure is array
+				
+				this.eventCallbacks[ eventName ] = main.ensure_array( this.eventCallbacks[ eventName ] );
+				
+			}
+			
+		}
 		
 	}
 	
 	Action.prototype = {
 		
-		execute: function ( callbackName, parameters ) {
+		execute: function ( eventName, parameters ) {
 			
-			var event;
+			var i, l,
+				event,
+				eventCallbacks;
 			
 			// handle parameters
 			
@@ -249,17 +267,23 @@
 			
 			event = parameters.event;
 			
-			// if callbackName exists
+			// if eventName exists
 			
-			if ( this.callbacks.hasOwnProperty( callbackName ) ) {
+			if ( this.eventCallbacks.hasOwnProperty( eventName ) ) {
 				
-				// store callbackName
+				// store eventName
 				
-				this.callbackNameCurrent = callbackName;
+				this.eventNameCurrent = eventName;
 				
-				// execute
+				// execute each eventCallback
 				
-				this.callbacks[ callbackName ]( parameters );
+				eventCallbacks = this.eventCallbacks[ eventName ];
+				
+				for ( i = 0, l = eventCallbacks.length; i < l; i++ ) {
+					
+					eventCallbacks[ i ]( parameters );
+					
+				}
 				
 				// update active
 				
@@ -280,9 +304,9 @@
 		
 		deactivate: function () {
 			
-			if ( this.callbacks.hasOwnProperty( this.callbackNameInactive ) && this.is_active() ) {
+			if ( typeof this.eventNameInactive !== 'undefined' && this.eventCallbacks.hasOwnProperty( this.eventNameInactive ) && this.is_active() ) {
 				
-				this.execute( this.callbackNameInactive );
+				this.execute( this.eventNameInactive );
 				this.active = false;
 				
 			}
@@ -297,16 +321,16 @@
 				this.active = this.activeChecks();
 				
 			}
-			// else try active check for current callback
-			else if ( this.activeChecks.hasOwnProperty( this.callbackNameCurrent ) ) {
+			// else try active check for current eventCallback
+			else if ( this.activeChecks.hasOwnProperty( this.eventNameCurrent ) ) {
 				
-				this.active = this.activeChecks[ this.callbackNameCurrent ]();
+				this.active = this.activeChecks[ this.eventNameCurrent ]();
 				
 			}
-			// else default to callback names
-			else {
+			// else default to eventCallback names
+			else if ( typeof this.eventNameActive !== 'undefined' ) {
 				
-				this.active = this.callbackNameCurrent === this.callbackNameActive;
+				this.active = this.eventNameCurrent === this.eventNameActive;
 				
 			}
 			

@@ -797,8 +797,8 @@
 		} );
 		gridGameplay.add( gpRow1 );
 		
-		make_message_grid_element( 'Fields are puzzles', '', gpRow1, 'grid_cell_inner', shared.pathToTextures + 'dirt_128.jpg', 'grid_cell_inner_circle' );
-		make_message_grid_element( 'Plant to complete fields', '', gpRow1, 'grid_cell_inner', shared.pathToIcons + 'game_steps_choose_plant_128.jpg', 'grid_cell_inner_circle' );
+		make_message_grid_element( 'Puzzles are puzzles', '', gpRow1, 'grid_cell_inner', shared.pathToTextures + 'dirt_128.jpg', 'grid_cell_inner_circle' );
+		make_message_grid_element( 'Plant to complete puzzles', '', gpRow1, 'grid_cell_inner', shared.pathToIcons + 'game_steps_choose_plant_128.jpg', 'grid_cell_inner_circle' );
 		make_message_grid_element( 'Less is more', '', gpRow1, 'grid_cell_inner', shared.pathToIcons + 'game_steps_design_128.jpg', 'grid_cell_inner_circle' );
 		make_message_grid_element( 'Efficiency is rewarding!', '', gpRow1, 'grid_cell_inner', shared.pathToIcons + 'game_steps_grow_128.jpg', 'grid_cell_inner_circle' );
 		make_message_grid_element( 'Gravity is shifty...', '', gpRow1, 'grid_cell_inner', shared.pathToIcons + 'game_steps_explore_128.jpg', 'grid_cell_inner_circle' );

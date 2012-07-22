@@ -97,9 +97,9 @@
 		// actions
 		
 		this.actions.add( 'pointer', {
-			callbacks: {
-				tap: $.proxy( me.planting.select_plant, me.planting ),
-				hold: $.proxy( me.planting.select_field, me.planting )
+			eventCallbacks: {
+				tap: [ $.proxy( me.planting.select_puzzle, me.planting ), $.proxy( me.planting.select_plant, me.planting ) ],
+				hold: $.proxy( me.planting.activate_puzzle, me.planting )
 			},
 			activeChecks: {
 				drag: function () {

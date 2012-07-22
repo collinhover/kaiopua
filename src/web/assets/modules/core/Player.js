@@ -14,6 +14,7 @@
 		_Game,
 		_CameraControls,
 		_Hero,
+		_GridElementShapes,
 		_Messenger,
 		_ObjectHelper,
 		_MathHelper,
@@ -90,6 +91,7 @@
 			"assets/modules/core/CameraControls.js",
 			"assets/modules/core/Actions.js",
 			"assets/modules/characters/Hero.js",
+			"assets/modules/puzzles/GridElementShapes.js",
 			"assets/modules/ui/Messenger.js",
 			"assets/modules/utils/ObjectHelper.js",
 			"assets/modules/utils/MathHelper.js",
@@ -105,7 +107,7 @@
     
     =====================================================*/
 	
-	function init_internal ( g, cc, ac, h, msg, oh, mh, kh ) {
+	function init_internal ( g, cc, ac, h, ges, msg, oh, mh, kh ) {
 		console.log('internal player');
 		
 		if ( ready !== true ) {
@@ -116,6 +118,7 @@
 			_CameraControls = cc;
 			_Actions = ac;
 			_Hero = h;
+			_GridElementShapes = ges;
 			_Messenger = msg;
 			_ObjectHelper = oh;
 			_MathHelper = mh;
@@ -229,7 +232,7 @@
 		// pointer
 		
 		actions.add( 'pointer', {
-			callbacks: {
+			eventCallbacks: {
 				drag: function ( parameters ) {
 					
 					// start rotating camera if character is not acting
@@ -259,7 +262,7 @@
 		// wasd / arrows
 		
 		actions.add( 'w up_arrow', {
-			callbacks: {
+			eventCallbacks: {
 				down: function () {
 					character_move( 'forward' );
 				},
@@ -270,7 +273,7 @@
 		} );
 		
 		actions.add( 's down_arrow', {
-			callbacks: {
+			eventCallbacks: {
 				down: function () {
 					character_move( 'back' );
 				},
@@ -281,7 +284,7 @@
 		} );
 		
 		actions.add( 'a left_arrow', {
-			callbacks: {
+			eventCallbacks: {
 				down: function () {
 					character_move( 'turnleft' );
 				},
@@ -292,7 +295,7 @@
 		} );
 		
 		actions.add( 'd right_arrow', {
-			callbacks: {
+			eventCallbacks: {
 				down: function () {
 					character_move( 'turnright' );
 				},
@@ -305,7 +308,7 @@
 		// jump
 		
 		actions.add( 'space', {
-			callbacks: {
+			eventCallbacks: {
 				down: function () {
 					character_move( 'up' );
 				},
@@ -318,7 +321,7 @@
 		// misc
 		
 		actions.add( 'escape', {
-			callbacks: {
+			eventCallbacks: {
 				up: function () {
 					
 					if ( _Game.paused === true ) {
@@ -547,43 +550,51 @@
 	
 	function on_puzzle_started ( puzzle ) {
 		
+		var i, l,
+			shapes,
+			shape;
+		
 		console.log( 'puzzle started', puzzle );
 		
 		// modify ui to reflect new puzzle
 		
 		main.dom_collapse( {
-			element: $( "#fieldActiveWarning" ),
+			element: shared.domElements.$puzzleActiveWarning,
 			time: 0
 		} );
 		
 		main.dom_collapse( {
-			element: $( "#fieldActive" ),
+			element: shared.domElements.$puzzleActive,
 			show: true,
 			time: 0
 		} );
 		
 		// overview
 		
-		$( "#fieldActiveName" ).html( puzzle.name );
-		$( "#fieldActiveScoreBar" ).css( 'width', this.scorePct + '%' );
-		$( "#fieldActiveElementCount" ).html( puzzle.elements.length );
-		$( "#fieldActiveNumElementsMin" ).html( puzzle.numElementsMin );
+		shared.domElements.$puzzleActiveName.html( puzzle.name );
+		shared.domElements.$puzzleActiveScoreBar.css( 'width', puzzle.scorePct + '%' );
+		shared.domElements.$puzzleActiveElementCount.html( puzzle.elements.length );
+		shared.domElements.$puzzleActiveNumElementsMin.html( puzzle.numElementsMin );
 		
 		// shapes
 		
-		$( "#fieldActiveShapesRequired" ).html( puzzle.numShapesRequired );
+		shared.domElements.$puzzleActiveNumShapesRequired.html( puzzle.numShapesRequired );
 		
-		$( "#fieldActiveShapesPicker button" ).on( 'tap.toggleShape', on_toggle_shape );
+		shapes = character.planting.shapes;
 		
-		$.each($('#fieldActiveShapesPicker button').data('events'), function(i, event){
-			console.log( event );
-			$.each(event, function(i, handler){
-
-				console.log( ' > ', handler );
-
-			});
-
-		});
+		for ( i = 0, l = shapes.length; i < l; i++ ) {
+			
+			shape = shapes[ i ];
+			
+			// add tap listeners
+			
+			_GridElementShapes[ shape ].$buttonsShapePicker.on( 'tap.toggleShape', on_toggle_shape );
+			
+		}
+		
+		// puzzle selected listener
+		
+		character.planting.puzzleSelected.add( on_puzzle_selected );
 		
 		// puzzle ready status
 		
@@ -605,10 +616,11 @@
 	function on_toggle_shape ( e ) {
 		
 		var puzzle = character.planting.puzzle,
-			$button = $( e.currentTarget ),
-			shape = $button.attr( 'id' ),
+			$shape = $( e.currentTarget ),
+			$button = $shape.find( 'button' ).andSelf().filter( 'button' ),
+			shape = $shape.data( 'shape' ),
 			shapesChanged;
-		console.log( 'toggle shape, puzzle is ', puzzle, ' e ', e, 'button is ', $button, ' and shape is ', shape );
+		
 		// if valid puzzle
 		
 		if ( puzzle ) {
@@ -638,71 +650,140 @@
 		
 	}
 	
-	function on_puzzle_waiting ( puzzle ) {
+	function on_puzzle_selected ( puzzle ) {
 		
-		console.log( 'puzzle waiting', puzzle );
-		
-		puzzle.shapesReady.add( on_puzzle_ready );
+		console.log( 'puzzle selected', puzzle );
 		
 		// trigger farming menu
 		
 		shared.domElements.$buttonFarmingMenu.trigger( 'tap' );
 		
-		// scroll to field
+		// scroll to puzzle
 		
-		$.scrollTo( shared.domElements.$field, shared.domScrollTime, {
+		$.scrollTo( shared.domElements.$puzzle, shared.domScrollTime, {
 			easing: 'easeInOutCubic'
 		} );
 		
+	}
+	
+	function on_puzzle_waiting ( puzzle ) {
+		
+		var i, l,
+			shapes,
+			shape;
+		console.log( 'puzzle waiting', puzzle );
+		
+		puzzle.shapesReady.add( on_puzzle_ready );
+		
+		// select puzzle
+		
+		on_puzzle_selected( puzzle );
+		
 		// update status
 		
-		$( "#fieldActiveStatusIcons img" ).addClass( 'hidden' );
-		$( "#fieldActiveStatusText" ).html( 'waiting' );
-		$( "#fieldActiveStatusIcons #waiting" ).removeClass( 'hidden' );
+		shared.domElements.$puzzleActiveStatusIcons.addClass( 'hidden' );
+		shared.domElements.$puzzleActiveStatusText.html( 'waiting' );
+		shared.domElements.$puzzleActiveStatusIcons.filter( "#waiting" ).removeClass( 'hidden' );
 		
 		// hide map and rewards
 		
 		main.dom_collapse( {
-			element: $( "#fieldActiveMap, #fieldActiveRewards" )
+			element: $.merge( shared.domElements.$puzzleActiveMap, shared.domElements.$puzzleActiveRewards )
+		} );
+		
+		// hide all shapes
+		
+		shapes = _GridElementShapes.all;
+		
+		for ( i = 0, l = shapes.length; i < l; i++ ) {
+			
+			shape = shapes[ i ];
+			
+			_GridElementShapes[ shape ].$buttonsPuzzleActive.addClass( 'disabled hidden' );
+			
+		}
+		
+		main.dom_fade( { 
+			element: shared.domElements.$puzzleActiveShapes,
+			opacity: 0,
+			time: 0
 		} );
 		
 	}
 	
 	function on_puzzle_ready ( puzzle ) {
 		
+		var i, l,
+			shapes,
+			shape;
 		console.log( 'puzzle ready', puzzle );
 		
 		puzzle.shapesReady.remove( on_puzzle_ready );
 		
 		// update status
 		
-		$( "#fieldActiveStatusIcons img" ).addClass( 'hidden' );
-		$( "#fieldActiveStatusText" ).html( 'ready' );
-		$( "#fieldActiveStatusIcons #ready" ).removeClass( 'hidden' );
+		shared.domElements.$puzzleActiveStatusIcons.addClass( 'hidden' );
+		shared.domElements.$puzzleActiveStatusText.html( 'ready' );
+		shared.domElements.$puzzleActiveStatusIcons.filter( "#ready" ).removeClass( 'hidden' );
 		
 		// hide shapes required warning
 		
 		main.dom_collapse( {
-			element: $( "#fieldActiveShapesRequiredWarning" ),
+			element: shared.domElements.$puzzleActiveShapesRequiredWarning,
 			time: 0
 		} );
 		
 		// show map and rewards
 		
 		main.dom_collapse( {
-			element: $( "#fieldActiveMap, #fieldActiveRewards" ),
+			element: $.merge( shared.domElements.$puzzleActiveMap, shared.domElements.$puzzleActiveRewards ),
 			show: true
+		} );
+		
+		// show puzzle shapes
+		
+		shapes = puzzle.shapes;
+		
+		for ( i = 0, l = shapes.length; i < l; i++ ) {
+			
+			shape = shapes[ i ];
+			
+			_GridElementShapes[ shape ].$buttonsPuzzleActive.removeClass( 'disabled hidden' );
+			
+		}
+		
+		main.dom_fade( { 
+			element: shared.domElements.$puzzleActiveShapes,
+			time: 0
 		} );
 		
 	}
 	
 	function on_puzzle_stopped ( puzzle ) {
 		
+		var i, l,
+			shapes,
+			shape;
+		
 		console.log( 'puzzle stopped', puzzle );
+		
+		// puzzle selected listener
+		
+		character.planting.puzzleSelected.remove( on_puzzle_selected );
 		
 		// shapes
 		
-		$( "#fieldActiveShapesPicker button" ).off( '.toggleShape' );
+		shapes = character.planting.shapes;
+		
+		for ( i = 0, l = shapes.length; i < l; i++ ) {
+			
+			shape = shapes[ i ];
+			
+			// remove tap listeners
+			
+			_GridElementShapes[ shape ].$buttonsShapePicker.off( '.toggleShape' );
+			
+		}
 		
 		puzzle.shapesNeeded.remove( on_puzzle_waiting );
 		puzzle.shapesReady.remove( on_puzzle_ready );
@@ -710,12 +791,11 @@
 		// remove puzzle from ui
 		
 		main.dom_collapse( {
-			element: $( "#fieldActive, #fieldActiveMap, #fieldActiveRewards" ),
-			time: 0
+			element: shared.domElements.$puzzleActive
 		} );
 		
 		main.dom_collapse( {
-			element: $( "#fieldActiveWarning" ),
+			element: shared.domElements.$puzzleActiveWarning,
 			show: true,
 			time: 0
 		} );
