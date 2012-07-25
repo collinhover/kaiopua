@@ -194,6 +194,28 @@
 		
 		$element = $( "#" + errorStringBase + errorType );
 		
+		// add error info if general error
+		
+		if ( errorType === errorTypeGeneral ) {
+		
+			// format origin
+			
+			index = origin.search( /\/(?![\s\S]*\/)/ );
+			if ( index !== -1 ) {
+				origin = origin.slice( index + 1 );
+			}
+			
+			index = origin.search( /\?(?![\s\S]*\?)/ );
+			if ( index !== -1 ) {
+				origin = origin.slice( 0, index );
+			}
+			
+			$element.find( "#errorMessage" ).html( error );
+			$element.find( "#errorFile" ).html( origin );
+			$element.find( "#errorLine" ).html( lineNumber );
+			
+		}
+		
 		// show
 		
 		main.dom_collapse( {

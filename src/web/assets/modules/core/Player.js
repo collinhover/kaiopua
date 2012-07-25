@@ -14,7 +14,7 @@
 		_Game,
 		_CameraControls,
 		_Hero,
-		_GridElementShapes,
+		_GridElementLibrary,
 		_Messenger,
 		_ObjectHelper,
 		_MathHelper,
@@ -91,7 +91,7 @@
 			"assets/modules/core/CameraControls.js",
 			"assets/modules/core/Actions.js",
 			"assets/modules/characters/Hero.js",
-			"assets/modules/puzzles/GridElementShapes.js",
+			"assets/modules/puzzles/GridElementLibrary.js",
 			"assets/modules/ui/Messenger.js",
 			"assets/modules/utils/ObjectHelper.js",
 			"assets/modules/utils/MathHelper.js",
@@ -118,7 +118,7 @@
 			_CameraControls = cc;
 			_Actions = ac;
 			_Hero = h;
-			_GridElementShapes = ges;
+			_GridElementLibrary = ges;
 			_Messenger = msg;
 			_ObjectHelper = oh;
 			_MathHelper = mh;
@@ -527,7 +527,7 @@
 			
 			parameters = {
 				event: e,
-				bubble: isAlwaysAvailable || _Game.paused
+				allowDefault: isAlwaysAvailable || _Game.paused
 			};
 			
 			// perform character action
@@ -588,7 +588,7 @@
 			
 			// add tap listeners
 			
-			_GridElementShapes[ shape ].$buttonsShapePicker.on( 'tap.toggleShape', on_toggle_shape );
+			_GridElementLibrary.shapes[ shape ].$buttonsShapePicker.on( 'tap.shapeToggle', on_shape_toggle );
 			
 		}
 		
@@ -608,43 +608,6 @@
 		else {
 			
 			on_puzzle_ready( puzzle );
-			
-		}
-		
-	}
-	
-	function on_toggle_shape ( e ) {
-		
-		var puzzle = character.planting.puzzle,
-			$shape = $( e.currentTarget ),
-			$button = $shape.find( 'button' ).andSelf().filter( 'button' ),
-			shape = $shape.data( 'shape' ),
-			shapesChanged;
-		
-		// if valid puzzle
-		
-		if ( puzzle ) {
-			
-			// add / remove shapes based on whether button active
-			
-			if ( $button.hasClass( 'active' ) ) {
-				
-				shapesChanged = puzzle.remove_shape( shape );
-				console.log( 'removing shape', shape, ' shapesChanged? ', shapesChanged );
-			}
-			else {
-				
-				shapesChanged = puzzle.add_shape( shape );
-				console.log( 'adding shape', shape, ' shapesChanged? ', shapesChanged );
-			}
-			
-			// toggle button active if shapes changed
-			
-			if ( shapesChanged === true ) {
-				
-				$button.toggleClass( 'active' );
-				
-			}
 			
 		}
 		
@@ -691,15 +654,17 @@
 			element: $.merge( shared.domElements.$puzzleActiveMap, shared.domElements.$puzzleActiveRewards )
 		} );
 		
-		// hide all shapes
+		// hide all shapes and disable drag
 		
-		shapes = _GridElementShapes.all;
+		shapes = _GridElementLibrary.shapeNames;
 		
 		for ( i = 0, l = shapes.length; i < l; i++ ) {
 			
 			shape = shapes[ i ];
 			
-			_GridElementShapes[ shape ].$buttonsPuzzleActive.addClass( 'disabled hidden' );
+			_GridElementLibrary.shapes[ shape ]
+				.$buttonsPuzzleActive.addClass( 'disabled hidden' )
+				.off( '.shapeDrag' );
 			
 		}
 		
@@ -740,7 +705,7 @@
 			show: true
 		} );
 		
-		// show puzzle shapes
+		// show puzzle shapes and allow drag
 		
 		shapes = puzzle.shapes;
 		
@@ -748,7 +713,11 @@
 			
 			shape = shapes[ i ];
 			
-			_GridElementShapes[ shape ].$buttonsPuzzleActive.removeClass( 'disabled hidden' );
+			_GridElementLibrary.shapes[ shape ]
+				.$buttonsPuzzleActive.removeClass( 'disabled hidden' )
+				.on( 'dragstart.shapeDrag', on_shape_dragstart )
+				.on( 'drag.shapeDrag', on_shape_drag )
+				.on( 'dragend.shapeDrag', on_shape_dragend );
 			
 		}
 		
@@ -781,7 +750,7 @@
 			
 			// remove tap listeners
 			
-			_GridElementShapes[ shape ].$buttonsShapePicker.off( '.toggleShape' );
+			_GridElementLibrary.shapes[ shape ].$buttonsShapePicker.off( '.shapeToggle' );
 			
 		}
 		
@@ -800,6 +769,111 @@
 			time: 0
 		} );
 		
+	}
+	
+	function on_shape_toggle ( e ) {
+		
+		var puzzle = character.planting.puzzle,
+			$shape = $( e.target ),
+			$button = $shape.find( 'button' ).andSelf().filter( 'button' ),
+			shape = $shape.data( 'shape' ),
+			shapesChanged;
+		
+		// if valid puzzle
+		
+		if ( puzzle ) {
+			
+			// add / remove shapes based on whether button active
+			
+			if ( $button.hasClass( 'active' ) ) {
+				
+				shapesChanged = puzzle.remove_shape( shape );
+				console.log( 'removing shape', shape, ' shapesChanged? ', shapesChanged );
+			}
+			else {
+				
+				shapesChanged = puzzle.add_shape( shape );
+				console.log( 'adding shape', shape, ' shapesChanged? ', shapesChanged );
+			}
+			
+			// toggle button active if shapes changed
+			
+			if ( shapesChanged === true ) {
+				
+				$button.toggleClass( 'active' );
+				
+			}
+			
+		}
+		
+	}
+	
+	function on_shape_dragstart ( e ) {
+		
+		// generates proxy of shape to be dragged
+		
+		var $shape = $( this ),
+			shape = $shape.data( 'shape' )
+			$proxy = $shape.clone()
+				.css( {
+					opacity: 0.75 
+				} )
+				.appendTo( shared.domElements.$uiInGame ),
+			dd = shared.domElements.$uiInGame.offset();
+		
+		// handle drag data
+		
+		dd.width = $shape.outerWidth();
+		dd.height = $shape.outerHeight();
+		dd.widthHalf = dd.width * 0.5;
+		dd.heightHalf = dd.height * 0.5;
+		dd.right = dd.left + shared.domElements.$uiInGame.outerWidth() - dd.width;
+		dd.bottom = dd.top + shared.domElements.$uiInGame.outerHeight() - dd.height;
+		
+		// store data
+		
+		$shape.data( {
+			$proxy: $proxy,
+			dragData: dd
+		} );
+		
+		// select plant
+		console.log( 'shape DRAG start', e, shape, $shape );
+		character.planting.select_plant( { 
+			event: e,
+			plant: {
+				shape: shape
+			}
+		} );
+		
+	}
+	
+	function on_shape_drag ( e ) {
+		
+		var pointer = main.get_pointer( e ),
+			$shape = $( this ),
+			$proxy = $shape.data( '$proxy' ),
+			dd = $shape.data( 'dragData' ),
+			boundedX = Math.min( dd.right, Math.max( dd.left, pointer.x - dd.widthHalf ) ),
+			boundedY = Math.min( dd.bottom, Math.max( dd.top, pointer.y - dd.heightHalf ) )
+		
+		$proxy.css( {
+			left: boundedX,
+			top: boundedY
+		} );
+		//console.log( 'dragged shape to ', pointer.x, pointer.y );
+		
+	}
+	
+	function on_shape_dragend ( e ) {
+		
+		var $shape = $( this ),
+			$proxy = $shape.data( '$proxy' );
+		
+		// remove clone
+		
+		$proxy.remove();
+		console.log( 'shape DRAG end', e );
 	}
 	
 	/*===================================================

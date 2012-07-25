@@ -215,7 +215,7 @@
 		// signals
 		
 		shared.signals.keyReleased.remove( hide_message );
-		shared.signals.gamePointerReleased.remove( hide_message );
+		shared.signals.gamePointerTapped.remove( hide_message );
 		
 		// clear timeout
 		
@@ -272,7 +272,7 @@
 		if ( confirmRequired !== true ) {
 			
 			shared.signals.keyReleased.add( hide_message );
-			shared.signals.gamePointerReleased.add( hide_message );
+			shared.signals.gamePointerTapped.add( hide_message );
 			
 		}
 		

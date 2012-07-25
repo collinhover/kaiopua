@@ -38,7 +38,7 @@
 	initial-scale = 1.0 retains dimensions instead of zooming out if page height > device height
 	maximum-scale = 1.0 retains dimensions instead of zooming in if page width < device width
 	-->
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 	<link rel="shortcut icon" href="favicon.ico">
 	<!-- This is the traditional favicon.
@@ -84,11 +84,104 @@
 	<!-- game -->
 	<div id="game" class="container unselectable">
 		
+		<!-- uiInGame -->
+		<div id="uiInGame" class="unselectable ignore-pointer">
+			
+			<div id="primaryActionsInactive" class="hidden">
+				
+				<ul id="navStart"  class="primaryAction-item nav nav-inline nav-buttons ignore-pointer hidden">
+					<li id="buttonLoad" class="disabled">
+						<button class="btn btn-large btn-inverse btn-circle-large">
+							<img src="assets/icons/load_rev_64.png" class="iconk-large">
+							<h2><small>load</small></h2>
+						</button>
+					</li>
+					<li id="buttonStart">
+						<button class="btn btn-huge btn-inverse btn-circle-giant">
+							<img src="assets/icons/face_perfect_rev_64.png" class="iconk-giant">
+							<h2 class="logo-type">Start</h2>
+						</button>
+					</li>
+					<li id="buttonContinue" class="disabled">
+						<button class="btn btn-large btn-inverse btn-circle-large">
+							<img src="assets/icons/rock_rev_64.png" class="iconk-large">
+							<p><small>continue</small></p>
+						</button>
+					</li>
+				</ul>
+				
+				<ul id="puzzleActiveShapes" class="primaryAction-item nav nav-inline nav-buttons ignore-pointer hidden">
+					<li class="shape-monomino">
+						<button class="btn btn-inverse btn-circle-small">
+							<img src="assets/icons/shape_monomino_rev_64.png" class="iconk-large">
+						</button>
+					</li>
+					<li class="shape-domino">
+						<button class="btn btn-inverse btn-circle-small">
+							<img src="assets/icons/shape_domino_rev_64.png" class="iconk-large">
+						</button>
+					</li>
+					<li class="shape-trominoI">
+						<button class="btn btn-inverse btn-circle-small">
+							<img src="assets/icons/shape_tromino_i_rev_64.png" class="iconk-large">
+						</button>
+					</li>
+					<li class="shape-trominoL">
+						<button class="btn btn-inverse btn-circle-small">
+							<img src="assets/icons/shape_tromino_l_rev_64.png" class="iconk-large">
+						</button>
+					</li>
+					<li class="shape-tetrominoI">
+						<button class="btn btn-inverse btn-circle-small">
+							<img src="assets/icons/shape_tetromino_i_rev_64.png" class="iconk-large">
+						</button>
+					</li>
+					<li class="shape-tetrominoJ">
+						<button class="btn btn-inverse btn-circle-small">
+							<img src="assets/icons/shape_tetromino_j_rev_64.png" class="iconk-large">
+						</button>
+					</li>
+					<li class="shape-tetrominoL">
+						<button class="btn btn-inverse btn-circle-small">
+							<img src="assets/icons/shape_tetromino_l_rev_64.png" class="iconk-large">
+						</button>
+					</li>
+					<li class="shape-tetrominoO">
+						<button class="btn btn-inverse btn-circle-small">
+							<img src="assets/icons/shape_tetromino_o_rev_64.png" class="iconk-large">
+						</button>
+					</li>
+					<li class="shape-tetrominoS">
+						<button class="btn btn-inverse btn-circle-small">
+							<img src="assets/icons/shape_tetromino_s_rev_64.png" class="iconk-large">
+						</button>
+					</li>
+					<li class="shape-tetrominoT">
+						<button class="btn btn-inverse btn-circle-small">
+							<img src="assets/icons/shape_tetromino_t_rev_64.png" class="iconk-large">
+						</button>
+					</li>
+					<li class="shape-tetrominoZ">
+						<button class="btn btn-inverse btn-circle-small">
+							<img src="assets/icons/shape_tetromino_z_rev_64.png" class="iconk-large">
+						</button>
+					</li>
+				</ul>
+				
+			</div>
+			
+			<div id="primaryActionsActive" class="container container-center ignore-pointer">
+				
+			</div>
+			
+		</div>
+		<!-- END inGame -->
+		
 	</div>
 	<!-- END game -->
 	
-	<!-- ui -->
-	<div id="ui" class="container ignore-pointer">
+	<!-- uiOutGame -->
+	<div id="uiOutGame" class="container ignore-pointer">
 		
 		<!-- navMenus -->
 		<div id="navMenus" class="unselectable">
@@ -201,6 +294,7 @@
 				<div class="hero-unit squire-unit error">
 					<h2 class="error-header logo-type">Well, this is embarrassing!</h2>
 					<p class="error-body">We tried to catch every bug, but it looks like one got through. Please let us know by <a href='https://github.com/collinhover/kaiopua/issues' target='_blank'>submitting an issue</a> report.</p>
+					<p><code><span id='errorMessage'>Error Message</span></code><small> in file: </small><code><span id='errorFile'>Filename</span> > line <span id='errorLine'>0</span></code></p>
 					<p><small>(you can also try to <a href='index.html' class="btn btn-large">refresh</a> to fix the problem)</small></p>
 				</div>
 			</div>
@@ -298,842 +392,743 @@
 		</div>
 		<!-- END active -->
 		
-		<!-- inGame -->
-		<div id="inGame" class="unselectable ignore-pointer">
-			
-			<div id="primaryActionsInactive" class="hidden">
-				
-				<ul id="navStart"  class="primaryAction-item nav nav-inline nav-buttons ignore-pointer hidden">
-					<li id="buttonLoad" class="disabled">
-						<button class="btn btn-large btn-inverse btn-circle-large">
-							<img src="assets/icons/load_rev_64.png" class="iconk-large">
-							<h2><small>load</small></h2>
-						</button>
-					</li>
-					<li id="buttonStart">
-						<button class="btn btn-huge btn-inverse btn-circle-giant">
-							<img src="assets/icons/face_perfect_rev_64.png" class="iconk-giant">
-							<h2 class="logo-type">Start</h2>
-						</button>
-					</li>
-					<li id="buttonContinue" class="disabled">
-						<button class="btn btn-large btn-inverse btn-circle-large">
-							<img src="assets/icons/rock_rev_64.png" class="iconk-large">
-							<p><small>continue</small></p>
-						</button>
-					</li>
-				</ul>
-				
-				<ul id="puzzleActiveShapes" class="primaryAction-item nav nav-inline nav-buttons ignore-pointer hidden">
-					<li class="shape-monomino">
-						<button class="btn btn-inverse btn-circle-small">
-							<img src="assets/icons/shape_monomino_rev_64.png" class="iconk-large">
-						</button>
-					</li>
-					<li class="shape-domino">
-						<button class="btn btn-inverse btn-circle-small">
-							<img src="assets/icons/shape_domino_rev_64.png" class="iconk-large">
-						</button>
-					</li>
-					<li class="shape-trominoI">
-						<button class="btn btn-inverse btn-circle-small">
-							<img src="assets/icons/shape_tromino_i_rev_64.png" class="iconk-large">
-						</button>
-					</li>
-					<li class="shape-trominoL">
-						<button class="btn btn-inverse btn-circle-small">
-							<img src="assets/icons/shape_tromino_l_rev_64.png" class="iconk-large">
-						</button>
-					</li>
-					<li class="shape-tetrominoI">
-						<button class="btn btn-inverse btn-circle-small">
-							<img src="assets/icons/shape_tetromino_i_rev_64.png" class="iconk-large">
-						</button>
-					</li>
-					<li class="shape-tetrominoJ">
-						<button class="btn btn-inverse btn-circle-small">
-							<img src="assets/icons/shape_tetromino_j_rev_64.png" class="iconk-large">
-						</button>
-					</li>
-					<li class="shape-tetrominoL">
-						<button class="btn btn-inverse btn-circle-small">
-							<img src="assets/icons/shape_tetromino_l_rev_64.png" class="iconk-large">
-						</button>
-					</li>
-					<li class="shape-tetrominoO">
-						<button class="btn btn-inverse btn-circle-small">
-							<img src="assets/icons/shape_tetromino_o_rev_64.png" class="iconk-large">
-						</button>
-					</li>
-					<li class="shape-tetrominoS">
-						<button class="btn btn-inverse btn-circle-small">
-							<img src="assets/icons/shape_tetromino_s_rev_64.png" class="iconk-large">
-						</button>
-					</li>
-					<li class="shape-tetrominoT">
-						<button class="btn btn-inverse btn-circle-small">
-							<img src="assets/icons/shape_tetromino_t_rev_64.png" class="iconk-large">
-						</button>
-					</li>
-					<li class="shape-tetrominoZ">
-						<button class="btn btn-inverse btn-circle-small">
-							<img src="assets/icons/shape_tetromino_z_rev_64.png" class="iconk-large">
-						</button>
-					</li>
-				</ul>
-				
-			</div>
-			
-			<div id="primaryActionsActive" class="container container-center ignore-pointer">
-				
-			</div>
-			
-		</div>
-		<!-- END inGame -->
-		
 		<!-- transitioner -->
 		<div id="transitioner" class="unselectable">
 			
 		</div>
 		<!-- END transitioner -->
 		
-		<!-- outGame -->
-		<div id="outGame">
+		<!-- menus -->
+		<div id="menus">
 			
-			<!-- menus -->
-			<div id="menus">
+			<!-- menuFarming -->
+			<section id="menuFarming" class="menu hidden">
 				
-				<!-- menuFarming -->
-				<section id="menuFarming" class="menu hidden">
-					
-					<header class="subhead container">
-						<div class="alert alert-success iconk-large"><img src="assets/icons/farming_64.png"></div>
-						<h1>Farming</h1>
-						<p class="lead">Examine the puzzle you're working on, modify the things you've planted, and browse your plant collection</p>
-						<div id="navFarming" class="subnavbar subnav-sticky">
-							<div class="navbar-inner">
-								<div class="container">
-									<ul class="nav nav-pills pull-left">
-										<li><a href="#puzzleTools">Tools</a></li>
-										<li><a href="#puzzle">Puzzle</a></li>
-										<li><a href="#plant">Plant</a></li>
-										<li><a href="#collection">Collection</a></li>
-									</ul>
-									<ul class="nav nav-pills pull-right">
-										<li><a href="#menuFarming"><h6>top</h6></a></li>
-									</ul>
+				<header class="subhead container">
+					<div class="alert alert-success iconk-large"><img src="assets/icons/farming_64.png"></div>
+					<h1>Farming</h1>
+					<p class="lead">Examine the puzzle you're working on, modify the things you've planted, and browse your plant collection</p>
+					<div id="navFarming" class="subnavbar subnav-sticky">
+						<div class="navbar-inner">
+							<div class="container">
+								<ul class="nav nav-pills pull-left">
+									<li><a href="#puzzleTools">Tools</a></li>
+									<li><a href="#puzzle">Puzzle</a></li>
+									<li><a href="#plant">Plant</a></li>
+									<li><a href="#collection">Collection</a></li>
+								</ul>
+								<ul class="nav nav-pills pull-right">
+									<li><a href="#menuFarming"><h6>top</h6></a></li>
+								</ul>
+							</div>
+						</div>
+					</div>
+				</header>
+				
+				<!-- puzzleTools -->
+				<section id="puzzleTools" class="tools">
+					<div class="container">
+						<div class="page-header">
+							<h1>Puzzle Tools <small>multiple ways to work with puzzles</small></h1>
+						</div>
+						<div class="row">
+							<div class="span2">
+								<div class="well">
+									<img src="assets/icons/tiki_128.png" alt="">
+								</div>
+								<div class="container-center">
+									<p><small>each puzzle has</small></p>
+									<h3>a tiki statue</h3>
+								</div>
+							</div>
+							<div class="span2">
+								<div class="well">
+									<img src="assets/icons/tap_hold_128.png" alt="">
+								</div>
+								<div class="container-center">
+									<p><small>tap and hold</small></p>
+									<h3>to start</h3>
+									<p><small>tap and hold again</small></p>
+									<h3>to complete</h3>
+								</div>
+							</div>
+							<div class="span2">
+								<div class="well">
+									<img src="assets/icons/tap_128.png" alt="">
+								</div>
+								<div class="container-center">
+									<p><small>tap</small></p>
+									<h3>to select</h3>
 								</div>
 							</div>
 						</div>
-					</header>
-					
-					<!-- puzzleTools -->
-					<section id="puzzleTools" class="tools">
-						<div class="container">
-							<div class="page-header">
-								<h1>Puzzle Tools <small>multiple ways to work with puzzles</small></h1>
+					</div>
+				</section>
+				<!-- END puzzleTools -->
+				<!-- plantTools -->
+				<section id="plantTools" class="tools">
+					<div class="container">
+						<div class="page-header">
+							<h1>Plant Tools <small>a single tap to control any plant</small></h1>
+						</div>
+						<div class="row">
+							<div class="span2">
+								<div class="well">
+									<img src="assets/icons/tap_128.png" alt="">
+								</div>
+								<div class="container-center">
+									<p><small>while in ANY mode</small></p>
+									<h3>tap</h3>
+								</div>
 							</div>
-							<div class="row">
-								<div class="span2">
-									<div class="well">
-										<img src="assets/icons/tiki_128.png" alt="">
-									</div>
-									<div class="container-center">
-										<p><small>each puzzle has</small></p>
-										<h3>a tiki statue</h3>
-									</div>
+							<div class="span2">
+								<div class="well">
+									<img src="assets/icons/drag_move_128.png" alt="">
 								</div>
-								<div class="span2">
-									<div class="well">
-										<img src="assets/icons/tap_hold_128.png" alt="">
-									</div>
-									<div class="container-center">
-										<p><small>tap and hold</small></p>
-										<h3>to start</h3>
-										<p><small>tap and hold again</small></p>
-										<h3>to complete</h3>
-									</div>
+								<div class="container-center">
+									<p><small>while in MOVE mode</small></p>
+									<h3>drag</h3>
 								</div>
-								<div class="span2">
-									<div class="well">
-										<img src="assets/icons/tap_128.png" alt="">
-									</div>
-									<div class="container-center">
-										<p><small>tap</small></p>
-										<h3>to select</h3>
-									</div>
+							</div>
+							<div class="span2">
+								<div class="well">
+									<img src="assets/icons/drag_rotate_128.png" alt="">
+								</div>
+								<div class="container-center">
+									<p><small>while in ROTATE mode</small></p>
+									<h3>drag in circles</h3>
+								</div>
+							</div>
+							<div class="span2">
+								<div class="well">
+									<img src="assets/icons/tap_double_128.png" alt="">
+								</div>
+								<div class="container-center">
+									<p><small>while in ANY mode</small></p>
+									<h3>double tap</h3>
 								</div>
 							</div>
 						</div>
-					</section>
-					<!-- END puzzleTools -->
-					<!-- plantTools -->
-					<section id="plantTools" class="tools">
-						<div class="container">
-							<div class="page-header">
-								<h1>Plant Tools <small>a single tap to control any plant</small></h1>
-							</div>
-							<div class="row">
-								<div class="span2">
-									<div class="well">
-										<img src="assets/icons/tap_128.png" alt="">
-									</div>
-									<div class="container-center">
-										<p><small>while in ANY mode</small></p>
-										<h3>tap</h3>
-									</div>
-								</div>
-								<div class="span2">
-									<div class="well">
-										<img src="assets/icons/drag_move_128.png" alt="">
-									</div>
-									<div class="container-center">
-										<p><small>while in MOVE mode</small></p>
-										<h3>drag</h3>
-									</div>
-								</div>
-								<div class="span2">
-									<div class="well">
-										<img src="assets/icons/drag_rotate_128.png" alt="">
-									</div>
-									<div class="container-center">
-										<p><small>while in ROTATE mode</small></p>
-										<h3>drag in circles</h3>
-									</div>
-								</div>
-								<div class="span2">
-									<div class="well">
-										<img src="assets/icons/tap_double_128.png" alt="">
-									</div>
-									<div class="container-center">
-										<p><small>while in ANY mode</small></p>
-										<h3>double tap</h3>
-									</div>
+						<div class="row">
+							<div class="span2">
+								<div class="container-center">
+									<button id="buttonPlantToolsSelect" class="btn btn-primary">
+										<div class="valign">
+											<div class="valign-cell"><img src="assets/icons/info_rev_64.png" class="iconk-small"></div>
+											<div class="valign-cell"><p>Select</p></div>
+										</div>
+									</button>
 								</div>
 							</div>
-							<div class="row">
-								<div class="span2">
-									<div class="container-center">
-										<button id="buttonPlantToolsSelect" class="btn btn-primary">
-											<div class="valign">
-												<div class="valign-cell"><img src="assets/icons/info_rev_64.png" class="iconk-small"></div>
-												<div class="valign-cell"><p>Select</p></div>
-											</div>
-										</button>
-									</div>
+							<div class="span2">
+								<div class="container-center">
+									<button id="buttonPlantToolsMove" class="btn">
+										<div class="valign">
+											<div class="valign-cell"><img src="assets/icons/move_64.png" class="iconk-small"></div>
+											<div class="valign-cell"><p>Move</p></div>
+										</div>
+									</button>
 								</div>
-								<div class="span2">
-									<div class="container-center">
-										<button id="buttonPlantToolsMove" class="btn">
-											<div class="valign">
-												<div class="valign-cell"><img src="assets/icons/move_64.png" class="iconk-small"></div>
-												<div class="valign-cell"><p>Move</p></div>
-											</div>
-										</button>
-									</div>
+							</div>
+							<div class="span2">
+								<div class="container-center">
+									<button id="buttonPlantToolsRotate" class="btn">
+										<div class="valign">
+											<div class="valign-cell"><img src="assets/icons/rotate_64.png" class="iconk-small"></div>
+											<div class="valign-cell"><p>Rotate</p></div>
+										</div>
+									</button>
 								</div>
-								<div class="span2">
-									<div class="container-center">
-										<button id="buttonPlantToolsRotate" class="btn">
-											<div class="valign">
-												<div class="valign-cell"><img src="assets/icons/rotate_64.png" class="iconk-small"></div>
-												<div class="valign-cell"><p>Rotate</p></div>
-											</div>
-										</button>
-									</div>
-								</div>
-								<div class="span2">
-									<div class="container-center">
-										<button id="buttonPlantToolsDelete" class="btn btn-danger">
-											<div class="valign">
-												<div class="valign-cell"><img src="assets/icons/close_rev_64.png" class="iconk-small"></div>
-												<div class="valign-cell"><p>Delete</p></div>
-											</div>
-										</button>
-									</div>
+							</div>
+							<div class="span2">
+								<div class="container-center">
+									<button id="buttonPlantToolsDelete" class="btn btn-danger">
+										<div class="valign">
+											<div class="valign-cell"><img src="assets/icons/close_rev_64.png" class="iconk-small"></div>
+											<div class="valign-cell"><p>Delete</p></div>
+										</div>
+									</button>
 								</div>
 							</div>
 						</div>
-					</section>
-					<!-- END plantTools -->
-					
-					<!-- puzzle -->
-					<section id="puzzle">
-						<div class="container">
-							<div class="page-header">
-								<h1>Puzzle <small>overview, 2D map, and rewards</small></h1>
-							</div>
-							
-							<div id="puzzleActiveWarning" class="alert alert-block alert-warning">
-								<p><strong>Hold up!</strong></p>
-								<p>You haven't started a puzzle yet. Check the tools section (above) to learn how to get started.</p>
-							</div>
-							
-							<div id="puzzleActive" class="hidden">
-								<div id="puzzleActiveOverview" class="row">
-									<div class="span6">
-										<h6>Name</h6>
-										<h1 class="puzzle-active-name logo-type hero-type">Tutorial Puzzle</h1>
-										<h6>Score</h6>
-										<div class="progress progress-success progress-striped">
-											<div id="puzzleActiveScoreBar" class="bar" style="width: 0%;"></div>
-										</div>
-									</div>
-									<div id="puzzleActivePlants" class="span3">
-										<h6>Plants</h6>
-										<div class="well well-success">
-											<div class="row">
-												<div class="span1 container-center">
-													<h2 class="squire-type puzzle-active-elementCount">0</h2>
-													<p>planted</p>
-												</div>
-												<div class="pull-right">
-													<div class="span1 container-center">
-														<h2 class="squire-type puzzle-active-numElementsMin">0</h2>
-														<p>goal</p>
-													</div>
-												</div>
-											</div>
-										</div>
-									</div>
-									<div id="puzzleActiveStatus" class="span3">
-										<h6>Status: <span id="puzzleActiveStatusText">waiting</span></h6>
-										<div class="well">
-											<div id="puzzleActiveStatusIcons">
-												<img src="assets/icons/waiting_64.png" id="waiting" class="puzzle-statusIcon iconk-giant">
-												<img src="assets/icons/confirm_64.png" id="ready" class="puzzle-statusIcon iconk-giant hidden">
-												<img src="assets/icons/face_okay_64.png" id="okay" class="puzzle-statusIcon iconk-giant hidden">
-												<img src="assets/icons/face_good_64.png" id="good" class="puzzle-statusIcon iconk-giant hidden">
-												<img src="assets/icons/face_perfect_64.png" id="perfect" class="puzzle-statusIcon iconk-giant hidden">
-											</div>
-										</div>
-									</div>
-								</div>
-								
-								<h3>Choose Plant Shapes<small> pick the shapes you want to use for this puzzle</small></h3>
-								<div class="row">
-									<div class="span12">
-										<div id="puzzleActiveShapesRequiredWarning" class="alert alert-block alert-info">
-											<button type="button" class="close" data-dismiss="alert">&times;</button>
-											<strong>Check it out:</strong> You've got to choose as many shapes as the puzzle requires before you can start. (choose below)
-										</div>
-									</div>
-								</div>
-								<div class="row">
-									<div class="span1 container-center">
-										<p><small>(required)</small></p>
-										<h1 class="hero-type puzzle-active-numShapesRequired">1</h1>
-									</div>
-									<div id="puzzleActiveShapesPicker" class="span11">
-										<div class="grid-gutterless">
-											<ul class="thumbnails thumbnails4 shadowless">
-												<li class="span1 shape-monomino">
-													<div class="thumbnail">
-														<button class="btn btn-inverse btn-circle-small dim">
-															<img src="assets/icons/shape_monomino_rev_64.png" class="iconk-large">
-														</button>
-													</div>
-												</li>
-												<li class="span1 shape-domino">
-													<div class="thumbnail">
-														<button class="btn btn-inverse btn-circle-small dim">
-															<img src="assets/icons/shape_domino_rev_64.png" class="iconk-large">
-														</button>
-													</div>
-												</li>
-												<li class="span1 shape-trominoI">
-													<div class="thumbnail">
-														<button class="btn btn-inverse btn-circle-small dim">
-															<img src="assets/icons/shape_tromino_i_rev_64.png" class="iconk-large">
-														</button>
-													</div>
-												</li>
-												<li class="span1 shape-trominoL">
-													<div class="thumbnail">
-														<button class="btn btn-inverse btn-circle-small dim">
-															<img src="assets/icons/shape_tromino_l_rev_64.png" class="iconk-large">
-														</button>
-													</div>
-												</li>
-												<li class="span1 shape-tetrominoI">
-													<div class="thumbnail">
-														<button class="btn btn-inverse btn-circle-small dim">
-															<img src="assets/icons/shape_tetromino_i_rev_64.png" class="iconk-large">
-														</button>
-													</div>
-												</li>
-												<li class="span1 shape-tetrominoJ">
-													<div class="thumbnail">
-														<button class="btn btn-inverse btn-circle-small dim">
-															<img src="assets/icons/shape_tetromino_j_rev_64.png" class="iconk-large">
-														</button>
-													</div>
-												</li>
-												<li class="span1 shape-tetrominoL">
-													<div class="thumbnail">
-														<button class="btn btn-inverse btn-circle-small dim">
-															<img src="assets/icons/shape_tetromino_l_rev_64.png" class="iconk-large">
-														</button>
-													</div>
-												</li>
-												<li class="span1 shape-tetrominoO">
-													<div class="thumbnail">
-														<button class="btn btn-inverse btn-circle-small dim">
-															<img src="assets/icons/shape_tetromino_o_rev_64.png" class="iconk-large">
-														</button>
-													</div>
-												</li>
-												<li class="span1 shape-tetrominoS">
-													<div class="thumbnail">
-														<button class="btn btn-inverse btn-circle-small dim">
-															<img src="assets/icons/shape_tetromino_s_rev_64.png" class="iconk-large">
-														</button>
-													</div>
-												</li>
-												<li class="span1 shape-tetrominoT">
-													<div class="thumbnail">
-														<button class="btn btn-inverse btn-circle-small dim">
-															<img src="assets/icons/shape_tetromino_t_rev_64.png" class="iconk-large">
-														</button>
-													</div>
-												</li>
-												<li class="span1 shape-tetrominoZ">
-													<div class="thumbnail">
-														<button class="btn btn-inverse btn-circle-small dim">
-															<img src="assets/icons/shape_tetromino_z_rev_64.png" class="iconk-large">
-														</button>
-													</div>
-												</li>
-											</ul>
-										</div>
-									</div>
-								</div>
-								
-								<div id="puzzleActiveMap" class="hidden">
-									<h3>Puzzle Map <small>click on the colored shapes to customize the object you've planted there</small></h3>
-									<div class="alert alert-block alert-info">
-										<button type="button" class="close" data-dismiss="alert">&times;</button>
-										<strong>Check it out:</strong> You'll need to fill every space and use at least 1 of each of the shapes you chose to complete the puzzle!
-									</div>
-									
-									<div id="puzzleActiveMapGrid" class="row">
-										<div class="span12">
-											<div class="container-center grid-gutterless well">
-												<ul class="span3 thumbnails thumbnails1">
-													<li class="span1">
-														<a href="#" class="thumbnail">
-															<img src="assets/textures/dirt_128.jpg" alt="">
-														</a>
-													</li>
-													<li class="span1">
-														<a href="#" class="thumbnail">
-															<img src="assets/textures/dirt_128.jpg" alt="">
-														</a>
-													</li>
-													<li class="span1">
-														<a href="#" class="thumbnail">
-															<img src="assets/textures/dirt_128.jpg" alt="">
-														</a>
-													</li>
-													<li class="span1">
-														<a href="#" class="thumbnail">
-															<img src="assets/textures/dirt_128.jpg" alt="">
-														</a>
-													</li>
-													<li class="span1">
-														<a href="#" class="thumbnail invisible">
-															<img src="assets/textures/dirt_128.jpg" alt="">
-														</a>
-													</li>
-													<li class="span1">
-														<a href="#" class="thumbnail">
-															<img src="assets/textures/dirt_128.jpg" alt="">
-														</a>
-													</li>
-													<li class="span1">
-														<a href="#" class="thumbnail">
-															<img src="assets/textures/dirt_128.jpg" alt="">
-														</a>
-													</li>
-													<li class="span1">
-														<a href="#" class="thumbnail">
-															<img src="assets/textures/dirt_128.jpg" alt="">
-														</a>
-													</li>
-													<li class="span1">
-														<a href="#" class="thumbnail invisible">
-															<img src="assets/textures/dirt_128.jpg" alt="">
-														</a>
-													</li>
-												</ul>
-											</div>
-										</div>
-									</div>
-								</div>
-								
-								<div id="puzzleActiveRewards" class="hidden">
-									<h3>Rewards <small>the less plants you use to fill a puzzle, the better the reward</small></h3>
-									<div class="row">
-										<div class="span4">
-											<div id="puzzleActiveRewardsOkay">
-												<h4>Okay <small>(0 - 79%)</small></h4>
-												<div class="puzzle-rewardsList row">
-													<div class="span4">
-														<div class="well well-success">
-															<div class="row">
-																<i class="puzzle-rewardsEarnedStatusIcon iconk-topRight icon-ok-sign"></i>
-																<div class="span1 container-center">
-																	<img src="assets/icons/grid_64.png" class="iconk-large">
-																	<p>Puzzle</p>
-																	<h6>Puzzle</h6>
-																</div>
-															</div>
-														</div>
-													</div>
-												</div>
-											</div>
-										</div>
-										<div class="span4">
-											<div id="puzzleActiveRewardsGood">
-												<h4>Good <small>(80 - 99%)</small></h4>
-												<div class="puzzle-rewardsList row">
-													<div class="span4">
-														<div class="well">
-															<div class="row">
-																<div class="span1 container-center">
-																	<i class="puzzle-rewardsEarnedStatusIcon iconk-topRight icon-ok-sign hidden"></i>
-																	<img src="assets/icons/shape_monomino_64.png" class="iconk-large">
-																	<p>Shape</p>
-																	<h6>Shape</h6>
-																</div>
-															</div>
-														</div>
-													</div>
-												</div>
-											</div>
-										</div>
-										<div class="span4">
-											<div id="puzzleActiveRewardsPerfect">
-												<h4>Perfect <small>(100%)</small></h4>
-												<div class="puzzle-rewardsList row">
-													<div class="span4">
-														<div class="well">
-															<div class="row">
-																<div class="span1 container-center">
-																	<i class="puzzle-rewardsEarnedStatusIcon iconk-topRight icon-ok-sign hidden"></i>
-																	<img src="assets/icons/plant_64.png" class="iconk-large">
-																	<p>Plant</p>
-																	<h6>Plant</h6>
-																</div>
-															</div>
-														</div>
-													</div>
-												</div>
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
+					</div>
+				</section>
+				<!-- END plantTools -->
+				
+				<!-- puzzle -->
+				<section id="puzzle">
+					<div class="container">
+						<div class="page-header">
+							<h1>Puzzle <small>overview, 2D map, and rewards</small></h1>
 						</div>
-					</section>
-					<!-- END puzzle -->
-					
-					<!-- plant -->
-					<section id="plant">
-						<div class="container">
-							<div class="page-header">
-								<h1>Plant <small>examine an object you've planted in the active puzzle</small></h1>
-							</div>
-							
-							<div id="plantActiveWarning" class="alert alert-block alert-warning">
-								<p><strong>Hold up!</strong></p>
-								<p>You're not customizing a plant right now. Tap on a plant in game or use the puzzle map to select one.</p>
-							</div>
-							
-							<div id="plantActive">
-								
-								<div class="row">
-									<div class="span12 grid-gutterless">
-										<div class="row container-center well">
-											<ul class="span2 thumbnails">
-												<li class="span2">
-													<div id="plantActive3DPortrait" class="thumbnail">
-														<img src="http://placehold.it/260x300">
-													</div>
-												</li>
-											</ul>
-										</div>
-									</div>
-								</div>
-								
-								<div id="plantActiveOverview" class="row">
-									<div class="span4">
-										<img src="assets/icons/shape_monomino_64.png" id="plantActiveShapeIcon" class="pull-left iconk-large">
-										<h2 id="plantActiveShape">Monomino</h2>
-										<h6>shape</h6>
-									</div>
-									<div class="span4">
-										<img src="assets/icons/taro_64.png" id="plantActiveTypeIcon" class="pull-left iconk-large">
-										<h2 id="plantActiveType">Taro</h2>
-										<h6>plant</h6>
-									</div>
-									<div class="span4">
-										<h3 class="pull-right"><small>in the <span class="puzzle-active-name">Tutorial</span> Puzzle, at location <span id="plantActivePuzzleLocation">1</span></small></h3>
-									</div>
-								</div>
-							
-							</div>
-							
+						
+						<div id="puzzleActiveWarning" class="alert alert-block alert-warning">
+							<p><strong>Hold up!</strong></p>
+							<p>You haven't started a puzzle yet. Check the tools section (above) to learn how to get started.</p>
 						</div>
-					</section>
-					<!-- END plant -->
-					<!-- collection -->
-					<section id="collection">
-						<div class="container">
-							<div class="page-header">
-								<h1>Collection <small>explore plants in your collection and use them to customize your active plant</small></h1>
-							</div>
-							<div class="row">
-								<div class="span3">
-									<h3>Selection</h3>
-									<div id="plantCustomizationWarning" class="alert alert-block alert-info">
-										<p><strong>Check it out:</strong></p>
-										<p>Tap a plant in your collection to get more information.</p>
+						
+						<div id="puzzleActive" class="hidden">
+							<div id="puzzleActiveOverview" class="row">
+								<div class="span6">
+									<h6>Name</h6>
+									<h1 class="puzzle-active-name logo-type hero-type">Tutorial Puzzle</h1>
+									<h6>Score</h6>
+									<div class="progress progress-success progress-striped">
+										<div id="puzzleActiveScoreBar" class="bar" style="width: 0%;"></div>
 									</div>
-									<div id="plantCustomization">
+								</div>
+								<div id="puzzleActivePlants" class="span3">
+									<h6>Plants</h6>
+									<div class="well well-success">
 										<div class="row">
-											<div class="span2 well">
-												<div id="plantCustom3DPortrait" >
-													<img src="http://placehold.it/260x300">
+											<div class="span1 container-center">
+												<h2 class="squire-type puzzle-active-elementCount">0</h2>
+												<p>planted</p>
+											</div>
+											<div class="pull-right">
+												<div class="span1 container-center">
+													<h2 class="squire-type puzzle-active-numElementsMin">0</h2>
+													<p>goal</p>
 												</div>
-											</div>
-										</div>
-										<div id="plantCustomInfo">
-											<div class="page-header">
-												<div id="plantCustomTitle" class="valign">
-													<div class="valign-cell"><img src="assets/icons/taro_64.png" id="plantCustomTypeIcon" class="iconk-large"></div>
-													<div id="plantCustomType" class="valign-cell"><h2>Taro</h2><h6>Plant</h6></div>
-												</div>
-											</div>
-											<h2><small>Knowledge</small></h2>
-											<p id="plantCustomInfoText">Information about plant</p>
-											<div id="plantActiveCustomizeWarning" class="alert alert-block alert-warning">
-												<p><strong>Hold up!</strong></p>
-												<p>You're not customizing a plant right now. Tap on a plant in game or use the puzzle map to select one.</p>
-											</div>
-											<div id="plantActiveCustomize">
-												<a href="#plant" id="buttonPlantCustomChange" class="btn btn-primary">
-													<div class="valign">
-														<div class="valign-cell"><img src="assets/icons/confirm_rev_64.png" class="iconk-small"></div>
-														<div class="valign-cell"><p>Customize</p></div>
-													</div>
-												</a>
 											</div>
 										</div>
 									</div>
 								</div>
-								<div id="plantCollection" class="span9 grid-gutterless">
-									<h3>Collection</h3>
-									<div class="row container-center well">
-										<ul class="span8 thumbnails thumbnails4">
-											<li class="span1">
-												<a href="#" class="thumbnail">
-													<img src="http://placehold.it/100" alt="">
-												</a>
+								<div id="puzzleActiveStatus" class="span3">
+									<h6>Status: <span id="puzzleActiveStatusText">waiting</span></h6>
+									<div class="well">
+										<div id="puzzleActiveStatusIcons">
+											<img src="assets/icons/waiting_64.png" id="waiting" class="puzzle-statusIcon iconk-giant">
+											<img src="assets/icons/confirm_64.png" id="ready" class="puzzle-statusIcon iconk-giant hidden">
+											<img src="assets/icons/face_okay_64.png" id="okay" class="puzzle-statusIcon iconk-giant hidden">
+											<img src="assets/icons/face_good_64.png" id="good" class="puzzle-statusIcon iconk-giant hidden">
+											<img src="assets/icons/face_perfect_64.png" id="perfect" class="puzzle-statusIcon iconk-giant hidden">
+										</div>
+									</div>
+								</div>
+							</div>
+							
+							<h3>Choose Plant Shapes<small> pick the shapes you want to use for this puzzle</small></h3>
+							<div class="row">
+								<div class="span12">
+									<div id="puzzleActiveShapesRequiredWarning" class="alert alert-block alert-info">
+										<button type="button" class="close" data-dismiss="alert">&times;</button>
+										<strong>Check it out:</strong> You've got to choose as many shapes as the puzzle requires before you can start. (choose below)
+									</div>
+								</div>
+							</div>
+							<div class="row">
+								<div class="span1 container-center">
+									<p><small>(required)</small></p>
+									<h1 class="hero-type puzzle-active-numShapesRequired">1</h1>
+								</div>
+								<div id="puzzleActiveShapesPicker" class="span11">
+									<div class="grid-gutterless">
+										<ul class="thumbnails thumbnails4 shadowless">
+											<li class="span1 shape-monomino">
+												<div class="thumbnail">
+													<button class="btn btn-inverse btn-circle-small dim">
+														<img src="assets/icons/shape_monomino_rev_64.png" class="iconk-large">
+													</button>
+												</div>
 											</li>
-											<li class="span1">
-												<a href="#" class="thumbnail">
-													<img src="http://placehold.it/100" alt="">
-												</a>
+											<li class="span1 shape-domino">
+												<div class="thumbnail">
+													<button class="btn btn-inverse btn-circle-small dim">
+														<img src="assets/icons/shape_domino_rev_64.png" class="iconk-large">
+													</button>
+												</div>
 											</li>
-											<li class="span1">
-												<a href="#" class="thumbnail">
-													<img src="http://placehold.it/100" alt="">
-												</a>
+											<li class="span1 shape-trominoI">
+												<div class="thumbnail">
+													<button class="btn btn-inverse btn-circle-small dim">
+														<img src="assets/icons/shape_tromino_i_rev_64.png" class="iconk-large">
+													</button>
+												</div>
 											</li>
-											<li class="span1">
-												<a href="#" class="thumbnail">
-													<img src="http://placehold.it/100" alt="">
-												</a>
+											<li class="span1 shape-trominoL">
+												<div class="thumbnail">
+													<button class="btn btn-inverse btn-circle-small dim">
+														<img src="assets/icons/shape_tromino_l_rev_64.png" class="iconk-large">
+													</button>
+												</div>
 											</li>
-											<li class="span1">
-												<a href="#" class="thumbnail">
-													<img src="http://placehold.it/100" alt="">
-												</a>
+											<li class="span1 shape-tetrominoI">
+												<div class="thumbnail">
+													<button class="btn btn-inverse btn-circle-small dim">
+														<img src="assets/icons/shape_tetromino_i_rev_64.png" class="iconk-large">
+													</button>
+												</div>
 											</li>
-											<li class="span1">
-												<a href="#" class="thumbnail">
-													<img src="http://placehold.it/100" alt="">
-												</a>
+											<li class="span1 shape-tetrominoJ">
+												<div class="thumbnail">
+													<button class="btn btn-inverse btn-circle-small dim">
+														<img src="assets/icons/shape_tetromino_j_rev_64.png" class="iconk-large">
+													</button>
+												</div>
 											</li>
-											<li class="span1">
-												<a href="#" class="thumbnail">
-													<img src="http://placehold.it/100" alt="">
-												</a>
+											<li class="span1 shape-tetrominoL">
+												<div class="thumbnail">
+													<button class="btn btn-inverse btn-circle-small dim">
+														<img src="assets/icons/shape_tetromino_l_rev_64.png" class="iconk-large">
+													</button>
+												</div>
 											</li>
-											<li class="span1">
-												<a href="#" class="thumbnail">
-													<img src="http://placehold.it/100" alt="">
-												</a>
+											<li class="span1 shape-tetrominoO">
+												<div class="thumbnail">
+													<button class="btn btn-inverse btn-circle-small dim">
+														<img src="assets/icons/shape_tetromino_o_rev_64.png" class="iconk-large">
+													</button>
+												</div>
+											</li>
+											<li class="span1 shape-tetrominoS">
+												<div class="thumbnail">
+													<button class="btn btn-inverse btn-circle-small dim">
+														<img src="assets/icons/shape_tetromino_s_rev_64.png" class="iconk-large">
+													</button>
+												</div>
+											</li>
+											<li class="span1 shape-tetrominoT">
+												<div class="thumbnail">
+													<button class="btn btn-inverse btn-circle-small dim">
+														<img src="assets/icons/shape_tetromino_t_rev_64.png" class="iconk-large">
+													</button>
+												</div>
+											</li>
+											<li class="span1 shape-tetrominoZ">
+												<div class="thumbnail">
+													<button class="btn btn-inverse btn-circle-small dim">
+														<img src="assets/icons/shape_tetromino_z_rev_64.png" class="iconk-large">
+													</button>
+												</div>
 											</li>
 										</ul>
 									</div>
 								</div>
 							</div>
-						</div>
-					</section>
-					<!-- END collection -->
-				</section>
-				<!-- END menuFarming -->
-				
-				<!-- menuOptions -->
-				<section id="menuOptions" class="menu hidden">
-					
-					<header class="subhead container">
-						<div class="alert alert-warning iconk-large"><img src="assets/icons/cog_64.png"></div>
-						<h1>Options</h1>
-						<p class="lead">Handle your game data, fiddle with settings, and change controls</p>
-						<div id="navOptions" class="subnavbar subnav-sticky">
-							<div class="navbar-inner">
-								<div class="container">
-									<ul class="nav nav-pills pull-left">
-										<li><a href="#data">Save & Load</a></li>
-										<li><a href="#settings">Settings</a></li>
-										<li><a href="#controls">Controls</a></li>
-									</ul>
-									<ul class="nav nav-pills pull-right">
-										<li><a href="#menuOptions"><h6>top</h6></a></li>
-									</ul>
+							
+							<div id="puzzleActiveMap" class="hidden">
+								<h3>Puzzle Map <small>click on the colored shapes to customize the object you've planted there</small></h3>
+								<div class="alert alert-block alert-info">
+									<button type="button" class="close" data-dismiss="alert">&times;</button>
+									<strong>Check it out:</strong> You'll need to fill every space and use at least 1 of each of the shapes you chose to complete the puzzle!
 								</div>
-							</div>
-						</div>
-					</header>
-					
-					<!-- data -->
-					<section id="data">
-						<div class="container">
-							<div class="page-header">
-								<h1>Save & Load <small>keep track of your progress and start right where you left off</small></h1>
-							</div>
-							<div class="row">
-								<div class="span12">
-									<div class="well">
-										<textarea id="progressCode" class="span11 input-xlarge" rows="5"></textarea>
-										<div class="btn-group">
-											<button id="buttonSaveCode" class="btn btn-large btn-primary disabled">
-												<div class="valign">
-													<div class="valign-cell"><img src="assets/icons/save_rev_64.png" class="iconk-small"></div>
-													<div class="valign-cell"><p>Generate Save Code</p></div>
-												</div>
-											</button>
-											<button id="buttonLoadCode" class="btn btn-large disabled">
-												<div class="valign">
-													<div class="valign-cell"><img src="assets/icons/load_64.png" class="iconk-small"></div>
-													<div class="valign-cell"><p>Load Current Code</p></div>
-												</div>
-											</button>
-											<button id="buttonExitGame" class="btn btn-large">
-												<div class="valign">
-													<div class="valign-cell"><img src="assets/icons/exit_64.png" class="iconk-small"></div>
-													<div class="valign-cell"><p>Exit Game</p></div>
-												</div>
-											</button>
+								
+								<div id="puzzleActiveMapGrid" class="row">
+									<div class="span12">
+										<div class="container-center grid-gutterless well">
+											<ul class="span3 thumbnails thumbnails1">
+												<li class="span1">
+													<a href="#" class="thumbnail">
+														<img src="assets/textures/dirt_128.jpg" alt="">
+													</a>
+												</li>
+												<li class="span1">
+													<a href="#" class="thumbnail">
+														<img src="assets/textures/dirt_128.jpg" alt="">
+													</a>
+												</li>
+												<li class="span1">
+													<a href="#" class="thumbnail">
+														<img src="assets/textures/dirt_128.jpg" alt="">
+													</a>
+												</li>
+												<li class="span1">
+													<a href="#" class="thumbnail">
+														<img src="assets/textures/dirt_128.jpg" alt="">
+													</a>
+												</li>
+												<li class="span1">
+													<a href="#" class="thumbnail invisible">
+														<img src="assets/textures/dirt_128.jpg" alt="">
+													</a>
+												</li>
+												<li class="span1">
+													<a href="#" class="thumbnail">
+														<img src="assets/textures/dirt_128.jpg" alt="">
+													</a>
+												</li>
+												<li class="span1">
+													<a href="#" class="thumbnail">
+														<img src="assets/textures/dirt_128.jpg" alt="">
+													</a>
+												</li>
+												<li class="span1">
+													<a href="#" class="thumbnail">
+														<img src="assets/textures/dirt_128.jpg" alt="">
+													</a>
+												</li>
+												<li class="span1">
+													<a href="#" class="thumbnail invisible">
+														<img src="assets/textures/dirt_128.jpg" alt="">
+													</a>
+												</li>
+											</ul>
 										</div>
 									</div>
-									<div class="alert alert-block alert-info">
-										<p><strong>Check it out:</strong></p>
-										<p>When you generate a save code, it will also appear in your web address so you can bookmark your progress.</p>
+								</div>
+							</div>
+							
+							<div id="puzzleActiveRewards" class="hidden">
+								<h3>Rewards <small>the less plants you use to fill a puzzle, the better the reward</small></h3>
+								<div class="row">
+									<div class="span4">
+										<div id="puzzleActiveRewardsOkay">
+											<h4>Okay <small>(0 - 79%)</small></h4>
+											<div class="puzzle-rewardsList row">
+												<div class="span4">
+													<div class="well well-success">
+														<div class="row">
+															<i class="puzzle-rewardsEarnedStatusIcon iconk-topRight icon-ok-sign"></i>
+															<div class="span1 container-center">
+																<img src="assets/icons/grid_64.png" class="iconk-large">
+																<p>Puzzle</p>
+																<h6>Puzzle</h6>
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+									<div class="span4">
+										<div id="puzzleActiveRewardsGood">
+											<h4>Good <small>(80 - 99%)</small></h4>
+											<div class="puzzle-rewardsList row">
+												<div class="span4">
+													<div class="well">
+														<div class="row">
+															<div class="span1 container-center">
+																<i class="puzzle-rewardsEarnedStatusIcon iconk-topRight icon-ok-sign hidden"></i>
+																<img src="assets/icons/shape_monomino_64.png" class="iconk-large">
+																<p>Shape</p>
+																<h6>Shape</h6>
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+									<div class="span4">
+										<div id="puzzleActiveRewardsPerfect">
+											<h4>Perfect <small>(100%)</small></h4>
+											<div class="puzzle-rewardsList row">
+												<div class="span4">
+													<div class="well">
+														<div class="row">
+															<div class="span1 container-center">
+																<i class="puzzle-rewardsEarnedStatusIcon iconk-topRight icon-ok-sign hidden"></i>
+																<img src="assets/icons/plant_64.png" class="iconk-large">
+																<p>Plant</p>
+																<h6>Plant</h6>
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
 									</div>
 								</div>
 							</div>
 						</div>
-					</section>
-					<!-- END data -->
-					
-					<!-- settings -->
-					<section id="settings">
-						<div class="container">
-							<div class="page-header">
-								<h1>Settings <small>edit game presets</small></h1>
-							</div>
-							<div class="row">
-								<div class="span12">
-									<table class="table table-bordered table-striped">
-										<tbody>
-											<tr>
-												<td>
-													<div class="valign">
-														<div class="valign-cell"><img src="assets/icons/accessibility_64.png" class="iconk-small"></div>
-														<div class="valign-cell"><p>Difficulty</p></div>
-													</div>
-												</td>
-												<td>
-													<div class="btn-group iconk-small iconk-widthFollow" data-toggle="buttons-radio">
-														<button id="buttonDifficultyLow" class="btn btn-primary">Novice</button>
-														<button id="buttonDifficultyMedium" class="btn btn-primary active">Student</button>
-														<button id="buttonDifficultyHigh" class="btn btn-primary">Master</button>
-													</div>
-												</td>
-											</tr>
-											<tr>
-												<td>
-													<div class="valign">
-														<div class="valign-cell"><img src="assets/icons/computer_64.png" class="iconk-small"></div>
-														<div class="valign-cell"><p>Graphics Quality</p></div>
-													</div>
-												</td>
-												<td>
-													<div class="btn-group iconk-small iconk-widthFollow" data-toggle="buttons-radio">
-														<button id="buttonGraphicsLow" class="btn btn-primary">Low</button>
-														<button id="buttonGraphicsMedium" class="btn btn-primary">Medium</button>
-														<button id="buttonGraphicsHigh" class="btn btn-primary active">High</button>
-													</div>
-												</td>
-											</tr>
-											<tr>
-												<td>
-													<div class="valign">
-														<div class="valign-cell"><img src="assets/icons/sound_64.png" class="iconk-small"></div>
-														<div class="valign-cell"><p>Volume</p></div>
-													</div>
-												</td>
-												<td>
-													<div class="iconk-small iconk-widthFollow">
-														<input type="range" name="slider" id="sliderVolume" value="100" min="0" max="100"  />
-													</div>
-												</td>
-											</tr>
-										</tbody>
-									</table>
-								</div>
-							</div>
-						</div>
-					</section>
-					<!-- END settings -->
-					
-					<!-- controls -->
-					<section id="controls">
-						<div class="container">
-							<div class="page-header">
-								<h1>Controls <small>change the way you interact with the game</small></h1>
-							</div>
-							<div class="row">
-								<div class="span12">
-									<div id="controlsWarning" class="alert alert-block alert-warning">
-										<p><strong>Hold up!</strong></p>
-										<p>We don't support changing controls for your device, but we're working on it.</p>
-									</div>
-								</div>
-							</div>
-						</div>
-					</section>
-					<!-- END controls -->
-					
+					</div>
 				</section>
-				<!-- END menuOptions -->
+				<!-- END puzzle -->
 				
-			</div>
-			<!-- END menus -->
+				<!-- plant -->
+				<section id="plant">
+					<div class="container">
+						<div class="page-header">
+							<h1>Plant <small>examine an object you've planted in the active puzzle</small></h1>
+						</div>
+						
+						<div id="plantActiveWarning" class="alert alert-block alert-warning">
+							<p><strong>Hold up!</strong></p>
+							<p>You're not customizing a plant right now. Tap on a plant in game or use the puzzle map to select one.</p>
+						</div>
+						
+						<div id="plantActive">
+							
+							<div class="row">
+								<div class="span12 grid-gutterless">
+									<div class="row container-center well">
+										<ul class="span2 thumbnails">
+											<li class="span2">
+												<div id="plantActive3DPortrait" class="thumbnail">
+													<img src="http://placehold.it/260x300">
+												</div>
+											</li>
+										</ul>
+									</div>
+								</div>
+							</div>
+							
+							<div id="plantActiveOverview" class="row">
+								<div class="span4">
+									<img src="assets/icons/shape_monomino_64.png" id="plantActiveShapeIcon" class="pull-left iconk-large">
+									<h2 id="plantActiveShape">Monomino</h2>
+									<h6>shape</h6>
+								</div>
+								<div class="span4">
+									<img src="assets/icons/taro_64.png" id="plantActiveTypeIcon" class="pull-left iconk-large">
+									<h2 id="plantActiveType">Taro</h2>
+									<h6>plant</h6>
+								</div>
+								<div class="span4">
+									<h3 class="pull-right"><small>in the <span class="puzzle-active-name">Tutorial</span> Puzzle, at location <span id="plantActivePuzzleLocation">1</span></small></h3>
+								</div>
+							</div>
+						
+						</div>
+						
+					</div>
+				</section>
+				<!-- END plant -->
+				<!-- collection -->
+				<section id="collection">
+					<div class="container">
+						<div class="page-header">
+							<h1>Collection <small>explore plants in your collection and use them to customize your active plant</small></h1>
+						</div>
+						<div class="row">
+							<div class="span3">
+								<h3>Selection</h3>
+								<div id="plantCustomizationWarning" class="alert alert-block alert-info">
+									<p><strong>Check it out:</strong></p>
+									<p>Tap a plant in your collection to get more information.</p>
+								</div>
+								<div id="plantCustomization">
+									<div class="row">
+										<div class="span2 well">
+											<div id="plantCustom3DPortrait" >
+												<img src="http://placehold.it/260x300">
+											</div>
+										</div>
+									</div>
+									<div id="plantCustomInfo">
+										<div class="page-header">
+											<div id="plantCustomTitle" class="valign">
+												<div class="valign-cell"><img src="assets/icons/taro_64.png" id="plantCustomTypeIcon" class="iconk-large"></div>
+												<div id="plantCustomType" class="valign-cell"><h2>Taro</h2><h6>Plant</h6></div>
+											</div>
+										</div>
+										<h2><small>Knowledge</small></h2>
+										<p id="plantCustomInfoText">Information about plant</p>
+										<div id="plantActiveCustomizeWarning" class="alert alert-block alert-warning">
+											<p><strong>Hold up!</strong></p>
+											<p>You're not customizing a plant right now. Tap on a plant in game or use the puzzle map to select one.</p>
+										</div>
+										<div id="plantActiveCustomize">
+											<a href="#plant" id="buttonPlantCustomChange" class="btn btn-primary">
+												<div class="valign">
+													<div class="valign-cell"><img src="assets/icons/confirm_rev_64.png" class="iconk-small"></div>
+													<div class="valign-cell"><p>Customize</p></div>
+												</div>
+											</a>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div id="plantCollection" class="span9 grid-gutterless">
+								<h3>Collection</h3>
+								<div class="row container-center well">
+									<ul class="span8 thumbnails thumbnails4">
+										<li class="span1">
+											<a href="#" class="thumbnail">
+												<img src="http://placehold.it/100" alt="">
+											</a>
+										</li>
+										<li class="span1">
+											<a href="#" class="thumbnail">
+												<img src="http://placehold.it/100" alt="">
+											</a>
+										</li>
+										<li class="span1">
+											<a href="#" class="thumbnail">
+												<img src="http://placehold.it/100" alt="">
+											</a>
+										</li>
+										<li class="span1">
+											<a href="#" class="thumbnail">
+												<img src="http://placehold.it/100" alt="">
+											</a>
+										</li>
+										<li class="span1">
+											<a href="#" class="thumbnail">
+												<img src="http://placehold.it/100" alt="">
+											</a>
+										</li>
+										<li class="span1">
+											<a href="#" class="thumbnail">
+												<img src="http://placehold.it/100" alt="">
+											</a>
+										</li>
+										<li class="span1">
+											<a href="#" class="thumbnail">
+												<img src="http://placehold.it/100" alt="">
+											</a>
+										</li>
+										<li class="span1">
+											<a href="#" class="thumbnail">
+												<img src="http://placehold.it/100" alt="">
+											</a>
+										</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</div>
+				</section>
+				<!-- END collection -->
+			</section>
+			<!-- END menuFarming -->
+			
+			<!-- menuOptions -->
+			<section id="menuOptions" class="menu hidden">
+				
+				<header class="subhead container">
+					<div class="alert alert-warning iconk-large"><img src="assets/icons/cog_64.png"></div>
+					<h1>Options</h1>
+					<p class="lead">Handle your game data, fiddle with settings, and change controls</p>
+					<div id="navOptions" class="subnavbar subnav-sticky">
+						<div class="navbar-inner">
+							<div class="container">
+								<ul class="nav nav-pills pull-left">
+									<li><a href="#data">Save & Load</a></li>
+									<li><a href="#settings">Settings</a></li>
+									<li><a href="#controls">Controls</a></li>
+								</ul>
+								<ul class="nav nav-pills pull-right">
+									<li><a href="#menuOptions"><h6>top</h6></a></li>
+								</ul>
+							</div>
+						</div>
+					</div>
+				</header>
+				
+				<!-- data -->
+				<section id="data">
+					<div class="container">
+						<div class="page-header">
+							<h1>Save & Load <small>keep track of your progress and start right where you left off</small></h1>
+						</div>
+						<div class="row">
+							<div class="span12">
+								<div class="well">
+									<textarea id="progressCode" class="span11 input-xlarge" rows="5"></textarea>
+									<div class="btn-group">
+										<button id="buttonSaveCode" class="btn btn-large btn-primary disabled">
+											<div class="valign">
+												<div class="valign-cell"><img src="assets/icons/save_rev_64.png" class="iconk-small"></div>
+												<div class="valign-cell"><p>Generate Save Code</p></div>
+											</div>
+										</button>
+										<button id="buttonLoadCode" class="btn btn-large disabled">
+											<div class="valign">
+												<div class="valign-cell"><img src="assets/icons/load_64.png" class="iconk-small"></div>
+												<div class="valign-cell"><p>Load Current Code</p></div>
+											</div>
+										</button>
+										<button id="buttonExitGame" class="btn btn-large">
+											<div class="valign">
+												<div class="valign-cell"><img src="assets/icons/exit_64.png" class="iconk-small"></div>
+												<div class="valign-cell"><p>Exit Game</p></div>
+											</div>
+										</button>
+									</div>
+								</div>
+								<div class="alert alert-block alert-info">
+									<p><strong>Check it out:</strong></p>
+									<p>When you generate a save code, it will also appear in your web address so you can bookmark your progress.</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				</section>
+				<!-- END data -->
+				
+				<!-- settings -->
+				<section id="settings">
+					<div class="container">
+						<div class="page-header">
+							<h1>Settings <small>edit game presets</small></h1>
+						</div>
+						<div class="row">
+							<div class="span12">
+								<table class="table table-bordered table-striped">
+									<tbody>
+										<tr>
+											<td>
+												<div class="valign">
+													<div class="valign-cell"><img src="assets/icons/accessibility_64.png" class="iconk-small"></div>
+													<div class="valign-cell"><p>Difficulty</p></div>
+												</div>
+											</td>
+											<td>
+												<div class="btn-group iconk-small iconk-widthFollow" data-toggle="buttons-radio">
+													<button id="buttonDifficultyLow" class="btn btn-primary">Novice</button>
+													<button id="buttonDifficultyMedium" class="btn btn-primary active">Student</button>
+													<button id="buttonDifficultyHigh" class="btn btn-primary">Master</button>
+												</div>
+											</td>
+										</tr>
+										<tr>
+											<td>
+												<div class="valign">
+													<div class="valign-cell"><img src="assets/icons/computer_64.png" class="iconk-small"></div>
+													<div class="valign-cell"><p>Graphics Quality</p></div>
+												</div>
+											</td>
+											<td>
+												<div class="btn-group iconk-small iconk-widthFollow" data-toggle="buttons-radio">
+													<button id="buttonGraphicsLow" class="btn btn-primary">Low</button>
+													<button id="buttonGraphicsMedium" class="btn btn-primary">Medium</button>
+													<button id="buttonGraphicsHigh" class="btn btn-primary active">High</button>
+												</div>
+											</td>
+										</tr>
+										<tr>
+											<td>
+												<div class="valign">
+													<div class="valign-cell"><img src="assets/icons/sound_64.png" class="iconk-small"></div>
+													<div class="valign-cell"><p>Volume</p></div>
+												</div>
+											</td>
+											<td>
+												<div class="iconk-small iconk-widthFollow">
+													<input type="range" name="slider" id="sliderVolume" value="100" min="0" max="100"  />
+												</div>
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</section>
+				<!-- END settings -->
+				
+				<!-- controls -->
+				<section id="controls">
+					<div class="container">
+						<div class="page-header">
+							<h1>Controls <small>change the way you interact with the game</small></h1>
+						</div>
+						<div class="row">
+							<div class="span12">
+								<div id="controlsWarning" class="alert alert-block alert-warning">
+									<p><strong>Hold up!</strong></p>
+									<p>We don't support changing controls for your device, but we're working on it.</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				</section>
+				<!-- END controls -->
+				
+			</section>
+			<!-- END menuOptions -->
 			
 			<!-- footer -->
 			<div id="footer" class="container">
@@ -1147,10 +1142,10 @@
 			<!-- END footer -->
 			
 		</div>
-		<!-- END outGame -->
+		<!-- END menus -->
 		
 	</div>
-	<!-- END ui -->
+	<!-- END uiOutGame -->
 	
 	<!-- javascript -->
 	

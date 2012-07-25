@@ -46,8 +46,6 @@
         assetsSetup = [
             "js/three/Three.js",
 			"js/Tween.js",
-			"js/jquery.transform2d.min.js",
-			"js/jquery.tipTip.min.js"
         ],
 		assetsSetupExtras = [
             "js/three/ThreeExtras.js",
@@ -87,13 +85,13 @@
 			"assets/modules/env/Water.js",
 			"assets/modules/env/Sky.js",
 			"assets/modules/puzzles/Puzzle.js",
-			"assets/modules/puzzles/PuzzleBuilder.js",
+			"assets/modules/puzzles/PuzzleLibrary.js",
 			"assets/modules/puzzles/Grid.js",
 			"assets/modules/puzzles/GridModule.js",
 			"assets/modules/puzzles/GridModuleState.js",
 			"assets/modules/puzzles/GridModel.js",
 			"assets/modules/puzzles/GridElement.js",
-			"assets/modules/puzzles/GridElementShapes.js",
+			"assets/modules/puzzles/GridElementLibrary.js",
 			"assets/modules/farming/Planting.js",
 			"assets/modules/farming/Dirt.js",
 			"assets/modules/sections/Intro.js",
@@ -315,8 +313,6 @@
 		shared.signals.gameStarted = new signals.Signal();
 		shared.signals.gameStopped = new signals.Signal();
 		
-		shared.signals.gamePointerPressed = new signals.Signal();
-		shared.signals.gamePointerReleased = new signals.Signal();
 		shared.signals.gamePointerTapped = new signals.Signal();
 		shared.signals.gamePointerDoubleTapped = new signals.Signal();
 		shared.signals.gamePointerHeld = new signals.Signal();
@@ -327,7 +323,8 @@
 		
 		// game events
 		
-		shared.domElements.$game.on( 'tap', on_pointer_tapped )
+		shared.domElements.$game
+			.on( 'tap', on_pointer_tapped )
 			.on( 'doubletap', on_pointer_doubletapped )
 			.on( 'hold', on_pointer_held )
 			.on( 'dragstart', on_pointer_dragstarted )
@@ -338,7 +335,7 @@
 		
 		// renderer
 		
-        renderer = new THREE.WebGLRenderer( { antialias: false, clearColor: 0x000000, clearAlpha: 0, maxLights: 4 } );
+        renderer = new THREE.WebGLRenderer( { antialias: true, clearColor: 0x000000, clearAlpha: 0, maxLights: 4 } );
         renderer.setSize( shared.gameWidth, shared.gameHeight );
         renderer.autoClear = false;
 		
@@ -427,7 +424,7 @@
 		
 		// add renderer to display
 		
-		shared.domElements.$game.append( renderer.domElement );
+		shared.domElements.$game.prepend( renderer.domElement );
 		
 		// ui
 		
@@ -439,9 +436,9 @@
 		shared.domElements.$buttonFarmingMenu = $('.button-farmingMenu');
 		shared.domElements.$buttonOptionsMenu = $('.button-optionsMenu');
 		shared.domElements.$buttonsNavMenus = shared.domElements.$navMenus.find( ".nav li a" ).not( shared.domElements.$buttonGamePause ).not( shared.domElements.$buttonGameResume );
+		shared.domElements.$menus = shared.domElements.$uiOutGame.find( '.menu' );
 		shared.domElements.$menuFarming = $('#menuFarming');
 		shared.domElements.$menuOptions = $('#menuOptions');
-		shared.domElements.$menus = shared.domElements.$outGame.find( '.menu' );
 		shared.domElements.$pauseMessage = $('#pauseMessage');
 		
 		// ui menus
@@ -659,144 +656,60 @@
 	function on_pointer_tapped ( e ) {
 		
 		var pointer;
-		console.log( 'tapped', e );
-		// is touch event
 		
-		if ( main.is_touch_event( e ) ){
-			
-			main.handle_touch_event( e.originalEvent, on_pointer_tapped );
-		}
-		else {
-			
-			pointer = main.reposition_pointer( e );
-			console.log( pointer );
-			shared.signals.gamePointerTapped.dispatch( e, pointer );
-			
-		}
+		pointer = main.reposition_pointer( e );
 		
-		e.preventDefault();
-        e.stopPropagation();
-        return false;
+		shared.signals.gamePointerTapped.dispatch( e, pointer );
 		
 	}
 	
 	function on_pointer_doubletapped ( e ) {
 		
 		var pointer;
-		console.log( 'double tapped', e );
-		// is touch event
 		
-		if ( main.is_touch_event( e ) ){
-			
-			main.handle_touch_event( e.originalEvent, on_pointer_doubletapped );
-		}
-		else {
-			
-			pointer = main.reposition_pointer( e );
-			
-			shared.signals.gamePointerDoubleTapped.dispatch( e, pointer );
-			
-		}
+		pointer = main.reposition_pointer( e );
 		
-		e.preventDefault();
-        e.stopPropagation();
-        return false;
+		shared.signals.gamePointerDoubleTapped.dispatch( e, pointer );
 		
 	}
 	
 	function on_pointer_held ( e ) {
 		
 		var pointer;
-		console.log( 'held', e );
-		// is touch event
 		
-		if ( main.is_touch_event( e ) ){
+		pointer = main.reposition_pointer( e );
 			
-			main.handle_touch_event( e.originalEvent, on_pointer_held );
-		}
-		else {
-			
-			pointer = main.reposition_pointer( e );
-				
-			shared.signals.gamePointerHeld.dispatch( e, pointer );
-			
-		}
-		
-		e.preventDefault();
-        e.stopPropagation();
-        return false;
+		shared.signals.gamePointerHeld.dispatch( e, pointer );
 		
 	}
 	
 	function on_pointer_dragstarted ( e ) {
 		
 		var pointer;
-		console.log( 'drag started', e );
-		// is touch event
 		
-		if ( main.is_touch_event( e ) ){
-			
-			main.handle_touch_event( e.originalEvent, on_pointer_dragstarted );
-		}
-		else {
-			
-			pointer = main.reposition_pointer( e );
-			
-			shared.signals.gamePointerDragStarted.dispatch( e, pointer );
-			
-		}
-        
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
+		pointer = main.reposition_pointer( e );
+		
+		shared.signals.gamePointerDragStarted.dispatch( e, pointer );
 		
 	}
     
     function on_pointer_dragged( e ) {
 		
 		var pointer;
-		console.log( 'dragged', e );
-		// is touch event
 		
-		if ( main.is_touch_event( e ) ){
-			
-			main.handle_touch_event( e.originalEvent, on_pointer_dragged );
-		}
-		else {
-			
-			pointer = main.reposition_pointer( e );
-			
-			shared.signals.gamePointerDragged.dispatch( e, pointer );
-			
-		}
-        
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
+		pointer = main.reposition_pointer( e );
+		
+		shared.signals.gamePointerDragged.dispatch( e, pointer );
 		
     }
 	
 	function on_pointer_dragended ( e ) {
 		
 		var pointer;
-		console.log( 'drag ended', e );
-		// is touch event
 		
-		if ( main.is_touch_event( e ) ){
-			
-			main.handle_touch_event( e.originalEvent, on_pointer_dragended );
-		}
-		else {
-			
-			pointer = main.reposition_pointer( e );
-			
-			shared.signals.gamePointerDragEnded.dispatch( e, pointer );
-			
-		}
-        
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
+		pointer = main.reposition_pointer( e );
+		
+		shared.signals.gamePointerDragEnded.dispatch( e, pointer );
 		
 	}
 	
@@ -814,16 +727,14 @@
         shared.signals.gamePointerWheel.dispatch( e );
         
         e.preventDefault();
-        e.stopPropagation();
-        return false;
 		
     }
 	
 	function on_context_menu ( e ) {
 		
+		// disable right click menu while in game
+		
 		e.preventDefault();
-        e.stopPropagation();
-        return false;
 		
 	}
 	

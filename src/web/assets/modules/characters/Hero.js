@@ -98,13 +98,12 @@
 		
 		this.actions.add( 'pointer', {
 			eventCallbacks: {
-				tap: [ $.proxy( me.planting.select_puzzle, me.planting ), $.proxy( me.planting.select_plant, me.planting ) ],
-				hold: $.proxy( me.planting.activate_puzzle, me.planting )
+				tap: [ $.proxy( me.planting.select_puzzle, me.planting ) ],
+				hold: $.proxy( me.planting.activate_puzzle, me.planting ),
+				//dragstart: $.proxy( me.planting.select_plant, me.planting )
 			},
-			activeChecks: {
-				drag: function () {
-					return me.planting.started;
-				}
+			activeChecks: function () {
+				return me.planting.started;
 			}
 		} );
 		
@@ -247,7 +246,7 @@
 			
 			// pointer change
 			
-			pointerDelta = ( pointer.distanceX - pointer.distanceY ) * 0.5;
+			pointerDelta = ( pointer.deltaX - pointer.deltaY ) * 0.5;
 			
 			// scale change
 			

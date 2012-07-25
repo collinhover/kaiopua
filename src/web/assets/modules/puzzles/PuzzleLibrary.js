@@ -1,6 +1,6 @@
 /*
  *
- * PuzzleBuilder.js
+ * PuzzleLibrary.js
  * List of all puzzle build parameters, with capability to generate puzzles.
  *
  * @author Collin Hover / http://collinhover.com/
@@ -9,8 +9,8 @@
 (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/puzzles/PuzzleBuilder.js",
-		_PuzzleBuilder = {},
+		assetPath = "assets/modules/puzzles/PuzzleLibrary.js",
+		_PuzzleLibrary = {},
 		_Puzzle,
 		_Dirt;
 	
@@ -21,7 +21,7 @@
     =====================================================*/
 	
 	main.asset_register( assetPath, { 
-		data: _PuzzleBuilder,
+		data: _PuzzleLibrary,
 		requirements: [
 			"assets/modules/puzzles/Puzzle.js",
 			"assets/modules/farming/Dirt.js"
@@ -37,20 +37,20 @@
     =====================================================*/
 	
 	function init_internal( pzl, dt ) {
-		console.log( 'internal PuzzleBuilder' );
+		console.log( 'internal PuzzleLibrary' );
 		
 		_Puzzle = pzl;
 		_Dirt = dt;
 		
 		// functions
 		
-		_PuzzleBuilder.build = build;
+		_PuzzleLibrary.build = build;
 		
 		// puzzles
 		
-		_PuzzleBuilder.parameters = {};
+		_PuzzleLibrary.parameters = {};
 		
-		Object.defineProperty(_PuzzleBuilder.parameters, 'Tutorial', { 
+		Object.defineProperty(_PuzzleLibrary.parameters, 'Tutorial', { 
 			value : {
 				name: 'Tutorial',
 				geometry: "assets/models/Puzzle_Tutorial.js",
@@ -74,7 +74,7 @@
 			}
 		});
 		
-		Object.defineProperty(_PuzzleBuilder.parameters, 'Abilities', { 
+		Object.defineProperty(_PuzzleLibrary.parameters, 'Abilities', { 
 			value : {
 				name: 'Abilities',
 				geometry: "assets/models/Puzzle_Basics_Abilities.js",
@@ -108,7 +108,7 @@
 			}
 		});
 		
-		Object.defineProperty(_PuzzleBuilder.parameters, 'RollingHills', { 
+		Object.defineProperty(_PuzzleLibrary.parameters, 'RollingHills', { 
 			value : {
 				name: 'Rolling Hills',
 				geometry: "assets/models/Puzzle_Rolling_Hills.js",
@@ -147,9 +147,13 @@
     
     =====================================================*/
 	
-	function build( name, parameters ) {
+	function build( parameters ) {
 		
-		return new _Puzzle.Instance( main.extend( parameters, _PuzzleBuilder.parameters.hasOwnProperty( name ) ? _PuzzleBuilder.parameters[ name ] : {} ) );
+		// handle parameters
+		
+		parameters = parameters || {};
+		
+		return new _Puzzle.Instance( main.extend( parameters, _PuzzleLibrary.parameters.hasOwnProperty( parameters.name ) ? _PuzzleLibrary.parameters[ parameters.name ] : {} ) );
 		
 	}
 	

@@ -293,10 +293,9 @@
 			
 			// if event passed
 			
-			if ( event && parameters.bubble !== true ) {
+			if ( event && parameters.allowDefault !== true ) {
 				
 				event.preventDefault();
-				event.stopPropagation();
 				
 			}
 			

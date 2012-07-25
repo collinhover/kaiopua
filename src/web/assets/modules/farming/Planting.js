@@ -18,7 +18,7 @@
 		_GridModule,
 		_GridModel,
 		_GridElement,
-		_GridElementShapes,
+		_GridElementLibrary,
 		_MathHelper,
 		_ObjectHelper,
 		utilVec31Rotate,
@@ -40,7 +40,7 @@
 			"assets/modules/puzzles/GridModule.js",
 			"assets/modules/puzzles/GridModel.js",
 			"assets/modules/puzzles/GridElement.js",
-			"assets/modules/puzzles/GridElementShapes.js",
+			"assets/modules/puzzles/GridElementLibrary.js",
 			"assets/modules/utils/MathHelper.js",
 			"assets/modules/utils/ObjectHelper.js"
 		],
@@ -64,7 +64,7 @@
 		_GridModule = gm;
 		_GridModel = gmodel;
 		_GridElement = ge;
-		_GridElementShapes = ges;
+		_GridElementLibrary = ges;
 		_MathHelper = mh;
 		_ObjectHelper = oh;
 		
@@ -97,7 +97,6 @@
 		_Planting.Instance.prototype.step_rotate = step_rotate;
 		_Planting.Instance.prototype.step_placement = step_placement;
 		
-		_Planting.Instance.prototype.setup = setup;
 		_Planting.Instance.prototype.start = start;
 		_Planting.Instance.prototype.on_pointer_moved = on_pointer_moved;
 		_Planting.Instance.prototype.update = update;
@@ -218,13 +217,13 @@
 		
 		// if valid shape
 		
-		if ( _GridElementShapes.hasOwnProperty( shape ) ) {
+		if ( _GridElementLibrary.shapes.hasOwnProperty( shape ) ) {
 			
 			this.shapes.push( shape );
 			
 			// shape picker buttons
 			
-			_GridElementShapes[ shape ].$buttonsShapePicker.removeClass( "disabled hidden" );
+			_GridElementLibrary.shapes[ shape ].$buttonsShapePicker.removeClass( "disabled hidden" );
 			
 		}
 		
@@ -242,7 +241,7 @@
 			
 			// shape picker buttons
 			
-			_GridElementShapes[ shape ].$buttonsShapePicker.addClass( "disabled hidden" );
+			_GridElementLibrary.shapes[ shape ].$buttonsShapePicker.addClass( "disabled hidden" );
 			
 		}
 		
@@ -256,7 +255,76 @@
 	
 	function select_plant ( parameters ) {
 		
-		this.step( parameters );
+		var plant;
+		
+		// handle parameters
+		
+		parameters = parameters || {};
+		
+		// if started, stop
+		
+		if ( this.started === true ) {
+			
+			this.stop();
+			
+		}
+		
+		this.plantFromSelection = false;
+		
+		// if passed plant / parameters to use
+		
+		if ( parameters.plant ) {
+			
+			if ( parameters.plant instanceof _GridElement.Instance ) {
+				
+				plant = parameters.plant;
+				
+			}
+			else {
+				
+				plant = _GridElementLibrary.build( parameters.plant );
+				
+			}
+			
+		}
+		// else try to find under pointer
+		else {
+			
+			plant = this.get_planting_object_under_pointer( { modules: false, plants: true } );
+			
+			// if is a grid model, get grid element
+			
+			if ( plant instanceof _GridModel.Instance ) {
+				
+				plant = parameters.plant.gridElement;
+				
+			}
+			
+			this.plantFromSelection = true;
+			
+		}
+		
+		// if is a plant
+		
+		if ( plant instanceof _GridElement.Instance ) {
+			
+			// use plant
+			
+			this.change_plant( plant );
+			
+			// selected
+			
+			if ( this.plantFromSelection === true ) {
+				
+				this.plantSelected.dispatch( plant );
+				
+			}
+			
+		}
+		
+		// start planting
+		
+		this.start( parameters );
 		
 	}
 	
@@ -319,15 +387,22 @@
 	=====================================================*/
 	
 	function step ( parameters ) {
-		
+		console.log(' > PLANTING: STEP');
 		// handle parameters
 		
 		parameters = parameters || {};
 		
-		// if has active puzzle
+		// if stop
 		
-		if ( this.puzzle instanceof _Puzzle.Instance ) {
-			console.log(' > PLANTING: STEP');
+		if ( parameters.stop === true ) {
+			
+			// stop
+			
+			this.stop();
+			
+		}
+		else {
+			
 			// store pointer
 					
 			this.pointer = main.get_pointer( parameters.event );
@@ -350,21 +425,11 @@
 		
 	}
 	
-	function step_rotate ( parameters ) {
-		
+	function step_rotate () {
+		console.log(' > PLANTING: rotation step');
 		// handle parameters
 		
-		parameters = parameters || {};
-		
-		console.log(' > PLANTING: rotation step');
-		if ( parameters.stop === true ) {
-			
-			// stop
-			
-			this.stop_rotate_plant();
-			
-		}
-		else if ( this.started === true ) {
+		if ( this.started === true ) {
 			
 			// start
 			
@@ -374,59 +439,45 @@
 		
 	}
 	
-	function step_placement ( parameters ) {
-		
+	function step_placement () {
+		console.log(' > PLANTING: placement step ' );
 		var wasRotated;
 		
-		// handle parameters
+		// if is rotating
 		
-		parameters = parameters || {};
-		
-		console.log(' > PLANTING: placement step, parameters', parameters, ' + is stop? ', parameters.stop );
-		if ( parameters.stop === true ) {
+		if ( this.rotating === true ) {
 			
-			this.stop();
+			// record if rotated
+			
+			wasRotated = this.rotation.rotated;
+			
+			// stop rotating
+			
+			this.step_rotate( { stop: true } );
 			
 		}
-		else {
+		
+		// if was not just rotated
+		
+		if ( wasRotated !== true ) {
 			
-			// if is rotating
+			// steps
 			
-			if ( this.rotating === true ) {
+			// complete
+			
+			if ( this.started === true ) {
 				
-				// record if rotated
+				console.log(' > PLANTING: step complete' );
 				
-				wasRotated = this.rotation.rotated;
-				
-				// stop rotating
-				
-				this.step_rotate( { stop: true } );
+				this.complete();
 				
 			}
-			
-			// if was not just rotated
-			
-			if ( wasRotated !== true ) {
+			// start
+			else {
 				
-				// steps
+				console.log(' > PLANTING: step start');
 				
-				// if has plant
-				
-				if ( this.plant instanceof _GridElement.Instance ) {
-					
-					console.log(' > PLANTING: step has plant: ', this.plant);
-					
-					this.complete();
-					
-				}
-				// if needs plant
-				else {
-					
-					console.log(' > PLANTING: step no plant yet!');
-					
-					this.setup( parameters );
-					
-				}
+				this.start();
 				
 			}
 			
@@ -436,85 +487,20 @@
 	
 	/*===================================================
 	
-	setup / start / continue / complete / stop
+	start / continue / complete / stop
 	
 	=====================================================*/
-	
-	function setup ( parameters ) {
-		
-		var targetObject;
-		
-		// properties
-		
-		this.plantFromSelection = false;
-		
-		// if passed plant to use
-		
-		if ( parameters && parameters.plant ) {
-			
-			if ( parameters.plant instanceof _GridElement.Instance ) {
-				
-				targetObject = parameters.plant;
-				
-			}
-			else {
-				
-				targetObject = new _GridElement.Instance( parameters.plant );
-				
-			}
-		
-		}
-		// else if any plants under pointer
-		else {
-			
-			targetObject = this.get_planting_object_under_pointer( { modules: false, plants: true } );
-			
-			// if is a grid model
-			
-			if ( targetObject instanceof _GridModel.Instance ) {
-				
-				targetObject = targetObject.gridElement;
-				
-			}
-			
-			this.plantFromSelection = true;
-			
-		}
-		
-		// if is a plant
-		
-		if ( targetObject instanceof _GridElement.Instance ) {
-			
-			// use plant
-			
-			this.change_plant( targetObject );
-			
-			// selected
-			
-			if ( this.plantFromSelection === true ) {
-				
-				this.plantSelected.dispatch( targetObject );
-				
-			}
-			
-		}
-		
-	}
 	
 	function start () {
 		
 		// if has not started planting and plant is valid
 		
-		if ( this.started !== true && this.plant instanceof _GridElement.Instance ) {
+		if ( this.started !== true && this.puzzle instanceof _Puzzle.Instance && this.plant instanceof _GridElement.Instance ) {
 			console.log('start PLANTING!');
 			
 			// set started
 			
 			this.started = true;
-			
-			// TODO: dim ui to focus on planting
-					
-			
 			
 			// start updating planting
 			
@@ -524,6 +510,7 @@
 			
 			shared.signals.gameUpdated.add( this.update, this );
 			shared.signals.gamePointerDragged.add( this.on_pointer_moved, this );
+			shared.signals.gamePointerDragEnded.add( this.complete, this );
 			
 		}
 		
@@ -532,14 +519,6 @@
 	function on_pointer_moved () {
 		console.log(' > PLANTING: pointer move!');
 		var targetObject;
-		
-		// if has plant, update seed position
-		
-		if ( this.plant instanceof _GridElement.Instance ) {
-			
-			//this.plant.$seed
-			
-		}
 		
 		// if rotating
 		
@@ -580,79 +559,86 @@
 	function complete () {
 		console.log(' > PLANTING: completing...');
 		var targetObject,
-			plantSuccessful = false,
+			plantSuccessful,
 			plantPlanted,
 			plantPlantedNodes,
 			plantPlantedClone;
 		
-		// find if any planting objects under pointer
-				
-		targetObject = this.get_planting_object_under_pointer( { modules: true } );
+		// if started
 		
-		// if target is valid
+		if ( this.started === true ) {
+			
+			// find if any planting objects under pointer
+					
+			targetObject = this.get_planting_object_under_pointer( { modules: true } );
+			
+			// if target is valid
+			
+			if ( targetObject instanceof _GridModule.Instance ) {
+				
+				// if target and current module do not match
+				
+				if ( this.module !== targetObject ) {
+					
+					// change module
 		
-		if ( targetObject instanceof _GridModule.Instance ) {
-			
-			// if target and current module do not match
-			
-			if ( this.module !== targetObject ) {
-				
-				// change module
-	
-				this.change_module( targetObject );
-				
-			}
-			
-			// try adding plant
-			
-			plantSuccessful = this.plant.occupy_module( this.module );
-			
-			// if successful
-			
-			if ( plantSuccessful && this.plant instanceof _GridElement.Instance ) {
-				console.log(' > PLANTING: plant added!', this.plant );
-				plantPlanted = this.plant;
-				plantPlantedNodes = plantPlanted.get_layout_node_total();
-				
-				// stop if plant was selected from puzzle or on puzzle complete
-				
-				if ( this.plantFromSelection === true || ( this.puzzle instanceof _Puzzle.Instance && this.puzzle.isCompleted === true ) ) {
-					
-					this.stop();
+					this.change_module( targetObject );
 					
 				}
 				
-				// planted signal
+				// try adding plant
 				
-				this.planted.dispatch( plantPlanted );
+				plantSuccessful = this.plant.occupy_module( this.module );
 				
-				// also signal by type
+				// if successful
 				
-				if ( plantPlantedNodes > 1 ) {
+				if ( plantSuccessful === true && this.plant instanceof _GridElement.Instance ) {
+					console.log(' > PLANTING: plant added!', this.plant );
+					plantPlanted = this.plant;
+					plantPlantedNodes = plantPlanted.get_layout_node_total();
 					
-					this.plantedMulti.dispatch( plantPlanted );
+					// stop if plant was selected from puzzle or on puzzle complete
 					
-				}
-				else {
+					if ( this.plantFromSelection === true || ( this.puzzle instanceof _Puzzle.Instance && this.puzzle.isCompleted === true ) ) {
+						
+						this.stop();
+						
+					}
 					
-					this.plantedSingle.dispatch( plantPlanted );
+					// planted signal
 					
-				}
-				
-				// if still started, clone plant planted and continue planting
-				
-				if ( this.started === true ) {
+					this.planted.dispatch( plantPlanted );
 					
-					plantPlantedClone = plantPlanted.clone();
+					// also signal by type
 					
-					this.setup( { plant: plantPlantedClone } );
+					if ( plantPlantedNodes > 1 ) {
+						
+						this.plantedMulti.dispatch( plantPlanted );
+						
+					}
+					else {
+						
+						this.plantedSingle.dispatch( plantPlanted );
+						
+					}
+					
+					// if still started, clone plant planted and continue planting
+					
+					if ( this.started === true ) {
+						
+						plantPlantedClone = plantPlanted.clone();
+						
+						this.select_plant( { plant: plantPlantedClone } );
+						
+					}
 					
 				}
 				
 			}
 			
 		}
-		else {
+		
+		if ( plantSuccessful !== true ) {
 			
 			// stop planting
 			
@@ -668,7 +654,8 @@
 		// stop updating
 		
 		shared.signals.gameUpdated.remove( this.update, this );
-		shared.signals.gamePointerDragged.remove( on_pointer_moved, this );
+		shared.signals.gamePointerDragged.remove( this.on_pointer_moved, this );
+		shared.signals.gamePointerDragEnded.remove( this.complete, this );
 		
 		// stop
 			
@@ -682,13 +669,9 @@
 		
 		this.change_plant();
 		
-		// clear module / puzzle
+		// clear module
 		
 		this.change_module();
-		
-		// TODO: return ui to normal state
-		
-		
 		
 	}
 	
@@ -800,6 +783,14 @@
 			// signal
 			
 			this.puzzleStopped.dispatch( puzzleLast );
+			
+			// if started, stop
+			
+			if ( this.started === true ) {
+				
+				this.stop();
+				
+			}
 			
 		}
 		

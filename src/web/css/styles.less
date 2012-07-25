@@ -185,59 +185,66 @@ html, body {
 /* icons 
 -------------------------*/
 
-[class^="iconk-"], [class*=" iconk-"] {
+[class^="iconk"], [class*=" iconk"], [class^="iconk-"], [class*=" iconk-"] {
 	display: inline-block;
 	width: 14px;
 	height: 14px;
 	line-height: 14px;
 	vertical-align: middle;
 	padding: 2px;
-}
+	
+	&[class*="-small"], &[class*="-small-"] {
+		width: 24px;
+		height: 24px;
+	}
 
-.iconk-small {
-	width: 24px;
-	height: 24px;
-}
+	&[class*="-medium"], &[class*="-medium-"] {
+		width: 32px;
+		height: 32px;
+	}
 
-.iconk-medium {
-	width: 32px;
-	height: 32px;
-}
+	&[class*="-large"], &[class*="-large-"]{
+		width: 46px;
+		height: 46px;
+	}
 
-.iconk-large {
-	width: 46px;
-	height: 46px;
-}
+	&[class*="-huge"], &[class*="-huge-"]{
+		width: 52px;
+		height: 52px;
+	}
 
-.iconk-huge {
-	width: 52px;
-	height: 52px;
-}
+	&[class*="-giant"], &[class*="-giant-"]{
+		width: 64px;
+		height: 64px;
+	}
+	
+	&[class*="-topRight"], &[class*="-topRight-"]{
+		position: relative;
+		top: -2px;
+		line-height: 18px;
+		float: right;
+		padding: 0;
+	}
 
-.iconk-giant {
-	width: 64px;
-	height: 64px;
-}
+	&[class*="-widthFollow"], &[class*="-widthFollow-"]{
+		width: auto;
+	}
+	&[class*="-heightFollow"], &[class*="-heightFollow-"]{
+		height: auto;
+	}
 
-.iconk-topRight {
-	position: relative;
-	top: -2px;
-	line-height: 18px;
-	float: right;
-	padding: 0;
-}
-
-.iconk-widthFollow {
-	width: auto;
-}
-.iconk-heightFollow{
-	height: auto;
-}
-
-.iconk-tight {
-	display: block;
-	float: left;
-	padding: 1px;
+	&[class*="-tight"], &[class*="-tight-"]{
+		display: block;
+		float: left;
+		padding: 1px;
+	}
+	
+	/* TODO: all icons into one sprite
+	{
+		background: url('assets/icons/sprite_64.png') no-repeat;
+	}
+	*/
+	
 }
 
 /* badges 
@@ -357,6 +364,13 @@ a, .navbar .nav > li > a {
 		cursor: pointer;
 	}
 	
+}
+
+/* list items 
+-------------------------*/
+
+li {
+	list-style: none;
 }
 
 /* containers 
@@ -741,15 +755,46 @@ a, .navbar .nav > li > a {
 	.fullscreenTopLeftNoWidth;
 	overflow:hidden;
 	z-index: 1000;
+	
+	#uiInGame {
+		.fullscreenTopLeftNoWidth;
+		overflow:hidden;
+		z-index: 1001;
+		
+		#primaryActionsInactive {
+			
+		}
+		
+		#primaryActionsActive {
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			
+			.primaryAction-item {
+				padding: 10px;
+			}
+			
+			.primaryAction-item:last-child {
+				margin-bottom: 20px;
+			}
+			
+		}
+		
+		#navStart {
+			
+		}
+		
+	}
 }
 
 #transitioner {
 	.fullscreenTopLeftNoWidth;
 	background: @gray;
-	z-index: 3000;
+	z-index: 2000;
 }
 
-#ui {
+#uiOutGame {
 	.fullscreenTopLeftNoWidth;
 	
 	#navMenus {
@@ -817,47 +862,11 @@ a, .navbar .nav > li > a {
 		
 	}
 	
-	#inGame {
-		.fullscreenTopLeftNoWidth;
-		overflow:hidden;
-		z-index: 2000;
-		
-		#primaryActionsInactive {
-			
-		}
-		
-		#primaryActionsActive {
-			position: absolute;
-			bottom: 0;
-			left: 0;
-			right: 0;
-			
-			.primaryAction-item {
-				padding: 10px;
-			}
-			
-			.primaryAction-item:last-child {
-				margin-bottom: 20px;
-			}
-			
-		}
-		
-		#navStart {
-			
-		}
-		
-	}
-	
-	#outGame {
+	#menus {
 		position: absolute;
 		top: 100%;
 		min-width: 100%;
 		.clearfix();
-		
-		#menus {
-			
-		}
-		
 	}
 		
 	#preloader {

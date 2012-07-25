@@ -235,11 +235,11 @@
 		
 		// pitch
 		
-		rotDelta.x = _MathHelper.clamp( rotDelta.x + pointer.distanceY * rotDeltaSpeed, rotDeltaMin.x, rotDeltaMax.x );
+		rotDelta.x = _MathHelper.clamp( rotDelta.x + pointer.deltaY * rotDeltaSpeed, rotDeltaMin.x, rotDeltaMax.x );
 		
 		// yaw
 		
-		rotDelta.y = _MathHelper.clamp( rotDelta.y - pointer.distanceX * rotDeltaSpeed, rotDeltaMin.y, rotDeltaMax.y );
+		rotDelta.y = _MathHelper.clamp( rotDelta.y - pointer.deltaX * rotDeltaSpeed, rotDeltaMin.y, rotDeltaMax.y );
 		
 		// if totals above start threshold
 		

@@ -128,7 +128,8 @@
 		this.material = parameters.material || new THREE.MeshLambertMaterial( { vertexColors: THREE.VertexColors, shading: THREE.SmoothShading } );
 		this.materialBase = _ObjectHelper.clone_material( this.material );
 		
-		this.timeGrow = main.is_number( parameters.timeGrow ) ? parameters.timeGrow : _Plant.timeGrow;
+		this.timeGrow = main.is_number( parameters.timeGrow ) ? parameters.timeGrow : _GridElement.timeGrow;
+		this.utilVec31Grow = new THREE.Vector3();
 		this.utilQ1Rotate = new THREE.Quaternion();
 		
 		// layout
@@ -524,7 +525,7 @@
 						model.tween_properties( {
 							time: this.timeGrow,
 							easing: TWEEN.Easing.Back.EaseOut,
-							scale: utilVec31Grow.set( 1, 1, 1 )
+							scale: this.utilVec31Grow.set( 1, 1, 1 )
 						} );
 						
 					}
@@ -561,7 +562,7 @@
 	
 	function rotate ( radians, testModule, show, occupy, force ) {
 		
-		var q = utilQ1Rotate,
+		var q = this.utilQ1Rotate,
 			angle,
 			angleDelta,
 			layoutRotated,
@@ -993,7 +994,7 @@
 				this.material.color.copy( _GridModule.colors.vacant );
 				this.material.ambient.copy( _GridModule.colors.vacant );
 				this.material.transparent = true;
-				this.material.opacity = _Plant.opacityVacant;
+				this.material.opacity = _GridElement.opacityVacant;
 				
 			}
 			// unsuccessful, but tested on an actual module
@@ -1002,7 +1003,7 @@
 				this.material.color.copy( _GridModule.colors.occupied );
 				this.material.ambient.copy( _GridModule.colors.occupied );
 				this.material.transparent = true;
-				this.material.opacity = _Plant.opacityOccupied;
+				this.material.opacity = _GridElement.opacityOccupied;
 			
 			}
 			// base state

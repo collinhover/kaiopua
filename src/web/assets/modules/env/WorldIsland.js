@@ -14,7 +14,7 @@
 		_World,
         _Game,
 		_Model,
-		_PuzzleBuilder,
+		_PuzzleLibrary,
 		_Water,
 		_Sky,
 		_ObjectMaker,
@@ -388,7 +388,7 @@
 		=====================================================*/
 		
 		main.asset_require( [
-				"assets/modules/puzzles/PuzzleBuilder.js"
+				"assets/modules/puzzles/PuzzleLibrary.js"
 			],
 			init_puzzles,
 			true
@@ -396,21 +396,21 @@
 		
 		function init_puzzles ( pb ) {
 			
-			_PuzzleBuilder = pb;
+			_PuzzleLibrary = pb;
 			
 			// tutorial
 			
-			me.parts.puzzleTutorial = _PuzzleBuilder.build( 'Tutorial' );
+			me.parts.puzzleTutorial = _PuzzleLibrary.build( { name: 'Tutorial' } );
 			me.parts.body.add( me.parts.puzzleTutorial );
 			
 			// basics abilities
 			
-			me.parts.puzzleBasicsAbilities = _PuzzleBuilder.build( 'Abilities' );
+			me.parts.puzzleBasicsAbilities = _PuzzleLibrary.build( { name: 'Abilities' } );
 			me.parts.body.add( me.parts.puzzleBasicsAbilities );
 			
 			// rolling hills
 			
-			me.parts.puzzleRollingHills = _PuzzleBuilder.build( 'RollingHills' );
+			me.parts.puzzleRollingHills = _PuzzleLibrary.build( { name: 'RollingHills' } );
 			me.parts.body.add( me.parts.puzzleRollingHills );
 			
 		}
