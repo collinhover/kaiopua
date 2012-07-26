@@ -164,17 +164,19 @@
 	
 	function build ( parameters ) {
 		
+		var shape;
+		
 		// handle parameters
 		
 		parameters = parameters || {};
 		
-		parameters.shape = _GridElementLibrary.shapes.hasOwnProperty( parameters.shape ) ? parameters.shape : 'monomino';
+		shape = _GridElementLibrary.shapes.hasOwnProperty( parameters.shape ) ? parameters.shape : 'monomino';
 		
 		// TODO: skin
 		
 		// copy shape parameters
 		
-		parameters = main.extend( parameters, _GridElementLibrary.shapes[ parameters.shape ] );
+		parameters = main.extend( parameters, _GridElementLibrary.shapes[ shape ] );
 		console.log( 'BUILD GRID ELEMENT', parameters );
 		return new _GridElement.Instance( parameters );
 		

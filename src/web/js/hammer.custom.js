@@ -88,7 +88,8 @@ var HAMMER = ( function ( main ) {
 						if(_gesture == 'hold') {
 							
 							triggerEvent( "hold", {
-								originalEvent   : event
+								originalEvent   : event,
+								position: _pos.start
 							} );
 							
 						}
@@ -142,8 +143,7 @@ var HAMMER = ( function ( main ) {
 				
 				var _distance_x = _pos.move[0].x - _pos.start[0].x,
 					_distance_y = _pos.move[0].y - _pos.start[0].y,
-					is_vertical,
-					eventObject;
+					is_vertical;
 				
 				_distance = Math.sqrt(_distance_x * _distance_x + _distance_y * _distance_y);
 				
@@ -163,19 +163,18 @@ var HAMMER = ( function ( main ) {
 
 					_gesture = 'drag';
 					
-					eventObject = {
-						originalEvent   : event,
-						direction       : _direction,
-						distance        : _distance,
-						distanceX       : _distance_x,
-						distanceY       : _distance_y,
-						angle           : _angle
-					};
-					
 					// on the first time trigger the start event
 					if( _first ) {
 						
-						triggerEvent( 'dragstart', eventObject );
+						triggerEvent( 'dragstart', {
+							originalEvent   : event,
+							position: _pos.start,
+							direction       : _direction,
+							distance        : _distance,
+							distanceX       : _distance_x,
+							distanceY       : _distance_y,
+							angle           : _angle
+						} );
 
 						_first = false;
 						
@@ -183,7 +182,14 @@ var HAMMER = ( function ( main ) {
 					
 					// drag
 					
-					triggerEvent( 'drag', eventObject );
+					triggerEvent( 'drag', {
+						originalEvent   : event,
+						direction       : _direction,
+						distance        : _distance,
+						distanceX       : _distance_x,
+						distanceY       : _distance_y,
+						angle           : _angle
+					} );
 					
 				}
 			},
@@ -194,8 +200,7 @@ var HAMMER = ( function ( main ) {
 			{
 				
 				var rotation,
-					scale,
-					eventObject;
+					scale;
 				
 				if(options.transform) {
 					if(countFingers(event) != 2) {
@@ -211,26 +216,30 @@ var HAMMER = ( function ( main ) {
 
 						_pos.center = {  x: ((_pos.move[0].x + _pos.move[1].x) / 2) - _offset.left,
 							y: ((_pos.move[0].y + _pos.move[1].y) / 2) - _offset.top };
-						
-						eventObject = {
-							originalEvent   : event,
-							center			: _pos.center,
-							scale           : scale,
-							rotation        : rotation
-						};
 
 						// on the first time trigger the start event
 						if( _first ) {
 							
 							_first = false;
 							
-							triggerEvent( 'transformstart', eventObject );
+							triggerEvent( 'transformstart', {
+								originalEvent   : event,
+								position: _pos.start,
+								center			: _pos.center,
+								scale           : scale,
+								rotation        : rotation
+							} );
 							
 						}
 						
 						// trigger transform
 						
-						triggerEvent( 'transform', eventObject );
+						triggerEvent( 'transform', {
+							originalEvent   : event,
+							center			: _pos.center,
+							scale           : scale,
+							rotation        : rotation
+						} );
 
 						return true;
 					}
@@ -271,7 +280,8 @@ var HAMMER = ( function ( main ) {
 					_prev_tap_end_time = null;
 					
 					triggerEvent( 'doubletap', {
-						originalEvent   : event
+						originalEvent   : event,
+						position: _pos.start
 					} );
 					
 				}
@@ -290,7 +300,8 @@ var HAMMER = ( function ( main ) {
 						if(options.tap) {
 							
 							triggerEvent( 'tap', {
-								originalEvent   : event
+								originalEvent   : event,
+								position: _pos.start
 							} );
 							
 						}
@@ -483,8 +494,9 @@ var HAMMER = ( function ( main ) {
 	}
 	
 	function killEvent () {
-		console.log( 'kill select' );
+		
 		return false;
+		
 	}
 	
 	/**
@@ -578,7 +590,8 @@ var HAMMER = ( function ( main ) {
 				
 				// update event object
 				
-				eventObject.touches = eventObject.position = getXYfromEvent( eventObject.originalEvent );
+				eventObject.touches = getXYfromEvent( eventObject.originalEvent );
+				eventObject.position = eventObject.position || eventObject.touches;
 				eventObject.type = eventName;
 				
 				// if event does not yet have a target

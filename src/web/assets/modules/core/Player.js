@@ -839,7 +839,7 @@
 		
 		// select plant
 		console.log( 'shape DRAG start', e, shape, $shape );
-		character.planting.select_plant( { 
+		character.planting.activate_plant( { 
 			event: e,
 			plant: {
 				shape: shape

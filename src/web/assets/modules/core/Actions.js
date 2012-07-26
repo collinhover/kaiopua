@@ -194,7 +194,7 @@
 			active = this.map[ name ].is_active();
 			
 		}
-		console.log( name, ' is active? ', active );
+		
 		return active;
 		
 	}
