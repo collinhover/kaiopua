@@ -240,7 +240,7 @@
 			modulesGeometry = main.get_asset_data( modulesGeometry );
 			
 		}
-		console.log( modulesGeometry );
+		
 		if ( modulesGeometry instanceof THREE.Geometry ) {
 			
 			// store original modules modulesGeometry
@@ -776,19 +776,22 @@
 	
 	function on_occupant_added ( module ) {
 		
-		console.log(' PUZZLE completing for ', this.puzzle.id );
-		this.puzzle.complete();
 		
 	}
 	
 	function on_occupant_removed ( module ) {
 		
-		console.log(' PUZZLE completing for ', this.puzzle.id );
-		this.puzzle.complete();
+		
 		
 	}
 	
 	function on_occupant_changed ( module ) {
+		
+		// clean
+		
+		this.clean();
+		
+		// signal
 		
 		this.stateChanged.dispatch( this, module );
 		

@@ -183,11 +183,6 @@
 		
 		character = new _Hero.Instance();
 		
-		// listen for planting puzzle changes
-		
-		character.planting.puzzleStarted.add( on_puzzle_started );
-		character.planting.puzzleStopped.add( on_puzzle_stopped );
-		
 		// add handler for physics safety net
 		
 		if ( character.rigidBody ) {
@@ -248,7 +243,7 @@
 					
 					// stop camera rotate
 					
-					cameraControls.rotate( parameters.event, true );
+					cameraControls.rotate( undefined, true );
 					
 				},
 				wheel: function ( parameters ) {
@@ -256,7 +251,8 @@
 					cameraControls.zoom( parameters.event );
 					
 				}
-			}
+			},
+			deactivateCallbacks: 'dragend'
 		} );
 		
 		// wasd / arrows
@@ -269,7 +265,8 @@
 				up: function () {
 					character_move( 'forward', true );
 				}
-			}
+			},
+			deactivateCallbacks: 'up'
 		} );
 		
 		actions.add( 's down_arrow', {
@@ -280,7 +277,8 @@
 				up: function () {
 					character_move( 'back', true );
 				}
-			}
+			},
+			deactivateCallbacks: 'up'
 		} );
 		
 		actions.add( 'a left_arrow', {
@@ -291,7 +289,8 @@
 				up: function () {
 					character_move( 'turnleft', true );
 				}
-			}
+			},
+			deactivateCallbacks: 'up'
 		} );
 		
 		actions.add( 'd right_arrow', {
@@ -302,7 +301,8 @@
 				up: function () {
 					character_move( 'turnright', true );
 				}
-			}
+			},
+			deactivateCallbacks: 'up'
 		} );
 		
 		// jump
@@ -315,7 +315,8 @@
 				up: function () {
 					character_move( 'up', true );
 				}
-			}
+			},
+			deactivateCallbacks: 'up'
 		} );
 		
 		// misc
@@ -540,340 +541,6 @@
 			
 		}
 		
-	}
-	
-	/*===================================================
-    
-    ui
-    
-    =====================================================*/
-	
-	function on_puzzle_started ( puzzle ) {
-		
-		var i, l,
-			shapes,
-			shape;
-		
-		console.log( 'puzzle started', puzzle );
-		
-		// modify ui to reflect new puzzle
-		
-		main.dom_collapse( {
-			element: shared.domElements.$puzzleActiveWarning,
-			time: 0
-		} );
-		
-		main.dom_collapse( {
-			element: shared.domElements.$puzzleActive,
-			show: true,
-			time: 0
-		} );
-		
-		// overview
-		
-		shared.domElements.$puzzleActiveName.html( puzzle.name );
-		shared.domElements.$puzzleActiveScoreBar.css( 'width', puzzle.scorePct + '%' );
-		shared.domElements.$puzzleActiveElementCount.html( puzzle.elements.length );
-		shared.domElements.$puzzleActiveNumElementsMin.html( puzzle.numElementsMin );
-		
-		// shapes
-		
-		shared.domElements.$puzzleActiveNumShapesRequired.html( puzzle.numShapesRequired );
-		
-		shapes = character.planting.shapes;
-		
-		for ( i = 0, l = shapes.length; i < l; i++ ) {
-			
-			shape = shapes[ i ];
-			
-			// add tap listeners
-			
-			_GridElementLibrary.shapes[ shape ].$buttonsShapePicker.on( 'tap.shapeToggle', on_shape_toggle );
-			
-		}
-		
-		// puzzle selected listener
-		
-		character.planting.puzzleSelected.add( on_puzzle_selected );
-		
-		// puzzle ready status
-		
-		puzzle.shapesNeeded.add( on_puzzle_waiting );
-		
-		if ( puzzle.ready !== true ) {
-			
-			on_puzzle_waiting( puzzle );
-			
-		}
-		else {
-			
-			on_puzzle_ready( puzzle );
-			
-		}
-		
-	}
-	
-	function on_puzzle_selected ( puzzle ) {
-		
-		console.log( 'puzzle selected', puzzle );
-		
-		// trigger farming menu
-		
-		shared.domElements.$buttonFarmingMenu.trigger( 'tap' );
-		
-		// scroll to puzzle
-		
-		$.scrollTo( shared.domElements.$puzzle, shared.domScrollTime, {
-			easing: 'easeInOutCubic'
-		} );
-		
-	}
-	
-	function on_puzzle_waiting ( puzzle ) {
-		
-		var i, l,
-			shapes,
-			shape;
-		console.log( 'puzzle waiting', puzzle );
-		
-		puzzle.shapesReady.add( on_puzzle_ready );
-		
-		// select puzzle
-		
-		on_puzzle_selected( puzzle );
-		
-		// update status
-		
-		shared.domElements.$puzzleActiveStatusIcons.addClass( 'hidden' );
-		shared.domElements.$puzzleActiveStatusText.html( 'waiting' );
-		shared.domElements.$puzzleActiveStatusIcons.filter( "#waiting" ).removeClass( 'hidden' );
-		
-		// hide map and rewards
-		
-		main.dom_collapse( {
-			element: $.merge( shared.domElements.$puzzleActiveMap, shared.domElements.$puzzleActiveRewards )
-		} );
-		
-		// hide all shapes and disable drag
-		
-		shapes = _GridElementLibrary.shapeNames;
-		
-		for ( i = 0, l = shapes.length; i < l; i++ ) {
-			
-			shape = shapes[ i ];
-			
-			_GridElementLibrary.shapes[ shape ]
-				.$buttonsPuzzleActive.addClass( 'disabled hidden' )
-				.off( '.shapeDrag' );
-			
-		}
-		
-		main.dom_fade( { 
-			element: shared.domElements.$puzzleActiveShapes,
-			opacity: 0,
-			time: 0
-		} );
-		
-	}
-	
-	function on_puzzle_ready ( puzzle ) {
-		
-		var i, l,
-			shapes,
-			shape;
-		console.log( 'puzzle ready', puzzle );
-		
-		puzzle.shapesReady.remove( on_puzzle_ready );
-		
-		// update status
-		
-		shared.domElements.$puzzleActiveStatusIcons.addClass( 'hidden' );
-		shared.domElements.$puzzleActiveStatusText.html( 'ready' );
-		shared.domElements.$puzzleActiveStatusIcons.filter( "#ready" ).removeClass( 'hidden' );
-		
-		// hide shapes required warning
-		
-		main.dom_collapse( {
-			element: shared.domElements.$puzzleActiveShapesRequiredWarning,
-			time: 0
-		} );
-		
-		// show map and rewards
-		
-		main.dom_collapse( {
-			element: $.merge( shared.domElements.$puzzleActiveMap, shared.domElements.$puzzleActiveRewards ),
-			show: true
-		} );
-		
-		// show puzzle shapes and allow drag
-		
-		shapes = puzzle.shapes;
-		
-		for ( i = 0, l = shapes.length; i < l; i++ ) {
-			
-			shape = shapes[ i ];
-			
-			_GridElementLibrary.shapes[ shape ]
-				.$buttonsPuzzleActive.removeClass( 'disabled hidden' )
-				.on( 'dragstart.shapeDrag', on_shape_dragstart )
-				.on( 'drag.shapeDrag', on_shape_drag )
-				.on( 'dragend.shapeDrag', on_shape_dragend );
-			
-		}
-		
-		main.dom_fade( { 
-			element: shared.domElements.$puzzleActiveShapes,
-			time: 0
-		} );
-		
-	}
-	
-	function on_puzzle_stopped ( puzzle ) {
-		
-		var i, l,
-			shapes,
-			shape;
-		
-		console.log( 'puzzle stopped', puzzle );
-		
-		// puzzle selected listener
-		
-		character.planting.puzzleSelected.remove( on_puzzle_selected );
-		
-		// shapes
-		
-		shapes = character.planting.shapes;
-		
-		for ( i = 0, l = shapes.length; i < l; i++ ) {
-			
-			shape = shapes[ i ];
-			
-			// remove tap listeners
-			
-			_GridElementLibrary.shapes[ shape ].$buttonsShapePicker.off( '.shapeToggle' );
-			
-		}
-		
-		puzzle.shapesNeeded.remove( on_puzzle_waiting );
-		puzzle.shapesReady.remove( on_puzzle_ready );
-		
-		// remove puzzle from ui
-		
-		main.dom_collapse( {
-			element: shared.domElements.$puzzleActive
-		} );
-		
-		main.dom_collapse( {
-			element: shared.domElements.$puzzleActiveWarning,
-			show: true,
-			time: 0
-		} );
-		
-	}
-	
-	function on_shape_toggle ( e ) {
-		
-		var puzzle = character.planting.puzzle,
-			$shape = $( e.target ),
-			$button = $shape.find( 'button' ).andSelf().filter( 'button' ),
-			shape = $shape.data( 'shape' ),
-			shapesChanged;
-		
-		// if valid puzzle
-		
-		if ( puzzle ) {
-			
-			// add / remove shapes based on whether button active
-			
-			if ( $button.hasClass( 'active' ) ) {
-				
-				shapesChanged = puzzle.remove_shape( shape );
-				console.log( 'removing shape', shape, ' shapesChanged? ', shapesChanged );
-			}
-			else {
-				
-				shapesChanged = puzzle.add_shape( shape );
-				console.log( 'adding shape', shape, ' shapesChanged? ', shapesChanged );
-			}
-			
-			// toggle button active if shapes changed
-			
-			if ( shapesChanged === true ) {
-				
-				$button.toggleClass( 'active' );
-				
-			}
-			
-		}
-		
-	}
-	
-	function on_shape_dragstart ( e ) {
-		
-		// generates proxy of shape to be dragged
-		
-		var $shape = $( this ),
-			shape = $shape.data( 'shape' )
-			$proxy = $shape.clone()
-				.css( {
-					opacity: 0.75 
-				} )
-				.appendTo( shared.domElements.$uiInGame ),
-			dd = shared.domElements.$uiInGame.offset();
-		
-		// handle drag data
-		
-		dd.width = $shape.outerWidth();
-		dd.height = $shape.outerHeight();
-		dd.widthHalf = dd.width * 0.5;
-		dd.heightHalf = dd.height * 0.5;
-		dd.right = dd.left + shared.domElements.$uiInGame.outerWidth() - dd.width;
-		dd.bottom = dd.top + shared.domElements.$uiInGame.outerHeight() - dd.height;
-		
-		// store data
-		
-		$shape.data( {
-			$proxy: $proxy,
-			dragData: dd
-		} );
-		
-		// select plant
-		console.log( 'shape DRAG start', e, shape, $shape );
-		character.planting.activate_plant( { 
-			event: e,
-			plant: {
-				shape: shape
-			}
-		} );
-		
-	}
-	
-	function on_shape_drag ( e ) {
-		
-		var pointer = main.get_pointer( e ),
-			$shape = $( this ),
-			$proxy = $shape.data( '$proxy' ),
-			dd = $shape.data( 'dragData' ),
-			boundedX = Math.min( dd.right, Math.max( dd.left, pointer.x - dd.widthHalf ) ),
-			boundedY = Math.min( dd.bottom, Math.max( dd.top, pointer.y - dd.heightHalf ) )
-		
-		$proxy.css( {
-			left: boundedX,
-			top: boundedY
-		} );
-		//console.log( 'dragged shape to ', pointer.x, pointer.y );
-		
-	}
-	
-	function on_shape_dragend ( e ) {
-		
-		var $shape = $( this ),
-			$proxy = $shape.data( '$proxy' );
-		
-		// remove clone
-		
-		$proxy.remove();
-		console.log( 'shape DRAG end', e );
 	}
 	
 	/*===================================================

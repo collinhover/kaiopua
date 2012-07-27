@@ -119,7 +119,6 @@
 			this.map[ name ] = action;
 			this.actionNames.push( name );
 			
-			
 		}
 		
 	}
@@ -187,15 +186,7 @@
 	
 	function is_active ( name ) {
 		
-		var active = false;
-		
-		if ( this.map.hasOwnProperty( name ) ) {
-			
-			active = this.map[ name ].is_active();
-			
-		}
-		
-		return active;
+		return ( this.map.hasOwnProperty( name ) && this.map[ name ].active ) || false;
 		
 	}
 	
@@ -221,7 +212,9 @@
 	
 	function Action ( parameters ) {
 		
-		var eventName;
+		var eventName,
+			deactivateCallbacks,
+			deactivateCallback;
 		
 		// handle parameters
 		
@@ -231,11 +224,12 @@
 		
 		this.eventCallbacks = parameters.eventCallbacks || {};
 		
-		this.eventNameActive = parameters.eventNameActive;
-		this.eventNameInactive = parameters.eventNameInactive;
+		deactivateCallbacks = parameters.deactivateCallbacks;
+		this.deactivateCallbacks = {};
 		
+		this.eventsActive = [];
 		this.active = false; 
-		this.activeChecks = parameters.activeChecks || {};
+		this.activeCheck = parameters.activeCheck || {};
 		
 		// for each list of eventCallbacks
 		
@@ -246,6 +240,46 @@
 				// ensure is array
 				
 				this.eventCallbacks[ eventName ] = main.ensure_array( this.eventCallbacks[ eventName ] );
+				
+				// check deactivateCallbacks
+				if ( deactivateCallbacks ) {
+					
+					// all deactivates same
+					if ( typeof deactivateCallbacks === 'function' ) {
+						
+						this.deactivateCallbacks[ eventName ] = deactivateCallbacks;
+						
+					}
+					// all deactivates same event callback
+					else if ( typeof deactivateCallbacks === 'string' && this.eventCallbacks.hasOwnProperty( deactivateCallbacks ) ) {
+						
+						this.deactivateCallbacks[ eventName ] = this.eventCallbacks[ deactivateCallbacks ];
+						
+					}
+					// unique deactivate
+					else if ( deactivateCallbacks.hasOwnProperty( eventName ) ) {
+						
+						deactivateCallback = deactivateCallbacks[ eventName ];
+						
+						// unique deactivate is event callback
+						if ( typeof deactivateCallback === 'string' && this.eventCallbacks.hasOwnProperty( deactivateCallback ) ) {
+							
+							this.deactivateCallbacks[ eventName ] = this.eventCallbacks[ deactivateCallback ];
+							
+						}
+						else {
+							
+							this.deactivateCallbacks[ eventName ] = deactivateCallback;
+						
+						}
+						
+					}
+					
+					// ensure is array
+					
+					this.deactivateCallbacks[ eventName ] = main.ensure_array( this.deactivateCallbacks[ eventName ] );
+					
+				}
 				
 			}
 			
@@ -273,7 +307,11 @@
 				
 				// store eventName
 				
-				this.eventNameCurrent = eventName;
+				if ( this.eventsActive.indexOf( eventName ) === -1 ) {
+					
+					this.eventsActive.push( eventName );
+					
+				}
 				
 				// execute each eventCallback
 				
@@ -284,10 +322,6 @@
 					eventCallbacks[ i ]( parameters );
 					
 				}
-				
-				// update active
-				
-				this.is_active();
 				
 			}
 			
@@ -303,40 +337,74 @@
 		
 		deactivate: function () {
 			
-			if ( typeof this.eventNameInactive !== 'undefined' && this.eventCallbacks.hasOwnProperty( this.eventNameInactive ) && this.is_active() ) {
-				
-				this.execute( this.eventNameInactive );
-				this.active = false;
-				
-			}
+			var i, l,
+				j, k,
+				eventName,
+				callbacks,
+				callbacksCalled,
+				callback;
 			
-		},
-		
-		is_active: function () {
+			// if has current event
 			
-			// if checks is function
-			if ( typeof this.activeChecks === 'function' ) {
+			if ( this.active && this.eventsActive.length > 0 ) {
 				
-				this.active = this.activeChecks();
+				callbacksCalled = [];
+				
+				// execute each deactivate callback only once
+				
+				for ( i = 0, l = this.eventsActive.length; i < l; i++ ) {
+				
+					eventName = this.eventsActive[ i ];
+					
+					if ( this.deactivateCallbacks.hasOwnProperty( eventName ) ) {
+						
+						callbacks = this.deactivateCallbacks[ eventName ];
+					
+						for ( j = 0, k = callbacks.length; j < k; j++ ) {
+							
+							callback = callbacks[ j ];
+							
+							if ( callbacksCalled.indexOf( callback ) === -1 ) {
+								
+								callback();
+								
+								callbacksCalled.push( callback );
+								
+							}
+							
+						}
+						
+					}
+					
+				}
+				
+				// clear eventName
+				
+				this.eventsActive = [];
 				
 			}
-			// else try active check for current eventCallback
-			else if ( this.activeChecks.hasOwnProperty( this.eventNameCurrent ) ) {
-				
-				this.active = this.activeChecks[ this.eventNameCurrent ]();
-				
-			}
-			// else default to eventCallback names
-			else if ( typeof this.eventNameActive !== 'undefined' ) {
-				
-				this.active = this.eventNameCurrent === this.eventNameActive;
-				
-			}
-			
-			return this.active;
 			
 		}
 		
 	};
+	
+	Object.defineProperty( Action.prototype, 'active', { 
+		get : function () { 
+			
+			// if has check
+			if ( typeof this.activeCheck === 'function' ) {
+				
+				return this.activeCheck();
+				
+			}
+			// else default
+			else {
+				
+				return this.eventsActive.length > 0;
+				
+			}
+			
+		}
+	});
 	
 } (KAIOPUA) );

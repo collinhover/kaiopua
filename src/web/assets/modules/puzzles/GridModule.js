@@ -463,6 +463,10 @@
 			
 			this.change_state( [ 'occupied', 'base' ], false );
 			
+			// set inactive
+			
+			this.set_active( false );
+			
 			// if had previous
 			
 			if ( typeof occupantPrev !== 'undefined' ) {

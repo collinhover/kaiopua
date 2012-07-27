@@ -111,8 +111,8 @@
 		_Puzzle.Instance.prototype.reset = reset;
 		
 		_Puzzle.Instance.prototype.toggle = toggle;
-		_Puzzle.Instance.prototype.activate = activate;
-		_Puzzle.Instance.prototype.deactivate = deactivate;
+		_Puzzle.Instance.prototype.start = start;
+		_Puzzle.Instance.prototype.stop = stop;
 		
 		_Puzzle.Instance.prototype.add_shape = add_shape;
 		_Puzzle.Instance.prototype.remove_shape = remove_shape;
@@ -260,6 +260,26 @@
 		
 		this.grid.reset();
 		
+		// toggleSwitch handles own reset
+		
+	}
+	
+	/*===================================================
+	
+	clean
+	
+	=====================================================*/
+	
+	function clean () {
+		
+		// TODO: remove any shapes in puzzle not in shapes list
+		
+		
+		
+		// clean grid
+		
+		this.grid.clean();
+		
 	}
 	
 	/*===================================================
@@ -278,19 +298,19 @@
 		
 		if ( this.toggleSwitch.state === true ) {
 			
-			this.activate();
+			this.start();
 			
 		}
 		else {
 			
-			this.deactivate();
+			this.stop();
 			
 		}
 		
 	}
 	
-	function activate () {
-		console.log( this, this.name, ' ACTIVATED!' );
+	function start () {
+		console.log( this, this.name, ' START!' );
 		this.started = true;
 		
 		// TODO: start spawning farmer enemies that plant bad plants or destroy plants?
@@ -314,9 +334,13 @@
 		
 	}
 	
-	function deactivate () {
-		console.log( this, this.name, ' deactivated :(' );
+	function stop () {
+		console.log( this, this.name, ' stop!' );
 		this.started = false;
+		
+		// try completing
+		
+		this.complete();
 		
 		// signal
 		
@@ -362,6 +386,8 @@
 		var removed = false,
 			index;
 		
+		// remove from list
+		
 		index = this.shapes.indexOf( shape );
 		
 		if ( index !== -1 ) {
@@ -371,28 +397,16 @@
 			
 		}
 		
+		// clean
+		
+		this.clean();
+		
+		// signal
+		
 		this.shapesNeeded.dispatch( this );
 		
 		return removed;
 	
-	}
-	
-	/*===================================================
-	
-	clean
-	
-	=====================================================*/
-	
-	function clean () {
-		
-		// TODO: remove any shapes in puzzle not in shapes list
-		
-		
-		
-		// clean grid
-		
-		this.grid.clean();
-		
 	}
 	
 	/*===================================================
@@ -424,227 +438,233 @@
 		// properties
 		
 		this.completed = this.grid.isFull;
-		console.log( 'puzzle complete?', this.completed, this);
+		console.log( this.id, ' puzzle complete?', this.completed, this);
 		// if completed
 		
-		if ( this.perfect !== true && this.completed === true ) {
+		if ( this.completed === true ) {
 			
-			// get elements filling grid
+			// until has perfect score
 			
-			elements = this.elements;
-			
-			numElementsUsed = elements.length;
-			
-			// compare num elements used to base num required
-			
-			numElementsToMin = Math.max( 0, numElementsUsed - this.numElementsMin );
-			
-			// store score
-			
-			this.scoreLast = this.score;
-			
-			this.score = Math.min( 1, 1 - numElementsToMin / ( this.numGridModules - numElementsMin ) );
-			
-			if ( isNaN( this.score ) || this.score < 0 ) {
+			if ( this.perfect !== true ) {
 				
-				this.score = 1;
+				// get elements filling grid
 				
-			}
-			
-			this.scorePct = Math.round( this.score * 100 ) + "%";
-			
-			// use score map to determine status/icon/rewards
-			
-			rewards = [];
-			
-			for ( i = 0, l = this.scoreMap.length; i < l; i++ ) {
+				elements = this.elements;
 				
-				scoreInfo = this.scoreMap[ i ];
+				numElementsUsed = elements.length;
 				
-				// set highest score
+				// compare num elements used to base num required
 				
-				if ( this.score >= scoreInfo.threshold ) {
+				numElementsToMin = Math.max( 0, numElementsUsed - this.numElementsMin );
+				
+				// store score
+				
+				this.scoreLast = this.score;
+				
+				this.score = Math.min( 1, 1 - numElementsToMin / ( this.numGridModules - numElementsMin ) );
+				
+				if ( isNaN( this.score ) || this.score < 0 ) {
 					
-					scoreHighestInfo = scoreInfo;
-					
-					scoreIndex = i;
+					this.score = 1;
 					
 				}
 				
-				// add all rewards possible
+				this.scorePct = Math.round( this.score * 100 ) + "%";
 				
-				if ( typeof scoreInfo.rewards !== 'undefined' && main.type( scoreInfo.rewards.list ) === 'array' && scoreInfo.rewards.list.length > 0 ) {
+				// use score map to determine status/icon/rewards
+				
+				rewards = [];
+				
+				for ( i = 0, l = this.scoreMap.length; i < l; i++ ) {
 					
-					// if giving to player
+					scoreInfo = this.scoreMap[ i ];
+					
+					// set highest score
 					
 					if ( this.score >= scoreInfo.threshold ) {
 						
-						scoreInfo.rewards.enabled = true;
+						scoreHighestInfo = scoreInfo;
+						
+						scoreIndex = i;
 						
 					}
 					
-					rewards.push( scoreInfo.rewards );
+					// add all rewards possible
+					
+					if ( typeof scoreInfo.rewards !== 'undefined' && main.type( scoreInfo.rewards.list ) === 'array' && scoreInfo.rewards.list.length > 0 ) {
+						
+						// if giving to player
+						
+						if ( this.score >= scoreInfo.threshold ) {
+							
+							scoreInfo.rewards.enabled = true;
+							
+						}
+						
+						rewards.push( scoreInfo.rewards );
+						
+					}
 					
 				}
 				
-			}
-			
-			this.scoreStatus = scoreHighestInfo.status;
-			
-			this.scoreIcon = scoreHighestInfo.icon;
-			
-			// perfect score
-			if ( scoreIndex === this.scoreMap.length - 1 ) {
+				this.scoreStatus = scoreHighestInfo.status;
 				
-				this.perfect = true;
+				this.scoreIcon = scoreHighestInfo.icon;
 				
-				// title
-				
-				title = "Hurrah! You completed the " + this.id + " puzzle!";
-				
-			}
-			// other scores
-			else {
-				
-				// title
-				
-				if ( scoreIndex === 0 ) {
+				// perfect score
+				if ( scoreIndex === this.scoreMap.length - 1 ) {
 					
-					title = "You've got the basics of the " + this.id + " puzzle!";
+					this.perfect = true;
+					
+					// title
+					
+					title = "Hurrah! You completed the " + this.id + " puzzle!";
 					
 				}
+				// other scores
 				else {
 					
-					title = "Getting better at the " + this.id + " puzzle!";
+					// title
 					
-				}
-				
-				// reset hints
-				
-				if ( this.hints.list.length === 0 && this.hints.used.length > 0 ) {
-					
-					this.hints.list = this.hints.list.concat( this.hints.used.splice( 0, this.hints.used.length ) );
-					
-				}
-				
-				// hint
-				
-				if ( this.hints.list.length > 0 ) {
-					
-					hint = this.hints.list.shift();
-					
-					this.hints.used.push( hint );
-					
-				}
-				
-			}
-			
-			//
-			// TODO: use for ui > this.numGridModules, this.numElementsMin, numElementsUsed, this.scorePct, scoreIcon, this.scoreStatus, title, hint
-			//
-			console.log( 'PUZZLE COMPLETE INFO: ' );
-			console.log( 'this.numGridModules', this.numGridModules, 'this.numElementsMin', this.numElementsMin, ' numElementsUsed ', numElementsUsed, ' scoreLast ', this.scoreLast, ' score ', this.score, 'scorePct', this.scorePct, ' scoreIcon', scoreIcon, ' this.scoreStatus', this.scoreStatus, 'title', title, 'hint', hint );
-			
-			// show all rewards
-			// give all enabled rewards
-			
-			for ( i = 0, l = rewards.length; i < l; i++ ) {
-				
-				rewardInfo = rewards[ i ];
-				
-				rewardList = rewardInfo.list;
-				
-				// for each reward in list
-				
-				for ( j = 0, k = rewardList.length; j < k; j++ ) {
-					
-					reward = rewardList[ j ];
-					
-					// TODO: show ui > reward.image, reward.label
-					
-					if ( rewardInfo.enabled === true ) {
+					if ( scoreIndex === 0 ) {
 						
-						if ( rewardInfo.given !== true ) {
-							
-							// new reward
-							console.log( ' > puzzle new reward: ', reward.label, reward.image );
-							
-						}
-						else {
-							
-							// already have reward
-							console.log( ' > puzzle already have reward: ', reward.label );
-							
-						}
+						title = "You've got the basics of the " + this.id + " puzzle!";
 						
 					}
 					else {
 						
-						// reward at higher score
-						console.log( ' > puzzle reward needs higher score: ', reward.label );
-					
+						title = "Getting better at the " + this.id + " puzzle!";
+						
 					}
 					
-					// if reward enabled
+					// reset hints
 					
-					if ( rewardInfo.enabled === true ) {
+					if ( this.hints.list.length === 0 && this.hints.used.length > 0 ) {
 						
-						// if not yet given
+						this.hints.list = this.hints.list.concat( this.hints.used.splice( 0, this.hints.used.length ) );
 						
-						if ( rewardInfo.given !== true ) {
+					}
+					
+					// hint
+					
+					if ( this.hints.list.length > 0 ) {
+						
+						hint = this.hints.list.shift();
+						
+						this.hints.used.push( hint );
+						
+					}
+					
+				}
+				
+				//
+				// TODO: use for ui > this.numGridModules, this.numElementsMin, numElementsUsed, this.scorePct, scoreIcon, this.scoreStatus, title, hint
+				//
+				console.log( 'PUZZLE COMPLETE INFO: ' );
+				console.log( 'this.numGridModules', this.numGridModules, 'this.numElementsMin', this.numElementsMin, ' numElementsUsed ', numElementsUsed, ' scoreLast ', this.scoreLast, ' score ', this.score, 'scorePct', this.scorePct, ' scoreIcon', scoreIcon, ' this.scoreStatus', this.scoreStatus, 'title', title, 'hint', hint );
+				
+				// show all rewards
+				// give all enabled rewards
+				
+				for ( i = 0, l = rewards.length; i < l; i++ ) {
+					
+					rewardInfo = rewards[ i ];
+					
+					rewardList = rewardInfo.list;
+					
+					// for each reward in list
+					
+					for ( j = 0, k = rewardList.length; j < k; j++ ) {
+						
+						reward = rewardList[ j ];
+						
+						// TODO: show ui > reward.image, reward.label
+						
+						if ( rewardInfo.enabled === true ) {
 							
-							if ( typeof reward.callback === 'function' ) {
+							if ( rewardInfo.given !== true ) {
 								
-								reward.callback.apply( reward.context, main.ensure_array( reward.data ) );
+								// new reward
+								console.log( ' > puzzle new reward: ', reward.label, reward.image );
+								
+							}
+							else {
+								
+								// already have reward
+								console.log( ' > puzzle already have reward: ', reward.label );
 								
 							}
 							
-							numRewardsGiven++;
+						}
+						else {
+							
+							// reward at higher score
+							console.log( ' > puzzle reward needs higher score: ', reward.label );
+						
+						}
+						
+						// if reward enabled
+						
+						if ( rewardInfo.enabled === true ) {
+							
+							// if not yet given
+							
+							if ( rewardInfo.given !== true ) {
+								
+								if ( typeof reward.callback === 'function' ) {
+									
+									reward.callback.apply( reward.context, main.ensure_array( reward.data ) );
+									
+								}
+								
+								numRewardsGiven++;
+								
+							}
 							
 						}
 						
 					}
 					
-				}
-				
-				// set given
-				
-				if ( rewardInfo.enabled === true && rewardInfo.given !== true ) {
+					// set given
 					
-					rewardInfo.given = true;
+					if ( rewardInfo.enabled === true && rewardInfo.given !== true ) {
+						
+						rewardInfo.given = true;
+					}
+					
+				}
+				
+				// notify about number of rewards given
+				
+				
+				if ( numRewardsGiven > 0 ) {
+					
+					console.log( ' > The tiki spirits favor you with ', numRewardsGiven, ' gifts ' );
+					
+				}
+				else {
+					
+					console.log( ' > The tiki spirits have given all they can for now. ' );
+					
+				}
+				
+				// add to list
+				
+				if ( allPuzzlesCompleted.indexOf( this ) === -1 ) {
+					
+					allPuzzlesCompleted.push( this );
+					
 				}
 				
 			}
 			
-			// notify about number of rewards given
+			// grid
 			
-			
-			if ( numRewardsGiven > 0 ) {
+			if ( this.grid instanceof _Grid.Instance ) {
 				
-				console.log( ' > The tiki spirits favor you with ', numRewardsGiven, ' gifts ' );
-				
-			}
-			else {
-				
-				console.log( ' > The tiki spirits have given all they can for now. ' );
+				this.grid.complete();
 				
 			}
-			
-			// add to list
-			
-			if ( allPuzzlesCompleted.indexOf( this ) === -1 ) {
-				
-				allPuzzlesCompleted.push( this );
-				
-			}
-			
-		}
-		
-		// grid
-		
-		if ( this.grid instanceof _Grid.Instance ) {
-			
-			this.grid.complete();
 			
 		}
 		

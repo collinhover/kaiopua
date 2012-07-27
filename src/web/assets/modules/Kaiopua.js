@@ -116,6 +116,7 @@ var KAIOPUA = (function (main) {
 		shared.domScrollTime = 500;
 		shared.domFadeEasing = 'easeInOutCubic';
 		shared.domCollapseEasing = 'easeInOutCubic';
+		shared.domScrollEasing = 'easeInOutCubic';
 		
         shared.domElements = {};
 		shared.domElements.$game = $('#game');
@@ -289,6 +290,7 @@ var KAIOPUA = (function (main) {
 			main.is_array = is_array;
 			main.is_image = is_image;
 			main.is_image_ext = is_image_ext;
+			main.is_event = is_event;
 			
 			main.extend = extend;
 			main.time_test = time_test;
@@ -433,6 +435,10 @@ var KAIOPUA = (function (main) {
 		}
 		
     }
+	
+	function is_event ( obj ) {
+		return obj && ( obj.type && ( obj.target || obj.srcElement ) );
+	}
 	
 	/*===================================================
     

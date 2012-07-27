@@ -61,8 +61,9 @@
 					modulesGeometry: "assets/models/Puzzle_Tutorial_Grid.js",
 					moduleInstance: _Dirt.Instance
 				},
-				moduleInstance: _Dirt.Instance,
+				toggleSwitch: "assets/models/Puzzle_Tutorial_Toggle.js",
 				numElementsMin: 0,
+				numShapesRequired: 2,
 				rewards: [
 					{
 						image: shared.pathToIcons + 'plant_rev_64.png',
@@ -86,6 +87,7 @@
 					moduleInstance: _Dirt.Instance
 				},
 				numElementsMin: 10,
+				numShapesRequired: 2,
 				hints: [
 					'Some plants have special abilities that will help complete puzzles!'
 				],
@@ -120,7 +122,6 @@
 					moduleInstance: _Dirt.Instance
 				},
 				toggleSwitch: "assets/models/Puzzle_Rolling_Hills_Toggle.js",
-				moduleInstance: _Dirt.Instance,
 				numElementsMin: 13,
 				numShapesRequired: 3,
 				hints: [

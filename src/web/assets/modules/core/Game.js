@@ -128,6 +128,7 @@
 			{ path: "assets/models/Volcano_Rocks_005.js", type: 'model' },
 			{ path: "assets/models/Puzzle_Tutorial.js", type: 'model' },
 			{ path: "assets/models/Puzzle_Tutorial_Grid.js", type: 'model' },
+			{ path: "assets/models/Puzzle_Tutorial_Toggle.js", type: 'model' },
 			{ path: "assets/models/Puzzle_Rolling_Hills.js", type: 'model' },
 			{ path: "assets/models/Puzzle_Rolling_Hills_Grid.js", type: 'model' },
 			{ path: "assets/models/Puzzle_Rolling_Hills_Toggle.js", type: 'model' },
@@ -456,8 +457,10 @@
 		shared.domElements.$puzzleActiveShapes = $( "#puzzleActiveShapes" );
 		shared.domElements.$puzzleActiveShapesRequiredWarning = $( "#puzzleActiveShapesRequiredWarning" );
 		shared.domElements.$puzzleActiveShapesPicker = $( "#puzzleActiveShapesPicker" );
-		shared.domElements.$puzzleActiveStatusIcons = $( "#puzzleActiveStatusIcons img" );
+		shared.domElements.$puzzleActiveStatusIcons = $( ".puzzle-statusIcon" );
+		shared.domElements.$puzzleActiveCompletionIcons = $( ".puzzle-completionIcon" );
 		shared.domElements.$puzzleActiveStatusText = $( "#puzzleActiveStatusText" );
+		shared.domElements.$puzzleActiveCompletionText = $( "#puzzleActiveCompletionText" );
 		shared.domElements.$puzzleActiveMap = $( "#puzzleActiveMap" );
 		shared.domElements.$puzzleActiveRewards = $( "#puzzleActiveRewards" );
 		
@@ -522,7 +525,7 @@
 					// scroll to top position
 					
 					$.scrollTo( $target, shared.domScrollTime, {
-						easing: 'easeInOutCubic'
+						easing: main.shared.domScrollEasing
 					} );
 					
 				} );
@@ -1268,7 +1271,7 @@
 		// scroll to top position
 		
 		$.scrollTo( { top: topPosition, left: 0 }, shared.domScrollTime, {
-			easing: 'easeInOutCubic'
+			easing: main.shared.domScrollEasing
 		} );
 		
 	}
@@ -1479,7 +1482,7 @@
 			// scroll to top
 			
 			$.scrollTo( shared.domElements.$game, shared.domScrollTime, {
-				easing: 'easeInOutCubic',
+				easing: main.shared.domScrollEasing,
 				onAfter: function () {
 					
 					// if not paused

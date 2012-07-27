@@ -92,7 +92,9 @@
 		
 		// properties
 		
-		this.planting = new _Planting.Instance();
+		this.planting = new _Planting.Instance( {
+			affectUI: true
+		} );
 		
 		// actions
 		
@@ -104,7 +106,8 @@
 				drag: $.proxy( me.planting.step, me.planting ),
 				dragend: $.proxy( me.planting.complete, me.planting )
 			},
-			activeChecks: function () {
+			deactivateCallbacks: $.proxy( me.planting.stop, me.planting ),
+			activeCheck: function () {
 				return me.planting.started;
 			}
 		} );

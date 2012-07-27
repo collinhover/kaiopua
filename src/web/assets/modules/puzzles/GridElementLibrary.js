@@ -49,6 +49,8 @@
 		
 		_GridElementLibrary.shapeNames = [];
 		_GridElementLibrary.shapes = {};
+		_GridElementLibrary.skinNames = [];
+		_GridElementLibrary.skins = {};
 		
 		// monomino
 		
@@ -142,6 +144,12 @@
 			
 			if ( _GridElementLibrary.shapes.hasOwnProperty( shape ) ) {
 				
+				// add shape name to self
+				
+				_GridElementLibrary.shapes[ shape ].shape = shape;
+				
+				// store shape name in list
+				
 				_GridElementLibrary.shapeNames.push( shape );
 				
 				// disable and hide all shape buttons
@@ -164,19 +172,17 @@
 	
 	function build ( parameters ) {
 		
-		var shape;
-		
 		// handle parameters
 		
 		parameters = parameters || {};
 		
-		shape = _GridElementLibrary.shapes.hasOwnProperty( parameters.shape ) ? parameters.shape : 'monomino';
+		parameters.shape = _GridElementLibrary.shapes.hasOwnProperty( parameters.shape ) ? parameters.shape : 'monomino';
 		
 		// TODO: skin
 		
 		// copy shape parameters
 		
-		parameters = main.extend( parameters, _GridElementLibrary.shapes[ shape ] );
+		parameters = main.extend( parameters, _GridElementLibrary.shapes[ parameters.shape ] );
 		console.log( 'BUILD GRID ELEMENT', parameters );
 		return new _GridElement.Instance( parameters );
 		

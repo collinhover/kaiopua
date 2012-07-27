@@ -114,8 +114,6 @@
 	
 	function GridElement ( parameters ) {
 		
-		var c;
-		
 		// handle parameters
 		
 		parameters = parameters || {};
@@ -134,6 +132,7 @@
 		
 		// layout
 		
+		this.shape = parameters.shape;
 		this.layout = generate_layout.call( this, parameters.layout );
 		
 		// modules matrix from layout
@@ -146,8 +145,8 @@
 		
 		// customizations
 		
-		//c = parameters.customizations = parameters.customizations || {};
-		//c.geometry = c.geometry || new THREE.CubeGeometry( 60, 120, 60 );
+		//parameters.customizations = parameters.customizations || {};
+		//parameters.customizations.geometry = parameters.customizations.geometry || new THREE.CubeGeometry( 60, 120, 60 );
 		
 		this.customize( parameters.customizations );
 		
@@ -772,6 +771,13 @@
 				
 			}
 			
+			// clean current testModule's grid
+			
+			if ( this.testModule instanceof _GridModule.Instance && typeof this.testModule.grid !== 'undefined' ) {
+				
+				this.testModule.grid.clean();
+				
+			}
 			
 			// store as test
 			
@@ -784,14 +790,6 @@
 		// valid testModule
 		
 		if ( this.testModule instanceof _GridModule.Instance ) {
-			
-			// clean testModule's grid
-			
-			if ( typeof this.testModule.grid !== 'undefined' ) {
-				
-				this.testModule.grid.clean();
-				
-			}
 			
 			// basics
 			
@@ -1060,17 +1058,34 @@
 		var nodeTotal = 0;
 		
 		layout = layout || this.layout;
-		nodeType = main.is_number( nodeType ) ? nodeType : -1;
+		nodeType = typeof nodeType !== 'undefined' ? nodeType : _GridElement.NODE_SELF;
 		
-		each_layout_element.call( this, layout, function ( node ) {
+		if ( typeof nodeType === 'function' ) {
 			
-			if ( ( typeof nodeType === 'undefined' && node > 0 ) || ( main.is_number( nodeType ) ? node === nodeType : node instanceof nodeType ) )  {
+			each_layout_element.call( this, layout, function ( node ) {
 				
-				nodeTotal += 1;
+				if ( node instanceof nodeType )  {
+					
+					nodeTotal += 1;
+					
+				}
 				
-			}
+			} );
 			
-		} );
+		}
+		else {
+			
+			each_layout_element.call( this, layout, function ( node ) {
+				
+				if ( node === nodeType )  {
+					
+					nodeTotal += 1;
+					
+				}
+				
+			} );
+			
+		}
 		
 		return nodeTotal;
 		

@@ -816,31 +816,6 @@ var HAMMER = ( function ( main ) {
 		
 		me.id = _hammer_count++;
 		me.element = element;
-
-		// some css hacks
-		
-		if( options.css_hacks === true ) {
-			
-			var vendors = ['webkit','moz','ms','o',''];
-			var css_props = {
-				"userSelect": "none",
-				"touchCallout": "none",
-				"userDrag": "none",
-				"tapHighlightColor": "rgba(0,0,0,0)"
-			};
-
-			var prop = '';
-			for(var i = 0; i < vendors.length; i++) {
-				for(var p in css_props) {
-					prop = p;
-					if(vendors[i]) {
-						prop = vendors[i] + prop.substring(0, 1).toUpperCase() + prop.substring(1);
-					}
-					element.style[ prop ] = css_props[p];
-				}
-			}
-			
-		}
 		
 		function startGesture ( event ) {
 			

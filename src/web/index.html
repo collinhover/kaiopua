@@ -246,7 +246,7 @@
 											</div>
 										</a>
 									</li>
-									<li class="disabled">
+									<li class="disabled dim">
 										<a class="button-mapMenu nav-icon">
 											<div class="valign">
 												<div class="valign-cell"><img src="assets/icons/map_rev_64.png" class="iconk-large"></div>
@@ -564,7 +564,7 @@
 						
 						<div id="puzzleActiveWarning" class="alert alert-block alert-warning">
 							<p><strong>Hold up!</strong></p>
-							<p>You haven't started a puzzle yet. Check the tools section (above) to learn how to get started.</p>
+							<p>You're not working on a puzzle right now. Check the tools section (above) to learn how to get started.</p>
 						</div>
 						
 						<div id="puzzleActive" class="hidden">
@@ -577,132 +577,121 @@
 										<div id="puzzleActiveScoreBar" class="bar" style="width: 0%;"></div>
 									</div>
 								</div>
-								<div id="puzzleActivePlants" class="span3">
-									<h6>Plants</h6>
-									<div class="well well-success">
-										<div class="row">
-											<div class="span1 container-center">
-												<h2 class="squire-type puzzle-active-elementCount">0</h2>
-												<p>planted</p>
-											</div>
-											<div class="pull-right">
-												<div class="span1 container-center">
-													<h2 class="squire-type puzzle-active-numElementsMin">0</h2>
-													<p>goal</p>
-												</div>
-											</div>
-										</div>
-									</div>
+								<div id="puzzleActiveElementCounts" class="span1">
+									<h6>Planted</h6>
+									<h2 class="squire-type puzzle-active-elementCount">0</h2>
+									<h6>Goal</h6>
+									<h2 class="squire-type puzzle-active-numElementsMin">0</h2>
 								</div>
-								<div id="puzzleActiveStatus" class="span3">
-									<h6>Status: <span id="puzzleActiveStatusText">waiting</span></h6>
-									<div class="well">
-										<div id="puzzleActiveStatusIcons">
-											<img src="assets/icons/waiting_64.png" id="waiting" class="puzzle-statusIcon iconk-giant">
-											<img src="assets/icons/confirm_64.png" id="ready" class="puzzle-statusIcon iconk-giant hidden">
-											<img src="assets/icons/face_okay_64.png" id="okay" class="puzzle-statusIcon iconk-giant hidden">
-											<img src="assets/icons/face_good_64.png" id="good" class="puzzle-statusIcon iconk-giant hidden">
-											<img src="assets/icons/face_perfect_64.png" id="perfect" class="puzzle-statusIcon iconk-giant hidden">
-										</div>
+								<div id="puzzleActiveStatus" class="span5">
+									<h6>Status: <span id="puzzleActiveStatusText">waiting</span> <span id="puzzleActiveCompletionText"></span></h6>
+									<div id="puzzleActiveStatusIcons" class="well">
+										<img src="assets/icons/waiting_64.png" id="waiting" class="puzzle-statusIcon iconk-giant">
+										<img src="assets/icons/confirm_64.png" id="ready" class="puzzle-statusIcon iconk-giant hidden">
+										<img src="assets/icons/face_okay_64.png" id="okay" class="puzzle-completionIcon iconk-giant hidden">
+										<img src="assets/icons/face_good_64.png" id="good" class="puzzle-completionIcon iconk-giant hidden">
+										<img src="assets/icons/face_perfect_64.png" id="perfect" class="puzzle-completionIcon iconk-giant hidden">
 									</div>
 								</div>
 							</div>
 							
-							<h3>Choose Plant Shapes<small> pick the shapes you want to use for this puzzle</small></h3>
-							<div class="row">
-								<div class="span12">
-									<div id="puzzleActiveShapesRequiredWarning" class="alert alert-block alert-info">
-										<button type="button" class="close" data-dismiss="alert">&times;</button>
-										<strong>Check it out:</strong> You've got to choose as many shapes as the puzzle requires before you can start. (choose below)
+							<div id="puzzleActiveShapesPicker">
+								<h3>Choose Plant Shapes <small>pick the shapes you want to use for this puzzle</small></h3>
+								<div class="row">
+									<div class="span12">
+										<div id="puzzleActiveShapesRequiredWarning" class="alert alert-block alert-info">
+											<button type="button" class="close" data-dismiss="alert">&times;</button>
+											<strong>Check it out:</strong> You've got to choose as many shapes as the puzzle requires before you can start. (choose below)
+										</div>
 									</div>
 								</div>
-							</div>
-							<div class="row">
-								<div class="span1 container-center">
-									<p><small>(required)</small></p>
-									<h1 class="hero-type puzzle-active-numShapesRequired">1</h1>
-								</div>
-								<div id="puzzleActiveShapesPicker" class="span11">
-									<div class="grid-gutterless">
-										<ul class="thumbnails thumbnails4 shadowless">
-											<li class="span1 shape-monomino">
-												<div class="thumbnail">
-													<button class="btn btn-inverse btn-circle-small dim">
-														<img src="assets/icons/shape_monomino_rev_64.png" class="iconk-large">
-													</button>
-												</div>
-											</li>
-											<li class="span1 shape-domino">
-												<div class="thumbnail">
-													<button class="btn btn-inverse btn-circle-small dim">
-														<img src="assets/icons/shape_domino_rev_64.png" class="iconk-large">
-													</button>
-												</div>
-											</li>
-											<li class="span1 shape-trominoI">
-												<div class="thumbnail">
-													<button class="btn btn-inverse btn-circle-small dim">
-														<img src="assets/icons/shape_tromino_i_rev_64.png" class="iconk-large">
-													</button>
-												</div>
-											</li>
-											<li class="span1 shape-trominoL">
-												<div class="thumbnail">
-													<button class="btn btn-inverse btn-circle-small dim">
-														<img src="assets/icons/shape_tromino_l_rev_64.png" class="iconk-large">
-													</button>
-												</div>
-											</li>
-											<li class="span1 shape-tetrominoI">
-												<div class="thumbnail">
-													<button class="btn btn-inverse btn-circle-small dim">
-														<img src="assets/icons/shape_tetromino_i_rev_64.png" class="iconk-large">
-													</button>
-												</div>
-											</li>
-											<li class="span1 shape-tetrominoJ">
-												<div class="thumbnail">
-													<button class="btn btn-inverse btn-circle-small dim">
-														<img src="assets/icons/shape_tetromino_j_rev_64.png" class="iconk-large">
-													</button>
-												</div>
-											</li>
-											<li class="span1 shape-tetrominoL">
-												<div class="thumbnail">
-													<button class="btn btn-inverse btn-circle-small dim">
-														<img src="assets/icons/shape_tetromino_l_rev_64.png" class="iconk-large">
-													</button>
-												</div>
-											</li>
-											<li class="span1 shape-tetrominoO">
-												<div class="thumbnail">
-													<button class="btn btn-inverse btn-circle-small dim">
-														<img src="assets/icons/shape_tetromino_o_rev_64.png" class="iconk-large">
-													</button>
-												</div>
-											</li>
-											<li class="span1 shape-tetrominoS">
-												<div class="thumbnail">
-													<button class="btn btn-inverse btn-circle-small dim">
-														<img src="assets/icons/shape_tetromino_s_rev_64.png" class="iconk-large">
-													</button>
-												</div>
-											</li>
-											<li class="span1 shape-tetrominoT">
-												<div class="thumbnail">
-													<button class="btn btn-inverse btn-circle-small dim">
-														<img src="assets/icons/shape_tetromino_t_rev_64.png" class="iconk-large">
-													</button>
-												</div>
-											</li>
-											<li class="span1 shape-tetrominoZ">
-												<div class="thumbnail">
-													<button class="btn btn-inverse btn-circle-small dim">
-														<img src="assets/icons/shape_tetromino_z_rev_64.png" class="iconk-large">
-													</button>
-												</div>
-											</li>
-										</ul>
+								<div class="row">
+									<div class="span1 container-center">
+										<p><small>(required)</small></p>
+										<h1 class="hero-type puzzle-active-numShapesRequired">1</h1>
+									</div>
+									<div class="span11">
+										<div class="grid-gutterless">
+											<ul class="thumbnails thumbnails4 shadowless">
+												<li class="span1 shape-monomino">
+													<div class="thumbnail">
+														<button class="btn btn-inverse btn-circle-small dim">
+															<img src="assets/icons/shape_monomino_rev_64.png" class="iconk-large">
+														</button>
+													</div>
+												</li>
+												<li class="span1 shape-domino">
+													<div class="thumbnail">
+														<button class="btn btn-inverse btn-circle-small dim">
+															<img src="assets/icons/shape_domino_rev_64.png" class="iconk-large">
+														</button>
+													</div>
+												</li>
+												<li class="span1 shape-trominoI">
+													<div class="thumbnail">
+														<button class="btn btn-inverse btn-circle-small dim">
+															<img src="assets/icons/shape_tromino_i_rev_64.png" class="iconk-large">
+														</button>
+													</div>
+												</li>
+												<li class="span1 shape-trominoL">
+													<div class="thumbnail">
+														<button class="btn btn-inverse btn-circle-small dim">
+															<img src="assets/icons/shape_tromino_l_rev_64.png" class="iconk-large">
+														</button>
+													</div>
+												</li>
+												<li class="span1 shape-tetrominoI">
+													<div class="thumbnail">
+														<button class="btn btn-inverse btn-circle-small dim">
+															<img src="assets/icons/shape_tetromino_i_rev_64.png" class="iconk-large">
+														</button>
+													</div>
+												</li>
+												<li class="span1 shape-tetrominoJ">
+													<div class="thumbnail">
+														<button class="btn btn-inverse btn-circle-small dim">
+															<img src="assets/icons/shape_tetromino_j_rev_64.png" class="iconk-large">
+														</button>
+													</div>
+												</li>
+												<li class="span1 shape-tetrominoL">
+													<div class="thumbnail">
+														<button class="btn btn-inverse btn-circle-small dim">
+															<img src="assets/icons/shape_tetromino_l_rev_64.png" class="iconk-large">
+														</button>
+													</div>
+												</li>
+												<li class="span1 shape-tetrominoO">
+													<div class="thumbnail">
+														<button class="btn btn-inverse btn-circle-small dim">
+															<img src="assets/icons/shape_tetromino_o_rev_64.png" class="iconk-large">
+														</button>
+													</div>
+												</li>
+												<li class="span1 shape-tetrominoS">
+													<div class="thumbnail">
+														<button class="btn btn-inverse btn-circle-small dim">
+															<img src="assets/icons/shape_tetromino_s_rev_64.png" class="iconk-large">
+														</button>
+													</div>
+												</li>
+												<li class="span1 shape-tetrominoT">
+													<div class="thumbnail">
+														<button class="btn btn-inverse btn-circle-small dim">
+															<img src="assets/icons/shape_tetromino_t_rev_64.png" class="iconk-large">
+														</button>
+													</div>
+												</li>
+												<li class="span1 shape-tetrominoZ">
+													<div class="thumbnail">
+														<button class="btn btn-inverse btn-circle-small dim">
+															<img src="assets/icons/shape_tetromino_z_rev_64.png" class="iconk-large">
+														</button>
+													</div>
+												</li>
+											</ul>
+										</div>
 									</div>
 								</div>
 							</div>
@@ -876,7 +865,7 @@
 									<h6>plant</h6>
 								</div>
 								<div class="span4">
-									<h3 class="pull-right"><small>in the <span class="puzzle-active-name">Tutorial</span> Puzzle, at location <span id="plantActivePuzzleLocation">1</span></small></h3>
+									<h3 class="pull-right"><small>in the <span class="puzzle-active-name">Tutorial</span> Puzzle</small></h3>
 								</div>
 							</div>
 						
