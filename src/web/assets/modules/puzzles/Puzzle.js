@@ -256,6 +256,10 @@
 		this.scoreIcon = _Puzzle.scores.base.icon;
 		this.scoreMap = reset_score_map( this.scoreMap );
 		
+		// clean
+		
+		this.clean( true );
+		
 		// grid
 		
 		this.grid.reset();
@@ -270,15 +274,37 @@
 	
 	=====================================================*/
 	
-	function clean () {
+	function clean ( force ) {
 		
-		// TODO: remove any shapes in puzzle not in shapes list
+		var i, l,
+			elements,
+			element;
 		
+		// remove any element with shape in puzzle not in shapes list
 		
+		if ( this._dirtyShapes !== false || force === true ) {
+			
+			elements = this.elements;
+			
+			for ( i = 0, l = elements.length; i < l; i++ ) {
+				
+				element = elements[ i ];
+				
+				if ( this.shapes.indexOf( element.shape ) === -1 ) {
+					
+					element.change_module();
+					
+				}
+				
+			}
+			
+			this._dirtyShapes = false;
+			
+		}
 		
 		// clean grid
 		
-		this.grid.clean();
+		this.grid.clean( undefined, force );
 		
 	}
 	
@@ -395,15 +421,15 @@
 			this.shapes.splice( index, 1 );
 			removed = true;
 			
+			// set shapes dirty
+			
+			this._dirtyShapes = true;
+			
+			// signal
+			
+			this.shapesNeeded.dispatch( this );
+			
 		}
-		
-		// clean
-		
-		this.clean();
-		
-		// signal
-		
-		this.shapesNeeded.dispatch( this );
 		
 		return removed;
 	

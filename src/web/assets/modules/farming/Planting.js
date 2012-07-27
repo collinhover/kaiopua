@@ -1229,6 +1229,7 @@
 		
 		this.update_ui_puzzle();
 		
+		shared.signals.gameResumed.remove( on_resume, this );
 		this.puzzleLast.shapesNeeded.remove( this.update_ui_puzzle, this );
 		this.puzzleLast.shapesReady.remove( this.update_ui_puzzle, this );
 		
@@ -1257,6 +1258,16 @@
 			shared.domElements.$puzzleActiveElementCount.html( this.puzzle.elements.length );
 			shared.domElements.$puzzleActiveNumElementsMin.html( this.puzzle.numElementsMin );
 			
+		}
+		
+	}
+	
+	function on_resume () {
+		
+		if ( this.puzzle instanceof _Puzzle.Instance ) {
+			
+			this.puzzle.clean();
+		
 		}
 		
 	}
@@ -1355,6 +1366,7 @@
 			if ( this.puzzle instanceof _Puzzle.Instance ) {
 				
 				this.puzzle.shapesReady.add( this.update_ui_puzzle, this );
+				shared.signals.gameResumed.addOnce( on_resume, this );
 				
 				// select puzzle
 				

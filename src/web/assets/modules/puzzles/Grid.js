@@ -76,6 +76,9 @@
 		
 		_Grid.Instance.prototype.reset = reset;
 		_Grid.Instance.prototype.clean = clean;
+		
+		_Grid.Instance.prototype.remove_elements = remove_elements;
+		
 		_Grid.Instance.prototype.complete = complete;
 		
 		_Grid.Instance.prototype.each_module = each_module;
@@ -356,6 +359,7 @@
 				module.occupantAdded.add( on_occupant_added, this );
 				module.occupantRemoved.add( on_occupant_removed, this );
 				module.occupantChanged.add( on_occupant_changed, this );
+				module.dirty.add( on_module_dirty, this );
 				
 			}
 			
@@ -375,32 +379,9 @@
 	
 	function reset () {
 		
-		var i, l,
-			module,
-			occupant,
-			gridElement;
+		// remove all elements
 		
-		// for each module
-		
-		for ( i = 0, l = this.modules.length; i < l; i++ ) {
-			
-			module = this.modules[ i ];
-			occupant = module.occupant;
-			
-			if ( occupant instanceof _GridModel.Instance ) {
-				
-				gridElement = occupant.gridElement;
-				
-				gridElement.change_module();
-				
-			}
-			else {
-				
-				this.occupant = undefined;
-				
-			}
-			
-		}
+		this.remove_elements();
 		
 		// clean
 		
@@ -421,6 +402,47 @@
 			}, modulesExcluding );
 			
 			this._dirtyModules = false;
+			
+		}
+		
+	}
+	
+	/*===================================================
+	
+	occupants / elements
+	
+	=====================================================*/
+	
+	function remove_elements ( shape ) {
+		
+		var i, l,
+			module,
+			occupant,
+			gridElement;
+		
+		// for each module
+		
+		for ( i = 0, l = this.modules.length; i < l; i++ ) {
+			
+			module = this.modules[ i ];
+			occupant = module.occupant;
+			
+			if ( occupant instanceof _GridModel.Instance ) {
+				
+				gridElement = occupant.gridElement;
+				
+				if ( !shape || gridElement.shape === shape ) {
+					
+					gridElement.change_module();
+					
+				}
+				
+			}
+			else {
+				
+				module.occupant = undefined;
+				
+			}
 			
 		}
 		
@@ -787,6 +809,10 @@
 	
 	function on_occupant_changed ( module ) {
 		
+		// set dirty
+		
+		this._dirtyModules = true;
+		
 		// clean
 		
 		this.clean();
@@ -794,6 +820,14 @@
 		// signal
 		
 		this.stateChanged.dispatch( this, module );
+		
+	}
+	
+	function on_module_dirty ( module ) {
+		
+		// set dirty
+		
+		this._dirtyModules = true;
 		
 	}
 	

@@ -165,6 +165,7 @@
 		this.occupantRemoved = new signals.Signal();
 		this.occupantChanged = new signals.Signal();
 		this.activeChanged = new signals.Signal();
+		this.dirty = new signals.Signal();
 		
 		// states
 		
@@ -239,11 +240,8 @@
 		this._dirtyStates = true;
 		this._dirtyConnected = true;
 		
-		if ( typeof this.grid !== 'undefined' ) {
-			
-			this.grid._dirtyModules = true;
-			
-		}
+		this.dirty.dispatch( this );
+		
 	}
 	
 	function change_state ( ids, activates ) {
