@@ -169,12 +169,12 @@ img {
 	
 	&:not(.active) {
 		opacity: 0.65;
-		
-		&:hover {
-			opacity: 1;
-		}
 	}
 	
+}
+
+a.dim:hover, button.dim:hover, .btn.dim:hover {
+	opacity: 1;
 }
 
 .disabled {
@@ -1028,6 +1028,11 @@ a, .navbar .nav > li > a {
 		p {
 			margin: 0;
 		}
+		
+		.tools-sequenceArrow {
+			margin-top: 40px;
+		}
+		
 	}
 	
 	#puzzleActive {

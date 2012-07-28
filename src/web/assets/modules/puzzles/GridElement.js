@@ -133,6 +133,7 @@
 		// layout
 		
 		this.shape = parameters.shape;
+		this.skin = parameters.skin;
 		this.layout = generate_layout.call( this, parameters.layout );
 		
 		// modules matrix from layout
@@ -676,11 +677,22 @@
 			this.modules = modulesNew;
 			this._dirtyModule = true;
 			
-			// signal
+			// if has module
 			
 			if ( this.hasModule ) {
 				
+				// puzzle
+				
+				this.puzzle = this.module.puzzle;
+				
+				// signal
+				
 				this.module.activeChanged.add( this.occupy_modules, this );
+				
+			}
+			else {
+				
+				this.puzzle = undefined;
 				
 			}
 			

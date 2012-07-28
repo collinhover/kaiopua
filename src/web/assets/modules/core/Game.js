@@ -465,6 +465,13 @@
 		shared.domElements.$puzzleActiveRewards = $( "#puzzleActiveRewards" );
 		
 		shared.domElements.$plant = $('#plant');
+		shared.domElements.$plantActive = $("#plantActive");
+		shared.domElements.$plantActiveWarning = $("#plantActiveWarning");
+		shared.domElements.$plantActive3DPortrait = $("#plantActive3DPortrait");
+		shared.domElements.$plantActiveShape = $("#plantActiveShape");
+		shared.domElements.$plantActiveShapeIcon = $("#plantActiveShapeIcon");
+		shared.domElements.$plantActiveSkin = $("#plantActiveSkin");
+		shared.domElements.$plantActiveSkinIcon = $("#plantActiveSkinIcon");
 		
 		shared.domElements.$collection = $('#collection');
 		

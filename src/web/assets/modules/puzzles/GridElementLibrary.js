@@ -37,6 +37,8 @@
 	function init_internal( ge ) {
 		console.log( 'internal GridElementLibrary' );
 		var shape,
+			skin,
+			data,
 			$buttons;
 		
 		_GridElement = ge;
@@ -51,6 +53,8 @@
 		_GridElementLibrary.shapes = {};
 		_GridElementLibrary.skinNames = [];
 		_GridElementLibrary.skins = {};
+		
+		// shapes
 		
 		// monomino
 		
@@ -144,19 +148,69 @@
 			
 			if ( _GridElementLibrary.shapes.hasOwnProperty( shape ) ) {
 				
-				// add shape name to self
+				// get data
 				
-				_GridElementLibrary.shapes[ shape ].shape = shape;
+				data = _GridElementLibrary.shapes[ shape ];
 				
-				// store shape name in list
+				// properties
+				
+				data.shape = shape;
+				
+				// store name in list
 				
 				_GridElementLibrary.shapeNames.push( shape );
 				
-				// disable and hide all shape buttons
+				// disable and hide all buttons
 				
-				$buttons = _GridElementLibrary.shapes[ shape ].$buttons = $( ".shape-" + shape ).addClass( "disabled hidden" ).data( 'shape', shape );
-				_GridElementLibrary.shapes[ shape ].$buttonsPuzzleActive = shared.domElements.$puzzleActiveShapes.find( $buttons );
-				_GridElementLibrary.shapes[ shape ].$buttonsShapePicker = shared.domElements.$puzzleActiveShapesPicker.find( $buttons );
+				$buttons = data.$buttons = $( ".shape-" + shape ).addClass( "disabled hidden" ).data( 'shape', shape );
+				data.$buttonsPuzzleActive = shared.domElements.$puzzleActiveShapes.find( $buttons );
+				data.$buttonsShapePicker = shared.domElements.$puzzleActiveShapesPicker.find( $buttons );
+				data.picked = false;
+				
+			}
+			
+		}
+		
+		// skins
+		
+		_GridElementLibrary.skins.taro = {
+			//geometry: 'assets/models/Plant_Taro.js',
+			customizations: {
+				geometry: 'assets/models/Plant_Taro.js'
+			}
+		};
+		
+		_GridElementLibrary.skins.pineapple = {
+			geometry: 'assets/models/Plant_Pineapple.js'
+		};
+		
+		_GridElementLibrary.skins.rock = {
+			geometry: 'assets/models/Plant_Rock.js'
+		};
+		
+		// for each skin
+		
+		for ( skin in _GridElementLibrary.skins ) {
+			
+			if ( _GridElementLibrary.skins.hasOwnProperty( skin ) ) {
+				
+				// get data
+				
+				data = _GridElementLibrary.skins[ skin ];
+				
+				// properties
+				
+				data.skin = skin;
+				
+				// store name in list
+				
+				_GridElementLibrary.skinNames.push( skin );
+				
+				// TODO: disable and hide all buttons
+				
+				//$buttons = data.$buttons = $( ".skin-" + skin ).addClass( "disabled hidden" ).data( 'skin', skin );
+				//data.$buttonsPuzzleActive = shared.domElements.$puzzleActiveShapes.find( $buttons );
+				//data.$buttonsShapePicker = shared.domElements.$puzzleActiveShapesPicker.find( $buttons );
 				
 			}
 			
@@ -177,12 +231,12 @@
 		parameters = parameters || {};
 		
 		parameters.shape = _GridElementLibrary.shapes.hasOwnProperty( parameters.shape ) ? parameters.shape : 'monomino';
+		parameters.skin = _GridElementLibrary.skins.hasOwnProperty( parameters.skin ) ? parameters.skin : 'taro';
 		
-		// TODO: skin
-		
-		// copy shape parameters
+		// copy parameters
 		
 		parameters = main.extend( parameters, _GridElementLibrary.shapes[ parameters.shape ] );
+		parameters = main.extend( parameters, _GridElementLibrary.skins[ parameters.skin ] );
 		console.log( 'BUILD GRID ELEMENT', parameters );
 		return new _GridElement.Instance( parameters );
 		

@@ -94,6 +94,7 @@
 		_Planting.Instance.prototype.select_puzzle = select_puzzle;
 		_Planting.Instance.prototype.activate_plant = activate_plant;
 		_Planting.Instance.prototype.activate_puzzle = activate_puzzle;
+		_Planting.Instance.prototype.delete_plant = delete_plant;
 		
 		_Planting.Instance.prototype.start = start;
 		_Planting.Instance.prototype.step = step;
@@ -200,6 +201,7 @@
 		// plants
 		
 		this.add_collection_skin( 'taro' );
+		this.add_collection_skin( 'pineapple' );
 		this.add_collection_skin( 'rock' );
 		
 		// shapes
@@ -294,10 +296,7 @@
 		var shape,
 			shapeData,
 			$shapePicker,
-			$shapeActivator,
-			$button,
-			shapesChanged,
-			isActive;
+			shapesChanged;
 		
 		// if valid puzzle
 		
@@ -331,15 +330,9 @@
 			
 			if ( this.shapes.indexOf( shape ) !== -1 && $shapePicker ) {
 				
-				// find button in shape
+				// add / remove shapes based on whether picked
 				
-				$button = $shapePicker.find( 'button' ).andSelf().filter( 'button' );
-				
-				// add / remove shapes based on whether button active
-				
-				isActive = $button.hasClass( 'active' );
-				
-				if ( isActive === true ) {
+				if ( shapeData.picked ) {
 					
 					shapesChanged = this.puzzle.remove_shape( shape );
 					console.log( 'removing shape', shape, ' shapesChanged? ', shapesChanged );
@@ -354,26 +347,53 @@
 				
 				if ( shapesChanged === true ) {
 					
-					// toggle picker button
-					
-					$button.toggleClass( 'active' );
-					
-					// toggle shape activator if button was active
-					
-					$shapeActivator = shapeData.$buttonsPuzzleActive;
-					
-					if ( isActive === true ) {
-						
-						$shapeActivator.addClass( 'disabled hidden' );
-						
-					}
-					else {
-						
-						$shapeActivator.removeClass( 'disabled hidden' );
-						
-					}
+					toggle_shape_picked( shape );
 					
 				}
+				
+			}
+			
+		}
+		
+	}
+	
+	function toggle_shape_picked ( shape ) {
+		
+		var shape,
+			shapeData,
+			$shapePicker,
+			$shapeActivator,
+			$button,
+			shapesChanged,
+			picked;
+		
+		shapeData = _GridElementLibrary.shapes[ shape ];
+		
+		if ( shapeData ) {
+			
+			// get picker
+			
+			$shapePicker = shapeData.$buttonsShapePicker;
+			
+			// toggle picker button
+			
+			$button = $shapePicker.find( 'button' ).andSelf().filter( 'button' );
+			$button.toggleClass( 'active' );
+			
+			shapeData.picked = $button.hasClass( 'active' );
+			
+			// toggle shape activator if button was active
+			
+			$shapeActivator = shapeData.$buttonsPuzzleActive;
+			
+			if ( shapeData.picked === true ) {
+				
+				$shapeActivator.removeClass( 'disabled hidden' );
+				
+			}
+			else {
+				
+				$shapeActivator.addClass( 'disabled hidden' );
 				
 			}
 			
@@ -391,66 +411,76 @@
 		
 		var plant;
 		
-		// handle parameters
-		
-		parameters = parameters || {};
-		
-		// set pointer
-		
-		this.pointer = main.get_pointer( parameters.event );
-		
-		// if passed plant / parameters to use
-		
-		if ( parameters.plant ) {
+		if ( this.puzzle instanceof _Puzzle.Instance && this.puzzle.started === true ) {
 			
-			if ( parameters.plant instanceof _GridElement.Instance ) {
-				
-				plant = parameters.plant;
-				
-			}
-			else {
-				
-				plant = _GridElementLibrary.build( parameters.plant );
-				
-			}
+			// handle parameters
 			
-		}
-		// else try to find under pointer
-		else {
+			parameters = parameters || {};
 			
-			plant = this.get_planting_object_under_pointer( { modules: false, plants: true } );
+			// set pointer
 			
-			// if is a grid model, get grid element
+			this.pointer = main.get_pointer( parameters.event );
 			
-			if ( plant instanceof _GridModel.Instance ) {
+			// if passed plant / parameters to use
+			
+			if ( parameters.plant ) {
 				
-				plant = plant.gridElement;
-				
-			}
-			
-		}
-		
-		// if is a plant
-		
-		if ( plant instanceof _GridElement.Instance ) {
-			
-			// activate
-			
-			if ( parameters.activate === true ) {
-				
-				this.change_plant( plant );
-				
-			}
-			// select
-			else {
-				console.log( 'plant ', plant.id );
-				if ( this.affectUI === true ) {
+				if ( parameters.plant instanceof _GridElement.Instance ) {
 					
-					this.select_ui_plant();
+					plant = parameters.plant;
+					
+				}
+				else {
+					
+					plant = _GridElementLibrary.build( parameters.plant );
 					
 				}
 				
-				this.plantSelected.dispatch( plant );
+			}
+			// else try to find under pointer
+			else {
+				
+				plant = this.get_planting_object_under_pointer( { modules: false, plants: true } );
+				
+				// if is a grid model, get grid element
+				
+				if ( plant instanceof _GridModel.Instance ) {
+					
+					plant = plant.gridElement;
+					
+				}
+				
+			}
+			
+			// if is a plant
+			
+			if ( plant instanceof _GridElement.Instance ) {
+				
+				// store
+				
+				this.plantSelect = plant;
+				
+				// activate
+				
+				if ( parameters.activate === true ) {
+					
+					this.change_plant( plant );
+					
+				}
+				// select
+				else {
+					
+					this.plantSelected.dispatch( plant );
+					
+				}
+				
+				// ui
+				
+				if ( this.affectUI === true ) {
+				
+					this.select_ui_plant( plant, !parameters.activate );
+					
+				}
 				
 			}
 			
@@ -546,6 +576,64 @@
 		
 	}
 	
+	function delete_plant ( parameters ) {
+		
+		var plant;
+		
+		if ( this.puzzle instanceof _Puzzle.Instance && this.puzzle.started === true ) {
+			
+			// handle parameters
+			
+			parameters = parameters || {};
+			
+			// set pointer
+			
+			this.pointer = main.get_pointer( parameters.event );
+			
+			// if passed plant / parameters to use
+			
+			if ( parameters.plant instanceof _GridElement.Instance ) {
+				
+				plant = parameters.plant;
+				
+			}
+			// else try to find under pointer
+			else {
+				
+				plant = this.get_planting_object_under_pointer( { modules: false, plants: true } );
+				
+				// if is a grid model, get grid element
+				
+				if ( plant instanceof _GridModel.Instance ) {
+					
+					plant = plant.gridElement;
+					
+				}
+				
+			}
+			
+			// if plant found
+			
+			if ( plant instanceof _GridElement.Instance && plant.puzzle === this.puzzle ) {
+				console.log( 'PLANTING: deleting plant', plant );
+				
+				// clear select timeout
+				
+				if ( typeof this.selectPlantTimeout !== 'undefined' ) {
+					
+					window.clearRequestTimeout( this.selectPlantTimeout );
+					this.selectPlantTimeout = undefined;
+					
+				}
+				
+				plant.change_module();
+				
+			}
+			
+		}
+		
+	}
+	
 	/*===================================================
 	
 	start / step / complete / stop
@@ -556,7 +644,7 @@
 		
 		// if has not started planting and plant is valid
 		
-		if ( this.started !== true && this.puzzle instanceof _Puzzle.Instance && this.plant instanceof _GridElement.Instance ) {
+		if ( this.started !== true && this.puzzle instanceof _Puzzle.Instance && this.puzzle.started === true && this.plant instanceof _GridElement.Instance ) {
 			console.log('start PLANTING!');
 			
 			// set started
@@ -989,7 +1077,7 @@
 			
 			// handle new plant
 			
-			if ( plantNew instanceof _GridElement.Instance && /*this.skins.indexOf( plantNew.skin ) !== -1 && */this.shapes.indexOf( plantNew.shape ) !== -1 ) {
+			if ( plantNew instanceof _GridElement.Instance && this.skins.indexOf( plantNew.skin ) !== -1 && this.shapes.indexOf( plantNew.shape ) !== -1 ) {
 				console.log(' > PLANTING: plant to', this.plant);
 				this.plant = plantNew;
 				
@@ -1154,7 +1242,9 @@
 	function start_ui () {
 		
 		var i, l,
-			shape;
+			shape,
+			shapeData,
+			index;
 		
 		if ( this.puzzle instanceof _Puzzle.Instance ) {
 			
@@ -1165,28 +1255,59 @@
 				
 				// modify ui to reflect new puzzle
 				
+				// hide puzzle warning
 				main.dom_collapse( {
 					element: shared.domElements.$puzzleActiveWarning,
 					time: 0
 				} );
 				
+				// show puzzle
 				main.dom_collapse( {
 					element: shared.domElements.$puzzleActive,
 					show: true,
 					time: 0
 				} );
 				
+				// deselect plant
+				
+				this.select_ui_plant();
+				
 				// shapes
 				
 				shared.domElements.$puzzleActiveNumShapesRequired.html( this.puzzle.numShapesRequired );
-				console.log( ' this.shapes ', this.shapes.length, this.shapes );
+				console.log( ' this.shapes ', this.shapes.length, this.shapes, ' + puzzle shapes: ', this.puzzle.shapes.length, this.puzzle.shapes );
 				for ( i = 0, l = this.shapes.length; i < l; i++ ) {
 					
 					shape = this.shapes[ i ];
+					shapeData = _GridElementLibrary.shapes[ shape ];
 					
 					// add tap listeners
 					
 					_GridElementLibrary.shapes[ shape ].$buttonsShapePicker.removeClass( 'disabled' ).on( 'tap.shapeToggle', $.proxy( this.toggle_puzzle_shape, this ) );
+					
+					// toggle based on puzzle
+					
+					index = this.puzzle.shapes.indexOf( shape );
+					
+					// puzzle has shape
+					console.log( 'shape ', shape, ' picked? ', shapeData.picked );
+					if ( index !== -1 ) {
+						
+						// ensure is picked
+						
+						if ( shapeData.picked !== true ) {
+							console.log( ' > toggling shape on ', shape );
+							toggle_shape_picked( shape );
+							
+						}
+						
+					}
+					// ensure not picked
+					else if ( shapeData.picked !== false ) {
+						console.log( ' > toggling shape off ', shape );
+						toggle_shape_picked( shape );
+						
+					}
 					
 				}
 				
@@ -1202,6 +1323,21 @@
 				
 			}
 		
+		}
+		
+	}
+	
+	function update_ui () {
+		
+		if ( this.puzzle instanceof _Puzzle.Instance ) {
+			
+			// overview
+			
+			shared.domElements.$puzzleActiveName.html( this.puzzle.name );
+			shared.domElements.$puzzleActiveScoreBar.css( 'width', this.puzzle.scorePct + '%' );
+			shared.domElements.$puzzleActiveElementCount.html( this.puzzle.elements.length );
+			shared.domElements.$puzzleActiveNumElementsMin.html( this.puzzle.numElementsMin );
+			
 		}
 		
 	}
@@ -1233,32 +1369,23 @@
 		this.puzzleLast.shapesNeeded.remove( this.update_ui_puzzle, this );
 		this.puzzleLast.shapesReady.remove( this.update_ui_puzzle, this );
 		
+		// deselect plant
+		
+		this.select_ui_plant();
+		
 		// remove puzzle from ui
 		
+		// hide puzzle
 		main.dom_collapse( {
 			element: shared.domElements.$puzzleActive
 		} );
 		
+		// show puzzle warning
 		main.dom_collapse( {
 			element: shared.domElements.$puzzleActiveWarning,
 			show: true,
 			time: 0
 		} );
-		
-	}
-	
-	function update_ui () {
-		
-		if ( this.puzzle instanceof _Puzzle.Instance ) {
-			
-			// overview
-			
-			shared.domElements.$puzzleActiveName.html( this.puzzle.name );
-			shared.domElements.$puzzleActiveScoreBar.css( 'width', this.puzzle.scorePct + '%' );
-			shared.domElements.$puzzleActiveElementCount.html( this.puzzle.elements.length );
-			shared.domElements.$puzzleActiveNumElementsMin.html( this.puzzle.numElementsMin );
-			
-		}
 		
 	}
 	
@@ -1290,18 +1417,91 @@
 		
 	}
 	
-	function select_ui_plant () {
+	function select_ui_plant ( plant, moveScreen ) {
 		
-		if ( this.puzzle instanceof _Puzzle.Instance && this.puzzle.started === true ) {
+		var shape,
+			skin;
+		
+		// select
+		
+		if ( this.puzzle instanceof _Puzzle.Instance && this.puzzle.started === true && plant instanceof _GridElement.Instance ) {
+			console.log( 'PLANTING: plant select ', this.plantSelect, ' vs plant ', this.plant );
+			// if new
 			
-			// trigger farming menu
+			if ( this.plantSelect !== plant ) {
+				
+				this.plantSelect = plant;
+				
+			}
 			
-			shared.domElements.$buttonFarmingMenu.trigger( 'tap' );
+			// update information
 			
-			// scroll to plant
+			shape = this.plantSelect.shape;
+			skin = this.plantSelect.skin;
 			
-			$.scrollTo( shared.domElements.$plant, shared.domScrollTime, {
-				easing: main.shared.domScrollEasing
+			shared.domElements.$plantActiveShape.html( shape.charAt(0).toUpperCase() + shape.slice(1) );
+			shared.domElements.$plantActiveSkin.html( skin.charAt(0).toUpperCase() + skin.slice(1) );
+			
+			
+			// TODO: shape/skin icons
+			//shared.domElements.$plantActiveShapeIcon;
+			//shared.domElements.$plantActiveSkinIcon;
+			
+			
+			// TODO: show 3D portrait
+			//shared.domElements.$plantActive3DPortrait;
+			
+			
+			// hide plant warning
+			main.dom_collapse( {
+				element: shared.domElements.$plantActiveWarning,
+				time: 0
+			} );
+			
+			// show plant
+			main.dom_collapse( {
+				element: shared.domElements.$plantActive,
+				show: true,
+				time: 0
+			} );
+			
+			// if should move screen
+			
+			if ( moveScreen === true ) {
+				
+				// trigger farming menu
+				
+				shared.domElements.$buttonFarmingMenu.trigger( 'tap' );
+				
+				// scroll to plant
+				
+				$.scrollTo( shared.domElements.$plant, shared.domScrollTime, {
+					easing: main.shared.domScrollEasing
+				} );
+				
+			}
+			
+		}
+		// deselect
+		else if ( this.plantSelect instanceof _GridElement.Instance ) {
+			console.log( 'PLANTING: plant deselected');
+			this.plantSelect = undefined;
+			
+			
+			// TODO: stop 3D portrait
+			//shared.domElements.$plantActive3DPortrait;
+			
+			// show plant warning
+			main.dom_collapse( {
+				element: shared.domElements.$plantActiveWarning,
+				show: true,
+				time: 0
+			} );
+			
+			// hide plant
+			main.dom_collapse( {
+				element: shared.domElements.$plantActive,
+				time: 0
 			} );
 			
 		}
@@ -1341,7 +1541,7 @@
 				show: true
 			} );
 			
-			// show puzzle shapes and allow drag
+			// handle puzzle shape activators
 			
 			shapes = this.puzzle.shapes;
 			
@@ -1352,6 +1552,8 @@
 				_GridElementLibrary.shapes[ shape ].$buttonsPuzzleActive.on( 'dragstart.activatePlant', $.proxy( this.activate_plant, this ) );
 				
 			}
+			
+			// show shape activators
 			
 			main.dom_fade( { 
 				element: shared.domElements.$puzzleActiveShapes
@@ -1385,7 +1587,7 @@
 				element: $.merge( shared.domElements.$puzzleActiveMap, shared.domElements.$puzzleActiveRewards )
 			} );
 			
-			// hide shapes and disable drag
+			// disable all shape activators
 			
 			shapes = _GridElementLibrary.shapeNames;
 			
@@ -1396,6 +1598,8 @@
 				_GridElementLibrary.shapes[ shape ].$buttonsPuzzleActive.off( '.activatePlant' );
 				
 			}
+			
+			// hide shape activators
 			
 			main.dom_fade( { 
 				element: shared.domElements.$puzzleActiveShapes,

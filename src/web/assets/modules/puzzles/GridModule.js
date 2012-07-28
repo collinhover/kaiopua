@@ -102,6 +102,14 @@
 			}
 		});
 		
+		Object.defineProperty( _GridModule.Instance.prototype, 'puzzle', { 
+			get: function () { 
+				if ( this.grid ) {
+					return this.grid.puzzle;
+				}
+			}
+		});
+		
 		Object.defineProperty( _GridModule.Instance.prototype, 'grid', { 
 			get: function () { return this._grid; },
 			set: function ( grid ) {

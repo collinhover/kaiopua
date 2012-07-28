@@ -104,7 +104,8 @@
 				hold: $.proxy( me.planting.activate_puzzle, me.planting ),
 				dragstart: $.proxy( me.planting.activate_plant, me.planting ),
 				drag: $.proxy( me.planting.step, me.planting ),
-				dragend: $.proxy( me.planting.complete, me.planting )
+				dragend: $.proxy( me.planting.complete, me.planting ),
+				doubletap: $.proxy( me.planting.delete_plant, me.planting )
 			},
 			deactivateCallbacks: $.proxy( me.planting.stop, me.planting ),
 			activeCheck: function () {

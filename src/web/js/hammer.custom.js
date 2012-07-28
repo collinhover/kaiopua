@@ -33,7 +33,7 @@ var HAMMER = ( function ( main ) {
 
 			tap                : true,
 			tap_double         : true,
-			tap_max_interval   : 300,
+			tap_max_interval   : 200,
 			tap_max_distance   : 10,
 			tap_double_distance: 20,
 
