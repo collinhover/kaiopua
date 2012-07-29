@@ -116,7 +116,7 @@
 		
 		// quaternion between axes
 		
-		qToNew = _VectorHelper.q_to_axis( axisAwayNew, axisAway, axisForward );
+		qToNew = _VectorHelper.q_to_axis( axisAway, axisAwayNew, axisForward );
 		
 		if ( qToNew instanceof THREE.Quaternion ) {
 			

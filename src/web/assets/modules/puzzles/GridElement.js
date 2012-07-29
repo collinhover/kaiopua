@@ -42,11 +42,11 @@
     
     =====================================================*/
 	
-	function init_internal( m, gm, oh, mh ) {
+	function init_internal( gModel, gModule, oh, mh ) {
 		console.log('internal grid element', _GridElement);
 		
-		_GridModel = m;
-		_GridModule = gm;
+		_GridModel = gModel;
+		_GridModule = gModule;
 		_ObjectHelper = oh;
 		_MathHelper = mh;
 		
@@ -123,7 +123,7 @@
 		this.id = gridElementCount++;
 		this.rotationAngle = this.rotationAngleLayout = 0;
 		this.geometry = typeof parameters.geometry === 'string' ? main.get_asset_data( parameters.geometry ) : ( parameters.geometry || new THREE.CubeGeometry( _GridElement.sizeBase.x, _GridElement.sizeBase.y, _GridElement.sizeBase.z ) );
-		this.material = parameters.material || new THREE.MeshLambertMaterial( { vertexColors: THREE.VertexColors, shading: THREE.SmoothShading } );
+		this.material = parameters.material instanceof THREE.Material ? _ObjectHelper.clone_material( parameters.material ) : new THREE.MeshLambertMaterial( { vertexColors: THREE.VertexColors, shading: THREE.SmoothShading } );
 		this.materialBase = _ObjectHelper.clone_material( this.material );
 		
 		this.timeGrow = main.is_number( parameters.timeGrow ) ? parameters.timeGrow : _GridElement.timeGrow;
@@ -140,14 +140,16 @@
 		
 		this.modules = this.layout.dup();
 		
+		// container
+		
+		this.container = main.extend( parameters.container, {} );
+		this.container.material = this.material;
+		
 		// models
 		
 		this.models = generate_models.call( this, parameters.models );
 		
 		// customizations
-		
-		//parameters.customizations = parameters.customizations || {};
-		//parameters.customizations.geometry = parameters.customizations.geometry || new THREE.CubeGeometry( 60, 120, 60 );
 		
 		this.customize( parameters.customizations );
 		
@@ -172,7 +174,9 @@
 	function reset_material () {
 		
 		this.material.color.copy( this.materialBase.color );
-		this.material.ambient.copy( this.materialBase.ambient );
+		if ( this.material.ambient ) {
+			this.material.ambient.copy( this.materialBase.ambient );
+		}
 		this.material.vertexColors = this.materialBase.vertexColors;
 		this.material.transparent = false;
 		this.material.opacity = 1;
@@ -516,13 +520,13 @@
 						
 						layoutModule.occupant = model;
 						
-						// set scale to 0
+						// set core scale to 0
 						
-						model.scale.set( 0, 0, 0 );
+						model.core.scale.set( 0, 0, 0 );
 						
-						// tween scale to 1
+						// grow core
 						
-						model.tween_properties( {
+						model.core.tween_properties( {
 							time: this.timeGrow,
 							easing: TWEEN.Easing.Back.EaseOut,
 							scale: this.utilVec31Grow.set( 1, 1, 1 )
@@ -582,7 +586,7 @@
 		*/
 		// angle from current to new
 		
-		angleDelta = _MathHelper.shortest_rotation_between_angles( this.rotationAngleLayout, this.rotationAngle )
+		angleDelta = _MathHelper.shortest_rotation_between_angles( this.rotationAngleLayout, this.rotationAngle );
 		
 		// rotate layout by angleDelta
 		
@@ -1002,7 +1006,9 @@
 			if ( this.testSuccess === true ) {
 				
 				this.material.color.copy( _GridModule.colors.vacant );
-				this.material.ambient.copy( _GridModule.colors.vacant );
+				if ( this.material.ambient ) {
+					this.material.ambient.copy( _GridModule.colors.vacant );
+				}
 				this.material.transparent = true;
 				this.material.opacity = _GridElement.opacityVacant;
 				
@@ -1011,7 +1017,9 @@
 			else if ( this.testModule instanceof _GridModule.Instance ) {
 				
 				this.material.color.copy( _GridModule.colors.occupied );
-				this.material.ambient.copy( _GridModule.colors.occupied );
+				if ( this.material.ambient ) {
+					this.material.ambient.copy( _GridModule.colors.occupied );
+				}
 				this.material.transparent = true;
 				this.material.opacity = _GridElement.opacityOccupied;
 			

@@ -52,6 +52,9 @@
 		_VectorHelper.distance_to = distance_to;
 		_VectorHelper.rotate_vector3_relative_to = rotate_vector3_relative_to;
 		_VectorHelper.rotate_vector3_to_mesh_rotation = rotate_vector3_to_mesh_rotation;
+		_VectorHelper.angle_between_vectors = angle_between_vectors;
+		_VectorHelper.signed_angle_between_coplanar_vectors = signed_angle_between_coplanar_vectors;
+		_VectorHelper.axis_between_vectors = axis_between_vectors;
 		_VectorHelper.q_to_axis = q_to_axis;
 		_VectorHelper.get_orthonormal_vectors = get_orthonormal_vectors;
 		_VectorHelper.get_rotation_to_normal = get_rotation_to_normal;
@@ -129,11 +132,38 @@
 		
 	}
 	
-	function q_to_axis ( axisTo, axisFrom, axisFromRightAngle ) {
+	function angle_between_vectors ( vFrom, vTo ) {
+		
+		var dist = _MathHelper.clamp( vFrom.dot( vTo ), -1, 1 );
+		
+		return Math.acos( dist );
+		
+	}
+	
+	function signed_angle_between_coplanar_vectors ( vFrom, vTo, vNormal ) {
+		
+		/*var sina = |Va x Vb| / ( |Va| * |Vb| );
+			cosa = (Va . Vb) / ( |Va| * |Vb| );
+
+		angle = atan2( sina, cosa );*/
+		
+		var angle = angle_between_vectors( vFrom, vTo ),
+			sign = vNormal.dot( axis_between_vectors( vFrom, vTo ) );
+		
+		return sign < 0 ? -angle : angle;
+		
+	}
+	
+	function axis_between_vectors ( vFrom, vTo ) {
+		
+		return utilVec31Axis.cross( vFrom, vTo ).normalize();
+		
+	}
+	
+	function q_to_axis ( axisFrom, axisTo, axisOrthonormal ) {
 		
 		var ca = shared.cardinalAxes,
-			dist,
-			axis = utilVec31Axis,
+			axis,
 			angle,
 			qToA = utilQ1Axis;
 		
@@ -141,27 +171,22 @@
 		
 		axisFrom = axisFrom || ca.up;
 		
-		axisFromRightAngle = axisFromRightAngle || ca.forward;
+		// angle
 		
-		// find dist between current axis up and average of normals
+		angle = angle_between_vectors( axisFrom, axisTo );
 		
-		dist = _MathHelper.clamp( axisFrom.dot( axisTo ), -1, 1 );
-		
-		// if up axes are not same
-		
-		if ( dist !== 1 ) {
+		if ( angle !== 0 ) {
 			
-			// axis / angle
+			// axis
 			
-			angle = Math.acos( dist );
-			axis.cross( axisFrom, axisTo ).normalize();
+			axis = axis_between_vectors( axisFrom, axisTo );
 			
 			// if new axis is exactly opposite of current
-			// replace new axis with the forward axis
+			// replace new axis with orthonormal axis
 			
 			if ( axis.length() === 0 ) {
 				
-				axis.copy( axisFromRightAngle );
+				axis.copy( axisOrthonormal || get_orthonormal_vectors( axisFrom, true ) );
 				
 			}
 			
@@ -184,7 +209,7 @@
     
     =====================================================*/
 	
-	function get_orthonormal_vectors ( v1 ) {
+	function get_orthonormal_vectors ( v1, one ) {
 		
 		// returns 2 orthographic ( perpendicular ) vectors to the first
 		
@@ -225,9 +250,18 @@
 		v2.y -= v1[ minAxis ] * v1.y;
 		v2.z -= v1[ minAxis ] * v1.z;
 		
-		v3.cross( v1, v2 );
-		
-		return { v1: v1, v2: v2, v3: v3 };
+		if ( one === true ) {
+			
+			return v2;
+			
+		}
+		else {
+			
+			v3.cross( v1, v2 );
+			
+			return { v1: v1, v2: v2, v3: v3 };
+			
+		}
 		
 	}
 	

@@ -727,7 +727,7 @@
 		
 		// find quaternion to go from average of normals to current axis up
 		
-		return _VectorHelper.q_to_axis( axisUp, normalAvg, axisForward );
+		return _VectorHelper.q_to_axis( normalAvg, axisUp, axisForward );
 		
 	}
 	

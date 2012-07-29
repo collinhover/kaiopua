@@ -379,16 +379,10 @@
 				// axis / angle
 				
 				pcRotToRotOffsetAngle = Math.acos( pcRotToRotOffsetDist );
-				pcRotToRotOffsetAxis = utilVec33Update.cross( caForward, rotOffsetAxis );
-				pcRotToRotOffsetAxis.normalize();
-				
-				// rotation change
-				
-				pcRotToRotOffsetQ = utilQ32Update.setFromAxisAngle( pcRotToRotOffsetAxis, pcRotToRotOffsetAngle );
 				
 				// update player rotation y
 				
-				pc.rotate_by_delta( pcRotToRotOffsetQ.x, pcRotToRotOffsetQ.y, pcRotToRotOffsetQ.z, pcRotToRotOffsetQ.w );
+				pc.rotate_by_angle( pcRotToRotOffsetAngle );
 				
 				// reset rot offset
 				

@@ -14,6 +14,7 @@
 		_Model,
 		_Actions,
 		_MathHelper,
+		_VectorHelper,
 		characterName = 'Character',
 		utilQ1Rotate;
 	
@@ -29,7 +30,8 @@
 			"assets/modules/core/Game.js",
 			"assets/modules/core/Model.js",
 			"assets/modules/core/Actions.js",
-			"assets/modules/utils/MathHelper.js"
+			"assets/modules/utils/MathHelper.js",
+			"assets/modules/utils/VectorHelper.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -41,7 +43,7 @@
     
     =====================================================*/
 	
-	function init_internal ( g, m, ac, mh ) {
+	function init_internal ( g, m, ac, mh, vh ) {
 		console.log('internal Character', _Character);
 		// modules
 		
@@ -49,6 +51,7 @@
 		_Model = m;
 		_Actions = ac;
 		_MathHelper = mh;
+		_VectorHelper = vh;
 		
 		// utility
 		
@@ -61,7 +64,8 @@
 		_Character.Instance.prototype.constructor = _Character.Instance;
 		
 		_Character.Instance.prototype.move_state_change = move_state_change;
-		_Character.Instance.prototype.rotate_by_delta = rotate_by_delta;
+		_Character.Instance.prototype.rotate_by_direction = rotate_by_direction;
+		_Character.Instance.prototype.rotate_by_angle = rotate_by_angle;
 		_Character.Instance.prototype.stop_jumping = stop_jumping;
 		_Character.Instance.prototype.morph_cycle = morph_cycle;
 		
@@ -158,8 +162,11 @@
 		
 		// rotate
 		rotate = this.movement.rotate = {};
-		rotate.speed = parametersMovement.rotateSpeed || 0.015;
-		rotate.direction = new THREE.Vector3();
+		rotate.lerpDelta = parametersMovement.lerpDelta || 0.05;
+		rotate.direction = new THREE.Vector3( 0, 0, 1 );
+		rotate.directionLast = rotate.direction.clone();
+		rotate.angle = 0;
+		rotate.axis = new THREE.Vector3( 0, 1, 0 );
 		rotate.delta = new THREE.Quaternion();
 		rotate.vector = new THREE.Quaternion();
 		
@@ -187,9 +194,8 @@
 		state.right = 0;
 		state.forward = 0;
 		state.back = 0;
-		state.turnleft = 0;
-		state.turnright = 0;
 		state.moving = false;
+		state.movingHorizontal = false;
 		state.movingBack = false;
 		state.moveType = '';
 		
@@ -218,13 +224,51 @@
 	
 	function move_state_change ( propertyName, stop ) {
 		
-		var state = this.movement.state;
+		var movement = this.movement,
+			state = movement.state,
+			rotate = movement.rotate,
+			rotateDirection = rotate.direction,
+			forwardBack;
 		
 		// handle state property
 		
 		if ( state.hasOwnProperty( propertyName ) ) {
 			
 			state[ propertyName ] = stop === true ? 0 : 1;
+			
+		}
+		
+		// rotation
+		
+		if ( state.forward === 1 ) {
+			
+			rotateDirection.z = 1;
+			rotateDirection.x = 0;
+			forwardBack = true;
+			
+		}
+		else if ( state.back === 1 ) {
+			
+			rotateDirection.z = -1;
+			rotateDirection.x = 0;
+			forwardBack = true;
+			
+		}
+		
+		if ( state.left === 1 || state.right === 1 ) {
+			
+			rotateDirection.x = state.left - state.right;
+			
+			if ( forwardBack !== true ) {
+				
+				rotateDirection.z = 0;
+				
+			}
+			else {
+				
+				rotateDirection.normalize();
+				
+			}
 			
 		}
 		
@@ -236,21 +280,48 @@
 	
 	=====================================================*/
 	
-	function rotate_by_delta ( dx, dy, dz, dw ) {
+	function rotate_by_direction ( dx, dy, dz ) {
 		
-		var q = this.quaternion,
-			rotate = this.movement.rotate,
+		var rotate = this.movement.rotate;
+		
+		// update direction
+		
+		if ( main.is_number( dx ) ) {
+			
+			rotate.direction.x = dx;
+			
+		}
+		
+		if ( main.is_number( dy ) ) {
+			
+			rotate.direction.y = dy;
+			
+		}
+		
+		if ( main.is_number( dz ) ) {
+			
+			rotate.direction.z = dz;
+			
+		}
+		
+	}
+	
+	function rotate_by_angle ( rotateAngleDelta ) {
+		
+		var rotate = this.movement.rotate,
+			rotateAxis = rotate.axis,
 			rotateDelta = rotate.delta,
-			rotateVec = rotate.vector,
-			rotateUtilQ1 = utilQ1Rotate;
+			rotateAngleTarget = _MathHelper.degree_between_180( rotate.angle + rotateAngleDelta ),
+			rotateAngleDeltaShortest = _MathHelper.shortest_rotation_between_angles( rotate.angle, rotateAngleTarget );
 		
-		rotateDelta.set( dx || 0, dy || 0, dz || 0, dw || 1 ).normalize();
+		// find delta quaternion
 		
-		rotateVec.multiplySelf( rotateDelta );
+		rotateDelta.setFromAxisAngle( rotateAxis, rotateAngleDeltaShortest );
 		
-		rotateUtilQ1.multiply( q, rotateDelta );
+		// copy deltas
 		
-		q.copy( rotateUtilQ1 );
+		rotateDelta.multiplyVector3( rotate.direction );
+		rotate.angle = rotateAngleTarget;
 		
 	}
 	
@@ -348,9 +419,15 @@
 			rotate = movement.rotate,
 			jump = movement.jump,
 			state = movement.state,
-			rotateDir = rotate.direction,
+			rotateAngleDelta,
+			rotateAngleDeltaShortest,
+			rotateAngleTarget,
+			rotateAxis = rotate.axis,
+			rotateDirection = rotate.direction,
+			rotateDirectionLast = rotate.directionLast,
 			rotateDelta = rotate.delta,
-			rotateSpeed = rotate.speed * timeDeltaMod,
+			rotateLerpDelta = rotate.lerpDelta * timeDeltaMod,
+			rotateNewQ = utilQ1Rotate,
 			moveDir = move.direction,
 			moveVec = move.vector,
 			moveSpeed = move.speed * timeDeltaMod,
@@ -374,16 +451,20 @@
 			terminalVelocity,
 			playSpeedModifier;
 		
-		// update vectors with state
-		
-		moveDir.x = ( state.left - state.right );
-		moveDir.z = ( state.forward - state.back );
-		
-		rotateDir.y = ( state.turnleft - state.turnright );
-		
 		// set moving
 				
-		if ( state.forward === 1 || state.back === 1 || state.turnleft === 1 || state.turnright === 1 || state.up === 1 || state.down === 1 || state.left === 1 || state.right === 1 ) {
+		if ( state.forward === 1 || state.back === 1 || state.left === 1 || state.right === 1 ) {
+			
+			state.movingHorizontal = true;
+			
+		}
+		else {
+			
+			state.movingHorizontal = false;
+			
+		}
+		
+		if ( state.movingHorizontal || state.up === 1 || state.down === 1 ) {
 			
 			state.moving = true;
 			
@@ -394,9 +475,41 @@
 			
 		}
 		
-		// rotate self
+		// update directions with state
 		
-		this.rotate_by_delta( rotateDir.x * rotateSpeed, rotateDir.y * rotateSpeed, rotateDir.z * rotateSpeed, 1 );
+		// movement
+		
+		moveDir.z = state.movingHorizontal ? 1 : 0;
+		
+		// update rotation
+		
+		// get signed angle between directions
+		
+		rotateAngleDelta = _VectorHelper.signed_angle_between_coplanar_vectors( rotateDirectionLast, rotateDirection, rotateAxis ) * rotateLerpDelta;
+		
+		if ( state.movingHorizontal === true && rotateAngleDelta !== 0 ) {
+			
+			// find target angle
+			
+			rotateAngleTarget = _MathHelper.degree_between_180( rotate.angle + rotateAngleDelta );
+			
+			// find shortest angle to target
+			
+			rotateAngleDeltaShortest = _MathHelper.shortest_rotation_between_angles( rotate.angle, rotateAngleTarget );
+			
+			// modify quaternion
+			
+			rotateDelta.setFromAxisAngle( rotateAxis, rotateAngleDeltaShortest );
+			rotateNewQ.multiply( this.quaternion, rotateDelta );
+			
+			this.quaternion.copy( rotateNewQ );
+			
+			// copy delta
+			
+			rotateDelta.multiplyVector3( rotateDirectionLast );
+			rotate.angle = rotateAngleTarget;
+			
+		}
 		
 		// velocity
 		

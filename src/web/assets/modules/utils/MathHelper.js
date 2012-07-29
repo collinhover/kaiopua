@@ -109,14 +109,6 @@
 		
 	};
 	
-	_MathHelper.angle_between_vectors = function ( vFrom, vTo ) {
-		
-		var dist = _MathHelper.clamp( vFrom.dot( vTo ), -1, 1 );
-		
-		return Math.acos( dist );
-		
-	};
-	
 	_MathHelper.rotate_matrix2d_90 = function ( matrix2d, degrees ) {
 		
 		var i, l,

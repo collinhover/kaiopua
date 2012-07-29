@@ -153,7 +153,7 @@
 			
 			posVec.copy( this.object.position ).normalize();
 			
-			angleA = _MathHelper.angle_between_vectors( this.axisTarget, posVec );
+			angleA = _VectorHelper.angle_between_vectors( posVec, this.axisTarget );
 			
 			lengthC = this.object.position.length();
 			lengthA = ( Math.sin( angleA ) * lengthC ) / Math.sin( Math.PI * 0.5 );

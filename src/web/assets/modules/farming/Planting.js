@@ -499,10 +499,10 @@
 		
 		// find puzzle toggle switch under pointer
 		
-		toggleSwitch = _Game.get_pointer_object( {
+		toggleSwitch = _Game.get_pointer_intersection( {
 			objects: _Puzzle.allToggleSwitches,
-			hierarchical: false,
-			pointer: main.get_pointer( parameters.event )
+			pointer: main.get_pointer( parameters.event ),
+			objectOnly: true
 		} );
 		
 		// if toggle switch found
@@ -688,7 +688,7 @@
 				// find if any planting objects under pointer
 				
 				targetObject = this.get_planting_object_under_pointer( { modules: true } );
-				
+				console.log( '>>> target module is ', targetObject );
 				// change to new module
 				
 				this.change_module( targetObject );
@@ -849,6 +849,13 @@
 				
 			}
 			
+			/*targetObject = _Game.get_pointer_intersection( {
+				objects: this.puzzle.grid.modules,
+				pointer: this.pointer,
+				hierarchySearch: false,
+				objectOnly: true
+			} );*/
+			
 			// plants
 			
 			if ( parameters.plants === true ) {
@@ -858,11 +865,10 @@
 			}
 			
 			// find if any planting objects under pointer
-			
-			targetObject = _Game.get_pointer_object( {
+			targetObject = _Game.get_pointer_intersection( {
 				objects: plantingObjects,
-				hierarchical: false,
-				pointer: this.pointer
+				pointer: this.pointer,
+				objectOnly: true
 			} );
 			
 		}

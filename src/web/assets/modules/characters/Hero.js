@@ -80,7 +80,6 @@
 		parameters.movement.moveSpeed = 6;
 		parameters.movement.moveSpeedBack = 2;
 		parameters.movement.moveRunThreshold = parameters.movement.moveSpeed;
-		parameters.movement.rotateSpeed = 0.019;
 		parameters.movement.jumpSpeedStart = 8;
 		parameters.movement.jumpSpeedEnd = 0;
 		parameters.movement.jumpTimeMax = 100;

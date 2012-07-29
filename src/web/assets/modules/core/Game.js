@@ -114,6 +114,8 @@
 			{ path: "assets/models/Palm_Trees.js", type: 'model' },
 			{ path: "assets/models/Kukui_Tree.js", type: 'model' },
 			{ path: "assets/models/Kukui_Trees.js", type: 'model' },
+			{ path: "assets/models/Plant_Dirt_Mound.js", type: 'model' },
+			{ path: "assets/models/Plant_Seed.js", type: 'model' },
 			{ path: "assets/models/Plant_Taro.js", type: 'model' },
 			{ path: "assets/models/Plant_Pineapple.js", type: 'model' },
 			{ path: "assets/models/Plant_Rock.js", type: 'model' },
@@ -181,7 +183,6 @@
 	_Game.remove_from_scene = remove_from_scene;
 	
 	_Game.get_pointer_intersection = get_pointer_intersection;
-	_Game.get_pointer_object = get_pointer_object;
 	
 	// getters and setters
 	
@@ -1070,18 +1071,6 @@
 		// intersection
 		
 		return _RayHelper.raycast( parameters );
-		
-	}
-	
-	function get_pointer_object ( parameters ) {
-		
-		var intersection = get_pointer_intersection( parameters );
-		
-		if ( typeof intersection !== 'undefined' ) {
-			
-			return intersection.object;
-			
-		}
 		
 	}
 	

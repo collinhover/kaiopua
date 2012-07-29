@@ -360,9 +360,12 @@
 	function raycast ( parameters ) {
 		
 		var i, l,
+			j, k,
 			ray,
 			ignore,
 			objects,
+			object,
+			children,
 			colliders,
 			camera,
 			pointer,
@@ -370,8 +373,10 @@
 			projector = utilProjector1Casting,
 			octree,
 			far,
-			hierarchical,
+			hierarchySearch,
+			hierarchyIntersect,
 			intersections = [],
+			childIntersections,
 			intersectionPotential,
 			intersectedObject,
 			intersectionDistance = Number.MAX_VALUE,
@@ -384,9 +389,11 @@
 		objects = main.ensure_array( parameters.objects ).slice( 0 );
 		colliders = main.ensure_array( parameters.colliders ).slice( 0 );
 		octree = parameters.octree;
-		hierarchical = parameters.hierarchical;
+		hierarchySearch = parameters.hierarchySearch;
+		hierarchyIntersect = parameters.hierarchyIntersect;
 		camera = parameters.camera;
 		pointer = parameters.pointer;
+		ignore = parameters.ignore;
 		
 		// ray
 		
@@ -467,13 +474,43 @@
 		
 		if ( objects.length > 0 ) {
 		
-			// account for hierarchy and extract all children of objects
+			// account for hierarchy
 			
-			if ( hierarchical !== false ) {
+			if ( hierarchySearch !== false ) {
 				
-				objects = _SceneHelper.extract_children_from_objects( objects, objects );
+				// if intersection of hierarchy allowed, add all object children to objects list
+				
+				if ( hierarchyIntersect === true ) {
+					
+					objects = _SceneHelper.extract_children_from_objects( objects, objects );
+				
+				}
+				// else raycast children and add reference to ancestor
+				else {
+					
+					for ( i = 0, l = objects.length; i < l; i++ ) {
+						
+						object = objects[ i ];
+						
+						children = _SceneHelper.extract_children_from_objects( object );
+						
+						childIntersections = raycast_objects( ray, children );
+						
+						for ( j = 0, k = childIntersections.length; j < k; j++ ) {
+							
+							childIntersections[ j ].ancestor = object;
+							
+						}
+						
+						intersections = intersections.concat( childIntersections );
+						
+					}
+					
+				}
 				
 			}
+			
+			// raycast objects
 			
 			intersections = intersections.concat( raycast_objects( ray, objects ) );
 			
@@ -525,6 +562,23 @@
 			else {
 				
 				intersection = intersections[ 0 ];
+				
+			}
+			
+			// if needs object only
+			
+			if ( parameters.objectOnly === true && intersection ) {
+				
+				if ( hierarchyIntersect !== true && intersection.ancestor ) {
+					
+					intersection = intersection.ancestor;
+					
+				}
+				else {
+					
+					intersection = intersection.object;
+					
+				}
 				
 			}
 			

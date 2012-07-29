@@ -228,7 +228,7 @@
 		
 		actions.add( 'pointer', {
 			eventCallbacks: {
-				drag: function ( parameters ) {
+				/*drag: function ( parameters ) {
 					
 					// start rotating camera if character is not acting
 					
@@ -245,7 +245,7 @@
 					
 					cameraControls.rotate( undefined, true );
 					
-				},
+				},*/
 				wheel: function ( parameters ) {
 					
 					cameraControls.zoom( parameters.event );
@@ -284,10 +284,10 @@
 		actions.add( 'a left_arrow', {
 			eventCallbacks: {
 				down: function () {
-					character_move( 'turnleft' );
+					character_move( 'left' );
 				},
 				up: function () {
-					character_move( 'turnleft', true );
+					character_move( 'left', true );
 				}
 			},
 			deactivateCallbacks: 'up'
@@ -296,10 +296,10 @@
 		actions.add( 'd right_arrow', {
 			eventCallbacks: {
 				down: function () {
-					character_move( 'turnright' );
+					character_move( 'right' );
 				},
 				up: function () {
-					character_move( 'turnright', true );
+					character_move( 'right', true );
 				}
 			},
 			deactivateCallbacks: 'up'
@@ -580,7 +580,13 @@
 		
 		// select
 			
-		selectedModel = _Game.get_pointer_object( pointer );
+		selectedModel = _Game.get_pointer_intersection( {
+			pointer: pointer,
+			// TODO: objects
+			hierarchySearch: true,
+			hierarchyIntersect: true,
+			objectOnly: true
+		} );
 		
 		// if a selection was made
 		

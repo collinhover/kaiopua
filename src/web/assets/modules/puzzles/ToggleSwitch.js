@@ -55,33 +55,6 @@
 	
 	/*===================================================
     
-    events
-    
-    =====================================================*/
-	
-	function on_toggle ( e, pointer ) {
-		
-		var toggleTarget;
-		
-		// find toggle target 
-		
-		toggleTarget = _Game.get_pointer_object( {
-			octree: octree,
-			pointer: pointer
-		} );
-		console.log( ' TOGGLE EVENT, toggleTarget ', toggleTarget );
-		// if pointer toggling any switch
-		
-		if ( toggleTarget instanceof ToggleSwitch ) {
-			
-			toggleTarget.toggle();
-			
-		}
-		
-	}
-	
-	/*===================================================
-    
     instance
     
     =====================================================*/

@@ -174,18 +174,24 @@
 		// skins
 		
 		_GridElementLibrary.skins.taro = {
-			//geometry: 'assets/models/Plant_Taro.js',
+			container: {
+				geometry: 'assets/models/Plant_Dirt_Mound.js'
+			},
 			customizations: {
 				geometry: 'assets/models/Plant_Taro.js'
 			}
 		};
 		
 		_GridElementLibrary.skins.pineapple = {
-			geometry: 'assets/models/Plant_Pineapple.js'
+			customizations: {
+				geometry: 'assets/models/Plant_Pineapple.js'
+			}
 		};
 		
 		_GridElementLibrary.skins.rock = {
-			geometry: 'assets/models/Plant_Rock.js'
+			customizations: {
+				geometry: 'assets/models/Plant_Rock.js'
+			}
 		};
 		
 		// for each skin
@@ -201,6 +207,7 @@
 				// properties
 				
 				data.skin = skin;
+				data.geometry = data.geometry || 'assets/models/Plant_Seed.js';
 				
 				// store name in list
 				

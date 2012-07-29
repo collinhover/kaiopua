@@ -62,12 +62,18 @@
 		parameters = parameters || {};
 		
 		gridElement = parameters.gridElement;
+		parameters.container = parameters.container || gridElement.container;
 		parameters.material = parameters.material || gridElement.material;
 		parameters.geometry = parameters.geometry || gridElement.geometry;
 		
 		// proto
+		console.log( 'GRID MODEL, parameters', parameters );
+		_Model.Instance.call( this, parameters.container );
 		
-		_Model.Instance.call( this, parameters );
+		// core
+		
+		this.core = new _Model.Instance( parameters );
+		this.add( this.core );
 		
 		// properties
 		
