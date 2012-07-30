@@ -88,6 +88,11 @@
 		
 		parameters = parameters || {};
 		
+		// shared
+		
+		shared.universeGravitySource = parameters.universeGravitySource instanceof THREE.Vector3 ? parameters.universeGravitySource : shared.universeGravitySource;
+		shared.universeGravityMagnitude = parameters.universeGravityMagnitude instanceof THREE.Vector3 ? parameters.universeGravityMagnitude : shared.universeGravityMagnitude;
+		
 		// util
 		
 		this.utilVec31Update = new THREE.Vector3();
@@ -103,8 +108,6 @@
 		
 		// properties
 		
-		this.worldGravitySource = parameters.worldGravitySource instanceof THREE.Vector3 ? parameters.worldGravitySource : new THREE.Vector3( 0, 0, 0 );
-		this.worldGravityMagnitude = parameters.worldGravityMagnitude instanceof THREE.Vector3 ? parameters.worldGravityMagnitude : new THREE.Vector3( 0, -1, 0 );
 		this.timeWithoutIntersectionThreshold = main.is_number( parameters.timeWithoutIntersectionThreshold ) ? parameters.timeWithoutIntersectionThreshold : _Physics.timeWithoutIntersectionThreshold;
 		
 		this.bodies = [];
@@ -323,15 +326,15 @@
 				
 				gravityOrigin.copy( gravityMesh.matrixWorld.getPosition() );
 				
-				gravityMagnitude.copy( rigidBody.gravityMagnitude || this.worldGravityMagnitude );
+				gravityMagnitude.copy( rigidBody.gravityMagnitude || shared.universeGravityMagnitude );
 				
 			}
 			// else use world gravity
 			else {
 				
-				gravityOrigin.copy( this.worldGravitySource );
+				gravityOrigin.copy( shared.universeGravitySource );
 				
-				gravityMagnitude.copy( this.worldGravityMagnitude );
+				gravityMagnitude.copy( shared.universeGravityMagnitude );
 				
 			}
 			
@@ -339,7 +342,7 @@
 			
 			// rotate to stand on source
 			
-			_PhysicsHelper.rotate_relative_to_source( mesh, gravityOrigin, rigidBody.axes.up, rigidBody.axes.forward, rigidBody.lerpDelta, rigidBody );
+			_PhysicsHelper.rotate_relative_to_source( mesh.quaternion, mesh.position, gravityOrigin, rigidBody.axes.up, rigidBody.axes.forward, rigidBody.lerpDelta, rigidBody );
 			
 			// movement velocity
 			

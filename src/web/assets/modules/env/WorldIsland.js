@@ -150,7 +150,7 @@
 		me.parts.sun.position.set( 0, 4000, 0 );
 		me.parts.sun.quaternion.setFromAxisAngle( new THREE.Vector3( 0, 0, 1 ), Math.PI );
 		
-		_PhysicsHelper.rotate_relative_to_source( me.parts.sun, me.parts.body, shared.cardinalAxes.forward.clone().negate(), shared.cardinalAxes.up );
+		_PhysicsHelper.rotate_relative_to_source( me.parts.sun.quaternion, me.parts.sun.position, me.parts.body, shared.cardinalAxes.forward.clone().negate(), shared.cardinalAxes.up );
 		
 		me.add( me.parts.sun );
 		

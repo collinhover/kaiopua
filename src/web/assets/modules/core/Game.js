@@ -297,6 +297,11 @@
     
     function init_setup () {
 		
+		// universe gravity
+		
+		shared.universeGravitySource = new THREE.Vector3( 0, 0, 0 );
+		shared.universeGravityMagnitude = new THREE.Vector3( 0, -1, 0 );
+		
 		// cardinal axes
 		
 		shared.cardinalAxes = {

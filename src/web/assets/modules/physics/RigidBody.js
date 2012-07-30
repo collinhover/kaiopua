@@ -726,22 +726,15 @@
 	
 	function change_gravity_body ( gravityBody, ease ) {
 		
-		var index;
+		var index,
+			gravityBodyLast = this.gravityBody;
 		
 		// if in middle of change already
 		
 		if ( this.gravityBodyChanging !== false ) {
 			
 			change_gravity_body_end.call( this );
-			
-		}
 		
-		// remove from previous gravity body
-		
-		if ( this.gravityBody instanceof RigidBody ) {
-			
-			remove_gravity_child.call( this.gravityBody, this );
-			
 		}
 		
 		// new gravity body
@@ -774,6 +767,12 @@
 			}
 			
 		}
+		// remove from previous gravity body
+		else if ( gravityBodyLast instanceof RigidBody ) {
+			
+			remove_gravity_child.call( gravityBodyLast, this );
+			
+		}
 		
 	}
 	
@@ -795,6 +794,16 @@
 	function add_gravity_child ( gravityChild ) {
 		
 		var index;
+		
+		// remove from previous gravity body
+		
+		if ( gravityChild.gravityBody instanceof RigidBody ) {
+			
+			remove_gravity_child.call( gravityChild.gravityBody, gravityChild );
+			
+		}
+		
+		// add to new
 		
 		index = this.gravityChildren.indexOf( gravityChild );
 		

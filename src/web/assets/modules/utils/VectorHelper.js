@@ -72,7 +72,7 @@
 	
 	function distance_to ( vecFrom, vecTo ) {
 		
-		return Math.sqrt( utilVec31Distance.sub( vecFrom, vecTo ).lengthSq() );
+		return Math.sqrt( utilVec31Distance.sub( vecTo, vecFrom ).lengthSq() );
 		
 	}
 	

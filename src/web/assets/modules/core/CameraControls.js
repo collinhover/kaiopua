@@ -13,13 +13,8 @@
 		_CameraControls = {},
 		_ObjectHelper,
 		_MathHelper,
-		firstPersonDist = 50,
-		rotateRecordedThreshold = 4,
-		utilVec31Update,
-		utilVec32Update,
-		utilVec33Update,
-		utilQ31Update,
-		utilQ32Update;
+		_VectorHelper,
+		_PhysicsHelper;
 	
 	/*===================================================
     
@@ -31,7 +26,9 @@
 		data: _CameraControls,
 		requirements: [
 			"assets/modules/utils/ObjectHelper.js",
-			"assets/modules/utils/MathHelper.js"
+			"assets/modules/utils/MathHelper.js",
+			"assets/modules/utils/VectorHelper.js",
+			"assets/modules/utils/PhysicsHelper.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -43,27 +40,18 @@
     
     =====================================================*/
 	
-	function init_internal ( oh, mh ) {
+	function init_internal ( oh, mh, vh, ph ) {
 		console.log('internal cameracontrols');
 		// assets
 		
 		_ObjectHelper = oh;
 		_MathHelper = mh;
-		
-		// utility
-		
-		utilVec31Update = new THREE.Vector3();
-		utilVec32Update = new THREE.Vector3();
-		utilVec33Update = new THREE.Vector3();
-		utilQ31Update = new THREE.Quaternion();
-		utilQ32Update = new THREE.Quaternion();
+		_VectorHelper = vh;
+		_PhysicsHelper = ph;
 		
 		// instance
 		
 		_CameraControls.Instance = CameraControls;
-		_CameraControls.Instance.prototype.rotate = rotate;
-		_CameraControls.Instance.prototype.rotate_update = rotate_update;
-		_CameraControls.Instance.prototype.rotate_revert = rotate_revert;
 		_CameraControls.Instance.prototype.zoom = zoom;
 		_CameraControls.Instance.prototype.update = update;
 		
@@ -83,19 +71,6 @@
 			}
 		});
 		
-		Object.defineProperty( _CameraControls.Instance.prototype, 'player', { 
-			get : function () { return this._player; },
-			set : function ( newPlayer ) {
-				
-				if ( typeof newPlayer !== 'undefined' ) {
-					
-					this._player = newPlayer;
-					
-				}
-				
-			}
-		});
-		
 	}
 	
 	/*===================================================
@@ -104,168 +79,53 @@
     
     =====================================================*/
 	
-	function CameraControls ( player, camera ) {
+	function CameraControls ( camera, target ) {
 		
 		var pRot,
 			pPos;
 		
-		// camera
+		// utility
+		
+		this.utilVec31Update = new THREE.Vector3();
+		this.utilVec32Update = new THREE.Vector3();
+		this.utilVec33Update = new THREE.Vector3();
+		this.utilQ31Update = new THREE.Quaternion();
+		this.utilQ32Update = new THREE.Quaternion();
+		
+		// properties
 		
 		this.camera = camera;
+		this.target = target;
 		
-		// player
+		this.position = new THREE.Vector3();
+		this.quaternion = new THREE.Quaternion();
 		
-		this.player = player;
+		this.up = new THREE.Vector3( 0, 1, 0 );
 		
-		// controller settings
+		this.positionOffset = new THREE.Vector3( 0, 50, 550 );
+		this.positionOffsetMin = new THREE.Vector3( 0, 50, 200 );
+		this.positionOffsetMax = new THREE.Vector3( 0, 50, 1200 );
+		this.positionOffsetDelta = new THREE.Vector3();
+		this.positionOffsetDeltaMin = new THREE.Vector3( -40, -40, -40 );
+		this.positionOffsetDeltaMax = new THREE.Vector3( 40, 40, 40 );
+		this.positionOffsetDeltaSpeedMin = 0.1;
+		this.positionOffsetDeltaSpeedMax = 0.3;
+		this.positionOffsetDeltaDecay = 0.7;
 		
-		this.settingsRotation = pRot = new PropertySettings();
-		this.settingsPosition = pPos = new PropertySettings();
+		this.rotationOffset = new THREE.Vector3( -40, 0, 0 );
 		
-		pRot.base.setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), Math.PI );
-		pRot.offsetBase.set( 15, 0, 0 );//( 50, 0, 0 );
-		pRot.offset.copy( pRot.offsetBase );
-		pRot.offsetMin.set( -75, -360, 0 );
-		pRot.offsetMax.set( 75, 360, 0 );
-		pRot.deltaMin.set( -40, -40, -40 );
-		pRot.deltaMax.set( 40, 40, 40 );
-		pRot.deltaSpeedMax = pRot.deltaSpeedMin = 0.1;
-		pRot.baseRevertSpeed = 0.05;
-		
-		pPos.offsetBase.set( 0, 50, 550 );//( 0, 50, 300 );
-		pPos.offset.copy( pPos.offsetBase );
-		pPos.offsetMin.set( 0, 0, -25 );
-		pPos.offsetMax.set( 0, 50, 1200 );
-		pPos.offsetSnap.copy( pPos.offset );
-		pPos.offsetSnapToMinDist.set( 0, 0, firstPersonDist );
-		pPos.deltaMin.set( -80, -80, -80 );
-		pPos.deltaMax.set( 80, 80, 80 );
-		pPos.deltaSpeedMin = 0.1;
-		pPos.deltaSpeedMax = 0.3;
-		pPos.deltaDecay = 0.7;
-		
-		// misc
-		
-		this.firstPerson = false;
-		this.rotatedRecently = false;
-		
-	}
-	
-	/*===================================================
-    
-    property settings
-    
-    =====================================================*/
-	
-	function PropertySettings () {
-		
-		this.base = new THREE.Quaternion();
-		this.baseRevertSpeed = 1;
-		this.offsetBase = new THREE.Vector3();
-		this.offsetSnap = new THREE.Vector3();
-		this.offset = new THREE.Vector3();
-		this.offsetMin = new THREE.Vector3();
-		this.offsetMax = new THREE.Vector3();
-		this.offsetSnapToMinDist = new THREE.Vector3();
-		this.offsetSnapToMaxDist = new THREE.Vector3();
-		this.delta = new THREE.Vector3();
-		this.deltaMin = new THREE.Vector3();
-		this.deltaMax = new THREE.Vector3();
-		this.deltaTotal = new THREE.Vector3();
-		this.deltaSpeedMin = 0;
-		this.deltaSpeedMax = 0;
-		this.deltaDecay = 0.8;
-		
-	}
-	
-	/*===================================================
-	
-	rotate
-	
-	=====================================================*/
-	
-	function rotate ( e, end ) {
-		
-		var pointer;
-		
-		// end rotation
-		if ( end === true ) {
-			
-			// reset
-			
-			shared.signals.gamePointerDragged.remove( rotate_update, this );
-			
-			this.settingsRotation.pointer = undefined;
-			
-			this.rotating = false;
-			
-		}
-		// start rotation
-		else {
-			
-			// store pointer
-			
-			this.settingsRotation.pointer = main.get_pointer( e );
-			
-			// reset properties
-			
-			this.settingsRotation.deltaTotal.set( 0, 0, 0 );
-			this.settingsRotation.delta.set( 0, 0, 0 );
-			this.rotating = false;
-			
-			// update
-			
-			shared.signals.gamePointerDragged.add( rotate_update, this );
-			
-		}
-		
-	}
-	
-	function rotate_update () {
-		
-		var pRot = this.settingsRotation,
-			rotDelta = pRot.delta,
-			rotDeltaMin = pRot.deltaMin,
-			rotDeltaMax = pRot.deltaMax,
-			rotDeltaSpeed = pRot.deltaSpeedMin,
-			rotDeltaTotal = pRot.deltaTotal,
-			rotDeltaX,
-			rotDeltaY,
-			pointer = pRot.pointer;
-		
-		// pitch
-		
-		rotDelta.x = _MathHelper.clamp( rotDelta.x + pointer.deltaY * rotDeltaSpeed, rotDeltaMin.x, rotDeltaMax.x );
-		
-		// yaw
-		
-		rotDelta.y = _MathHelper.clamp( rotDelta.y - pointer.deltaX * rotDeltaSpeed, rotDeltaMin.y, rotDeltaMax.y );
-		
-		// if totals above start threshold
-		
-		if ( this.rotatedRecently !== true ) {
-			
-			rotDeltaTotal.addSelf( rotDelta );
-			
-			if ( rotDeltaTotal.length() > rotateRecordedThreshold ) {
-				
-				this.rotating = true;
-				
-			}
-			
-		}
-		
-	}
-	
-	function rotate_revert ( speed ) {
-		
-		var pRot = this.settingsRotation,
-			rotBaseRevertSpeed = speed || pRot.baseRevertSpeed,
-			rotOffsetBase = pRot.offsetBase,
-			rotOffset = pRot.offset;
-		
-		if ( rotOffset.x !== rotOffsetBase.x ) rotOffset.x += (rotOffsetBase.x - rotOffset.x) * rotBaseRevertSpeed;
-		if ( rotOffset.y !== rotOffsetBase.y ) rotOffset.y += (rotOffsetBase.y - rotOffset.y) * rotBaseRevertSpeed;
+		this.distanceThresholdPassed = false;
+		this.distanceThresholdMin = 1;
+		this.distanceThresholdPct = 0.35;
+		this.distanceThresholdMax = this.positionOffset.length() * this.distanceThresholdPct;
+		this.distanceSpeedPctMax = 0.25;
+		this.distanceSpeedPctMin = 0.01;
+		this.distanceSpeedPctAlphaGrow = 0.025;
+		this.distanceSpeedPctAlphaShrink = 0.1;
+		this.distanceSpeedPct = this.distanceSpeedPctMin;
+		this.distanceSpeed = 0;
+		this.distanceNormal = new THREE.Vector3();
+		this.distanceMagnitude = new THREE.Vector3();
 		
 	}
 	
@@ -279,22 +139,22 @@
 		
 		var eo = e.originalEvent || e,
 			wheelDelta = eo.wheelDelta,
-			pPos = this.settingsPosition,
-			posOffset = pPos.offset,
-			posOffsetMin = pPos.offsetMin,
-			posOffsetMax = pPos.offsetMax,
-			posDelta = pPos.delta,
-			posDeltaMin = pPos.deltaMin,
-			posDeltaMax = pPos.deltaMax,
-			posDeltaSpeed,
-			posOffsetZMinMaxDist = posOffsetMax.z - posOffsetMin.z,
-			posOffsetPctToMin = (posOffset.z - posOffsetMin.z) / posOffsetZMinMaxDist;
+			positionOffset = this.positionOffset,
+			positionOffsetMin = this.positionOffsetMin,
+			positionOffsetMax = this.positionOffsetMax,
+			positionOffsetDeltaMin = this.positionOffsetDeltaMin,
+			positionOffsetDeltaMax = this.positionOffsetDeltaMax,
+			positionOffsetDelta = this.positionOffsetDelta,
+			positionOffsetDeltaSpeedMin = this.positionOffsetDeltaSpeedMin,
+			positionOffsetDeltaSpeedMax = this.positionOffsetDeltaSpeedMax,
+			positionOffsetPctToMin = (positionOffset.z - positionOffsetMin.z) / ( positionOffsetMax.z - positionOffsetMin.z ),
+			positionOffsetDeltaSpeed;
 		
-		// set new zoom
+		// set new zoom delta
 		
-		posDeltaSpeed = pPos.deltaSpeedMin * ( 1 - posOffsetPctToMin ) + pPos.deltaSpeedMax * posOffsetPctToMin;
+		positionOffsetDeltaSpeed = positionOffsetDeltaSpeedMin * ( 1 - positionOffsetPctToMin ) + positionOffsetDeltaSpeedMax * positionOffsetPctToMin;
 		
-		posDelta.z = _MathHelper.clamp( posDelta.z - wheelDelta * posDeltaSpeed, posDeltaMin.z, posDeltaMax.z );
+		positionOffsetDelta.z = _MathHelper.clamp( positionOffsetDelta.z - wheelDelta * positionOffsetDeltaSpeed, positionOffsetDeltaMin.z, positionOffsetDeltaMax.z );
 		
 	}
 	
@@ -306,131 +166,162 @@
 	
 	function update ( timeDelta ) {
 		
-		var pRot = this.settingsRotation,
-			pPos = this.settingsPosition,
-			posOffset = pPos.offset,
-			posOffsetMin = pPos.offsetMin,
-			posOffsetMax = pPos.offsetMax,
-			posOffsetSnap = pPos.offsetSnap,
-			posOffsetSnapToMinDist = pPos.offsetSnapToMinDist,
-			posDelta = pPos.delta,
-			posDeltaDecay = pRot.deltaDecay,
-			rotBase = pRot.base,
-			rotBaseRevertSpeed = pRot.baseRevertSpeed,
-			rotOffsetBase = pRot.offsetBase,
-			rotOffset = pRot.offset,
-			rotOffsetMin = pRot.offsetMin,
-			rotOffsetMax = pRot.offsetMax,
-			rotDelta = pRot.delta,
-			rotDeltaDecay = pRot.deltaDecay,
-			player = this.player,
-			pc = player.character,
-			cardinalAxes = shared.cardinalAxes,
-			caForward = cardinalAxes.forward,
-			caUp = cardinalAxes.up,
-			rotOffsetQ,
-			rotOffsetAxis,
-			pcRotToRotOffsetDist,
-			pcRotToRotOffsetAngle,
-			pcRotToRotOffsetAxis,
-			pcRotToRotOffsetQ;
+		var target = this.target,
+			scale = Math.max( target.scale.x, target.scale.y, target.scale.z ),
+			gravityBody = target.gravityBody,
+			gravityMesh,
+			upReferencePosition,
+			distance,
+			distanceDiff,
+			distanceSpeedMod,
+			qToNew,
+			angle,
+			axis,
+			positionOffset = this.positionOffset,
+			positionOffsetMin = this.positionOffsetMin,
+			positionOffsetMax = this.positionOffsetMax,
+			positionOffsetDelta = this.positionOffsetDelta,
+			positionOffsetScaled,
+			rotationOffsetQ = this.utilQ31Update.setFromEuler( this.rotationOffset ).normalize();
 		
-		// add delta to offset
-		// snap to min when within snapping dist
+		// make sure camera and target parents are same
 		
-		if ( posDelta.z > 0 && posOffset.z === posOffsetMin.z ) {
+		if ( this.camera.parent !== target.parent ) {
 			
-			posOffsetSnap.z = posOffsetMin.z + posOffsetSnapToMinDist.z;
+			target.parent.add( this.camera );
 			
 		}
 		
-		posOffset.z = posOffsetSnap.z = _MathHelper.clamp( posOffsetSnap.z + posDelta.z, posOffsetMin.z, posOffsetMax.z );
+		// update position offset
 		
-		if ( posOffsetSnap.z - posOffsetSnapToMinDist.z <= posOffsetMin.z ) {
+		positionOffset.z = _MathHelper.clamp( positionOffset.z + positionOffsetDelta.z, positionOffsetMin.z, positionOffsetMax.z );
+		positionOffsetScaled = this.utilVec31Update.copy( positionOffset ).multiplyScalar( scale );
+		
+		// decay position offset delta
+		
+		positionOffsetDelta.multiplyScalar( this.positionOffsetDeltaDecay );
+		
+		// get distance to target position
+		
+		distance = _VectorHelper.distance_to( this.position, target.position );
+		
+		if ( distance > this.distanceThresholdMin ) {
 			
-			posOffset.z = posOffsetMin.z;
+			// update threshold max based on position offset
 			
-		}
-		
-		rotOffset.x = _MathHelper.clamp( rotOffset.x + rotDelta.x, rotOffsetMin.x, rotOffsetMax.x );
-		rotOffset.y = _MathHelper.clamp( rotOffset.y + rotDelta.y, rotOffsetMin.y, rotOffsetMax.y );
-		
-		// normalize rotation (between 180 and -180)
-		
-		rotOffset.x = _MathHelper.degree_between_180( rotOffset.x );
-		rotOffset.y = _MathHelper.degree_between_180( rotOffset.y );
-		
-		// check if should change between third and first
-		
-		if ( posOffset.z - firstPersonDist <= posOffsetMin.z ) {
+			this.distanceThresholdMax = positionOffsetScaled.length() * this.distanceThresholdPct;
 			
-			if ( this.firstPerson !== true && rotOffset.y !== 0 ) {
+			// if greater than max threshold, move with target at max distance
+			
+			if ( distance - this.distanceThresholdMin > this.distanceThresholdMax ) {
 				
-				// get axis and angle between rot offset y rotation and forward
+				distanceDiff = distance - this.distanceThresholdMax;
 				
-				rotOffsetQ = utilQ31Update.setFromAxisAngle( utilVec31Update.copy( caUp ), rotOffset.y * Math.PI / 180 );
+				// change flag
 				
-				rotOffsetAxis = utilVec32Update.copy( caForward );
+				this.distanceThresholdPassed = true;
 				
-				rotOffsetQ.multiplyVector3( rotOffsetAxis );
+				// update speed
 				
-				pcRotToRotOffsetDist = Math.max( -1, Math.min( 1, caForward.dot( rotOffsetAxis ) ) );
+				this.distanceSpeed = Math.max( this.distanceSpeed, distanceDiff );
 				
-				// axis / angle
+			}
+			// if distance threshold not yet passed, slow movement while target moving, speed up when stopped
+			else if ( this.distanceThresholdPassed === false ) {
 				
-				pcRotToRotOffsetAngle = Math.acos( pcRotToRotOffsetDist );
+				// get speed pct
 				
-				// update player rotation y
+				if ( target.moving === true ) {
+					
+					this.distanceSpeedPct += ( this.distanceSpeedPctMin - this.distanceSpeedPct ) * this.distanceSpeedPctAlphaShrink;
+					
+				}
+				else {
+					
+					this.distanceSpeedPct += ( this.distanceSpeedPctMax - this.distanceSpeedPct ) * this.distanceSpeedPctAlphaGrow;
+					
+				}
 				
-				pc.rotate_by_angle( pcRotToRotOffsetAngle );
+				// update speed
 				
-				// reset rot offset
-				
-				rotOffset.y = 0;
+				this.distanceSpeed = Math.max( this.distanceSpeed, distance * this.distanceSpeedPct );
 				
 			}
 			
-			this.firstPerson = true;
+			// get speed modifier
+			
+			distanceSpeedMod = Math.min( 1, distance / Math.max( this.distanceSpeed, this.distanceThresholdMax ) );
+			
+			// normal / magnitude to target
+			
+			this.distanceNormal.sub( target.position, this.position ).normalize();
+			this.distanceMagnitude.copy( this.distanceNormal ).multiplyScalar( this.distanceSpeed * distanceSpeedMod );
+			
+			// update position
+			
+			this.position.addSelf( this.distanceMagnitude );
+			
+		}
+		// reset position variables
+		else if ( this.distanceThresholdPassed !== false ) {
+			
+			this.position.copy( target.position );
+			this.distanceSpeed = 0;
+			this.distanceThresholdPassed = false;
+			
+		}
+		
+		// find angle and axis
+		
+		if ( gravityBody ) {
+			
+			gravityMesh = gravityBody.mesh;
+			upReferencePosition = gravityMesh.matrixWorld.getPosition();
 			
 		}
 		else {
 			
-			this.firstPerson = false;
+			upReferencePosition = shared.universeGravitySource;
 			
 		}
 		
-		// if in first person mode
-		// rotate character on y axis with camera
+		// rotate quaternion
 		
-		if ( this.firstPerson === true ) {
+		qToNew = _PhysicsHelper.rotate_relative_to_source ( this.quaternion, this.position, upReferencePosition, this.up, undefined, 1 );
+		
+		// if rotation change
+		
+		if ( qToNew instanceof THREE.Quaternion ) {
 			
-			// update player rotation y
+			// update up direction
 			
-			pc.rotate_by_delta( 0, rotDelta.y / 180, 0, 1 );
+			qToNew.multiplyVector3( this.up );
 			
-			// remove rot delta from offset
-			// as will be copied when camera follows player
+			// copy rotation
 			
-			rotOffset.y -= rotDelta.y;
+			this.camera.quaternion.copy( this.quaternion );
+			
+			// apply target turn
+			
+			if ( target.turn instanceof THREE.Quaternion ) {
+				
+				this.camera.quaternion.multiplySelf( target.turn );
+				
+			}
+			
+			// apply rotation offset
+			
+			this.camera.quaternion.multiplySelf( rotationOffsetQ );
 			
 		}
-		// if player is not in first person and moving but not rotating camera
-		// move rotation offset back towards original
-		else if ( typeof pRot.pointer === 'undefined' && player.moving === true ) {
-			
-			this.rotate_revert();
-			
-		}
 		
-		// follow player
+		// adjust position
 		
-		_ObjectHelper.object_follow_object( this.camera, pc, posOffset, rotBase, rotOffset );
+		this.camera.quaternion.multiplyVector3( positionOffsetScaled );
 		
-		// decay deltas
+		// apply position
 		
-		posDelta.multiplyScalar( posDeltaDecay );
-		
-		rotDelta.multiplyScalar( rotDeltaDecay );
+		this.camera.position.copy( this.position ).addSelf( positionOffsetScaled );
 		
 	}
 	

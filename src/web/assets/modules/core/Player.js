@@ -139,9 +139,9 @@
 			
 			// initialization
 			
-			init_cameracontrols();
-			
 			init_character();
+			
+			init_cameracontrols();
 			
 			init_actions();
 			
@@ -156,18 +156,6 @@
 			ready = true;
 			
 		}
-		
-	}
-	
-	/*===================================================
-    
-    camera
-    
-    =====================================================*/
-	
-	function init_cameracontrols () {
-		
-		cameraControls = new _CameraControls.Instance( _Player, _Game.camera );
 		
 	}
     
@@ -206,9 +194,15 @@
 		
 	}
 	
-	function character_move ( movementTypeName, stop ) {
+	/*===================================================
+    
+    camera
+    
+    =====================================================*/
+	
+	function init_cameracontrols () {
 		
-		character.move_state_change( movementTypeName, stop );
+		cameraControls = new _CameraControls.Instance( _Game.camera, character );
 		
 	}
 	
@@ -260,10 +254,10 @@
 		actions.add( 'w up_arrow', {
 			eventCallbacks: {
 				down: function () {
-					character_move( 'forward' );
+					character.move_state_change( 'forward' );
 				},
 				up: function () {
-					character_move( 'forward', true );
+					character.move_state_change( 'forward', true );
 				}
 			},
 			deactivateCallbacks: 'up'
@@ -272,10 +266,10 @@
 		actions.add( 's down_arrow', {
 			eventCallbacks: {
 				down: function () {
-					character_move( 'back' );
+					character.move_state_change( 'back' );
 				},
 				up: function () {
-					character_move( 'back', true );
+					character.move_state_change( 'back', true );
 				}
 			},
 			deactivateCallbacks: 'up'
@@ -284,10 +278,10 @@
 		actions.add( 'a left_arrow', {
 			eventCallbacks: {
 				down: function () {
-					character_move( 'left' );
+					character.move_state_change( 'left' );
 				},
 				up: function () {
-					character_move( 'left', true );
+					character.move_state_change( 'left', true );
 				}
 			},
 			deactivateCallbacks: 'up'
@@ -296,10 +290,10 @@
 		actions.add( 'd right_arrow', {
 			eventCallbacks: {
 				down: function () {
-					character_move( 'right' );
+					character.move_state_change( 'right' );
 				},
 				up: function () {
-					character_move( 'right', true );
+					character.move_state_change( 'right', true );
 				}
 			},
 			deactivateCallbacks: 'up'
@@ -310,10 +304,10 @@
 		actions.add( 'space', {
 			eventCallbacks: {
 				down: function () {
-					character_move( 'up' );
+					character.move_state_change( 'up' );
 				},
 				up: function () {
-					character_move( 'up', true );
+					character.move_state_change( 'up', true );
 				}
 			},
 			deactivateCallbacks: 'up'

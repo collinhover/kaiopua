@@ -607,7 +607,7 @@
 			
 			// ray cast object
 			
-			intersection = raycast_object( ray, object );
+			intersection = raycast_mesh( ray, object );//raycast_object( ray, object );
 			
 			// store
 			
@@ -645,7 +645,7 @@
 				
 				if ( collider instanceof MeshCollider && collider.box ) {
 					
-					intersection = raycast_object( ray, collider );//raycast_mesh( ray, collider );
+					intersection = raycast_mesh( ray, collider );//raycast_object( ray, collider );
 					
 				}
 				
@@ -691,7 +691,7 @@
 		}
 		else {
 			
-			return raycast_object( ray, collider );//return raycast_mesh( ray, collider );
+			return raycast_mesh( ray, collider );//raycast_object( ray, collider );
 			
 		}
 
@@ -1088,6 +1088,8 @@
 	}
 	
 	function raycast_object ( ray, collider, hierarchy, intersect ) {
+		
+		// TODO: raycast_object missing collisions where raycast_mesh is not?
 		
 		var i, l,
 			object = collider.object || collider,

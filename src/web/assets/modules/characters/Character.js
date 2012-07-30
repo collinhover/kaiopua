@@ -15,8 +15,7 @@
 		_Actions,
 		_MathHelper,
 		_VectorHelper,
-		characterName = 'Character',
-		utilQ1Rotate;
+		characterName = 'Character';
 	
 	/*===================================================
     
@@ -53,10 +52,6 @@
 		_MathHelper = mh;
 		_VectorHelper = vh;
 		
-		// utility
-		
-		utilQ1Rotate = new THREE.Quaternion();
-		
 		// character instance
 		
 		_Character.Instance = Character;
@@ -70,7 +65,6 @@
 		_Character.Instance.prototype.morph_cycle = morph_cycle;
 		
 		_Character.Instance.prototype.update = update;
-		_Character.Instance.prototype.update_followers = update_followers;
 		
 		_Character.Instance.prototype.show = show;
 		_Character.Instance.prototype.hide = hide;
@@ -94,8 +88,20 @@
 			}
 		});
 		
+		Object.defineProperty( _Character.Instance.prototype, 'moving', { 
+			get : function () { return this.movement.state.moving; }
+		});
+		
+		Object.defineProperty( _Character.Instance.prototype, 'movingHorizontal', { 
+			get : function () { return this.movement.state.movingHorizontal; }
+		});
+		
 		Object.defineProperty( _Character.Instance.prototype, 'jumping', { 
 			get : function () { return this.movement.jump.active; }
+		});
+		
+		Object.defineProperty( _Character.Instance.prototype, 'turn', { 
+			get : function () { return this.movement.rotate.turn; }
 		});
 		
 	}
@@ -148,7 +154,7 @@
 		// move
 		
 		move = movement.move = {};
-		move.speed = parametersMovement.moveSpeed || 6;
+		move.speed = parametersMovement.moveSpeed || 3;
 		move.speedBack = parametersMovement.moveSpeedBack || move.speed;
 		move.runThreshold = parametersMovement.moveRunThreshold || 0;
 		move.walkAnimationTime = parametersMovement.moveWalkAnimationTime || 750;
@@ -162,20 +168,23 @@
 		
 		// rotate
 		rotate = this.movement.rotate = {};
-		rotate.lerpDelta = parametersMovement.lerpDelta || 0.05;
+		rotate.lerpDelta = parametersMovement.rotateLerpDelta || 1;
 		rotate.direction = new THREE.Vector3( 0, 0, 1 );
 		rotate.directionLast = rotate.direction.clone();
-		rotate.angle = 0;
+		rotate.turnAngle = 0;
+		rotate.turn = new THREE.Quaternion();
+		rotate.turnSpeed = parametersMovement.rotateTurnSpeed || 0.025;
+		rotate.directionAngle = 0;
 		rotate.axis = new THREE.Vector3( 0, 1, 0 );
 		rotate.delta = new THREE.Quaternion();
 		rotate.vector = new THREE.Quaternion();
 		
 		// jump
 		jump = this.movement.jump = {};
-		jump.speedStart = parametersMovement.jumpSpeedStart || 6;
+		jump.speedStart = parametersMovement.jumpSpeedStart || move.speed * ( 4 / 3 );
 		jump.speedEnd = parametersMovement.jumpSpeedEnd || 0;
 		jump.timeTotal = 0;
-		jump.timeMax = parametersMovement.jumpTimeMax || 50;
+		jump.timeMax = parametersMovement.jumpTimeMax || 100;
 		jump.timeAfterNotGrounded = 0;
 		jump.timeAfterNotGroundedMax = 125;
 		jump.startDelay = parametersMovement.jumpStartDelay || 125;
@@ -203,7 +212,6 @@
 		
 		this.name = parameters.name || characterName;
 		this.showing = false;
-		this.followers = [];
 		this.targeting = {
 			
 			targets: [],
@@ -311,8 +319,8 @@
 		var rotate = this.movement.rotate,
 			rotateAxis = rotate.axis,
 			rotateDelta = rotate.delta,
-			rotateAngleTarget = _MathHelper.degree_between_180( rotate.angle + rotateAngleDelta ),
-			rotateAngleDeltaShortest = _MathHelper.shortest_rotation_between_angles( rotate.angle, rotateAngleTarget );
+			rotateAngleTarget = _MathHelper.degree_between_180( rotate.directionAngle + rotateAngleDelta ),
+			rotateAngleDeltaShortest = _MathHelper.shortest_rotation_between_angles( rotate.directionAngle, rotateAngleTarget );
 		
 		// find delta quaternion
 		
@@ -321,7 +329,7 @@
 		// copy deltas
 		
 		rotateDelta.multiplyVector3( rotate.direction );
-		rotate.angle = rotateAngleTarget;
+		rotate.directionAngle = rotateAngleTarget;
 		
 	}
 	
@@ -375,37 +383,6 @@
 	
 	/*===================================================
 	
-	followers
-	
-	=====================================================*/
-	
-	function update_followers () {
-		
-		var i, l,
-			followSettings;
-		
-		/*
-		// example follow settings
-		followSettings = {
-			obj: model,
-			rotationBase: new THREE.Quaternion(),
-			rotationOffset: new THREE.Vector3( 0, 0, 0 ),
-			positionOffset: new THREE.Vector3( 0, 0, 0 )
-		};
-		*/
-		
-		for ( i = 0, l = this.followers.length; i < l; i ++ ) {
-			
-			followSettings = this.followers[ i ];
-			
-			_ObjectHelper.object_follow_object( followSettings.obj, this, followSettings.positionOffset, followSettings.rotationBase, followSettings.rotationOffset );
-				
-		}
-		
-	}
-	
-	/*===================================================
-	
 	update
 	
 	=====================================================*/
@@ -419,20 +396,21 @@
 			rotate = movement.rotate,
 			jump = movement.jump,
 			state = movement.state,
-			rotateAngleDelta,
-			rotateAngleDeltaShortest,
-			rotateAngleTarget,
-			rotateAxis = rotate.axis,
-			rotateDirection = rotate.direction,
-			rotateDirectionLast = rotate.directionLast,
-			rotateDelta = rotate.delta,
-			rotateLerpDelta = rotate.lerpDelta * timeDeltaMod,
-			rotateNewQ = utilQ1Rotate,
 			moveDir = move.direction,
 			moveVec = move.vector,
 			moveSpeed = move.speed * timeDeltaMod,
 			moveSpeedBack = move.speedBack * timeDeltaMod,
 			moveSpeedRatio = Math.min( 1, ( moveSpeedBack / moveSpeed ) * 2 ),
+			moveSpeedPct = Math.min( 1, ( moveVec.length() / moveSpeed ) ),
+			rotateTurnAngleDelta,
+			rotateDirectionAngleDelta,
+			rotateDirectionAngleDeltaShortest,
+			rotateDirectionAngleTarget,
+			rotateAxis = rotate.axis,
+			rotateDirection = rotate.direction,
+			rotateDirectionLast = rotate.directionLast,
+			rotateDelta = rotate.delta,
+			rotateLerpDelta = rotate.lerpDelta * timeDeltaMod,
 			jumpSpeedStart,
 			jumpSpeedEnd,
 			jumpTimeTotal,
@@ -475,39 +453,50 @@
 			
 		}
 		
-		// update directions with state
-		
-		// movement
+		// update movement
 		
 		moveDir.z = state.movingHorizontal ? 1 : 0;
 		
-		// update rotation
+		// update rotation angles
 		
-		// get signed angle between directions
+		rotateTurnAngleDelta = ( state.left - state.right ) * rotate.turnSpeed;
+		rotateDirectionAngleDelta = _VectorHelper.signed_angle_between_coplanar_vectors( rotateDirectionLast, rotateDirection, rotateAxis ) * rotateLerpDelta;
 		
-		rotateAngleDelta = _VectorHelper.signed_angle_between_coplanar_vectors( rotateDirectionLast, rotateDirection, rotateAxis ) * rotateLerpDelta;
+		// if moving
 		
-		if ( state.movingHorizontal === true && rotateAngleDelta !== 0 ) {
+		if ( state.movingHorizontal === true ) {
 			
-			// find target angle
+			// rotate by turn angle change
 			
-			rotateAngleTarget = _MathHelper.degree_between_180( rotate.angle + rotateAngleDelta );
+			if ( rotateTurnAngleDelta !== 0 ) {
+				
+				rotateDelta.setFromAxisAngle( rotateAxis, rotateTurnAngleDelta );
+				
+				this.quaternion.multiplySelf( rotateDelta );
+				
+				// copy new turn angle
+				
+				rotate.turn.multiplySelf( rotateDelta );
+				rotate.turnAngle = _MathHelper.degree_between_180( rotate.turnAngle + rotateTurnAngleDelta );
+				
+			}
 			
-			// find shortest angle to target
+			// rotate by direction angle change
 			
-			rotateAngleDeltaShortest = _MathHelper.shortest_rotation_between_angles( rotate.angle, rotateAngleTarget );
-			
-			// modify quaternion
-			
-			rotateDelta.setFromAxisAngle( rotateAxis, rotateAngleDeltaShortest );
-			rotateNewQ.multiply( this.quaternion, rotateDelta );
-			
-			this.quaternion.copy( rotateNewQ );
-			
-			// copy delta
-			
-			rotateDelta.multiplyVector3( rotateDirectionLast );
-			rotate.angle = rotateAngleTarget;
+			if ( rotateDirectionAngleDelta !== 0 ) {
+				
+				rotateDirectionAngleTarget = _MathHelper.degree_between_180( rotate.directionAngle + rotateDirectionAngleDelta );
+				rotateDirectionAngleDeltaShortest = _MathHelper.shortest_rotation_between_angles( rotate.directionAngle, rotateDirectionAngleTarget );
+				rotateDelta.setFromAxisAngle( rotateAxis, rotateDirectionAngleDeltaShortest );
+				
+				this.quaternion.multiplySelf( rotateDelta );
+				
+				// copy new direction angle
+				
+				rotateDelta.multiplyVector3( rotateDirectionLast );
+				rotate.directionAngle = rotateDirectionAngleTarget;
+				
+			}
 			
 		}
 		
@@ -545,7 +534,7 @@
 			}
 			else if ( jump.active === true ) {
 				
-				moveVec.z *= jumpSpeedStart;
+				moveVec.z *= ( moveSpeed + jumpSpeedStart ) * 0.5;
 				
 			}
 			else {
@@ -635,7 +624,7 @@
 				
 				if ( grounded === true && jump.active !== false ) {
 					
-					this.stop_jumping();//jump.active = false;
+					this.stop_jumping();
 					
 					if ( jump.timeAfterNotGrounded >= jumpTimeAfterNotGroundedMax ) {
 						
@@ -717,10 +706,6 @@
 			}
 			
 		}
-		
-		// update followers
-		
-		this.update_followers();
 		
 	}
 	

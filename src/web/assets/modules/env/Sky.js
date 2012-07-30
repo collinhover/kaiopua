@@ -329,7 +329,7 @@
 				cloud.quaternion.multiplyVector3( cloudForward );
 				cloud.quaternion.multiplyVector3( cloudUp );
 				
-				_PhysicsHelper.rotate_relative_to_source( cloud, this._world, cloudUp, cloudForward );
+				_PhysicsHelper.rotate_relative_to_source( cloud.quaternion, cloud.position, this._world, cloudUp, cloudForward );
 				
 			}
 			
@@ -418,7 +418,7 @@
 				cloud.quaternion.multiplyVector3( cloudForward );
 				cloud.quaternion.multiplyVector3( cloudUp );
 				
-				_PhysicsHelper.rotate_relative_to_source( cloud, this._world, cloudForward, cloudUp );
+				_PhysicsHelper.rotate_relative_to_source( cloud.quaternion, cloud.position, this._world, cloudForward, cloudUp );
 				
 			}
 			

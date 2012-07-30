@@ -77,13 +77,11 @@
 		parameters.model.physics.movementDamping = 0.5;
 		
 		parameters.movement = parameters.movement || {};
-		parameters.movement.moveSpeed = 6;
-		parameters.movement.moveSpeedBack = 2;
+		parameters.movement.moveSpeed = 3;
+		parameters.movement.moveSpeedBack = 1;
 		parameters.movement.moveRunThreshold = parameters.movement.moveSpeed;
-		parameters.movement.jumpSpeedStart = 8;
-		parameters.movement.jumpSpeedEnd = 0;
 		parameters.movement.jumpTimeMax = 100;
-		parameters.movement.jumpAnimationTime = 1500;
+		parameters.movement.jumpAnimationTime = 1000;
 		
 		// prototype constructor
 		

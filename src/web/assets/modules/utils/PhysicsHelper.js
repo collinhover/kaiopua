@@ -18,7 +18,6 @@
 		utilVec33Pull,
 		utilVec31RotateToSrc,
 		utilVec32RotateToSrc,
-		utilVec31SourceBase,
 		utilQ1RotateToSrc,
 		utilQ2RotateToSrc,
 		utilQ3RotateToSrc;
@@ -57,7 +56,6 @@
 		utilVec33Pull = new THREE.Vector3();
 		utilVec31RotateToSrc = new THREE.Vector3();
 		utilVec32RotateToSrc = new THREE.Vector3();
-		utilVec31SourceBase = new THREE.Vector3();
 		utilQ1RotateToSrc = new THREE.Quaternion();
 		utilQ2RotateToSrc = new THREE.Quaternion();
 		utilQ3RotateToSrc = new THREE.Quaternion();
@@ -75,11 +73,9 @@
     
     =====================================================*/
 	
-	function rotate_relative_to_source ( object, source, axisAway, axisForward, lerpDelta, rigidBody ) {
+	function rotate_relative_to_source ( rotation, position, source, axisAway, axisForward, lerpDelta, rigidBody ) {
 		
 		var ca = shared.cardinalAxes,
-			position,
-			rotation,
 			axisAwayNew = utilVec31RotateToSrc,
 			axisAwayToAwayNewDist,
 			angleToNew,
@@ -88,12 +84,6 @@
 			rotationTargetForMatrix = utilQ2RotateToSrc,
 			qToNew = utilQ3RotateToSrc,
 			axes;
-			
-		// localize basics
-		
-		position = object.position;
-		
-		rotation = ( object.useQuaternion === true ? object.quaternion : object.matrix );
 		
 		// if source is 3D object, cascade
 		if ( source instanceof THREE.Object3D ) {
@@ -102,11 +92,11 @@
 		
 		}
 		
-		// default to 0, 0, 0
+		// default to universe gravity source
 		
 		if ( source instanceof THREE.Vector3 !== true ) {
 			
-			source = utilVec31SourceBase;
+			source = shared.universeGravitySource;
 			
 		}
 		
@@ -122,7 +112,7 @@
 			
 			// apply as quaternion or matrix
 			
-			if ( object.useQuaternion === true ) {
+			if ( rotation instanceof THREE.Quaternion ) {
 				
 				// quaternion rotations
 				
@@ -174,6 +164,8 @@
 			
 		}
 		
+		return qToNew;
+		
 	}
 	
 	/*===================================================
@@ -205,11 +197,11 @@
 		
 		}
 		
-		// default to 0, 0, 0
+		// default to universe gravity source
 		
 		if ( source instanceof THREE.Vector3 !== true ) {
 			
-			source = utilVec31SourceBase;
+			source = shared.universeGravitySource;
 			
 		}
 		
@@ -285,6 +277,8 @@
 		// add shift to position
 		
 		position.addSelf( shift );
+		
+		return shift;
 		
 	}
 	

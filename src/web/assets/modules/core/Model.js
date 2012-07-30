@@ -65,6 +65,10 @@
 		
 		// catch geometry changes
 		
+		Object.defineProperty( _Model.Instance.prototype, 'gravityBody', { 
+			get : function () { return this.rigidBody ? this.rigidBody.gravityBody : false; }
+		} );
+		
 		Object.defineProperty( _Model.Instance.prototype, 'geometry', { 
 			get : function () { return this._geometry; },
 			set : function ( geometry ) {

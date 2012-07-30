@@ -135,7 +135,6 @@
 			
 			_Player.character.position.set( 35, 2000, 300 );
 			_Player.character.quaternion.set( 0, -1, -0.25, 0 );
-			_Player.cameraControls.rotate_revert( 1 );
 			
 			//_Player.cameraMode = 'freelook';
 			
