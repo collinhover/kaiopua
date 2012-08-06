@@ -335,7 +335,7 @@
 			.on( 'doubletap', on_pointer_doubletapped )
 			.on( 'hold', on_pointer_held )
 			.on( 'dragstart', on_pointer_dragstarted )
-			.on( 'drag', on_pointer_dragged )
+			.on( 'drag', $.throttle( shared.throttleTimeShort, true, on_pointer_dragged ) )
 			.on( 'dragend', on_pointer_dragended )
 			.on( 'mousewheel DOMMouseScroll', on_pointer_wheel )
 			.on( 'contextmenu', on_context_menu );
@@ -740,7 +740,7 @@
 		
 		e.wheelDelta = eo.wheelDelta = ( ( eo.detail < 0 || eo.wheelDelta > 0 ) ? 1 : -1 ) * shared.pointerWheelSpeed;
 		
-        shared.signals.gamePointerWheel.dispatch( e );
+		shared.signals.gamePointerWheel.dispatch( e );
         
         e.preventDefault();
 		

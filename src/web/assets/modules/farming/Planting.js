@@ -688,7 +688,7 @@
 				// find if any planting objects under pointer
 				
 				targetObject = this.get_planting_object_under_pointer( { modules: true } );
-				console.log( '>>> target module is ', targetObject );
+				
 				// change to new module
 				
 				this.change_module( targetObject );

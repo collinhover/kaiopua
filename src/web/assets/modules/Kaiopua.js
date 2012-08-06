@@ -13,10 +13,10 @@ var KAIOPUA = (function (main) {
 		loader = {},
 		worker = {},
         lastGamma, lastBeta,
-        libsList = [
+        libsPrimaryList = [
             "js/RequestAnimationFrame.js",
-            "js/requestInterval.js",
-            "js/requestTimeout.js",
+            "js/RequestInterval.js",
+            "js/RequestTimeout.js",
             "js/signals.min.js",
 			"js/sylvester.js",
 			"js/thumbs.0.5.2.min.js",
@@ -27,8 +27,11 @@ var KAIOPUA = (function (main) {
 			"js/jquery.easing-1.3.min.js",
 			"js/jquery.contentchanged.js",
 			"js/jquery.imagesloaded.min.js",
-			"js/jquery.sticky.custom.js",
+			"js/jquery.throttle-debounce.custom.min.js",
 			"js/jquery.scrollTo-1.4.2.custom.js",
+		],
+		libsTertiaryList = [
+			"js/jquery.sticky.custom.js"
 		],
         setupList = [
 			"assets/modules/core/Game.js"
@@ -85,7 +88,7 @@ var KAIOPUA = (function (main) {
 	$LAB.setGlobalDefaults({ CacheBust: true });
 	
     // load scripts
-    $LAB.script( libsList ).wait().script( libsSecondaryList ).wait( init_basics );
+    $LAB.script( libsPrimaryList ).wait().script( libsSecondaryList ).wait().script( libsTertiaryList ).wait( init_basics );
     
     function init_basics () {
 		
@@ -106,7 +109,10 @@ var KAIOPUA = (function (main) {
 		shared.timeDeltaModDec = Math.pow( 10, 2 );
 		shared.pointerWheelSpeed = 120;
 		shared.pointerHoldPositionShift = 10;
-		
+		shared.throttleTimeShort = shared.timeDeltaExpected * 3;
+		shared.throttleTimeMedium = 100;
+		shared.throttleTimeLong = 250;
+		console.log( 'shared.throttleTimeShort', shared.throttleTimeShort);
         shared.galleryMode = false;
 		shared.timeSinceInteraction = 0;
 		shared.timeSinceInteractionMax = 300000;
@@ -166,10 +172,10 @@ var KAIOPUA = (function (main) {
 		$(window)
 			.on( 'blur', on_focus_lost )
 			.on( 'focus', on_focus_gained )
-			.on( 'scroll scrollstop', on_scrolled )
+			.on( 'scroll scrollstop', $.throttle( shared.throttleTimeLong, on_scrolled ) )
 			.on( 'orientationchange', on_window_device_orientation )
 			.on( 'MozOrientation', on_window_device_orientation )
-			.on( 'resize', on_window_resized );
+			.on( 'resize', $.throttle( shared.throttleTimeLong, on_window_resized ) );
 		
 		window.onerror = on_error;
 		
@@ -227,8 +233,9 @@ var KAIOPUA = (function (main) {
 				}
 			});
 			
-			add_loaded_locations( libsList );
+			add_loaded_locations( libsPrimaryList );
 			add_loaded_locations( libsSecondaryList );
+			add_loaded_locations( libsTertiaryList );
 			
 			// ui
 			

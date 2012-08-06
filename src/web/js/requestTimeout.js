@@ -11,30 +11,31 @@ window.requestTimeout = function(fn, delay) {
 		!window.oRequestAnimationFrame      && 
 		!window.msRequestAnimationFrame)
 			return window.setTimeout(fn, delay);
-			
+
 	var start = new Date().getTime(),
 		handle = new Object();
-		
+
 	function loop(){
 		var current = new Date().getTime(),
 			delta = current - start;
-			
-		delta >= delay ? fn.call() : handle.value = requestAnimationFrame(loop);
+
+		delta >= delay ? fn.call() : handle.value = window.requestAnimationFrame(loop);
 	};
-	
-	handle.value = requestAnimationFrame(loop);
+
+	handle.value = window.requestAnimationFrame(loop);
 	return handle;
 };
 
 /**
- * Behaves the same as clearInterval except uses cancelRequestAnimationFrame() where possible for better performance
+ * Behaves the same as clearTimeout except uses cancelRequestAnimationFrame() where possible for better performance
  * @param {int|object} fn The callback function
  */
 window.clearRequestTimeout = function(handle) {
     window.cancelAnimationFrame ? window.cancelAnimationFrame(handle.value) :
-    window.webkitCancelRequestAnimationFrame ? window.webkitCancelRequestAnimationFrame(handle.value)	:
+    window.webkitCancelAnimationFrame ? window.webkitCancelAnimationFrame(handle.value) :
+    window.webkitCancelRequestAnimationFrame ? window.webkitCancelRequestAnimationFrame(handle.value) : /* Support for legacy API */
     window.mozCancelRequestAnimationFrame ? window.mozCancelRequestAnimationFrame(handle.value) :
     window.oCancelRequestAnimationFrame	? window.oCancelRequestAnimationFrame(handle.value) :
-    window.msCancelRequestAnimationFrame ? msCancelRequestAnimationFrame(handle.value) :
+    window.msCancelRequestAnimationFrame ? window.msCancelRequestAnimationFrame(handle.value) :
     clearTimeout(handle);
 };

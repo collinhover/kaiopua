@@ -103,13 +103,27 @@
             update: scroller
         };
 
-    // should be more efficient than using $window.scroll(scroller) and $window.resize(resizer):
-    if (window.addEventListener) {
-        window.addEventListener('scroll', scroller, false);
-        window.addEventListener('resize', resizer, false);
-    } else if (window.attachEvent) {
-        window.attachEvent('onscroll', scroller);
-        window.attachEvent('onresize', resizer);
+	// event listeners
+    // attempt to use throttle
+    
+    if ( $.throttle ) {
+        
+        $window.scroll( $.throttle( 250, scroller ) );
+        $window.resize( $.throttle( 250, resizer ) );
+        
+    }
+    else {
+        
+        // should be more efficient than using $window.scroll(scroller) and $window.resize(resizer):
+        
+        if (window.addEventListener) {
+            window.addEventListener('scroll', scroller, false);
+            window.addEventListener('resize', resizer, false);
+        } else if (window.attachEvent) {
+            window.attachEvent('onscroll', scroller);
+            window.attachEvent('onresize', resizer);
+        }
+        
     }
 
     $.fn.sticky = function(method) {
