@@ -155,12 +155,15 @@
 					if( settings.over[pos] )
 						// Scroll to a fraction of its width/height
 						attr[key] += targ[axis=='x'?'width':'height']() * settings.over[pos];
-				}else{ 
+				}else { 
 					var val = targ[pos];
+					
 					// Handle percentage values
-					attr[key] = val.slice && val.slice(-1) == '%' ? 
-						parseFloat(val) / 100 * max
-						: val;
+					if ( typeof val !== 'undefined' ) {
+						attr[key] = val.slice && val.slice(-1) == '%' ? 
+							parseFloat(val) / 100 * max
+							: val;
+					}
 				}
 
 				// Number or 'number'

@@ -189,7 +189,7 @@
 			body: "Our physics broke, but we'll do our best to drop you off at your last safe location.",
 			priority: true,
 			confirmRequired: true,
-			transitionerOpacity: 1
+			uiGameDimmerOpacity: 1
 		} );
 		
 	}

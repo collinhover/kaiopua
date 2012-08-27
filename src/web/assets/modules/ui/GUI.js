@@ -152,10 +152,10 @@
 			fullwindow: true
 		} );
 		
-		// transitioner
+		// uiGameDimmer
 		
-        _GUI.transitioner = new _UIElement.Instance( {
-			id: 'transitioner',
+        _GUI.uiGameDimmer = new _UIElement.Instance( {
+			id: 'uiGameDimmer',
 			cssmap: {
 				"background-color" : "#333333"
 			},

@@ -112,7 +112,7 @@ var KAIOPUA = (function (main) {
 		shared.throttleTimeShort = shared.timeDeltaExpected * 3;
 		shared.throttleTimeMedium = 100;
 		shared.throttleTimeLong = 250;
-		console.log( 'shared.throttleTimeShort', shared.throttleTimeShort);
+		shared.throttleTimeLong = 250;
         shared.galleryMode = false;
 		shared.timeSinceInteraction = 0;
 		shared.timeSinceInteractionMax = 300000;
@@ -126,9 +126,12 @@ var KAIOPUA = (function (main) {
 		
         shared.domElements = {};
 		shared.domElements.$game = $('#game');
-		shared.domElements.$transitioner = $('#transitioner');
+		shared.domElements.$uiGameDimmer = $('#uiGameDimmer');
+		shared.domElements.$uiBlocker = $('#uiBlocker');
 		shared.domElements.$errors = $('#errors');
 		shared.domElements.$ui = $('#ui');
+		shared.domElements.$uiHeader = $( '#uiHeader' );
+		shared.domElements.$uiBody = $( '#uiBody' );
 		shared.domElements.$uiInGame = $( '#uiInGame' );
 		shared.domElements.$uiOutGame = $( '#uiOutGame' );
 		shared.domElements.$statusInactive = $( '#statusInactive' );
@@ -182,10 +185,6 @@ var KAIOPUA = (function (main) {
 		// wait for document
 		
 		$(document).ready( function () {
-			
-			// resize once
-			
-			on_window_resized();
 			
 			// begin updating
 			
@@ -247,15 +246,74 @@ var KAIOPUA = (function (main) {
 				
 			}
 			
+			// all links that point to a location in page
+			
+			$( 'a[href^="#"]' ).each( function () {
+				
+				var $element = $( this ),
+					$section = $( $element.data( 'section' ) ),
+					$target = $( $element.attr( 'href' ) );
+				
+				// remove click
+				
+				$element.attr( 'onclick', 'return false;' );
+				
+				// if has section or target
+				
+				if ( $section.length > 0 ) {
+					
+					$element.on( 'tap', function () {
+						
+						$section[0].scrollIntoView( true );
+						
+					} );
+					
+				}
+				else if ( $target.length > 0 ) {
+					
+					$element.on( 'tap', function () {
+						
+						$target[0].scrollIntoView( true );
+						
+						/*
+						// scroll to top position
+						
+						$.scrollTo( $target, shared.domScrollTime, {
+							easing: main.shared.domScrollEasing
+						} );
+						*/
+					} );
+					
+				}
+					
+			} );
+			
 			// sticky navigation bars
 			
-			shared.domElements.$navMenus.sticky( { topSpacing:0 } );
-			$(".subnav-sticky").sticky( { 
-				topSpacing: function () {
-					return $("#navMenus").outerHeight( true );
-				}
-			} );
+			$(".affix").each( function () {
 				
+				var $navbar = $( this ),
+					$wrapper = $( '<div></div>' ).attr( 'id', $navbar.attr( 'id' ) + 'AffixWrapper' );
+				console.log( 'affixing ', $navbar );
+				
+				$wrapper.insertAfter( $navbar ).append( $navbar );
+				
+				$navbar.affix( { 
+						offset: { 
+							top: function () {
+								console.log( 'shared.domElements.$navMenus.outerHeight( true )', shared.domElements.$navMenus.outerHeight( true ), ' $wrapper.offset().top', $wrapper.offset().top );
+								return $wrapper.offset().top - shared.domElements.$navMenus.outerHeight( true );
+							} 
+						}
+					} );
+				
+				shared.signals.windowResized.add( function () {
+					console.log( '$navbar', $navbar, '$wrapper', $wrapper, '$navbar.outerHeight( true )', $navbar.outerHeight( true ) );
+					$wrapper.css( 'height', $navbar.outerHeight( true ) );
+				} );
+				
+			} );
+			
 			// handle statusActive items
 			
 			$('.status-item').on('show.active', function () {
@@ -337,6 +395,10 @@ var KAIOPUA = (function (main) {
 			main.set_asset = set_asset;
 			main.get_asset = get_asset;
 			main.get_asset_data = get_asset_data;
+			
+			// resize once
+			
+			on_window_resized();
 			
 			// hide preloader
 			
@@ -1274,12 +1336,19 @@ var KAIOPUA = (function (main) {
 	}
 
     function on_window_resized( e ) {
+		
+		var heightHeader = shared.domElements.$uiHeader.height();
         
         shared.screenWidth = $(window).width();
         shared.screenHeight = $(window).height();
 		
 		shared.gameWidth = shared.domElements.$game.width(),
 		shared.gameHeight = shared.domElements.$game.height();
+		
+		shared.domElements.$uiBody.css( {
+			'height' : shared.gameHeight - heightHeader,
+			'top' : heightHeader
+		} );
         
         shared.signals.windowResized.dispatch(shared.screenWidth, shared.screenHeight);
         

@@ -16,36 +16,43 @@
             bottomSpacing: 0,
             className: 'is-sticky',
 			classNameNav: 'navbar-fixed-',
-            wrapperClassName: 'sticky-wrapper'
+            wrapperClassName: 'sticky-wrapper',
+            maxScroll: Number.MAX_VALUE,
+            maxScrollStart: 0
         },
         $window = $(window),
         $document = $(document),
         sticked = [],
+        stickedElements = [],
         windowHeight = $window.height(),
         scroller = function() {
-            var scrollTop = $window.scrollTop(),
+            var i, l, s
+                scrollTop = $window.scrollTop(),
                 documentHeight = $document.height(),
                 dwh = documentHeight - windowHeight,
                 extra = (scrollTop > dwh) ? dwh - scrollTop : 0;
-			
-            for (var i = 0; i < sticked.length; i++) {
-                var s = sticked[i];
+		    
+            for ( i = 0, l = sticked.length; i < l; i++) {
+                
+                s = sticked[i];
 				
 				if ( s.stickyElement.not(":hidden").length > 0 ) {
 					
 					var elementTop = s.stickyWrapper.offset().top,
+                        elementHeight = s.stickyWrapper.outerHeight( true ),
+                        maxScrollStart = ( typeof s.maxScrollStart === 'function' ? s.maxScrollStart() : s.maxScrollStart ),
+                        maxScroll = maxScrollStart + ( typeof s.maxScroll === 'function' ? s.maxScroll() : s.maxScroll ),
 						topSpacing = ( typeof s.topSpacing === 'function' ? s.topSpacing() : s.topSpacing ),
 						etse = elementTop - topSpacing - extra;
 					
-					if (scrollTop <= etse) {
+					if (scrollTop <= etse || scrollTop > maxScroll) {
 						if (s.currentTop !== null) {
 							s.stickyElement
-								.css('position', '')
 								.css('top', '')
+                                .css('position', '')
 								.removeClass(s.className + " " + s.classNameNav);
 							s.stickyWrapper
-								.css('height', '' )
-								.removeClass(s.className);
+								.css('height', '' );
 							s.currentTop = null;
 						}
 					}
@@ -60,12 +67,12 @@
 						}
 						if (s.currentTop != newTop) {
 							s.stickyElement
-								.css('position', 'fixed')
-								.css('top', newTop)
-								.addClass(s.className + ( s.stickyElement.is(".navbar,.subnavbar") ? " " + s.classNameNav : "" ) );
+								.addClass(s.className + ( s.stickyElement.is(".navbar,.subnavbar") ? " " + s.classNameNav : "" ) )
+                                .css('top', newTop)
+                                .css('position', 'fixed');
+                            
 							s.stickyWrapper
-								.css('height', s.stickyElement.outerHeight( true ) )
-								.addClass(s.className);
+								.css('height', elementHeight );
 							s.currentTop = newTop;
 						}
 					}
@@ -81,29 +88,54 @@
             init: function(options) {
                 var o = $.extend(defaults, options);
                 return this.each(function() {
-                    var stickyElement = $(this);
-
-                    stickyId = stickyElement.attr('id');
-                    wrapper = $('<div></div>')
-                        .attr('id', stickyId + '-sticky-wrapper')
-                        .addClass(o.wrapperClassName);
-                    stickyElement.wrapAll(wrapper);
+                    var stickyElement = $(this),
+                        stickyId = stickyElement.attr('id'),
+                        wrapper = $('<div></div>')
+                            .attr('id', stickyId + '-sticky-wrapper')
+                            .addClass(o.wrapperClassName);
                     
-                    sticked.push({
-                        topSpacing: o.topSpacing,
-                        bottomSpacing: o.bottomSpacing,
-                        stickyElement: stickyElement,
-                        currentTop: null,
-                        stickyWrapper: stickyElement.parent(),
-                        className: o.className,
-						classNameNav: o.classNameNav + ( ( typeof o.bottomSpacing === 'function' ? o.bottomSpacing() : o.bottomSpacing ) > ( typeof o.topSpacing === 'function' ? o.topSpacing() : o.topSpacing ) ? 'bottom' : 'top' )
-                    });
+                    if ( stickedElements.indexOf( this ) === -1 ) {
+                        
+                        stickedElements.push( this );
+                        
+                        stickyElement.wrapAll(wrapper);
+                        
+                        sticked.push({
+                            topSpacing: o.topSpacing,
+                            bottomSpacing: o.bottomSpacing,
+                            maxScroll: o.maxScroll,
+                            maxScrollStart: o.maxScrollStart,
+                            stickyElement: stickyElement,
+                            currentTop: null,
+                            stickyWrapper: stickyElement.parent(),
+                            className: o.className,
+    						classNameNav: o.classNameNav + ( ( typeof o.bottomSpacing === 'function' ? o.bottomSpacing() : o.bottomSpacing ) > ( typeof o.topSpacing === 'function' ? o.topSpacing() : o.topSpacing ) ? 'bottom' : 'top' )
+                        });
+                        
+                    }
+                    
                 });
             },
-            update: scroller
+            update: scroller,
+            stop: function () {
+                
+                return this.each(function() {
+                    
+                    var index = stickedElements.indexOf( this );
+                    
+                    if ( index !== -1 ) {
+                        
+                        stickedElements.splice( index, 1 );
+                        sticked.splice( index, 1 );
+                        
+                    }
+                        
+                } );
+                
+            }
         };
-
-	// event listeners
+    
+    // event listeners
     // attempt to use throttle
     
     if ( $.throttle ) {
