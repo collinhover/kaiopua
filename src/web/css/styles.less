@@ -1152,6 +1152,33 @@ a, .navbar .nav > li > a {
 		
 	}
 	
+	.nav-collapse {
+		
+		@media (max-width: 979px) {
+			position: absolute;
+			width: 100%;
+			top: 100%;
+			background: lighten( @navbarInverseBackground, 10% );
+			.rounded-bottom(15px);
+			
+			ul {
+				margin: 0;
+				
+				li:last-child {
+					
+					a {
+						margin-bottom: 0;
+						.rounded-bottom(15px);
+					}
+					
+				}
+				
+			}
+			
+		}
+		
+	}
+	
 }
 
 /* ui body sections 
@@ -1296,30 +1323,30 @@ a, .navbar .nav > li > a {
 			margin-right: 5px;
 		}
 		
+		.dropdown-menu {
+			//right: 0;
+		}
+		
 	}
 	
 	.open {
 		
 		.logo {
 			opacity: 1;
+			background-color: transparent !important;
 		}
 		
 	}
 	
-	.btn-group {
-		padding: 0;
-		
-		.dropdown-toggle {
-			border: 0;
-			box-shadow: none;
-		}
-		
-		.caret {
-			position: absolute;
-			bottom: 15px;
-			right: 0;
-			border-top-color: @white;
-		}
+	.dropdown-toggle {
+		border: 0;
+		box-shadow: none;
+	}
+	
+	.caret {
+		vertical-align: bottom;
+		bottom: 6px;
+		border-top-color: @white;
 	}
 	
 }

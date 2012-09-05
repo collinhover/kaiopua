@@ -19,18 +19,19 @@ var KAIOPUA = (function (main) {
             "js/RequestTimeout.js",
             "js/signals.min.js",
 			"js/sylvester.js",
-			"js/thumbs.0.5.2.min.js",
-			"js/bootstrap.min.js"
+			"js/jquery-1.7.2.min.js"
         ],
 		libsSecondaryList = [
-			"js/hammer.custom.js",
+			"js/bootstrap.min.js",
+			"js/hammer.custom.js"
+		],
+		libsTertiaryList = [
 			"js/jquery.easing-1.3.min.js",
 			"js/jquery.contentchanged.js",
 			"js/jquery.imagesloaded.min.js",
 			"js/jquery.throttle-debounce.custom.min.js",
+			"js/jquery.scrollbarwidth.min.js",
 			"js/jquery.scrollTo-1.4.2.custom.js",
-		],
-		libsTertiaryList = [
 			"js/jquery.sticky.custom.js"
 		],
         setupList = [
@@ -136,7 +137,18 @@ var KAIOPUA = (function (main) {
 		shared.domElements.$uiOutGame = $( '#uiOutGame' );
 		shared.domElements.$statusInactive = $( '#statusInactive' );
 		shared.domElements.$statusActive = $( '#statusActive' );
+		
+		shared.domElements.$navbars = $( '.navbar, .subnavbar' );
 		shared.domElements.$navMenus = $('#navMenus');
+		shared.domElements.$buttonsNavMenus = shared.domElements.$navMenus.find( ".nav li a" );
+		
+		shared.domElements.$menus = shared.domElements.$uiOutGame.find( '.menu' );
+		shared.domElements.$menusContainers = $();
+		
+		shared.domElements.$dropdowns = $( '.dropdown' );
+		
+        shared.domElements.$tabs = $( '.tab-pane' );
+        shared.domElements.$tabToggles = $( '.tab-toggles' ).find( '[href^="#"]' ).not( '.tab-toggle-empty' );
 		
 		shared.supports = {};
 		shared.supports.pointerEvents = css_property_supported( 'pointer-events' );
@@ -184,7 +196,7 @@ var KAIOPUA = (function (main) {
 		
 		// wait for document
 		
-		$(document).ready( function () {
+		//$(document).ready( function () {
 			
 			// begin updating
 			
@@ -269,7 +281,7 @@ var KAIOPUA = (function (main) {
 					} );
 					
 				}
-				else if ( $target.length > 0 ) {
+				else if ( $target.length > 1 ) {
 					
 					$element.on( 'tap', function () {
 						
@@ -288,7 +300,63 @@ var KAIOPUA = (function (main) {
 					
 			} );
 			
-			// sticky navigation bars
+			// for all drop downs
+			
+			shared.domElements.$dropdowns.each( function () {
+				
+				var $dropdown = $( this );
+				
+				// close when drop down item is selected
+				
+				$dropdown.find( '.dropdown-menu a' ).each( function () {
+					
+					var $button = $( this );
+					
+					$button.on( 'tap', function () {
+							
+							$button.parent().removeClass( 'active' );
+							
+							$dropdown.removeClass('open');
+							
+						} );
+					
+				} );
+				
+			} );
+			
+			// for each navbar
+			
+			shared.domElements.$navbars.each( function () {
+				
+				var $navbar = $( this ),
+					$buttonCollapse = $navbar.find( '[data-toggle="collapse"]' ),
+					$navCollapse = $navbar.find( '.nav-collapse' );
+				
+				// if has collapsable
+				
+				if ( $buttonCollapse.length > 0 && $navCollapse.length > 0 ) {
+					
+					$navCollapse.find( 'a' ).each( function () {
+						
+						var $button = $( this );
+						
+						$button.on( 'tap', function () {
+								
+								if( $buttonCollapse.hasClass( 'collapsed' ) !== true ) {
+									
+									$buttonCollapse.trigger( 'click' );
+									
+								}
+								
+							} );
+						
+					} );
+					
+				}
+				
+			} );
+			
+			// sticky affixed items (usually navbars)
 			
 			$(".affix").each( function () {
 				
@@ -311,6 +379,19 @@ var KAIOPUA = (function (main) {
 					console.log( '$navbar', $navbar, '$wrapper', $wrapper, '$navbar.outerHeight( true )', $navbar.outerHeight( true ) );
 					$wrapper.css( 'height', $navbar.outerHeight( true ) );
 				} );
+				
+			} );
+			
+			// for each menu
+			
+			shared.domElements.$menus.each( function () {
+				
+				var $menu = $( this ),
+					$container = $menu.find( '.container' ).first();
+				
+				// add container to menu containers
+				
+				shared.domElements.$menusContainers = shared.domElements.$menusContainers.add( $container );
 				
 			} );
 			
@@ -415,7 +496,7 @@ var KAIOPUA = (function (main) {
 				
 			} );
 			
-		} );
+		//} );
 		
     }
     
@@ -1337,7 +1418,8 @@ var KAIOPUA = (function (main) {
 
     function on_window_resized( e ) {
 		
-		var heightHeader = shared.domElements.$uiHeader.height();
+		var heightHeader = shared.domElements.$uiHeader.height(),
+			uiBodyHeight;
         
         shared.screenWidth = $(window).width();
         shared.screenHeight = $(window).height();
@@ -1345,11 +1427,22 @@ var KAIOPUA = (function (main) {
 		shared.gameWidth = shared.domElements.$game.width(),
 		shared.gameHeight = shared.domElements.$game.height();
 		
+		uiBodyHeight = shared.gameHeight - heightHeader;
+		
 		shared.domElements.$uiBody.css( {
-			'height' : shared.gameHeight - heightHeader,
+			'height' : uiBodyHeight,
 			'top' : heightHeader
 		} );
-        
+		
+		// because ui out game is scrollable, its grids are not aligned to main header grids
+		// so we need to pad left side of the individual containers to correct for this
+		
+		if ( shared.domElements.$uiOutGame[0].scrollHeight > uiBodyHeight ) {
+			
+			shared.domElements.$menusContainers.css( 'padding-left', $.scrollbarWidth() );
+			
+		}
+		
         shared.signals.windowResized.dispatch(shared.screenWidth, shared.screenHeight);
         
     }

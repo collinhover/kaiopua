@@ -40,7 +40,7 @@ var HAMMER = ( function ( main ) {
 			hold               : true,
 			hold_timeout       : 500
 		},
-		_has_touch = ('ontouchstart' in window),
+		_has_touch = ( Modernizr ? Modernizr.touch : 'ontouchstart' in window ),
 		_event_name_start = _has_touch ? 'touchstart' : 'mousedown',
 		_event_name_move = _has_touch ? 'touchmove' : 'mousemove',
 		_event_name_end = _has_touch ? 'touchend' : 'mouseup',

@@ -438,14 +438,9 @@
 		shared.domElements.$navStart = $( '#navStart' );
 		shared.domElements.$buttonGamePause = $('.button-gamePause');
 		shared.domElements.$buttonGameResume = $('.button-gameResume');
-		shared.domElements.$buttonsNavMenus = shared.domElements.$navMenus.find( ".nav li a" );
-		shared.domElements.$menus = shared.domElements.$uiOutGame.find( '.menu' );
 		shared.domElements.$menuFarming = $('#menuFarming');
 		shared.domElements.$menuOptions = $('#menuOptions');
 		shared.domElements.$pauseMessage = $('#pauseMessage');
-		
-        shared.domElements.$tabs = $( '.tab-pane' );
-        shared.domElements.$tabToggles = $( '.tab-toggles' ).find( '[href^="#"]' ).not( '.tab-toggle-empty' );
 		
 		// ui menus
 		
