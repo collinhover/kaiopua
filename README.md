@@ -22,10 +22,10 @@ The core goal of the project is to create a universal design education tool that
 
 ####Design Consulting
 
-Seiji Ikeda - Web Design
-Robert Hower - Graphic Design 
-Tuan Ho - Gaming
-Vassilis Athitsos - Computer Science
+Seiji Ikeda - Web Design  
+Robert Hower - Graphic Design  
+Tuan Ho - Gaming  
+Vassilis Athitsos - Computer Science  
   
 ####Music
   
