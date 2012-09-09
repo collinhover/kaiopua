@@ -22,10 +22,10 @@ The core goal of the project is to create a universal design education tool that
 
 ####Design Consulting
 
-Seiji Ikeda - Assistant Professor (Web Design), Art + Art History  
-Robert Hower - Professor & Dept. Chair (Graphic Design), Art + Art History   
-Tuan Ho - Assistant Professor (Gaming), Art + Art History   
-Vassilis Athitsos - Assistant Professor (Computer Vision), Computer Science and Engineering  
+Seiji Ikeda - Web Design
+Robert Hower - Graphic Design 
+Tuan Ho - Gaming
+Vassilis Athitsos - Computer Science
   
 ####Music
   

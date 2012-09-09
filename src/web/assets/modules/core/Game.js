@@ -505,46 +505,30 @@
             
             var $toggle = $( this ),
 				$tab = $( $toggle.attr( 'href' ) ),
-				$toggleEmpty = $toggle.closest( '.tab-toggles' ).find( '.tab-toggle-empty' ).filter( ':first' ),
 				isMenu = shared.domElements.$menus.is( $tab );
 			
-			// make toggle-able
-            
-            $toggle.on( 'tap', function ( e ) {
+			// for menu toggles, pause/resume game
+			
+			if ( isMenu === true ) {
 				
-				e.preventDefault();
-				
-				// handle menu toggles specially
-				
-				if ( isMenu === true ) {
-					
-					// if showing
-					
-					if ( $tab.hasClass( 'active' ) !== true || paused === false ) {
+				$toggle.on( 'show showing', function () {
 						
-						pause();
+						// if showing
 						
-					}
-					else {
-						
-						resume();
-						
-					}
+						if ( $tab.hasClass( 'active' ) !== true || paused === false ) {
+							
+							pause();
+							
+						}
+						else {
+							
+							resume();
+							
+						}
 					
-				}
-				
-				if ( $tab.hasClass( 'active' ) === true ) {
-					
-					$toggleEmpty.tab('show');
-					
-				}
-				else {
-					
-					$toggle.tab('show');
-					
-				}
-				
-            } );
+				} );
+			
+			}
 			
         } );
 		
@@ -760,18 +744,6 @@
 		// disable right click menu while in game
 		
 		e.preventDefault();
-		
-	}
-	
-	function on_scrolled ( x, y ) {
-		
-		// pause if page scrolled too far
-		
-		if ( y >= shared.domElements.$game.height() * 0.5 ) {
-			
-			pause();
-			
-		}
 		
 	}
 	
@@ -1306,10 +1278,6 @@
             console.log('GAME: PAUSE');
             paused = true;
 			
-			// stop listening for scroll
-			
-			shared.signals.scrolled.remove( on_scrolled );
-			
 			// hide pause button
 			
 			main.dom_fade( {
@@ -1411,18 +1379,7 @@
 			// scroll to top
 			
 			$.scrollTo( shared.domElements.$game, shared.domScrollTime, {
-				easing: main.shared.domScrollEasing,
-				onAfter: function () {
-					
-					// if not paused
-					if ( paused === false ) {
-						
-						// start listening for scroll
-						shared.signals.scrolled.add( on_scrolled );
-						
-					}
-					
-				}
+				easing: main.shared.domScrollEasing
 			} );
 			
 			// when started

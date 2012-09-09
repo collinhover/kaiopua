@@ -22,15 +22,15 @@ var KAIOPUA = (function (main) {
 			"js/jquery-1.7.2.min.js"
         ],
 		libsSecondaryList = [
+			"js/hammer.custom.js",
 			"js/bootstrap.min.js",
-			"js/hammer.custom.js"
-		],
-		libsTertiaryList = [
 			"js/jquery.easing-1.3.min.js",
 			"js/jquery.contentchanged.js",
 			"js/jquery.imagesloaded.min.js",
 			"js/jquery.throttle-debounce.custom.min.js",
 			"js/jquery.scrollbarwidth.min.js",
+		],
+		libsTertiaryList = [
 			"js/jquery.scrollTo-1.4.2.custom.js",
 			"js/jquery.sticky.custom.js"
 		],
@@ -150,6 +150,8 @@ var KAIOPUA = (function (main) {
         shared.domElements.$tabs = $( '.tab-pane' );
         shared.domElements.$tabToggles = $( '.tab-toggles' ).find( '[href^="#"]' ).not( '.tab-toggle-empty' );
 		
+		shared.domElements.$stickied = $( ".is-sticky" );
+		
 		shared.supports = {};
 		shared.supports.pointerEvents = css_property_supported( 'pointer-events' );
        
@@ -180,19 +182,21 @@ var KAIOPUA = (function (main) {
         // add listeners for global events
         // each listener dispatches shared signal
 		
-        $(document)
+        $( document )
 			.on( 'keydown', on_key_pressed )
 			.on( 'keyup', on_key_released );
 		
-		$(window)
+		$( window )
 			.on( 'blur', on_focus_lost )
 			.on( 'focus', on_focus_gained )
-			.on( 'scroll scrollstop', $.throttle( shared.throttleTimeLong, on_scrolled ) )
 			.on( 'orientationchange', on_window_device_orientation )
 			.on( 'MozOrientation', on_window_device_orientation )
 			.on( 'resize', $.throttle( shared.throttleTimeLong, on_window_resized ) );
 		
 		window.onerror = on_error;
+		
+		shared.domElements.$uiOutGame
+			.on( 'scroll scrollstop', $.throttle( shared.throttleTimeLong, on_scrolled ) )
 		
 		// wait for document
 		
@@ -356,28 +360,40 @@ var KAIOPUA = (function (main) {
 				
 			} );
 			
-			// sticky affixed items (usually navbars)
+			// sticky elements
 			
-			$(".affix").each( function () {
+			shared.domElements.$stickied.each( function () {
 				
-				var $navbar = $( this ),
-					$wrapper = $( '<div></div>' ).attr( 'id', $navbar.attr( 'id' ) + 'AffixWrapper' );
-				console.log( 'affixing ', $navbar );
+				var $stickied = $( this ),
+					$relative = $( $stickied.data( "relative" ) ),
+					$target = $( $stickied.data( "target" ) );
 				
-				$wrapper.insertAfter( $navbar ).append( $navbar );
+				// if relative empty, assume uiHeader
 				
-				$navbar.affix( { 
-						offset: { 
-							top: function () {
-								console.log( 'shared.domElements.$navMenus.outerHeight( true )', shared.domElements.$navMenus.outerHeight( true ), ' $wrapper.offset().top', $wrapper.offset().top );
-								return $wrapper.offset().top - shared.domElements.$navMenus.outerHeight( true );
-							} 
-						}
-					} );
+				if ( $relative.length === 0 ) {
+					
+					$relative = shared.domElements.$uiHeader;
+					
+				}
 				
-				shared.signals.windowResized.add( function () {
-					console.log( '$navbar', $navbar, '$wrapper', $wrapper, '$navbar.outerHeight( true )', $navbar.outerHeight( true ) );
-					$wrapper.css( 'height', $navbar.outerHeight( true ) );
+				// if target empty, assume uiOutGame
+				
+				if ( $target.length === 0 ) {
+					
+					$target = shared.domElements.$uiOutGame;
+					
+				}
+				console.log( 'stickying ', $stickied );
+				
+				$stickied.removeClass( 'is-sticky' ).sticky( {
+					
+					topSpacing: function () {
+						
+						return $relative.offset().top + $relative.outerHeight( true );
+						
+					},
+					scrollTarget: $target
+					
 				} );
 				
 			} );
@@ -392,6 +408,37 @@ var KAIOPUA = (function (main) {
 				// add container to menu containers
 				
 				shared.domElements.$menusContainers = shared.domElements.$menusContainers.add( $container );
+				
+			} );
+			
+			// for each tab toggle
+			
+			 shared.domElements.$tabToggles.each( function () {
+				
+				var $toggle = $( this ),
+					$tab = $( $toggle.attr( 'href' ) );
+				
+				// make toggle-able
+				
+				$toggle.on( 'tap', function ( e ) {
+					
+					if ( $tab.hasClass( 'active' ) === true ) {
+						
+						$toggle.trigger( 'showing' );
+						
+					}
+					else {
+						
+						$toggle.tab('show');
+						
+					}
+					
+				} )
+				.on( 'show', function () {
+					
+					on_window_resized();
+					
+				} );
 				
 			} );
 			
@@ -1409,7 +1456,7 @@ var KAIOPUA = (function (main) {
 	}
 	
 	function on_scrolled ( e ) {
-		
+		console.log( 'scrolled' );
 		shared.timeSinceInteraction = 0;
 		
 		shared.signals.scrolled.dispatch( $( window ).scrollLeft(), $( window ).scrollTop() );
