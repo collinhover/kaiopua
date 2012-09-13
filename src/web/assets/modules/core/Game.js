@@ -34,8 +34,9 @@
 		menus = {},
         currentSection, 
         previousSection,
-        paused = false,
 		started = false,
+        paused = false,
+		pausedByFocusLoss = false,
 		transitionTime = 500,
 		navStartDelayTime = 500,
 		sectionChangePauseTime = 500,
@@ -486,9 +487,31 @@
 		shared.domElements.$buttonGamePause.on( 'tap', pause );
 		shared.domElements.$buttonGameResume.on( 'tap', resume );
 		
-		// if focus lost, pause game
+		// pause / resume on focus
 		
-		shared.signals.focusLost.add( pause );
+		shared.signals.focusLost.add( function () {
+			
+			if ( paused !== true ) {
+				
+				pausedByFocusLoss = true;
+			
+			}
+			
+			pause( true );
+			
+		} );
+		
+		shared.signals.focusGained.add( function () {
+			
+			if ( pausedByFocusLoss === true ) {
+				
+				pausedByFocusLoss = false;
+				
+				resume();
+				
+			}
+			
+		} );
 		
 		// primary action items
 		
@@ -499,36 +522,36 @@
 			shared.domElements.$primaryActionsInactive.append( this );
 		});
 		
-		// for each tab toggle
+		// for each menu toggle
         
-        shared.domElements.$tabToggles.each( function () {
+        shared.domElements.$menuToggles.each( function () {
             
             var $toggle = $( this ),
-				$tab = $( $toggle.attr( 'href' ) ),
-				isMenu = shared.domElements.$menus.is( $tab );
+				$tab = $( $toggle.attr( 'href' ) );
 			
-			// for menu toggles, pause/resume game
+			// on toggle, pause/resume game
 			
-			if ( isMenu === true ) {
+			$toggle.on( 'show', function () {
 				
-				$toggle.on( 'show showing', function () {
-						
-						// if showing
-						
-						if ( $tab.hasClass( 'active' ) !== true || paused === false ) {
-							
-							pause();
-							
-						}
-						else {
-							
-							resume();
-							
-						}
+				shared.domElements.$menuToggleActive = $toggle;
+				
+			} )
+			.on( 'show showing', function () {
 					
-				} );
-			
-			}
+					// if showing
+					
+					if ( $tab.hasClass( 'active' ) !== true || paused === false ) {
+						
+						pause( false, true );
+						
+					}
+					else {
+						
+						resume();
+						
+					}
+				
+			} );
 			
         } );
 		
@@ -1271,7 +1294,7 @@
     
     =====================================================*/
 	
-    function pause ( preventDefault ) {
+    function pause ( preventDefault, preventMenuChange ) {
 		// set state
 		
         if (paused === false) {
@@ -1312,6 +1335,14 @@
 					time: transitionTime,
 					opacity: 1
 				} );
+				
+				// swap to default menu
+				
+				if ( preventMenuChange !== true && shared.domElements.$menuToggleDefault.length > 0 && shared.domElements.$menuToggleActive.is( shared.domElements.$menuToggleDefault ) !== true ) {
+					
+					shared.domElements.$menuToggleDefault.tab( 'show' );
+					
+				}
 				
 				// add listener for click on uiGameDimmer
 				

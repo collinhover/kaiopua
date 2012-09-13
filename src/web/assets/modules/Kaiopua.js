@@ -25,14 +25,13 @@ var KAIOPUA = (function (main) {
 			"js/hammer.custom.js",
 			"js/bootstrap.min.js",
 			"js/jquery.easing-1.3.min.js",
-			"js/jquery.contentchanged.js",
 			"js/jquery.imagesloaded.min.js",
 			"js/jquery.throttle-debounce.custom.min.js",
 			"js/jquery.scrollbarwidth.min.js",
 		],
 		libsTertiaryList = [
 			"js/jquery.scrollTo-1.4.2.custom.js",
-			"js/jquery.sticky.custom.js"
+			"js/jquery.multi-sticky.js"
 		],
         setupList = [
 			"assets/modules/core/Game.js"
@@ -114,6 +113,7 @@ var KAIOPUA = (function (main) {
 		shared.throttleTimeMedium = 100;
 		shared.throttleTimeLong = 250;
 		shared.throttleTimeLong = 250;
+		shared.focused = true;
         shared.galleryMode = false;
 		shared.timeSinceInteraction = 0;
 		shared.timeSinceInteractionMax = 300000;
@@ -143,7 +143,11 @@ var KAIOPUA = (function (main) {
 		shared.domElements.$buttonsNavMenus = shared.domElements.$navMenus.find( ".nav li a" );
 		
 		shared.domElements.$menus = shared.domElements.$uiOutGame.find( '.menu' );
+		shared.domElements.$menuDefault = $();
 		shared.domElements.$menusContainers = $();
+		shared.domElements.$menuToggles = $();
+		shared.domElements.$menuToggleActive = $();
+		shared.domElements.$menuToggleDefault = $();
 		
 		shared.domElements.$dropdowns = $( '.dropdown' );
 		
@@ -383,7 +387,6 @@ var KAIOPUA = (function (main) {
 					$target = shared.domElements.$uiOutGame;
 					
 				}
-				console.log( 'stickying ', $stickied );
 				
 				$stickied.removeClass( 'is-sticky' ).sticky( {
 					
@@ -416,29 +419,52 @@ var KAIOPUA = (function (main) {
 			 shared.domElements.$tabToggles.each( function () {
 				
 				var $toggle = $( this ),
-					$tab = $( $toggle.attr( 'href' ) );
-				
-				// make toggle-able
-				
-				$toggle.on( 'tap', function ( e ) {
+					$tab = $( $toggle.attr( 'href' ) ),
+					isMenu = shared.domElements.$menus.is( $tab );
 					
-					if ( $tab.hasClass( 'active' ) === true ) {
+					// make toggle-able
+					
+					$toggle.on( 'tap', function ( e ) {
 						
-						$toggle.trigger( 'showing' );
+						if ( $tab.hasClass( 'active' ) === true ) {
+							
+							$toggle.trigger( 'showing' );
+							
+						}
+						else {
+							
+							$toggle.tab('show');
+							
+						}
+						
+					} )
+					.on( 'shown', function () {
+						
+						shared.domElements.$uiOutGame.scrollTop( 0 );
+						
+						$( window ).trigger( 'resize' );
+						
+					} );
+					
+					// for menu toggles
+					
+					if ( isMenu === true ) {
+						
+						shared.domElements.$menuToggles = shared.domElements.$menuToggles.add( $toggle );
+						
+						// find default menu
+						
+						if ( shared.domElements.$menuToggleDefault.length === 0 && $tab.hasClass( 'active' ) === true ) {
+							
+							shared.domElements.$menuToggleDefault = shared.domElements.$menuToggleActive = $toggle;
+							shared.domElements.$menuDefault = $tab;
+							
+							$toggle.closest( 'li' ).addClass( 'active' );
+							
+						}
 						
 					}
-					else {
-						
-						$toggle.tab('show');
-						
-					}
 					
-				} )
-				.on( 'show', function () {
-					
-					on_window_resized();
-					
-				} );
 				
 			} );
 			
@@ -1445,18 +1471,22 @@ var KAIOPUA = (function (main) {
 	
 	function on_focus_lost ( e ) {
 		
+		shared.focused = false;
+		
 		shared.signals.focusLost.dispatch( e );
 		
 	}
 	
 	function on_focus_gained ( e ) {
 		
+		shared.focused = true;
+		
 		shared.signals.focusGained.dispatch( e );
 		
 	}
 	
 	function on_scrolled ( e ) {
-		console.log( 'scrolled' );
+		
 		shared.timeSinceInteraction = 0;
 		
 		shared.signals.scrolled.dispatch( $( window ).scrollLeft(), $( window ).scrollTop() );
