@@ -548,7 +548,7 @@
 					
 					intersectedObject = intersectionPotential.object || intersectionPotential.mesh;
 					
-					if ( ignore.indexOf( intersectedObject ) === -1 ) {
+					if ( main.index_of_value( ignore, intersectedObject ) === -1 ) {
 						
 						intersection = intersectionPotential;
 						break;

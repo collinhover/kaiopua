@@ -290,7 +290,7 @@
 				
 				element = elements[ i ];
 				
-				if ( this.shapes.indexOf( element.shape ) === -1 ) {
+				if ( main.index_of_value( this.shapes, element.shape ) === -1 ) {
 					
 					element.change_module();
 					
@@ -388,7 +388,7 @@
 			
 			// doesnt have shape yet and is an enabled shape
 			
-			if ( this.shapes.indexOf( shape ) === -1 && ( this.shapesEnabled.length === 0 || this.shapesEnabled.indexOf( shape ) !== -1 ) && ( this.shapesDisabled.length === 0 || this.shapesDisabled.indexOf( shape ) === -1 ) ) {
+			if ( main.index_of_value( this.shapes, shape ) === -1 && ( this.shapesEnabled.length === 0 || main.index_of_value( this.shapesEnabled, shape ) !== -1 ) && ( this.shapesDisabled.length === 0 || main.index_of_value( this.shapesDisabled, shape ) === -1 ) ) {
 				
 				this.shapes.push( shape );
 				added = true;
@@ -414,7 +414,7 @@
 		
 		// remove from list
 		
-		index = this.shapes.indexOf( shape );
+		index = main.index_of_value( this.shapes, shape );
 		
 		if ( index !== -1 ) {
 			
@@ -676,7 +676,7 @@
 				
 				// add to list
 				
-				if ( allPuzzlesCompleted.indexOf( this ) === -1 ) {
+				if ( main.index_of_value( allPuzzlesCompleted, this ) === -1 ) {
 					
 					allPuzzlesCompleted.push( this );
 					

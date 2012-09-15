@@ -40,6 +40,12 @@
     internal init
     
     =====================================================*/
+	
+	// ui
+	
+	shared.domElements = shared.domElements || {};
+	
+	shared.domElements.$errors = $('#errors');
     
     // clear current errors
     clear();

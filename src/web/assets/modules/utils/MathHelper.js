@@ -47,7 +47,7 @@
 		
 		max = Math.max.apply( Math, abs );
 		
-		index = abs.indexOf( max );
+		index = main.index_of_value( abs, max );
 		
 		return arguments[ index ];
 		

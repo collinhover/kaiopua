@@ -52,7 +52,7 @@
 						
 						// update data
 						
-						$element.data( 'stickyData', data );
+						$element.data( 'sticky', data );
 						
 						data.$element = $element;
 						data.$wrapper = $wrapper;
@@ -98,7 +98,7 @@
                 return this.each(function() {
                     
                     var $element = $(this),
-						data = $element.data( 'stickyData' ),
+						data = $element.data( 'sticky' ),
 						$scrollTarget = data.$scrollTarget && data.$scrollTarget.length > 0 ? data.$scrollTarget : $( data.scrollTarget ),
 						scrollTarget = $scrollTarget[ 0 ],
 						scrollTargetIndex = scrollTargets.indexOf( scrollTarget ),
@@ -197,7 +197,7 @@
 	function stickyCheck ( element, parameters ) {
 		
 		var $element = $( element ),
-			data = $element.data( 'stickyData' ),
+			data = $element.data( 'sticky' ),
 			$wrapper,
 			$scrollTarget,
 			elementTop,

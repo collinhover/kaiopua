@@ -13,6 +13,7 @@
 		_Game = {},
 		_ErrorHandler,
 		_Scene,
+		_UIQueue,
 		_MathHelper,
 		_RayHelper,
 		_Messenger,
@@ -36,6 +37,7 @@
         previousSection,
 		started = false,
         paused = false,
+		pausedWithoutControl = false,
 		pausedByFocusLoss = false,
 		transitionTime = 500,
 		navStartDelayTime = 500,
@@ -63,6 +65,7 @@
 			"assets/modules/core/Octree.js",
 			"assets/modules/physics/Physics.js",
 			"assets/modules/physics/RigidBody.js",
+			"assets/modules/ui/UIQueue.js",
 			"assets/modules/utils/MathHelper.js",
 			"assets/modules/utils/VectorHelper.js",
 			"assets/modules/utils/SceneHelper.js",
@@ -327,18 +330,6 @@
 		shared.signals.gamePointerDragEnded = new signals.Signal();
 		shared.signals.gamePointerWheel = new signals.Signal();
 		
-		// game events
-		
-		shared.domElements.$game
-			.on( 'tap', on_pointer_tapped )
-			.on( 'doubletap', on_pointer_doubletapped )
-			.on( 'hold', on_pointer_held )
-			.on( 'dragstart', on_pointer_dragstarted )
-			.on( 'drag', $.throttle( shared.throttleTimeShort, true, on_pointer_dragged ) )
-			.on( 'dragend', on_pointer_dragended )
-			.on( 'mousewheel DOMMouseScroll', on_pointer_wheel )
-			.on( 'contextmenu', on_context_menu );
-		
 		// renderer
 		
         renderer = new THREE.WebGLRenderer( { antialias: true, clearColor: 0x000000, clearAlpha: 0, maxLights: 4 } );
@@ -376,6 +367,7 @@
 		// utility
 		
 		_Scene = main.get_asset_data( "assets/modules/core/Scene.js" );
+		_UIQueue = main.get_asset_data( "assets/modules/ui/UIQueue.js" );
 		_MathHelper = main.get_asset_data( "assets/modules/utils/MathHelper.js" );
 		
 		// scenes
@@ -428,20 +420,76 @@
         
         set_render_processing();
 		
-		// add renderer to display
-		
-		shared.domElements.$game.prepend( renderer.domElement );
-		
 		// ui
+		
+		init_ui();
+		
+		// resize
+		
+        shared.signals.windowResized.add( resize );
+		resize();
+		
+		// set ready
+		
+		main.asset_ready( assetPath );
+        
+		// start updating
+        
+        shared.signals.updated.add( update );
+		
+	}
+	
+	/*===================================================
+    
+    init ui
+    
+    =====================================================*/
+	
+	function init_ui () {
+		
+		shared.domElements = shared.domElements || {};
+		
+		shared.domElements.$game = $('#game');
+		shared.domElements.$uiGameDimmer = $('#uiGameDimmer');
+		shared.domElements.$uiBlocker = $('#uiBlocker');
+		shared.domElements.$ui = $('#ui');
+		shared.domElements.$uiHeader = $( '#uiHeader' );
+		shared.domElements.$uiBody = $( '#uiBody' );
+		shared.domElements.$uiInGame = $( '#uiInGame' );
+		shared.domElements.$uiOutGame = $( '#uiOutGame' );
+		
+		shared.domElements.$dropdowns = $( '.dropdown' );
+		
+        shared.domElements.$tabToggles = $( '.tab-toggles' ).find( '[href^="#"]' ).not( '.tab-toggle-empty' );
+		
+		shared.domElements.$stickied = $( ".is-sticky" );
 		
 		shared.domElements.$primaryActionsActive = $( '#primaryActionsActive' );
 		shared.domElements.$primaryActionsInactive = $( '#primaryActionsInactive' );
-		shared.domElements.$navStart = $( '#navStart' );
-		shared.domElements.$buttonGamePause = $('.button-gamePause');
-		shared.domElements.$buttonGameResume = $('.button-gameResume');
+		shared.domElements.$primaryActionItems = $('.primaryAction-item');
+		shared.domElements.$pauseMessage = $('#pauseMessage');
+		
+		shared.domElements.$menus = shared.domElements.$uiOutGame.find( '.menu' );
+		shared.domElements.$menuDefault = $();
+		shared.domElements.$menusContainers = $();
+		shared.domElements.$menuToggles = $();
+		shared.domElements.$menuToggleActive = $();
+		shared.domElements.$menuToggleDefault = $();
+		shared.domElements.$menuGeneralActive = $( '#menuGeneralActive' );
+		shared.domElements.$menuGeneralInactive = $( '#menuGeneralInactive' );
 		shared.domElements.$menuFarming = $('#menuFarming');
 		shared.domElements.$menuOptions = $('#menuOptions');
-		shared.domElements.$pauseMessage = $('#pauseMessage');
+		
+		shared.domElements.$navbars = $( '.navbar, .subnavbar' );
+		shared.domElements.$navMenus = $('#navMenus');
+		shared.domElements.$navMenusButtons = shared.domElements.$navMenus.find( ".nav li a" );
+		shared.domElements.$navStart = $( '#navStart' );
+		
+		// major buttons
+		
+		shared.domElements.$buttonGamePause = $('#buttonGamePause');
+		shared.domElements.$buttonGameResume = $('#buttonGameResume');
+		shared.domElements.$menuFarmingToggle = $('a[href="#menuFarming"]');
 		
 		// ui menus
 		
@@ -462,6 +510,7 @@
 		shared.domElements.$puzzleActiveCompletionIcons = $( ".puzzle-completionIcon" );
 		shared.domElements.$puzzleActiveStatusText = $( "#puzzleActiveStatusText" );
 		shared.domElements.$puzzleActiveCompletionText = $( "#puzzleActiveCompletionText" );
+		shared.domElements.$puzzleActiveReady = $( "#puzzleActiveReady" );
 		shared.domElements.$puzzleActiveMap = $( "#puzzleActiveMap" );
 		shared.domElements.$puzzleActiveRewards = $( "#puzzleActiveRewards" );
 		
@@ -476,10 +525,340 @@
 		
 		shared.domElements.$collection = $('#collection');
 		
-		// show menus nav
+		// set all images to not draggable
 		
-		main.dom_fade( {
-			element: shared.domElements.$navMenus.find( '.nav.hidden' )
+		if ( Modernizr.draganddrop ) {
+			
+			$( 'img' ).attr( 'draggable', false );
+			
+		}
+		
+		// all links that point to a location in page
+		
+		$( 'a[href^="#"]' ).each( function () {
+			
+			var $element = $( this ),
+				$section = $( $element.data( 'section' ) ),
+				$target = $( $element.attr( 'href' ) );
+			
+			// remove click
+			
+			$element.attr( 'onclick', 'return false;' );
+			
+			// if has section or target, prioritize section over target
+			
+			if ( $section.length > 0 || $target.length > 0 ) {
+				
+				$element.on( 'tap', function () {
+					
+					( $section[0] || $target[0] ).scrollIntoView( true );
+					
+				} );
+				
+			}
+				
+		} );
+		
+		// handle disabled items only if pointer-events are not supported
+		
+		if ( shared.supports.pointerEvents === false ) {
+			
+			main.dom_ignore_pointer( $(".ignore-pointer, .disabled"), true );
+			
+		}
+		
+		// primary action items
+		
+		shared.domElements.$primaryActionItems.each( function () {
+			
+			var $item = $( this );
+			
+			if ( $item.parent().is( shared.domElements.$primaryActionsActive ) && $item.hasClass( 'hidden collapsed' ) ) {
+				
+				shared.domElements.$primaryActionsInactive.append( $item );
+				
+			}
+			
+		} ).on('show.active', function () {
+			
+			shared.domElements.$primaryActionsActive.append( this );
+			
+		})
+		.on('hidden.active', function () {
+			
+			shared.domElements.$primaryActionsInactive.append( this );
+			
+		});
+		
+		// for all drop downs
+		
+		shared.domElements.$dropdowns.each( function () {
+			
+			var $dropdown = $( this );
+			
+			// close when drop down item is selected
+			
+			$dropdown.find( '.dropdown-menu a' ).each( function () {
+				
+				var $button = $( this );
+				
+				$button.on( 'tap', function () {
+						
+						$button.parent().removeClass( 'active' );
+						
+						$dropdown.removeClass('open');
+						
+					} );
+				
+			} );
+			
+		} );
+		
+		// for each navbar
+		
+		shared.domElements.$navbars.each( function () {
+			
+			var $navbar = $( this ),
+				$buttonCollapse = $navbar.find( '[data-toggle="collapse"]' ),
+				$navCollapse = $navbar.find( '.nav-collapse' );
+			
+			// if has collapsable
+			
+			if ( $buttonCollapse.length > 0 && $navCollapse.length > 0 ) {
+				
+				$navCollapse.find( 'a' ).each( function () {
+					
+					var $button = $( this );
+					
+					$button.on( 'tap', function () {
+							
+							if( $buttonCollapse.hasClass( 'collapsed' ) !== true ) {
+								
+								$buttonCollapse.trigger( 'click' );
+								
+							}
+							
+						} );
+					
+				} );
+				
+			}
+			
+		} );
+		
+		// sticky elements
+		
+		shared.domElements.$stickied.each( function () {
+			
+			var $stickied = $( this ),
+				$relative = $( $stickied.data( "relative" ) ),
+				$target = $( $stickied.data( "target" ) );
+			
+			// if relative empty, assume uiHeader
+			
+			if ( $relative.length === 0 ) {
+				
+				$relative = shared.domElements.$uiHeader;
+				
+			}
+			
+			// if target empty, assume uiOutGame
+			
+			if ( $target.length === 0 ) {
+				
+				$target = shared.domElements.$uiOutGame;
+				
+			}
+			
+			$stickied.removeClass( 'is-sticky' ).sticky( {
+				
+				topSpacing: function () {
+					
+					return $relative.offset().top + $relative.outerHeight( true );
+					
+				},
+				scrollTarget: $target
+				
+			} );
+			
+		} );
+		
+		// for each menu
+		
+		shared.domElements.$menus.each( function () {
+			
+			var $menu = $( this ),
+				$container = $menu.find( '.container' ).first();
+			
+			// add container to menu containers
+			
+			shared.domElements.$menusContainers = shared.domElements.$menusContainers.add( $container );
+			
+		} );
+		
+		// for each menu toggle
+		
+		shared.domElements.$navMenusButtons.each( function () {
+			
+			var $toggle = $( this ),
+				$menu = $( $toggle.attr( 'href' ) ),
+				isMenu = shared.domElements.$menus.is( $menu ),
+				activate,
+				deactivate,
+				first,
+				last;
+			
+			if ( isMenu === true ) {
+				
+				shared.domElements.$menuToggles = shared.domElements.$menuToggles.add( $toggle );
+				
+				$toggle.data( '$menu', $menu );
+				
+				$menu.data( '$toggle', $toggle );
+				$menu.data( 'scrollTop', 0 );
+				
+				// functions
+				
+				activate = function () {
+					
+					shared.domElements.$menuToggleActive = $toggle;
+					
+					pause( false, true );
+					
+					//$toggle.tab('show');
+					
+					$toggle.trigger( 'show' );
+					
+					$toggle.closest( 'li' ).addClass( 'active' );
+					
+					$menu.addClass( 'active' );
+					
+					main.dom_fade( {
+						element: $menu,
+						opacity: 1
+					} );
+					
+					// scroll to last location for this tab
+					
+					shared.domElements.$uiOutGame.scrollTop( $menu.data( 'scrollTop' ) );
+					
+					$toggle.trigger( 'shown' );
+					
+				};
+				
+				deactivate = function () {
+					
+					// store scroll position
+					
+					$menu.data( 'scrollTop', shared.domElements.$uiOutGame.scrollTop() );
+					
+					$toggle.closest( 'li' ).removeClass( 'active' );
+					
+					$menu.removeClass( 'active' );
+					
+					main.dom_fade( {
+						element: $menu,
+						time: 0
+					} );
+					
+				};
+				
+				first = function () {
+					
+					pause( false, true );
+					
+					main.dom_fade( {
+						element: shared.domElements.$uiOutGame,
+						opacity: 1
+					} );
+					
+				};
+				
+				last = function () {
+					
+					main.dom_fade( {
+						element: shared.domElements.$uiOutGame
+					} );
+					
+					resume();
+					
+				};
+				
+				// events
+				
+				$toggle.on( 'tap', function () {
+					
+					if ( $menu.hasClass( 'active' ) === true ) {
+						
+						_UIQueue.remove( $menu );
+						
+					}
+					else {
+						
+						_UIQueue.add( {
+							element: $menu,
+							container: shared.domElements.$uiOutGame,
+							activate: activate,
+							deactivate: deactivate,
+							first: first,
+							last: last
+						} );
+						
+					}
+					
+				} )
+				.on( 'shown', function () {
+					
+					$( window ).trigger( 'resize' );
+					
+				} );
+				
+				// find default menu
+				
+				if ( shared.domElements.$menuToggleDefault.length === 0 && $menu.hasClass( 'active' ) === true ) {
+					
+					shared.domElements.$menuToggleDefault = shared.domElements.$menuToggleActive = $toggle;
+					shared.domElements.$menuDefault = $menu;
+					
+					deactivate();
+					
+				}
+				
+			}
+			
+		} );
+		
+		// for each tab toggle
+		
+		 shared.domElements.$tabToggles.each( function () {
+			
+			var $toggle = $( this ),
+				$tab = $( $toggle.attr( 'href' ) );
+				
+				$toggle.data( '$tab', $tab );
+				
+				// make toggle-able
+				
+				$toggle.on( 'tap', function ( e ) {
+					
+					if ( $tab.hasClass( 'active' ) === true ) {
+						
+						$toggle.trigger( 'showing' );
+						
+					}
+					else {
+						
+						$toggle.tab('show');
+						
+					}
+					
+				} )
+				.on( 'shown', function () {
+					
+					$toggle.trigger( 'showing' );
+					
+				} );
+			
 		} );
 		
 		// pause / resume
@@ -494,6 +873,11 @@
 			if ( paused !== true ) {
 				
 				pausedByFocusLoss = true;
+				
+				main.dom_collapse( {
+					element: shared.domElements.$pauseMessage,
+					show: true
+				} );
 			
 			}
 			
@@ -513,68 +897,38 @@
 			
 		} );
 		
-		// primary action items
+		// add renderer to display
 		
-		$('.primaryAction-item').on('show.active', function () {
-			shared.domElements.$primaryActionsActive.append( this );
-		});
-		$('.primaryAction-item').on('hidden.active', function () {
-			shared.domElements.$primaryActionsInactive.append( this );
-		});
+		shared.domElements.$game.prepend( renderer.domElement );
 		
-		// for each menu toggle
-        
-        shared.domElements.$menuToggles.each( function () {
-            
-            var $toggle = $( this ),
-				$tab = $( $toggle.attr( 'href' ) );
+		// events
+		
+		shared.domElements.$game
+			.on( 'tap', on_pointer_tapped )
+			.on( 'doubletap', on_pointer_doubletapped )
+			.on( 'hold', on_pointer_held )
+			.on( 'dragstart', on_pointer_dragstarted )
+			.on( 'drag', $.throttle( shared.throttleTimeShort, true, on_pointer_dragged ) )
+			.on( 'dragend', on_pointer_dragended )
+			.on( 'mousewheel DOMMouseScroll', on_pointer_wheel )
+			.on( 'contextmenu', on_context_menu );
 			
-			// on toggle, pause/resume game
-			
-			$toggle.on( 'show', function () {
-				
-				shared.domElements.$menuToggleActive = $toggle;
-				
-			} )
-			.on( 'show showing', function () {
-					
-					// if showing
-					
-					if ( $tab.hasClass( 'active' ) !== true || paused === false ) {
-						
-						pause( false, true );
-						
-					}
-					else {
-						
-						resume();
-						
-					}
-				
-			} );
-			
-        } );
+		shared.domElements.$uiOutGame
+			.on( 'scroll scrollstop', $.throttle( shared.throttleTimeLong, on_scrolled ) );
 		
 		// hide uiOutGame
 		
 		main.dom_fade( {
 			element: shared.domElements.$uiOutGame,
-			time: 0,
-			opacity: 0
+			time: 0
 		} );
 		
-		// resize
+		// show menus nav
 		
-        shared.signals.windowResized.add( resize );
-		resize();
-		
-		// set ready
-		
-		main.asset_ready( assetPath );
-        
-		// start updating
-        
-        shared.signals.updated.add( update );
+		main.dom_fade( {
+			element: shared.domElements.$navMenus,
+			opacity: 1
+		} );
 		
 	}
 	
@@ -617,7 +971,8 @@
 		setTimeout( function () {
 			
 			main.dom_fade( {
-				element: shared.domElements.$navStart
+				element: shared.domElements.$navStart,
+				opacity: 1
 			} );
 			
 		}, navStartDelayTime );
@@ -762,6 +1117,14 @@
 		
     }
 	
+	function on_scrolled ( e ) {
+		
+		shared.timeSinceInteraction = 0;
+		
+		shared.signals.scrolled.dispatch( $( window ).scrollLeft(), $( window ).scrollTop() );
+		
+	}
+	
 	function on_context_menu ( e ) {
 		
 		// disable right click menu while in game
@@ -828,7 +1191,7 @@
 			
 			passName = requiredPre[ i ];
 			
-			defaultPassIndex = passesNames.indexOf( passName );
+			defaultPassIndex = main.index_of_value( passesNames, passName );
 			
 			if ( defaultPassIndex === -1 ) {
 				
@@ -844,7 +1207,7 @@
 			
 			passName = requiredPost[ i ];
 			
-			defaultPassIndex = passesNames.indexOf( passName );
+			defaultPassIndex = main.index_of_value( passesNames, passName );
 			
 			if ( defaultPassIndex === -1 ) {
 				
@@ -1119,9 +1482,7 @@
 				// hide blocker
 				
 				main.dom_fade( {
-					element: shared.domElements.$uiBlocker,
-					time: transitionTime,
-					opacity: 0
+					element: shared.domElements.$uiBlocker
 				} );
 				
 				resume();
@@ -1151,7 +1512,6 @@
             
 			main.dom_fade( {
 				element: shared.domElements.$uiBlocker,
-				time: transitionTime,
 				opacity: 1
 			} );
             
@@ -1219,8 +1579,7 @@
 			// hide start nav
 			
 			main.dom_fade( {
-				element: shared.domElements.$navStart,
-				opacity: 0
+				element: shared.domElements.$navStart
 			} );
 			
 			// set intro section
@@ -1279,7 +1638,8 @@
 				// show start menu
 				
 				main.dom_fade( {
-					element: shared.domElements.$navStart
+					element: shared.domElements.$navStart,
+					opacity: 1
 				} );
 				
 			});
@@ -1300,26 +1660,43 @@
         if (paused === false) {
             console.log('GAME: PAUSE');
             paused = true;
+			pausedWithoutControl = preventDefault;
 			
 			// hide pause button
 			
 			main.dom_fade( {
 				element: shared.domElements.$buttonGamePause,
-				opacity: 0,
 				time: 0
 			} );
 			
-			// uiGameDimmer
+			// pause priority
 			
-			main.dom_fade( {
-				element: shared.domElements.$uiGameDimmer,
-				time: transitionTime,
-				opacity: 0.75
-			} );
-			
-			// default actions
-			
-			if ( preventDefault !== true ) {
+			if ( pausedWithoutControl === true ) {
+				
+				// block ui
+				
+				main.dom_fade( {
+					element: shared.domElements.$uiBlocker,
+					opacity: 0.9
+				} );
+				
+			}
+			else {
+				
+				// uiGameDimmer
+				
+				main.dom_fade( {
+					element: shared.domElements.$uiGameDimmer,
+					opacity: 0.75
+				} );
+				
+				// swap to default menu
+				
+				if ( preventMenuChange !== true && shared.domElements.$menuToggleDefault.length > 0 ) {
+					
+					shared.domElements.$menuToggleDefault.trigger( 'tap' );
+					
+				}
 				
 				// show resume button
 				
@@ -1327,22 +1704,6 @@
 					element: shared.domElements.$buttonGameResume,
 					opacity: 1
 				} );
-				
-				// show uiOutGame
-				
-				main.dom_fade( {
-					element: shared.domElements.$uiOutGame,
-					time: transitionTime,
-					opacity: 1
-				} );
-				
-				// swap to default menu
-				
-				if ( preventMenuChange !== true && shared.domElements.$menuToggleDefault.length > 0 && shared.domElements.$menuToggleActive.is( shared.domElements.$menuToggleDefault ) !== true ) {
-					
-					shared.domElements.$menuToggleDefault.tab( 'show' );
-					
-				}
 				
 				// add listener for click on uiGameDimmer
 				
@@ -1375,29 +1736,32 @@
         if ( paused === true && _ErrorHandler.errorState !== true && ( typeof _Messenger === 'undefined' || _Messenger.active !== true ) ) {
 			console.log('GAME: RESUME');
 			
-			// hide uiOutGame
+			// hide resume button
 			
 			main.dom_fade( {
-				element: shared.domElements.$uiOutGame,
-				time: transitionTime,
-				opacity: 0
+				element: shared.domElements.$buttonGameResume,
+				time: 0
 			} );
+			
+			// hide pause message
+			
+			main.dom_collapse( {
+				element: shared.domElements.$pauseMessage
+			} );
+			
+			// unblock ui
+			
+			main.dom_fade( {
+				element: shared.domElements.$uiBlocker
+			} );
+			
+			_UIQueue.clear( shared.domElements.$uiOutGame );
 			
 			// uiGameDimmer
 			
 			shared.domElements.$uiGameDimmer.off( '.resume' );
 			main.dom_fade( {
-				element: shared.domElements.$uiGameDimmer,
-				time: transitionTime,
-				opacity: 0
-			} );
-			
-			// hide resume button
-			
-			main.dom_fade( {
-				element: shared.domElements.$buttonGameResume,
-				opacity: 0,
-				time: 0
+				element: shared.domElements.$uiGameDimmer
 			} );
 			
 			// show pause button
@@ -1405,12 +1769,6 @@
 			main.dom_fade( {
 				element: shared.domElements.$buttonGamePause,
 				opacity: 1
-			} );
-			
-			// scroll to top
-			
-			$.scrollTo( shared.domElements.$game, shared.domScrollTime, {
-				easing: main.shared.domScrollEasing
 			} );
 			
 			// when started
@@ -1422,6 +1780,7 @@
 			}
 			
 			paused = false;
+			pausedWithoutControl = false;
 			
 			shared.signals.gameResumed.dispatch();
             
@@ -1480,29 +1839,44 @@
     
     function resize( screenWidth, screenHeight ) {
 		
-		var gameWidth = shared.gameWidth = shared.domElements.$game.width(),
-			gameHeight = shared.gameHeight = shared.domElements.$game.height();
+		var gameWidth,
+			gameHeight,
+			heightHeader = shared.domElements.$uiHeader.height(),
+			uiBodyHeight =( screenHeight || shared.screenHeight ) - heightHeader;
 		
-		// render passes
+		// ui
 		
-		renderPasses.focusVignette.uniforms[ "screenWidth" ].value = gameWidth;
-        renderPasses.focusVignette.uniforms[ "screenHeight" ].value = gameHeight;
-        
+		shared.domElements.$uiBody.css( {
+			'height' : uiBodyHeight,
+			'top' : heightHeader
+		} );
+		
+		// because ui out game is scrollable, its grids are not aligned to main header grids
+		// so we need to pad left side of the individual containers to correct for this
+		
+		if ( shared.domElements.$uiOutGame[0].scrollHeight > uiBodyHeight ) {
+			
+			shared.domElements.$menusContainers.css( 'padding-left', $.scrollbarWidth() );
+			
+		}
+		
         // renderer
+		
+		gameWidth = shared.gameWidth = shared.domElements.$game.width();
+		gameHeight = shared.gameHeight = shared.domElements.$game.height();
 		
         renderer.setSize( gameWidth, gameHeight );
         renderTarget.width = gameWidth;
         renderTarget.height = gameHeight;
 		
-		// cameras
+		renderPasses.focusVignette.uniforms[ "screenWidth" ].value = gameWidth;
+        renderPasses.focusVignette.uniforms[ "screenHeight" ].value = gameHeight;
 		
 		camera.aspect = gameWidth / gameHeight;
         camera.updateProjectionMatrix();
 		
 		cameraBG.aspect = gameWidth / gameHeight;
         cameraBG.updateProjectionMatrix();
-        
-		// composer
 		
         renderComposer.reset( renderTarget );
 		

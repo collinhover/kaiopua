@@ -722,7 +722,7 @@
 			
 			faces = this.geometry.faces;
 			
-			if ( faces.indexOf( searchFor ) !== -1 ) {
+			if ( main.index_of_value( faces, searchFor ) !== -1 ) {
 				
 				has = true;
 				

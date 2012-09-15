@@ -161,7 +161,7 @@
 				
 				// get indices
 				
-				index = this.bodies.indexOf( rigidBody );
+				index = main.index_of_value( this.bodies, rigidBody );
 				
 				// if adding
 				
@@ -179,7 +179,7 @@
 					
 					if ( rigidBody.gravitySource === true ) {
 					
-						index = this.bodiesGravity.indexOf( rigidBody );
+						index = main.index_of_value( this.bodiesGravity, rigidBody );
 						
 						if ( index === -1 ) {
 							
@@ -195,7 +195,7 @@
 					
 					if ( rigidBody.dynamic === true ) {
 						
-						index = this.bodiesDynamic.indexOf( rigidBody );
+						index = main.index_of_value( this.bodiesDynamic, rigidBody );
 						
 						if ( index === -1 ) {
 							
@@ -227,7 +227,7 @@
 					
 					if ( rigidBody.gravitySource === true ) {
 					
-						index = this.bodiesGravity.indexOf( rigidBody );
+						index = main.index_of_value( this.bodiesGravity, rigidBody );
 						
 						if ( index === -1 ) {
 							
@@ -241,7 +241,7 @@
 					
 					if ( rigidBody.dynamic === true ) {
 						
-						index = this.bodiesDynamic.indexOf( rigidBody );
+						index = main.index_of_value( this.bodiesDynamic, rigidBody );
 						
 						if ( index !== -1 ) {
 							

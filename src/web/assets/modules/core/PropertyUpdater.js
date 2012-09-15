@@ -150,7 +150,7 @@
 			
 			// children
 			
-			if ( children.indexOf( updater ) === -1 ) {
+			if ( main.index_of_value( children, updater ) === -1 ) {
 				
 				children.push( updater );
 				
@@ -195,7 +195,7 @@
 				
 				updater = updaters[ i ];
 				
-				index = children.indexOf( updater );
+				index = main.index_of_value( children, updater );
 				
 				if ( index !== -1 ) {
 					

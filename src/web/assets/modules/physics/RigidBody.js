@@ -805,7 +805,7 @@
 		
 		// add to new
 		
-		index = this.gravityChildren.indexOf( gravityChild );
+		index = main.index_of_value( this.gravityChildren, gravityChild );
 		
 		if ( index === -1 ) {
 			
@@ -829,7 +829,7 @@
 		
 		var index;
 		
-		index = this.gravityChildren.indexOf( gravityChild );
+		index = main.index_of_value( this.gravityChildren, gravityChild );
 		
 		if ( index !== -1 ) {
 			

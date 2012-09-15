@@ -79,108 +79,104 @@
 	<!-- END game -->
 	
 	<!-- ui -->
-	<div id="ui" class="unselectable">
+	<div id="ui" class="unselectable ignore-pointer">
 		
 		<!-- uiHeader -->
 		<header id="uiHeader">
 			
 			<h1 class="visuallyhidden">Kai 'Opua: an interactive moon-sized Hawaiian space worm that will teach you to be a better designer!</h1>
 			
-			<!-- navMenus -->
-			<div id="navMenus">
-			
-				<div class="container">
-					<div class="navbar navbar-inverse navbar-flush">
-						<div class="navbar-inner">
-							<div class="container">
-								<ul class="nav pull-right logo-group">
-									<li>
-										<a class="button-gamePause hidden">
-											<div class="iconk-large-widthFollow">
-												<img src="assets/icons/pause_rev_64.png" class="iconk-small" draggable="false"><p class="inline-type">Pause</p>
-											</div>
-										</a>
-									</li>
-									<li>
-										<a class="button-gameResume hidden">
-											<div class="iconk-large-widthFollow">
-												<img src="assets/icons/play_rev_64.png" class="iconk-small" draggable="false"><p class="inline-type">Resume</p>
-											</div>
-										</a>
-									</li>
-									<li class="dropdown">
-										<a href="#" id="logoDropdownToggle" class="logo dropdown-toggle" data-toggle="dropdown">
-											<img src="assets/icons/whale_rev_64.png" alt="Kai 'Opua" id="logoIcon1" class="iconk-large">
-											<h1 class="logo-type inline-type">Kai 'Opua</h1>
-											<img src="assets/icons/character_rev_64.png" alt="Kai 'Opua" id="logoIcon2" class="iconk-large">
-											<img src="assets/icons/taro_rev_64.png" alt="Kai 'Opua" id="logoIcon3" class="iconk-medium">
-											<b class="caret"></b>
-										</a>
-										<ul class="dropdown-menu" role="menu" aria-labelledby="logoDropdownToggle">
-											<li>
-												<a href="https://github.com/collinhover/kaiopua" target="_blank">
-													<img src="assets/icons/github_64.png" class="iconk-small">
-													<p>Get the Code</p>
-												</a>
-											</li>
-											<li>
-												<a href="http://www.facebook.com/sharer.php?u=http%3A%2F%2Fcollinhover.com&t=Kai 'Opua%3A%20an%20interactive%20moon-sized%20Hawaiian%20space%20worm%20that%20will%20teach%20you%20to%20be%20a%20better%20designer!" target="_blank">
-													<img src="assets/icons/facebook_64.png" class="iconk-small">
-													<p>Like</p>
-												</a>
-											</li>
-											<li>
-												<a href="http://twitter.com/share?url=http%3A%2F%2Fcollinhover.com&text=Kai 'Opua%3A%20an%20interactive%20moon-sized%20Hawaiian%20space%20worm%20that%20will%20teach%20you%20to%20be%20a%20better%20designer!" target="_blank">
-													<img src="assets/icons/twitter_64.png" class="iconk-small">
-													<p>Share</p>
-												</a>
-											</li>
-										</ul>
-									</li>
-								</ul>
-								
-								<div class="pull-left">
-									<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-										<span class="icon-bar"></span>
-										<span class="icon-bar"></span>
-										<span class="icon-bar"></span>
+			<div class="container">
+				<div class="navbar navbar-inverse navbar-flush">
+					<div class="navbar-inner">
+						<div class="container">
+							<ul class="nav pull-right logo-group">
+								<li>
+									<a id="buttonGamePause" class="hidden">
+										<div class="iconk-large-widthFollow">
+											<img src="assets/icons/pause_rev_64.png" class="iconk-small" draggable="false"><p class="inline-type">Pause</p>
+										</div>
 									</a>
-								</div>
-								
-								<div class="nav-collapse">
-									<ul class="nav nav-pills tab-toggles hidden">
+								</li>
+								<li>
+									<a id="buttonGameResume" class="hidden">
+										<div class="iconk-large-widthFollow">
+											<img src="assets/icons/play_rev_64.png" class="iconk-small" draggable="false"><p class="inline-type">Resume</p>
+										</div>
+									</a>
+								</li>
+								<li class="dropdown">
+									<a href="#" id="logoDropdownToggle" class="logo dropdown-toggle" data-toggle="dropdown">
+										<img src="assets/icons/whale_rev_64.png" alt="Kai 'Opua" id="logoIcon1" class="iconk-large">
+										<h1 class="logo-type inline-type">Kai 'Opua</h1>
+										<img src="assets/icons/character_rev_64.png" alt="Kai 'Opua" id="logoIcon2" class="iconk-large">
+										<img src="assets/icons/taro_rev_64.png" alt="Kai 'Opua" id="logoIcon3" class="iconk-medium">
+										<b class="caret"></b>
+									</a>
+									<ul class="dropdown-menu" role="menu" aria-labelledby="logoDropdownToggle">
 										<li>
-											<a href="#menuFarming" class="nav-icon">
-												<img src="assets/icons/farming_rev_64.png" class="iconk-large">
-												<p class="inline-type">Farming</p>
+											<a href="https://github.com/collinhover/kaiopua" target="_blank">
+												<img src="assets/icons/github_64.png" class="iconk-small">
+												<p>Get the Code</p>
 											</a>
 										</li>
-										<li class="disabled dim">
-											<a href="#menuMap" class="nav-icon">
-												<img src="assets/icons/map_rev_64.png" class="iconk-large">
-												<p class="inline-type">Map</p>
+										<li>
+											<a href="http://www.facebook.com/sharer.php?u=http%3A%2F%2Fcollinhover.com&t=Kai 'Opua%3A%20an%20interactive%20moon-sized%20Hawaiian%20space%20worm%20that%20will%20teach%20you%20to%20be%20a%20better%20designer!" target="_blank">
+												<img src="assets/icons/facebook_64.png" class="iconk-small">
+												<p>Like</p>
 											</a>
 										</li>
 										<li>
-											<a href="#menuOptions" class="nav-icon">
-												<img src="assets/icons/cog_rev_64.png" class="iconk-large">
-												<p class="inline-type">Options</p>
+											<a href="http://twitter.com/share?url=http%3A%2F%2Fcollinhover.com&text=Kai 'Opua%3A%20an%20interactive%20moon-sized%20Hawaiian%20space%20worm%20that%20will%20teach%20you%20to%20be%20a%20better%20designer!" target="_blank">
+												<img src="assets/icons/twitter_64.png" class="iconk-small">
+												<p>Share</p>
 											</a>
 										</li>
 									</ul>
-								</div>
+								</li>
+							</ul>
+							
+							<div class="pull-left">
+								<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+									<span class="icon-bar"></span>
+									<span class="icon-bar"></span>
+									<span class="icon-bar"></span>
+								</a>
 							</div>
+							
+							<div id="navMenus" class="nav-collapse hidden">
+								<ul class="nav nav-pills">
+									<li>
+										<a href="#menuFarming" class="nav-icon">
+											<img src="assets/icons/farming_rev_64.png" class="iconk-large">
+											<p class="inline-type">Farming</p>
+										</a>
+									</li>
+									<li class="disabled dim">
+										<a href="#menuMap" class="nav-icon">
+											<img src="assets/icons/map_rev_64.png" class="iconk-large">
+											<p class="inline-type">Map</p>
+										</a>
+									</li>
+									<li>
+										<a href="#menuOptions" class="nav-icon">
+											<img src="assets/icons/cog_rev_64.png" class="iconk-large">
+											<p class="inline-type">Options</p>
+										</a>
+									</li>
+								</ul>
+							</div>
+							<!-- END navMenus -->
 						</div>
 					</div>
 				</div>
 			</div>
-			<!-- END navMenus -->
 			
 		</header>
 		<!-- END uiHeader -->
 		
 		<!-- uiBody -->
-		<div id="uiBody">
+		<div id="uiBody" class="unselectable ignore-pointer">
 			
 			<!-- uiGameDimmer -->
 			<div id="uiGameDimmer" class="unselectable">
@@ -389,10 +385,26 @@
 			<!-- END uiInGame -->
 			
 			<!-- uiOutGame -->
-			<div id="uiOutGame" class="ignore-pointer tab-content">
+			<div id="uiOutGame">
+				
+				<!-- menuGeneralInactive -->
+				<section id="menuGeneralInactive" class="menu hidden">
+				
+				</section>
+				<!-- END menuGeneralInactive -->
+				
+				<!-- menuGeneralActive -->
+				<section id="menuGeneralActive" class="menu hidden">
+					
+					<div class="container">
+					
+					</div>
+					
+				</section>
+				<!-- END menuGeneralActive -->
 				
 				<!-- menuFarming -->
-				<section id="menuFarming" class="menu tab-pane fade in">
+				<section id="menuFarming" class="menu hidden">
 					
 					<div class="container">
 						
@@ -531,6 +543,7 @@
 							</div>
 							
 							<div id="puzzleActive" class="hidden">
+								
 								<div id="puzzleActiveOverview" class="row">
 									<div class="span6">
 										<h6>Name</h6>
@@ -659,30 +672,98 @@
 									</div>
 								</div>
 								
-								<div id="puzzleActiveMap" class="hidden">
-									<h3>Puzzle Map <small>click on the colored shapes to customize the object you've planted there</small></h3>
-									<div class="alert alert-info">
-										<button type="button" class="close" data-dismiss="alert">&times;</button>
-										<strong>Check it out:</strong> You'll need to fill every space and use at least 1 of each of the shapes you chose to complete the puzzle!
-									</div>
-									
-									<div id="puzzleActiveMapGrid" class="well container-center grid-gutterless">
-										<div class="row">
-											<a href="#" class="span1">
-												<img src="assets/textures/dirt_128.jpg" alt="" class="iconk">
-											</a>
-											<a href="#" class="span1">
-												<img src="assets/textures/dirt_128.jpg" alt="" class="iconk">
-											</a>
-											<a href="#" class="span1">
-												<img src="assets/textures/dirt_128.jpg" alt="" class="iconk">
-											</a>
+								<div id="puzzleActiveReady" class="hidden">
+								
+									<div id="puzzleActiveMap">
+										<h3>Puzzle Map <small>click on the colored shapes to customize the object you've planted there</small></h3>
+										
+										<div class="alert alert-info">
+											<button type="button" class="close" data-dismiss="alert">&times;</button>
+											<strong>Check it out:</strong> You'll need to fill every space and use at least 1 of each of the shapes you chose to complete the puzzle!
 										</div>
+										
+										<div id="puzzleActiveMapGrid" class="well container-center grid-gutterless">
+											<div class="row">
+												<a href="#" class="span1">
+													<img src="assets/textures/dirt_128.jpg" alt="" class="iconk">
+												</a>
+												<a href="#" class="span1">
+													<img src="assets/textures/dirt_128.jpg" alt="" class="iconk">
+												</a>
+												<a href="#" class="span1">
+													<img src="assets/textures/dirt_128.jpg" alt="" class="iconk">
+												</a>
+											</div>
+										</div>
+										
 										<div class="not-ready">
 											<div class="not-ready-content">
 												<div class="not-ready-message">
-													<h3>Sorry, this feature is not ready yet :(</h3>
-													<p>(we're working on it!)</p>
+													<h3>Sorry, this feature is not ready yet :( <small>(we're working on it!)</small></h3>
+												</div>
+											</div>
+										</div>
+										
+									</div>
+									
+									<div id="puzzleActiveRewards">
+										<h3>Rewards <small>the less plants you use to fill a puzzle, the better the reward</small></h3>
+										<div class="row">
+											<div class="span4">
+												<div id="puzzleActiveRewardsOkay">
+													<h4>Okay <small>(0 - 79%)</small></h4>
+													<div class="puzzle-rewardsList row">
+														<div class="span4">
+															<div class="well well-success">
+																<div class="row">
+																	<i class="puzzle-rewardsEarnedStatusIcon iconk-topRight icon-ok-sign"></i>
+																	<div class="span1 container-center">
+																		<img src="assets/icons/grid_64.png" class="iconk-large">
+																		<p>Puzzle</p>
+																		<h6>Puzzle</h6>
+																	</div>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+											<div class="span4">
+												<div id="puzzleActiveRewardsGood">
+													<h4>Good <small>(80 - 99%)</small></h4>
+													<div class="puzzle-rewardsList row">
+														<div class="span4">
+															<div class="well">
+																<div class="row">
+																	<div class="span1 container-center">
+																		<i class="puzzle-rewardsEarnedStatusIcon iconk-topRight icon-ok-sign hidden"></i>
+																		<img src="assets/icons/shape_monomino_64.png" class="iconk-large">
+																		<p>Shape</p>
+																		<h6>Shape</h6>
+																	</div>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+											<div class="span4">
+												<div id="puzzleActiveRewardsPerfect">
+													<h4>Perfect <small>(100%)</small></h4>
+													<div class="puzzle-rewardsList row">
+														<div class="span4">
+															<div class="well">
+																<div class="row">
+																	<div class="span1 container-center">
+																		<i class="puzzle-rewardsEarnedStatusIcon iconk-topRight icon-ok-sign hidden"></i>
+																		<img src="assets/icons/plant_64.png" class="iconk-large">
+																		<p>Plant</p>
+																		<h6>Plant</h6>
+																	</div>
+																</div>
+															</div>
+														</div>
+													</div>
 												</div>
 											</div>
 										</div>
@@ -690,68 +771,6 @@
 									
 								</div>
 								
-								<div id="puzzleActiveRewards" class="hidden">
-									<h3>Rewards <small>the less plants you use to fill a puzzle, the better the reward</small></h3>
-									<div class="row">
-										<div class="span4">
-											<div id="puzzleActiveRewardsOkay">
-												<h4>Okay <small>(0 - 79%)</small></h4>
-												<div class="puzzle-rewardsList row">
-													<div class="span4">
-														<div class="well well-success">
-															<div class="row">
-																<i class="puzzle-rewardsEarnedStatusIcon iconk-topRight icon-ok-sign"></i>
-																<div class="span1 container-center">
-																	<img src="assets/icons/grid_64.png" class="iconk-large">
-																	<p>Puzzle</p>
-																	<h6>Puzzle</h6>
-																</div>
-															</div>
-														</div>
-													</div>
-												</div>
-											</div>
-										</div>
-										<div class="span4">
-											<div id="puzzleActiveRewardsGood">
-												<h4>Good <small>(80 - 99%)</small></h4>
-												<div class="puzzle-rewardsList row">
-													<div class="span4">
-														<div class="well">
-															<div class="row">
-																<div class="span1 container-center">
-																	<i class="puzzle-rewardsEarnedStatusIcon iconk-topRight icon-ok-sign hidden"></i>
-																	<img src="assets/icons/shape_monomino_64.png" class="iconk-large">
-																	<p>Shape</p>
-																	<h6>Shape</h6>
-																</div>
-															</div>
-														</div>
-													</div>
-												</div>
-											</div>
-										</div>
-										<div class="span4">
-											<div id="puzzleActiveRewardsPerfect">
-												<h4>Perfect <small>(100%)</small></h4>
-												<div class="puzzle-rewardsList row">
-													<div class="span4">
-														<div class="well">
-															<div class="row">
-																<div class="span1 container-center">
-																	<i class="puzzle-rewardsEarnedStatusIcon iconk-topRight icon-ok-sign hidden"></i>
-																	<img src="assets/icons/plant_64.png" class="iconk-large">
-																	<p>Plant</p>
-																	<h6>Plant</h6>
-																</div>
-															</div>
-														</div>
-													</div>
-												</div>
-											</div>
-										</div>
-									</div>
-								</div>
 							</div>
 						</section>
 						<!-- END puzzle -->
@@ -882,12 +901,13 @@
 				<!-- END menuFarming -->
 				
 				<!-- menuOptions -->
-				<section id="menuOptions" class="menu tab-pane fade in active">
+				<section id="menuOptions" class="menu hidden active">
 					
 					<div class="container">
 						
 						<header class="subhead">
-							<h1><img src="assets/icons/cog_64.png" draggable="false" class="iconk-large"> Options</h1>
+							<img src="assets/icons/cog_64.png" draggable="false" class="iconk-large">
+							<h1 class="inline-type">Options</h1>
 							<p class="lead">Handle your game data, fiddle with settings, and change controls</p>
 							<div id="navOptions" class="subnavbar is-sticky">
 								<div class="navbar-inner">
@@ -1021,7 +1041,7 @@
 						<footer id="footer" class="container">
 							<div class="row">
 								<div class="span12">
-									<p>Kai 'Opua is an open source universal education tool that is intended to teach players to better understand design concepts.</p>
+									<p>Kai 'Opua is an open source universal education tool that is intended to teach players better understanding of design concepts.</p>
 									<p>Designed and developed by <a href="http://www.collinhover.com/" target="_blank">Collin Hover</a></p>
 								</div>
 							</div>

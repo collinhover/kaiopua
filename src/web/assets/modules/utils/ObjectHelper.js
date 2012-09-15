@@ -916,7 +916,7 @@
 					
 					// if vertex id has not been placed in new order yet
 					
-					if ( vertexOrderNew.indexOf( vertexId ) === -1 ) {
+					if ( main.index_of_value( vertexOrderNew, vertexId ) === -1 ) {
 						
 						vertexOrderScores = vertexOrderScoresList[ vertexId ];
 						

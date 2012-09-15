@@ -115,9 +115,10 @@
 		_Planting.Instance.prototype.start_ui = start_ui;
 		_Planting.Instance.prototype.stop_ui = stop_ui;
 		_Planting.Instance.prototype.update_ui = update_ui;
+		_Planting.Instance.prototype.show_ui = show_ui;
 		
-		_Planting.Instance.prototype.select_ui_plant = select_ui_plant;
 		_Planting.Instance.prototype.select_ui_puzzle = select_ui_puzzle;
+		_Planting.Instance.prototype.select_ui_plant = select_ui_plant;
 		
 		_Planting.Instance.prototype.update_ui_puzzle = update_ui_puzzle;
 		
@@ -243,7 +244,7 @@
 		
 		var index;
 		
-		index = this.skins.indexOf( skin );
+		index = main.index_of_value( this.skins, skin );
 		
 		if ( index !== -1 ) {
 			
@@ -277,7 +278,7 @@
 		
 		var index;
 		
-		index = this.shapes.indexOf( shape );
+		index = main.index_of_value( this.shapes, shape );
 		
 		if ( index !== -1 ) {
 			
@@ -328,7 +329,7 @@
 			
 			// valid shape
 			
-			if ( this.shapes.indexOf( shape ) !== -1 && $shapePicker ) {
+			if ( main.index_of_value( this.shapes, shape ) !== -1 && $shapePicker ) {
 				
 				// add / remove shapes based on whether picked
 				
@@ -520,14 +521,14 @@
 			}
 			// select
 			else {
-				console.log( 'puzzle selected ', puzzle.id );
+				
+				this.puzzleSelected.dispatch( puzzle );
+				
 				if ( this.affectUI === true ) {
 					
 					this.select_ui_puzzle();
 					
 				}
-				
-				this.puzzleSelected.dispatch( puzzle );
 				
 			}
 			
@@ -1026,7 +1027,7 @@
 				
 				// find if in all plants list
 				
-				index = this.plants.indexOf( this.plant );
+				index = main.index_of_value( this.plants, this.plant );
 				
 				// if planted
 				
@@ -1083,7 +1084,7 @@
 			
 			// handle new plant
 			
-			if ( plantNew instanceof _GridElement.Instance && this.skins.indexOf( plantNew.skin ) !== -1 && this.shapes.indexOf( plantNew.shape ) !== -1 ) {
+			if ( plantNew instanceof _GridElement.Instance && main.index_of_value( this.skins, plantNew.skin ) !== -1 && main.index_of_value( this.shapes, plantNew.shape ) !== -1 ) {
 				console.log(' > PLANTING: plant to', this.plant);
 				this.plant = plantNew;
 				
@@ -1293,7 +1294,7 @@
 					
 					// toggle based on puzzle
 					
-					index = this.puzzle.shapes.indexOf( shape );
+					index = main.index_of_value( this.puzzle.shapes, shape );
 					
 					// puzzle has shape
 					console.log( 'shape ', shape, ' picked? ', shapeData.picked );
@@ -1405,19 +1406,23 @@
 		
 	}
 	
+	function show_ui ( callback ) {
+		
+		if ( shared.domElements.$menuFarming.hasClass( 'active' ) !== true || _Game.paused !== true ) {
+			
+			shared.domElements.$menuFarmingToggle.trigger( 'tap' );
+			
+		}
+		
+	}
+	
 	function select_ui_puzzle () {
 		
 		if ( this.puzzle instanceof _Puzzle.Instance && this.puzzle.started === true ) {
 			
-			// trigger farming menu
+			this.show_ui();
 			
-			shared.domElements.$buttonFarmingMenu.trigger( 'tap' );
-			
-			// scroll to puzzle
-			
-			$.scrollTo( shared.domElements.$puzzle, shared.domScrollTime, {
-				easing: main.shared.domScrollEasing
-			} );
+			shared.domElements.$puzzle[0].scrollIntoView( true );
 			
 		}
 		
@@ -1475,15 +1480,11 @@
 			
 			if ( moveScreen === true ) {
 				
-				// trigger farming menu
-				
-				shared.domElements.$buttonFarmingMenu.trigger( 'tap' );
+				show_ui();
 				
 				// scroll to plant
 				
-				$.scrollTo( shared.domElements.$plant, shared.domScrollTime, {
-					easing: main.shared.domScrollEasing
-				} );
+				shared.domElements.$plant[0].scrollIntoView( true );
 				
 			}
 			
@@ -1540,10 +1541,10 @@
 				time: 0
 			} );
 			
-			// show map and rewards
+			// show ready items
 			
 			main.dom_collapse( {
-				element: $.merge( shared.domElements.$puzzleActiveMap, shared.domElements.$puzzleActiveRewards ),
+				element: shared.domElements.$puzzleActiveReady,
 				show: true
 			} );
 			
@@ -1562,7 +1563,8 @@
 			// show shape activators
 			
 			main.dom_fade( { 
-				element: shared.domElements.$puzzleActiveShapes
+				element: shared.domElements.$puzzleActiveShapes,
+				opacity: 1
 			} );
 			
 		}
@@ -1575,8 +1577,6 @@
 				
 				this.puzzle.shapesReady.add( this.update_ui_puzzle, this );
 				shared.signals.gameResumed.addOnce( on_resume, this );
-				
-				// select puzzle
 				
 				this.select_ui_puzzle();
 				
@@ -1608,8 +1608,7 @@
 			// hide shape activators
 			
 			main.dom_fade( { 
-				element: shared.domElements.$puzzleActiveShapes,
-				opacity: 0
+				element: shared.domElements.$puzzleActiveShapes
 			} );
 			
 		}

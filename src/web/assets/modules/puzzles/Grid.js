@@ -143,7 +143,7 @@
 					
 					occupant = module.occupant;
 					
-					if ( occupant && occupants.indexOf( occupant ) === -1 ) {
+					if ( occupant && main.index_of_value( occupants, occupant ) === -1 ) {
 						
 						occupants.push( occupant );
 						
@@ -177,7 +177,7 @@
 						
 						element = occupant.gridElement;
 						
-						if ( element instanceof _GridElement.Instance && elements.indexOf( element ) === -1 ) {
+						if ( element instanceof _GridElement.Instance && main.index_of_value( elements, element ) === -1 ) {
 							
 							elements.push( element );
 							
@@ -497,7 +497,7 @@
 			
 			// if not to be excluded
 			
-			if ( modulesExcluding.indexOf( module ) === -1 ) {
+			if ( main.index_of_value( modulesExcluding, module ) === -1 ) {
 				
 				// pass module to callback
 				
@@ -565,7 +565,7 @@
 			
 			// store module
 			
-			index = this.modules.indexOf( module );
+			index = main.index_of_value( this.modules, module );
 			
 			if ( index === -1 ) {
 				
@@ -624,7 +624,7 @@
 					
 					module = this.modules[ j ];
 					
-					index = module.connected.indexOf( moduleRemove );
+					index = main.index_of_value( module.connected, moduleRemove );
 					
 					if ( index !== -1 ) {
 						
@@ -712,7 +712,7 @@
 			
 			// if module not matched or excluded
 			
-			if ( modulesMatching.indexOf( module ) === -1 && modulesExcluding.indexOf( module ) === -1 ) {
+			if ( main.index_of_value( modulesMatching, module ) === -1 && main.index_of_value( modulesExcluding, module ) === -1 ) {
 				
 				// get module matrix world
 				

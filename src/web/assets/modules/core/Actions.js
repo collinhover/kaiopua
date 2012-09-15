@@ -146,7 +146,7 @@
 				
 				delete this.map[ name ];
 				
-				index = this.actionNames.indexOf( name );
+				index = main.index_of_value( this.actionNames, name );
 				
 				if ( index !== -1 ) {
 					
@@ -307,7 +307,7 @@
 				
 				// store eventName
 				
-				if ( this.eventsActive.indexOf( eventName ) === -1 ) {
+				if ( main.index_of_value( this.eventsActive, eventName ) === -1 ) {
 					
 					this.eventsActive.push( eventName );
 					
@@ -364,7 +364,7 @@
 							
 							callback = callbacks[ j ];
 							
-							if ( callbacksCalled.indexOf( callback ) === -1 ) {
+							if ( main.index_of_value( callbacksCalled, callback ) === -1 ) {
 								
 								callback();
 								

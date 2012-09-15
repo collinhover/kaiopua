@@ -143,7 +143,7 @@
 		
 		// if does not yet contain object
 		
-		index = this.objects.indexOf( object );
+		index = main.index_of_value( this.objects, object );
 		
 		if ( index === -1 ) {
 			
@@ -211,7 +211,7 @@
 		
 		// if contains object
 		
-		index = this.objects.indexOf( object );
+		index = main.index_of_value( this.objects, object );
 		
 		if ( index !== -1 ) {
 			
@@ -229,7 +229,7 @@
 				
 				objectData = objectsDataRemoved[ i ];
 				
-				index = this.objectsData.indexOf( objectData );
+				index = main.index_of_value( this.objectsData, objectData );
 				
 				if ( index !== -1 ) {
 					
@@ -383,7 +383,7 @@
 				objectData = objects[ i ];
 				object = objectData.object;
 				
-				resultObjectIndex = resultsObjectsIndices.indexOf( object );
+				resultObjectIndex = main.index_of_value( resultsObjectsIndices, object );
 				
 				// if needed, create new result data
 				
@@ -701,7 +701,7 @@
 		
 		indexOctant = octree.indexOctant = main.is_number( indexOctant ) ? indexOctant : main.is_number( octree.indexOctant ) ? octree.indexOctant : octant_index.call( this, octree );
 		
-		if ( this.nodesIndices.indexOf( indexOctant ) === -1 ) {
+		if ( main.index_of_value( this.nodesIndices, indexOctant ) === -1 ) {
 			
 			this.nodesIndices.push( indexOctant );
 			
@@ -759,7 +759,7 @@
 		
 		if ( indexOctant !== -1 ) {
 			
-			index = this.nodesIndices.indexOf( indexOctant );
+			index = main.index_of_value( this.nodesIndices, indexOctant );
 			
 			this.nodesIndices.splice( index, 1 );
 			
@@ -811,7 +811,7 @@
 			
 			// add to this objects list
 			
-			index = this.objects.indexOf( object );
+			index = main.index_of_value( this.objects, object );
 			
 			if ( index === -1 ) {
 				
@@ -891,7 +891,7 @@
 			
 			// remove from this objects list
 			
-			index = this.objects.indexOf( object );
+			index = main.index_of_value( this.objects, object );
 			
 			if ( index !== -1 ) {
 				
@@ -936,7 +936,7 @@
 		
 		// if object data removed and this is not on nodes removed from
 		
-		if ( objectRemoved === true ) {//&& removeData.nodesRemovedFrom.indexOf( this ) === -1 ) {
+		if ( objectRemoved === true ) {//&& main.index_of_value( removeData.nodesRemovedFrom, this ) === -1 ) {
 			
 			removeData.nodesRemovedFrom.push( this );
 			

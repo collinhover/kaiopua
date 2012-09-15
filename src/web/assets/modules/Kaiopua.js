@@ -28,6 +28,7 @@ var KAIOPUA = (function (main) {
 			"js/jquery.imagesloaded.min.js",
 			"js/jquery.throttle-debounce.custom.min.js",
 			"js/jquery.scrollbarwidth.min.js",
+			"js/jquery.placeholdme.js"
 		],
 		libsTertiaryList = [
 			"js/jquery.scrollTo-1.4.2.custom.js",
@@ -126,35 +127,9 @@ var KAIOPUA = (function (main) {
 		shared.domScrollEasing = 'easeInOutCubic';
 		
         shared.domElements = {};
-		shared.domElements.$game = $('#game');
-		shared.domElements.$uiGameDimmer = $('#uiGameDimmer');
-		shared.domElements.$uiBlocker = $('#uiBlocker');
-		shared.domElements.$errors = $('#errors');
-		shared.domElements.$ui = $('#ui');
-		shared.domElements.$uiHeader = $( '#uiHeader' );
-		shared.domElements.$uiBody = $( '#uiBody' );
-		shared.domElements.$uiInGame = $( '#uiInGame' );
-		shared.domElements.$uiOutGame = $( '#uiOutGame' );
 		shared.domElements.$statusInactive = $( '#statusInactive' );
 		shared.domElements.$statusActive = $( '#statusActive' );
-		
-		shared.domElements.$navbars = $( '.navbar, .subnavbar' );
-		shared.domElements.$navMenus = $('#navMenus');
-		shared.domElements.$buttonsNavMenus = shared.domElements.$navMenus.find( ".nav li a" );
-		
-		shared.domElements.$menus = shared.domElements.$uiOutGame.find( '.menu' );
-		shared.domElements.$menuDefault = $();
-		shared.domElements.$menusContainers = $();
-		shared.domElements.$menuToggles = $();
-		shared.domElements.$menuToggleActive = $();
-		shared.domElements.$menuToggleDefault = $();
-		
-		shared.domElements.$dropdowns = $( '.dropdown' );
-		
-        shared.domElements.$tabs = $( '.tab-pane' );
-        shared.domElements.$tabToggles = $( '.tab-toggles' ).find( '[href^="#"]' ).not( '.tab-toggle-empty' );
-		
-		shared.domElements.$stickied = $( ".is-sticky" );
+		shared.domElements.$statusItems = $('.status-item');
 		
 		shared.supports = {};
 		shared.supports.pointerEvents = css_property_supported( 'pointer-events' );
@@ -199,377 +174,164 @@ var KAIOPUA = (function (main) {
 		
 		window.onerror = on_error;
 		
-		shared.domElements.$uiOutGame
-			.on( 'scroll scrollstop', $.throttle( shared.throttleTimeLong, on_scrolled ) )
+		// begin updating
 		
-		// wait for document
+		update();
+	
+		// loader
 		
-		//$(document).ready( function () {
-			
-			// begin updating
-			
-			update();
+		loader.active = false;
+		loader.listCount = 0;
+		loader.lists = [];
+		loader.listLocations = {};
+		loader.listLoaded = {};
+		loader.listMessages = {};
+		loader.listCallbacks = {};
+		loader.loading = [];
+		loader.loadingListIDs = [];
+		loader.started = [];
+		loader.loaded = [];
+		loader.loadingOrLoaded = [];
+		loader.listCurrent = '';
+		loader.loadTypeBase = 'script';
+		loader.tips = [];
 		
-			// loader
-			
-			loader.active = false;
-			loader.listCount = 0;
-			loader.lists = [];
-			loader.listLocations = {};
-			loader.listLoaded = {};
-			loader.listMessages = {};
-			loader.listCallbacks = {};
-			loader.loading = [];
-			loader.loadingListIDs = [];
-			loader.started = [];
-			loader.loaded = [];
-			loader.loadingOrLoaded = [];
-			loader.listCurrent = '';
-			loader.loadTypeBase = 'script';
-			loader.tips = [];
-			
-			Object.defineProperty( main, 'loadingHeader', {
-				set: function ( header ) { 
-					
-					if ( typeof loader.progressBar !== 'undefined' ) {
-						
-						loader.progressBar.header = header;
-						
-					}
-					
-				}
-			});
-			
-			Object.defineProperty( main, 'loadingTips', {
-				set: function ( tips ) { 
-					
-					if ( is_array( tips ) ) {
-						
-						loader.tips = tips.slice( 0 );
-						
-					}
-					
-				}
-			});
-			
-			add_loaded_locations( libsPrimaryList );
-			add_loaded_locations( libsSecondaryList );
-			add_loaded_locations( libsTertiaryList );
-			
-			// ui
-			
-			// set all images to not draggable
-			
-			if ( Modernizr.draganddrop ) {
+		Object.defineProperty( main, 'loadingHeader', {
+			set: function ( header ) { 
 				
-				$( 'img' ).attr( 'draggable', false );
+				if ( typeof loader.progressBar !== 'undefined' ) {
+					
+					loader.progressBar.header = header;
+					
+				}
 				
 			}
-			
-			// all links that point to a location in page
-			
-			$( 'a[href^="#"]' ).each( function () {
+		});
+		
+		Object.defineProperty( main, 'loadingTips', {
+			set: function ( tips ) { 
 				
-				var $element = $( this ),
-					$section = $( $element.data( 'section' ) ),
-					$target = $( $element.attr( 'href' ) );
-				
-				// remove click
-				
-				$element.attr( 'onclick', 'return false;' );
-				
-				// if has section or target
-				
-				if ( $section.length > 0 ) {
+				if ( is_array( tips ) ) {
 					
-					$element.on( 'tap', function () {
-						
-						$section[0].scrollIntoView( true );
-						
-					} );
+					loader.tips = tips.slice( 0 );
 					
 				}
-				else if ( $target.length > 1 ) {
-					
-					$element.on( 'tap', function () {
-						
-						$target[0].scrollIntoView( true );
-						
-						/*
-						// scroll to top position
-						
-						$.scrollTo( $target, shared.domScrollTime, {
-							easing: main.shared.domScrollEasing
-						} );
-						*/
-					} );
-					
-				}
-					
-			} );
-			
-			// for all drop downs
-			
-			shared.domElements.$dropdowns.each( function () {
-				
-				var $dropdown = $( this );
-				
-				// close when drop down item is selected
-				
-				$dropdown.find( '.dropdown-menu a' ).each( function () {
-					
-					var $button = $( this );
-					
-					$button.on( 'tap', function () {
-							
-							$button.parent().removeClass( 'active' );
-							
-							$dropdown.removeClass('open');
-							
-						} );
-					
-				} );
-				
-			} );
-			
-			// for each navbar
-			
-			shared.domElements.$navbars.each( function () {
-				
-				var $navbar = $( this ),
-					$buttonCollapse = $navbar.find( '[data-toggle="collapse"]' ),
-					$navCollapse = $navbar.find( '.nav-collapse' );
-				
-				// if has collapsable
-				
-				if ( $buttonCollapse.length > 0 && $navCollapse.length > 0 ) {
-					
-					$navCollapse.find( 'a' ).each( function () {
-						
-						var $button = $( this );
-						
-						$button.on( 'tap', function () {
-								
-								if( $buttonCollapse.hasClass( 'collapsed' ) !== true ) {
-									
-									$buttonCollapse.trigger( 'click' );
-									
-								}
-								
-							} );
-						
-					} );
-					
-				}
-				
-			} );
-			
-			// sticky elements
-			
-			shared.domElements.$stickied.each( function () {
-				
-				var $stickied = $( this ),
-					$relative = $( $stickied.data( "relative" ) ),
-					$target = $( $stickied.data( "target" ) );
-				
-				// if relative empty, assume uiHeader
-				
-				if ( $relative.length === 0 ) {
-					
-					$relative = shared.domElements.$uiHeader;
-					
-				}
-				
-				// if target empty, assume uiOutGame
-				
-				if ( $target.length === 0 ) {
-					
-					$target = shared.domElements.$uiOutGame;
-					
-				}
-				
-				$stickied.removeClass( 'is-sticky' ).sticky( {
-					
-					topSpacing: function () {
-						
-						return $relative.offset().top + $relative.outerHeight( true );
-						
-					},
-					scrollTarget: $target
-					
-				} );
-				
-			} );
-			
-			// for each menu
-			
-			shared.domElements.$menus.each( function () {
-				
-				var $menu = $( this ),
-					$container = $menu.find( '.container' ).first();
-				
-				// add container to menu containers
-				
-				shared.domElements.$menusContainers = shared.domElements.$menusContainers.add( $container );
-				
-			} );
-			
-			// for each tab toggle
-			
-			 shared.domElements.$tabToggles.each( function () {
-				
-				var $toggle = $( this ),
-					$tab = $( $toggle.attr( 'href' ) ),
-					isMenu = shared.domElements.$menus.is( $tab );
-					
-					// make toggle-able
-					
-					$toggle.on( 'tap', function ( e ) {
-						
-						if ( $tab.hasClass( 'active' ) === true ) {
-							
-							$toggle.trigger( 'showing' );
-							
-						}
-						else {
-							
-							$toggle.tab('show');
-							
-						}
-						
-					} )
-					.on( 'shown', function () {
-						
-						shared.domElements.$uiOutGame.scrollTop( 0 );
-						
-						$( window ).trigger( 'resize' );
-						
-					} );
-					
-					// for menu toggles
-					
-					if ( isMenu === true ) {
-						
-						shared.domElements.$menuToggles = shared.domElements.$menuToggles.add( $toggle );
-						
-						// find default menu
-						
-						if ( shared.domElements.$menuToggleDefault.length === 0 && $tab.hasClass( 'active' ) === true ) {
-							
-							shared.domElements.$menuToggleDefault = shared.domElements.$menuToggleActive = $toggle;
-							shared.domElements.$menuDefault = $tab;
-							
-							$toggle.closest( 'li' ).addClass( 'active' );
-							
-						}
-						
-					}
-					
-				
-			} );
-			
-			// handle statusActive items
-			
-			$('.status-item').on('show.active', function () {
-					shared.domElements.$statusActive.append( this );
-				}).on('hidden.active', function () {
-					shared.domElements.$statusInactive.append( this );
-				});
-			
-			// handle disabled items only if pointer-events are not supported
-			
-			if ( shared.supports.pointerEvents === false ) {
-				
-				dom_ignore_pointer( $(".ignore-pointer, .disabled"), true );
 				
 			}
-			
-			// init worker
-			
-			worker.$domElement =  $("#worker");
-			worker.$progressStarted = worker.$domElement.find( "#workerProgressBarStarted" );
-			worker.$progressCompleted = worker.$domElement.find( "#workerProgressBarCompleted" );
-			worker.taskCount = 0;
-			worker.tasksStartedIds = [];
-			worker.tasksStarted = {};
-			worker.tasksCompleted = {};
-			worker.collapseDelay = 1000;
+		});
+		
+		add_loaded_locations( libsPrimaryList );
+		add_loaded_locations( libsSecondaryList );
+		add_loaded_locations( libsTertiaryList );
+		
+		// init worker
+		
+		worker.$domElement =  $("#worker");
+		worker.$progressStarted = worker.$domElement.find( "#workerProgressBarStarted" );
+		worker.$progressCompleted = worker.$domElement.find( "#workerProgressBarCompleted" );
+		worker.taskCount = 0;
+		worker.tasksStartedIds = [];
+		worker.tasksStarted = {};
+		worker.tasksCompleted = {};
+		worker.collapseDelay = 1000;
+		
+		worker_reset();
+		worker.$domElement.on( 'hidden.reset', function () {
 			
 			worker_reset();
-			worker.$domElement.on( 'hidden.reset', function () {
+			
+		} );
+		
+		// public functions
+		
+		main.type = type;
+		main.is_number = is_number;
+		main.is_array = is_array;
+		main.is_image = is_image;
+		main.is_image_ext = is_image_ext;
+		main.is_event = is_event;
+		
+		main.extend = extend;
+		main.time_test = time_test;
+		
+		main.ensure_array = ensure_array;
+		main.ensure_not_array = ensure_not_array;
+		main.modify_array = modify_array;
+		main.index_of_value = index_of_value;
+		main.index_of_values = index_of_values;
+		main.index_of_property = index_of_property;
+		main.index_of_properties = index_of_properties;
+		
+		main.css_property_supported = css_property_supported;
+		main.dom_generate_image = dom_generate_image;
+		main.dom_ignore_pointer = dom_ignore_pointer;
+		main.dom_fade = dom_fade;
+		main.dom_collapse = dom_collapse;
+		
+		main.get_pointer = get_pointer;
+		main.reposition_pointer = reposition_pointer;
+		
+		main.worker_reset = worker_reset;
+		main.worker_start_task = worker_start_task;
+		main.worker_complete_task = worker_complete_task;
+		
+		main.load = load;
+		main.get_is_loaded = get_is_loaded;
+		main.get_is_loading = get_is_loading;
+		main.get_is_loading_or_loaded = get_is_loading_or_loaded;
+		
+		main.get_asset_path = get_asset_path;
+		main.get_ext = get_ext;
+		main.add_default_ext = add_default_ext;
+		main.remove_ext = remove_ext;
+		main.get_alt_path = get_alt_path;
+		
+		main.asset_register = asset_register;
+		main.asset_require = asset_require;
+		main.asset_ready = asset_ready;
+		main.set_asset = set_asset;
+		main.get_asset = get_asset;
+		main.get_asset_data = get_asset_data;
+		
+		// resize once
+		
+		on_window_resized();
+		
+		// setup
+		
+		shared.domElements.$statusItems.each( function () {
+			
+			var $item = $( this );
+			
+			if ( $item.parent().is( shared.domElements.$statusActive ) && $item.hasClass( 'hidden collapsed' ) ) {
 				
-				worker_reset();
+				shared.domElements.$statusInactive.append( $item );
 				
-			} );
+			}
 			
-			// public functions
+		} ).on('show.active', function () {
 			
-			main.type = type;
-			main.is_number = is_number;
-			main.is_array = is_array;
-			main.is_image = is_image;
-			main.is_image_ext = is_image_ext;
-			main.is_event = is_event;
+			shared.domElements.$statusActive.append( this );
 			
-			main.extend = extend;
-			main.time_test = time_test;
+		}).on('hidden.active', function () {
 			
-			main.ensure_array = ensure_array;
-			main.ensure_not_array = ensure_not_array;
-			main.modify_array = modify_array;
-			main.index_of_object_with_property_value = index_of_object_with_property_value;
+			shared.domElements.$statusInactive.append( this );
 			
-			main.css_property_supported = css_property_supported;
-			main.dom_generate_image = dom_generate_image;
-			main.dom_ignore_pointer = dom_ignore_pointer;
-			main.dom_fade = dom_fade;
-			main.dom_collapse = dom_collapse;
+		});
+		
+		$("#preloader").one( 'hidden', function () {
 			
-			main.get_pointer = get_pointer;
-			main.reposition_pointer = reposition_pointer;
+			$( this ).remove();
 			
-			main.worker_reset = worker_reset;
-			main.worker_start_task = worker_start_task;
-			main.worker_complete_task = worker_complete_task;
+			// start loading setup
 			
-			main.load = load;
-			main.get_is_loaded = get_is_loaded;
-			main.get_is_loading = get_is_loading;
-			main.get_is_loading_or_loaded = get_is_loading_or_loaded;
+			asset_require( setupList, init_setup, true );
 			
-			main.get_asset_path = get_asset_path;
-			main.get_ext = get_ext;
-			main.add_default_ext = add_default_ext;
-			main.remove_ext = remove_ext;
-			main.get_alt_path = get_alt_path;
-			
-			main.asset_register = asset_register;
-			main.asset_require = asset_require;
-			main.asset_ready = asset_ready;
-			main.set_asset = set_asset;
-			main.get_asset = get_asset;
-			main.get_asset_data = get_asset_data;
-			
-			// resize once
-			
-			on_window_resized();
-			
-			// hide preloader
-			
-			dom_collapse( {
-				element: $("#preloader"),
-			} );
-			$("#preloader").on( 'hidden.init', function () {
-				
-				$( this ).off( 'hidden.init' );
-				
-				// start loading setup
-				
-				asset_require( setupList, init_setup, true );
-				
-			} );
-			
-		//} );
+		} );
+		
+		dom_collapse( {
+			element: $("#preloader"),
+		} );
 		
     }
     
@@ -732,7 +494,7 @@ var KAIOPUA = (function (main) {
 						
 						recordCopies = records.copies;
 						
-						recordSourceIndex = recordSources.indexOf( value );
+						recordSourceIndex = index_of_value( recordSources, value );
 						
 						// if value does not yet exist in records
 						
@@ -833,7 +595,7 @@ var KAIOPUA = (function (main) {
 				
 				element = elements[ i ];
 				
-				index = target.indexof( element );
+				index = index_of_value( target, element );
 				
 				if ( remove === true ) {
 					
@@ -860,27 +622,71 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function index_of_object_with_property_value( array, property, value ) {
+	function index_of_value( array, value ) {
 		
-		var i, l,
-			index = -1,
-			object;
-		
-		for ( i = 0, l = array.length; i < l; i++ ) {
+		for ( var i = 0, l = array.length; i < l; i++ ) {
 			
-			object = array[ i ];
-			
-			if ( value === object[ property ] ) {
+			if ( value === array[ i ] ) {
 				
-				index = i;
-				
-				break;
+				return i;
 				
 			}
 			
 		}
 		
-		return index;
+		return -1;
+		
+	}
+	
+	function index_of_values( array, values ) {
+		
+		for ( var i = 0, l = array.length; i < l; i++ ) {
+			
+			if ( index_of( values, array[ i ] ) !== -1 ) {
+				
+				return i;
+				
+			}
+			
+		}
+		
+		return -1;
+		
+	}
+	
+	function index_of_property( array, property, value ) {
+		
+		for ( var i = 0, l = array.length; i < l; i++ ) {
+			
+			if ( value === array[ i ][ property ] ) {
+				
+				return i;
+				
+			}
+			
+		}
+		
+		return -1;
+		
+	}
+	
+	function index_of_properties( array, properties, values ) {
+		
+		for ( var i = 0, il = array.length; i < il; i++ ) {
+			
+			for ( var j = 0, jl = properties.length; j < jl; j++ ) {
+				
+				if ( values[ j ] === array[ i ][ properties[ j ] ] ) {
+					
+					return i;
+					
+				}
+				
+			}
+			
+		}
+		
+		return -1;
 		
 	}
 	
@@ -1039,6 +845,7 @@ var KAIOPUA = (function (main) {
 			easing,
 			callback,
 			isHidden,
+			isCollapsed,
 			fadeComplete = function () {
 				
 				// if faded out completely, hide
@@ -1077,11 +884,12 @@ var KAIOPUA = (function (main) {
 		if ( $element.length > 0 ) {
 			
 			time = is_number( parameters.time ) ? parameters.time : shared.domFadeTime;
-			opacity = is_number( parameters.opacity ) ? parameters.opacity : 1;
+			opacity = is_number( parameters.opacity ) ? parameters.opacity : 0;
 			easing = typeof parameters.easing === 'string' ? parameters.easing : shared.domFadeEasing;
 			callback = parameters.callback;
 			
 			isHidden = $element.hasClass( 'hidden' );
+			isCollapsed = $element.hasClass( 'collapsed' );
 			
 			// stop animations
 			
@@ -1110,6 +918,14 @@ var KAIOPUA = (function (main) {
 				
 			}
 			else {
+				
+				// if collapsed
+				
+				if ( isCollapsed === true ) {
+					
+					$element.$element.css( 'height', '' ).removeClass( 'collapsed' );
+					
+				}
 				
 				$element.trigger( 'show' );
 				
@@ -1145,7 +961,6 @@ var KAIOPUA = (function (main) {
 			
 			var $element = $( this ),
 				isCollapsed,
-				$placeholder,
 				isHidden,
 				heightCurrent,
 				heightTarget = 0,
@@ -1185,7 +1000,7 @@ var KAIOPUA = (function (main) {
 			
 			if ( isCollapsed !== true && ( isHidden === true || parameters.initHidden === true ) ) {
 				
-				$element.css( { height : 0 } ).addClass( 'collapsed' ).addClass('hidden');
+				$element.css( 'height', 0 ).addClass( 'collapsed' ).addClass('hidden');
 				isCollapsed = true;
 				
 			}
@@ -1200,21 +1015,16 @@ var KAIOPUA = (function (main) {
 				
 				if ( show === true ) {
 					
-					// add placeholder after element and add element to body
-					
-					$placeholder = $( '<div id="collapsePlaceholder"></div>' );
-					$element.after( $placeholder ).appendTo( 'body' );
-					
 					// find correct current height and target height
+					
+					$element.placeholdme().appendTo( 'body' );
 					
 					heightCurrent = $element.height();
 					$element.css( 'height', '' );
 					heightTarget = $element.height();
 					$element.css( 'height', heightCurrent );
 					
-					// place element back to correct place and delete placeholder
-					
-					$placeholder.before( $element ).remove();
+					$element.placeholdme( 'revert' );
 					
 					// enable pointer
 					
@@ -1484,41 +1294,11 @@ var KAIOPUA = (function (main) {
 		shared.signals.focusGained.dispatch( e );
 		
 	}
-	
-	function on_scrolled ( e ) {
-		
-		shared.timeSinceInteraction = 0;
-		
-		shared.signals.scrolled.dispatch( $( window ).scrollLeft(), $( window ).scrollTop() );
-		
-	}
 
     function on_window_resized( e ) {
-		
-		var heightHeader = shared.domElements.$uiHeader.height(),
-			uiBodyHeight;
         
         shared.screenWidth = $(window).width();
         shared.screenHeight = $(window).height();
-		
-		shared.gameWidth = shared.domElements.$game.width(),
-		shared.gameHeight = shared.domElements.$game.height();
-		
-		uiBodyHeight = shared.gameHeight - heightHeader;
-		
-		shared.domElements.$uiBody.css( {
-			'height' : uiBodyHeight,
-			'top' : heightHeader
-		} );
-		
-		// because ui out game is scrollable, its grids are not aligned to main header grids
-		// so we need to pad left side of the individual containers to correct for this
-		
-		if ( shared.domElements.$uiOutGame[0].scrollHeight > uiBodyHeight ) {
-			
-			shared.domElements.$menusContainers.css( 'padding-left', $.scrollbarWidth() );
-			
-		}
 		
         shared.signals.windowResized.dispatch(shared.screenWidth, shared.screenHeight);
         
@@ -1550,8 +1330,7 @@ var KAIOPUA = (function (main) {
 	
 	function worker_start_task ( id ) {
 		
-		var $task,
-			id;
+		var $task;
 		
 		// if does not have task yet
 		
@@ -1567,6 +1346,13 @@ var KAIOPUA = (function (main) {
 				worker.collapseTimeoutHandle = undefined;
 				
 			}
+			
+			// block ui
+            
+			main.dom_fade( {
+				element: shared.domElements.$uiBlocker,
+				opacity: 0.75
+			} );
 			
 			// show if hidden
 			
@@ -1604,7 +1390,7 @@ var KAIOPUA = (function (main) {
 			
 			// remove previous
 			
-			index = worker.tasksStartedIds.indexOf( id );
+			index = index_of_value( worker.tasksStartedIds, id );
 			if ( index !== -1 ) {
 				worker.tasksStartedIds.splice( index, 1 );
 			}
@@ -1636,9 +1422,17 @@ var KAIOPUA = (function (main) {
 					
 				}
 				
-				// collapse after delay
+				// new collapse delay
 				
 				worker.collapseTimeoutHandle = window.setTimeout( function () {
+					
+					// hide blocker
+					
+					main.dom_fade( {
+						element: shared.domElements.$uiBlocker
+					} );
+					
+					// collapse
 					
 					main.dom_collapse( {
 						element: worker.$domElement
@@ -1700,8 +1494,8 @@ var KAIOPUA = (function (main) {
 				
 				path = get_asset_path( location );
 				
-				indexLoading = loader.loading.indexOf( path );
-				indexLoaded = loader.loaded.indexOf( path );
+				indexLoading = index_of_value( loader.loading, path );
+				indexLoaded = index_of_value( loader.loaded, path );
 				
 				// if not already loading or loaded item
 				// load new location
@@ -1817,7 +1611,7 @@ var KAIOPUA = (function (main) {
 				
 				// if already loaded
 				
-				if ( loader.loaded.indexOf( path ) !== -1 ) {
+				if ( index_of_value( loader.loaded, path ) !== -1 ) {
 					
 					// make duplicate complete event
 					
@@ -1825,7 +1619,7 @@ var KAIOPUA = (function (main) {
 					
 				}
 				// if not started loading yet
-				else if ( loader.started.indexOf( path ) === -1 ) {
+				else if ( index_of_value( loader.started, path ) === -1 ) {
 					
 					// load it
 					
@@ -1976,7 +1770,7 @@ var KAIOPUA = (function (main) {
 			
 			// get index in locations list
 			
-			index = locationsList.indexOf(location);
+			index = index_of_value( locationsList,location);
 			
 			// if is in list
 			
@@ -2027,7 +1821,7 @@ var KAIOPUA = (function (main) {
 		
 		// remove list from all lists to load
 		
-		listIndex = loader.lists.indexOf( listID );
+		listIndex = index_of_value( loader.lists, listID );
 		
 		if ( listIndex !== -1 ) {
 			
@@ -2098,7 +1892,7 @@ var KAIOPUA = (function (main) {
 			
 			// update all loading
 			
-			indexLoading = loader.loading.indexOf( path );
+			indexLoading = index_of_value( loader.loading, path );
 			
 			if ( indexLoading !== -1 ) {
 				
@@ -2110,7 +1904,7 @@ var KAIOPUA = (function (main) {
 			
 			// update all loaded
 			
-			indexLoaded = loader.loaded.indexOf( path );
+			indexLoaded = index_of_value( loader.loaded, path );
 			
 			if ( indexLoaded === -1 ) {
 				
@@ -2137,7 +1931,7 @@ var KAIOPUA = (function (main) {
 		
 		path = get_asset_path( location );
 		
-		index = list.indexOf( path );
+		index = index_of_value( list, path );
 		
 		if ( index !== -1 ) {
 			
@@ -2447,7 +2241,7 @@ var KAIOPUA = (function (main) {
 			
 			var indexWaiting;
 			
-			indexWaiting = assetsWaitingFor.indexOf( path );
+			indexWaiting = index_of_value( assetsWaitingFor, path );
 			
 			// if waiting for asset to be ready
 			

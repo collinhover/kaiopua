@@ -269,7 +269,7 @@
 					
 					if ( targetsToRemove.length > 0 ) {
 						
-						removeIndex = targetsToRemove.indexOf( target );
+						removeIndex = main.index_of_value( targetsToRemove, target );
 						
 						if ( removeIndex !== -1 ) {
 							

@@ -611,7 +611,7 @@
 				
 				// get if updater for animation exists
 				
-				updaterIndex = uNames.indexOf( name );
+				updaterIndex = main.index_of_value( uNames, name );
 				
 				// new updater
 				

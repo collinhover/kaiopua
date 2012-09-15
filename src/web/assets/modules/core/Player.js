@@ -516,7 +516,7 @@
 		
 		// if enabled or key is always available
 		
-		isAlwaysAvailable = kbMap.alwaysAvailable.indexOf( keyNameActual ) !== -1;
+		isAlwaysAvailable = main.index_of_value( kbMap.alwaysAvailable, keyNameActual ) !== -1;
 		
 		if ( enabled === true || isAlwaysAvailable ) {
 			
@@ -592,7 +592,7 @@
 			// add selected to character targets
 			// unless already selected, then add to removal list
 			
-			if ( targets.indexOf( selectedModel ) === -1 ) {
+			if ( main.index_of_value( targets, selectedModel ) === -1 ) {
 				
 				// check current length of targets
 				// if at or over max num targets, remove earliest
@@ -610,7 +610,7 @@
 				 * TODO: fix for single material case
 				selectedMesh = selectedModel.mesh;
 				
-				materialIndex = selectedMesh.material.indexOf( selecting.material );
+				materialIndex = main.index_of_value( selectedMesh.material, selecting.material );
 				
 				if ( materialIndex === -1 ) {
 					
@@ -684,7 +684,7 @@
 			
 			// find in targets and remove
 			
-			targetIndex = targets.indexOf( targetModel );
+			targetIndex = main.index_of_value( targets, targetModel );
 			
 			if ( targetIndex !== -1 ) {
 				
@@ -695,7 +695,7 @@
 			/* TODO: fix for no multimaterials
 			// remove selecting material
 			
-			materialIndex = targetMesh.material.indexOf( selecting.material );
+			materialIndex = main.index_of_value( targetMesh.material, selecting.material );
 			
 			if ( materialIndex !== -1 ) {
 				

@@ -246,7 +246,7 @@ a.dim:hover, button.dim:hover, .btn.dim:hover {
 	color: @grayLighter;
 	opacity: 0.75;
 	text-align: center;
-	
+	/*
 	.not-ready-content {
 		position: absolute;
 		top: 50%;
@@ -259,6 +259,7 @@ a.dim:hover, button.dim:hover, .btn.dim:hover {
 		}
 		
 	}
+	*/
 }
 
 /* type 
@@ -1047,6 +1048,7 @@ a, .navbar .nav > li > a {
 	
 	h1 {
 		font-size: 56px;
+		margin-bottom: @baseLineHeight / 2;
 	}
 	
 	h2 {
@@ -1101,24 +1103,11 @@ a, .navbar .nav > li > a {
 	.fullscreenTopLeftMin;
 }
 
-/* ui sections
+/* ui header sections 
 -------------------------*/
 
 #uiHeader {
 	z-index: 9999;
-}
-
-#uiBody {
-	position: absolute;
-	width: 100%;
-	height: 100%;
-	z-index: 300;
-}
-
-/* ui header sections 
--------------------------*/
-	
-#navMenus {
 	.fullWidth;
 	#gradient > .vertical(@navbarInverseBackgroundHighlight, @navbarInverseBackground);
 	.box-shadow(~"inset 0 -1px 0 rgba(0, 0, 0, .4), 0 1px 10px rgba(0, 0, 0, .4)");
@@ -1184,6 +1173,13 @@ a, .navbar .nav > li > a {
 /* ui body sections 
 -------------------------*/
 
+#uiBody {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	z-index: 300;
+}
+
 #uiGameDimmer {
 	.fullscreenTopLeft;
 	background: @gray;
@@ -1205,7 +1201,6 @@ a, .navbar .nav > li > a {
 	left: 0;
 	right: 0;
 	height: 100%;
-	overflow: auto;
 	z-index: 500;
 	
 	.status-item {
@@ -1213,6 +1208,7 @@ a, .navbar .nav > li > a {
 		
 		.hero-unit, .sidekick-unit {
 			.border-radius(0);
+			.box-shadow(~"0 1px 10px rgba(0, 0, 0, .4)");
 		}
 		
 		&:last-child {
@@ -1406,57 +1402,60 @@ a, .navbar .nav > li > a {
 		
 	}
 	
-	#puzzleActive {
-		
-		#puzzleActiveOverview {
-			
-			#puzzleActiveElementCounts {
-				
-				h2 {
-					margin-bottom: 16px;
-				}
-				
-			}
-			
-		}
-		
-		#puzzleActiveRewards {
-			
-			h4 {
-				margin-top: 9px;
-				margin-bottom: 4px;
-			}
+}
 
-			.puzzle-rewardsList {
-				
-				p {
-					margin: 0;
-				}
-				
-			}
-			
-		}
-		
-	}
-
+#puzzleActive {
 	
+}
 
-	#plantOverview {
-		margin-bottom: 10px;
+#puzzleActiveOverview {
+	
+}
+
+#puzzleActiveElementCounts {
+	
+	h2 {
+		margin-bottom: 16px;
+	}
+	
+}
+
+#puzzleActiveShapes {
+	#gradient > .vertical(@navbarInverseBackgroundHighlight, @navbarInverseBackground);
+	.rounded-top( 10px );
+}
+
+#puzzleActiveRewards {
+	
+	h4 {
+		margin-top: 9px;
+		margin-bottom: 4px;
 	}
 
-	#plantCustomInfo {
+	.puzzle-rewardsList {
 		
-		.page-header {
-			margin-top: 0;
-		}
-		
-		#plantCustomInfoText {
-			margin-bottom: 20px;
+		p {
+			margin: 0;
 		}
 		
 	}
 	
+}
+
+#plantOverview {
+	margin-bottom: 10px;
+}
+
+#plantCustomInfo {
+	
+	.page-header {
+		margin-top: 0;
+	}
+	
+}
+
+#plantCustomInfoText {
+	margin-bottom: 20px;
 }
 
 /* options 
