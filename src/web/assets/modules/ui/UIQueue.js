@@ -75,12 +75,13 @@
 	
 	function add ( parameters ) {
 		
-		var element = parameters.element || parameters,
+		var element = main.dom_extract( parameters.element || parameters ),
 			$element = $( element ),
 			item,
 			container,
 			priority,
-			index;
+			index,
+			itemIsNew;
 		
 		if ( $element.length > 0 ) {
 			
@@ -89,7 +90,7 @@
 			item.element = element;
 			item.$element = $element;
 			
-			container = item.container;
+			container = item.container = main.dom_extract( item.container );
 			priority = item.priority;
 			
 			// init queue for container if needed
@@ -121,24 +122,37 @@
 			// store by priority
 			// priority can stack
 			// general can only have 1 at a time
+			// do not allow duplicates
 			
 			if ( priority === true ) {
 				
-				item.queue.priority.push( item );
+				if ( item.queue.priority.length === 0 || !items_identical( item, item.queue.priority[ item.queue.priority.length - 1 ] ) ) {
+					
+					item.queue.priority.push( item );
+					
+					itemIsNew = true;
+					
+				}
 				
 			}
-			else {
+			else if ( !items_identical( item, item.queue.general ) ) {
 				
 				item.queue.general = item;
+				
+				itemIsNew = true;
 				
 			}
 			
 			// store and step
 			
-			elements.push( element );
-			items.push( item );
-			console.log( 'UIQueue: ADD, queues', queues, ' containers', containers, 'items', items, ' elements', elements );
-			step( item.queue );
+			if ( itemIsNew === true ) {
+				
+				elements.push( element );
+				items.push( item );
+				console.log( 'UIQueue: ADD, queues', queues, ' containers', containers, 'items', items, ' elements', elements );
+				step( item.queue );
+				
+			}
 			
 		}
 		
@@ -152,7 +166,8 @@
 	
 	function remove ( parameters ) {
 		
-		var element ,
+		var i, l,
+			element ,
 			item,
 			priority,
 			queue,
@@ -160,102 +175,87 @@
 			index = -1,
 			active;
 		
-		if ( typeof parameters !== 'undefined' ) {
+		index = find_item_index( parameters );
+		item = items[ index ];
+		
+		if ( typeof item !== 'undefined' ) {
 			
-			// find element
+			element = item.element;
+			container = item.container;
+			priority = item.priority;
+			queue = item.queue;
+			active = queue.active;
 			
-			element = parameters.element || parameters;
-			item = parameters.item || parameters;
+			// clear from storage
 			
-			if ( typeof element !== 'undefined' ) {
+			elements.splice( index, 1 );
+			items.splice( index, 1 );
+			
+			// remove queues and container
+			
+			if ( priority === true ) {
 				
-				index = main.index_of_value( elements, element );
+				index = main.index_of_value( queue.priority, item );
+				
+				if ( index !== -1 ) {
+					
+					queue.priority.splice( index, 1 );
+					
+				}
+				
+			}
+			else if ( queue.general === item ) {
+				
+				queue.general = undefined;
 				
 			}
 			
-			// try item
+			// if element is container, clear its queue first
 			
-			if ( index === -1 && typeof item !== 'undefined' ) {
-				
-				index = main.index_of_value( items, item );
-				
-			}
+			index = main.index_of_value( containers, element );
 			
 			if ( index !== -1 ) {
+				console.log( 'UIQueue: element is container');
+				clear( queues[ index ] );
 				
-				item = items[ index ];
-				element = item.element;
-				container = item.container;
-				priority = item.priority;
-				queue = item.queue;
-				active = queue.active;
-				
-				// clear from storage
-				
-				elements.splice( index, 1 );
-				items.splice( index, 1 );
-				
-				// remove queues and container
-				
-				if ( priority === true ) {
-					
-					index = main.index_of_value( queue.priority, item );
-					
-					if ( index !== -1 ) {
-						
-						queue.priority.splice( index, 1 );
-						
-					}
-					
-				}
-				else if ( queue.general === item ) {
-					
-					queue.general = undefined;
-					
-				}
-				
-				// if active, and next element is not the same as item element, deactivate
-				
-				if ( item === active && typeof item.deactivate === 'function' && ( queue.priority.length === 0 || !items_identical( item, queue.priority[ 0 ] ) ) && !items_identical( item, queue.general ) ) {
-					console.log( 'UIQueue: deactivate item ' );
-					item.deactivate();
-					
-				}
-				
-				// if last in queue
-				
-				if ( queue.priority.length === 0 && typeof queue.general === 'undefined' ) {
-				
-					index = main.index_of_value( queues, queue );
-					
-					if ( index !== -1 ) {
-						
-						queues.splice( index, 1 );
-						
-					}
-					
-					if ( typeof container !== 'undefined' ) {
-						
-						index = main.index_of_value( containers, container );
-						
-						if ( index !== -1 ) {
-							
-							containers.splice( index, 1 );
-							
-						}
-						
-					}
-					
-					if ( typeof item.last === 'function' ) {
-						console.log( 'UIQueue: last' );
-						item.last();
-						
-					}
-					
-				}
-				console.log( 'UIQueue: REMOVE, queues', queues, ' containers', containers, 'items', items, ' elements', elements );
 			}
 			
+			// if active, and next element is not the same as item element, deactivate
+			
+			if ( item === active && typeof item.deactivate === 'function' && ( queue.priority.length === 0 || !items_identical( item, queue.priority[ 0 ] ) ) && !items_identical( item, queue.general ) ) {
+				console.log( 'UIQueue: deactivate item ' );
+				item.deactivate();
+				
+			}
+			
+			// if last in queue
+			
+			if ( queue.priority.length === 0 && typeof queue.general === 'undefined' ) {
+			
+				index = main.index_of_value( queues, queue );
+				
+				if ( index !== -1 ) {
+					
+					queues.splice( index, 1 );
+					
+					// also remove container if not default
+					
+					if ( index > 0 && index < containers.length ) {
+						
+						containers.splice( index, 1 );
+						
+					}
+					
+				}
+				
+				if ( typeof item.last === 'function' ) {
+					console.log( 'UIQueue: last' );
+					item.last();
+					
+				}
+				
+			}
+			console.log( 'UIQueue: REMOVE, queues', queues, ' containers', containers, 'items', items, ' elements', elements );
 		}
 	
 	}
@@ -319,6 +319,8 @@
 							opacity: 1
 						} );
 						
+						$container.trigger( 'open' );
+						
 					}
 					
 					if ( typeof active.activate === 'function' && !items_identical( active, activeLast ) ) {
@@ -337,6 +339,7 @@
 			else {
 				console.log( 'UIQueue: STEP blocked by priority' );
 			}
+			
 		}
 		
 	}
@@ -377,7 +380,7 @@
 				remove( queue.active );
 				
 			}
-			
+			console.log( 'UIQueue: CLEAR, queues', queues, ' containers', containers, 'items', items, ' elements', elements );
 		}
 		
 	}
@@ -394,21 +397,17 @@
 		
 	}
 	
-	function find_queue ( parameters ) {
+	function find_item_index ( parameters ) {
 		
-		parameters = parameters || {};
-		
-		var queue = parameters.queue || parameters,
-			element = parameters.element || parameters,
-			item = parameters.item || parameters,
-			container = parameters.container || parameters,
+		var element,
+			item,
 			index = -1;
 		
-		// find queue
-		
-		if ( queue instanceof Queue !== true ) {
+		if ( typeof parameters !== 'undefined' ) {
 			
 			// try element
+			
+			element = main.dom_extract( parameters.element || parameters );
 			
 			if ( typeof element !== 'undefined' ) {
 				
@@ -418,27 +417,13 @@
 			
 			// try item
 			
-			if ( index === -1 && typeof item !== 'undefined' ) {
+			if ( index === -1 ) {
 				
-				index = main.index_of_value( items, item );
-				
-			}
-			
-			if ( index !== -1 ) {
-				
-				queue = items[ index ].queue;
-				
-			}
-			
-			// try container
-			
-			if ( index === -1 && typeof container !== 'undefined' ) {
-				
-				index = main.index_of_value( containers, container );
-				
-				if ( index !== -1 ) {
+				item = parameters.item || parameters;
+
+				if ( typeof item !== 'undefined' ) {
 					
-					queue = queues[ index ];
+					index = main.index_of_value( items, item );
 					
 				}
 				
@@ -446,7 +431,54 @@
 			
 		}
 		
-		return queue;
+		return index;
+		
+	}
+	
+	function find_queue ( parameters ) {
+		
+		if ( typeof parameters !== 'undefined' ) {
+			
+			var queue = parameters.queue || parameters,
+				item,
+				container,
+				index;
+			
+			// find queue
+			
+			if ( queue instanceof Queue ) {
+				
+				return queue;
+				
+			}
+				
+			// try item
+			
+			item = items[ find_item_index( parameters ) ];
+			
+			if ( typeof item !== 'undefined' ) {
+				
+				return item.queue;
+				
+			}
+			
+			// try container
+			
+			container = main.dom_extract( parameters.container || parameters );
+			
+			if (  typeof container !== 'undefined' ) {
+				
+				index = main.index_of_value( containers, container );
+				
+				if ( index !== -1 ) {
+					
+					return queues[ index ];
+					
+				}
+				
+			}
+		
+		}
 		
 	}
 	

@@ -464,19 +464,19 @@
 		
 		shared.domElements.$stickied = $( ".is-sticky" );
 		
-		shared.domElements.$primaryActionsActive = $( '#primaryActionsActive' );
-		shared.domElements.$primaryActionsInactive = $( '#primaryActionsInactive' );
-		shared.domElements.$primaryActionItems = $('.primaryAction-item');
+		shared.domElements.$actionsActive = $( '#actionsActive' );
+		shared.domElements.$actionsInactive = $( '#actionsInactive' );
+		shared.domElements.$actionItems = $('.action-item');
 		shared.domElements.$pauseMessage = $('#pauseMessage');
 		
 		shared.domElements.$menus = shared.domElements.$uiOutGame.find( '.menu' );
 		shared.domElements.$menuDefault = $();
-		shared.domElements.$menusContainers = $();
+		shared.domElements.$menusInner = $();
 		shared.domElements.$menuToggles = $();
-		shared.domElements.$menuToggleActive = $();
 		shared.domElements.$menuToggleDefault = $();
-		shared.domElements.$menuGeneralActive = $( '#menuGeneralActive' );
-		shared.domElements.$menuGeneralInactive = $( '#menuGeneralInactive' );
+		shared.domElements.$menuGeneral = $( '#menuGeneral' );
+		shared.domElements.$menuCenter = $( '#menuCenter' );
+		shared.domElements.$menuInactive = $( '#menuInactive' );
 		shared.domElements.$menuFarming = $('#menuFarming');
 		shared.domElements.$menuOptions = $('#menuOptions');
 		
@@ -502,6 +502,8 @@
 		shared.domElements.$puzzleActiveScoreBar = $( "#puzzleActiveScoreBar" );
 		shared.domElements.$puzzleActiveElementCount = $( ".puzzle-active-elementCount" );
 		shared.domElements.$puzzleActiveNumElementsMin = $( ".puzzle-active-numElementsMin" );
+		shared.domElements.$puzzleActiveShapesCounter = $( "#puzzleActiveShapesCounter" );
+		shared.domElements.$puzzleActiveNumShapesChosen = $( ".puzzle-active-numShapesChosen" );
 		shared.domElements.$puzzleActiveNumShapesRequired = $( ".puzzle-active-numShapesRequired" );
 		shared.domElements.$puzzleActiveShapes = $( "#puzzleActiveShapes" );
 		shared.domElements.$puzzleActiveShapesRequiredWarning = $( "#puzzleActiveShapesRequiredWarning" );
@@ -569,24 +571,24 @@
 		
 		// primary action items
 		
-		shared.domElements.$primaryActionItems.each( function () {
+		shared.domElements.$actionItems.each( function () {
 			
 			var $item = $( this );
 			
-			if ( $item.parent().is( shared.domElements.$primaryActionsActive ) && $item.hasClass( 'hidden collapsed' ) ) {
+			if ( $item.parent().is( shared.domElements.$actionsActive ) && $item.is( '.hidden, .collapsed' ) ) {
 				
-				shared.domElements.$primaryActionsInactive.append( $item );
+				shared.domElements.$actionsInactive.append( $item );
 				
 			}
 			
 		} ).on('show.active', function () {
 			
-			shared.domElements.$primaryActionsActive.append( this );
+			shared.domElements.$actionsActive.append( this );
 			
 		})
 		.on('hidden.active', function () {
 			
-			shared.domElements.$primaryActionsInactive.append( this );
+			shared.domElements.$actionsInactive.append( this );
 			
 		});
 		
@@ -632,7 +634,7 @@
 					
 					$button.on( 'tap', function () {
 							
-							if( $buttonCollapse.hasClass( 'collapsed' ) !== true ) {
+							if( $buttonCollapse.is( '.collapsed' ) !== true ) {
 								
 								$buttonCollapse.trigger( 'click' );
 								
@@ -688,141 +690,146 @@
 		shared.domElements.$menus.each( function () {
 			
 			var $menu = $( this ),
-				$container = $menu.find( '.container' ).first();
-			
-			// add container to menu containers
-			
-			shared.domElements.$menusContainers = shared.domElements.$menusContainers.add( $container );
-			
-		} );
-		
-		// for each menu toggle
-		
-		shared.domElements.$navMenusButtons.each( function () {
-			
-			var $toggle = $( this ),
-				$menu = $( $toggle.attr( 'href' ) ),
-				isMenu = shared.domElements.$menus.is( $menu ),
+				$inner = $menu.find( '.menu-inner' ),
+				$toggle = shared.domElements.$navMenusButtons.filter( '[href="#' + $menu.attr( 'id' ) + '"]' ),
 				activate,
 				deactivate,
 				first,
-				last;
+				last,
+				open,
+				close,
+				toggle;
 			
-			if ( isMenu === true ) {
+			$menu.data( '$inner', $inner );
+			$menu.data( '$toggle', $toggle );
+			$menu.data( 'scrollTop', 0 );
+			
+			shared.domElements.$menusInner = shared.domElements.$menusInner.add( $inner );
+			
+			// functions
+			
+			activate = function () {
 				
-				shared.domElements.$menuToggles = shared.domElements.$menuToggles.add( $toggle );
+				pause( false, true );
 				
-				$toggle.data( '$menu', $menu );
-				
-				$menu.data( '$toggle', $toggle );
-				$menu.data( 'scrollTop', 0 );
-				
-				// functions
-				
-				activate = function () {
-					
-					shared.domElements.$menuToggleActive = $toggle;
-					
-					pause( false, true );
-					
-					//$toggle.tab('show');
-					
-					$toggle.trigger( 'show' );
+				if ( $toggle.length > 0 ) {
 					
 					$toggle.closest( 'li' ).addClass( 'active' );
-					
-					$menu.addClass( 'active' );
-					
-					main.dom_fade( {
-						element: $menu,
-						opacity: 1
-					} );
-					
-					// scroll to last location for this tab
-					
-					shared.domElements.$uiOutGame.scrollTop( $menu.data( 'scrollTop' ) );
-					
-					$toggle.trigger( 'shown' );
-					
-				};
+						
+				}
 				
-				deactivate = function () {
-					
-					// store scroll position
-					
-					$menu.data( 'scrollTop', shared.domElements.$uiOutGame.scrollTop() );
+				$menu.addClass( 'active' );
+				
+				main.dom_fade( {
+					element: $menu,
+					opacity: 1
+				} );
+				
+				// resize and scroll to last location for this tab
+				
+				$( window ).trigger( 'resize' );
+				
+				shared.domElements.$uiOutGame.scrollTop( $menu.data( 'scrollTop' ) );
+				
+			};
+			
+			deactivate = function () {
+				
+				// store scroll position
+				
+				$menu.data( 'scrollTop', shared.domElements.$uiOutGame.scrollTop() );
+				
+				if ( $toggle.length > 0 ) {
 					
 					$toggle.closest( 'li' ).removeClass( 'active' );
 					
-					$menu.removeClass( 'active' );
-					
-					main.dom_fade( {
+				}
+				
+				$menu.removeClass( 'active' );
+				
+				main.dom_fade( {
+					element: $menu,
+					time: 0
+				} );
+				
+			};
+			
+			first = function () {
+				
+				pause( false, true );
+				
+			};
+			
+			last = function () {
+				
+				main.dom_fade( {
+					element: shared.domElements.$uiOutGame
+				} );
+				
+				resume();
+				
+			};
+			
+			open = function () {
+				
+				_UIQueue.add( {
 						element: $menu,
-						time: 0
+						container: shared.domElements.$uiOutGame,
+						activate: activate,
+						deactivate: deactivate,
+						first: first,
+						last: last
 					} );
-					
-				};
 				
-				first = function () {
-					
-					pause( false, true );
-					
-					main.dom_fade( {
-						element: shared.domElements.$uiOutGame,
-						opacity: 1
-					} );
-					
-				};
+			};
+			
+			close = function () {
 				
-				last = function () {
+				_UIQueue.remove( $menu );
+				
+			};
+			
+			toggle = function () {
+				
+				if ( $menu.is( '.active' ) === true ) {
 					
-					main.dom_fade( {
-						element: shared.domElements.$uiOutGame
-					} );
+					$menu.trigger( 'close' );
 					
-					resume();
+				}
+				else {
 					
-				};
+					$menu.trigger( 'open' );
+					
+				}
+				
+			};
+			
+			$menu.on( 'open', open )
+				.on( 'close', close )
+				.on( 'toggle', toggle );
+			
+			// attach events to toggle when present
+			
+			if ( $toggle.length > 0 ) {
+				
+				$toggle.data( '$menu', $menu );
+				
+				shared.domElements.$menuToggles = shared.domElements.$menuToggles.add( $toggle );
 				
 				// events
 				
-				$toggle.on( 'tap', function () {
-					
-					if ( $menu.hasClass( 'active' ) === true ) {
-						
-						_UIQueue.remove( $menu );
-						
-					}
-					else {
-						
-						_UIQueue.add( {
-							element: $menu,
-							container: shared.domElements.$uiOutGame,
-							activate: activate,
-							deactivate: deactivate,
-							first: first,
-							last: last
-						} );
-						
-					}
-					
-				} )
-				.on( 'shown', function () {
-					
-					$( window ).trigger( 'resize' );
-					
-				} );
+				$toggle.on( 'tap',  toggle );
 				
-				// find default menu
+			}
+			
+			// find default menu
+			
+			if ( shared.domElements.$menuDefault.length === 0 && $menu.is( '.active' ) === true ) {
 				
-				if ( shared.domElements.$menuToggleDefault.length === 0 && $menu.hasClass( 'active' ) === true ) {
-					
-					shared.domElements.$menuToggleDefault = shared.domElements.$menuToggleActive = $toggle;
-					shared.domElements.$menuDefault = $menu;
-					
-					deactivate();
-					
-				}
+				shared.domElements.$menuDefault = $menu;
+				shared.domElements.$menuToggleDefault = $toggle;
+				
+				deactivate();
 				
 			}
 			
@@ -841,7 +848,7 @@
 				
 				$toggle.on( 'tap', function ( e ) {
 					
-					if ( $tab.hasClass( 'active' ) === true ) {
+					if ( $tab.is( '.active' ) === true ) {
 						
 						$toggle.trigger( 'showing' );
 						
@@ -1856,7 +1863,7 @@
 		
 		if ( shared.domElements.$uiOutGame[0].scrollHeight > uiBodyHeight ) {
 			
-			shared.domElements.$menusContainers.css( 'padding-left', $.scrollbarWidth() );
+			shared.domElements.$menusInner.css( 'padding-left', $.scrollbarWidth() );
 			
 		}
 		

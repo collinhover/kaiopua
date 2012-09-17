@@ -220,6 +220,8 @@
 		this.stateChanged = new signals.Signal();
 		this.shapesReady = new signals.Signal();
 		this.shapesNeeded = new signals.Signal();
+		this.shapeAdded = new signals.Signal();
+		this.shapeRemoved = new signals.Signal();
 		
 		// reset self
 		
@@ -391,6 +393,9 @@
 			if ( main.index_of_value( this.shapes, shape ) === -1 && ( this.shapesEnabled.length === 0 || main.index_of_value( this.shapesEnabled, shape ) !== -1 ) && ( this.shapesDisabled.length === 0 || main.index_of_value( this.shapesDisabled, shape ) === -1 ) ) {
 				
 				this.shapes.push( shape );
+				
+				this.shapeAdded.dispatch( this );
+				
 				added = true;
 				
 			}
@@ -419,6 +424,9 @@
 		if ( index !== -1 ) {
 			
 			this.shapes.splice( index, 1 );
+			
+			this.shapeRemoved.dispatch( this );
+			
 			removed = true;
 			
 			// set shapes dirty
@@ -427,7 +435,11 @@
 			
 			// signal
 			
-			this.shapesNeeded.dispatch( this );
+			if ( this.ready !== true ) {
+				
+				this.shapesNeeded.dispatch( this );
+			
+			}
 			
 		}
 		

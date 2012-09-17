@@ -23,19 +23,27 @@
 				
                 return this.each( function() {
 					
-					count++;
+					var $element = $( this ),
+						data = $element.data( dataName ),
+						$placeholder;
 					
-					var data = $.extend( {}, defaults, options ),
-						$element = $( this ),
-						$placeholder = data.clone === true ? $element.clone() : $( '<div></div>' );
+					// placehold only one at a time, revert if already placeholding
+					
+					if ( typeof data !== 'undefined' ) {
+						
+						$element.placeholdme( 'revert' );
+						
+					}
 					
 					// handle data
 					
-					$element.data( dataName, data );
+					data = $.extend( {}, defaults, options );
 					
-					data.id = data.id || idBase + '_' + count + '_' + $element.attr( 'id' );
+					data.id = data.id || idBase + '_' + count++ + '_' + $element.attr( 'id' );
 					data.$parent = $element.parent();
-					data.$placeholder = $placeholder;
+					data.$placeholder = $placeholder = data.clone === true ? $element.clone() : $( '<div></div>' );
+					
+					$element.data( dataName, data );
 					
 					// placeholder properties
 					
@@ -61,34 +69,65 @@
 					
 					var $element = $(this),
 						data = $element.data( dataName ),
-						$placeholder = data.$placeholder && data.$placeholder.length > 0 ? data.$placeholder : $( "#" + data.id ),
+						$placeholder,
+						$parent;
+					
+					if ( typeof data !== 'undefined' ) {
+						
+						$placeholder = data.$placeholder && data.$placeholder.length > 0 ? data.$placeholder : $( "#" + data.id );
 						$parent = data.$parent;
-					
-					// if has valid placeholder
-					
-					if ( $placeholder.length > 0 && $placeholder.parent().length > 0 ) {
 						
-						// insert element in reverse
+						// if has valid placeholder
 						
-						$placeholder[ data.after === true ?  "before" : "after" ]( $element );
+						if ( $placeholder.length > 0 && $placeholder.parent().length > 0 ) {
+							
+							// insert element in reverse
+							
+							$placeholder[ data.after === true ?  "before" : "after" ]( $element );
+							
+							// clear placeholder
+							
+							$placeholder.remove();
+							
+						}
+						// fallback to adding back into original parent
+						else if ( $parent && $parent.length > 0 ) {
+							
+							$parent.append( $element );
+							
+						}
 						
-						// clear placeholder
+						// clear data
 						
-						$placeholder.remove();
+						$element.removeData( dataName );
 						
 					}
-					// fallback to adding back into original parent
-					else if ( $parent && $parent.length > 0 ) {
-						
-						$parent.append( $element );
-						
-					}
-					
-					// clear data
-					
-					$element.removeData( dataName );
 					
 				} );
+				
+			},
+			active: function () {
+				
+				var active = false;
+				
+				this.each( function() {
+					
+					var $element = $(this),
+						data = $element.data( dataName );
+					
+					if ( typeof data !== 'undefined' && typeof data.$placeholder !== 'undefined' ) {
+						
+						active = data.$placeholder.parent().is( data.$parent ) || !$element.parent().is( data.$parent );
+						
+					}
+					
+					// break each loop if active
+					
+					return !active;
+					
+				} );
+				
+				return active;
 				
 			}
 			

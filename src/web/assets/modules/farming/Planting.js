@@ -19,6 +19,7 @@
 		_GridModel,
 		_GridElement,
 		_GridElementLibrary,
+		_UIQueue,
 		_MathHelper,
 		_ObjectHelper,
 		utilVec31Rotate,
@@ -41,6 +42,7 @@
 			"assets/modules/puzzles/GridModel.js",
 			"assets/modules/puzzles/GridElement.js",
 			"assets/modules/puzzles/GridElementLibrary.js",
+			"assets/modules/ui/UIQueue.js",
 			"assets/modules/utils/MathHelper.js",
 			"assets/modules/utils/ObjectHelper.js"
 		],
@@ -54,7 +56,7 @@
     
     =====================================================*/
 	
-	function init_internal ( g, pzl, ts, gr, gm, gmodel, ge, ges, mh, oh ) {
+	function init_internal ( g, pzl, ts, gr, gm, gmodel, ge, ges, uiq, mh, oh ) {
 		console.log('internal planting', _Planting);
 		
 		_Game = g;
@@ -65,6 +67,7 @@
 		_GridModel = gmodel;
 		_GridElement = ge;
 		_GridElementLibrary = ges;
+		_UIQueue = uiq;
 		_MathHelper = mh;
 		_ObjectHelper = oh;
 		
@@ -381,7 +384,7 @@
 			$button = $shapePicker.find( 'button' ).andSelf().filter( 'button' );
 			$button.toggleClass( 'active' );
 			
-			shapeData.picked = $button.hasClass( 'active' );
+			shapeData.picked = $button.is( '.active' );
 			
 			// toggle shape activator if button was active
 			
@@ -1281,7 +1284,9 @@
 				
 				// shapes
 				
-				shared.domElements.$puzzleActiveNumShapesRequired.html( this.puzzle.numShapesRequired );
+				this.puzzle.shapeAdded.add( this.update_ui, this );
+				this.puzzle.shapeRemoved.add( this.update_ui, this );
+				
 				console.log( ' this.shapes ', this.shapes.length, this.shapes, ' + puzzle shapes: ', this.puzzle.shapes.length, this.puzzle.shapes );
 				for ( i = 0, l = this.shapes.length; i < l; i++ ) {
 					
@@ -1345,6 +1350,9 @@
 			shared.domElements.$puzzleActiveElementCount.html( this.puzzle.elements.length );
 			shared.domElements.$puzzleActiveNumElementsMin.html( this.puzzle.numElementsMin );
 			
+			shared.domElements.$puzzleActiveNumShapesRequired.html( this.puzzle.numShapesRequired );
+			shared.domElements.$puzzleActiveNumShapesChosen.html( this.puzzle.shapes.length );
+			
 		}
 		
 	}
@@ -1373,6 +1381,8 @@
 		this.update_ui_puzzle();
 		
 		shared.signals.gameResumed.remove( on_resume, this );
+		this.puzzleLast.shapeAdded.remove( this.update_ui, this );
+		this.puzzleLast.shapeRemoved.remove( this.update_ui, this );
 		this.puzzleLast.shapesNeeded.remove( this.update_ui_puzzle, this );
 		this.puzzleLast.shapesReady.remove( this.update_ui_puzzle, this );
 		
@@ -1398,6 +1408,8 @@
 	
 	function on_resume () {
 		
+		shared.domElements.$puzzleActiveShapesPicker.placeholdme( 'revert' );
+		
 		if ( this.puzzle instanceof _Puzzle.Instance ) {
 			
 			this.puzzle.clean();
@@ -1408,7 +1420,7 @@
 	
 	function show_ui ( callback ) {
 		
-		if ( shared.domElements.$menuFarming.hasClass( 'active' ) !== true || _Game.paused !== true ) {
+		if ( shared.domElements.$menuFarming.is( '.active' ) !== true || _Game.paused !== true ) {
 			
 			shared.domElements.$menuFarmingToggle.trigger( 'tap' );
 			
@@ -1529,15 +1541,17 @@
 			
 			this.puzzle.shapesReady.remove( this.update_ui_puzzle, this );
 			
+			_UIQueue.remove( shared.domElements.$menuCenter );
+			
 			// update status
 			
 			shared.domElements.$puzzleActiveStatusIcons.addClass( 'hidden' ).filter( "#ready" ).removeClass( 'hidden' );
 			shared.domElements.$puzzleActiveStatusText.html( 'ready' );
 			
-			// hide shapes required warning
+			// hide shapes picker elements
 			
-			main.dom_collapse( {
-				element: shared.domElements.$puzzleActiveShapesRequiredWarning,
+			main.dom_fade( {
+				element: $.merge( shared.domElements.$puzzleActiveShapesRequiredWarning, shared.domElements.$puzzleActiveShapesCounter ),
 				time: 0
 			} );
 			
@@ -1578,7 +1592,34 @@
 				this.puzzle.shapesReady.add( this.update_ui_puzzle, this );
 				shared.signals.gameResumed.addOnce( on_resume, this );
 				
-				this.select_ui_puzzle();
+				// isolate and show shapes picker
+				
+				if ( shared.domElements.$menuFarming.is( '.active' ) !== true ) {
+					
+					_UIQueue.add( {
+						element: shared.domElements.$puzzleActiveShapesPicker,
+						container: shared.domElements.$menuCenter,
+						activate: function () {
+							
+							shared.domElements.$puzzleActiveShapesPicker.placeholdme()
+								.appendTo( shared.domElements.$menuCenter.data( '$inner' ) );
+							
+						},
+						deactivate: function () {
+							
+							shared.domElements.$puzzleActiveShapesPicker.placeholdme( 'revert' );
+							
+						}
+					} );
+					
+				}
+				
+				// show counter
+				
+				main.dom_collapse( {
+					element: shared.domElements.$puzzleActiveShapesCounter,
+					show: true
+				} );
 				
 			}
 			
@@ -1587,10 +1628,11 @@
 			shared.domElements.$puzzleActiveStatusIcons.addClass( 'hidden' ).filter( "#waiting" ).removeClass( 'hidden' );
 			shared.domElements.$puzzleActiveStatusText.html( 'waiting for shapes' );
 			
-			// hide map and rewards
+			// hide ready items
 			
-			main.dom_collapse( {
-				element: $.merge( shared.domElements.$puzzleActiveMap, shared.domElements.$puzzleActiveRewards )
+			main.dom_fade( {
+				element: shared.domElements.$puzzleActiveReady,
+				time: 0
 			} );
 			
 			// disable all shape activators

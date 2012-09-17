@@ -294,9 +294,9 @@
 			<!-- uiInGame -->
 			<div id="uiInGame" class="unselectable ignore-pointer">
 				
-				<div id="primaryActionsInactive" class="hidden">
+				<div id="actionsInactive" class="hidden">
 					
-					<ul id="navStart"  class="primaryAction-item nav nav-inline nav-buttons ignore-pointer hidden">
+					<ul id="navStart"  class="action-item nav nav-inline nav-buttons ignore-pointer hidden">
 						<li id="buttonLoad" class="disabled dim">
 							<button class="btn btn-large btn-inverse btn-circle-large">
 								<img src="assets/icons/load_rev_64.png" class="iconk-large">
@@ -317,7 +317,7 @@
 						</li>
 					</ul>
 					
-					<ul id="puzzleActiveShapes" class="primaryAction-item nav nav-inline nav-buttons ignore-pointer hidden">
+					<ul id="puzzleActiveShapes" class="action-item nav nav-inline nav-buttons ignore-pointer hidden">
 						<li class="shape-monomino">
 							<button class="btn btn-inverse btn-circle-small">
 								<img src="assets/icons/shape_monomino_rev_64.png" class="iconk-large">
@@ -377,7 +377,7 @@
 					
 				</div>
 				
-				<div id="primaryActionsActive" class="container container-center ignore-pointer">
+				<div id="actionsActive" class="container-center ignore-pointer">
 					
 				</div>
 				
@@ -387,26 +387,40 @@
 			<!-- uiOutGame -->
 			<div id="uiOutGame">
 				
-				<!-- menuGeneralInactive -->
-				<section id="menuGeneralInactive" class="menu hidden">
-				
-				</section>
-				<!-- END menuGeneralInactive -->
-				
-				<!-- menuGeneralActive -->
-				<section id="menuGeneralActive" class="menu hidden">
+				<!-- menuInactive -->
+				<section id="menuInactive" class="menu hidden">
 					
-					<div class="container">
-					
+					<div class="menu-inner container">
+						
 					</div>
 					
 				</section>
-				<!-- END menuGeneralActive -->
+				<!-- END menuInactive -->
+				
+				<!-- menuGeneral -->
+				<section id="menuGeneral" class="menu hidden">
+					
+					<div class="menu-inner container">
+						
+					</div>
+					
+				</section>
+				<!-- END menuGeneral -->
+				
+				<!-- menuCenter -->
+				<section id="menuCenter" class="menu hidden">
+					
+					<div class="menu-inner container container-center">
+						
+					</div>
+					
+				</section>
+				<!-- END menuCenter -->
 				
 				<!-- menuFarming -->
 				<section id="menuFarming" class="menu hidden">
 					
-					<div class="container">
+					<div class="menu-inner container">
 						
 						<header class="subhead">
 							<img src="assets/icons/farming_64.png" draggable="false" class="iconk-large">
@@ -572,109 +586,105 @@
 								</div>
 								
 								<div id="puzzleActiveShapesPicker">
+									
 									<h3>Choose Plant Shapes <small>pick the shapes you want to use for this puzzle</small></h3>
-									<div class="row">
-										<div class="span12">
-											<div id="puzzleActiveShapesRequiredWarning" class="alert alert-info">
-												<button type="button" class="close" data-dismiss="alert">&times;</button>
-												<strong>Check it out:</strong> You've got to choose as many shapes as the puzzle requires before you can start. (choose below)
-											</div>
-										</div>
+									
+									<div id="puzzleActiveShapesRequiredWarning" class="alert alert-info">
+										<button type="button" class="close" data-dismiss="alert">&times;</button>
+										<strong>Check it out:</strong> You've got to choose as many shapes as the puzzle requires before you can start. (choose below)
 									</div>
-									<div class="row">
-										<div class="span1 container-center">
-											<p><small>(required)</small></p>
-											<h1 class="hero-type puzzle-active-numShapesRequired">1</h1>
-										</div>
-										<div class="span11">
-											<div class="grid-gutterless">
-												<ul class="thumbnails thumbnails4 shadowless">
-													<li class="span1 shape-monomino">
-														<div class="thumbnail">
-															<button class="btn btn-inverse btn-circle-small dim">
-																<img src="assets/icons/shape_monomino_rev_64.png" class="iconk-large">
-															</button>
-														</div>
-													</li>
-													<li class="span1 shape-domino">
-														<div class="thumbnail">
-															<button class="btn btn-inverse btn-circle-small dim">
-																<img src="assets/icons/shape_domino_rev_64.png" class="iconk-large">
-															</button>
-														</div>
-													</li>
-													<li class="span1 shape-trominoI">
-														<div class="thumbnail">
-															<button class="btn btn-inverse btn-circle-small dim">
-																<img src="assets/icons/shape_tromino_i_rev_64.png" class="iconk-large">
-															</button>
-														</div>
-													</li>
-													<li class="span1 shape-trominoL">
-														<div class="thumbnail">
-															<button class="btn btn-inverse btn-circle-small dim">
-																<img src="assets/icons/shape_tromino_l_rev_64.png" class="iconk-large">
-															</button>
-														</div>
-													</li>
-													<li class="span1 shape-tetrominoI">
-														<div class="thumbnail">
-															<button class="btn btn-inverse btn-circle-small dim">
-																<img src="assets/icons/shape_tetromino_i_rev_64.png" class="iconk-large">
-															</button>
-														</div>
-													</li>
-													<li class="span1 shape-tetrominoJ">
-														<div class="thumbnail">
-															<button class="btn btn-inverse btn-circle-small dim">
-																<img src="assets/icons/shape_tetromino_j_rev_64.png" class="iconk-large">
-															</button>
-														</div>
-													</li>
-													<li class="span1 shape-tetrominoL">
-														<div class="thumbnail">
-															<button class="btn btn-inverse btn-circle-small dim">
-																<img src="assets/icons/shape_tetromino_l_rev_64.png" class="iconk-large">
-															</button>
-														</div>
-													</li>
-													<li class="span1 shape-tetrominoO">
-														<div class="thumbnail">
-															<button class="btn btn-inverse btn-circle-small dim">
-																<img src="assets/icons/shape_tetromino_o_rev_64.png" class="iconk-large">
-															</button>
-														</div>
-													</li>
-													<li class="span1 shape-tetrominoS">
-														<div class="thumbnail">
-															<button class="btn btn-inverse btn-circle-small dim">
-																<img src="assets/icons/shape_tetromino_s_rev_64.png" class="iconk-large">
-															</button>
-														</div>
-													</li>
-													<li class="span1 shape-tetrominoT">
-														<div class="thumbnail">
-															<button class="btn btn-inverse btn-circle-small dim">
-																<img src="assets/icons/shape_tetromino_t_rev_64.png" class="iconk-large">
-															</button>
-														</div>
-													</li>
-													<li class="span1 shape-tetrominoZ">
-														<div class="thumbnail">
-															<button class="btn btn-inverse btn-circle-small dim">
-																<img src="assets/icons/shape_tetromino_z_rev_64.png" class="iconk-large">
-															</button>
-														</div>
-													</li>
-												</ul>
-											</div>
-										</div>
+									
+									<div class="grid-gutterless">
+										<ul class="thumbnails thumbnails4 shadowless well">
+											<li class="span1 shape-monomino">
+												<div class="thumbnail">
+													<button class="btn btn-inverse btn-circle-small dim">
+														<img src="assets/icons/shape_monomino_rev_64.png" class="iconk-large">
+													</button>
+												</div>
+											</li>
+											<li class="span1 shape-domino">
+												<div class="thumbnail">
+													<button class="btn btn-inverse btn-circle-small dim">
+														<img src="assets/icons/shape_domino_rev_64.png" class="iconk-large">
+													</button>
+												</div>
+											</li>
+											<li class="span1 shape-trominoI">
+												<div class="thumbnail">
+													<button class="btn btn-inverse btn-circle-small dim">
+														<img src="assets/icons/shape_tromino_i_rev_64.png" class="iconk-large">
+													</button>
+												</div>
+											</li>
+											<li class="span1 shape-trominoL">
+												<div class="thumbnail">
+													<button class="btn btn-inverse btn-circle-small dim">
+														<img src="assets/icons/shape_tromino_l_rev_64.png" class="iconk-large">
+													</button>
+												</div>
+											</li>
+											<li class="span1 shape-tetrominoI">
+												<div class="thumbnail">
+													<button class="btn btn-inverse btn-circle-small dim">
+														<img src="assets/icons/shape_tetromino_i_rev_64.png" class="iconk-large">
+													</button>
+												</div>
+											</li>
+											<li class="span1 shape-tetrominoJ">
+												<div class="thumbnail">
+													<button class="btn btn-inverse btn-circle-small dim">
+														<img src="assets/icons/shape_tetromino_j_rev_64.png" class="iconk-large">
+													</button>
+												</div>
+											</li>
+											<li class="span1 shape-tetrominoL">
+												<div class="thumbnail">
+													<button class="btn btn-inverse btn-circle-small dim">
+														<img src="assets/icons/shape_tetromino_l_rev_64.png" class="iconk-large">
+													</button>
+												</div>
+											</li>
+											<li class="span1 shape-tetrominoO">
+												<div class="thumbnail">
+													<button class="btn btn-inverse btn-circle-small dim">
+														<img src="assets/icons/shape_tetromino_o_rev_64.png" class="iconk-large">
+													</button>
+												</div>
+											</li>
+											<li class="span1 shape-tetrominoS">
+												<div class="thumbnail">
+													<button class="btn btn-inverse btn-circle-small dim">
+														<img src="assets/icons/shape_tetromino_s_rev_64.png" class="iconk-large">
+													</button>
+												</div>
+											</li>
+											<li class="span1 shape-tetrominoT">
+												<div class="thumbnail">
+													<button class="btn btn-inverse btn-circle-small dim">
+														<img src="assets/icons/shape_tetromino_t_rev_64.png" class="iconk-large">
+													</button>
+												</div>
+											</li>
+											<li class="span1 shape-tetrominoZ">
+												<div class="thumbnail">
+													<button class="btn btn-inverse btn-circle-small dim">
+														<img src="assets/icons/shape_tetromino_z_rev_64.png" class="iconk-large">
+													</button>
+												</div>
+											</li>
+										</ul>
 									</div>
+									
+									<div id="puzzleActiveShapesCounter" class="container-center">
+										<h1 class="hero-type"><span class="puzzle-active-numShapesChosen">0</span> <small>of</small> <span class="puzzle-active-numShapesRequired">1</span></h1>
+									</div>
+									
 								</div>
 								
 								<div id="puzzleActiveReady" class="hidden">
 								
-									<div id="puzzleActiveMap">
+									<div id="puzzleActiveMap" class="hidden">
 										<h3>Puzzle Map <small>click on the colored shapes to customize the object you've planted there</small></h3>
 										
 										<div class="alert alert-info">
@@ -903,7 +913,7 @@
 				<!-- menuOptions -->
 				<section id="menuOptions" class="menu hidden active">
 					
-					<div class="container">
+					<div class="menu-inner container">
 						
 						<header class="subhead">
 							<img src="assets/icons/cog_64.png" draggable="false" class="iconk-large">

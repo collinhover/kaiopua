@@ -33,7 +33,6 @@
 @displayFontFamily: 'CoustardRegular', @sansFontFamily;
 
 @backgroundColor: @white;
-@minHeight: 600px;
 
 .fullWidth {
 	position: relative;
@@ -47,7 +46,7 @@
 
 .fullMin {
 	min-width: 100%;
-	min-height: @minHeight;
+	min-height: 100%;
 }
 
 .fullscreen {
@@ -267,7 +266,7 @@ a.dim:hover, button.dim:hover, .btn.dim:hover {
 
 .hero-type {
 	font-size: 60px;
-	margin-bottom: 5px;
+	padding-bottom: 5px;
 }
 
 .sidekick-type {
@@ -288,8 +287,13 @@ a.dim:hover, button.dim:hover, .btn.dim:hover {
 	margin: 0;
 }
 
+h1, h2, h3, h4, h5, h6 {
+	margin: 0;
+	padding: (@baseLineHeight / 2) 0;
+}
+
 h3 {
-	margin-bottom: 5px;
+	padding-bottom: 5px;
 }
 
 h2, h3 {
@@ -298,14 +302,11 @@ h2, h3 {
 	}
 }
 
-h4 {
-    margin: 0;
-}
-
 h6 {
     text-transform: uppercase;
     color: #666;
     margin: 0;
+	padding: 0;
 }
 
 small {
@@ -1241,21 +1242,22 @@ a, .navbar .nav > li > a {
 	overflow:hidden;
 	z-index: 100;
 	
-	#primaryActionsInactive {
+	#actionsInactive {
 		
 	}
 	
-	#primaryActionsActive {
+	#actionsActive {
 		position: absolute;
 		bottom: 0;
 		left: 0;
 		right: 0;
+		overflow-x: auto;
 		
-		.primaryAction-item {
+		.action-item {
 			padding: 10px;
 		}
 		
-		.primaryAction-item:last-child {
+		.action-item:last-child {
 			margin-bottom: 20px;
 		}
 		
@@ -1421,8 +1423,7 @@ a, .navbar .nav > li > a {
 }
 
 #puzzleActiveShapes {
-	#gradient > .vertical(@navbarInverseBackgroundHighlight, @navbarInverseBackground);
-	.rounded-top( 10px );
+	
 }
 
 #puzzleActiveRewards {

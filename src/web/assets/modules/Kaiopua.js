@@ -263,6 +263,7 @@ var KAIOPUA = (function (main) {
 		main.index_of_properties = index_of_properties;
 		
 		main.css_property_supported = css_property_supported;
+		main.dom_extract = dom_extract;
 		main.dom_generate_image = dom_generate_image;
 		main.dom_ignore_pointer = dom_ignore_pointer;
 		main.dom_fade = dom_fade;
@@ -303,7 +304,7 @@ var KAIOPUA = (function (main) {
 			
 			var $item = $( this );
 			
-			if ( $item.parent().is( shared.domElements.$statusActive ) && $item.hasClass( 'hidden collapsed' ) ) {
+			if ( $item.parent().is( shared.domElements.$statusActive ) && $item.is( '.hidden, .collapsed' ) ) {
 				
 				shared.domElements.$statusInactive.append( $item );
 				
@@ -748,6 +749,12 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
 	
+	function dom_extract ( element ) {
+		
+		return element instanceof $ ? element.get( 0 ) : element;
+		
+	}
+	
 	function dom_ignore_pointer ( $element, state ) {
 		
 		// use native pointer-events when available
@@ -848,11 +855,13 @@ var KAIOPUA = (function (main) {
 			isCollapsed,
 			fadeComplete = function () {
 				
+				$element.removeClass( 'hiding' );
+				
 				// if faded out completely, hide
 				
 				if ( opacity === 0 ) {
 					
-					$element.addClass( 'hidden' ).trigger( 'hidden' );
+					$element.addClass( 'hidden' ).css( 'opacity', '' ).trigger( 'hidden' );
 					
 					// reenable all buttons and links
 					
@@ -888,21 +897,21 @@ var KAIOPUA = (function (main) {
 			easing = typeof parameters.easing === 'string' ? parameters.easing : shared.domFadeEasing;
 			callback = parameters.callback;
 			
-			isHidden = $element.hasClass( 'hidden' );
-			isCollapsed = $element.hasClass( 'collapsed' );
+			isHidden = $element.is( '.hidden' );
+			isCollapsed = $element.is( '.collapsed' );
 			
 			// stop animations
 			
-			$element.stop( true ).removeClass( 'hidden' );
+			$element.stop( true ).removeClass( 'hiding hidden collapsed' );
 			
 			actions = $element.find( 'a, button' );
 			dom_ignore_pointer( actions, false );
 			
 			// if should start at 0 opacity
 			
-			if ( isHidden === true || parameters.initHidden === true ) {
+			if ( isHidden === true || isCollapsed === true || parameters.initHidden === true ) {
 				
-				$element.fadeTo( 0, 0 );
+				$element.fadeTo( 0, 0 ).css( 'height', '' );
 				
 			}
 			
@@ -910,7 +919,7 @@ var KAIOPUA = (function (main) {
 			
 			if ( opacity === 0 ) {
 				
-				$element.trigger( 'hide' );
+				$element.addClass( 'hiding' ).trigger( 'hide' );
 				
 				// temporarily disable all buttons and links
 				
@@ -918,14 +927,6 @@ var KAIOPUA = (function (main) {
 				
 			}
 			else {
-				
-				// if collapsed
-				
-				if ( isCollapsed === true ) {
-					
-					$element.$element.css( 'height', '' ).removeClass( 'collapsed' );
-					
-				}
 				
 				$element.trigger( 'show' );
 				
@@ -995,12 +996,12 @@ var KAIOPUA = (function (main) {
 			
 			// if should start from hidden
 			
-			isHidden = $element.hasClass( 'hidden' );
-			isCollapsed = $element.hasClass( 'collapsed' );
+			isHidden = $element.is( '.hiding, .hidden' );
+			isCollapsed = $element.is( '.collapsed' );
 			
 			if ( isCollapsed !== true && ( isHidden === true || parameters.initHidden === true ) ) {
 				
-				$element.css( 'height', 0 ).addClass( 'collapsed' ).addClass('hidden');
+				$element.css( 'height', 0 ).css( 'opacity', '' );
 				isCollapsed = true;
 				
 			}
@@ -1011,7 +1012,7 @@ var KAIOPUA = (function (main) {
 				
 				// stop any previous animation
 				
-				$element.stop( true ).removeClass( 'hidden collapsed' );
+				$element.stop( true ).removeClass( 'hiding hidden collapsed' );
 				
 				if ( show === true ) {
 					
@@ -1033,7 +1034,7 @@ var KAIOPUA = (function (main) {
 					// show
 					
 					$element.trigger( 'show' );
-				
+					
 				}
 				else {
 					
