@@ -157,7 +157,6 @@ img {
 .flush {
     padding: 0;
     margin: 0;
-    border: 0;
 }
 
 .inline-block {
@@ -207,29 +206,6 @@ a.dim:hover, button.dim:hover, .btn.dim:hover {
 	-webkit-tap-highlight-color: rgba(0,0,0,0);
 }
 
-[class^="valign"], [class*=" valign"]{
-	display: table;
-	.clearfix();
-	
-	[class^="valign-cell"], [class*=" valign-cell"] {
-		display: table-cell; 
-		vertical-align: middle;
-		text-align: center;
-		width: auto;
-		margin: 0 auto;
-		
-		p {
-			margin: 0;
-			padding: 5px;
-		}
-	}
-	
-}
-
-.valign-expand {
-	width: 100%;
-}
-
 .sequence-arrow {
 	margin-top: 32px;
 }
@@ -266,7 +242,7 @@ a.dim:hover, button.dim:hover, .btn.dim:hover {
 
 .hero-type {
 	font-size: 60px;
-	padding-bottom: 5px;
+	line-height: 1;
 }
 
 .sidekick-type {
@@ -290,6 +266,15 @@ a.dim:hover, button.dim:hover, .btn.dim:hover {
 h1, h2, h3, h4, h5, h6 {
 	margin: 0;
 	padding: (@baseLineHeight / 2) 0;
+	line-height: 1.125;
+	
+	&:first-child {
+		padding-top: 0;
+	}
+	
+	&:last-child {
+		padding-bottom: 0;
+	}
 }
 
 h3 {
@@ -305,8 +290,7 @@ h2, h3 {
 h6 {
     text-transform: uppercase;
     color: #666;
-    margin: 0;
-	padding: 0;
+	padding: (@baseLineHeight / 4) 0;
 }
 
 small {
@@ -491,6 +475,14 @@ html, body {
 		line-height: 256px;
 	}
 	
+	&[class*="-fill"], &[class*="-fill-"]{
+		width: 100%;
+	}
+	
+	&[class*="-fillHeight"], &[class*="-fillHeight-"]{
+		height: 100%;
+	}
+	
 	&[class*="-topRight"], &[class*="-topRight-"]{
 		position: relative;
 		top: -2px;
@@ -566,6 +558,7 @@ html, body {
 
 .btn {
 	z-index: 1;
+	font-family: @headingsFontFamily;
 }
 
 .btn-huge {
@@ -735,6 +728,12 @@ a, .navbar .nav > li > a {
 			}
 		}
 		
+		&.borderless {
+			.thumbnail, &:hover {
+				border: 0;
+			}
+		}
+		
 	}
 	
 	.thumbnails0 {
@@ -774,6 +773,10 @@ a, .navbar .nav > li > a {
 		
 	}
 
+}
+
+.thumbnail .caption {
+	color: inherit;
 }
 
 /* wells 
@@ -1049,16 +1052,9 @@ a, .navbar .nav > li > a {
 	
 	h1 {
 		font-size: 56px;
-		margin-bottom: @baseLineHeight / 2;
 	}
 	
-	h2 {
-        .sidekick-type;
-		margin-top: 6px;
-		margin-bottom: 20px;
-	}
-	
-	p {
+	h2, h3, p {
 		margin-bottom: 20px;
 	}
 	
@@ -1206,6 +1202,7 @@ a, .navbar .nav > li > a {
 	
 	.status-item {
 		margin: 0;
+		font-family: @headingsFontFamily;
 		
 		.hero-unit, .sidekick-unit {
 			.border-radius(0);
@@ -1224,14 +1221,6 @@ a, .navbar .nav > li > a {
 	}
 	
 	#worker {
-		position: relative;
-		
-		.work {
-			.progress-bar {
-				.inline-block;
-				margin-top: 4px;
-			}
-		}
 		
 	}
 	
@@ -1276,7 +1265,7 @@ a, .navbar .nav > li > a {
 	background-color: @bodyBackground;
 	
 	#footer {
-		font-size: 13px;
+		color: #777;
 		position: relative;
 		margin-top: 10px;
 		padding-top: 20px;
@@ -1292,7 +1281,7 @@ a, .navbar .nav > li > a {
 .logo-group {
 	
 	.logo {
-		padding-bottom: 10px;
+		padding-top: 5px;
 		opacity: 0.75;
 		color: @white;
 		cursor: pointer;
@@ -1387,19 +1376,27 @@ a, .navbar .nav > li > a {
 -------------------------*/
 
 #menuFarming {
-
+	
 	.tools {
 		
-		h3 {
-			margin-bottom: 0;
+		p {
+			color: #555;
+			margin: 0;
 		}
 		
-		p {
-			margin: 0;
+		.tool {
+			margin-bottom: 20px;
 		}
 		
 		.tools-sequenceArrow {
 			margin-top: 40px;
+		}
+		
+		.thumbnail img {
+			max-width: 100%;
+			margin-left: auto;
+			margin-right: auto;
+			padding: 20px;
 		}
 		
 	}
@@ -1418,6 +1415,7 @@ a, .navbar .nav > li > a {
 	
 	h2 {
 		margin-bottom: 16px;
+		padding: 4px 0;
 	}
 	
 }
@@ -1445,6 +1443,11 @@ a, .navbar .nav > li > a {
 
 #plantOverview {
 	margin-bottom: 10px;
+}
+
+#plantCustomTitle {
+	padding-bottom: 10px;
+	border-bottom: 1px solid #EEE;
 }
 
 #plantCustomInfo {

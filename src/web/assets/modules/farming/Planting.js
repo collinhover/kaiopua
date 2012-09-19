@@ -1550,9 +1550,8 @@
 			
 			// hide shapes picker elements
 			
-			main.dom_fade( {
-				element: $.merge( shared.domElements.$puzzleActiveShapesRequiredWarning, shared.domElements.$puzzleActiveShapesCounter ),
-				time: 0
+			main.dom_collapse( {
+				element: $().add( shared.domElements.$puzzleActiveShapesRequiredWarning ).add( shared.domElements.$puzzleActiveShapesCounter )
 			} );
 			
 			// show ready items
@@ -1630,9 +1629,8 @@
 			
 			// hide ready items
 			
-			main.dom_fade( {
-				element: shared.domElements.$puzzleActiveReady,
-				time: 0
+			main.dom_collapse( {
+				element: shared.domElements.$puzzleActiveReady
 			} );
 			
 			// disable all shape activators

@@ -1322,10 +1322,9 @@ var KAIOPUA = (function (main) {
 	function worker_reset () {
 		
 		worker.tasksStartedIds = [];
-		worker.tasksStarted = [];
-		worker.tasksCompleted = [];
-		worker.$progressStarted.empty();
-		worker.$progressCompleted.empty();
+		worker.tasksStarted = {};
+		worker.tasksCompleted = {};
+		$().add( worker.$progressStarted ).add( worker.$progressCompleted ).children( '.work-task' ).remove();
 		
 	}
 	
@@ -1364,7 +1363,7 @@ var KAIOPUA = (function (main) {
 			
 			// init task
 			
-			$task = $( '<img src="assets/icons/bar_vertical_color_64.png" id="' + id + '" class="iconk-tiny iconk-widthFollow iconk-tight">' );
+			$task = $( '<img src="assets/icons/bar_vertical_color_64.png" id="' + id + '" class="iconk-tiny iconk-widthFollow iconk-tight work-task">' );
 			
 			// store
 			
@@ -1395,12 +1394,13 @@ var KAIOPUA = (function (main) {
 			if ( index !== -1 ) {
 				worker.tasksStartedIds.splice( index, 1 );
 			}
+			
 			worker.tasksStarted[ id ].remove();
 			delete worker.tasksStarted[ id ];
 			
 			// init task
 			
-			$task = $( '<img src="assets/icons/bar_vertical_64.png" id="' + id + '" class="iconk-tiny iconk-widthFollow iconk-tight">' );
+			$task = $( '<img src="assets/icons/bar_vertical_64.png" id="' + id + '" class="iconk-tiny iconk-widthFollow iconk-tight work-task">' );
 			
 			// store
 			
