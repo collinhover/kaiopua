@@ -59,10 +59,10 @@
 			icon: 'plant',
 			status: "Started"
 		};
-		_Puzzle.scores.okay = {
+		_Puzzle.scores.poor = {
 			threshold: 0,
-			icon: 'face_okay',
-			status: "Okay"
+			icon: 'face_poor',
+			status: "Poor"
 		};
 		_Puzzle.scores.good = {
 			threshold: 0.8,
@@ -76,7 +76,7 @@
 		};
 		
 		_Puzzle.scoreMap = [
-			_Puzzle.scores.okay,
+			_Puzzle.scores.poor,
 			_Puzzle.scores.good,
 			_Puzzle.scores.perfect
 		];
@@ -731,7 +731,7 @@
 		if ( main.type( scoreMap ) !== 'array' || scoreMap.length === 0 ) {
 			
 			scoreMap = [
-				main.extend( parameters.okay, main.extend( _Puzzle.scores.okay, {} ) ),
+				main.extend( parameters.poor, main.extend( _Puzzle.scores.poor, {} ) ),
 				main.extend( parameters.good, main.extend( _Puzzle.scores.good, {} ) ),
 				main.extend( parameters.perfect, main.extend( _Puzzle.scores.perfect, {} ) )
 			];

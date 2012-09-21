@@ -172,6 +172,10 @@
 		
 		this.reset();
 		
+		// stop on pause
+		
+		shared.signals.gamePaused.add( this.stop, this );
+		
 	}
 	
 	/*===================================================
@@ -1472,7 +1476,7 @@
 			
 			
 			// TODO: show 3D portrait
-			//shared.domElements.$plantActive3DPortrait;
+			//shared.domElements.$plantActivePortrait;
 			
 			
 			// hide plant warning
@@ -1508,7 +1512,7 @@
 			
 			
 			// TODO: stop 3D portrait
-			//shared.domElements.$plantActive3DPortrait;
+			//shared.domElements.$plantActivePortrait;
 			
 			// show plant warning
 			main.dom_collapse( {
@@ -1541,7 +1545,7 @@
 			
 			this.puzzle.shapesReady.remove( this.update_ui_puzzle, this );
 			
-			_UIQueue.remove( shared.domElements.$menuCenter );
+			_UIQueue.remove( shared.domElements.$menuActive );
 			
 			// update status
 			
@@ -1597,11 +1601,11 @@
 					
 					_UIQueue.add( {
 						element: shared.domElements.$puzzleActiveShapesPicker,
-						container: shared.domElements.$menuCenter,
+						container: shared.domElements.$menuActive,
 						activate: function () {
 							
 							shared.domElements.$puzzleActiveShapesPicker.placeholdme()
-								.appendTo( shared.domElements.$menuCenter.data( '$inner' ) );
+								.appendTo( shared.domElements.$menuActive.data( '$inner' ) );
 							
 						},
 						deactivate: function () {

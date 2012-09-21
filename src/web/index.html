@@ -75,6 +75,99 @@
 	<!-- game -->
 	<div id="game" class="unselectable">
 		
+		<!-- uiInGame -->
+		<div id="uiInGame" class="unselectable ignore-pointer">
+			
+			<div id="actionsInactive" class="hidden">
+				
+				<ul id="navStart"  class="action-item nav nav-inline nav-buttons ignore-pointer hidden">
+					<li id="buttonLoad" class="disabled dim">
+						<button class="btn btn-large btn-inverse btn-circle-large">
+							<img src="assets/icons/load_rev_64.png" class="iconk-large">
+							<h2><small>load</small></h2>
+						</button>
+					</li>
+					<li id="buttonStart">
+						<button class="btn btn-huge btn-inverse btn-circle-giant">
+							<img src="assets/icons/face_perfect_rev_64.png" class="iconk-giant">
+							<h2 class="logo-type">Start</h2>
+						</button>
+					</li>
+					<li id="buttonContinue" class="disabled dim">
+						<button class="btn btn-large btn-inverse btn-circle-large">
+							<img src="assets/icons/rock_rev_64.png" class="iconk-large">
+							<p><small>continue</small></p>
+						</button>
+					</li>
+				</ul>
+				
+				<ul id="puzzleActiveShapes" class="action-item nav nav-inline nav-buttons ignore-pointer hidden">
+					<li class="shape-monomino">
+						<button class="btn btn-inverse btn-circle-small">
+							<img src="assets/icons/shape_monomino_rev_64.png" class="iconk-large">
+						</button>
+					</li>
+					<li class="shape-domino">
+						<button class="btn btn-inverse btn-circle-small">
+							<img src="assets/icons/shape_domino_rev_64.png" class="iconk-large">
+						</button>
+					</li>
+					<li class="shape-trominoI">
+						<button class="btn btn-inverse btn-circle-small">
+							<img src="assets/icons/shape_tromino_i_rev_64.png" class="iconk-large">
+						</button>
+					</li>
+					<li class="shape-trominoL">
+						<button class="btn btn-inverse btn-circle-small">
+							<img src="assets/icons/shape_tromino_l_rev_64.png" class="iconk-large">
+						</button>
+					</li>
+					<li class="shape-tetrominoI">
+						<button class="btn btn-inverse btn-circle-small">
+							<img src="assets/icons/shape_tetromino_i_rev_64.png" class="iconk-large">
+						</button>
+					</li>
+					<li class="shape-tetrominoJ">
+						<button class="btn btn-inverse btn-circle-small">
+							<img src="assets/icons/shape_tetromino_j_rev_64.png" class="iconk-large">
+						</button>
+					</li>
+					<li class="shape-tetrominoL">
+						<button class="btn btn-inverse btn-circle-small">
+							<img src="assets/icons/shape_tetromino_l_rev_64.png" class="iconk-large">
+						</button>
+					</li>
+					<li class="shape-tetrominoO">
+						<button class="btn btn-inverse btn-circle-small">
+							<img src="assets/icons/shape_tetromino_o_rev_64.png" class="iconk-large">
+						</button>
+					</li>
+					<li class="shape-tetrominoS">
+						<button class="btn btn-inverse btn-circle-small">
+							<img src="assets/icons/shape_tetromino_s_rev_64.png" class="iconk-large">
+						</button>
+					</li>
+					<li class="shape-tetrominoT">
+						<button class="btn btn-inverse btn-circle-small">
+							<img src="assets/icons/shape_tetromino_t_rev_64.png" class="iconk-large">
+						</button>
+					</li>
+					<li class="shape-tetrominoZ">
+						<button class="btn btn-inverse btn-circle-small">
+							<img src="assets/icons/shape_tetromino_z_rev_64.png" class="iconk-large">
+						</button>
+					</li>
+				</ul>
+				
+			</div>
+			
+			<div id="actionsActive" class="container-center ignore-pointer">
+				
+			</div>
+			
+		</div>
+		<!-- END uiInGame -->
+		
 	</div>
 	<!-- END game -->
 	
@@ -90,21 +183,8 @@
 				<div class="navbar navbar-inverse navbar-flush">
 					<div class="navbar-inner">
 						<div class="container">
+							
 							<ul class="nav pull-right logo-group">
-								<li>
-									<a id="buttonGamePause" class="hidden">
-										<div class="iconk-large-widthFollow">
-											<img src="assets/icons/pause_rev_64.png" class="iconk-small" draggable="false"><p class="inline-type">Pause</p>
-										</div>
-									</a>
-								</li>
-								<li>
-									<a id="buttonGameResume" class="hidden">
-										<div class="iconk-large-widthFollow">
-											<img src="assets/icons/play_rev_64.png" class="iconk-small" draggable="false"><p class="inline-type">Resume</p>
-										</div>
-									</a>
-								</li>
 								<li class="dropdown">
 									<a href="#" id="logoDropdownToggle" class="dropdown-toggle" data-toggle="dropdown">
 										<div class="logo">
@@ -135,6 +215,23 @@
 											</a>
 										</li>
 									</ul>
+								</li>
+							</ul>
+							
+							<ul class="nav pull-right">
+								<li>
+									<a id="buttonGamePause" class="hidden">
+										<div class="iconk-large-widthFollow">
+											<img src="assets/icons/pause_rev_64.png" class="iconk-small" ><p class="inline-type">Pause</p>
+										</div>
+									</a>
+								</li>
+								<li>
+									<a id="buttonGameResume" class="hidden">
+										<div class="iconk-large-widthFollow">
+											<img src="assets/icons/play_rev_64.png" class="iconk-small" ><p class="inline-type">Resume</p>
+										</div>
+									</a>
 								</li>
 							</ul>
 							
@@ -287,131 +384,24 @@
 			</div>
 			<!-- END active -->
 			
-			<!-- uiInGame -->
-			<div id="uiInGame" class="unselectable ignore-pointer">
-				
-				<div id="actionsInactive" class="hidden">
-					
-					<ul id="navStart"  class="action-item nav nav-inline nav-buttons ignore-pointer hidden">
-						<li id="buttonLoad" class="disabled dim">
-							<button class="btn btn-large btn-inverse btn-circle-large">
-								<img src="assets/icons/load_rev_64.png" class="iconk-large">
-								<h2><small>load</small></h2>
-							</button>
-						</li>
-						<li id="buttonStart">
-							<button class="btn btn-huge btn-inverse btn-circle-giant">
-								<img src="assets/icons/face_perfect_rev_64.png" class="iconk-giant">
-								<h2 class="logo-type">Start</h2>
-							</button>
-						</li>
-						<li id="buttonContinue" class="disabled dim">
-							<button class="btn btn-large btn-inverse btn-circle-large">
-								<img src="assets/icons/rock_rev_64.png" class="iconk-large">
-								<p><small>continue</small></p>
-							</button>
-						</li>
-					</ul>
-					
-					<ul id="puzzleActiveShapes" class="action-item nav nav-inline nav-buttons ignore-pointer hidden">
-						<li class="shape-monomino">
-							<button class="btn btn-inverse btn-circle-small">
-								<img src="assets/icons/shape_monomino_rev_64.png" class="iconk-large">
-							</button>
-						</li>
-						<li class="shape-domino">
-							<button class="btn btn-inverse btn-circle-small">
-								<img src="assets/icons/shape_domino_rev_64.png" class="iconk-large">
-							</button>
-						</li>
-						<li class="shape-trominoI">
-							<button class="btn btn-inverse btn-circle-small">
-								<img src="assets/icons/shape_tromino_i_rev_64.png" class="iconk-large">
-							</button>
-						</li>
-						<li class="shape-trominoL">
-							<button class="btn btn-inverse btn-circle-small">
-								<img src="assets/icons/shape_tromino_l_rev_64.png" class="iconk-large">
-							</button>
-						</li>
-						<li class="shape-tetrominoI">
-							<button class="btn btn-inverse btn-circle-small">
-								<img src="assets/icons/shape_tetromino_i_rev_64.png" class="iconk-large">
-							</button>
-						</li>
-						<li class="shape-tetrominoJ">
-							<button class="btn btn-inverse btn-circle-small">
-								<img src="assets/icons/shape_tetromino_j_rev_64.png" class="iconk-large">
-							</button>
-						</li>
-						<li class="shape-tetrominoL">
-							<button class="btn btn-inverse btn-circle-small">
-								<img src="assets/icons/shape_tetromino_l_rev_64.png" class="iconk-large">
-							</button>
-						</li>
-						<li class="shape-tetrominoO">
-							<button class="btn btn-inverse btn-circle-small">
-								<img src="assets/icons/shape_tetromino_o_rev_64.png" class="iconk-large">
-							</button>
-						</li>
-						<li class="shape-tetrominoS">
-							<button class="btn btn-inverse btn-circle-small">
-								<img src="assets/icons/shape_tetromino_s_rev_64.png" class="iconk-large">
-							</button>
-						</li>
-						<li class="shape-tetrominoT">
-							<button class="btn btn-inverse btn-circle-small">
-								<img src="assets/icons/shape_tetromino_t_rev_64.png" class="iconk-large">
-							</button>
-						</li>
-						<li class="shape-tetrominoZ">
-							<button class="btn btn-inverse btn-circle-small">
-								<img src="assets/icons/shape_tetromino_z_rev_64.png" class="iconk-large">
-							</button>
-						</li>
-					</ul>
-					
-				</div>
-				
-				<div id="actionsActive" class="container-center ignore-pointer">
-					
-				</div>
-				
-			</div>
-			<!-- END uiInGame -->
-			
 			<!-- uiOutGame -->
 			<div id="uiOutGame">
 				
 				<!-- menuInactive -->
 				<section id="menuInactive" class="menu hidden">
 					
-					<div class="menu-inner container">
-						
-					</div>
-					
 				</section>
 				<!-- END menuInactive -->
 				
-				<!-- menuGeneral -->
-				<section id="menuGeneral" class="menu hidden">
+				<!-- menuActive -->
+				<section id="menuActive" class="menu hidden">
 					
-					<div class="menu-inner container">
+					<section class="menu-inner container">
 						
-					</div>
+					</section>
 					
 				</section>
-				<!-- END menuGeneral -->
-				
-				<!-- menuCenter -->
-				<section id="menuCenter" class="menu hidden">
-					
-					<div class="menu-inner container container-center">
-						
-					</div>
-					
-				</section>
-				<!-- END menuCenter -->
+				<!-- END menuActive -->
 				
 				<!-- menuFarming -->
 				<section id="menuFarming" class="menu hidden">
@@ -419,7 +409,7 @@
 					<div class="menu-inner container">
 						
 						<header class="subhead">
-							<img src="assets/icons/farming_64.png" draggable="false" class="iconk-large">
+							<img src="assets/icons/farming_64.png"  class="iconk-large">
 							<h1 class="inline-type">Farming</h1>
 							<h2 class="sidekick-type">Examine puzzles, change plants, and browse your plant collection</h2>
 							<div id="navFarming" class="subnavbar is-sticky">
@@ -438,6 +428,202 @@
 								</div>
 							</div>
 						</header>
+						
+						<!-- score -->
+						<div id="score" class="container-center">
+							
+							<header class="subhead">
+								<img src="assets/icons/tiki_128.png"  class="iconk-doublegiant">
+								<h1 class="hero-type logo-type">Puzzle Complete</h1>
+								<h2 class="sidekick-type">Hurrah, you solved the <span class="puzzle-active-name">Tutorial Puzzle</span>!</h2>
+							</header>
+							
+							<div id="scoreDetails">
+								
+								<div class="row">
+								
+									<div class="span3">
+										<div class="iconk">
+											<img src="assets/icons/farming_64.png" class="iconk-medium">
+											<h6>Planted</h6>
+										</div>
+										<h2 class="hero-type inline-type puzzle-active-elementCount">0</h2>
+									</div>
+									
+									<div class="span1">
+										<h6><small>vs.</small></h6>
+									</div>
+									
+									<div class="span3">
+										<h2 class="hero-type inline-type puzzle-active-numElementsMin">0</h2>
+										<div class="iconk">
+											<img src="assets/icons/goal_64.png" class="iconk-medium">
+											<h6>Goal</h6>
+										</div>
+									</div>
+									
+								</div>
+								
+								<div id="scoreBarHeader">
+									<h6>Score</h6>
+								</div>
+								
+							</div>
+							
+							<!-- score bar -->
+							<div id="scoreBar">
+								
+								<div class="score-arrow"></div>
+								
+								<!-- score: perfect -->
+								<div id="scorePerfect" class="score">
+									
+									<div class="score-arrow"></div>
+									<div class="score-inner span4">
+										<img src="assets/icons/face_perfect_rev_64.png"  class="iconk-giant">
+										<h6>PERFECT</h6>
+									</div>
+									
+									<!-- score: good -->
+									<div id="scoreGood" class="score active">
+										
+										<div class="score-arrow"></div>
+										<div class="score-inner span4">
+											<img src="assets/icons/face_good_rev_64.png"  class="iconk-giant">
+											<h6>GOOD</h6>
+										</div>
+										
+										<!-- score: poor -->
+										<div id="scorePoor" class="score active">
+											
+											<div class="score-arrow"></div>
+											<div class="score-inner span4">
+												<img src="assets/icons/face_poor_rev_64.png"  class="iconk-giant">
+												<h6>POOR</h6>
+											</div>
+										
+										</div>
+										
+									</div>
+									
+								</div>
+								
+							</div>
+							<!-- END score bar -->
+							
+							<!-- score results -->
+							<div id="scoreResults">
+								
+								<div id="scoreBarFooter">
+									<h6><span id="scorePct">0</span> %</h6>
+								</div>
+								
+								<h2 class="sidekick-type">Rewards</h2>
+								
+								<!-- score rewards -->
+								<div id="scoreRewards">
+									
+									<div class="eqheight3-container3">
+										<div class="eqheight3-container2">
+											<div class="eqheight3-container1">
+												<!-- poor -->
+												<div id="rewardsPoor" class="eqheight3-column rewards active">
+													
+													<div class="reward-requirements">
+														
+														<table class="reward-requirements-list">
+															<tbody>
+																<tr>
+																	<td class="rewards-requires-poor"></td>
+																	<td class="rewards-requires-good"></td>
+																	<td class="rewards-requires-perfect"></td>
+																</tr>
+															</tbody>
+														</table>
+														
+													</div>
+													
+													<div class="reward-list">
+														
+														<div class="reward">
+															<img src="assets/icons/grid_64.png" class="iconk-large">
+															<p>Basics Puzzle</p>
+															<h6>Puzzle</h6>
+														</div>
+														
+														<div class="reward">
+															<img src="assets/icons/grid_64.png" class="iconk-large">
+															<p>Basics Puzzle</p>
+															<h6>Puzzle</h6>
+														</div>
+													
+													</div>
+													
+												</div>
+												<!-- good -->
+												<div id="rewardsGood" class="eqheight3-column rewards active">
+													<div class="reward-requirements">
+														
+														<table class="reward-requirements-list">
+															<tbody>
+																<tr>
+																	<td class="rewards-requires-good"></td>
+																	<td class="rewards-requires-perfect"></td>
+																</tr>
+															</tbody>
+														</table>
+														
+													</div>
+													
+													<div class="reward-list">
+														
+														<div class="reward">
+															<img src="assets/icons/grid_64.png" class="iconk-large">
+															<p>Basics Puzzle</p>
+															<h6>Puzzle</h6>
+														</div>
+														
+													</div>
+													
+												</div>
+												<!-- perfect -->
+												<div id="rewardsPerfect" class="eqheight3-column rewards">
+													
+													<div class="reward-requirements">
+														
+														<table class="reward-requirements-list">
+															<tbody>
+																<tr>
+																	<td class="rewards-requires-perfect"></td>
+																</tr>
+															</tbody>
+														</table>
+														
+													</div>
+													
+													<div class="reward-list">
+														
+														<div class="reward">
+															<img src="assets/icons/grid_64.png" class="iconk-large">
+															<p>Basics Puzzle</p>
+															<h6>Puzzle</h6>
+														</div>
+														
+													</div>
+													
+												</div>
+											</div>
+										</div>
+									</div>
+									
+								</div>
+								<!-- END score rewards -->
+								
+							</div>
+							<!-- END score results -->
+							
+						</div>
+						<!-- END score -->
 						
 						<!-- puzzleTools -->
 						<section id="puzzleTools" class="tools">
@@ -580,7 +766,7 @@
 										<div id="puzzleActiveStatusIcons" class="well">
 											<img src="assets/icons/waiting_64.png" id="waiting" class="puzzle-statusIcon iconk-giant">
 											<img src="assets/icons/confirm_64.png" id="ready" class="puzzle-statusIcon iconk-giant hidden">
-											<img src="assets/icons/face_okay_64.png" id="okay" class="puzzle-completionIcon iconk-giant hidden">
+											<img src="assets/icons/face_poor_64.png" id="poor" class="puzzle-completionIcon iconk-giant hidden">
 											<img src="assets/icons/face_good_64.png" id="good" class="puzzle-completionIcon iconk-giant hidden">
 											<img src="assets/icons/face_perfect_64.png" id="perfect" class="puzzle-completionIcon iconk-giant hidden">
 										</div>
@@ -702,8 +888,8 @@
 										<h3>Rewards <small>the less plants you use to fill a puzzle, the better the reward</small></h3>
 										<div class="row">
 											<div class="span4">
-												<div id="puzzleActiveRewardsOkay">
-													<h4>Okay <small>(0 - 79%)</small></h4>
+												<div id="puzzleActiveRewardsPoor">
+													<h4>Poor <small>(0 - 79%)</small></h4>
 													<div class="puzzle-rewardsList row">
 														<div class="span4">
 															<div class="well well-success">
@@ -779,33 +965,25 @@
 							
 							<div id="plantActive" class="hidden">
 								
-								<div class="row">
-									<div class="span12 grid-gutterless">
-										<div class="row container-center well">
-											<ul class="span2 thumbnails">
-												<li class="span2">
-													<div id="plantActive3DPortrait" class="thumbnail">
-														<!--<img src="http://placehold.it/260x300">-->
-													</div>
-												</li>
-											</ul>
+								<div class="container-center well">
+									<div class="thumbnails borderless shadowless">
+										<div id="plantActivePortrait" class="span4 thumbnail">
+											<img src="assets/icons/taro_128.png" class="iconk-fill">
 										</div>
 									</div>
 								</div>
 								
 								<div id="plantActiveOverview" class="row">
+									<p class="pull-right"><small>in the <span class="puzzle-active-name">Tutorial</span> Puzzle</small></p>
 									<div class="span4">
-										<img src="assets/icons/shape_monomino_64.png" id="plantActiveShapeIcon" class="pull-left iconk-large">
-										<h2 id="plantActiveShape">Monomino</h2>
 										<h6>shape</h6>
+										<img src="assets/icons/shape_monomino_64.png" id="plantActiveShapeIcon" class="iconk-large">
+										<h2 id="plantActiveShape" class="inline-type">Monomino</h2>
 									</div>
 									<div class="span4">
-										<img src="assets/icons/taro_64.png" id="plantActiveSkinIcon" class="pull-left iconk-large">
-										<h2 id="plantActiveSkin">Taro</h2>
 										<h6>plant</h6>
-									</div>
-									<div class="span4">
-										<h3 class="pull-right"><small>in the <span class="puzzle-active-name">Tutorial</span> Puzzle</small></h3>
+										<img src="assets/icons/taro_64.png" id="plantActiveSkinIcon" class="iconk-large">
+										<h2 id="plantActiveSkin" class="inline-type">Taro</h2>
 									</div>
 								</div>
 							
@@ -903,7 +1081,7 @@
 					<div class="menu-inner container">
 						
 						<header class="subhead">
-							<img src="assets/icons/cog_64.png" draggable="false" class="iconk-large">
+							<img src="assets/icons/cog_64.png"  class="iconk-large">
 							<h1 class="inline-type">Options</h1>
 							<h2 class="sidekick-type">Handle your game data, fiddle with settings, and change controls</h2>
 							<div id="navOptions" class="subnavbar is-sticky">

@@ -97,14 +97,14 @@
 		
 		this.actions.add( 'pointer', {
 			eventCallbacks: {
-				tap: [ $.proxy( me.planting.select_puzzle, me.planting ), $.proxy( me.planting.select_plant, me.planting ) ],
-				hold: $.proxy( me.planting.activate_puzzle, me.planting ),
-				dragstart: $.proxy( me.planting.activate_plant, me.planting ),
-				drag: $.proxy( me.planting.step, me.planting ),
-				dragend: $.proxy( me.planting.complete, me.planting ),
-				doubletap: $.proxy( me.planting.delete_plant, me.planting )
+				tap: [ $.proxy( this.planting.select_puzzle, this.planting ), $.proxy( this.planting.select_plant, this.planting ) ],
+				hold: $.proxy( this.planting.activate_puzzle, this.planting ),
+				dragstart: $.proxy( this.planting.activate_plant, this.planting ),
+				drag: $.proxy( this.planting.step, this.planting ),
+				dragend: $.proxy( this.planting.complete, this.planting ),
+				doubletap: $.proxy( this.planting.delete_plant, this.planting )
 			},
-			deactivateCallbacks: $.proxy( me.planting.stop, me.planting ),
+			deactivateCallbacks: $.proxy( this.planting.stop, this.planting ),
 			activeCheck: function () {
 				return me.planting.started;
 			}

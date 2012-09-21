@@ -33,6 +33,9 @@
 @displayFontFamily: 'CoustardRegular', @sansFontFamily;
 
 @backgroundColor: @white;
+@poorBackground: #ee5f5b;
+@goodBackground: #5fcae9;
+@perfectBackground: #7bd86b;//#62c462;
 
 .fullWidth {
 	position: relative;
@@ -98,6 +101,14 @@
 
 .rounded-bottom ( @radius ) {
 	.border-radius( 0 0 @radius @radius );
+}
+
+.rounded-left ( @radius ) {
+	.border-radius( @radius 0 0 @radius );
+}
+
+.rounded-right ( @radius ) {
+	.border-radius( 0 @radius @radius 0 );
 }
 
 .transform ( @transform ) {
@@ -173,7 +184,7 @@ img {
     
 }
 
-.ignore-pointer {
+.ignore-pointer, .ignore-pointer-temporary {
 	pointer-events: none;
 }
 
@@ -275,6 +286,11 @@ h1, h2, h3, h4, h5, h6 {
 	&:last-child {
 		padding-bottom: 0;
 	}
+	
+	small {
+		line-height: 1.125;
+	}
+	
 }
 
 h3 {
@@ -322,6 +338,19 @@ small {
     margin-bottom: 26px;
 }
 
+@media (max-width: 480px) {
+	
+	.page-header {
+		h1, h2, h3, h4, h5, h6 {
+			
+			small {
+				line-height: 1.125;
+			}
+			
+		}
+	}
+	
+}
 /* containers 
 -------------------------*/
 
@@ -722,18 +751,6 @@ a, .navbar .nav > li > a {
 			.border-radius(0);
 		}
 		
-		&.shadowless {
-			.thumbnail, &:hover {
-				.box-shadow(none);
-			}
-		}
-		
-		&.borderless {
-			.thumbnail, &:hover {
-				border: 0;
-			}
-		}
-		
 	}
 	
 	.thumbnails0 {
@@ -777,6 +794,22 @@ a, .navbar .nav > li > a {
 
 .thumbnail .caption {
 	color: inherit;
+}
+
+.shadowless {
+	.box-shadow(none);
+	
+	.thumbnail, &:hover {
+		.box-shadow(none);
+	}
+}
+
+.borderless {
+	border: 0;
+	
+	.thumbnail, &:hover {
+		border: 0;
+	}
 }
 
 /* wells 
@@ -954,13 +987,6 @@ a, .navbar .nav > li > a {
     			}
     		}
     	}
-    	
-        &.is-sticky {
-        	width: auto;
-            position: inherit;
-            top: 0;
-            left: 0;
-        }
         
         .grid-gutterless {
             #grid > .core(60px, 0px);
@@ -996,7 +1022,6 @@ a, .navbar .nav > li > a {
 .nav-inline {
 	display: inline-block;
 	float: none;
-	margin-bottom: -2px;
 	
 	li {	
 		display: inline-block;
@@ -1082,6 +1107,284 @@ a, .navbar .nav > li > a {
 		a {
 			padding-top: 10px;
 			padding-bottom: 10px;
+		}
+		
+	}
+	
+}
+
+/* equal height containers / http://matthewjamestaylor.com/blog/equal-height-columns-cross-browser-css-no-hacks
+-------------------------*/
+
+[class*="eqheight3-container"] {
+    float: left;
+    width: 100%;
+}
+
+.eqheight3-container3 {
+    overflow:hidden;
+}
+
+.eqheight3-container2, .eqheight3-container1 {
+    right: 33.33%;
+}
+
+.eqheight3-container3, .eqheight3-container2 {
+    clear: left;
+}
+
+.eqheight3-column {
+    float:left;
+    width: 33.33%;
+    left: 66.66%;
+    overflow:hidden;
+}
+
+/* score
+-------------------------*/
+
+@scorePadding: 10px;
+@scoreRadius: 6px;
+@scoreBackground: #ccc;
+@scoreOpacity: 0.6;
+@rewardsOpacity: 0.4;
+
+#score {
+	
+	#scoreDetails {
+		
+		& > .row {
+			margin-bottom: 20px;
+		}
+		
+		.hero-type.inline-type {
+			padding: 0 20px;
+		}
+		
+	}
+	
+	#scoreBarHeader, #scoreBarFooter {
+		position: absolute;
+		width: 18%;
+		left: 40%;
+		padding: 5px;
+		background: whiteSmoke;
+		
+		h6 {
+			color: #999;
+		}
+		
+	}
+	
+	#scoreBarHeader {
+		bottom: 0;
+		.rounded-top( @scoreRadius );
+	}
+	
+	#scoreBarFooter {
+		top: 0;
+		.rounded-bottom( @scoreRadius );
+	}
+	
+	#scoreBar {
+		z-index: 1;
+		overflow: visible;
+		#gradient > .vertical( @grayLighter, @whiteDarker );
+		.box-shadow(~"inset 8px 1px 8px rgba(0, 0, 0, .1), 0 1px 10px rgba(0, 0, 0, 0.1)");
+		.rounded-left( @scoreRadius );
+		
+		.score {
+			background: @scoreBackground;
+			.rounded-left( @scoreRadius );
+			.clearfix;
+			
+			h6 {
+				color: @white;
+			}
+			
+		}
+		
+		/* box shadow on only one side, http://starikovs.com/2011/11/09/css3-one-side-shadow/ */
+		/*.score-level:before {
+			position: absolute; 
+			content: ' '; 
+			top: 0; 
+			right: 0; 
+			bottom: 0;
+			left: 0; 
+			background-color: transparent;
+			.box-shadow(~"2px 0 6px rgba(0, 0, 0, 0.1)");
+		}*/
+		
+		.score-arrow {
+			position: absolute;
+			right: -99px;
+			top: 0;
+			width: 100px;
+			height: 100%;
+			overflow: hidden;
+		}
+			
+		.score-arrow:after {
+			//opacity: 0;
+			content: "";
+			position: absolute;
+			background: @scoreBackground;
+			width: 89px;
+			height: 89px;
+			top: 17px;
+			left: -45px;
+			.box-shadow( -1px 0px 10px 0 rgba(0, 0, 0, 0.2) );
+			.transform( rotate(45deg) );
+		}
+		
+		.score-inner {
+			margin: 20px;
+			opacity: @scoreOpacity;
+			float: right;
+		}
+		
+		.score.active .score-inner {
+			opacity: 1;
+		}
+		
+		& > .score-arrow:after {
+			#gradient > .vertical( @grayLighter, @whiteDarker );
+			.box-shadow( ~"inset 0 1px 8px rgba(0, 0, 0, .1), -1px 0px 10px 0 rgba(0, 0, 0, 0.2)" );
+		}
+		
+		#scorePoor {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 50%;
+			
+			&.active {
+				background: @poorBackground;
+				.score-arrow:after {
+					background: @poorBackground;
+				}
+			}
+			
+		}
+		
+		#scoreGood {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 66%;
+			
+			&.active {
+				background: @goodBackground;
+				.score-arrow:after {
+					background: @goodBackground;
+				}
+				
+				#scorePoor {
+					background: transparent;
+					.score-arrow:after {
+						background: transparent;
+					}
+					.score-inner {
+						opacity: @scoreOpacity;
+					}
+				}
+			}
+			
+		}
+		
+		#scorePerfect {
+			width: 100%;
+			
+			&.active {
+				background: @perfectBackground;
+				.score-arrow:after {
+					background: @perfectBackground;
+				}
+				
+				#scorePoor, #scoreGood {
+					background: transparent;
+					.score-arrow:after {
+						background: transparent;
+					}
+					.score-inner {
+						opacity: @scoreOpacity;
+					}
+				}
+				
+			}
+			
+		}
+		
+	}
+	
+	#scoreResults {
+		padding-top: 80px;
+	}
+	
+	#scoreRewards {
+		margin-bottom: 20px;
+		padding: @scorePadding;
+		.box-shadow(~"0 0 6px rgba(0, 0, 0, 0.1)");
+		.border-radius( @scoreRadius );
+		.clearfix;
+		
+		.eqheight3-container2, .eqheight3-container1 {
+			border-right: 1px solid @grayLighter;
+		}
+		
+		.rewards:first-child {
+			.reward-requirements {
+				padding-left: 0;
+			}
+		}
+		
+		.rewards:last-child {
+			.reward-requirements {
+				padding-right: 0;
+			}
+		}
+		
+		.rewards .reward-list{
+			opacity: @rewardsOpacity;
+		}
+		
+		.rewards.active .reward-list {
+			opacity: 1;
+		}
+		
+		.reward-requirements {
+			padding: 0 10px 10px 10px;
+			opacity: @rewardsOpacity;
+			
+			.reward-requirements-list {
+				width: 100%;
+			}
+			
+			[class*="rewards-requires"] {
+				height: 5px;
+			}
+			
+			.rewards-requires-poor {
+				background: @poorBackground;
+			}
+			
+			.rewards-requires-good {
+				background: @goodBackground;
+			}
+			
+			.rewards-requires-perfect {
+				background: @perfectBackground;
+			}
+			
+		}
+		
+		.reward {
+			padding: 10px;
+		}
+	
+		.reward:last-child  {
+			border-right: 0;
 		}
 		
 	}
@@ -1240,14 +1543,10 @@ a, .navbar .nav > li > a {
 		bottom: 0;
 		left: 0;
 		right: 0;
-		overflow-x: auto;
+		margin-bottom: 10px;
 		
 		.action-item {
 			padding: 10px;
-		}
-		
-		.action-item:last-child {
-			margin-bottom: 20px;
 		}
 		
 	}
@@ -1310,15 +1609,11 @@ a, .navbar .nav > li > a {
 			margin-right: 5px;
 		}
 		
-		.dropdown-menu {
-			//right: 0;
-		}
-		
 	}
 	
 	.open {
 		
-		.logo {
+		a, .logo {
 			opacity: 1;
 			background-color: transparent !important;
 		}

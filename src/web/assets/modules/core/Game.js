@@ -474,8 +474,7 @@
 		shared.domElements.$menusInner = $();
 		shared.domElements.$menuToggles = $();
 		shared.domElements.$menuToggleDefault = $();
-		shared.domElements.$menuGeneral = $( '#menuGeneral' );
-		shared.domElements.$menuCenter = $( '#menuCenter' );
+		shared.domElements.$menuActive = $( '#menuActive' );
 		shared.domElements.$menuInactive = $( '#menuInactive' );
 		shared.domElements.$menuFarming = $('#menuFarming');
 		shared.domElements.$menuOptions = $('#menuOptions');
@@ -519,7 +518,7 @@
 		shared.domElements.$plant = $('#plant');
 		shared.domElements.$plantActive = $("#plantActive");
 		shared.domElements.$plantActiveWarning = $("#plantActiveWarning");
-		shared.domElements.$plantActive3DPortrait = $("#plantActive3DPortrait");
+		shared.domElements.$plantActivePortrait = $("#plantActivePortrait");
 		shared.domElements.$plantActiveShape = $("#plantActiveShape");
 		shared.domElements.$plantActiveShapeIcon = $("#plantActiveShapeIcon");
 		shared.domElements.$plantActiveSkin = $("#plantActiveSkin");
@@ -679,7 +678,8 @@
 					return $relative.offset().top + $relative.outerHeight( true );
 					
 				},
-				scrollTarget: $target
+				scrollTarget: $target,
+				handlePosition: false
 				
 			} );
 			
@@ -1092,7 +1092,7 @@
 		var pointer;
 		
 		pointer = main.reposition_pointer( e );
-		
+		console.log( 'gamePointerDragged' );
 		shared.signals.gamePointerDragged.dispatch( e, pointer );
 		
     }

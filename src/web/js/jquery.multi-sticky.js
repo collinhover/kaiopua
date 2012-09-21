@@ -17,6 +17,7 @@
             className: 'is-sticky',
 			classNameNav: 'navbar-fixed-',
             wrapperClassName: 'sticky-wrapper',
+			handlePosition: true,
             maxScroll: Number.MAX_VALUE,
             maxScrollStart: 0
         },
@@ -226,7 +227,7 @@
 			$wrapper = data.$wrapper;
 			elementTop = $wrapper.offset().top;
 			elementHeight = $wrapper.height();
-			topSpacing = ( typeof data.topSpacing === 'function' ? data.topSpacing() : data.topSpacing );
+			topSpacing = ( typeof data.topSpacing === 'function' ? data.topSpacing() : data.topSpacing ) || 0;
 			
 			// scroll range
 			
@@ -265,7 +266,7 @@
 			// sticky
 			else {
 				
-				bottomSpacing = ( typeof data.bottomSpacing === 'function' ? data.bottomSpacing() : data.bottomSpacing );
+				bottomSpacing = ( typeof data.bottomSpacing === 'function' ? data.bottomSpacing() : data.bottomSpacing ) || 0;
 				newTop = scrollTargetHeight - $element.outerHeight() - topSpacing - bottomSpacing - scrollTop - heightScrollPositionDiff;
 				
 				if (newTop < 0) {
@@ -280,10 +281,19 @@
 				
 				if (data.currentTop != newTop) {
 					
-					$element
-						.addClass(data.className + ( $element.is(".navbar,.subnavbar") ? " " + data.classNameNav : "" ) )
-						.css('top', newTop)
-						.css('position', 'fixed');
+					$element.addClass(data.className + ( $element.is(".navbar, .subnavbar") ? " " + data.classNameNav : "" ) );
+					
+					if ( data.handlePosition === true ) {
+						
+						$element.css( 'position', 'fixed' );
+						
+					}
+					
+					if ( topSpacing !== 0 || bottomSpacing !== 0 ) {
+						
+						$element.css( 'top', newTop );
+						
+					}
 					
 					$wrapper
 						.css('height', elementHeight );

@@ -763,12 +763,12 @@ var KAIOPUA = (function (main) {
 			
 			if ( state === true ) {
 				
-				$element.addClass( 'ignore-pointer' );
+				$element.addClass( 'ignore-pointer-temporary' );
 				
 			}
 			else {
 				
-				$element.removeClass( 'ignore-pointer' );
+				$element.removeClass( 'ignore-pointer-temporary' );
 			
 			}
 			
@@ -872,6 +872,12 @@ var KAIOPUA = (function (main) {
 					
 					$element.trigger( 'shown' );
 					
+					if ( opacity === 1 ) {
+						
+						$element.css( 'opacity', '' );
+						
+					}
+					
 				}
 				
 				// do callback
@@ -905,6 +911,7 @@ var KAIOPUA = (function (main) {
 			$element.stop( true ).removeClass( 'hiding hidden collapsed' );
 			
 			actions = $element.find( 'a, button' );
+			
 			dom_ignore_pointer( actions, false );
 			
 			// if should start at 0 opacity
