@@ -1595,17 +1595,37 @@
 				this.puzzle.shapesReady.add( this.update_ui_puzzle, this );
 				shared.signals.gameResumed.addOnce( on_resume, this );
 				
-				// isolate and show shapes picker
+				// isolate and show puzzle start menu
 				
 				if ( shared.domElements.$menuFarming.is( '.active' ) !== true ) {
 					
+					// puzzle start menu
+					
 					_UIQueue.add( {
-						element: shared.domElements.$puzzleActiveShapesPicker,
+						element: shared.domElements.$puzzleActiveStarted,
 						container: shared.domElements.$menuActive,
 						activate: function () {
 							
-							shared.domElements.$puzzleActiveShapesPicker.placeholdme()
+							shared.domElements.$puzzleActiveStarted.placeholdme()
 								.appendTo( shared.domElements.$menuActive.data( '$inner' ) );
+							
+						},
+						deactivate: function () {
+							
+							shared.domElements.$puzzleActiveStarted.placeholdme( 'revert' );
+							
+						}
+					} );
+					
+					// add puzzle shapes picker to start menu
+					
+					_UIQueue.add( {
+						element: shared.domElements.$puzzleActiveShapesPicker,
+						container: shared.domElements.$puzzleActiveStarted,
+						activate: function () {
+							
+							shared.domElements.$puzzleActiveShapesPicker.placeholdme()
+								.appendTo( shared.domElements.$puzzleActiveStarted );
 							
 						},
 						deactivate: function () {

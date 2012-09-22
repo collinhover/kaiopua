@@ -487,7 +487,9 @@
 		// major buttons
 		
 		shared.domElements.$buttonGamePause = $('#buttonGamePause');
+		shared.domElements.$buttonsGamePause = $('.game-pause');
 		shared.domElements.$buttonGameResume = $('#buttonGameResume');
+		shared.domElements.$buttonsGameResume = $('.game-resume');
 		shared.domElements.$menuFarmingToggle = $('a[href="#menuFarming"]');
 		
 		// ui menus
@@ -497,6 +499,7 @@
 		shared.domElements.$puzzle = $('#puzzle');
 		shared.domElements.$puzzleActive = $( "#puzzleActive" );
 		shared.domElements.$puzzleActiveWarning = $( "#puzzleActiveWarning" );
+		shared.domElements.$puzzleActiveStarted = $( "#puzzleActiveStarted" );
 		shared.domElements.$puzzleActiveName = $( ".puzzle-active-name" );
 		shared.domElements.$puzzleActiveScoreBar = $( "#puzzleActiveScoreBar" );
 		shared.domElements.$puzzleActiveElementCount = $( ".puzzle-active-elementCount" );
@@ -870,8 +873,8 @@
 		
 		// pause / resume
 		
-		shared.domElements.$buttonGamePause.on( 'tap', pause );
-		shared.domElements.$buttonGameResume.on( 'tap', resume );
+		shared.domElements.$buttonsGamePause.on( 'tap', pause );
+		shared.domElements.$buttonsGameResume.on( 'tap', resume );
 		
 		// pause / resume on focus
 		
@@ -1694,7 +1697,7 @@
 				
 				main.dom_fade( {
 					element: shared.domElements.$uiGameDimmer,
-					opacity: 0.75
+					opacity: 0.9
 				} );
 				
 				// swap to default menu

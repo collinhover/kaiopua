@@ -96,7 +96,7 @@
 					<li id="buttonContinue" class="disabled dim">
 						<button class="btn btn-large btn-inverse btn-circle-large">
 							<img src="assets/icons/rock_rev_64.png" class="iconk-large">
-							<p><small>continue</small></p>
+							<h2><small>continue</small></h2>
 						</button>
 					</li>
 				</ul>
@@ -220,14 +220,14 @@
 							
 							<ul class="nav pull-right">
 								<li>
-									<a id="buttonGamePause" class="hidden">
+									<a id="buttonGamePause" class="game-pause hidden">
 										<div class="iconk-large-widthFollow">
 											<img src="assets/icons/pause_rev_64.png" class="iconk-small" ><p class="inline-type">Pause</p>
 										</div>
 									</a>
 								</li>
 								<li>
-									<a id="buttonGameResume" class="hidden">
+									<a id="buttonGameResume" class="game-resume hidden">
 										<div class="iconk-large-widthFollow">
 											<img src="assets/icons/play_rev_64.png" class="iconk-small" ><p class="inline-type">Resume</p>
 										</div>
@@ -390,15 +390,229 @@
 				<!-- menuInactive -->
 				<section id="menuInactive" class="menu hidden">
 					
+					<!-- puzzle active started -->
+					<section id="puzzleActiveStarted" class="container-center">
+						
+						<header class="subhead">
+							<img src="assets/icons/tiki_rev_128.png"  class="iconk-doublegiant">
+							<h1 class="hero-type logo-type">Puzzle Started</h1>
+							<h2 class="sidekick-type">If you want to solve the <span class="puzzle-active-name">Tutorial</span> Puzzle, you'll need a plan...</h2>
+						</header>
+						
+					</section>
+					<!-- END puzzle active started -->
+					
+					<!-- score -->
+					<section id="score" class="container-center">
+						
+						<header class="subhead">
+							<img src="assets/icons/tiki_rev_128.png"  class="iconk-doublegiant">
+							<h1 class="hero-type logo-type">Puzzle Complete</h1>
+							<h2 class="sidekick-type">Hurrah, you solved the <span class="puzzle-active-name">Tutorial</span> Puzzle!</h2>
+						</header>
+						
+						<div id="scoreDetails">
+							
+							<div class="row">
+							
+								<div class="span3">
+									<div class="iconk">
+										<img src="assets/icons/farming_rev_64.png" class="iconk-medium">
+										<h6>Planted</h6>
+									</div>
+									<h2 class="hero-type inline-type puzzle-active-elementCount">0</h2>
+								</div>
+								
+								<div class="span1">
+									<h6><small>vs.</small></h6>
+								</div>
+								
+								<div class="span3">
+									<h2 class="hero-type inline-type puzzle-active-numElementsMin">0</h2>
+									<div class="iconk">
+										<img src="assets/icons/goal_rev_64.png" class="iconk-medium">
+										<h6>Goal</h6>
+									</div>
+								</div>
+								
+							</div>
+							
+							<div id="scoreBarHeader">
+								<h6>Score</h6>
+							</div>
+							
+						</div>
+						
+						<!-- score bar -->
+						<div id="scoreBar">
+							
+							<div class="score-arrow"></div>
+							
+							<!-- score: perfect -->
+							<div id="scorePerfect" class="score">
+								
+								<div class="score-arrow"></div>
+								<div class="score-inner span4">
+									<img src="assets/icons/face_perfect_rev_64.png"  class="iconk-giant">
+									<h6>PERFECT</h6>
+								</div>
+								
+								<!-- score: good -->
+								<div id="scoreGood" class="score active">
+									
+									<div class="score-arrow"></div>
+									<div class="score-inner span4">
+										<img src="assets/icons/face_good_rev_64.png"  class="iconk-giant">
+										<h6>GOOD</h6>
+									</div>
+									
+									<!-- score: poor -->
+									<div id="scorePoor" class="score active">
+										
+										<div class="score-arrow"></div>
+										<div class="score-inner span4">
+											<img src="assets/icons/face_poor_rev_64.png"  class="iconk-giant">
+											<h6>POOR</h6>
+										</div>
+									
+									</div>
+									
+								</div>
+								
+							</div>
+							
+						</div>
+						<!-- END score bar -->
+						
+						<!-- score results -->
+						<div id="scoreResults">
+							
+							<div id="scoreBarFooter">
+								<h6><span class="score-pct">0</span> %</h6>
+							</div>
+							
+							<h2 class="sidekick-type">Rewards</h2>
+							
+							<!-- score rewards -->
+							<div id="scoreRewards">
+								
+								<div class="eqheight3-container3">
+									<div class="eqheight3-container2">
+										<div class="eqheight3-container1">
+											<!-- poor -->
+											<div id="rewardsPoor" class="eqheight3-column rewards active">
+												
+												<div class="reward-requirements">
+													
+													<table class="reward-requirements-list">
+														<tbody>
+															<tr>
+																<td class="rewards-requires-poor"></td>
+																<td class="rewards-requires-good"></td>
+																<td class="rewards-requires-perfect"></td>
+															</tr>
+														</tbody>
+													</table>
+													
+												</div>
+												
+												<div class="reward-list">
+													
+													<div class="reward">
+														<button class="btn btn-large btn-circle-large">
+															<img src="assets/icons/grid_64.png" class="iconk-giant">
+														</button>
+														<p class="reward-title">Basics Puzzle</p>
+														<p><small class="reward-type">Puzzle</small></p>
+													</div>
+												
+												</div>
+												
+											</div>
+											<!-- good -->
+											<div id="rewardsGood" class="eqheight3-column rewards active">
+												<div class="reward-requirements">
+													
+													<table class="reward-requirements-list">
+														<tbody>
+															<tr>
+																<td class="rewards-requires-good"></td>
+																<td class="rewards-requires-perfect"></td>
+															</tr>
+														</tbody>
+													</table>
+													
+												</div>
+												
+												<div class="reward-list">
+													
+													<div class="reward new">
+														<button class="btn btn-large btn-circle-large">
+															<img src="assets/icons/grid_64.png" class="iconk-giant">
+														</button>
+														<p class="reward-title">Basics Puzzle</p>
+														<p><small class="reward-type">Puzzle</small></p>
+													</div>
+													
+												</div>
+												
+											</div>
+											<!-- perfect -->
+											<div id="rewardsPerfect" class="eqheight3-column rewards">
+												
+												<div class="reward-requirements">
+													
+													<table class="reward-requirements-list">
+														<tbody>
+															<tr>
+																<td class="rewards-requires-perfect"></td>
+															</tr>
+														</tbody>
+													</table>
+													
+												</div>
+												
+												<div class="reward-list disabled">
+													
+													<div class="reward">
+														<button class="btn btn-large btn-circle-large">
+															<img src="assets/icons/grid_64.png" class="iconk-giant">
+														</button>
+														<p class="reward-title">Basics Puzzle</p>
+														<p><small class="reward-type">Puzzle</small></p>
+													</div>
+													
+												</div>
+												
+											</div>
+										</div>
+									</div>
+								</div>
+								
+							</div>
+							<!-- END score rewards -->
+							
+						</div>
+						<!-- END score results -->
+						
+						<p id="scoreHint">Not bad! The next puzzle will be more difficult... are you ready?</p>
+						<button class="btn game-resume">
+							<img src="assets/icons/confirm_64.png" class="iconk-small">
+							<p class="inline-type">Continue!</p>
+						</button>
+						
+					</section>
+					<!-- END score -->
+					
 				</section>
 				<!-- END menuInactive -->
 				
 				<!-- menuActive -->
-				<section id="menuActive" class="menu hidden">
+				<section id="menuActive" class="menu theme-dark theme-transparent hidden">
 					
-					<section class="menu-inner container">
+					<div class="menu-inner container">
 						
-					</section>
+					</div>
 					
 				</section>
 				<!-- END menuActive -->
@@ -429,202 +643,6 @@
 							</div>
 						</header>
 						
-						<!-- score -->
-						<div id="score" class="container-center">
-							
-							<header class="subhead">
-								<img src="assets/icons/tiki_128.png"  class="iconk-doublegiant">
-								<h1 class="hero-type logo-type">Puzzle Complete</h1>
-								<h2 class="sidekick-type">Hurrah, you solved the <span class="puzzle-active-name">Tutorial Puzzle</span>!</h2>
-							</header>
-							
-							<div id="scoreDetails">
-								
-								<div class="row">
-								
-									<div class="span3">
-										<div class="iconk">
-											<img src="assets/icons/farming_64.png" class="iconk-medium">
-											<h6>Planted</h6>
-										</div>
-										<h2 class="hero-type inline-type puzzle-active-elementCount">0</h2>
-									</div>
-									
-									<div class="span1">
-										<h6><small>vs.</small></h6>
-									</div>
-									
-									<div class="span3">
-										<h2 class="hero-type inline-type puzzle-active-numElementsMin">0</h2>
-										<div class="iconk">
-											<img src="assets/icons/goal_64.png" class="iconk-medium">
-											<h6>Goal</h6>
-										</div>
-									</div>
-									
-								</div>
-								
-								<div id="scoreBarHeader">
-									<h6>Score</h6>
-								</div>
-								
-							</div>
-							
-							<!-- score bar -->
-							<div id="scoreBar">
-								
-								<div class="score-arrow"></div>
-								
-								<!-- score: perfect -->
-								<div id="scorePerfect" class="score">
-									
-									<div class="score-arrow"></div>
-									<div class="score-inner span4">
-										<img src="assets/icons/face_perfect_rev_64.png"  class="iconk-giant">
-										<h6>PERFECT</h6>
-									</div>
-									
-									<!-- score: good -->
-									<div id="scoreGood" class="score active">
-										
-										<div class="score-arrow"></div>
-										<div class="score-inner span4">
-											<img src="assets/icons/face_good_rev_64.png"  class="iconk-giant">
-											<h6>GOOD</h6>
-										</div>
-										
-										<!-- score: poor -->
-										<div id="scorePoor" class="score active">
-											
-											<div class="score-arrow"></div>
-											<div class="score-inner span4">
-												<img src="assets/icons/face_poor_rev_64.png"  class="iconk-giant">
-												<h6>POOR</h6>
-											</div>
-										
-										</div>
-										
-									</div>
-									
-								</div>
-								
-							</div>
-							<!-- END score bar -->
-							
-							<!-- score results -->
-							<div id="scoreResults">
-								
-								<div id="scoreBarFooter">
-									<h6><span id="scorePct">0</span> %</h6>
-								</div>
-								
-								<h2 class="sidekick-type">Rewards</h2>
-								
-								<!-- score rewards -->
-								<div id="scoreRewards">
-									
-									<div class="eqheight3-container3">
-										<div class="eqheight3-container2">
-											<div class="eqheight3-container1">
-												<!-- poor -->
-												<div id="rewardsPoor" class="eqheight3-column rewards active">
-													
-													<div class="reward-requirements">
-														
-														<table class="reward-requirements-list">
-															<tbody>
-																<tr>
-																	<td class="rewards-requires-poor"></td>
-																	<td class="rewards-requires-good"></td>
-																	<td class="rewards-requires-perfect"></td>
-																</tr>
-															</tbody>
-														</table>
-														
-													</div>
-													
-													<div class="reward-list">
-														
-														<div class="reward">
-															<img src="assets/icons/grid_64.png" class="iconk-large">
-															<p>Basics Puzzle</p>
-															<h6>Puzzle</h6>
-														</div>
-														
-														<div class="reward">
-															<img src="assets/icons/grid_64.png" class="iconk-large">
-															<p>Basics Puzzle</p>
-															<h6>Puzzle</h6>
-														</div>
-													
-													</div>
-													
-												</div>
-												<!-- good -->
-												<div id="rewardsGood" class="eqheight3-column rewards active">
-													<div class="reward-requirements">
-														
-														<table class="reward-requirements-list">
-															<tbody>
-																<tr>
-																	<td class="rewards-requires-good"></td>
-																	<td class="rewards-requires-perfect"></td>
-																</tr>
-															</tbody>
-														</table>
-														
-													</div>
-													
-													<div class="reward-list">
-														
-														<div class="reward">
-															<img src="assets/icons/grid_64.png" class="iconk-large">
-															<p>Basics Puzzle</p>
-															<h6>Puzzle</h6>
-														</div>
-														
-													</div>
-													
-												</div>
-												<!-- perfect -->
-												<div id="rewardsPerfect" class="eqheight3-column rewards">
-													
-													<div class="reward-requirements">
-														
-														<table class="reward-requirements-list">
-															<tbody>
-																<tr>
-																	<td class="rewards-requires-perfect"></td>
-																</tr>
-															</tbody>
-														</table>
-														
-													</div>
-													
-													<div class="reward-list">
-														
-														<div class="reward">
-															<img src="assets/icons/grid_64.png" class="iconk-large">
-															<p>Basics Puzzle</p>
-															<h6>Puzzle</h6>
-														</div>
-														
-													</div>
-													
-												</div>
-											</div>
-										</div>
-									</div>
-									
-								</div>
-								<!-- END score rewards -->
-								
-							</div>
-							<!-- END score results -->
-							
-						</div>
-						<!-- END score -->
-						
 						<!-- puzzleTools -->
 						<section id="puzzleTools" class="tools">
 							<div class="page-header">
@@ -634,7 +652,7 @@
 							<div class="row container-center">
 								
 								<div class="span3">
-									<div class="thumbnail">
+									<div class="thumbnail borderless">
 										<img src="assets/icons/tiki_128.png" alt="">
 										<div class="caption">
 											<h3>Tiki Statues</h3>
@@ -684,7 +702,7 @@
 							<div class="row container-center">
 								
 								<div class="span3">
-									<div class="thumbnail">
+									<div class="thumbnail borderless">
 										<img src="assets/icons/taro_128.png" alt="">
 										<div class="caption">
 											<h3>Plants</h3>
@@ -786,57 +804,57 @@
 										<div class="container-center well">
 											<ul class="thumbnails thumbnails4 shadowless borderless">
 												<li class="shape-monomino iconk thumbnail">
-													<button class="btn btn-inverse btn-circle-small dim">
+													<button class="btn btn-inverse btn-circle-small">
 														<img src="assets/icons/shape_monomino_rev_64.png" class="iconk-large">
 													</button>
 												</li>
 												<li class="shape-domino iconk thumbnail">
-													<button class="btn btn-inverse btn-circle-small dim">
+													<button class="btn btn-inverse btn-circle-small">
 														<img src="assets/icons/shape_domino_rev_64.png" class="iconk-large">
 													</button>
 												</li>
 												<li class="shape-trominoI iconk thumbnail">
-													<button class="btn btn-inverse btn-circle-small dim">
+													<button class="btn btn-inverse btn-circle-small">
 														<img src="assets/icons/shape_tromino_i_rev_64.png" class="iconk-large">
 													</button>
 												</li>
 												<li class="shape-trominoL iconk thumbnail">
-													<button class="btn btn-inverse btn-circle-small dim">
+													<button class="btn btn-inverse btn-circle-small">
 														<img src="assets/icons/shape_tromino_l_rev_64.png" class="iconk-large">
 													</button>
 												</li>
 												<li class="shape-tetrominoI iconk thumbnail">
-													<button class="btn btn-inverse btn-circle-small dim">
+													<button class="btn btn-inverse btn-circle-small">
 														<img src="assets/icons/shape_tetromino_i_rev_64.png" class="iconk-large">
 													</button>
 												</li>
 												<li class="shape-tetrominoJ iconk thumbnail">
-													<button class="btn btn-inverse btn-circle-small dim">
+													<button class="btn btn-inverse btn-circle-small">
 														<img src="assets/icons/shape_tetromino_j_rev_64.png" class="iconk-large">
 													</button>
 												</li>
 												<li class="shape-tetrominoL iconk thumbnail">
-													<button class="btn btn-inverse btn-circle-small dim">
+													<button class="btn btn-inverse btn-circle-small">
 														<img src="assets/icons/shape_tetromino_l_rev_64.png" class="iconk-large">
 													</button>
 												</li>
 												<li class="shape-tetrominoO iconk thumbnail">
-													<button class="btn btn-inverse btn-circle-small dim">
+													<button class="btn btn-inverse btn-circle-small">
 														<img src="assets/icons/shape_tetromino_o_rev_64.png" class="iconk-large">
 													</button>
 												</li>
 												<li class="shape-tetrominoS iconk thumbnail">
-													<button class="btn btn-inverse btn-circle-small dim">
+													<button class="btn btn-inverse btn-circle-small">
 														<img src="assets/icons/shape_tetromino_s_rev_64.png" class="iconk-large">
 													</button>
 												</li>
 												<li class="shape-tetrominoT iconk thumbnail">
-													<button class="btn btn-inverse btn-circle-small dim">
+													<button class="btn btn-inverse btn-circle-small">
 														<img src="assets/icons/shape_tetromino_t_rev_64.png" class="iconk-large">
 													</button>
 												</li>
 												<li class="shape-tetrominoZ iconk thumbnail">
-													<button class="btn btn-inverse btn-circle-small dim">
+													<button class="btn btn-inverse btn-circle-small">
 														<img src="assets/icons/shape_tetromino_z_rev_64.png" class="iconk-large">
 													</button>
 												</li>
