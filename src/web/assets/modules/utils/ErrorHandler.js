@@ -159,7 +159,7 @@
             history.pushState( { "pState": shared.originLink }, '', shared.originLink );
             
             // trigger shared error signal
-            shared.signals.error.dispatch( errorCurrent.type, origin || 'Unknown Origin', lineNumber || 'N/A' );
+            shared.signals.onError.dispatch( errorCurrent.type, origin || 'Unknown Origin', lineNumber || 'N/A' );
         }
     }
     

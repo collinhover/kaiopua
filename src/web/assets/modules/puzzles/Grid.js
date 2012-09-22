@@ -232,7 +232,7 @@
 		
 		// signal
 		
-		this.stateChanged = new signals.Signal();
+		this.onStateChanged = new signals.Signal();
 		
 		// handle modulesGeometry
 		
@@ -356,10 +356,10 @@
 				
 				module.grid = this;
 				
-				module.occupantAdded.add( on_occupant_added, this );
-				module.occupantRemoved.add( on_occupant_removed, this );
-				module.occupantChanged.add( on_occupant_changed, this );
-				module.dirty.add( on_module_dirty, this );
+				module.onOccupantAdded.add( on_occupant_added, this );
+				module.onOccupantRemoved.add( on_occupant_removed, this );
+				module.onOccupantChanged.add( on_occupant_changed, this );
+				module.onDirtied.add( on_module_dirty, this );
 				
 			}
 			
@@ -819,7 +819,7 @@
 		
 		// signal
 		
-		this.stateChanged.dispatch( this, module );
+		this.onStateChanged.dispatch( this, module );
 		
 	}
 	

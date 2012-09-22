@@ -39,6 +39,10 @@
 		
 		_Model = m;
 		
+		// properties
+		
+		_ToggleSwitch.switchTime = 1000;
+		
 		// functions
 		
 		_ToggleSwitch.Instance = ToggleSwitch;
@@ -81,14 +85,15 @@
 		
 		this.target = parameters.target;
 		this.stateInitial = typeof parameters.state === 'boolean' ? parameters.state : false;
+		this.switchTime = main.is_number( parameters.switchTime ) ? parameters.switchTime : _ToggleSwitch.switchTime;
 		
 		// signal
 		
-		this.stateChanged = new signals.Signal();
+		this.onStateChanged = new signals.Signal();
 		
 		// reset self
 		
-		shared.signals.gameStopped.add( this.reset, this );
+		shared.signals.onGameStopped.add( this.reset, this );
 		this.reset();
 		
 	}
@@ -126,12 +131,12 @@
 		
 		if ( this.state === true ) {
 			
-			this.off();
+			this.morphs.play( 'off', { duration: this.switchTime, callback: $.proxy( off, this ) } );
 			
 		}
 		else {
 			
-			this.on();
+			this.morphs.play( 'on', { duration: this.switchTime, callback: $.proxy( on, this ) } );
 			
 		}
 		
@@ -143,7 +148,7 @@
 			
 			this.state = true;
 			
-			this.stateChanged.dispatch( this );
+			this.onStateChanged.dispatch( this );
 			
 		}
 		
@@ -155,7 +160,7 @@
 			
 			this.state = false;
 			
-			this.stateChanged.dispatch( this );
+			this.onStateChanged.dispatch( this );
 			
 		}
 		

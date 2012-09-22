@@ -667,7 +667,7 @@
 				
 				// signal
 				
-				this.module.activeChanged.remove( this.occupy_modules, this );
+				this.module.onActiveChanged.remove( this.occupy_modules, this );
 				
 				// unoccupy
 				
@@ -691,7 +691,7 @@
 				
 				// signal
 				
-				this.module.activeChanged.add( this.occupy_modules, this );
+				this.module.onActiveChanged.add( this.occupy_modules, this );
 				
 			}
 			else {

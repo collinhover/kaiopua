@@ -114,9 +114,6 @@
 		this.bodiesGravity = [];
 		this.bodiesDynamic = [];
 		
-		this.safetynetstarted = new signals.Signal();
-		this.safetynetended = new signals.Signal();
-		
 	}
 	
 	/*===================================================
@@ -427,7 +424,7 @@
 				
 				// safety net end
 					
-				rigidBody.safetynetend.dispatch();
+				rigidBody.onSafetyNetEnd.dispatch();
 				
 				shared.signals.physicssafetynetend.dispatch( rigidBody );
 				
@@ -445,9 +442,9 @@
 					
 					// safety net start
 					
-					if ( rigidBody.safetynetstart ) {
+					if ( rigidBody.onSafetyNetStarted ) {
 						
-						rigidBody.safetynetstart.dispatch();
+						rigidBody.onSafetyNetStarted.dispatch();
 						
 					}
 					

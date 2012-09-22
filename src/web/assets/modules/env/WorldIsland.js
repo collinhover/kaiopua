@@ -410,7 +410,7 @@
 			
 			// rolling hills
 			
-			me.parts.puzzleRollingHills = _PuzzleLibrary.build( { name: 'RollingHills' } );
+			me.parts.puzzleRollingHills = _PuzzleLibrary.build( { name: 'Rolling Hills' } );
 			me.parts.body.add( me.parts.puzzleRollingHills );
 			
 		}

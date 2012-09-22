@@ -236,7 +236,7 @@
 		
 		// register error listeners
 		
-		shared.signals.error.add( on_error );
+		shared.signals.onError.add( on_error );
 		
 		// check for errors
         
@@ -316,19 +316,19 @@
 		
         shared.signals = shared.signals || {};
 		
-        shared.signals.gamePaused = new signals.Signal();
-        shared.signals.gameResumed = new signals.Signal();
-        shared.signals.gameUpdated = new signals.Signal();
-		shared.signals.gameStarted = new signals.Signal();
-		shared.signals.gameStopped = new signals.Signal();
+        shared.signals.onGamePaused = new signals.Signal();
+        shared.signals.onGameResumed = new signals.Signal();
+        shared.signals.onGameUpdated = new signals.Signal();
+		shared.signals.onGameStarted = new signals.Signal();
+		shared.signals.onGameStopped = new signals.Signal();
 		
-		shared.signals.gamePointerTapped = new signals.Signal();
-		shared.signals.gamePointerDoubleTapped = new signals.Signal();
-		shared.signals.gamePointerHeld = new signals.Signal();
-		shared.signals.gamePointerDragStarted = new signals.Signal();
-		shared.signals.gamePointerDragged = new signals.Signal();
-		shared.signals.gamePointerDragEnded = new signals.Signal();
-		shared.signals.gamePointerWheel = new signals.Signal();
+		shared.signals.onGamePointerTapped = new signals.Signal();
+		shared.signals.onGamePointerDoubleTapped = new signals.Signal();
+		shared.signals.onGamePointerHeld = new signals.Signal();
+		shared.signals.onGamePointerDragStarted = new signals.Signal();
+		shared.signals.onGamePointerDragged = new signals.Signal();
+		shared.signals.onGamePointerDragEnded = new signals.Signal();
+		shared.signals.onGamePointerWheel = new signals.Signal();
 		
 		// renderer
 		
@@ -426,7 +426,7 @@
 		
 		// resize
 		
-        shared.signals.windowResized.add( resize );
+        shared.signals.onWindowResized.add( resize );
 		resize();
 		
 		// set ready
@@ -435,7 +435,7 @@
         
 		// start updating
         
-        shared.signals.updated.add( update );
+        shared.signals.onUpdated.add( update );
 		
 	}
 	
@@ -500,6 +500,8 @@
 		shared.domElements.$puzzleActive = $( "#puzzleActive" );
 		shared.domElements.$puzzleActiveWarning = $( "#puzzleActiveWarning" );
 		shared.domElements.$puzzleActiveStarted = $( "#puzzleActiveStarted" );
+		shared.domElements.$puzzleActiveStartedPlan = $( "#puzzleActiveStartedPlan" );
+		shared.domElements.$puzzleActiveStartedPlanReady = $( "#puzzleActiveStartedPlanReady" );
 		shared.domElements.$puzzleActiveName = $( ".puzzle-active-name" );
 		shared.domElements.$puzzleActiveScoreBar = $( "#puzzleActiveScoreBar" );
 		shared.domElements.$puzzleActiveElementCount = $( ".puzzle-active-elementCount" );
@@ -878,7 +880,7 @@
 		
 		// pause / resume on focus
 		
-		shared.signals.focusLost.add( function () {
+		shared.signals.onFocusLost.add( function () {
 			
 			if ( paused !== true ) {
 				
@@ -895,7 +897,7 @@
 			
 		} );
 		
-		shared.signals.focusGained.add( function () {
+		shared.signals.onFocusGained.add( function () {
 			
 			if ( pausedByFocusLoss === true ) {
 				
@@ -1056,7 +1058,7 @@
 		
 		pointer = main.reposition_pointer( e );
 		
-		shared.signals.gamePointerTapped.dispatch( e, pointer );
+		shared.signals.onGamePointerTapped.dispatch( e, pointer );
 		
 	}
 	
@@ -1066,7 +1068,7 @@
 		
 		pointer = main.reposition_pointer( e );
 		
-		shared.signals.gamePointerDoubleTapped.dispatch( e, pointer );
+		shared.signals.onGamePointerDoubleTapped.dispatch( e, pointer );
 		
 	}
 	
@@ -1076,7 +1078,7 @@
 		
 		pointer = main.reposition_pointer( e );
 			
-		shared.signals.gamePointerHeld.dispatch( e, pointer );
+		shared.signals.onGamePointerHeld.dispatch( e, pointer );
 		
 	}
 	
@@ -1086,7 +1088,7 @@
 		
 		pointer = main.reposition_pointer( e );
 		
-		shared.signals.gamePointerDragStarted.dispatch( e, pointer );
+		shared.signals.onGamePointerDragStarted.dispatch( e, pointer );
 		
 	}
     
@@ -1095,8 +1097,8 @@
 		var pointer;
 		
 		pointer = main.reposition_pointer( e );
-		console.log( 'gamePointerDragged' );
-		shared.signals.gamePointerDragged.dispatch( e, pointer );
+		
+		shared.signals.onGamePointerDragged.dispatch( e, pointer );
 		
     }
 	
@@ -1106,7 +1108,7 @@
 		
 		pointer = main.reposition_pointer( e );
 		
-		shared.signals.gamePointerDragEnded.dispatch( e, pointer );
+		shared.signals.onGamePointerDragEnded.dispatch( e, pointer );
 		
 	}
 	
@@ -1121,7 +1123,7 @@
 		
 		e.wheelDelta = eo.wheelDelta = ( ( eo.detail < 0 || eo.wheelDelta > 0 ) ? 1 : -1 ) * shared.pointerWheelSpeed;
 		
-		shared.signals.gamePointerWheel.dispatch( e );
+		shared.signals.onGamePointerWheel.dispatch( e );
         
         e.preventDefault();
 		
@@ -1131,7 +1133,7 @@
 		
 		shared.timeSinceInteraction = 0;
 		
-		shared.signals.scrolled.dispatch( $( window ).scrollLeft(), $( window ).scrollTop() );
+		shared.signals.onScrolled.dispatch( $( window ).scrollLeft(), $( window ).scrollTop() );
 		
 	}
 	
@@ -1623,7 +1625,7 @@
 			
 			// signal
 			
-			shared.signals.gameStarted.dispatch();
+			shared.signals.onGameStarted.dispatch();
 			
 		}
 		
@@ -1639,7 +1641,7 @@
 			
 			// signal
 			
-			shared.signals.gameStopped.dispatch();
+			shared.signals.onGameStopped.dispatch();
 			
 			// set launcher section
 			
@@ -1731,7 +1733,7 @@
 			
 			// signal
             
-            shared.signals.gamePaused.dispatch();
+            shared.signals.onGamePaused.dispatch();
 			
 			// render once to ensure user is not surprised when resuming
 			
@@ -1792,7 +1794,7 @@
 			paused = false;
 			pausedWithoutControl = false;
 			
-			shared.signals.gameResumed.dispatch();
+			shared.signals.onGameResumed.dispatch();
             
         }
     }
@@ -1823,7 +1825,7 @@
 			
 			// update all others
 			
-			shared.signals.gameUpdated.dispatch( timeDelta, timeDeltaMod );
+			shared.signals.onGameUpdated.dispatch( timeDelta, timeDeltaMod );
 			
 			// have camera bg mimic camera rotation
 			

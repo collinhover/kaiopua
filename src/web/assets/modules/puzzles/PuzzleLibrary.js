@@ -64,14 +64,13 @@
 				toggleSwitch: "assets/models/Puzzle_Tutorial_Toggle.js",
 				numElementsMin: 0,
 				numShapesRequired: 2,
-				rewards: [
-					{
-						image: shared.pathToIcons + 'plant_rev_64.png',
-						label: 'New Plant!',
-						//callback: _Farming.give_plants,
-						data: 'taro_003'
+				scores: {
+					poor: {
+						rewards: [
+							{ icon: shared.pathToIcons + 'plant_rev_64.png', name: 'Taro', type: 'skin', data: 'taro_003'/*, callback: _Farming.give_plants,*/ }
+						]
 					}
-				]
+				}
 			}
 		});
 		
@@ -92,25 +91,22 @@
 					'Some plants have special abilities that will help complete puzzles!'
 				],
 				hintsCombine: true,
-				rewards: [
-					{
-						image: shared.pathToIcons + 'plant_rev_64.png',
-						label: 'New Plant!',
-						//callback: _Farming.give_plants,
-						data: 'rock'
+				scores: {
+					poor: {
+						rewards: [
+							{ icon: shared.pathToIcons + 'plant_rev_64.png', name: 'Rock', type: 'skin', data: 'rock'/*, callback: _Farming.give_plants,*/ }
+						]
 					},
-					false,
-					{
-						image: shared.pathToIcons + 'plant_rev_64.png',
-						label: 'New Plant!',
-						//callback: _Farming.give_plants,
-						data: 'pineapple_001'
+					perfect: {
+						rewards: [
+							{ icon: shared.pathToIcons + 'plant_rev_64.png', name: 'Pineapple', type: 'skin', data: 'pineapple_001'/*, callback: _Farming.give_plants,*/ }
+						]
 					}
-				]
+				}
 			}
 		});
 		
-		Object.defineProperty(_PuzzleLibrary.parameters, 'RollingHills', { 
+		Object.defineProperty(_PuzzleLibrary.parameters, 'Rolling Hills', { 
 			value : {
 				name: 'Rolling Hills',
 				geometry: "assets/models/Puzzle_Rolling_Hills.js",
@@ -129,14 +125,13 @@
 					'Some puzzles are split into smaller parts. Puzzles are much easier to complete if you think this way!'
 				],
 				hintsCombine: true,
-				rewards: [
-					{
-						image: shared.pathToIcons + 'plant_rev_64.png',
-						label: 'New Plant!',
-						//callback: _Farming.give_plants,
-						data: 'pineapple_001'
+				scores: {
+					poor: {
+						rewards: [
+							{ icon: shared.pathToIcons + 'plant_rev_64.png', name: 'Pineapple', type: 'skin', data: 'pineapple_001'/*, callback: _Farming.give_plants,*/ }
+						]
 					}
-				]
+				}
 			}
 		});
 		

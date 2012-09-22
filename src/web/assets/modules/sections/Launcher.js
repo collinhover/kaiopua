@@ -261,9 +261,9 @@
 			
 			shared.renderer.sortObjects = false;
 			
-			shared.signals.gamePointerDragged.add( on_pointer_moved );
+			shared.signals.onGamePointerDragged.add( on_pointer_moved );
 			
-			shared.signals.gameUpdated.add( update );
+			shared.signals.onGameUpdated.add( update );
 			
 			// shift view to starting position
 			
@@ -287,9 +287,9 @@
 		
 		sky.animate( { stop: true } );
 		
-		shared.signals.gamePointerDragged.remove( on_pointer_moved );
+		shared.signals.onGamePointerDragged.remove( on_pointer_moved );
 		
-		shared.signals.gameUpdated.remove( update );
+		shared.signals.onGameUpdated.remove( update );
 		
     }
     

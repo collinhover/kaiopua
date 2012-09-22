@@ -51,34 +51,8 @@
 		
 		// properties
 		
-		_Puzzle.hints = [];
-		
-		_Puzzle.scores = {};
-		_Puzzle.scores.base = {
-			threshold: 0,
-			icon: 'plant',
-			status: "Started"
-		};
-		_Puzzle.scores.poor = {
-			threshold: 0,
-			icon: 'face_poor',
-			status: "Poor"
-		};
-		_Puzzle.scores.good = {
-			threshold: 0.8,
-			icon: 'face_smile',
-			status: 'Good'
-		};
-		_Puzzle.scores.perfect = {
-			threshold: 1,
-			icon: 'face_laugh',
-			status: 'Perfect'
-		};
-		
-		_Puzzle.scoreMap = [
-			_Puzzle.scores.poor,
-			_Puzzle.scores.good,
-			_Puzzle.scores.perfect
+		_Puzzle.hints = [ 
+			"Not bad! The next puzzle will be more difficult... are you ready?"
 		];
 		
 		allPuzzles = [];
@@ -125,14 +99,6 @@
 			get: function () {
 				
 				return this.shapes.length === this.numShapesRequired;
-			
-			}
-		});
-		
-		Object.defineProperty( _Puzzle.Instance.prototype, 'isCompleted', { 
-			get: function () {
-				
-				return this.grid.isFull;
 			
 			}
 		});
@@ -190,7 +156,7 @@
 		parameters.toggleSwitch.target = this;
 		
 		this.toggleSwitch = new _ToggleSwitch.Instance( parameters.toggleSwitch );
-		this.toggleSwitch.stateChanged.add( this.toggle, this );
+		this.toggleSwitch.onStateChanged.add( this.toggle, this );
 		this.add( this.toggleSwitch );
 		
 		// additional properties
@@ -212,20 +178,20 @@
 			used: []
 		}
 		
-		this.scoreMap = build_score_map( parameters.scores );
-		this.scoreMap = add_rewards_to_scores( this.scoreMap, parameters.rewards );
+		this.scores = new Scores( parameters.scores );
 		
 		// signals
 		
-		this.stateChanged = new signals.Signal();
-		this.shapesReady = new signals.Signal();
-		this.shapesNeeded = new signals.Signal();
-		this.shapeAdded = new signals.Signal();
-		this.shapeRemoved = new signals.Signal();
+		this.onStateChanged = new signals.Signal();
+		this.onShapesReady = new signals.Signal();
+		this.onShapesNeeded = new signals.Signal();
+		this.onShapeAdded = new signals.Signal();
+		this.onShapeRemoved = new signals.Signal();
+		this.onCompleted = new signals.Signal();
 		
 		// reset self
 		
-		shared.signals.gameStopped.add( this.reset, this );
+		shared.signals.onGameStopped.add( this.reset, this );
 		this.reset();
 		
 		// add to global list
@@ -254,9 +220,9 @@
 		
 		this.started = this.completed = this.perfect = false;
 		this.score = this.scoreLast = this.scorePct = 0;
-		this.scoreStatus = _Puzzle.scores.base.status;
-		this.scoreIcon = _Puzzle.scores.base.icon;
-		this.scoreMap = reset_score_map( this.scoreMap );
+		this.numElementsUsed = 0;
+		this.scoreTitle = this.scoreStatus = '';
+		this.scores.reset();
 		
 		// clean
 		
@@ -345,18 +311,18 @@
 		
 		// signal
 		
-		this.stateChanged.dispatch( this.started );
+		this.onStateChanged.dispatch( this.started );
 		
 		// check shape count
 		
 		if ( this.ready ) {
 			
-			this.shapesReady.dispatch( this );
+			this.onShapesReady.dispatch( this );
 			
 		}
 		else {
 			
-			this.shapesNeeded.dispatch( this );
+			this.onShapesNeeded.dispatch( this );
 			
 		}
 		
@@ -372,7 +338,7 @@
 		
 		// signal
 		
-		this.stateChanged.dispatch( this.started );
+		this.onStateChanged.dispatch( this.started );
 		
 	}
 	
@@ -394,7 +360,7 @@
 				
 				this.shapes.push( shape );
 				
-				this.shapeAdded.dispatch( this );
+				this.onShapeAdded.dispatch( this );
 				
 				added = true;
 				
@@ -402,7 +368,7 @@
 			
 			if ( this.ready ) {
 				
-				this.shapesReady.dispatch( this );
+				this.onShapesReady.dispatch( this );
 				
 			}
 			
@@ -425,7 +391,7 @@
 			
 			this.shapes.splice( index, 1 );
 			
-			this.shapeRemoved.dispatch( this );
+			this.onShapeRemoved.dispatch( this );
 			
 			removed = true;
 			
@@ -437,7 +403,7 @@
 			
 			if ( this.ready !== true ) {
 				
-				this.shapesNeeded.dispatch( this );
+				this.onShapesNeeded.dispatch( this );
 			
 			}
 			
@@ -449,7 +415,7 @@
 	
 	/*===================================================
 	
-	completed
+	complete
 	
 	=====================================================*/
 	
@@ -457,16 +423,11 @@
 		
 		var i, l,
 			j, k,
-			elements,
-			numElementsUsed,
 			numElementsMin,
 			numElementsToMin,
-			title,
-			hint,
-			scoreInfo,
-			scoreIndex,
+			scoreData,
+			scoreHighestIndex,
 			scoreHighestInfo,
-			scoreIcon,
 			rewards,
 			rewardInfo,
 			rewardList,
@@ -476,7 +437,7 @@
 		// properties
 		
 		this.completed = this.grid.isFull;
-		console.log( this.id, ' puzzle complete?', this.completed, this);
+		console.log( this.name, ' puzzle complete?', this.completed, this);
 		// if completed
 		
 		if ( this.completed === true ) {
@@ -487,13 +448,11 @@
 				
 				// get elements filling grid
 				
-				elements = this.elements;
-				
-				numElementsUsed = elements.length;
+				this.numElementsUsed = this.elements.length;
 				
 				// compare num elements used to base num required
 				
-				numElementsToMin = Math.max( 0, numElementsUsed - this.numElementsMin );
+				numElementsToMin = Math.max( 0, this.numElementsUsed - this.numElementsMin );
 				
 				// store score
 				
@@ -509,37 +468,25 @@
 				
 				this.scorePct = Math.round( this.score * 100 ) + "%";
 				
+				this.perfect = this.score === 1 ? true : false;
+				
 				// use score map to determine status/icon/rewards
 				
 				rewards = [];
 				
-				for ( i = 0, l = this.scoreMap.length; i < l; i++ ) {
+				for ( i = 0, l = this.scores.map.length; i < l; i++ ) {
 					
-					scoreInfo = this.scoreMap[ i ];
+					scoreData = this.scores[ this.scores.map[ i ] ];
 					
 					// set highest score
 					
-					if ( this.score >= scoreInfo.threshold ) {
+					if ( this.score >= scoreData.threshold ) {
 						
-						scoreHighestInfo = scoreInfo;
+						scoreHighestInfo = scoreData;
 						
-						scoreIndex = i;
+						scoreHighestIndex = i;
 						
-					}
-					
-					// add all rewards possible
-					
-					if ( typeof scoreInfo.rewards !== 'undefined' && main.type( scoreInfo.rewards.list ) === 'array' && scoreInfo.rewards.list.length > 0 ) {
-						
-						// if giving to player
-						
-						if ( this.score >= scoreInfo.threshold ) {
-							
-							scoreInfo.rewards.enabled = true;
-							
-						}
-						
-						rewards.push( scoreInfo.rewards );
+						scoreData.beat = true;
 						
 					}
 					
@@ -547,142 +494,43 @@
 				
 				this.scoreStatus = scoreHighestInfo.status;
 				
-				this.scoreIcon = scoreHighestInfo.icon;
+				// titles
 				
-				// perfect score
-				if ( scoreIndex === this.scoreMap.length - 1 ) {
+				if ( this.perfect === true ) {
 					
-					this.perfect = true;
-					
-					// title
-					
-					title = "Hurrah! You completed the " + this.id + " puzzle!";
+					this.scoreTitle = "Hurrah! You completed the " + this.name + " puzzle!";
 					
 				}
-				// other scores
 				else {
 					
-					// title
-					
-					if ( scoreIndex === 0 ) {
+					if ( scoreHighestIndex === 0 ) {
 						
-						title = "You've got the basics of the " + this.id + " puzzle!";
+						this.scoreTitle = "You've got the basics of the " + this.name + " puzzle!";
 						
 					}
 					else {
 						
-						title = "Getting better at the " + this.id + " puzzle!";
-						
-					}
-					
-					// reset hints
-					
-					if ( this.hints.list.length === 0 && this.hints.used.length > 0 ) {
-						
-						this.hints.list = this.hints.list.concat( this.hints.used.splice( 0, this.hints.used.length ) );
-						
-					}
-					
-					// hint
-					
-					if ( this.hints.list.length > 0 ) {
-						
-						hint = this.hints.list.shift();
-						
-						this.hints.used.push( hint );
+						this.scoreTitle = "Getting better at the " + this.name + " puzzle!";
 						
 					}
 					
 				}
 				
-				//
-				// TODO: use for ui > this.numGridModules, this.numElementsMin, numElementsUsed, this.scorePct, scoreIcon, this.scoreStatus, title, hint
-				//
-				console.log( 'PUZZLE COMPLETE INFO: ' );
-				console.log( 'this.numGridModules', this.numGridModules, 'this.numElementsMin', this.numElementsMin, ' numElementsUsed ', numElementsUsed, ' scoreLast ', this.scoreLast, ' score ', this.score, 'scorePct', this.scorePct, ' scoreIcon', scoreIcon, ' this.scoreStatus', this.scoreStatus, 'title', title, 'hint', hint );
+				// reset hints
 				
-				// show all rewards
-				// give all enabled rewards
-				
-				for ( i = 0, l = rewards.length; i < l; i++ ) {
+				if ( this.hints.list.length === 0 && this.hints.used.length > 0 ) {
 					
-					rewardInfo = rewards[ i ];
-					
-					rewardList = rewardInfo.list;
-					
-					// for each reward in list
-					
-					for ( j = 0, k = rewardList.length; j < k; j++ ) {
-						
-						reward = rewardList[ j ];
-						
-						// TODO: show ui > reward.image, reward.label
-						
-						if ( rewardInfo.enabled === true ) {
-							
-							if ( rewardInfo.given !== true ) {
-								
-								// new reward
-								console.log( ' > puzzle new reward: ', reward.label, reward.image );
-								
-							}
-							else {
-								
-								// already have reward
-								console.log( ' > puzzle already have reward: ', reward.label );
-								
-							}
-							
-						}
-						else {
-							
-							// reward at higher score
-							console.log( ' > puzzle reward needs higher score: ', reward.label );
-						
-						}
-						
-						// if reward enabled
-						
-						if ( rewardInfo.enabled === true ) {
-							
-							// if not yet given
-							
-							if ( rewardInfo.given !== true ) {
-								
-								if ( typeof reward.callback === 'function' ) {
-									
-									reward.callback.apply( reward.context, main.ensure_array( reward.data ) );
-									
-								}
-								
-								numRewardsGiven++;
-								
-							}
-							
-						}
-						
-					}
-					
-					// set given
-					
-					if ( rewardInfo.enabled === true && rewardInfo.given !== true ) {
-						
-						rewardInfo.given = true;
-					}
+					this.hints.list = this.hints.list.concat( this.hints.used.splice( 0, this.hints.used.length ) );
 					
 				}
 				
-				// notify about number of rewards given
+				// hint
 				
-				
-				if ( numRewardsGiven > 0 ) {
+				if ( this.hints.list.length > 0 ) {
 					
-					console.log( ' > The tiki spirits favor you with ', numRewardsGiven, ' gifts ' );
+					this.scoreHint = this.hints.list.shift();
 					
-				}
-				else {
-					
-					console.log( ' > The tiki spirits have given all they can for now. ' );
+					this.hints.used.push( this.scoreHint );
 					
 				}
 				
@@ -704,130 +552,118 @@
 				
 			}
 			
+			// signal
+			
+			this.onCompleted.dispatch();
+			
 		}
 		
 	}
 	
 	/*===================================================
 	
-	score map
+	scores
 	
 	=====================================================*/
 	
-	function build_score_map ( parameters ) {
+	function Scores ( parameters ) {
 		
-		var i, l,
-			scoreBase = _Puzzle.scores.base,
-			scoreMap,
-			scoreInfo,
-			rewards;
-		
-		// handle parameters
+		var me = this,
+			i, l,
+			scoreData;
 		
 		parameters = parameters || {};
 		
-		scoreMap = parameters.scoreMap;
+		// score levels
 		
-		if ( main.type( scoreMap ) !== 'array' || scoreMap.length === 0 ) {
+		this.poor = {
+			threshold: 0,
+			status: "Poor"
+		};
+		this.good = {
+			threshold: 0.8,
+			status: 'Good'
+		};
+		this.perfect = {
+			threshold: 1,
+			status: 'Perfect',
+			rewards: []
+		};
+		
+		// map
+		
+		this.map = [ 'poor', 'good', 'perfect' ];
+		
+		for ( i = 0, l = this.map.length; i < l; i++ ) {
 			
-			scoreMap = [
-				main.extend( parameters.poor, main.extend( _Puzzle.scores.poor, {} ) ),
-				main.extend( parameters.good, main.extend( _Puzzle.scores.good, {} ) ),
-				main.extend( parameters.perfect, main.extend( _Puzzle.scores.perfect, {} ) )
-			];
+			scoreData = this[ this.map[ i ] ];
+			scoreData.rewards = [];
 			
 		}
 		
-		// ensure all scores have required properties
+		this.reset();
 		
-		for ( i = 0, l = scoreMap.length; i < l; i++ ) {
-			
-			scoreInfo = scoreMap[ i ];
-			
-			if ( main.is_number( scoreInfo.threshold ) !== true ) {
-				
-				scoreInfo.threshold = scoreBase.threshold;
-				
-			}
-			
-			if ( typeof scoreInfo.status !== 'string' ) {
-				
-				scoreInfo.status = scoreBase.status;
-				
-			}
-			
-			if ( typeof scoreInfo.icon !== 'string' ) {
-				
-				scoreInfo.icon = scoreBase.icon;
-				
-			}
-			
-			scoreInfo.rewards = scoreInfo.rewards || {};
-			scoreInfo.rewards.list = main.ensure_array( scoreInfo.rewards.list );
-			
-		}
+		// override with parameters
+		
+		$.extend( this.poor, parameters.poor );
+		$.extend( this.good, parameters.good );
+		$.extend( this.perfect, parameters.perfect );
+		$.extend( this.map, parameters.map );
 		
 		// sort by threshold
 		
-		scoreMap.sort( function ( a, b ) {
+		this.map.sort( function ( a, b ) {
 			
-			return a.threshold - b.threshold;
+			return me[ a ].threshold - me[ b ].threshold;
 			
 		} );
 		
-		// reset
-		
-		scoreMap = reset_score_map( scoreMap );
-		
-		return scoreMap;
-		
 	}
 	
-	function add_rewards_to_scores ( scoreMap, rewards ) {
+	Scores.prototype.reset = function () {
 		
 		var i, l,
-			scoreInfo,
-			rewardAdditions;
+			scoreData;
 		
-		rewards = main.ensure_array( rewards );
-		
-		for ( i = 0, l = scoreMap.length; i < l; i++ ) {
+		for ( i = 0, l = this.map.length; i < l; i++ ) {
 			
-			scoreInfo = scoreMap[ i ];
+			scoreData = this[ this.map[ i ] ];
+			
+			scoreData.beat = false;
+			scoreData.rewarded = false;
+			
+		}
 		
-			if ( i < rewards.length ) {
+	};
+	
+	Scores.prototype.reward = function ( score ) {
+		
+		var i, l,
+			j, jl,
+			scoreId,
+			scoreData,
+			rewards,
+			results = {};
+		
+		for ( i = 0, l = this.map.length; i < l; i++ ) {
+			
+			scoreId = this.map[ i ];
+			scoreData = this[ scoreId ];
+			
+			results[ scoreId ] = [];
+			
+			if ( scoreData.beat === true ) {
 				
-				rewardAdditions = main.ensure_array( rewards[ i ] );
+				scoreData.rewarded = true;
 				
-				scoreInfo.rewards.list = scoreInfo.rewards.list.concat( rewardAdditions );
+				results[ scoreId ] = results[ scoreId ].concat( scoreData.rewards );
 				
 			}
 			
 		}
 		
-		return scoreMap;
+		return results;
 		
-	}
-	
-	function reset_score_map ( scoreMap ) {
-		
-		var i, l,
-			scoreInfo;
-		
-		if ( main.is_array( scoreMap ) ) {
-			
-			for ( i = 0, l = scoreMap.length; i < l; i++ ) {
-				
-				scoreInfo = scoreMap[ i ];
-				scoreInfo.rewards.given = false;
-				scoreInfo.rewards.enabled = false;
-				
-			}
-			
-		}
-		
-		return scoreMap;
-		
-	}
+	};
 	
 } (KAIOPUA) );

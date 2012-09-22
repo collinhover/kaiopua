@@ -342,8 +342,8 @@
 			position: new THREE.Vector3(),
 			quaternion: new THREE.Quaternion()
 		};
-		this.safetynetstart = new signals.Signal();
-		this.safetynetend = new signals.Signal();
+		this.onSafetyNetStarted = new signals.Signal();
+		this.onSafetyNetEnd = new signals.Signal();
 		
 	}
 	

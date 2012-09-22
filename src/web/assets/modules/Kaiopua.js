@@ -136,25 +136,25 @@ var KAIOPUA = (function (main) {
        
         shared.signals = {
 			
-			focusLost: new signals.Signal(),
-			focusGained: new signals.Signal(),
+			onFocusLost: new signals.Signal(),
+			onFocusGained: new signals.Signal(),
 			
-			scrolled: new signals.Signal(),
+			onScrolled: new signals.Signal(),
     
-            keyPressed : new signals.Signal(),
-            keyReleased : new signals.Signal(),
+            onKeyPressed : new signals.Signal(),
+            onKeyReleased : new signals.Signal(),
     
-            windowResized : new signals.Signal(),
+            onWindowResized : new signals.Signal(),
 			
-			updated: new signals.Signal(),
+			onUpdated: new signals.Signal(),
             
-            loadItemCompleted : new signals.Signal(),
-            loadListCompleted : new signals.Signal(),
-            loadAllCompleted : new signals.Signal(),
+            onLoadItemCompleted : new signals.Signal(),
+            onLoadListCompleted : new signals.Signal(),
+            onLoadAllCompleted : new signals.Signal(),
 			
-			assetReady : new signals.Signal(),
+			onAssetReady : new signals.Signal(),
             
-            error : new signals.Signal()
+            onError : new signals.Signal()
             
         };
         
@@ -371,7 +371,7 @@ var KAIOPUA = (function (main) {
 		
 		// signal
 		
-		shared.signals.updated.dispatch( timeDelta, timeDeltaMod );
+		shared.signals.onUpdated.dispatch( timeDelta, timeDeltaMod );
 		
 		// handle gallery mode
 		
@@ -1275,7 +1275,7 @@ var KAIOPUA = (function (main) {
 		
 		shared.timeSinceInteraction = 0;
 		
-        shared.signals.keyPressed.dispatch( e );
+        shared.signals.onKeyPressed.dispatch( e );
 		
     }
 
@@ -1283,7 +1283,7 @@ var KAIOPUA = (function (main) {
 		
 		shared.timeSinceInteraction = 0;
 		
-        shared.signals.keyReleased.dispatch( e );
+        shared.signals.onKeyReleased.dispatch( e );
 		
     }
 	
@@ -1291,7 +1291,7 @@ var KAIOPUA = (function (main) {
 		
 		shared.focused = false;
 		
-		shared.signals.focusLost.dispatch( e );
+		shared.signals.onFocusLost.dispatch( e );
 		
 	}
 	
@@ -1299,7 +1299,7 @@ var KAIOPUA = (function (main) {
 		
 		shared.focused = true;
 		
-		shared.signals.focusGained.dispatch( e );
+		shared.signals.onFocusGained.dispatch( e );
 		
 	}
 
@@ -1308,13 +1308,13 @@ var KAIOPUA = (function (main) {
         shared.screenWidth = $(window).width();
         shared.screenHeight = $(window).height();
 		
-        shared.signals.windowResized.dispatch(shared.screenWidth, shared.screenHeight);
+        shared.signals.onWindowResized.dispatch(shared.screenWidth, shared.screenHeight);
         
     }
 	
 	function on_error ( error, url, lineNumber ) {
 		
-		shared.signals.error.dispatch( error, url, lineNumber );
+		shared.signals.onError.dispatch( error, url, lineNumber );
 		
 		return true;
 		
@@ -1646,7 +1646,7 @@ var KAIOPUA = (function (main) {
 			
 			loader.listCurrent = undefined;
 			
-			shared.signals.loadAllCompleted.dispatch();
+			shared.signals.onLoadAllCompleted.dispatch();
 			
 		}
 		
@@ -1764,7 +1764,7 @@ var KAIOPUA = (function (main) {
 		
 		if (typeof shared !== 'undefined') {
 			
-			shared.signals.loadItemCompleted.dispatch( path );
+			shared.signals.onLoadItemCompleted.dispatch( path );
 			
 		}
 		
@@ -1857,7 +1857,7 @@ var KAIOPUA = (function (main) {
 		
 		if (typeof shared !== 'undefined') {
 			
-			shared.signals.loadListCompleted.dispatch( listID );
+			shared.signals.onLoadListCompleted.dispatch( listID );
 			
 		}
 		
@@ -2215,9 +2215,9 @@ var KAIOPUA = (function (main) {
 			
 			// dispatch signal
 			
-			if ( typeof shared.signals !== 'undefined' && typeof shared.signals.assetReady !== 'undefined' ) {
+			if ( typeof shared.signals !== 'undefined' && typeof shared.signals.onAssetReady !== 'undefined' ) {
 				
-				shared.signals.assetReady.dispatch( path );
+				shared.signals.onAssetReady.dispatch( path );
 				
 			}
 			
@@ -2267,7 +2267,7 @@ var KAIOPUA = (function (main) {
 					
 					if ( listeningForReadySignal === true ) {
 						
-						shared.signals.assetReady.remove( on_asset_ready );
+						shared.signals.onAssetReady.remove( on_asset_ready );
 						
 						listeningForReadySignal = false;
 						
@@ -2357,7 +2357,7 @@ var KAIOPUA = (function (main) {
 						
 						listeningForReadySignal = true;
 						
-						shared.signals.assetReady.add( on_asset_ready );
+						shared.signals.onAssetReady.add( on_asset_ready );
 						
 					}
 					

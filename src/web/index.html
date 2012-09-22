@@ -395,9 +395,21 @@
 						
 						<header class="subhead">
 							<img src="assets/icons/tiki_rev_128.png"  class="iconk-doublegiant">
-							<h1 class="hero-type logo-type">Puzzle Started</h1>
-							<h2 class="sidekick-type">If you want to solve the <span class="puzzle-active-name">Tutorial</span> Puzzle, you'll need a plan...</h2>
+							<h1 class="hero-type logo-type"><span class="puzzle-active-name">Tutorial</span></h1>
+							<h2 class="sidekick-type">If you want to solve this puzzle, you'll need a plan...</h2>
 						</header>
+						
+						<div id="puzzleActiveStartedPlan">
+						
+						</div>
+						
+						<section id="puzzleActiveStartedPlanReady">
+							<p>Looks like you're all set. When you're ready, press start!</p>
+							<button class="btn btn-large btn-success btn-circle-large game-resume">
+								<img src="assets/icons/confirm_rev_64.png" class="iconk-large">
+								<h3 class="sidekick-type inline-type">Start!</h3>
+							</button>
+						</section>
 						
 					</section>
 					<!-- END puzzle active started -->
@@ -407,8 +419,8 @@
 						
 						<header class="subhead">
 							<img src="assets/icons/tiki_rev_128.png"  class="iconk-doublegiant">
-							<h1 class="hero-type logo-type">Puzzle Complete</h1>
-							<h2 class="sidekick-type">Hurrah, you solved the <span class="puzzle-active-name">Tutorial</span> Puzzle!</h2>
+							<h1 class="hero-type logo-type"><span class="puzzle-active-name">Tutorial</span> Complete</h1>
+							<h2 id="scoreTitle" class="sidekick-type">Hurrah, you solved it!</h2>
 						</header>
 						
 						<div id="scoreDetails">
@@ -522,7 +534,7 @@
 														<button class="btn btn-large btn-circle-large">
 															<img src="assets/icons/grid_64.png" class="iconk-giant">
 														</button>
-														<p class="reward-title">Basics Puzzle</p>
+														<p class="reward-name">Basics Puzzle</p>
 														<p><small class="reward-type">Puzzle</small></p>
 													</div>
 												
@@ -550,7 +562,7 @@
 														<button class="btn btn-large btn-circle-large">
 															<img src="assets/icons/grid_64.png" class="iconk-giant">
 														</button>
-														<p class="reward-title">Basics Puzzle</p>
+														<p class="reward-name">Basics Puzzle</p>
 														<p><small class="reward-type">Puzzle</small></p>
 													</div>
 													
@@ -578,7 +590,7 @@
 														<button class="btn btn-large btn-circle-large">
 															<img src="assets/icons/grid_64.png" class="iconk-giant">
 														</button>
-														<p class="reward-title">Basics Puzzle</p>
+														<p class="reward-name">Basics Puzzle</p>
 														<p><small class="reward-type">Puzzle</small></p>
 													</div>
 													

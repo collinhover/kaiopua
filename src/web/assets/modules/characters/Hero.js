@@ -186,7 +186,7 @@
 			
 			// signals
 			
-			shared.signals.gamePointerDragged.add( adObj.update );
+			shared.signals.onGamePointerDragged.add( adObj.update );
 			
 		}
 	
@@ -207,7 +207,7 @@
 			
 			// signals
 				
-			shared.signals.gamePointerDragged.remove( adObj.update );
+			shared.signals.onGamePointerDragged.remove( adObj.update );
 			
 			// clear action data object
 			

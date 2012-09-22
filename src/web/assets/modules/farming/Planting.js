@@ -121,10 +121,13 @@
 		_Planting.Instance.prototype.show_ui = show_ui;
 		
 		_Planting.Instance.prototype.select_ui_puzzle = select_ui_puzzle;
-		_Planting.Instance.prototype.select_ui_plant = select_ui_plant;
-		
+		_Planting.Instance.prototype.setup_ui_puzzle = setup_ui_puzzle;
 		_Planting.Instance.prototype.update_ui_puzzle = update_ui_puzzle;
+		_Planting.Instance.prototype.start_ui_puzzle = start_ui_puzzle;
+		_Planting.Instance.prototype.stop_ui_puzzle = stop_ui_puzzle;
+		_Planting.Instance.prototype.complete_ui_puzzle = complete_ui_puzzle;
 		
+		_Planting.Instance.prototype.select_ui_plant = select_ui_plant;
 		_Planting.Instance.prototype.start_ui_plant = start_ui_plant;
 		_Planting.Instance.prototype.step_ui_plant = step_ui_plant;
 		_Planting.Instance.prototype.stop_ui_plant = stop_ui_plant;
@@ -153,20 +156,21 @@
 		this.skins = [];
 		this.shapes = [];
 		this.affectUI = parameters.affectUI || false;
+		this.puzzleChanging = false;
 		
 		// signals
 		
-		this.puzzleStarted = new signals.Signal();
-		this.puzzleSelected = new signals.Signal();
-		this.puzzleStopped = new signals.Signal();
+		this.onPuzzleStarted = new signals.Signal();
+		this.onPuzzleSelected = new signals.Signal();
+		this.onPuzzleStopped = new signals.Signal();
 		
-		this.plantSelected = new signals.Signal();
-		this.plantStarted = new signals.Signal();
-		this.plantStopped = new signals.Signal();
+		this.onPlantSelected = new signals.Signal();
+		this.onPlantStarted = new signals.Signal();
+		this.onPlantStopped = new signals.Signal();
 		
-		this.planted = new signals.Signal();
-		this.plantedSingle = new signals.Signal();
-		this.plantedMulti = new signals.Signal();
+		this.onPlanted = new signals.Signal();
+		this.onPlantedSingle = new signals.Signal();
+		this.onPlantedMulti = new signals.Signal();
 		
 		// reset
 		
@@ -174,7 +178,7 @@
 		
 		// stop on pause
 		
-		shared.signals.gamePaused.add( this.stop, this );
+		shared.signals.onGamePaused.add( this.stop, this );
 		
 	}
 	
@@ -478,7 +482,7 @@
 				// select
 				else {
 					
-					this.plantSelected.dispatch( plant );
+					this.onPlantSelected.dispatch( plant );
 					
 				}
 				
@@ -529,7 +533,7 @@
 			// select
 			else {
 				
-				this.puzzleSelected.dispatch( puzzle );
+				this.onPuzzleSelected.dispatch( puzzle );
 				
 				if ( this.affectUI === true ) {
 					
@@ -662,7 +666,7 @@
 			// start updating planting
 			
 			this.update();
-			shared.signals.gameUpdated.add( this.update, this );
+			shared.signals.onGameUpdated.add( this.update, this );
 			
 		}
 		
@@ -773,18 +777,18 @@
 					
 					// planted signal
 					
-					this.planted.dispatch( this.plant );
+					this.onPlanted.dispatch( this.plant );
 					
 					// also signal by type
 					
 					if ( plantPlantedNodes > 1 ) {
 						
-						this.plantedMulti.dispatch( this.plant );
+						this.onPlantedMulti.dispatch( this.plant );
 						
 					}
 					else {
 						
-						this.plantedSingle.dispatch( this.plant );
+						this.onPlantedSingle.dispatch( this.plant );
 						
 					}
 					
@@ -805,7 +809,7 @@
 		
 		// stop updating
 		
-		shared.signals.gameUpdated.remove( this.update, this );
+		shared.signals.onGameUpdated.remove( this.update, this );
 		
 		// stop
 			
@@ -887,7 +891,7 @@
 	
 	/*===================================================
 	
-	planting changes
+	changes
 	
 	=====================================================*/
 	
@@ -895,84 +899,97 @@
 		
 		var puzzleNew;
 		
-		// if new puzzle
+		// queue puzzle for change
+		// if queued puzzle would be same as current, treat as toggle off
 		
-		if ( this.puzzle !== puzzle && puzzle instanceof _Puzzle.Instance ) {
-			
-			puzzleNew = true;
-			this.puzzleLast = this.puzzle;
-			
-			// change
-			
-			this.puzzle = puzzle;
-			
-		}
-		// else toggle current off
-		else if ( typeof puzzle === 'undefined' || this.puzzle === puzzle || ( this.puzzle instanceof _Puzzle.Instance && this.puzzle.started === false ) ) {
-			
-			this.puzzleLast = this.puzzle;
-			
-			// clear current
-			
-			this.puzzle = undefined;
-			
-		}
+		this.puzzleQueued = this.puzzle instanceof _Puzzle.Instance && this.puzzle === puzzle ? undefined : puzzle;
+		this.puzzleWaiting = this.puzzleQueued instanceof _Puzzle.Instance;
 		
-		// handle last puzzle
-		
-		if ( this.puzzleLast instanceof _Puzzle.Instance ) {
+		// if not currently changing puzzles
+		console.log( 'PLANTING: change puzzle, changing? ', this.puzzleChanging, ' + waiting? ', this.puzzleWaiting );
+		if ( this.puzzleChanging === false ) {
+			console.log( 'PLANTING: change puzzle from ', this.puzzle, ' to ', this.puzzleQueued );
+			this.puzzleChanging = true;
 			
-			// remove state change listener
+			// stop last
 			
-			this.puzzleLast.stateChanged.remove( this.change_puzzle, this );
-			
-			// toggle off
-			
-			if ( this.puzzleLast.started === true ) {
+			if ( this.puzzle instanceof _Puzzle.Instance && this.puzzle.started === true ) {
+				console.log( 'PLANTING: change puzzle stop last ', this.puzzle );
+				this.puzzleLast = this.puzzle;
+				this.puzzle = undefined;
+				
+				// stop planting
+				
+				if ( this.affectUI === true ) {
+					
+					this.stop_ui();
+					
+				}
+				
+				if ( this.started === true ) {
+					
+					this.stop();
+					
+				}
+				
+				// toggle off
+				
+				this.puzzleLast.onStateChanged.remove( change_puzzle_to_new, this );
+				this.puzzleLast.onStateChanged.addOnce( change_puzzle_from_last, this );
 				
 				this.puzzleLast.toggleSwitch.toggle();
-			
-			}
-			
-			// if affects ui
-			
-			if ( this.affectUI === true ) {
-				
-				this.stop_ui();
 				
 			}
-			
-			// signal
-			
-			this.puzzleStopped.dispatch( this.puzzleLast );
-			
-			// if started, stop
-			
-			if ( this.started === true ) {
+			// start new
+			else if ( this.puzzleQueued instanceof _Puzzle.Instance ) {
+				console.log( 'PLANTING: change puzzle start new ', this.puzzleQueued );
 				
-				this.stop();
+				this.puzzleWaiting = false;
+				this.puzzle = this.puzzleQueued;
+				this.puzzleQueued = undefined;
 				
-			}
-			
-		}
-		
-		// handle new puzzle
-		
-		if ( puzzleNew === true ) {
-			
-			// toggle on
-			
-			if ( this.puzzle.started !== true ) {
+				// toggle on
+				
+				this.puzzle.onStateChanged.remove( change_puzzle_from_last, this );
+				this.puzzle.onStateChanged.addOnce( change_puzzle_to_new, this );
 				
 				this.puzzle.toggleSwitch.toggle();
 				
 			}
 			
-			// listen for state change
+		}
+		
+	}
+	
+	function change_puzzle_from_last () {
+		
+		this.puzzleChanging = false;
+		
+		this.onPuzzleStopped.dispatch( this.puzzleLast );
+		
+		// step puzzle queue
+		
+		if ( this.puzzleWaiting === true ) {
 			
-			this.puzzle.stateChanged.add( this.change_puzzle, this );
+			this.change_puzzle( this.puzzleQueued );
 			
-			// if affects ui
+		}
+		
+	}
+	
+	function change_puzzle_to_new () {
+		
+		this.puzzleChanging = false;
+		
+		// step puzzle queue
+		
+		if ( this.puzzleWaiting === true ) {
+			
+			this.change_puzzle( this.puzzleQueued );
+			
+		}
+		// start new puzzle
+		else {
 			
 			if ( this.affectUI === true ) {
 				
@@ -980,9 +997,7 @@
 				
 			}
 			
-			// signal
-			
-			this.puzzleStarted.dispatch( this.puzzle );
+			this.onPuzzleStarted.dispatch( this.puzzle );
 			
 		}
 		
@@ -1081,7 +1096,7 @@
 				
 				// signal
 				
-				this.plantStopped.dispatch( this.plant );
+				this.onPlantStopped.dispatch( this.plant );
 				
 				// remove plant
 				
@@ -1121,7 +1136,7 @@
 				
 				// signal
 				
-				this.plantStarted.dispatch( this.plant );
+				this.onPlantStarted.dispatch( this.plant );
 				
 				// start planting
 			
@@ -1288,8 +1303,8 @@
 				
 				// shapes
 				
-				this.puzzle.shapeAdded.add( this.update_ui, this );
-				this.puzzle.shapeRemoved.add( this.update_ui, this );
+				this.puzzle.onShapeAdded.add( this.update_ui, this );
+				this.puzzle.onShapeRemoved.add( this.update_ui, this );
 				
 				console.log( ' this.shapes ', this.shapes.length, this.shapes, ' + puzzle shapes: ', this.puzzle.shapes.length, this.puzzle.shapes );
 				for ( i = 0, l = this.shapes.length; i < l; i++ ) {
@@ -1327,13 +1342,22 @@
 					
 				}
 				
-				// puzzle specific ui
+				this.puzzle.onShapesNeeded.add( this.setup_ui_puzzle, this );
+				this.puzzle.onCompleted.add( this.complete_ui_puzzle, this );
 				
-				this.puzzle.shapesNeeded.add( this.update_ui_puzzle, this );
+				// start ui
 				
-				this.update_ui_puzzle();
-				
-				// update ui
+				if ( this.puzzle.ready === true ) {
+					
+					this.update_ui_puzzle();
+					this.start_ui_puzzle();
+					
+				}
+				else {
+					
+					this.setup_ui_puzzle();
+					
+				}
 				
 				this.update_ui();
 				
@@ -1348,7 +1372,7 @@
 		if ( this.puzzle instanceof _Puzzle.Instance ) {
 			
 			// overview
-			
+			console.log( 'this.puzzle.name', this.puzzle.name );
 			shared.domElements.$puzzleActiveName.html( this.puzzle.name );
 			shared.domElements.$puzzleActiveScoreBar.css( 'width', this.puzzle.scorePct + '%' );
 			shared.domElements.$puzzleActiveElementCount.html( this.puzzle.elements.length );
@@ -1382,13 +1406,14 @@
 		
 		// update ui
 		
-		this.update_ui_puzzle();
+		this.stop_ui_puzzle();
 		
-		shared.signals.gameResumed.remove( on_resume, this );
-		this.puzzleLast.shapeAdded.remove( this.update_ui, this );
-		this.puzzleLast.shapeRemoved.remove( this.update_ui, this );
-		this.puzzleLast.shapesNeeded.remove( this.update_ui_puzzle, this );
-		this.puzzleLast.shapesReady.remove( this.update_ui_puzzle, this );
+		shared.signals.onGameResumed.remove( on_resume, this );
+		this.puzzleLast.onShapeAdded.remove( this.update_ui, this );
+		this.puzzleLast.onShapeRemoved.remove( this.update_ui, this );
+		this.puzzleLast.onShapesNeeded.remove( this.setup_ui_puzzle, this );
+		this.puzzleLast.onShapesReady.remove( this.update_ui_puzzle, this );
+		this.puzzleLast.onCompleted.remove( this.complete_ui_puzzle, this );
 		
 		// deselect plant
 		
@@ -1410,6 +1435,16 @@
 		
 	}
 	
+	function show_ui ( callback ) {
+		
+		if ( shared.domElements.$menuFarming.is( '.active' ) !== true || _Game.paused !== true ) {
+			
+			shared.domElements.$menuFarmingToggle.trigger( 'tap' );
+			
+		}
+		
+	}
+	
 	function on_resume () {
 		
 		shared.domElements.$puzzleActiveShapesPicker.placeholdme( 'revert' );
@@ -1420,17 +1455,26 @@
 		
 		}
 		
-	}
-	
-	function show_ui ( callback ) {
+		// if puzzle not ready on resume, stop
 		
-		if ( shared.domElements.$menuFarming.is( '.active' ) !== true || _Game.paused !== true ) {
+		if ( this.puzzle instanceof _Puzzle.Instance && this.puzzle.ready !== true ) {
 			
-			shared.domElements.$menuFarmingToggle.trigger( 'tap' );
+			this.change_puzzle();
+			
+		}
+		else {
+			
+			this.start_ui_puzzle();
 			
 		}
 		
 	}
+	
+	/*===================================================
+    
+    ui: puzzle
+    
+    =====================================================*/
 	
 	function select_ui_puzzle () {
 		
@@ -1443,6 +1487,192 @@
 		}
 		
 	}
+	
+	function setup_ui_puzzle () {
+		
+		console.log( 'PLANTING: UI puzzle setup' );
+		
+		this.stop_ui_puzzle();
+		
+		if ( this.puzzle instanceof _Puzzle.Instance ) {
+			
+			shared.signals.onGameResumed.addOnce( on_resume, this );
+			this.puzzle.onShapesReady.add( this.update_ui_puzzle, this );
+			
+			// if not already on farming menu, isolate and show puzzle start menu
+			
+			if ( shared.domElements.$menuFarming.is( '.active' ) !== true ) {
+				
+				// puzzle start menu
+				
+				_UIQueue.add( {
+					element: shared.domElements.$puzzleActiveStarted,
+					container: shared.domElements.$menuActive,
+					activate: function () {
+						
+						shared.domElements.$puzzleActiveStarted.placeholdme()
+							.appendTo( shared.domElements.$menuActive.data( '$inner' ) );
+						
+					},
+					deactivate: function () {
+						
+						shared.domElements.$puzzleActiveStarted.placeholdme( 'revert' );
+						
+					}
+				} );
+				
+				// add puzzle shapes picker to start menu
+				
+				_UIQueue.add( {
+					element: shared.domElements.$puzzleActiveShapesPicker,
+					container: shared.domElements.$puzzleActiveStarted,
+					activate: function () {
+						
+						shared.domElements.$puzzleActiveShapesPicker.placeholdme()
+							.appendTo( shared.domElements.$puzzleActiveStartedPlan );
+						
+					},
+					deactivate: function () {
+						
+						shared.domElements.$puzzleActiveShapesPicker.placeholdme( 'revert' );
+						
+					}
+				} );
+				
+			}
+			
+			// show counter
+			
+			main.dom_collapse( {
+				element: shared.domElements.$puzzleActiveShapesCounter,
+				show: true
+			} );
+			
+		}
+		
+	}
+	
+	function update_ui_puzzle () {
+		
+		var i, l,
+			shapes,
+			shape;
+		
+		// new puzzle ready
+		if ( this.puzzle instanceof _Puzzle.Instance && this.puzzle.ready === true ) {
+			
+			console.log( 'PLANTING: UI puzzle update' );
+			
+			this.puzzle.onShapesReady.remove( this.update_ui_puzzle, this );
+			
+			// update status
+			
+			shared.domElements.$puzzleActiveStatusIcons.addClass( 'hidden' ).filter( "#ready" ).removeClass( 'hidden' );
+			shared.domElements.$puzzleActiveStatusText.html( 'ready' );
+			
+			// hide shapes picker elements
+			
+			main.dom_collapse( {
+				element: $().add( shared.domElements.$puzzleActiveShapesRequiredWarning ).add( shared.domElements.$puzzleActiveShapesCounter )
+			} );
+			
+			// show ready items
+			
+			main.dom_collapse( {
+				element: $().add( shared.domElements.$puzzleActiveReady ).add( shared.domElements.$puzzleActiveStartedPlanReady ),
+				show: true
+			} );
+			
+			// handle puzzle shape activators
+			
+			shapes = this.puzzle.shapes;
+			
+			for ( i = 0, l = shapes.length; i < l; i++ ) {
+				
+				shape = shapes[ i ];
+				
+				_GridElementLibrary.shapes[ shape ].$buttonsPuzzleActive.on( 'dragstart.activatePlant', $.proxy( this.activate_plant, this ) );
+				
+			}
+			
+		}
+		
+	}
+	
+	function start_ui_puzzle () {
+		
+		// new puzzle ready
+		if ( this.puzzle instanceof _Puzzle.Instance && this.puzzle.ready === true ) {
+			
+			console.log( 'PLANTING: UI puzzle start' );
+			
+			// show shape activators
+			
+			main.dom_fade( { 
+				element: shared.domElements.$puzzleActiveShapes,
+				opacity: 1
+			} );
+			
+		}
+		
+	}
+	
+	function stop_ui_puzzle () {
+		
+		var i, l,
+			shapes,
+			shape;
+		
+		console.log( 'PLANTING: UI puzzle stop' );
+		
+		// update status
+		
+		shared.domElements.$puzzleActiveStatusIcons.addClass( 'hidden' ).filter( "#waiting" ).removeClass( 'hidden' );
+		shared.domElements.$puzzleActiveStatusText.html( 'waiting for shapes' );
+		
+		// hide ready items
+		
+		main.dom_collapse( {
+			element: $().add( shared.domElements.$puzzleActiveReady ).add( shared.domElements.$puzzleActiveStartedPlanReady )
+		} );
+		
+		// disable all shape activators
+		
+		shapes = _GridElementLibrary.shapeNames;
+		
+		for ( i = 0, l = shapes.length; i < l; i++ ) {
+			
+			shape = shapes[ i ];
+			
+			_GridElementLibrary.shapes[ shape ].$buttonsPuzzleActive.off( '.activatePlant' );
+			
+		}
+		
+		// hide shape activators
+		
+		main.dom_fade( { 
+			element: shared.domElements.$puzzleActiveShapes
+		} );
+		
+	}
+	
+	function complete_ui_puzzle () {
+		
+		console.log( 'PUZZLE COMPLETE INFO: ', this.puzzle, this.puzzleLast );
+		
+		if ( this.puzzle instanceof _Puzzle.Instance ) {
+			
+			console.log( 'this.numGridModules', this.puzzle.numGridModules, 'this.numElementsMin', this.puzzle.numElementsMin, ' this.numElementsUsed ', this.puzzle.numElementsUsed, ' scoreLast ', this.scoreLast, ' score ', this.puzzle.score, 'scorePct', this.puzzle.scorePct, ' this.puzzle.scoreStatus', this.puzzle.scoreStatus, 'this.puzzle.scoreTitle', this.puzzle.scoreTitle, 'this.scoreHint', this.puzzle.scoreHint, ' this.scores ', this.puzzle.scores );
+			
+		}
+		
+	}
+	
+	/*===================================================
+    
+    ui: plant
+    
+    =====================================================*/
 	
 	function select_ui_plant ( plant, moveScreen ) {
 		
@@ -1525,154 +1755,6 @@
 			main.dom_collapse( {
 				element: shared.domElements.$plantActive,
 				time: 0
-			} );
-			
-		}
-		
-	}
-	
-	function update_ui_puzzle () {
-		
-		var i, l,
-			shapes,
-			shape,
-			puzzle;
-		
-		// new puzzle ready
-		if ( this.puzzle instanceof _Puzzle.Instance && this.puzzle.ready === true ) {
-			
-			console.log( 'PLANTING: update puzzle ui to ready' );
-			
-			this.puzzle.shapesReady.remove( this.update_ui_puzzle, this );
-			
-			_UIQueue.remove( shared.domElements.$menuActive );
-			
-			// update status
-			
-			shared.domElements.$puzzleActiveStatusIcons.addClass( 'hidden' ).filter( "#ready" ).removeClass( 'hidden' );
-			shared.domElements.$puzzleActiveStatusText.html( 'ready' );
-			
-			// hide shapes picker elements
-			
-			main.dom_collapse( {
-				element: $().add( shared.domElements.$puzzleActiveShapesRequiredWarning ).add( shared.domElements.$puzzleActiveShapesCounter )
-			} );
-			
-			// show ready items
-			
-			main.dom_collapse( {
-				element: shared.domElements.$puzzleActiveReady,
-				show: true
-			} );
-			
-			// handle puzzle shape activators
-			
-			shapes = this.puzzle.shapes;
-			
-			for ( i = 0, l = shapes.length; i < l; i++ ) {
-				
-				shape = shapes[ i ];
-				
-				_GridElementLibrary.shapes[ shape ].$buttonsPuzzleActive.on( 'dragstart.activatePlant', $.proxy( this.activate_plant, this ) );
-				
-			}
-			
-			// show shape activators
-			
-			main.dom_fade( { 
-				element: shared.domElements.$puzzleActiveShapes,
-				opacity: 1
-			} );
-			
-		}
-		// waiting or no puzzle
-		else {
-			
-			console.log( 'PLANTING: update puzzle ui to waiting' );
-			
-			if ( this.puzzle instanceof _Puzzle.Instance ) {
-				
-				this.puzzle.shapesReady.add( this.update_ui_puzzle, this );
-				shared.signals.gameResumed.addOnce( on_resume, this );
-				
-				// isolate and show puzzle start menu
-				
-				if ( shared.domElements.$menuFarming.is( '.active' ) !== true ) {
-					
-					// puzzle start menu
-					
-					_UIQueue.add( {
-						element: shared.domElements.$puzzleActiveStarted,
-						container: shared.domElements.$menuActive,
-						activate: function () {
-							
-							shared.domElements.$puzzleActiveStarted.placeholdme()
-								.appendTo( shared.domElements.$menuActive.data( '$inner' ) );
-							
-						},
-						deactivate: function () {
-							
-							shared.domElements.$puzzleActiveStarted.placeholdme( 'revert' );
-							
-						}
-					} );
-					
-					// add puzzle shapes picker to start menu
-					
-					_UIQueue.add( {
-						element: shared.domElements.$puzzleActiveShapesPicker,
-						container: shared.domElements.$puzzleActiveStarted,
-						activate: function () {
-							
-							shared.domElements.$puzzleActiveShapesPicker.placeholdme()
-								.appendTo( shared.domElements.$puzzleActiveStarted );
-							
-						},
-						deactivate: function () {
-							
-							shared.domElements.$puzzleActiveShapesPicker.placeholdme( 'revert' );
-							
-						}
-					} );
-					
-				}
-				
-				// show counter
-				
-				main.dom_collapse( {
-					element: shared.domElements.$puzzleActiveShapesCounter,
-					show: true
-				} );
-				
-			}
-			
-			// update status
-			
-			shared.domElements.$puzzleActiveStatusIcons.addClass( 'hidden' ).filter( "#waiting" ).removeClass( 'hidden' );
-			shared.domElements.$puzzleActiveStatusText.html( 'waiting for shapes' );
-			
-			// hide ready items
-			
-			main.dom_collapse( {
-				element: shared.domElements.$puzzleActiveReady
-			} );
-			
-			// disable all shape activators
-			
-			shapes = _GridElementLibrary.shapeNames;
-			
-			for ( i = 0, l = shapes.length; i < l; i++ ) {
-				
-				shape = shapes[ i ];
-				
-				_GridElementLibrary.shapes[ shape ].$buttonsPuzzleActive.off( '.activatePlant' );
-				
-			}
-			
-			// hide shape activators
-			
-			main.dom_fade( { 
-				element: shared.domElements.$puzzleActiveShapes
 			} );
 			
 		}

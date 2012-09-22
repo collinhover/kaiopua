@@ -67,7 +67,7 @@
 		
 		// reset
 		
-		shared.signals.gameStopped.add( reset, _Messenger );
+		shared.signals.onGameStopped.add( reset, _Messenger );
 		
 		reset();
 		
@@ -91,7 +91,7 @@
 		
 		// remove signal
 		
-		shared.signals.gameResumed.remove( step_message_queue );
+		shared.signals.onGameResumed.remove( step_message_queue );
 		
 	}
 	
@@ -145,7 +145,7 @@
 		}
 		else {
 			
-			shared.signals.gameResumed.addOnce( step_message_queue );
+			shared.signals.onGameResumed.addOnce( step_message_queue );
 			
 		}
 		
@@ -214,8 +214,8 @@
 		
 		// signals
 		
-		shared.signals.keyReleased.remove( hide_message );
-		shared.signals.gamePointerTapped.remove( hide_message );
+		shared.signals.onKeyReleased.remove( hide_message );
+		shared.signals.onGamePointerTapped.remove( hide_message );
 		
 		// clear timeout
 		
@@ -271,8 +271,8 @@
 		
 		if ( confirmRequired !== true ) {
 			
-			shared.signals.keyReleased.add( hide_message );
-			shared.signals.gamePointerTapped.add( hide_message );
+			shared.signals.onKeyReleased.add( hide_message );
+			shared.signals.onGamePointerTapped.add( hide_message );
 			
 		}
 		

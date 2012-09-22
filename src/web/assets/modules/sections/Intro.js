@@ -140,9 +140,9 @@
 			
 			// signals
 			
-			shared.signals.windowResized.add( resize );
+			shared.signals.onWindowResized.add( resize );
 			
-			shared.signals.gameUpdated.add( update );
+			shared.signals.onGameUpdated.add( update );
 			
 		}
 		else {
@@ -157,9 +157,9 @@
 		
 		waitingToShow = false;
 		
-		shared.signals.windowResized.remove( resize );
+		shared.signals.onWindowResized.remove( resize );
         
-        shared.signals.gameUpdated.remove( update );
+        shared.signals.onGameUpdated.remove( update );
 		
     }
     

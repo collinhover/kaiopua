@@ -169,11 +169,11 @@
 		
 		// signals
 		
-		this.occupantAdded = new signals.Signal();
-		this.occupantRemoved = new signals.Signal();
-		this.occupantChanged = new signals.Signal();
-		this.activeChanged = new signals.Signal();
-		this.dirty = new signals.Signal();
+		this.onOccupantAdded = new signals.Signal();
+		this.onOccupantRemoved = new signals.Signal();
+		this.onOccupantChanged = new signals.Signal();
+		this.onActiveChanged = new signals.Signal();
+		this.onDirtied = new signals.Signal();
 		
 		// states
 		
@@ -248,7 +248,7 @@
 		this._dirtyStates = true;
 		this._dirtyConnected = true;
 		
-		this.dirty.dispatch( this );
+		this.onDirtied.dispatch( this );
 		
 	}
 	
@@ -459,7 +459,7 @@
 			
 			if ( typeof occupantPrev === 'undefined' ) {
 				
-				this.occupantAdded.dispatch( this );
+				this.onOccupantAdded.dispatch( this );
 				
 			}
 			
@@ -477,7 +477,7 @@
 			
 			if ( typeof occupantPrev !== 'undefined' ) {
 				
-				this.occupantRemoved.dispatch( this );
+				this.onOccupantRemoved.dispatch( this );
 				
 			}
 			
@@ -487,7 +487,7 @@
 		
 		if ( occupant !== occupantPrev ) {
 			
-			this.occupantChanged.dispatch( this );
+			this.onOccupantChanged.dispatch( this );
 			
 		}
 		
@@ -516,7 +516,7 @@
 		
 		if ( this._active !== activePrev ) {
 			
-			this.activeChanged.dispatch( this );
+			this.onActiveChanged.dispatch( this );
 			
 		}
 		

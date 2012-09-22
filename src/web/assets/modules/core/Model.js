@@ -638,6 +638,12 @@
 				updater.start( mesh, morphsMap, parameters );
 				
 			}
+			// else if has callback
+			else if ( parameters && typeof parameters.callback === 'function' ) {
+				
+				parameters.callback();
+				
+			}
 			
 			return this;
 			
@@ -1242,7 +1248,6 @@
 			
 			var i, l,
 				loop = info.loop,
-				callback,
 				morphsMap = info.morphsMap,
 				mesh = info.mesh,
 				scale = mesh.scale,
@@ -1407,11 +1412,9 @@
 					
 				}
 				
-				callback = info.callback;
-				
-				if ( typeof callback !== 'undefined' ) {
+				if ( typeof info.callback === 'function' ) {
 					
-					callback.call();
+					info.callback();
 					
 				}
 				
@@ -1431,7 +1434,7 @@
 				
 				info.cleared = false;
 					
-				shared.signals.gameUpdated.add( updater.update );
+				shared.signals.onGameUpdated.add( updater.update );
 				
 			}
 			
@@ -1445,7 +1448,7 @@
 				
 				info.updating = false;
 					
-				shared.signals.gameUpdated.remove( updater.update );
+				shared.signals.onGameUpdated.remove( updater.update );
 				
 			}
 			

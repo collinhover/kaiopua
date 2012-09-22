@@ -151,7 +151,7 @@
 			
 			// signals
 			
-			shared.signals.gamePaused.add( pause );
+			shared.signals.onGamePaused.add( pause );
 			
 			ready = true;
 			
@@ -175,7 +175,7 @@
 		
 		if ( character.rigidBody ) {
 			
-			character.rigidBody.safetynetstart.add( character_on_safety_net, this );
+			character.rigidBody.onSafetyNetStarted.add( character_on_safety_net, this );
 			
 		}
 		
@@ -424,16 +424,16 @@
 		
 		// signals
 		
-		shared.signals.gamePointerTapped.add( trigger_key );
-		shared.signals.gamePointerDoubleTapped.add( trigger_key );
-		shared.signals.gamePointerHeld.add( trigger_key );
-		shared.signals.gamePointerDragStarted.add( trigger_key );
-		shared.signals.gamePointerDragged.add( trigger_key );
-		shared.signals.gamePointerDragEnded.add( trigger_key );
-		shared.signals.gamePointerWheel.add( trigger_key );
+		shared.signals.onGamePointerTapped.add( trigger_key );
+		shared.signals.onGamePointerDoubleTapped.add( trigger_key );
+		shared.signals.onGamePointerHeld.add( trigger_key );
+		shared.signals.onGamePointerDragStarted.add( trigger_key );
+		shared.signals.onGamePointerDragged.add( trigger_key );
+		shared.signals.onGamePointerDragEnded.add( trigger_key );
+		shared.signals.onGamePointerWheel.add( trigger_key );
 		
-		shared.signals.keyPressed.add( trigger_key );
-		shared.signals.keyReleased.add( trigger_key );
+		shared.signals.onKeyPressed.add( trigger_key );
+		shared.signals.onKeyReleased.add( trigger_key );
 		
 	}
 	
@@ -445,16 +445,16 @@
 		
 		// signals
 		
-		shared.signals.gamePointerTapped.remove( trigger_key );
-		shared.signals.gamePointerDoubleTapped.remove( trigger_key );
-		shared.signals.gamePointerHeld.remove( trigger_key );
-		shared.signals.gamePointerDragStarted.remove( trigger_key );
-		shared.signals.gamePointerDragged.remove( trigger_key );
-		shared.signals.gamePointerDragEnded.remove( trigger_key );
-		shared.signals.gamePointerWheel.remove( trigger_key );
+		shared.signals.onGamePointerTapped.remove( trigger_key );
+		shared.signals.onGamePointerDoubleTapped.remove( trigger_key );
+		shared.signals.onGamePointerHeld.remove( trigger_key );
+		shared.signals.onGamePointerDragStarted.remove( trigger_key );
+		shared.signals.onGamePointerDragged.remove( trigger_key );
+		shared.signals.onGamePointerDragEnded.remove( trigger_key );
+		shared.signals.onGamePointerWheel.remove( trigger_key );
 		
-		shared.signals.keyPressed.remove( trigger_key );
-		shared.signals.keyReleased.remove( trigger_key );
+		shared.signals.onKeyPressed.remove( trigger_key );
+		shared.signals.onKeyReleased.remove( trigger_key );
 		
 	}
 	
@@ -778,13 +778,13 @@
 		
 		disable();
 		
-		shared.signals.gameResumed.add( resume );
+		shared.signals.onGameResumed.add( resume );
 		
 	}
 	
 	function resume () {
 			
-		shared.signals.gameResumed.remove( resume );
+		shared.signals.onGameResumed.remove( resume );
 		
 		enable();
 		
@@ -796,7 +796,7 @@
 			
 			enabled = true;
 			
-			shared.signals.gameUpdated.add( update );
+			shared.signals.onGameUpdated.add( update );
 		
 		}
 		
@@ -815,7 +815,7 @@
 		
 		// pause updating
 		
-		shared.signals.gameUpdated.remove( update );
+		shared.signals.onGameUpdated.remove( update );
 		
 	}
 	
