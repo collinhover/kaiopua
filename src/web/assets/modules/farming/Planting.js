@@ -19,6 +19,7 @@
 		_GridModel,
 		_GridElement,
 		_GridElementLibrary,
+		_PuzzleLibrary,
 		_UIQueue,
 		_MathHelper,
 		_ObjectHelper,
@@ -42,6 +43,7 @@
 			"assets/modules/puzzles/GridModel.js",
 			"assets/modules/puzzles/GridElement.js",
 			"assets/modules/puzzles/GridElementLibrary.js",
+			"assets/modules/puzzles/PuzzleLibrary.js",
 			"assets/modules/ui/UIQueue.js",
 			"assets/modules/utils/MathHelper.js",
 			"assets/modules/utils/ObjectHelper.js"
@@ -56,7 +58,7 @@
     
     =====================================================*/
 	
-	function init_internal ( g, pzl, ts, gr, gm, gmodel, ge, ges, uiq, mh, oh ) {
+	function init_internal ( g, pzl, ts, gr, gm, gmodel, ge, geLib, pLib, uiq, mh, oh ) {
 		console.log('internal planting', _Planting);
 		
 		_Game = g;
@@ -66,7 +68,8 @@
 		_GridModule = gm;
 		_GridModel = gmodel;
 		_GridElement = ge;
-		_GridElementLibrary = ges;
+		_GridElementLibrary = geLib;
+		_PuzzleLibrary = pLib;
 		_UIQueue = uiq;
 		_MathHelper = mh;
 		_ObjectHelper = oh;
@@ -87,10 +90,8 @@
 		
 		_Planting.Instance.prototype.reset = reset;
 		
-		_Planting.Instance.prototype.add_collection_skin = add_collection_skin;
-		_Planting.Instance.prototype.remove_collection_skin = remove_collection_skin;
-		_Planting.Instance.prototype.add_collection_shape = add_collection_shape;
-		_Planting.Instance.prototype.remove_collection_shape = remove_collection_shape;
+		_Planting.Instance.prototype.add_to_collection = add_to_collection;
+		_Planting.Instance.prototype.remove_from_collection = remove_from_collection;
 		_Planting.Instance.prototype.toggle_puzzle_shape = toggle_puzzle_shape;
 		
 		_Planting.Instance.prototype.select_plant = select_plant;
@@ -116,8 +117,9 @@
 		_Planting.Instance.prototype.stop_rotate_plant = stop_rotate_plant;
 		
 		_Planting.Instance.prototype.start_ui = start_ui;
-		_Planting.Instance.prototype.stop_ui = stop_ui;
 		_Planting.Instance.prototype.update_ui = update_ui;
+		_Planting.Instance.prototype.stop_ui = stop_ui;
+		_Planting.Instance.prototype.clear_ui = clear_ui;
 		_Planting.Instance.prototype.show_ui = show_ui;
 		
 		_Planting.Instance.prototype.select_ui_puzzle = select_ui_puzzle;
@@ -153,8 +155,10 @@
 		this.rotationStartThreshold = parameters.rotationStartThreshold || _Planting.rotationStartThreshold;
 		this.rotationDirChangeThreshold = parameters.rotationDirChangeThreshold || _Planting.rotationDirChangeThreshold;
 		this.plants = [];
-		this.skins = [];
-		this.shapes = [];
+		this.collection = {};
+		this.collection.puzzles = [];
+		this.collection.skins = [];
+		this.collection.shapes = [];
 		this.affectUI = parameters.affectUI || false;
 		this.puzzleChanging = false;
 		
@@ -195,33 +199,29 @@
 		// clear collection
 		// skins
 		
-		for ( i = 0, l = this.skins.length; i < l; i++ ) {
+		for ( i = 0, l = this.collection.skins.length; i < l; i++ ) {
 			
-			this.remove_collection_skin( this.skins[ i ] );
+			this.remove_collection_skin( this.collection.skins[ i ] );
 			
 		}
 		
 		// shapes
 		
-		for ( i = 0, l = this.shapes.length; i < l; i++ ) {
+		for ( i = 0, l = this.collection.shapes.length; i < l; i++ ) {
 			
-			this.remove_collection_shape( this.shapes[ i ] );
+			this.remove_collection_shape( this.collection.shapes[ i ] );
 			
 		}
 		
 		// create collection
-		// plants
 		
-		this.add_collection_skin( 'taro' );
-		this.add_collection_skin( 'pineapple' );
-		this.add_collection_skin( 'rock' );
+		this.add_to_collection( 'tutorial', 'puzzle' );
 		
-		// shapes
+		this.add_to_collection( 'taro', 'skin' );
+		this.add_to_collection( 'rock', 'skin' );
 		
-		this.add_collection_shape( 'monomino' );
-		this.add_collection_shape( 'domino' );
-		this.add_collection_shape( 'trominoL' );
-		this.add_collection_shape( 'tetrominoT' );
+		this.add_to_collection( 'monomino', 'shape' );
+		this.add_to_collection( 'domino', 'shape' );
 		
 		// stop planting
 		
@@ -235,73 +235,138 @@
 	
 	=====================================================*/
 	
-	function add_collection_skin ( skin ) {
+	function add_to_collection ( item, type ) {
 		
-		// if valid
+		var added = false;
 		
-		if ( _GridElementLibrary.skins.hasOwnProperty( skin ) ) {
+		// skins
+		
+		if ( type === 'skin' || typeof type === 'undefined' ) {
 			
-			this.skins.push( skin );
+			added = add_collection_item( item, this.collection.skins, _GridElementLibrary.skins );
 			
-			// skin picker buttons
+			if ( added === true ) {
+				
+				//_GridElementLibrary.skins[ item ].$buttonsSkinPicker.removeClass( "disabled hidden" );
 			
-			//_GridElementLibrary.skins[ skin ].$buttonsSkinPicker.removeClass( "disabled hidden" );
+			}
 			
 		}
 		
+		// shapes
+		
+		if ( added !== true && ( type === 'shape' || typeof type === 'undefined' ) ) {
+			
+			added = add_collection_item( item, this.collection.shapes, _GridElementLibrary.shapes );
+			
+			if ( added === true ) {
+				
+				_GridElementLibrary.shapes[ item ].$buttonsShapePicker.removeClass( "disabled hidden" );
+				
+			}
+			
+		}
+		
+		// puzzles
+		
+		if ( added !== true && ( type === 'puzzle' || typeof type === 'undefined' ) ) {
+			
+			added = add_collection_item( item, this.collection.puzzles, _PuzzleLibrary.puzzles );
+			
+			if ( added === true ) {
+				
+				// TODO: enable / show puzzle tiki statue?
+				
+			}
+			
+		}
+		console.log( 'added item ', item, ', which is a ', type, ' ? ', added, ' + collection ', this.collection );
+		return added;
+		
 	}
 	
-	function remove_collection_skin ( skin ) {
+	function remove_from_collection ( item, type ) {
+		
+		var removed = false;
+		
+		// skins
+		
+		if ( type === 'skin' || typeof type === 'undefined' ) {
+			
+			removed = remove_collection_item( item, this.collection.skins );
+			
+			if ( removed === true ) {
+				
+				//_GridElementLibrary.skins[ item ].$buttonsSkinPicker.addClass( "disabled hidden" );
+			
+			}
+			
+		}
+		
+		// shapes
+		
+		if ( removed !== true && ( type === 'shape' || typeof type === 'undefined' ) ) {
+			
+			removed = remove_collection_item( item, this.collection.shapes );
+			
+			if ( removed === true ) {
+				
+				_GridElementLibrary.shapes[ item ].$buttonsShapePicker.addClass( "disabled hidden" );
+				
+			}
+			
+		}
+		
+		// puzzles
+		
+		if ( removed !== true && ( type === 'puzzle' || typeof type === 'undefined' ) ) {
+			
+			removed = remove_collection_item( item, this.collection.puzzles );
+			
+		}
+		console.log( 'removed item ', item, ' ? ', removed );
+		
+		return removed;
+		
+	}
+	
+	function add_collection_item ( item, collectionList, libraryList ) {
+		
+		if ( libraryList.hasOwnProperty( item ) && main.index_of_value( collectionList, item ) === -1 ) {
+			
+			collectionList.push( item );
+			
+			return true;
+			
+		}
+		
+		return false;
+		
+	}
+	
+	function remove_collection_item ( item, collectionList ) {
 		
 		var index;
 		
-		index = main.index_of_value( this.skins, skin );
+		index = main.index_of_value( collectionList, item );
 		
 		if ( index !== -1 ) {
 			
-			this.skins.splice( index, 1 );
+			collectionList.splice( index, 1 );
 			
-			// skin picker buttons
-			
-			//_GridElementLibrary.skins[ skin ].$buttonsSkinPicker.addClass( "disabled hidden" );
+			return true;
 			
 		}
+		
+		return false;
 		
 	}
 	
-	function add_collection_shape ( shape ) {
-		
-		// if valid shape
-		
-		if ( _GridElementLibrary.shapes.hasOwnProperty( shape ) ) {
-			
-			this.shapes.push( shape );
-			
-			// shape picker buttons
-			
-			_GridElementLibrary.shapes[ shape ].$buttonsShapePicker.removeClass( "disabled hidden" );
-			
-		}
-		
-	}
+	/*===================================================
 	
-	function remove_collection_shape ( shape ) {
-		
-		var index;
-		
-		index = main.index_of_value( this.shapes, shape );
-		
-		if ( index !== -1 ) {
-			
-			this.shapes.splice( index, 1 );
-			
-			// shape picker buttons
-			
-			_GridElementLibrary.shapes[ shape ].$buttonsShapePicker.addClass( "disabled hidden" );
-			
-		}
-		
-	}
+	toggle shapes
+	
+	=====================================================*/
 	
 	function toggle_puzzle_shape ( parameters ) {
 		
@@ -340,7 +405,7 @@
 			
 			// valid shape
 			
-			if ( main.index_of_value( this.shapes, shape ) !== -1 && $shapePicker ) {
+			if ( main.index_of_value( this.collection.shapes, shape ) !== -1 && $shapePicker ) {
 				
 				// add / remove shapes based on whether picked
 				
@@ -902,19 +967,18 @@
 		// queue puzzle for change
 		// if queued puzzle would be same as current, treat as toggle off
 		
-		this.puzzleQueued = this.puzzle instanceof _Puzzle.Instance && this.puzzle === puzzle ? undefined : puzzle;
+		this.puzzleQueued = ( this.puzzle instanceof _Puzzle.Instance && this.puzzle === puzzle ) || ( puzzle instanceof _Puzzle.Instance && main.index_of_value( this.collection.puzzles, puzzle.libraryNames.puzzle ) === -1 ) ? undefined : puzzle;
 		this.puzzleWaiting = this.puzzleQueued instanceof _Puzzle.Instance;
 		
 		// if not currently changing puzzles
-		console.log( 'PLANTING: change puzzle, changing? ', this.puzzleChanging, ' + waiting? ', this.puzzleWaiting );
+		
 		if ( this.puzzleChanging === false ) {
 			console.log( 'PLANTING: change puzzle from ', this.puzzle, ' to ', this.puzzleQueued );
-			this.puzzleChanging = true;
-			
 			// stop last
 			
 			if ( this.puzzle instanceof _Puzzle.Instance && this.puzzle.started === true ) {
-				console.log( 'PLANTING: change puzzle stop last ', this.puzzle );
+				
+				this.puzzleChanging = true;
 				this.puzzleLast = this.puzzle;
 				this.puzzle = undefined;
 				
@@ -942,8 +1006,8 @@
 			}
 			// start new
 			else if ( this.puzzleQueued instanceof _Puzzle.Instance ) {
-				console.log( 'PLANTING: change puzzle start new ', this.puzzleQueued );
 				
+				this.puzzleChanging = true;
 				this.puzzleWaiting = false;
 				this.puzzle = this.puzzleQueued;
 				this.puzzleQueued = undefined;
@@ -964,6 +1028,12 @@
 	function change_puzzle_from_last () {
 		
 		this.puzzleChanging = false;
+		
+		if ( this.affectUI === true ) {
+			
+			this.clear_ui();
+			
+		}
 		
 		this.onPuzzleStopped.dispatch( this.puzzleLast );
 		
@@ -1106,7 +1176,7 @@
 			
 			// handle new plant
 			
-			if ( plantNew instanceof _GridElement.Instance && main.index_of_value( this.skins, plantNew.skin ) !== -1 && main.index_of_value( this.shapes, plantNew.shape ) !== -1 ) {
+			if ( plantNew instanceof _GridElement.Instance && main.index_of_value( this.collection.skins, plantNew.skin ) !== -1 && main.index_of_value( this.collection.shapes, plantNew.shape ) !== -1 ) {
 				console.log(' > PLANTING: plant to', this.plant);
 				this.plant = plantNew;
 				
@@ -1306,10 +1376,9 @@
 				this.puzzle.onShapeAdded.add( this.update_ui, this );
 				this.puzzle.onShapeRemoved.add( this.update_ui, this );
 				
-				console.log( ' this.shapes ', this.shapes.length, this.shapes, ' + puzzle shapes: ', this.puzzle.shapes.length, this.puzzle.shapes );
-				for ( i = 0, l = this.shapes.length; i < l; i++ ) {
+				for ( i = 0, l = this.collection.shapes.length; i < l; i++ ) {
 					
-					shape = this.shapes[ i ];
+					shape = this.collection.shapes[ i ];
 					shapeData = _GridElementLibrary.shapes[ shape ];
 					
 					// add tap listeners
@@ -1321,13 +1390,13 @@
 					index = main.index_of_value( this.puzzle.shapes, shape );
 					
 					// puzzle has shape
-					console.log( 'shape ', shape, ' picked? ', shapeData.picked );
+					
 					if ( index !== -1 ) {
 						
 						// ensure is picked
 						
 						if ( shapeData.picked !== true ) {
-							console.log( ' > toggling shape on ', shape );
+							
 							toggle_shape_picked( shape );
 							
 						}
@@ -1335,7 +1404,7 @@
 					}
 					// ensure not picked
 					else if ( shapeData.picked !== false ) {
-						console.log( ' > toggling shape off ', shape );
+						
 						toggle_shape_picked( shape );
 						
 					}
@@ -1372,7 +1441,7 @@
 		if ( this.puzzle instanceof _Puzzle.Instance ) {
 			
 			// overview
-			console.log( 'this.puzzle.name', this.puzzle.name );
+			
 			shared.domElements.$puzzleActiveName.html( this.puzzle.name );
 			shared.domElements.$puzzleActiveScoreBar.css( 'width', this.puzzle.scorePct + '%' );
 			shared.domElements.$puzzleActiveElementCount.html( this.puzzle.elements.length );
@@ -1394,9 +1463,9 @@
 		
 		// shapes
 		
-		for ( i = 0, l = this.shapes.length; i < l; i++ ) {
+		for ( i = 0, l = this.collection.shapes.length; i < l; i++ ) {
 			
-			shape = this.shapes[ i ];
+			shape = this.collection.shapes[ i ];
 			
 			// remove tap listeners
 			
@@ -1413,13 +1482,18 @@
 		this.puzzleLast.onShapeRemoved.remove( this.update_ui, this );
 		this.puzzleLast.onShapesNeeded.remove( this.setup_ui_puzzle, this );
 		this.puzzleLast.onShapesReady.remove( this.update_ui_puzzle, this );
-		this.puzzleLast.onCompleted.remove( this.complete_ui_puzzle, this );
 		
 		// deselect plant
 		
 		this.select_ui_plant();
 		
-		// remove puzzle from ui
+	}
+	
+	function clear_ui () {
+		
+		console.log( 'PLANTING: UI cleared' );
+		
+		this.puzzleLast.onCompleted.remove( this.complete_ui_puzzle, this );
 		
 		// hide puzzle
 		main.dom_collapse( {
@@ -1499,6 +1573,22 @@
 			shared.signals.onGameResumed.addOnce( on_resume, this );
 			this.puzzle.onShapesReady.add( this.update_ui_puzzle, this );
 			
+			// update status
+			
+			if ( this.puzzle.completed === true ) {
+				
+				shared.domElements.$puzzleActiveCompletionIcons.addClass( 'hidden' ).filter( "#" + this.puzzle.scoreStatus.toLowerCase()  ).removeClass( 'hidden' );
+				shared.domElements.$puzzleActiveStatusText.html( "completed at level '" + this.puzzle.scoreStatus + "'" );
+				
+			}
+			else {
+				
+				shared.domElements.$puzzleActiveStatusText.html( 'waiting for shapes' );
+				
+			}
+			
+			shared.domElements.$puzzleActiveStatusIcons.addClass( 'hidden' ).filter( "#waiting" ).removeClass( 'hidden' );
+			
 			// if not already on farming menu, isolate and show puzzle start menu
 			
 			if ( shared.domElements.$menuFarming.is( '.active' ) !== true ) {
@@ -1567,8 +1657,19 @@
 			
 			// update status
 			
+			if ( this.puzzle.completed === true ) {
+				
+				shared.domElements.$puzzleActiveCompletionIcons.addClass( 'hidden' ).filter( "#" + this.puzzle.scoreStatus.toLowerCase()  ).removeClass( 'hidden' );
+				shared.domElements.$puzzleActiveStatusText.html( "completed at level '" + this.puzzle.scoreStatus + "'" );
+				
+			}
+			else {
+				
+				shared.domElements.$puzzleActiveStatusText.html( 'ready' );
+				
+			}
+			
 			shared.domElements.$puzzleActiveStatusIcons.addClass( 'hidden' ).filter( "#ready" ).removeClass( 'hidden' );
-			shared.domElements.$puzzleActiveStatusText.html( 'ready' );
 			
 			// hide shapes picker elements
 			
@@ -1582,6 +1683,10 @@
 				element: $().add( shared.domElements.$puzzleActiveReady ).add( shared.domElements.$puzzleActiveStartedPlanReady ),
 				show: true
 			} );
+			
+			// ensure started plan ready in view
+			
+			shared.domElements.$puzzleActiveStartedPlanReady.get( 0 ).scrollIntoView( true );
 			
 			// handle puzzle shape activators
 			
@@ -1625,11 +1730,6 @@
 		
 		console.log( 'PLANTING: UI puzzle stop' );
 		
-		// update status
-		
-		shared.domElements.$puzzleActiveStatusIcons.addClass( 'hidden' ).filter( "#waiting" ).removeClass( 'hidden' );
-		shared.domElements.$puzzleActiveStatusText.html( 'waiting for shapes' );
-		
 		// hide ready items
 		
 		main.dom_collapse( {
@@ -1658,11 +1758,142 @@
 	
 	function complete_ui_puzzle () {
 		
-		console.log( 'PUZZLE COMPLETE INFO: ', this.puzzle, this.puzzleLast );
-		
-		if ( this.puzzle instanceof _Puzzle.Instance ) {
+		var scores;
+		console.log( 'PLANTING: UI puzzle complete, changed? ', this.puzzleLast.changed );
+		if ( this.puzzleLast instanceof _Puzzle.Instance && this.puzzleLast.changed === true ) {
 			
-			console.log( 'this.numGridModules', this.puzzle.numGridModules, 'this.numElementsMin', this.puzzle.numElementsMin, ' this.numElementsUsed ', this.puzzle.numElementsUsed, ' scoreLast ', this.scoreLast, ' score ', this.puzzle.score, 'scorePct', this.puzzle.scorePct, ' this.puzzle.scoreStatus', this.puzzle.scoreStatus, 'this.puzzle.scoreTitle', this.puzzle.scoreTitle, 'this.scoreHint', this.puzzle.scoreHint, ' this.scores ', this.puzzle.scores );
+			// scores
+			
+			scores = this.puzzleLast.scores;
+			
+			$().add( shared.domElements.$rewardsPoorList )
+				.add( shared.domElements.$rewardsGoodList )
+				.add( shared.domElements.$rewardsPerfectList )
+				.empty();
+			
+			$().add( shared.domElements.$scorePoor )
+					.add( shared.domElements.$rewardsPoor )
+					.add( shared.domElements.$scoreGood )
+					.add( shared.domElements.$rewardsGood )
+					.add( shared.domElements.$scorePerfect )
+					.add( shared.domElements.$rewardsPerfect )
+					.removeClass( 'active' );
+			
+			if ( scores.poor.beat === true ) {
+				
+				shared.domElements.$scorePoor.addClass( 'active' );
+				shared.domElements.$rewardsPoor.addClass( 'active' );
+				
+			}
+			
+			if ( scores.good.beat === true  ) {
+				
+				shared.domElements.$scoreGood.addClass( 'active' );
+				shared.domElements.$rewardsGood.addClass( 'active' );
+				
+			}
+			
+			if ( scores.perfect.beat === true ) {
+				
+				shared.domElements.$scorePerfect.addClass( 'active' );
+				shared.domElements.$rewardsPerfect.addClass( 'active' );
+				
+			}
+			
+			handle_rewards.call( this, scores.poor.rewards, shared.domElements.$rewardsPoorList, scores.poor.beat === true  );
+			handle_rewards.call( this, scores.good.rewards, shared.domElements.$rewardsGoodList, scores.good.beat === true  );
+			handle_rewards.call( this, scores.perfect.rewards, shared.domElements.$rewardsPerfectList, scores.perfect.beat === true  );
+			
+			// properties
+			
+			shared.domElements.$scorePuzzleName.html( this.puzzleLast.name );
+			shared.domElements.$scoreTitle.html( this.puzzleLast.scoreTitle );
+			shared.domElements.$scoreElementCount.html( this.puzzleLast.numElementsUsed );
+			shared.domElements.$scoreElementCountGoal.html( this.puzzleLast.numElementsMin );
+			shared.domElements.$scorePct.html( this.puzzleLast.scorePct );
+			shared.domElements.$scoreHint.html( this.puzzleLast.scoreHint );
+			
+			// score menu
+			
+			_UIQueue.add( {
+				element: shared.domElements.$score,
+				container: shared.domElements.$menuActive,
+				activate: function () {
+					
+					shared.domElements.$score.placeholdme()
+						.appendTo( shared.domElements.$menuActive.data( '$inner' ) );
+					
+				},
+				deactivate: function () {
+					
+					shared.domElements.$score.placeholdme( 'revert' );
+					
+				},
+				priority: true
+			} );
+			
+		}
+		
+	}
+	
+	function handle_rewards ( rewards, $list, give ) {
+		
+		var i, l,
+			reward,
+			$reward,
+			type,
+			typeDisplay,
+			tipTitle,
+			isNew;
+		
+		for ( i = 0, l = rewards.length; i < l; i++ ) {
+			
+			reward = rewards[ i ];
+			
+			type = $.trim( reward.type );
+			typeDisplay = main.str_to_title( type );
+			
+			// show in ui
+			
+			$reward = shared.domElements.cloneables.$reward.clone()
+				.find( '.reward-icon' )
+					.attr( 'src', shared.pathToIcons + reward.icon )
+				.end()
+				.find( '.reward-name' )
+					.html( main.str_to_title( $.trim( reward.name ) ) )
+				.end()
+				.find( '.reward-type ' )
+					.html( typeDisplay )
+				.end()
+				.appendTo( $list );
+			
+			// give by type
+			
+			if ( give === true ) {
+				
+				isNew = this.add_to_collection( reward.data || reward.name, type );
+				
+				if ( isNew === true ) {
+					
+					$reward.addClass( 'new' );
+					
+					tipTitle = 'New ' + typeDisplay + '!';
+					
+				}
+				else {
+					
+					tipTitle = 'You already have it!';
+					
+				}
+				
+			}
+			else {
+				
+				tipTitle = 'Unlock at higher score!';
+				
+			}
+			
+			$reward.tooltip( { title: tipTitle, trigger: 'hover' } );
 			
 		}
 		

@@ -149,7 +149,7 @@
 				
 				elements.push( element );
 				items.push( item );
-				console.log( 'UIQueue: ADD, queues', queues, ' containers', containers, 'items', items, ' elements', elements );
+				
 				step( item.queue );
 				
 			}
@@ -215,7 +215,7 @@
 			index = main.index_of_value( containers, element );
 			
 			if ( index !== -1 ) {
-				console.log( 'UIQueue: element is container');
+				
 				clear( queues[ index ] );
 				
 			}
@@ -223,7 +223,7 @@
 			// if active, and next element is not the same as item element, deactivate
 			
 			if ( item === active && typeof item.deactivate === 'function' && ( queue.priority.length === 0 || !items_identical( item, queue.priority[ 0 ] ) ) && !items_identical( item, queue.general ) ) {
-				console.log( 'UIQueue: deactivate item ' );
+				
 				item.deactivate();
 				
 			}
@@ -249,13 +249,13 @@
 				}
 				
 				if ( typeof item.last === 'function' ) {
-					console.log( 'UIQueue: last' );
+					
 					item.last();
 					
 				}
 				
 			}
-			console.log( 'UIQueue: REMOVE, queues', queues, ' containers', containers, 'items', items, ' elements', elements );
+			
 		}
 	
 	}
@@ -270,18 +270,18 @@
 		
 		var queue = find_queue( parameters ),
 			$container,
-			isFirst,
 			active,
-			activeLast;
+			activeLast,
+			activePriority;
 		
 		if ( queue instanceof Queue ) {
 			
 			activeLast = queue.active;
-			isFirst = typeof activeLast === 'undefined';
+			activePriority = item_priority( activeLast );
 			
 			// step queue
 			
-			if ( isFirst || ( parameters.force === true || activeLast.priority !== true ) ) {
+			if ( parameters.force === true || activePriority !== true ) {
 				
 				remove( activeLast );
 				
@@ -297,13 +297,13 @@
 					active = queue.active = queue.general;
 					
 				}
-				console.log( 'UIQueue: active', active, typeof active !== 'undefined' );
+				
 				if ( typeof active !== 'undefined' ) {
 					
 					// if active is first
 					
-					if ( isFirst && typeof active.first === 'function' ) {
-						console.log( 'UIQueue: first' );
+					if ( typeof activeLast === 'undefined' && typeof active.first === 'function' ) {
+						
 						active.first();
 						
 					}
@@ -324,20 +324,13 @@
 					}
 					
 					if ( typeof active.activate === 'function' && !items_identical( active, activeLast ) ) {
-						console.log( 'UIQueue: activate' );
+						
 						active.activate();
 						
 					}
-					console.log( 'UIQueue: STEP, queues', queues, ' containers', containers, 'items', items, ' elements', elements );
 					
 				}
-				else {
-					console.log( 'UIQueue: STEP none remain!' );
-				}
 				
-			}
-			else {
-				console.log( 'UIQueue: STEP blocked by priority' );
 			}
 			
 		}
@@ -380,7 +373,7 @@
 				remove( queue.active );
 				
 			}
-			console.log( 'UIQueue: CLEAR, queues', queues, ' containers', containers, 'items', items, ' elements', elements );
+			
 		}
 		
 	}
@@ -394,6 +387,37 @@
 	function items_identical ( itemA, itemB ) {
 		
 		return typeof itemA !== 'undefined' && typeof itemB !== 'undefined' && itemA.element === itemB.element && itemA.activate === itemB.activate && itemA.deactivate === itemB.deactivate;
+		
+	}
+	
+	function item_priority ( item ) {
+		
+		var priority = false,
+			index;
+		
+		if ( typeof item !== 'undefined' ) {
+			
+			if ( item.priority === true ) {
+				
+				priority = item.priority;
+				
+			}
+			// check if item is container and if active in that queue is priority
+			else  {
+				
+				index = main.index_of_value( containers, item.element );
+				
+				if ( index !== -1 ) {
+					
+					return item_priority( queues[ index ].active );
+					
+				}
+				
+			}
+			
+		}
+		
+		return priority;
 		
 	}
 	

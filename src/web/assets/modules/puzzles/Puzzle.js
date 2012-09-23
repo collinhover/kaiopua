@@ -148,6 +148,7 @@
 		parameters.grid.puzzle = this;
 		
 		this.grid = new _Grid.Instance( parameters.grid );
+		this.grid.onStateChanged.add( on_grid_changed, this );
 		this.add( this.grid );
 		
 		// toggle
@@ -218,8 +219,8 @@
 		
 		// properties
 		
-		this.started = this.completed = this.perfect = false;
-		this.score = this.scoreLast = this.scorePct = 0;
+		this.started = this.completed = this.perfect = this.changed = false;
+		this.score = this.scoreLast = this.scoreMax = this.scorePct = 0;
 		this.numElementsUsed = 0;
 		this.scoreTitle = this.scoreStatus = '';
 		this.scores.reset();
@@ -247,6 +248,8 @@
 		var i, l,
 			elements,
 			element;
+		
+		this.changed = false;
 		
 		// remove any element with shape in puzzle not in shapes list
 		
@@ -306,8 +309,6 @@
 	function start () {
 		console.log( this, this.name, ' START!' );
 		this.started = true;
-		
-		// TODO: start spawning farmer enemies that plant bad plants or destroy plants?
 		
 		// signal
 		
@@ -415,6 +416,18 @@
 	
 	/*===================================================
 	
+	grid
+	
+	=====================================================*/
+	
+	function on_grid_changed () {
+		
+		this.changed = true;
+		
+	}
+	
+	/*===================================================
+	
 	complete
 	
 	=====================================================*/
@@ -423,7 +436,6 @@
 		
 		var i, l,
 			j, k,
-			numElementsMin,
 			numElementsToMin,
 			scoreData,
 			scoreHighestIndex,
@@ -441,106 +453,102 @@
 		// if completed
 		
 		if ( this.completed === true ) {
+				
+			// get elements filling grid
 			
-			// until has perfect score
+			this.numElementsUsed = this.elements.length;
 			
-			if ( this.perfect !== true ) {
+			// compare num elements used to base num required
+			
+			numElementsToMin = Math.max( 0, this.numElementsUsed - this.numElementsMin );
+			
+			// store score
+			
+			this.scoreLast = this.score;
+			
+			this.score = Math.min( 1, 1 - numElementsToMin / ( this.numGridModules - this.numElementsMin ) );
+			
+			if ( isNaN( this.score ) || this.score < 0 ) {
 				
-				// get elements filling grid
+				this.score = 1;
 				
-				this.numElementsUsed = this.elements.length;
+			}
+			
+			this.scoreMax = Math.max( this.score, this.scoreMax );
+			
+			this.scorePct = Math.round( this.score * 100 ) + "%";
+			console.log( 'this.numElementsUsed', this.numElementsUsed, 'this.numElementsMin', this.numElementsMin, ' numElementsToMin / ( this.numGridModules - this.numElementsMin )', (numElementsToMin / ( this.numGridModules - this.numElementsMin )), ' score', this.score);
+			this.perfect = this.score === 1 ? true : false;
+			
+			// use score map to determine status/icon/rewards
+			
+			rewards = [];
+			
+			for ( i = 0, l = this.scores.map.length; i < l; i++ ) {
 				
-				// compare num elements used to base num required
+				scoreData = this.scores[ this.scores.map[ i ] ];
 				
-				numElementsToMin = Math.max( 0, this.numElementsUsed - this.numElementsMin );
+				// set highest score
 				
-				// store score
-				
-				this.scoreLast = this.score;
-				
-				this.score = Math.min( 1, 1 - numElementsToMin / ( this.numGridModules - numElementsMin ) );
-				
-				if ( isNaN( this.score ) || this.score < 0 ) {
+				if ( this.score >= scoreData.threshold ) {
 					
-					this.score = 1;
+					scoreHighestInfo = scoreData;
+					
+					scoreHighestIndex = i;
+					
+					scoreData.beat = true;
 					
 				}
 				
-				this.scorePct = Math.round( this.score * 100 ) + "%";
+			}
+			
+			this.scoreStatus = scoreHighestInfo.status;
+			
+			// titles
+			
+			if ( this.perfect === true ) {
 				
-				this.perfect = this.score === 1 ? true : false;
+				this.scoreTitle = "Hurrah! You completed the " + this.name + " puzzle!";
 				
-				// use score map to determine status/icon/rewards
+			}
+			else {
 				
-				rewards = [];
-				
-				for ( i = 0, l = this.scores.map.length; i < l; i++ ) {
+				if ( scoreHighestIndex === 0 ) {
 					
-					scoreData = this.scores[ this.scores.map[ i ] ];
-					
-					// set highest score
-					
-					if ( this.score >= scoreData.threshold ) {
-						
-						scoreHighestInfo = scoreData;
-						
-						scoreHighestIndex = i;
-						
-						scoreData.beat = true;
-						
-					}
-					
-				}
-				
-				this.scoreStatus = scoreHighestInfo.status;
-				
-				// titles
-				
-				if ( this.perfect === true ) {
-					
-					this.scoreTitle = "Hurrah! You completed the " + this.name + " puzzle!";
+					this.scoreTitle = "You've got the basics of the " + this.name + " puzzle!";
 					
 				}
 				else {
 					
-					if ( scoreHighestIndex === 0 ) {
-						
-						this.scoreTitle = "You've got the basics of the " + this.name + " puzzle!";
-						
-					}
-					else {
-						
-						this.scoreTitle = "Getting better at the " + this.name + " puzzle!";
-						
-					}
+					this.scoreTitle = "Getting better at the " + this.name + " puzzle!";
 					
 				}
 				
-				// reset hints
+			}
+			
+			// reset hints
+			
+			if ( this.hints.list.length === 0 && this.hints.used.length > 0 ) {
 				
-				if ( this.hints.list.length === 0 && this.hints.used.length > 0 ) {
-					
-					this.hints.list = this.hints.list.concat( this.hints.used.splice( 0, this.hints.used.length ) );
-					
-				}
+				this.hints.list = this.hints.list.concat( this.hints.used.splice( 0, this.hints.used.length ) );
 				
-				// hint
+			}
+			
+			// hint
+			
+			if ( this.hints.list.length > 0 ) {
 				
-				if ( this.hints.list.length > 0 ) {
-					
-					this.scoreHint = this.hints.list.shift();
-					
-					this.hints.used.push( this.scoreHint );
-					
-				}
+				this.scoreHint = this.hints.list.shift();
 				
-				// add to list
+				this.hints.used.push( this.scoreHint );
 				
-				if ( main.index_of_value( allPuzzlesCompleted, this ) === -1 ) {
-					
-					allPuzzlesCompleted.push( this );
-					
-				}
+			}
+			
+			// add to list
+			
+			if ( main.index_of_value( allPuzzlesCompleted, this ) === -1 ) {
+				
+				allPuzzlesCompleted.push( this );
 				
 			}
 			
@@ -608,7 +616,6 @@
 		$.extend( this.poor, parameters.poor );
 		$.extend( this.good, parameters.good );
 		$.extend( this.perfect, parameters.perfect );
-		$.extend( this.map, parameters.map );
 		
 		// sort by threshold
 		
@@ -630,39 +637,8 @@
 			scoreData = this[ this.map[ i ] ];
 			
 			scoreData.beat = false;
-			scoreData.rewarded = false;
 			
 		}
-		
-	};
-	
-	Scores.prototype.reward = function ( score ) {
-		
-		var i, l,
-			j, jl,
-			scoreId,
-			scoreData,
-			rewards,
-			results = {};
-		
-		for ( i = 0, l = this.map.length; i < l; i++ ) {
-			
-			scoreId = this.map[ i ];
-			scoreData = this[ scoreId ];
-			
-			results[ scoreId ] = [];
-			
-			if ( scoreData.beat === true ) {
-				
-				scoreData.rewarded = true;
-				
-				results[ scoreId ] = results[ scoreId ].concat( scoreData.rewards );
-				
-			}
-			
-		}
-		
-		return results;
 		
 	};
 	

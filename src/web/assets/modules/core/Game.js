@@ -449,6 +449,10 @@
 		
 		shared.domElements = shared.domElements || {};
 		
+		shared.domElements.cloneables = shared.domElements.cloneables || {};
+		
+		shared.domElements.cloneables.$reward = $( '<div class="reward"><button class="btn btn-large btn-circle-large"><img src="" class="iconk-giant reward-icon"></button><p class="reward-name"></p><p><small class="reward-type"></small></p></div>' );
+		
 		shared.domElements.$game = $('#game');
 		shared.domElements.$uiGameDimmer = $('#uiGameDimmer');
 		shared.domElements.$uiBlocker = $('#uiBlocker');
@@ -519,6 +523,25 @@
 		shared.domElements.$puzzleActiveReady = $( "#puzzleActiveReady" );
 		shared.domElements.$puzzleActiveMap = $( "#puzzleActiveMap" );
 		shared.domElements.$puzzleActiveRewards = $( "#puzzleActiveRewards" );
+		
+		shared.domElements.$score = $( "#score" );
+		shared.domElements.$scorePuzzleName = $( ".score-puzzle-name" );
+		shared.domElements.$scoreTitle = $( "#scoreTitle" );
+		shared.domElements.$scoreElementCount = $( ".score-element-count" );
+		shared.domElements.$scoreElementCountGoal = $( ".score-element-count-goal" );
+		shared.domElements.$scoreBar = $( "#scoreBar" );
+		shared.domElements.$scorePoor = $( "#scorePoor" );
+		shared.domElements.$scoreGood = $( "#scoreGood" );
+		shared.domElements.$scorePerfect = $( "#scorePerfect" );
+		shared.domElements.$scorePct = $( ".score-pct" );
+		shared.domElements.$scoreRewards = $( "#scoreRewards" );
+		shared.domElements.$rewardsPoor = $( "#rewardsPoor" );
+		shared.domElements.$rewardsGood = $( "#rewardsGood" );
+		shared.domElements.$rewardsPerfect = $( "#rewardsPerfect" );
+		shared.domElements.$rewardsPoorList = shared.domElements.$rewardsPoor.find( ".reward-list" );
+		shared.domElements.$rewardsGoodList = shared.domElements.$rewardsGood.find( ".reward-list" );
+		shared.domElements.$rewardsPerfectList = shared.domElements.$rewardsPerfect.find( ".reward-list" );
+		shared.domElements.$scoreHint = $( "#scoreHint" );
 		
 		shared.domElements.$plant = $('#plant');
 		shared.domElements.$plantActive = $("#plantActive");

@@ -48,9 +48,9 @@
 		
 		// puzzles
 		
-		_PuzzleLibrary.parameters = {};
+		_PuzzleLibrary.puzzles = {};
 		
-		Object.defineProperty(_PuzzleLibrary.parameters, 'Tutorial', { 
+		Object.defineProperty(_PuzzleLibrary.puzzles, 'tutorial', { 
 			value : {
 				name: 'Tutorial',
 				geometry: "assets/models/Puzzle_Tutorial.js",
@@ -62,19 +62,32 @@
 					moduleInstance: _Dirt.Instance
 				},
 				toggleSwitch: "assets/models/Puzzle_Tutorial_Toggle.js",
-				numElementsMin: 0,
+				numElementsMin: 6,
 				numShapesRequired: 2,
+				hints: [
+					'Remember, the less plants you use, the better your score!'
+				],
 				scores: {
 					poor: {
 						rewards: [
-							{ icon: shared.pathToIcons + 'plant_rev_64.png', name: 'Taro', type: 'skin', data: 'taro_003'/*, callback: _Farming.give_plants,*/ }
+							{ icon: 'shape_tromino_l_64.png', name: 'Tromino L', type: 'shape', data: 'trominol' }
+						]
+					},
+					good: {
+						rewards: [
+							{ icon: 'grid_64.png', name: 'Rolling Hills', type: 'puzzle', data: 'rollinghills' }
+						]
+					},
+					perfect: {
+						rewards: [
+							{ icon: 'pineapple_64.png', name: 'Pineapple', type: 'skin', data: 'pineapple' }
 						]
 					}
 				}
 			}
 		});
 		
-		Object.defineProperty(_PuzzleLibrary.parameters, 'Abilities', { 
+		Object.defineProperty(_PuzzleLibrary.puzzles, 'abilities', { 
 			value : {
 				name: 'Abilities',
 				geometry: "assets/models/Puzzle_Basics_Abilities.js",
@@ -94,19 +107,19 @@
 				scores: {
 					poor: {
 						rewards: [
-							{ icon: shared.pathToIcons + 'plant_rev_64.png', name: 'Rock', type: 'skin', data: 'rock'/*, callback: _Farming.give_plants,*/ }
+							{ icon: 'plant_64.png', name: 'Rock', type: 'skin', data: 'rock' }
 						]
 					},
 					perfect: {
 						rewards: [
-							{ icon: shared.pathToIcons + 'plant_rev_64.png', name: 'Pineapple', type: 'skin', data: 'pineapple_001'/*, callback: _Farming.give_plants,*/ }
+							{ icon: 'pineapple_64.png', name: 'Pineapple', type: 'skin', data: 'pineapple' }
 						]
 					}
 				}
 			}
 		});
 		
-		Object.defineProperty(_PuzzleLibrary.parameters, 'Rolling Hills', { 
+		Object.defineProperty(_PuzzleLibrary.puzzles, 'rollinghills', { 
 			value : {
 				name: 'Rolling Hills',
 				geometry: "assets/models/Puzzle_Rolling_Hills.js",
@@ -128,7 +141,7 @@
 				scores: {
 					poor: {
 						rewards: [
-							{ icon: shared.pathToIcons + 'plant_rev_64.png', name: 'Pineapple', type: 'skin', data: 'pineapple_001'/*, callback: _Farming.give_plants,*/ }
+							{ icon: 'plant_64.png', name: 'Pineapple', type: 'skin', data: 'pineapple' }
 						]
 					}
 				}
@@ -145,11 +158,41 @@
 	
 	function build( parameters ) {
 		
+		var puzzleName,
+			puzzle;
+		
+		var puzzleName,
+			puzzle;
+		
 		// handle parameters
 		
 		parameters = parameters || {};
 		
-		return new _Puzzle.Instance( main.extend( parameters, _PuzzleLibrary.parameters.hasOwnProperty( parameters.name ) ? _PuzzleLibrary.parameters[ parameters.name ] : {} ) );
+		// get and format name
+		
+		if ( typeof parameters === 'string' ) {
+			
+			puzzleName = parameters;
+			
+		}
+		else  {
+			
+			puzzleName = parameters.id || parameters.name;
+		
+		}
+		
+		puzzleName = puzzleName.toLowerCase();
+		
+		// combine passed parameters with library parameters
+		
+		parameters = main.extend( _PuzzleLibrary.puzzles[ puzzleName ], parameters );
+		
+		puzzle = new _Puzzle.Instance( parameters );
+		puzzle.libraryNames = {
+			puzzle: puzzleName
+		};
+		
+		return puzzle;
 		
 	}
 	

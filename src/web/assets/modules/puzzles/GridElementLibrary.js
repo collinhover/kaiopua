@@ -58,13 +58,13 @@
 		
 		// monomino
 		
-		_GridElementLibrary.shapes.monomino = {
+		_GridElementLibrary.shapes[ 'monomino' ] = {
 			layout: [ [ 1 ] ]
 		};
 		
 		// domino
 		
-		_GridElementLibrary.shapes.domino = {
+		_GridElementLibrary.shapes[ 'domino' ] = {
 			layout: [
 				[ 0, 1, 0 ],
 				[ 0, 1, 0 ],
@@ -74,14 +74,14 @@
 		
 		// tromino
 		
-		_GridElementLibrary.shapes.trominoI = {
+		_GridElementLibrary.shapes[ 'trominoi' ] = {
 			layout: [
 				[ 0, 1, 0 ],
 				[ 0, 1, 0 ],
 				[ 0, 1, 0 ]
 			]
 		};
-		_GridElementLibrary.shapes.trominoL = {
+		_GridElementLibrary.shapes[ 'trominol' ] = {
 			layout: [
 				[ 0, 1, 0 ],
 				[ 0, 1, 1 ],
@@ -91,49 +91,49 @@
 		
 		// tetromino
 		
-		_GridElementLibrary.shapes.tetrominoJ = {
+		_GridElementLibrary.shapes[ 'tetrominoj' ] = {
 			layout: [
 				[ 0, 1, 0 ],
 				[ 0, 1, 0 ],
 				[ 1, 1, 0 ]
 			]
 		};
-		_GridElementLibrary.shapes.tetrominoL = {
+		_GridElementLibrary.shapes[ 'tetrominol' ] = {
 			layout: [
 				[ 0, 1, 0 ],
 				[ 0, 1, 0 ],
 				[ 0, 1, 1 ]
 			]
 		};
-		_GridElementLibrary.shapes.tetrominoS = {
+		_GridElementLibrary.shapes[ 'tetrominos' ] = {
 			layout: [
 				[ 0, 1, 1 ],
 				[ 1, 1, 0 ],
 				[ 0, 0, 0 ]
 			]
 		};
-		_GridElementLibrary.shapes.tetrominoZ = {
+		_GridElementLibrary.shapes[ 'tetrominoz' ] = {
 			layout: [
 				[ 1, 1, 0 ],
 				[ 0, 1, 1 ],
 				[ 0, 0, 0 ]
 			]
 		};
-		_GridElementLibrary.shapes.tetrominoT = {
+		_GridElementLibrary.shapes[ 'tetrominot' ] = {
 			layout: [
 				[ 1, 1, 1 ],
 				[ 0, 1, 0 ],
 				[ 0, 0, 0 ]
 			]
 		};
-		_GridElementLibrary.shapes.tetrominoO = {
+		_GridElementLibrary.shapes[ 'tetrominoo' ] = {
 			layout: [
 				[ 0, 1, 1 ],
 				[ 0, 1, 1 ],
 				[ 0, 0, 0 ]
 			]
 		};
-		_GridElementLibrary.shapes.tetrominoI = {
+		_GridElementLibrary.shapes[ 'tetrominoi' ] = {
 			layout: [
 				[ 0, 0, 1, 0 ],
 				[ 0, 0, 1, 0 ],
@@ -173,7 +173,7 @@
 		
 		// skins
 		
-		_GridElementLibrary.skins.taro = {
+		_GridElementLibrary.skins[ 'taro' ] = {
 			container: {
 				geometry: 'assets/models/Plant_Dirt_Mound.js'
 			},
@@ -182,13 +182,13 @@
 			}
 		};
 		
-		_GridElementLibrary.skins.pineapple = {
+		_GridElementLibrary.skins[ 'pineapple' ] = {
 			customizations: {
 				geometry: 'assets/models/Plant_Pineapple.js'
 			}
 		};
 		
-		_GridElementLibrary.skins.rock = {
+		_GridElementLibrary.skins[ 'rock' ] = {
 			customizations: {
 				geometry: 'assets/models/Plant_Rock.js'
 			}
@@ -233,19 +233,30 @@
 	
 	function build ( parameters ) {
 		
+		var shapeName,
+			skinName,
+			gridElement;
+		
 		// handle parameters
 		
 		parameters = parameters || {};
 		
-		parameters.shape = _GridElementLibrary.shapes.hasOwnProperty( parameters.shape ) ? parameters.shape : 'monomino';
-		parameters.skin = _GridElementLibrary.skins.hasOwnProperty( parameters.skin ) ? parameters.skin : 'taro';
+		shapeName = _GridElementLibrary.shapes.hasOwnProperty( parameters.shape ) ? parameters.shape.toLowerCase() : 'monomino';
+		skinName = _GridElementLibrary.skins.hasOwnProperty( parameters.skin ) ? parameters.skin.toLowerCase() : 'taro';
 		
 		// copy parameters
 		
-		parameters = main.extend( parameters, _GridElementLibrary.shapes[ parameters.shape ] );
-		parameters = main.extend( parameters, _GridElementLibrary.skins[ parameters.skin ] );
+		parameters = main.extend( _GridElementLibrary.shapes[ shapeName ], parameters );
+		parameters = main.extend( _GridElementLibrary.skins[ skinName ], parameters );
 		console.log( 'BUILD GRID ELEMENT', parameters );
-		return new _GridElement.Instance( parameters );
+		gridElement = new _GridElement.Instance( parameters );
+		gridElement.libraryNames = {
+			shape: shapeName,
+			skin: skinName
+		};
+		
+		
+		return gridElement;
 		
 	}
 	

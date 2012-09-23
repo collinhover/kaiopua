@@ -263,6 +263,8 @@ var KAIOPUA = (function (main) {
 		main.index_of_properties = index_of_properties;
 		
 		main.css_property_supported = css_property_supported;
+		main.str_to_camel = str_to_camel;
+		main.str_to_title = str_to_title;
 		main.dom_extract = dom_extract;
 		main.dom_generate_image = dom_generate_image;
 		main.dom_ignore_pointer = dom_ignore_pointer;
@@ -455,7 +457,7 @@ var KAIOPUA = (function (main) {
 		
 		if ( typeof source !== 'undefined' ) {
 			
-			destination = destination || {};
+			destination = main.type( destination ) === 'object' ? destination : {};
 			
 			propertyNames = Object.getOwnPropertyNames( source );
 			
@@ -740,6 +742,14 @@ var KAIOPUA = (function (main) {
 		}
 		
 		return camelized;
+		
+	}
+	
+	function str_to_title ( str ) {
+		
+		return str.toLowerCase().replace( /\b[a-z]/g, function( letter ) {
+			return letter.toUpperCase();
+		} );
 		
 	}
 	

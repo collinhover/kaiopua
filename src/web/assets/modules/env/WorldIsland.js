@@ -400,17 +400,17 @@
 			
 			// tutorial
 			
-			me.parts.puzzleTutorial = _PuzzleLibrary.build( { name: 'Tutorial' } );
+			me.parts.puzzleTutorial = _PuzzleLibrary.build( 'tutorial' );
 			me.parts.body.add( me.parts.puzzleTutorial );
 			
 			// basics abilities
 			
-			me.parts.puzzleBasicsAbilities = _PuzzleLibrary.build( { name: 'Abilities' } );
+			me.parts.puzzleBasicsAbilities = _PuzzleLibrary.build( 'abilities' );
 			me.parts.body.add( me.parts.puzzleBasicsAbilities );
 			
 			// rolling hills
 			
-			me.parts.puzzleRollingHills = _PuzzleLibrary.build( { name: 'Rolling Hills' } );
+			me.parts.puzzleRollingHills = _PuzzleLibrary.build( 'rollinghills' );
 			me.parts.body.add( me.parts.puzzleRollingHills );
 			
 		}

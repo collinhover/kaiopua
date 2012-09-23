@@ -112,47 +112,47 @@
 							<img src="assets/icons/shape_domino_rev_64.png" class="iconk-large">
 						</button>
 					</li>
-					<li class="shape-trominoI">
+					<li class="shape-trominoi">
 						<button class="btn btn-inverse btn-circle-small">
 							<img src="assets/icons/shape_tromino_i_rev_64.png" class="iconk-large">
 						</button>
 					</li>
-					<li class="shape-trominoL">
+					<li class="shape-trominol">
 						<button class="btn btn-inverse btn-circle-small">
 							<img src="assets/icons/shape_tromino_l_rev_64.png" class="iconk-large">
 						</button>
 					</li>
-					<li class="shape-tetrominoI">
+					<li class="shape-tetrominoi">
 						<button class="btn btn-inverse btn-circle-small">
 							<img src="assets/icons/shape_tetromino_i_rev_64.png" class="iconk-large">
 						</button>
 					</li>
-					<li class="shape-tetrominoJ">
+					<li class="shape-tetrominoj">
 						<button class="btn btn-inverse btn-circle-small">
 							<img src="assets/icons/shape_tetromino_j_rev_64.png" class="iconk-large">
 						</button>
 					</li>
-					<li class="shape-tetrominoL">
+					<li class="shape-tetrominol">
 						<button class="btn btn-inverse btn-circle-small">
 							<img src="assets/icons/shape_tetromino_l_rev_64.png" class="iconk-large">
 						</button>
 					</li>
-					<li class="shape-tetrominoO">
+					<li class="shape-tetrominoo">
 						<button class="btn btn-inverse btn-circle-small">
 							<img src="assets/icons/shape_tetromino_o_rev_64.png" class="iconk-large">
 						</button>
 					</li>
-					<li class="shape-tetrominoS">
+					<li class="shape-tetrominos">
 						<button class="btn btn-inverse btn-circle-small">
 							<img src="assets/icons/shape_tetromino_s_rev_64.png" class="iconk-large">
 						</button>
 					</li>
-					<li class="shape-tetrominoT">
+					<li class="shape-tetrominot">
 						<button class="btn btn-inverse btn-circle-small">
 							<img src="assets/icons/shape_tetromino_t_rev_64.png" class="iconk-large">
 						</button>
 					</li>
-					<li class="shape-tetrominoZ">
+					<li class="shape-tetrominoz">
 						<button class="btn btn-inverse btn-circle-small">
 							<img src="assets/icons/shape_tetromino_z_rev_64.png" class="iconk-large">
 						</button>
@@ -419,7 +419,7 @@
 						
 						<header class="subhead">
 							<img src="assets/icons/tiki_rev_128.png"  class="iconk-doublegiant">
-							<h1 class="hero-type logo-type"><span class="puzzle-active-name">Tutorial</span> Complete</h1>
+							<h1 class="hero-type logo-type"><span class="score-puzzle-name">Tutorial</span> Complete</h1>
 							<h2 id="scoreTitle" class="sidekick-type">Hurrah, you solved it!</h2>
 						</header>
 						
@@ -432,7 +432,7 @@
 										<img src="assets/icons/farming_rev_64.png" class="iconk-medium">
 										<h6>Planted</h6>
 									</div>
-									<h2 class="hero-type inline-type puzzle-active-elementCount">0</h2>
+									<h2 class="hero-type inline-type score-element-count">0</h2>
 								</div>
 								
 								<div class="span1">
@@ -440,7 +440,7 @@
 								</div>
 								
 								<div class="span3">
-									<h2 class="hero-type inline-type puzzle-active-numElementsMin">0</h2>
+									<h2 class="hero-type inline-type score-element-count-goal">0</h2>
 									<div class="iconk">
 										<img src="assets/icons/goal_rev_64.png" class="iconk-medium">
 										<h6>Goal</h6>
@@ -470,7 +470,7 @@
 								</div>
 								
 								<!-- score: good -->
-								<div id="scoreGood" class="score active">
+								<div id="scoreGood" class="score">
 									
 									<div class="score-arrow"></div>
 									<div class="score-inner span4">
@@ -479,7 +479,7 @@
 									</div>
 									
 									<!-- score: poor -->
-									<div id="scorePoor" class="score active">
+									<div id="scorePoor" class="score">
 										
 										<div class="score-arrow"></div>
 										<div class="score-inner span4">
@@ -500,7 +500,7 @@
 						<div id="scoreResults">
 							
 							<div id="scoreBarFooter">
-								<h6><span class="score-pct">0</span> %</h6>
+								<h6 class="score-pct">0%</h6>
 							</div>
 							
 							<h2 class="sidekick-type">Rewards</h2>
@@ -512,7 +512,7 @@
 									<div class="eqheight3-container2">
 										<div class="eqheight3-container1">
 											<!-- poor -->
-											<div id="rewardsPoor" class="eqheight3-column rewards active">
+											<div id="rewardsPoor" class="eqheight3-column rewards">
 												
 												<div class="reward-requirements">
 													
@@ -528,21 +528,11 @@
 													
 												</div>
 												
-												<div class="reward-list">
-													
-													<div class="reward">
-														<button class="btn btn-large btn-circle-large">
-															<img src="assets/icons/grid_64.png" class="iconk-giant">
-														</button>
-														<p class="reward-name">Basics Puzzle</p>
-														<p><small class="reward-type">Puzzle</small></p>
-													</div>
-												
-												</div>
+												<div class="reward-list"></div>
 												
 											</div>
 											<!-- good -->
-											<div id="rewardsGood" class="eqheight3-column rewards active">
+											<div id="rewardsGood" class="eqheight3-column rewards">
 												<div class="reward-requirements">
 													
 													<table class="reward-requirements-list">
@@ -556,17 +546,7 @@
 													
 												</div>
 												
-												<div class="reward-list">
-													
-													<div class="reward new">
-														<button class="btn btn-large btn-circle-large">
-															<img src="assets/icons/grid_64.png" class="iconk-giant">
-														</button>
-														<p class="reward-name">Basics Puzzle</p>
-														<p><small class="reward-type">Puzzle</small></p>
-													</div>
-													
-												</div>
+												<div class="reward-list"></div>
 												
 											</div>
 											<!-- perfect -->
@@ -584,17 +564,7 @@
 													
 												</div>
 												
-												<div class="reward-list disabled">
-													
-													<div class="reward">
-														<button class="btn btn-large btn-circle-large">
-															<img src="assets/icons/grid_64.png" class="iconk-giant">
-														</button>
-														<p class="reward-name">Basics Puzzle</p>
-														<p><small class="reward-type">Puzzle</small></p>
-													</div>
-													
-												</div>
+												<div class="reward-list"></div>
 												
 											</div>
 										</div>
@@ -825,47 +795,47 @@
 														<img src="assets/icons/shape_domino_rev_64.png" class="iconk-large">
 													</button>
 												</li>
-												<li class="shape-trominoI iconk thumbnail">
+												<li class="shape-trominoi iconk thumbnail">
 													<button class="btn btn-inverse btn-circle-small">
 														<img src="assets/icons/shape_tromino_i_rev_64.png" class="iconk-large">
 													</button>
 												</li>
-												<li class="shape-trominoL iconk thumbnail">
+												<li class="shape-trominol iconk thumbnail">
 													<button class="btn btn-inverse btn-circle-small">
 														<img src="assets/icons/shape_tromino_l_rev_64.png" class="iconk-large">
 													</button>
 												</li>
-												<li class="shape-tetrominoI iconk thumbnail">
+												<li class="shape-tetrominoi iconk thumbnail">
 													<button class="btn btn-inverse btn-circle-small">
 														<img src="assets/icons/shape_tetromino_i_rev_64.png" class="iconk-large">
 													</button>
 												</li>
-												<li class="shape-tetrominoJ iconk thumbnail">
+												<li class="shape-tetrominoj iconk thumbnail">
 													<button class="btn btn-inverse btn-circle-small">
 														<img src="assets/icons/shape_tetromino_j_rev_64.png" class="iconk-large">
 													</button>
 												</li>
-												<li class="shape-tetrominoL iconk thumbnail">
+												<li class="shape-tetrominol iconk thumbnail">
 													<button class="btn btn-inverse btn-circle-small">
 														<img src="assets/icons/shape_tetromino_l_rev_64.png" class="iconk-large">
 													</button>
 												</li>
-												<li class="shape-tetrominoO iconk thumbnail">
+												<li class="shape-tetrominoo iconk thumbnail">
 													<button class="btn btn-inverse btn-circle-small">
 														<img src="assets/icons/shape_tetromino_o_rev_64.png" class="iconk-large">
 													</button>
 												</li>
-												<li class="shape-tetrominoS iconk thumbnail">
+												<li class="shape-tetrominos iconk thumbnail">
 													<button class="btn btn-inverse btn-circle-small">
 														<img src="assets/icons/shape_tetromino_s_rev_64.png" class="iconk-large">
 													</button>
 												</li>
-												<li class="shape-tetrominoT iconk thumbnail">
+												<li class="shape-tetrominot iconk thumbnail">
 													<button class="btn btn-inverse btn-circle-small">
 														<img src="assets/icons/shape_tetromino_t_rev_64.png" class="iconk-large">
 													</button>
 												</li>
-												<li class="shape-tetrominoZ iconk thumbnail">
+												<li class="shape-tetrominoz iconk thumbnail">
 													<button class="btn btn-inverse btn-circle-small">
 														<img src="assets/icons/shape_tetromino_z_rev_64.png" class="iconk-large">
 													</button>
