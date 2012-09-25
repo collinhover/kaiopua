@@ -198,7 +198,7 @@
 			materialToModify = materials[i];
 			
 			// morph targets
-			if ( materialToModify.hasOwnProperty('morphTargets' ) ) {
+			if ( materialToModify.hasOwnProperty( 'morphTargets' ) ) {
 				
 				materialToModify.morphTargets = geometry.morphTargets && geometry.morphTargets.length > 0 ? true : false;
 				
@@ -206,11 +206,30 @@
 			
 			// shading
 			// (1 = flat, 2 = smooth )
-			if ( parameters.hasOwnProperty('shading' ) ) {
+			if ( parameters.hasOwnProperty( 'shading' ) ) {
 				
 				materialToModify.shading = parameters.shading;
 			
 			}
+			
+			// side
+			
+			if ( parameters.hasOwnProperty( 'side' ) ) {
+				
+				materialToModify.side = parameters.side;
+				
+			}
+			else if ( parameters.doubleSided === true ) {
+				
+				materialToModify.side = THREE.DoubleSide;
+				
+			}
+			else if ( parameters.flipSided === true ) {
+				
+				materialToModify.side = THREE.BackSide;
+				
+			}
+			
 		}
 		
 		// call prototype constructor
@@ -263,8 +282,6 @@
 		
 		this.castShadow = typeof parameters.castShadow === 'boolean' ? parameters.castShadow : false;
 		this.receiveShadow = typeof parameters.receiveShadow === 'boolean' ? parameters.receiveShadow : false;
-		this.flipSided = typeof parameters.flipSided === 'boolean' ? parameters.flipSided : false;
-		this.doubleSided = typeof parameters.doubleSided === 'boolean' ? parameters.doubleSided : false;
 		
 		this.targetable = typeof parameters.targetable === 'boolean' ? parameters.targetable : false;
 		this.interactive = typeof parameters.interactive === 'boolean' ? parameters.interactive : false;
@@ -338,7 +355,7 @@
 			
 			// material
 			
-			c.material = _ObjectHelper.clone_material( material );
+			c.material = material.clone();
 			
 			// three properties
 			
@@ -361,9 +378,6 @@
 			c.scale.copy( this.scale );
 			
 			c.dynamic = this.dynamic;
-			
-			c.doubleSided = this.doubleSided;
-			c.flipSided = this.flipSided;
 			
 			c.renderDepth = this.renderDepth;
 			

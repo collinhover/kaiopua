@@ -2,9 +2,9 @@
  * @author alteredq / http://alteredqualia.com/
  */
 
-THREE.ShaderPass = function( shader, textureID ) {
+THREE.ShaderPass = function ( shader, textureID ) {
 
-    this.textureID = ( textureID !== undefined ) ? textureID : "tDiffuse";
+	this.textureID = ( textureID !== undefined ) ? textureID : "tDiffuse";
 
 	this.uniforms = THREE.UniformsUtils.clone( shader.uniforms );
 
@@ -30,18 +30,18 @@ THREE.ShaderPass.prototype = {
 
 		if ( this.uniforms[ this.textureID ] ) {
 
-			this.uniforms[ this.textureID ].texture = readBuffer;
+			this.uniforms[ this.textureID ].value = readBuffer;
 
 		}
 
 		THREE.EffectComposer.quad.material = this.material;
 
 		if ( this.renderToScreen ) {
-			
+
 			renderer.render( THREE.EffectComposer.scene, THREE.EffectComposer.camera );
 
 		} else {
-			
+
 			renderer.render( THREE.EffectComposer.scene, THREE.EffectComposer.camera, writeBuffer, this.clear );
 
 		}

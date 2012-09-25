@@ -121,23 +121,18 @@
 		// properties
 		
 		this.id = gridElementCount++;
-		this.rotationAngle = this.rotationAngleLayout = 0;
-		this.geometry = typeof parameters.geometry === 'string' ? main.get_asset_data( parameters.geometry ) : ( parameters.geometry || new THREE.CubeGeometry( _GridElement.sizeBase.x, _GridElement.sizeBase.y, _GridElement.sizeBase.z ) );
-		this.material = parameters.material instanceof THREE.Material ? _ObjectHelper.clone_material( parameters.material ) : new THREE.MeshLambertMaterial( { vertexColors: THREE.VertexColors, shading: THREE.SmoothShading } );
-		this.materialBase = _ObjectHelper.clone_material( this.material );
-		
-		this.timeGrow = main.is_number( parameters.timeGrow ) ? parameters.timeGrow : _GridElement.timeGrow;
 		this.utilVec31Grow = new THREE.Vector3();
 		this.utilQ1Rotate = new THREE.Quaternion();
+		this.rotationAngle = this.rotationAngleLayout = 0;
+		this.timeGrow = main.is_number( parameters.timeGrow ) ? parameters.timeGrow : _GridElement.timeGrow;
 		
-		// layout
+		this.geometry = typeof parameters.geometry === 'string' ? main.get_asset_data( parameters.geometry ) : ( parameters.geometry || new THREE.CubeGeometry( _GridElement.sizeBase.x, _GridElement.sizeBase.y, _GridElement.sizeBase.z ) );
+		this.material = parameters.material instanceof THREE.Material ? parameters.material.clone() : new THREE.MeshLambertMaterial( { vertexColors: THREE.VertexColors, shading: THREE.SmoothShading } );
+		this.materialBase = this.material.clone();
 		
 		this.shape = parameters.shape;
 		this.skin = parameters.skin;
 		this.layout = generate_layout.call( this, parameters.layout );
-		
-		// modules matrix from layout
-		
 		this.modules = this.layout.dup();
 		
 		// container
@@ -190,7 +185,7 @@
     =====================================================*/
 	
 	function clone ( c ) {
-		
+		console.log( this, ' CLONE ', c );
 		var i, l,
 			cMaterial,
 			cMaterialCustom,
@@ -212,11 +207,10 @@
 			c.timeGrow = this.timeGrow;
 			c.rotationAngle = this.rotationAngle;
 			c.rotationAngleLayout = this.rotationAngleLayout;
-			c.material = _ObjectHelper.clone_material( this.material );
+			c.material = this.material.clone();
 			c.geometry = _ObjectHelper.clone_geometry( this.geometry );
-			
-			// layout
-			
+			c.shape = this.shape;
+			c.skin = this.skin;
 			c.layout = generate_layout.call( c, this.layout );
 			
 			// modules matrix from layout
@@ -234,8 +228,8 @@
 			// handle customizations that need clone
 			
 			if ( this.customized ) {
-			
-				c.customizations.material = _ObjectHelper.clone_material( this.customizations.material );
+				
+				c.customizations.material = this.customizations.material.clone();
 				c.customizations.geometry = _ObjectHelper.clone_geometry( this.customizations.geometry );
 
 			}
@@ -283,13 +277,13 @@
 		c = this.customizations = this.hasOwnProperty( 'customizations' ) ? this.customizations : {};
 		
 		c.material = parameters.material || c.material;
-		c.geometry = parameters.geometry || c.geometry || this.geometry;
+		c.geometry = typeof parameters.geometry === 'string' ? main.get_asset_data( parameters.geometry ) : ( c.geometry || this.geometry );
 		
 		// ensure proper material
 		
 		if ( c.material === true ) {
 
-			c.material = _ObjectHelper.clone_material( this.material );
+			c.material = this.material.clone();
 			
 		}
 		else if ( c.material instanceof THREE.Material !== true ) {

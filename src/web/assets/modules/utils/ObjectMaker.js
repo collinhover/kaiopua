@@ -65,6 +65,8 @@
 		// cube texture
 		
 		textureCube = new THREE.Texture( null, mapping );
+		textureCube.format = THREE.RGBFormat;
+		textureCube.flipY = false;
 		
 		main.asset_require( [ 
 			ap + "_posx.jpg",
@@ -83,17 +85,16 @@
 		// shader
 		
 		shader = $.extend(true, {}, THREE.ShaderUtils.lib[ "cube" ]);
-		shader.uniforms[ "tCube" ].texture = textureCube;
+		shader.uniforms[ "tCube" ].value = textureCube;
 		
 		// material
 		
 		material = new THREE.ShaderMaterial( {
-
 			fragmentShader: shader.fragmentShader,
 			vertexShader: shader.vertexShader,
 			uniforms: shader.uniforms,
-			depthWrite: false
-			
+			depthWrite: false,
+			side: THREE.BackSide
 		} );
 		
 		// instance
@@ -102,7 +103,6 @@
             geometry: new THREE.CubeGeometry( 100, 100, 100 ),
 			material: material,
 			shading: THREE.SmoothShading,
-			flipSided: true,
 			addWorldOctree: false
         }, instance );
         

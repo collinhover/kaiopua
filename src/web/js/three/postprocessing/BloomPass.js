@@ -2,9 +2,9 @@
  * @author alteredq / http://alteredqualia.com/
  */
 
-THREE.BloomPass = function( strength, kernelSize, sigma, resolution ) {
+THREE.BloomPass = function ( strength, kernelSize, sigma, resolution ) {
 
-    strength = ( strength !== undefined ) ? strength : 1;
+	strength = ( strength !== undefined ) ? strength : 1;
 	kernelSize = ( kernelSize !== undefined ) ? kernelSize : 25;
 	sigma = ( sigma !== undefined ) ? sigma : 4.0;
 	resolution = ( resolution !== undefined ) ? resolution : 256;
@@ -65,9 +65,9 @@ THREE.BloomPass.prototype = {
 
 		// Render quad with blured scene into texture (convolution pass 1)
 
-		THREE.EffectComposer.quad.materials[ 0 ] = this.materialConvolution;
+		THREE.EffectComposer.quad.material = this.materialConvolution;
 
-		this.convolutionUniforms[ "tDiffuse" ].texture = readBuffer;
+		this.convolutionUniforms[ "tDiffuse" ].value = readBuffer;
 		this.convolutionUniforms[ "uImageIncrement" ].value = THREE.BloomPass.blurX;
 
 		renderer.render( THREE.EffectComposer.scene, THREE.EffectComposer.camera, this.renderTargetX, true );
@@ -75,16 +75,16 @@ THREE.BloomPass.prototype = {
 
 		// Render quad with blured scene into texture (convolution pass 2)
 
-		this.convolutionUniforms[ "tDiffuse" ].texture = this.renderTargetX;
+		this.convolutionUniforms[ "tDiffuse" ].value = this.renderTargetX;
 		this.convolutionUniforms[ "uImageIncrement" ].value = THREE.BloomPass.blurY;
 
 		renderer.render( THREE.EffectComposer.scene, THREE.EffectComposer.camera, this.renderTargetY, true );
 
 		// Render original scene with superimposed blur to texture
 
-		THREE.EffectComposer.quad.materials[ 0 ] = this.materialScreen;
+		THREE.EffectComposer.quad.material = this.materialScreen;
 
-		this.screenUniforms[ "tDiffuse" ].texture = this.renderTargetY;
+		this.screenUniforms[ "tDiffuse" ].value = this.renderTargetY;
 
 		if ( maskActive ) renderer.context.enable( renderer.context.STENCIL_TEST );
 
@@ -96,4 +96,3 @@ THREE.BloomPass.prototype = {
 
 THREE.BloomPass.blurX = new THREE.Vector2( 0.001953125, 0.0 );
 THREE.BloomPass.blurY = new THREE.Vector2( 0.0, 0.001953125 );
-

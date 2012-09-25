@@ -255,7 +255,7 @@
 		me.parts.bananaLeafDoor = new _Model.Instance({
             geometry: main.get_asset_data("assets/models/Banana_Leaf_Door.js"),
 			center: true,
-			doubleSided: true
+			side: THREE.DoubleSide
         });
 		
 		me.parts.home.add( me.parts.bananaLeafDoor );

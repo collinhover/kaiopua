@@ -47,13 +47,14 @@
             "assets/modules/utils/ErrorHandler.js",
 		],
         assetsSetup = [
-            "js/three/Three.js",
+            "js/three/three.min.js",
 			"js/Tween.js",
         ],
 		assetsSetupExtras = [
-            "js/three/ThreeExtras.js",
+            //"js/three/ThreeExtras.js",
             "js/three/postprocessing/ShaderExtras.js",
-            "js/three/postprocessing/EffectComposer.custom.js",
+            "js/three/postprocessing/EffectComposer.js",
+            //"js/three/postprocessing/EffectComposer.custom.js",
             "js/three/postprocessing/RenderPass.js",
             "js/three/postprocessing/ShaderPass.js",
             "js/three/postprocessing/MaskPass.js",
@@ -1279,7 +1280,7 @@
 		var scenePrev = scene;
 		
 		renderPasses.env.scene = scene = sceneNew || sceneDefault;
-		
+		/*
 		if( scene !== scenePrev && typeof camera !== 'undefined') {
 			
 			if ( typeof scenePrev !== 'undefined' ) {
@@ -1289,7 +1290,7 @@
 			scene.add( camera );
 			
 		}
-		
+		*/
 	}
 	
 	function set_scene_bg ( sceneNew ) {
@@ -1297,7 +1298,7 @@
 		var sceneBGPrev = sceneBG;
 		
 		renderPasses.bg.scene = sceneBG = sceneNew || sceneBGDefault;
-		
+		/*
 		if( sceneBG !== sceneBGPrev && typeof cameraBG !== 'undefined') {
 			
 			if ( typeof sceneBGPrev !== 'undefined' ) {
@@ -1307,7 +1308,7 @@
 			sceneBG.add( cameraBG );
 			
 		}
-		
+		*/
 	}
 	
 	function add_to_scene ( objects, sceneDefault ) {
@@ -1418,7 +1419,7 @@
 		
 		if ( typeof cameraPrev !== 'undefined' && typeof scene !== 'undefined' ) {
 			
-			scene.remove( cameraPrev );
+			//scene.remove( cameraPrev );
 			
 		}
 		
@@ -1426,7 +1427,7 @@
 		
 		if ( typeof scene !== 'undefined' ) {
 			
-			scene.add( camera );
+			//scene.add( camera );
 			
 		}
 		
@@ -1438,7 +1439,7 @@
 		
 		if ( typeof cameraBGPrev !== 'undefined' && typeof sceneBG !== 'undefined' ) {
 			
-			sceneBG.remove( cameraBGPrev );
+			//sceneBG.remove( cameraBGPrev );
 			
 		}
 		
@@ -1446,7 +1447,7 @@
 		
 		if ( typeof sceneBG !== 'undefined' ) {
 			
-			sceneBG.add( cameraBG );
+			//sceneBG.add( cameraBG );
 			
 		}
 		

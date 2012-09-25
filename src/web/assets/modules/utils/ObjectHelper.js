@@ -225,7 +225,7 @@
 	}
 	
 	function clone_geometry ( geometry ) {
-
+		console.log( 'CLONE geometry ', geometry );
 		var i, l,
 			j, k,
 			vertices = geometry.vertices,
@@ -242,7 +242,7 @@
 			
 			for ( i = 0, l = geometry.materials.length; i < l; i++ ) {
 				
-				cGeometry.materials.push( clone_material( geometry.materials[ i ] ) );
+				cGeometry.materials.push( geometry.materials[ i ].clone() );
 				
 			}
 

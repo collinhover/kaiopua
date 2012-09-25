@@ -992,7 +992,7 @@
 		var dot = n.dot( ray.direction );
 		if ( !( dot < 0 ) ) {
 			
-			if ( object.doubleSided || object.flipSided ) {
+			if ( object.material.side === THREE.DoubleSide || object.material.side === THREE.BackSide ) {
 			
 				n.multiplyScalar (-1.0);
 				dot *= -1.0;
@@ -1173,7 +1173,8 @@
 			
 			if ( scalar < 0 ) continue;
 			
-			if ( object.doubleSided || ( object.flipSided ? dot > 0 : dot < 0 ) ) {
+			if ( object.material.side === THREE.DoubleSide || ( object.material.side === THREE.BackSide ? dot > 0 : dot < 0 ) ) {
+			//if ( object.doubleSided || ( object.flipSided ? dot > 0 : dot < 0 ) ) {
 				
 				intersectPoint.add( ray.origin, directionCopy.multiplyScalar( scalar ) );
 				

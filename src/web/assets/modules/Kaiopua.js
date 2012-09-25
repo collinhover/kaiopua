@@ -19,7 +19,7 @@ var KAIOPUA = (function (main) {
             "js/RequestTimeout.js",
             "js/signals.min.js",
 			"js/sylvester.js",
-			"js/jquery-1.7.2.min.js"
+			"js/jquery-1.8.2.min.js"
         ],
 		libsSecondaryList = [
 			"js/hammer.custom.js",

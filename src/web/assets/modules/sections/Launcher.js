@@ -28,26 +28,23 @@
 		sky,
         skybox,
         time,
+		camPositionBase,
+		camPositionOffset,
+		camPositionOffsetQ,
 		camRotationBaseQ,
 		camRotationOffset,
 		camRotationOffsetQ,
-        viewShift = { 
-            x: 0, 
-            y: 0,
+        viewShift = {
             rx: 0,
             ry: 0, 
-            rangeTransMaxX: 500, 
-            rangeTransMinX: -500,
-            rangeTransMaxY: -175, 
-            rangeTransMinY: -175,
-            speedTransX: 0.01, 
-            speedTransY: 0.01,
-            rangeRotMaxX: -16,
-            rangeRotMinX: -16,
-            rangeRotMaxY: 10,
-            rangeRotMinY: -10,
-            speedRotX: 0.05,
-            speedRotY: 0.05
+            rangeRotMaxX: Math.PI * 0.1,
+            rangeRotMinX: Math.PI * 0.1,
+            rangeRotMaxY: Math.PI * 2,// * 0.05,
+            rangeRotMinY: -Math.PI * 2,// * 0.05,
+			rangeRotMaxDiff: Math.PI,
+			speedOnMove: 0.005,
+			speedToTarget: 0.005,
+			speedToTargetMax: Math.PI * 0.01
         };
     
     /*===================================================
@@ -113,12 +110,11 @@
 	
 	function init_environment () {
 		
-		// camera rotation
-		
+		camPositionBase = new THREE.Vector3( -5800, 0, 0 );
+		camPositionOffset = new THREE.Vector3();
+		camPositionOffsetRot = new THREE.Vector3();
 		camRotationBaseQ = new THREE.Quaternion().setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), -Math.PI * 0.5 );
-		
 		camRotationOffset = new THREE.Vector3();
-		
 		camRotationOffsetQ = new THREE.Quaternion();
 		
 		// lights
@@ -189,39 +185,40 @@
     
     /*===================================================
     
-    view shift
+    pointer
     
     =====================================================*/
     
-    function on_pointer_moved ( e ) {
+    function on_pointer_moved ( e, pointer ) {
         
-        var pointer = main.get_pointer( e ),
-			pctX = ( pointer.x / shared.screenWidth ),
-            pctY = ( pointer.y / shared.screenHeight );
-        
-        viewShift.x = pctX * viewShift.rangeTransMaxX + (1 - pctX) * viewShift.rangeTransMinX;
-        viewShift.y = pctY * viewShift.rangeTransMaxY + (1 - pctY) * viewShift.rangeTransMinY;
-        
-        viewShift.rx = (pctY)* viewShift.rangeRotMaxX + (1 - pctY) * viewShift.rangeRotMinX;
-        viewShift.ry = (1 - pctX) * viewShift.rangeRotMaxY + (pctX) * viewShift.rangeRotMinY;
+		pointer = pointer || main.get_pointer( e );
+		
+        var rx = viewShift.rx - pointer.deltaY * viewShift.speedOnMove,
+			ry = viewShift.ry + pointer.deltaX * viewShift.speedOnMove;
+		
+		if ( viewShift.rangeRotMaxX === Math.PI * 2 && viewShift.rangeRotMinX === -Math.PI * 2 ) {
+			
+			viewShift.rx = rx;
+			
+		}
+		else {
+			
+			viewShift.rx = Math.max( Math.min( rx, viewShift.rangeRotMaxX ), viewShift.rangeRotMinX );
+			
+		}
+		
+		if ( viewShift.rangeRotMaxY === Math.PI * 2 && viewShift.rangeRotMinY === -Math.PI * 2 ) {
+			
+			viewShift.ry = ry;
+			
+		}
+		else {
+			
+			viewShift.ry = Math.max( Math.min( ry, viewShift.rangeRotMaxY ), viewShift.rangeRotMinY );
+			
+		}
         
     }
-	
-	function view_shift_update ( instant ) {
-		
-		camera.position.z += (  viewShift.x - camera.position.z ) * ( instant === true ? 1 : viewShift.speedTransX );
-        camera.position.y += ( -viewShift.y - camera.position.y ) * ( instant === true ? 1 : viewShift.speedTransY );
-        
-        camRotationOffset.z += ( viewShift.rx - camRotationOffset.z ) * ( instant === true ? 1 : viewShift.speedRotX );
-        camRotationOffset.y += ( viewShift.ry - camRotationOffset.y ) * ( instant === true ? 1 : viewShift.speedRotY );
-		
-		// update rotation
-		
-		camRotationOffsetQ.setFromEuler( camRotationOffset ).normalize();
-        
-		camera.quaternion.set( 0, 0, 0, 1 ).multiplySelf( camRotationOffsetQ ).multiplySelf( camRotationBaseQ );
-		
-	}
     
     /*===================================================
     
@@ -236,7 +233,7 @@
 			// cameras
 			
 			camera = _Game.camera;
-			camera.position.set( -5800, 0, 0 );
+			camera.position.copy( camPositionBase );
 			camera.quaternion.copy( camRotationBaseQ );
 			
 			// scene
@@ -265,10 +262,7 @@
 			
 			shared.signals.onGameUpdated.add( update );
 			
-			// shift view to starting position
-			
 			on_pointer_moved();
-			view_shift_update( true );
 			
 		}
 		else {
@@ -317,7 +311,36 @@
     
     function update ( timeDelta ) {
 		
-		view_shift_update();
+		var deltaRX = viewShift.rx - camRotationOffset.z,
+			deltaRY = viewShift.ry - camRotationOffset.y;
+		
+		if ( Math.abs( deltaRX ) > viewShift.rangeRotMaxDiff ) {
+			
+			viewShift.rx = camRotationOffset.z + viewShift.rangeRotMaxDiff * ( deltaRX / Math.abs( deltaRX ) );
+			
+		}
+		
+		if ( Math.abs( deltaRY ) > viewShift.rangeRotMaxDiff ) {
+			
+			viewShift.ry = camRotationOffset.y + viewShift.rangeRotMaxDiff * ( deltaRY / Math.abs( deltaRY ) );
+			
+		}
+		
+		camRotationOffset.z += Math.max( Math.min( deltaRX * viewShift.speedToTarget, viewShift.speedToTargetMax ), -viewShift.speedToTargetMax );
+        camRotationOffset.y += Math.max( Math.min( deltaRY * viewShift.speedToTarget, viewShift.speedToTargetMax ), -viewShift.speedToTargetMax );
+		
+		// update rotation
+		
+		camRotationOffsetQ.setFromEuler( camRotationOffset ).normalize();
+        
+		camera.quaternion.multiply( camRotationOffsetQ, camRotationBaseQ );
+		
+		camPositionOffset.copy( camPositionBase );
+		camPositionOffsetRot.y = camRotationOffset.y;
+		camPositionOffsetRot.z = -Math.PI * 0.01;
+		camRotationOffsetQ.setFromEuler( camPositionOffsetRot ).normalize();
+		camRotationOffsetQ.multiplyVector3( camPositionOffset );
+		camera.position.copy( camPositionOffset );
 		
     }
 	

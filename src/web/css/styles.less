@@ -1648,13 +1648,9 @@ a, .navbar .nav > li > a {
 /* major containers 
 -------------------------*/
 
-#game {
+#game, #ui {
 	.fullscreenTopLeftMin;
-	overflow:hidden;
-}
-
-#ui {
-	.fullscreenTopLeftMin;
+	overflow: hidden;
 }
 
 /* ui header sections 
@@ -1815,7 +1811,7 @@ a, .navbar .nav > li > a {
 
 #uiOutGame {
 	.fullscreenTopLeft;
-	overflow: auto;
+	overflow-y: scroll;
 	z-index: 300;
 	
 	#footer {

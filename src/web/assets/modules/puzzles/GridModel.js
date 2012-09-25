@@ -67,7 +67,7 @@
 		parameters.geometry = parameters.geometry || gridElement.geometry;
 		
 		// proto
-		console.log( 'GRID MODEL, parameters', parameters );
+		
 		_Model.Instance.call( this, parameters.container );
 		
 		// core

@@ -52,6 +52,7 @@
 		_VectorHelper.distance_to = distance_to;
 		_VectorHelper.rotate_vector3_relative_to = rotate_vector3_relative_to;
 		_VectorHelper.rotate_vector3_to_mesh_rotation = rotate_vector3_to_mesh_rotation;
+		_VectorHelper.degree_to_rad = degree_to_rad;
 		_VectorHelper.angle_between_vectors = angle_between_vectors;
 		_VectorHelper.signed_angle_between_coplanar_vectors = signed_angle_between_coplanar_vectors;
 		_VectorHelper.axis_between_vectors = axis_between_vectors;
@@ -129,6 +130,16 @@
 		}
 		
 		return rotatedVec3;
+		
+	}
+	
+	function degree_to_rad ( v ) {
+		
+		v.x = _MathHelper.degree_to_rad( v.x );
+		v.y = _MathHelper.degree_to_rad( v.y );
+		v.z = _MathHelper.degree_to_rad( v.z );
+		
+		return v;
 		
 	}
 	

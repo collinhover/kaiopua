@@ -2,9 +2,9 @@
  * @author alteredq / http://alteredqualia.com/
  */
 
-THREE.DotScreenPass = function( center, angle, scale ) {
+THREE.DotScreenPass = function ( center, angle, scale ) {
 
-    var shader = THREE.ShaderExtras[ "dotscreen" ];
+	var shader = THREE.ShaderExtras[ "dotscreen" ];
 
 	this.uniforms = THREE.UniformsUtils.clone( shader.uniforms );
 
@@ -32,10 +32,10 @@ THREE.DotScreenPass.prototype = {
 
 	render: function ( renderer, writeBuffer, readBuffer, delta ) {
 
-		this.uniforms[ "tDiffuse" ].texture = readBuffer;
+		this.uniforms[ "tDiffuse" ].value = readBuffer;
 		this.uniforms[ "tSize" ].value.set( readBuffer.width, readBuffer.height );
 
-		THREE.EffectComposer.quad.materials[ 0 ] = this.material;
+		THREE.EffectComposer.quad.material = this.material;
 
 		if ( this.renderToScreen ) {
 

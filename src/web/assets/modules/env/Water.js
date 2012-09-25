@@ -11,7 +11,8 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/env/Water.js",
 		_Water = {},
-		_Model;
+		_Model,
+		_ObjectHelper;
     
     /*===================================================
     
@@ -23,6 +24,7 @@
 		data: _Water,
 		requirements: [
 			"assets/modules/core/Model.js",
+			"assets/modules/utils/ObjectHelper.js",
 			shared.pathToTextures + "water_512.png"
 		],
 		callbacksOnReqs: init_internal,
@@ -35,11 +37,12 @@
     
     =====================================================*/
 	
-	function init_internal ( m, wavesImage ) {
+	function init_internal ( m, oh, wavesImage ) {
 		console.log('internal water');
 		// assets
 		
 		_Model = m;
+		_ObjectHelper = oh;
 		
 		// properties
 		
@@ -135,6 +138,10 @@
         wavesGeometry = new THREE.PlaneGeometry( wavesSize, wavesSize, wavesVertsW - 1, wavesVertsH - 1 );
         wavesGeometry.dynamic = true;
 		
+		// plane geometry should lay flat
+		
+		_ObjectHelper.apply_matrix( wavesGeometry, new THREE.Matrix4().makeRotationX( - Math.PI / 2 ) );
+		
         // per vert variation
 		
         wavesVertsNum = wavesGeometry.vertices.length;
@@ -162,7 +169,8 @@
 			color: wavesColor,
 			shading: THREE.SmoothShading,
 			transparent: true,
-			opacity: parameters.wavesOpacity || 0.9
+			opacity: parameters.wavesOpacity || 0.9,
+			side: THREE.DoubleSide
 		} );
 		
 		// waves texture
@@ -314,7 +322,6 @@
 		
 		parameters.geometry = wavesGeometry;
 		parameters.material = wavesMaterial;
-		parameters.doubleSided = true;
 		
 		_Model.Instance.call( this, parameters );
 		

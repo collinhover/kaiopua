@@ -112,7 +112,7 @@
 		this.positionOffsetDeltaSpeedMax = 0.3;
 		this.positionOffsetDeltaDecay = 0.7;
 		
-		this.rotationOffset = new THREE.Vector3( -40, 0, 0 );
+		this.rotationOffset = new THREE.Vector3( -Math.PI * 0.2, 0, 0 );
 		
 		this.distanceThresholdPassed = false;
 		this.distanceThresholdMin = 1;
