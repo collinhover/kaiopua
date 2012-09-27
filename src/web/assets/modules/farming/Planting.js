@@ -926,13 +926,6 @@
 				
 			}
 			
-			/*targetObject = _Game.get_pointer_intersection( {
-				objects: this.puzzle.grid.modules,
-				pointer: this.pointer,
-				hierarchySearch: false,
-				objectOnly: true
-			} );*/
-			
 			// plants
 			
 			if ( parameters.plants === true ) {

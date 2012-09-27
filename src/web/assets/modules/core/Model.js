@@ -285,8 +285,6 @@
 		
 		this.targetable = typeof parameters.targetable === 'boolean' ? parameters.targetable : false;
 		this.interactive = typeof parameters.interactive === 'boolean' ? parameters.interactive : false;
-		this.addWorldOctree = typeof parameters.addWorldOctree === 'boolean' ? parameters.addWorldOctree : false;
-		this.useFaces = typeof parameters.useFaces === 'boolean' ? parameters.useFaces : true;
 		
 		// morph defaults
 		
@@ -428,8 +426,6 @@
 			
 			c.targetable = this.targetable;
 			c.interactive = this.interactive;
-			c.useOctree = this.useOctree;
-			c.useFaces = this.useFaces;
 			
 			if ( this.hasOwnProperty( 'rigidBody' ) ) {
 				

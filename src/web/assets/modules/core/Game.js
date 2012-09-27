@@ -51,10 +51,9 @@
 			"js/Tween.js",
         ],
 		assetsSetupExtras = [
-            //"js/three/ThreeExtras.js",
+			"js/three/ThreeOctree.min.js",
             "js/three/postprocessing/ShaderExtras.js",
             "js/three/postprocessing/EffectComposer.js",
-            //"js/three/postprocessing/EffectComposer.custom.js",
             "js/three/postprocessing/RenderPass.js",
             "js/three/postprocessing/ShaderPass.js",
             "js/three/postprocessing/MaskPass.js",
@@ -1466,12 +1465,6 @@
 		// handle parameters
 		
 		parameters = parameters || {};
-		
-		if ( typeof parameters.objects === 'undefined' ) {
-			
-			parameters.octree = parameters.octree || scene.octree;
-			
-		}
 		
 		parameters.pointer = parameters.pointer || main.get_pointer();
 		parameters.camera = parameters.camera || camera;

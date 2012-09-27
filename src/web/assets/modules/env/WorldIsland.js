@@ -129,8 +129,7 @@
 		// water
 		
 		me.parts.waterRing = new _Water.Instance( { 
-			wavesTexture: shared.pathToTextures + "water_world_512.png",
-			addWorldOctree: false
+			wavesTexture: shared.pathToTextures + "water_world_512.png"
 		} );
 		
 		me.add( me.parts.waterRing );

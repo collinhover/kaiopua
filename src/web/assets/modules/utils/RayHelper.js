@@ -372,7 +372,6 @@
 			pointerPosition = utilVec31Casting,
 			projector = utilProjector1Casting,
 			octree,
-			far,
 			hierarchySearch,
 			hierarchyIntersect,
 			intersections = [],
@@ -450,9 +449,9 @@
 		
 		// ray length
 		
-		if ( main.is_number( far ) && far > 0 ) {
+		if ( main.is_number( parameters.far ) && parameters.far > 0 ) {
 			
-			ray.far = far;
+			ray.far = parameters.far;
 			
 		}
 		
@@ -460,11 +459,9 @@
 		
 		ray.direction.normalize();
 		
-		// if using octree
+		// if using octree search for potential colliders
 		
 		if ( typeof octree !== 'undefined' ) {
-			
-			// search for potential colliders
 			
 			colliders = colliders.concat( octree.search( ray.origin, ray.far, true, ray.direction ) );
 			
@@ -520,7 +517,10 @@
 		
 		if ( colliders.length > 0 ) {
 			
+			// raycast_colliders is about 25% slower but supports casting non-planar quads
+			
 			intersections = intersections.concat( raycast_colliders( ray, colliders ) );
+			//intersections = intersections.concat( ray.intersectOctreeObjects( colliders ) );
 			
 		}
 		
@@ -607,7 +607,7 @@
 			
 			// ray cast object
 			
-			intersection = raycast_mesh( ray, object );//raycast_object( ray, object );
+			intersection = raycast_mesh( ray, object );
 			
 			// store
 			
@@ -645,7 +645,7 @@
 				
 				if ( collider instanceof MeshCollider && collider.box ) {
 					
-					intersection = raycast_mesh( ray, collider );//raycast_object( ray, collider );
+					intersection = raycast_mesh( ray, collider );
 					
 				}
 				
@@ -691,7 +691,7 @@
 		}
 		else {
 			
-			return raycast_mesh( ray, collider );//raycast_object( ray, collider );
+			return raycast_mesh( ray, collider );
 			
 		}
 
@@ -1085,140 +1085,6 @@
 
 		return t;
 
-	}
-	
-	function raycast_object ( ray, collider, hierarchy, intersect ) {
-		
-		// TODO: raycast_object missing collisions where raycast_mesh is not?
-		
-		var i, l,
-			object = collider.object || collider,
-			objMatrix = object.matrixWorld,
-			geometry = object.geometry,
-			vertices,
-			faces,
-			face,
-			p0 = utilVec31CastMesh,
-			p1 = utilVec32CastMesh,
-			p2 = utilVec33CastMesh,
-			p3 = utilVec34CastMesh,
-			scale = utilVec35CastMesh,
-			scaledRadius,
-			scalar,
-			dot,
-			normal = utilVec36CastMesh,
-			vector = utilVec37CastMesh,
-			directionCopy = utilVec38CastMesh,
-			intersectPoint = utilVec39CastMesh,
-			distance,
-			intersect = intersect || {
-				object: object,
-				distance: Number.MAX_VALUE,
-				point: new THREE.Vector3()
-			};
-		
-		// support hierarchy
-		
-		if ( hierarchy === true ) {
-			
-			for ( var i = 0, l = object.children.length; i < l; i ++ ) {
-				
-				intersect = raycast_object( ray, object.children[ i ], hierarchy, intersect );
-				
-			}
-			
-		}
-		
-		// check distance to ray against scaled bounding radius
-		
-		distance = distance_from_intersection( object.matrixWorld.getPosition(), ray.origin, ray.direction, ray.far );
-		scale.set( object.matrixWorld.getColumnX().length(), object.matrixWorld.getColumnY().length(), object.matrixWorld.getColumnZ().length() );
-		scaledRadius = ( geometry instanceof THREE.Geometry ? geometry.boundingSphere.radius : object.boundRadius ) * Math.max( scale.x, scale.y, scale.z ); 
-		
-		if ( distance > scaledRadius ) {
-			
-			return intersect;
-			
-		}
-		
-		// for each face passed or in geometry
-		
-		object.matrixRotationWorld.extractRotation( object.matrixWorld );
-		
-		vertices = geometry.vertices;
-		faces = collider.faces ? main.ensure_array( collider.faces ) : geometry.faces;
-
-		for ( i = 0, l = faces.length; i < l; i++ ) {
-			
-			face = faces[ i ];
-			
-			directionCopy.copy( ray.direction );
-			
-			// determine if ray intersects the plane of the face
-			// note: this works regardless of the direction of the face normal
-			
-			vector = objMatrix.multiplyVector3( vector.copy( face.centroid ) ).subSelf( ray.origin );
-			normal = object.matrixRotationWorld.multiplyVector3( normal.copy( face.normal ) );
-			dot = directionCopy.dot( normal );
-			
-			// bail if ray and plane are parallel
-			
-			if ( Math.abs( dot ) < 0.0001/*precision*/ ) continue;
-			
-			// calc distance to plane
-			
-			scalar = normal.dot( vector ) / dot;
-			
-			// if negative distance, then plane is behind ray
-			
-			if ( scalar < 0 ) continue;
-			
-			if ( object.material.side === THREE.DoubleSide || ( object.material.side === THREE.BackSide ? dot > 0 : dot < 0 ) ) {
-			//if ( object.doubleSided || ( object.flipSided ? dot > 0 : dot < 0 ) ) {
-				
-				intersectPoint.add( ray.origin, directionCopy.multiplyScalar( scalar ) );
-				
-				distance = _VectorHelper.distance_to( ray.origin, intersectPoint );
-				
-				// ignore face if distance is less than near, greater than far, or greater than a previous distance
-				
-				if ( distance < ray.near || distance > ray.far || distance >= intersect.distance ) continue;
-				
-				objMatrix.multiplyVector3( p0.copy( vertices[ face.a ] ) );
-				objMatrix.multiplyVector3( p1.copy( vertices[ face.b ] ) );
-				objMatrix.multiplyVector3( p2.copy( vertices[ face.c ] ) );
-				
-				if ( face instanceof THREE.Face4 ) {
-					
-					objMatrix.multiplyVector3( p3.copy( vertices[ face.d ] ) );
-					
-					if ( point_in_face3( intersectPoint, p0, p1, p3 ) || point_in_face3( intersectPoint, p1, p2, p3 ) ) {
-						
-						intersect.distance = distance;
-						intersect.face = face;
-						intersect.point.copy( intersectPoint );
-						
-					}
-					
-				}
-				else {
-					
-					if ( point_in_face3( intersectPoint, p0, p1, p2 ) ) {
-						
-						intersect.distance = distance;
-						intersect.face = face;
-						intersect.point.copy( intersectPoint );
-						
-					}
-					
-				}
-				
-			}
-			
-		}
-		
-		return intersect;
-		
 	}
 	
 } (KAIOPUA) );

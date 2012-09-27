@@ -28,7 +28,7 @@
 	
 	_MathHelper.clamp = function ( n, min, max ) {
 		
-		return Math.max( min, Math.min( max, n ) );
+		return (n < min) ? min : (max < n) ? max : n;
 		
 	};
 	

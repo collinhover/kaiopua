@@ -336,10 +336,7 @@
 				this.moduleInstance = typeof parameters.moduleInstance !== 'undefined' && parameters.moduleInstance.prototype instanceof _GridModule.Instance ? parameters.moduleInstance : _GridModule.Instance;
 				
 				module = new this.moduleInstance( { 
-					geometry: moduleGeometry,
-					physics: {
-						bodyType: 'mesh'
-					}
+					geometry: moduleGeometry
 				} );
 				
 				// store

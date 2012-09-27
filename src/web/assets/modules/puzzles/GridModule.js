@@ -151,13 +151,13 @@
 		
 		parameters.material = parameters.material || new THREE.MeshLambertMaterial();
 		
+		parameters.physics = parameters.physics || {
+			bodyType: 'mesh'
+		};
+		
 		parameters.center = true;
 		parameters.centerRotation = true;
 		parameters.normalizeFaces = true;
-		
-		/*parameters.physics = {
-			bodyType: 'mesh'
-		};*/
 		
 		// prototype constructor
 		

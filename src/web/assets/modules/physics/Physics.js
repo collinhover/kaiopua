@@ -1,7 +1,7 @@
 /*
  *
  * Physics.js
- * Simple raycasting based physics that works directly with rendering engine.
+ * Simple raycasting based physics using octree for faster casting.
  *
  * @author Collin Hover / http://collinhover.com/
  *
@@ -11,7 +11,6 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/physics/Physics.js",
 		_Physics = {},
-		_Octree,
 		_RigidBody,
 		_RayHelper,
 		_MathHelper,
@@ -29,13 +28,13 @@
 	main.asset_register( assetPath, { 
 		data: _Physics,
 		requirements: [
-			"assets/modules/core/Octree.js",
 			"assets/modules/physics/RigidBody.js",
 			"assets/modules/utils/MathHelper.js",
 			"assets/modules/utils/VectorHelper.js",
 			"assets/modules/utils/RayHelper.js",
 			"assets/modules/utils/ObjectHelper.js",
-			"assets/modules/utils/PhysicsHelper.js"
+			"assets/modules/utils/PhysicsHelper.js",
+			"js/three/ThreeOctree.min.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -47,10 +46,9 @@
     
     =====================================================*/
 	
-	function init_internal ( oc, rb, mh, vh, rh, oh, ph ) {
+	function init_internal ( rb, mh, vh, rh, oh, ph ) {
 		console.log('internal physics');
 		
-		_Octree = oc;
 		_RigidBody = rb;
 		_MathHelper = mh;
 		_VectorHelper = vh;
@@ -104,7 +102,7 @@
 		
 		// octree
 		
-		this.octree = parameters.octree instanceof _Octree.Instance ? parameters.octree : new _Octree.Instance();
+		this.octree = new THREE.Octree();
 		
 		// properties
 		

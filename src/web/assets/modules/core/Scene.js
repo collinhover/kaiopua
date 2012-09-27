@@ -12,7 +12,6 @@
 		assetPath = "assets/modules/core/Scene.js",
 		_Scene = {},
 		_SceneHelper,
-		_Octree,
 		_Model,
 		_Physics,
 		_RigidBody;
@@ -27,7 +26,6 @@
 		data: _Scene,
 		requirements: [
 			"assets/modules/utils/SceneHelper.js",
-			"assets/modules/core/Octree.js",
 			"assets/modules/core/Model.js",
 			'assets/modules/physics/Physics.js',
 			'assets/modules/physics/RigidBody.js'
@@ -42,13 +40,12 @@
     
     =====================================================*/
 	
-	function init_internal ( sh, oc, mdl, physx, rb ) {
+	function init_internal ( sh, mdl, physx, rb ) {
 		console.log('internal scene', _Scene);
 		
 		// utility
 		
 		_SceneHelper = sh;
-		_Octree = oc;
 		_Model = mdl;
 		_Physics = physx;
 		_RigidBody = rb;
@@ -81,10 +78,6 @@
 		
 		THREE.Scene.call( this );
 		
-		// octree
-		
-		this.octree = new _Octree.Instance( /*{ scene: this }*/ );
-		
 		// physics
 		
 		this.physics = new _Physics.Instance();
@@ -106,14 +99,6 @@
 		// if object is model
 		
 		if ( object instanceof _Model.Instance ) {
-			
-			// octree
-			
-			if ( object.addWorldOctree === true ) {
-				
-				this.octree.add( object, object.useFaces );
-				
-			}
 			
 			// physics
 			
@@ -148,14 +133,6 @@
 			if ( typeof object.morphs !== 'undefined' ) {
 				
 				object.morphs.stop();
-				
-			}
-			
-			// octree
-			
-			if ( object.addWorldOctree === true ) {
-				
-				this.octree.remove( object );
 				
 			}
 			
