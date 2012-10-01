@@ -536,7 +536,7 @@
 		
 		// get bounding radius in direction of velocity
 		// more accurate than plain radius, but about 4x more cost
-		boundingRadius = rigidBody.offset_in_direction( velocityForceRotated ).length();
+		boundingRadius = rigidBody.bounds_in_direction( velocityForceRotated ).length();
 		
 		// rotate offset if needed
 		

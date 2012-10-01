@@ -68,7 +68,7 @@
 		_RigidBody.Instance.prototype.collider_dimensions = collider_dimensions;
 		_RigidBody.Instance.prototype.collider_dimensions_scaled = collider_dimensions_scaled;
 		_RigidBody.Instance.prototype.collider_radius = collider_radius;
-		_RigidBody.Instance.prototype.offset_in_direction = offset_in_direction;
+		_RigidBody.Instance.prototype.bounds_in_direction = bounds_in_direction;
 		_RigidBody.Instance.prototype.find_gravity_body = find_gravity_body;
 		_RigidBody.Instance.prototype.change_gravity_body = change_gravity_body;
 		
@@ -136,8 +136,8 @@
 		this.utilVec32GravityBody = new THREE.Vector3();
 		this.utilVec33GravityBody = new THREE.Vector3();
 		this.utilVec34GravityBody = new THREE.Vector3();
-		this.utilVec31Offset = new THREE.Vector3();
-		this.utilQ4Offset = new THREE.Quaternion();
+		this.utilVec31Bounds = new THREE.Vector3();
+		this.utilQ4Bounds = new THREE.Quaternion();
 		
 		// handle parameters
 		
@@ -491,23 +491,23 @@
 	
 	/*===================================================
     
-	offset
+	bounds
     
     =====================================================*/
 	
-	function offset_in_direction ( direction ) {
+	function bounds_in_direction ( direction ) {
 		
-		var offset,
-			localDirection = this.utilVec31Offset,
-			meshRotation = this.utilQ4Offset;
+		var bounds,
+			localDirection = this.utilVec31Bounds,
+			meshRotation = this.utilQ4Bounds;
 		
 		// copy half of dimensions
 		
-		offset = this.collider_dimensions_scaled().multiplyScalar( 0.5 );
+		bounds = this.collider_dimensions_scaled().multiplyScalar( 0.5 );
 		
-		// add center offset
+		// add center bounds
 		
-		offset.subSelf( _ObjectHelper.center_offset( this.mesh ) );
+		bounds.subSelf( _ObjectHelper.center_offset( this.mesh ) );
 		
 		// get local direction
 		// seems like extra unnecessary work
@@ -521,13 +521,13 @@
 		
 		// set in direction
 		
-		offset.multiplySelf( localDirection );
+		bounds.multiplySelf( localDirection );
 		
 		// rotate to match mesh
 		
-		offset = _VectorHelper.rotate_vector3_to_mesh_rotation( this.mesh, offset );
+		bounds = _VectorHelper.rotate_vector3_to_mesh_rotation( this.mesh, bounds );
 		
-		return offset;
+		return bounds;
 		
 	}
 	

@@ -14,9 +14,10 @@
         errorState = false,
         errorCurrent = {},
         errorStringBase = 'error',
+		errorStringSearch = errorStringBase + '=',
 		errorTypeGeneral = 'General',
         errorTypes = [ errorTypeGeneral, 'WebGLBrowser', 'WebGLComputer' ],
-        webglNames = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];
+        webGLNames = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];
 	
     /*===================================================
     
@@ -41,104 +42,94 @@
     
     =====================================================*/
 	
-	// ui
-	
-	shared.domElements = shared.domElements || {};
-	
-	shared.domElements.$errors = $('#errors');
-    
-    // clear current errors
-    clear();
-    
-    // check internal
-    check_internal();
-    
-    function check_internal () {
-        var canvas, context, errorType, i, l;
-        
-        // webgl browser check
-        if ( !window.WebGLRenderingContext ) {
+	( function () {
+		
+		var i, l,
+			errorName,
+			canvas, 
+			context, 
+			errorType;
+		
+		// signals
+		
+		shared.signals = shared.signals || {};
+		
+		shared.signals.onError = new signals.Signal();
+		
+		// ui
+		
+		shared.domElements = shared.domElements || {};
+		
+		for ( i = 0, l = errorTypes.length; i < l; i++ ) {
 			
-            errorType = 'WebGLBrowser';
+			errorName = errorStringBase + errorTypes[ i ];
 			
-        }
-        else {
+			shared.domElements[ '$' + errorName ] = $( '#' + errorName );
 			
-            canvas = document.createElement( 'canvas' );
-            
-            // try each browser's webgl type
-            for (i = 0, l = webglNames.length; i < l; i += 1) {
+		}
+		
+		// clean url
+		
+		history.pushState( { "pState": shared.originLink }, '', shared.originLink );
+		
+		// webgl browser check
+		if ( !window.WebGLRenderingContext ) {
+			
+			errorType = 'WebGLBrowser';
+			
+		}
+		else {
+			
+			canvas = document.createElement( 'canvas' );
+			
+			// try each browser's webgl type
+			
+			for (i = 0, l = webGLNames.length; i < l; i += 1) {
 				
-                try {
+				try {
 					
-                    context = canvas.getContext(webglNames[i]);
+					context = canvas.getContext( webGLNames[i] );
 					
-                }
-                catch ( e ) {
-                }
+				}
+				catch ( e ) {
 				
-                if (context !== null && typeof context !== 'undefined') {
+				}
+				
+				if ( context ) {
 					
-                    break;
+					break;
 					
-                }
+				}
 				
-            }
-            
-            // if none found, there is another problem
-            if ( context === null || typeof context === 'undefined') {
-				
-                errorType = 'WebGLComputer';
-				
-            }
-        }
-        
-        // if error found, flag
-        if (typeof errorType !== 'undefined') {
+			}
 			
-            flag(errorType);
+			// if none found, there is another problem
+			if ( !context ) {
+				
+				errorType = 'WebGLComputer';
+				
+			}
 			
-        }
-    }
+		}
+		
+		// if error found, flag
+		if ( typeof errorType === 'string' ) {
+			
+			flag( errorType );
+			
+		}
+		
+	}() );
     
     /*===================================================
     
     functions
     
     =====================================================*/
-    
-    // remove error state
-    function clear () {
-        shared.domElements.$errors.empty();
-        errorCurrent = {};
-        errorState = false;
-    }
-    
-    // flag error
-    function flag ( errorType ) {
-        if (typeof errorType !== 'undefined') {
-            window.location.hash = errorStringBase + '=' + errorType;
-        }
-    }
-    
-    // read flagged error
-    function read () {
-        var hashError, hashErrorIndex;
-        
-        // check url hash for error message
-        hashError = window.location.hash.toString().replace( /#/, '', 1 );
-        hashErrorIndex = hashError.indexOf( errorStringBase );
-        if (hashErrorIndex != -1) {
-            // get error type
-            errorCurrent.type = hashError.replace( errorStringBase + '=', '', 1 );
-            
-            // set error state
-            errorState = true;
-        }
-    }
-    
-    // check for errors
+	
+	// check for errors
     function check () {
+		
         // clear current errors
         clear();
         
@@ -146,26 +137,52 @@
         read();
         
         return errorState;
+		
     }
     
-    // process error state
-    function process ( origin, lineNumber ) {
-        if (errorState === true) {
-            // show current
-            show( errorCurrent.type, origin, lineNumber );
+    // remove error state
+    function clear () {
+		
+        if ( typeof errorCurrent.$element !== 'undefined' ) {
+			
+			main.dom_collapse( {
+				element: errorCurrent.$element
+			} );
+			
+		}
+        errorCurrent = {};
+        errorState = false;
+		
+    }
+	
+	// read flagged error
+    function read () {
+		
+        var hashError, 
+			hashErrorIndex;
+        
+        // check url hash for error message
+		
+        hashError = window.location.hash.toString().replace( /#/, '' );
+        hashErrorIndex = hashError.indexOf( errorStringSearch );
+		
+        if (hashErrorIndex != -1) {
+			
+            // get error type
+            errorCurrent.type = hashError.replace( errorStringSearch, '' );
             
-            // set url back to origin link with history states
-            // always hide unnecessary information from users
-            history.pushState( { "pState": shared.originLink }, '', shared.originLink );
-            
-            // trigger shared error signal
-            shared.signals.onError.dispatch( errorCurrent.type, origin || 'Unknown Origin', lineNumber || 'N/A' );
+            // set error state
+            errorState = true;
+			
         }
+		
     }
-    
-    // generate error
+	
+	// generate error
     function generate ( error, origin, lineNumber ) {
+		
         if (typeof error !== 'undefined') {
+			
             // flag error
             flag( error );
             
@@ -174,7 +191,42 @@
             
             // process errors
             process( origin, lineNumber );
+			
         }
+		
+    }
+    
+    // flag error
+    function flag ( errorType ) {
+		
+        if (typeof errorType !== 'undefined') {
+			
+            window.location.hash = errorStringSearch + errorType;
+			
+        }
+		
+    }
+    
+    // process error state
+    function process ( origin, lineNumber ) {
+		
+        if (errorState === true) {
+			
+            // show current
+			
+            show( errorCurrent.type, origin, lineNumber );
+            
+            // set url back to origin link with history states
+            // always hide unnecessary information from users
+			
+            history.pushState( { "pState": shared.originLink }, '', shared.originLink );
+            
+            // trigger shared error signal
+			
+            shared.signals.onError.dispatch( errorCurrent.type, origin || 'Unknown Origin', lineNumber || 'N/A' );
+			
+        }
+		
     }
     
     // show error to user
@@ -184,7 +236,7 @@
         
         // if error type in list
 		
-        if ( errorTypes.indexOf( error ) !== -1 ) {
+        if ( main.index_of_value( errorTypes, error ) !== -1 ) {
 			
 			errorType = error;
 			
@@ -198,41 +250,41 @@
 		
 		// find dom element
 		
-		$element = $( "#" + errorStringBase + errorType );
+		errorCurrent.$element = shared.domElements[ '$' + errorStringBase + errorType ];
 		
 		// add error info if general error
 		
 		if ( errorType === errorTypeGeneral ) {
-		
+			
 			// format origin
 			
-			index = origin.search( /\/(?![\s\S]*\/)/ );
-			if ( index !== -1 ) {
-				origin = origin.slice( index + 1 );
+			if ( typeof origin === 'string' ) {
+				
+				index = origin.search( /\/(?![\s\S]*\/)/ );
+				if ( index !== -1 ) {
+					origin = origin.slice( index + 1 );
+				}
+				
+				index = origin.search( /\?(?![\s\S]*\?)/ );
+				if ( index !== -1 ) {
+					origin = origin.slice( 0, index );
+				}
+				
 			}
 			
-			index = origin.search( /\?(?![\s\S]*\?)/ );
-			if ( index !== -1 ) {
-				origin = origin.slice( 0, index );
-			}
-			
-			$element.find( "#errorMessage" ).html( error );
-			$element.find( "#errorFile" ).html( origin );
-			$element.find( "#errorLine" ).html( lineNumber );
+			errorCurrent.$element.find( "#errorMessage" ).html( error );
+			errorCurrent.$element.find( "#errorFile" ).html( origin );
+			errorCurrent.$element.find( "#errorLine" ).html( lineNumber );
 			
 		}
 		
 		// show
 		
 		main.dom_collapse( {
-			element: $element,
+			element: errorCurrent.$element,
 			show: true
 		} );
         
-        // store
-		
-        errorCurrent.$element = $element;
-		
     }
     
 } ( KAIOPUA ) );

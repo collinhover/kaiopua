@@ -506,7 +506,7 @@
 			keyName = _KeyHelper.key( keyCode );
 			
 			state = type.toLowerCase();
-			state = state.replace( 'key', '', 1 );
+			state = state.replace( 'key', '' );
 			
 		}
 		

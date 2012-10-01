@@ -62,7 +62,6 @@
 		assetsCore = [
 			"assets/modules/core/Scene.js",
 			"assets/modules/core/Model.js",
-			"assets/modules/core/Octree.js",
 			"assets/modules/physics/Physics.js",
 			"assets/modules/physics/RigidBody.js",
 			"assets/modules/ui/UIQueue.js",

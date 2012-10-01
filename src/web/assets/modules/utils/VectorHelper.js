@@ -49,6 +49,7 @@
 		
 		// functions
 		
+		_VectorHelper.clamp = clamp;
 		_VectorHelper.distance_to = distance_to;
 		_VectorHelper.rotate_vector3_relative_to = rotate_vector3_relative_to;
 		_VectorHelper.rotate_vector3_to_mesh_rotation = rotate_vector3_to_mesh_rotation;
@@ -62,6 +63,22 @@
 		_VectorHelper.lerp = lerp;
 		_VectorHelper.lerp_normalized = lerp_normalized;
 		_VectorHelper.lerp_snap = lerp_snap;
+		
+	}
+	
+	/*===================================================
+    
+    misc
+    
+    =====================================================*/
+	
+	function clamp ( v, vmin, vmax ) {
+		
+		v.x = _MathHelper.clamp( v.x, vmin.x, vmax.x );
+		v.y = _MathHelper.clamp( v.y, vmin.y, vmax.y );
+		v.z = _MathHelper.clamp( v.z, vmin.z, vmax.z );
+		
+		return v;
 		
 	}
 	
@@ -182,7 +199,13 @@
 		
 		axisFrom = axisFrom || ca.up;
 		
-		// angle
+		// check for invalid axes, i.e. axis with all 0
+		
+		if ( axisTo.lengthSq() === 0 || axisFrom.lengthSq() === 0 ) {
+			
+			return false;
+			
+		}
 		
 		angle = angle_between_vectors( axisFrom, axisTo );
 		
@@ -195,21 +218,16 @@
 			// if new axis is exactly opposite of current
 			// replace new axis with orthonormal axis
 			
-			if ( axis.length() === 0 ) {
+			if ( axis.lengthSq === 0 ) {
 				
-				axis.copy( axisOrthonormal || get_orthonormal_vectors( axisFrom, true ) );
+				axis.copy( axisOrthonormal && axisOrthonormal.lengthSq() > 0 ? axisOrthonormal : get_orthonormal_vectors( axisFrom, true ) );
 				
 			}
 			
 			// rotation change
 			
 			return qToA.setFromAxisAngle( axis, angle );
-			
-		}
-		else {
-			
-			return false;
-			
+		
 		}
 		
 	}

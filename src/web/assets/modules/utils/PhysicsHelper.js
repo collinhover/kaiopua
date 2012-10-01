@@ -73,7 +73,13 @@
     
     =====================================================*/
 	
-	function rotate_relative_to_source ( rotation, position, source, axisAway, axisForward, lerpDelta, rigidBody ) {
+	/*===================================================
+    
+    rotate
+    
+    =====================================================*/
+	
+	function rotate_relative_to_source ( rotation, position, source, axisAway, axisForward, lerpDelta, updateRigidBody ) {
 		
 		var ca = shared.cardinalAxes,
 			axisAwayNew = utilVec31RotateToSrc,
@@ -121,7 +127,7 @@
 				// normalized lerp to new rotation
 				
 				_VectorHelper.lerp_normalized( rotation, rotationTarget, lerpDelta );
-			
+				
 			}
 			else {
 				
@@ -141,23 +147,25 @@
 			
 			// update rigid body
 			
-			if ( typeof rigidBody !== 'undefined' ) {
+			if ( updateRigidBody === true ) {
 				
-				/*
-				quaternion = rigidBody.quaternion;
+				qToNew.multiplyVector3( axisAway );
 				
-				rotationTarget.multiply( qToNew, quaternion );
+				if ( axisForward instanceof THREE.Vector3 ) {
+					
+					qToNew.multiplyVector3( axisForward );
+					
+				}
 				
-				_VectorHelper.lerp_normalized( quaternion, rotationTarget, lerpDelta );
-				*/
+			}
+			else if ( typeof updateRigidBody !== 'undefined' ) {
+				
 				// find new axes based on new rotation
 				
-				axes = rigidBody.axes;
+				axes = updateRigidBody.axes;
 				
 				rotation.multiplyVector3( axes.up.copy( ca.up ) );
-				
 				rotation.multiplyVector3( axes.forward.copy( ca.forward ) );
-				
 				rotation.multiplyVector3( axes.right.copy( ca.right ) );
 				
 			}

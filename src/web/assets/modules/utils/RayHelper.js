@@ -36,9 +36,9 @@
 		utilVec31LinePoint,
 		utilVec32LinePoint,
 		utilVec33LinePoint,
-		utilVec31PointFace,
-		utilVec32PointFace,
-		utilVec33PointFace,
+		utilVec31PointTriangle,
+		utilVec32PointTriangle,
+		utilVec33PointTriangle,
 		utilVec31Triangle,
 		utilVec32Triangle,
 		utilVec33Triangle;
@@ -97,12 +97,13 @@
 		utilVec31LinePoint = new THREE.Vector3();
 		utilVec32LinePoint = new THREE.Vector3();
 		utilVec33LinePoint = new THREE.Vector3();
-		utilVec31PointFace = new THREE.Vector3();
-		utilVec32PointFace = new THREE.Vector3();
-		utilVec33PointFace = new THREE.Vector3();
+		utilVec31PointTriangle = new THREE.Vector3();
+		utilVec32PointTriangle = new THREE.Vector3();
+		utilVec33PointTriangle = new THREE.Vector3();
 		utilVec31Triangle = new THREE.Vector3();
 		utilVec32Triangle = new THREE.Vector3();
 		utilVec33Triangle = new THREE.Vector3();
+		utilVec34Triangle = new THREE.Vector3();
 		
 		// functions
 		
@@ -136,6 +137,9 @@
 		
 		rt.origin.copy( ray.origin );
 		rt.direction.copy( ray.direction );
+		rt.near = ray.near;
+		rt.far = ray.far;
+		rt.precision = ray.precision;
 		
 		if ( object instanceof THREE.Mesh ) {
 			
@@ -200,24 +204,26 @@
 		
 	}
 	
-	var point_in_face3 = function ( p, a, b, c ) {
+	function point_outside_triangle ( p, a, b, c ) {
 		
-		// http://www.blackpawn.com/texts/pointinpoly/default.html
-		
-		var v0 = utilVec31PointFace.sub( c, a ),
-			v1 = utilVec32PointFace.sub( b, a ),
-			v2 = utilVec33PointFace.sub( p, a ),
-			dot00 = v0.dot( v0 ),
-			dot01 = v0.dot( v1 ),
-			dot02 = v0.dot( v2 ),
-			dot11 = v1.dot( v1 ),
-			dot12 = v1.dot( v2 ),
-			invDenom = 1 / ( dot00 * dot11 - dot01 * dot01 ),
-			u = ( dot11 * dot02 - dot01 * dot12 ) * invDenom,
-			v = ( dot00 * dot12 - dot01 * dot02 ) * invDenom;
-		
-		return ( u >= 0 ) && ( v >= 0 ) && ( u + v < 1 );
-		
+		// slight imprecision (i.e. point can be on edge or very slightly outside triangle) adds a lot of stability
+
+		var v0 = utilVec31PointTriangle.sub( c, a );
+		var v1 = utilVec32PointTriangle.sub( b, a );
+		var v2 = utilVec33PointTriangle.sub( p, a );
+
+		var dot00 = v0.dot( v0 );
+		var dot01 = v0.dot( v1 );
+		var dot02 = v0.dot( v2 );
+		var dot11 = v1.dot( v1 );
+		var dot12 = v1.dot( v2 );
+
+		var invDenom = 1 / ( dot00 * dot11 - dot01 * dot01 );
+		var u = ( dot11 * dot02 - dot01 * dot12 ) * invDenom;
+		if ( u < -0.01 || u > 1.01 ) return true;
+		var v = ( dot00 * dot12 - dot01 * dot02 ) * invDenom;
+		return v < -0.01 || v > 1.01 || u + v > 1.01;
+
 	}
 	
 	function sort_intersections ( a, b ) {
@@ -356,6 +362,38 @@
     raycasting
     
     =====================================================*/
+	
+	function face_bounding_radius ( object, face ) {
+		
+		var geometry = object instanceof THREE.Mesh ? object.geometry : object,
+			vertices = geometry.vertices,
+			centroid = face.centroid,
+			va = vertices[ face.a ], vb = vertices[ face.b ], vc = vertices[ face.c ], vd,
+			centroidToVert = new THREE.Vector3(),
+			radius;
+		
+		// handle face type
+		
+		if ( face instanceof THREE.Face4 ) {
+			
+			vd = vertices[ face.d ];
+			
+			centroid.add( va, vb ).addSelf( vc ).addSelf( vd ).divideScalar( 4 );
+			
+			radius = Math.max( centroidToVert.sub( centroid, va ).length(), centroidToVert.sub( centroid, vb ).length(), centroidToVert.sub( centroid, vc ).length(), centroidToVert.sub( centroid, vd ).length() );
+			
+		}
+		else {
+			
+			centroid.add( va, vb ).addSelf( vc ).divideScalar( 3 );
+			
+			radius = Math.max( centroidToVert.sub( centroid, va ).length(), centroidToVert.sub( centroid, vb ).length(), centroidToVert.sub( centroid, vc ).length() );
+			
+		}
+		
+		return radius;
+		
+	}
 	
 	function raycast ( parameters ) {
 		
@@ -523,7 +561,7 @@
 			//intersections = intersections.concat( ray.intersectOctreeObjects( colliders ) );
 			
 		}
-		
+		//console.log( 'colliders', colliders, ' intersections', intersections );
 		// sort intersections
 		
 		intersections.sort( sort_intersections );
@@ -668,7 +706,7 @@
 	function raycast_collider ( ray, collider ) {
 		
 		// cast by type
-
+		
 		if ( collider instanceof PlaneCollider ) {
 			
 			return raycast_plane( ray, collider );
@@ -735,7 +773,7 @@
 				distance: Number.MAX_VALUE
 			};
 		
-		if ( e.lengthSq < collider.radiusSq ) {
+		if ( e.lengthSq() < collider.radiusSq ) {
 			
 			intersection.distance = -1;
 			
@@ -903,9 +941,11 @@
 			p3 = new THREE.Vector3(),
 			object = collider.object || collider,
 			scale = object.scale,
+			side = object.material.side,
 			geometry = object.geometry,
 			vertices = geometry.vertices,
-			faces = collider.faces ? main.ensure_array( collider.faces ) : geometry.faces,
+			faces,
+			face,
 			rayLocal = localize_ray( ray, object ),
 			collisionNormal = utilVec31CastMesh,
 			faceDist,
@@ -917,11 +957,25 @@
 				normal: new THREE.Vector3()
 			};
 		
+		// handle faces
+		
+		if ( collider.faces ) {
+			
+			faces = main.ensure_array( collider.faces );
+			
+		}
+		
+		if ( faces.length === 0 ) {
+			
+			faces = geometry.faces;
+			
+		}
+		
 		// for each face in collider
 		
 		for( i = 0, l = faces.length; i < l; i ++ ) {
 			
-			var face = faces[ i ];
+			face = faces[ i ];
 			
 			p0.copy( vertices[ face.a ] ).multiplySelf( scale );
 			p1.copy( vertices[ face.b ] ).multiplySelf( scale );
@@ -931,7 +985,8 @@
 				
 				p3.copy( vertices[ face.d ] ).multiplySelf( scale );
 				
-				faceDist = raycast_triangle( rayLocal, p0, p1, p3, minDist, collisionNormal, object );
+				//faceDist = raycast_triangle( rayLocal, p0, p1, p3, minDist, collisionNormal, object );
+				faceDist = raycast_triangle( rayLocal, p0, p1, p3, object, minDist, side );
 				
 				if( faceDist < minDist ) {
 					
@@ -941,7 +996,8 @@
 					
 				}
 				
-				faceDist = raycast_triangle( rayLocal, p1, p2, p3, minDist, collisionNormal, object );
+				//faceDist = raycast_triangle( rayLocal, p1, p2, p3, minDist, collisionNormal, object );
+				faceDist = raycast_triangle( rayLocal, p1, p2, p3, object, minDist, side );
 				
 				if( faceDist < minDist ) {
 					
@@ -954,7 +1010,8 @@
 			}
 			else {
 				
-				faceDist = raycast_triangle( rayLocal, p0, p1, p2, minDist, collisionNormal, object );
+				//faceDist = raycast_triangle( rayLocal, p0, p1, p2, minDist, collisionNormal, object );
+				faceDist = raycast_triangle( rayLocal, p0, p1, p2, object, minDist, side, face.normal );
 				
 				if( faceDist < minDist ) {
 					
@@ -975,9 +1032,96 @@
 		return intersection;
 		
 	}
+	
+	function raycast_triangle ( ray, p0, p1, p2, object, minDist, side, normal ) {
+		
+		var e1 = utilVec31Triangle,
+			e2 = utilVec32Triangle,
+			origin = ray.origin,
+			direction = ray.direction,
+			dotDirectionNormal,
+			planeDistance,
+			dotOriginNormal,
+			pointInPlane,
+			distance;
+		
+		// calculate normal if not provided
+		
+		if ( normal instanceof THREE.Vector3 !== true ) {
+			
+			e1.sub( p1, p0 );
+			e2.sub( p2, p1 );
+			
+			normal = utilVec33Triangle.cross( e1, e2 );
+			
+		}
+		else {
+			
+			normal = utilVec33Triangle.copy( normal );
+			
+		}
+		
+		// angle between ray direction and triangle normal
+		
+		if ( side === THREE.BackSide ) {
+			
+			normal.multiplyScalar( -1 );
+			
+		}
+		
+		dotDirectionNormal = direction.dot( normal );
+		
+		// ray and triangle are parallel ( = ) or facing similar direction ( > )
+		
+		if ( !( dotDirectionNormal < 0 ) ) {
+			
+			if ( side === THREE.DoubleSide ) {
+				
+				normal.multiplyScalar( -1 );
+				dotDirectionNormal *= -1;
+				
+			}
+			else {
+				
+				return Number.MAX_VALUE;
+				
+			}
+		
+		}
+		
+		// distance along ray from origin to triangle plane
+		
+		planeDistance = normal.dot( p0 );
+		dotOriginNormal = origin.dot( normal );
+		
+		distance = planeDistance - dotOriginNormal;
+		
+		// distance > 0 would take us behind ray, as dotDirectionNormal must be negative
+		// so distance should be negative or zero at this point
+		
+		if ( distance > 0 || distance < dotDirectionNormal * ray.far || distance < dotDirectionNormal * minDist ) return Number.MAX_VALUE;
+		
+		// complete distance
 
+		distance = distance / dotDirectionNormal;
+		
+		// ray has point in plane of triangle, now we need to know if point is inside triangle
+		
+		pointInPlane = utilVec34Triangle.copy( direction ).multiplyScalar( distance ).addSelf( origin );
+		
+		if ( point_outside_triangle( pointInPlane, p0, p1, p2 ) ) {
+			
+			return Number.MAX_VALUE;
+			
+		}
+		
+		return distance;
+
+	}
+	
+	/*
 	function raycast_triangle ( ray, p0, p1, p2, mind, n, object ) {
-
+		
 		var e1 = utilVec31Triangle,
 			e2 = utilVec32Triangle;
 		
@@ -1086,5 +1230,6 @@
 		return t;
 
 	}
+	*/
 	
 } (KAIOPUA) );

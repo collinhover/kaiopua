@@ -52,21 +52,38 @@
 		// instance
 		
 		_CameraControls.Instance = CameraControls;
+		
+		_CameraControls.Instance.prototype.enable = enable;
+		_CameraControls.Instance.prototype.disable = disable;
+		
+		_CameraControls.Instance.prototype.rotate = rotate;
 		_CameraControls.Instance.prototype.zoom = zoom;
 		_CameraControls.Instance.prototype.update = update;
 		
 		Object.defineProperty( _CameraControls.Instance.prototype, 'camera', { 
 			get : function () { return this._camera; },
-			set : function ( newCamera ) {
+			set : function ( camera ) {
 				
-				if ( typeof newCamera !== 'undefined' ) {
+				if ( typeof camera !== 'undefined' ) {
 					
-					this._camera = newCamera;
+					this._camera = camera;
 					
-					this.camera.useQuaternion = true;
-					this.camera.quaternion.setFromRotationMatrix( this.camera.matrix );
+					this._camera.useQuaternion = true;
+					this._camera.quaternion.setFromRotationMatrix( this._camera.matrix );
 					
 				}
+				
+			}
+		});
+		
+		Object.defineProperty( _CameraControls.Instance.prototype, 'target', { 
+			get : function () { return this._target; },
+			set : function ( target ) {
+				
+				this._target = target;
+				
+				this.boundRadius = this._target instanceof THREE.Object3D ? this._target.boundRadius : this.boundRadiusBase;
+				this.boundRadiusPct = _MathHelper.clamp( this.boundRadius / this.boundRadiusBase, this.boundRadiusPctMin, this.boundRadiusPctMax );
 				
 			}
 		});
@@ -88,31 +105,53 @@
 		
 		this.utilVec31Update = new THREE.Vector3();
 		this.utilVec32Update = new THREE.Vector3();
-		this.utilVec33Update = new THREE.Vector3();
 		this.utilQ31Update = new THREE.Quaternion();
 		this.utilQ32Update = new THREE.Quaternion();
 		
 		// properties
 		
-		this.camera = camera;
-		this.target = target;
-		
 		this.position = new THREE.Vector3();
 		this.quaternion = new THREE.Quaternion();
 		
-		this.up = new THREE.Vector3( 0, 1, 0 );
+		this.up = shared.cardinalAxes.up.clone();
+		this.forward = shared.cardinalAxes.forward.clone();
 		
-		this.positionOffset = new THREE.Vector3( 0, 50, 550 );
-		this.positionOffsetMin = new THREE.Vector3( 0, 50, 200 );
-		this.positionOffsetMax = new THREE.Vector3( 0, 50, 1200 );
-		this.positionOffsetDelta = new THREE.Vector3();
-		this.positionOffsetDeltaMin = new THREE.Vector3( -40, -40, -40 );
-		this.positionOffsetDeltaMax = new THREE.Vector3( 40, 40, 40 );
-		this.positionOffsetDeltaSpeedMin = 0.1;
-		this.positionOffsetDeltaSpeedMax = 0.3;
-		this.positionOffsetDeltaDecay = 0.7;
+		this.cameraLerpDelta = 0.1;
+		this.cameraLerpDeltaWhenNew = 0;
+		this.cameraLerpDeltaWhenNewGrow = 0.02;
 		
-		this.rotationOffset = new THREE.Vector3( -Math.PI * 0.2, 0, 0 );
+		this.positionBase = new THREE.Vector3();
+		this.positionMove = new THREE.Vector3();
+		this.positionOffset = new THREE.Vector3();
+		this.positionOffsetTarget = new THREE.Vector3();
+		this.positionOffsetSpeed = 0.1;
+		this.positionOffsetSpeedWhenNew = 0.05;
+		this.boundRadiusBase = 500;
+		this.boundRadiusModMin = 1.25;
+		this.boundRadiusModMax = this.boundRadiusMod = 3;
+		this.boundRadiusModSpeed = 0.001;
+		this.boundRadiusPctMin = 0.25;
+		this.boundRadiusPctMax = this.boundRadiusPct = 1;
+		
+		this.rotating = false;
+		this.rotationOffset = new THREE.Quaternion();
+		this.rotationOffsetTarget = new THREE.Quaternion();
+		this.rotationConstrained = new THREE.Vector3();
+		this.rotationBase = new THREE.Vector3( -Math.PI * 0.2, 0, 0 );
+		this.rotationRotated = new THREE.Vector3();
+		this.rotationTotal = new THREE.Vector3();
+		this.rotationDelta = new THREE.Vector3();
+		this.rotationDeltaTotal = new THREE.Vector3();
+		this.rotationTarget = new THREE.Quaternion();
+		this.rotationCamera = new THREE.Quaternion();
+		this.rotationMaxX = Math.PI * 0.5; // not using quaternions, so above 0.5 on X will appear to reverse y rotation
+		this.rotationMinX= -Math.PI * 0.5;
+		this.rotationMaxY = Math.PI;
+		this.rotationMinY = -Math.PI;
+		this.rotationSpeed = 0.1;
+		this.rotationSpeedDelta = 0.001;
+		this.rotationReturnDecay = 0.8;
+		this.rotationDeltaDecay = 0.8;
 		
 		this.distanceThresholdPassed = false;
 		this.distanceThresholdMin = 1;
@@ -122,10 +161,100 @@
 		this.distanceSpeedPctMin = 0.01;
 		this.distanceSpeedPctAlphaGrow = 0.025;
 		this.distanceSpeedPctAlphaShrink = 0.1;
+		this.distanceSpeedPctWhenNew = 0;
+		this.distanceSpeedPctWhenNewGrow = 0.0005;
 		this.distanceSpeedPct = this.distanceSpeedPctMin;
 		this.distanceSpeed = 0;
 		this.distanceNormal = new THREE.Vector3();
 		this.distanceMagnitude = new THREE.Vector3();
+		
+		// camera and target
+		
+		this.camera = camera;
+		this.target = this.targetLast = target;
+		
+	}
+	
+	/*===================================================
+	
+	enable / disable
+	
+	=====================================================*/
+	
+	function enable () {
+		
+		shared.signals.onGamePointerDragStarted.add( rotate_start, this );
+		shared.signals.onGamePointerDragged.add( this.rotate, this );
+		shared.signals.onGamePointerDragEnded.add( rotate_stop, this );
+		shared.signals.onGamePointerWheel.add( this.zoom, this );
+		
+	}
+	
+	function disable () {
+		
+		shared.signals.onGamePointerDragStarted.remove( rotate_start, this );
+		shared.signals.onGamePointerDragged.remove( this.rotate, this );
+		shared.signals.onGamePointerDragEnded.remove( rotate_stop, this );
+		shared.signals.onGamePointerWheel.remove( this.zoom, this );
+		
+	}
+	
+	/*===================================================
+	
+	rotate
+	
+	=====================================================*/
+	
+	function rotate ( e, pointer ) {
+		
+		var angle,
+			sign,
+			angleSign,
+			angleDiff;
+		
+		this.rotationDelta.set( -pointer.deltaY * this.rotationSpeedDelta, -pointer.deltaX * this.rotationSpeedDelta, 0 )
+		this.rotationDeltaTotal.addSelf( this.rotationDelta );
+		
+	}
+	
+	function rotate_start () {
+		
+		this.rotating = true;
+		
+	}
+	
+	function rotate_stop () {
+		
+		this.rotating = false;
+		
+	}
+	
+	function rotate_update () {
+		
+		var target = this._target;
+		
+		// while moving, return to 0 rotation offset
+		
+		if ( this.targetNew === true || ( target && target.moving === true && this.rotating !== true ) ) {
+			
+			this.rotationRotated.multiplyScalar( this.rotationReturnDecay );
+			
+		}
+		else {
+			
+			this.rotationRotated.x = _MathHelper.clamp( _MathHelper.rad_between_PI( this.rotationRotated.x + this.rotationDeltaTotal.x ), this.rotationMinX, this.rotationMaxX );
+			this.rotationRotated.y = _MathHelper.clamp( _MathHelper.rad_between_PI( this.rotationRotated.y + this.rotationDeltaTotal.y ), this.rotationMinY, this.rotationMaxY );
+			
+		}
+		
+		this.rotationConstrained.add( this.rotationBase, this.rotationRotated );
+		this.rotationConstrained.x = _MathHelper.clamp( this.rotationConstrained.x, this.rotationMinX, this.rotationMaxX );
+		this.rotationConstrained.y = _MathHelper.clamp( this.rotationConstrained.y, this.rotationMinY, this.rotationMaxY );
+		
+		this.rotationOffsetTarget.setFromEuler( this.rotationConstrained, "YXZ" );
+		this.rotationOffset.slerpSelf( this.rotationOffsetTarget, this.rotationSpeed );
+		
+		this.rotationDeltaTotal.multiplyScalar( this.rotationDeltaDecay );
 		
 	}
 	
@@ -138,23 +267,21 @@
 	function zoom ( e ) {
 		
 		var eo = e.originalEvent || e,
-			wheelDelta = eo.wheelDelta,
-			positionOffset = this.positionOffset,
-			positionOffsetMin = this.positionOffsetMin,
-			positionOffsetMax = this.positionOffsetMax,
-			positionOffsetDeltaMin = this.positionOffsetDeltaMin,
-			positionOffsetDeltaMax = this.positionOffsetDeltaMax,
-			positionOffsetDelta = this.positionOffsetDelta,
-			positionOffsetDeltaSpeedMin = this.positionOffsetDeltaSpeedMin,
-			positionOffsetDeltaSpeedMax = this.positionOffsetDeltaSpeedMax,
-			positionOffsetPctToMin = (positionOffset.z - positionOffsetMin.z) / ( positionOffsetMax.z - positionOffsetMin.z ),
-			positionOffsetDeltaSpeed;
+			wheelDelta = eo.wheelDelta;
 		
-		// set new zoom delta
+		this.boundRadiusMod -= wheelDelta * ( this.boundRadiusModSpeed / this.boundRadiusPct );
 		
-		positionOffsetDeltaSpeed = positionOffsetDeltaSpeedMin * ( 1 - positionOffsetPctToMin ) + positionOffsetDeltaSpeedMax * positionOffsetPctToMin;
+	}
+	
+	function zoom_update() {
 		
-		positionOffsetDelta.z = _MathHelper.clamp( positionOffsetDelta.z - wheelDelta * positionOffsetDeltaSpeed, positionOffsetDeltaMin.z, positionOffsetDeltaMax.z );
+		this.boundRadiusMod = _MathHelper.clamp( this.boundRadiusMod, this.boundRadiusModMin / this.boundRadiusPct, this.boundRadiusModMax / this.boundRadiusPct );
+		this.positionMove.z = this.boundRadius * this.boundRadiusMod;
+		
+		this.positionOffsetTarget.add( this.positionBase, this.positionMove );
+		
+		this.positionOffset.lerpSelf( this.positionOffsetTarget, this.targetNew === true ? this.positionOffsetSpeedWhenNew : this.positionOffsetSpeed );
+		
 		
 	}
 	
@@ -164,156 +291,204 @@
 	
 	=====================================================*/
 	
-	function update ( timeDelta ) {
+	function update () {
 		
-		var target = this.target,
-			scale = Math.max( target.scale.x, target.scale.y, target.scale.z ),
-			gravityBody = target.gravityBody,
+		var target = this._target,
+			scale,
+			rigidBody,
+			gravityBody,
 			gravityMesh,
 			upReferencePosition,
 			distance,
 			distanceDiff,
 			distanceSpeedMod,
+			distanceSpeedPctAlphaGrow,
+			distanceSpeedPctAlphaShrink,
 			qToNew,
-			angle,
-			axis,
-			positionOffset = this.positionOffset,
-			positionOffsetMin = this.positionOffsetMin,
-			positionOffsetMax = this.positionOffsetMax,
-			positionOffsetDelta = this.positionOffsetDelta,
-			positionOffsetScaled,
-			rotationOffsetQ = this.utilQ31Update.setFromEuler( this.rotationOffset ).normalize();
+			positionOffsetScaled = this.utilVec31Update,
+			rotationTargetNew = this.utilQ32Update,
+			cameraLerpDelta = this.cameraLerpDelta;
 		
-		// make sure camera and target parents are same
+		// handle target
 		
-		if ( this.camera.parent !== target.parent ) {
+		if ( target instanceof THREE.Object3D !== true ) {
 			
-			target.parent.add( this.camera );
-			
-		}
-		
-		// update position offset
-		
-		positionOffset.z = _MathHelper.clamp( positionOffset.z + positionOffsetDelta.z, positionOffsetMin.z, positionOffsetMax.z );
-		positionOffsetScaled = this.utilVec31Update.copy( positionOffset ).multiplyScalar( scale );
-		
-		// decay position offset delta
-		
-		positionOffsetDelta.multiplyScalar( this.positionOffsetDeltaDecay );
-		
-		// get distance to target position
-		
-		distance = _VectorHelper.distance_to( this.position, target.position );
-		
-		if ( distance > this.distanceThresholdMin ) {
-			
-			// update threshold max based on position offset
-			
-			this.distanceThresholdMax = positionOffsetScaled.length() * this.distanceThresholdPct;
-			
-			// if greater than max threshold, move with target at max distance
-			
-			if ( distance - this.distanceThresholdMin > this.distanceThresholdMax ) {
-				
-				distanceDiff = distance - this.distanceThresholdMax;
-				
-				// change flag
-				
-				this.distanceThresholdPassed = true;
-				
-				// update speed
-				
-				this.distanceSpeed = Math.max( this.distanceSpeed, distanceDiff );
-				
-			}
-			// if distance threshold not yet passed, slow movement while target moving, speed up when stopped
-			else if ( this.distanceThresholdPassed === false ) {
-				
-				// get speed pct
-				
-				if ( target.moving === true ) {
-					
-					this.distanceSpeedPct += ( this.distanceSpeedPctMin - this.distanceSpeedPct ) * this.distanceSpeedPctAlphaShrink;
-					
-				}
-				else {
-					
-					this.distanceSpeedPct += ( this.distanceSpeedPctMax - this.distanceSpeedPct ) * this.distanceSpeedPctAlphaGrow;
-					
-				}
-				
-				// update speed
-				
-				this.distanceSpeed = Math.max( this.distanceSpeed, distance * this.distanceSpeedPct );
-				
-			}
-			
-			// get speed modifier
-			
-			distanceSpeedMod = Math.min( 1, distance / Math.max( this.distanceSpeed, this.distanceThresholdMax ) );
-			
-			// normal / magnitude to target
-			
-			this.distanceNormal.sub( target.position, this.position ).normalize();
-			this.distanceMagnitude.copy( this.distanceNormal ).multiplyScalar( this.distanceSpeed * distanceSpeedMod );
-			
-			// update position
-			
-			this.position.addSelf( this.distanceMagnitude );
-			
-		}
-		// reset position variables
-		else if ( this.distanceThresholdPassed !== false ) {
-			
-			this.position.copy( target.position );
-			this.distanceSpeed = 0;
-			this.distanceThresholdPassed = false;
-			
-		}
-		
-		// find angle and axis
-		
-		if ( gravityBody ) {
-			
-			gravityMesh = gravityBody.mesh;
-			upReferencePosition = gravityMesh.matrixWorld.getPosition();
+			positionOffsetScaled.copy( this.positionOffset );
 			
 		}
 		else {
 			
-			upReferencePosition = shared.universeGravitySource;
+			scale = Math.max( target.scale.x, target.scale.y, target.scale.z );
+			rigidBody = target.rigidBody;
+			gravityBody = target.gravityBody;
+			/*
+			// make sure camera and target parents are same
 			
-		}
-		
-		// rotate quaternion
-		
-		qToNew = _PhysicsHelper.rotate_relative_to_source ( this.quaternion, this.position, upReferencePosition, this.up, undefined, 1 );
-		
-		// if rotation change
-		
-		if ( qToNew instanceof THREE.Quaternion ) {
-			
-			// update up direction
-			
-			qToNew.multiplyVector3( this.up );
-			
-			// copy rotation
-			
-			this.camera.quaternion.copy( this.quaternion );
-			
-			// apply target turn
-			
-			if ( target.turn instanceof THREE.Quaternion ) {
+			if ( this.camera.parent !== target.parent ) {
 				
-				this.camera.quaternion.multiplySelf( target.turn );
+				target.parent.add( this.camera );
+				
+			}
+			*/
+			// first time target is new
+			
+			if ( this.targetNew !== true && target !== this.targetLast ) {
+				
+				this.targetNew = true;
+				this.distanceSpeedPctWhenNew = 0;
+				this.cameraLerpDeltaWhenNew = 0;
+					
+			}
+			
+			// get distance to target position
+			
+			distance = _VectorHelper.distance_to( this.position, target.position );
+			
+			if ( this.targetNew === true && distance - this.distanceThresholdMin <= this.distanceThresholdMax ) {
+				
+				this.targetNew = false;
+				this.targetLast = target;
+				this.distanceThresholdPassed = true;
 				
 			}
 			
-			// apply rotation offset
+			positionOffsetScaled.copy( this.positionOffset ).multiplyScalar( scale );
 			
-			this.camera.quaternion.multiplySelf( rotationOffsetQ );
+			// handle distance
+			
+			if ( distance > this.distanceThresholdMin ) {
+				
+				// update threshold max based on position offset
+				
+				this.distanceThresholdMax = positionOffsetScaled.length() * this.distanceThresholdPct;
+				
+				// if greater than max threshold, move with target at max distance
+				
+				if ( this.targetNew !== true && distance - this.distanceThresholdMin > this.distanceThresholdMax ) {
+					
+					distanceDiff = distance - this.distanceThresholdMax;
+					
+					// change flag
+					
+					this.distanceThresholdPassed = true;
+					
+					// update speed
+					
+					this.distanceSpeed = Math.max( this.distanceSpeed, distanceDiff );
+					
+				}
+				// if distance threshold not yet passed, slow movement while target moving, speed up when stopped
+				else if ( this.distanceThresholdPassed === false ) {
+					
+					// get speed pct
+					
+					if ( target.moving === true ) {
+						
+						this.distanceSpeedPct += ( this.distanceSpeedPctMin - this.distanceSpeedPct ) * this.distanceSpeedPctAlphaShrink;
+						
+					}
+					else {
+						
+						if ( this.targetNew === true ) {
+							
+							distanceSpeedPctAlphaGrow = this.distanceSpeedPctWhenNew;
+							this.distanceSpeedPctWhenNew = Math.min( this.distanceSpeedPctAlphaGrow, this.distanceSpeedPctWhenNew + this.distanceSpeedPctWhenNewGrow );
+							
+						}
+						else {
+							
+							distanceSpeedPctAlphaGrow = this.distanceSpeedPctAlphaGrow;
+							
+						}
+						
+						this.distanceSpeedPct += ( this.distanceSpeedPctMax - this.distanceSpeedPct ) * distanceSpeedPctAlphaGrow;
+						
+					}
+					
+					// update speed
+					
+					this.distanceSpeed = Math.max( this.distanceSpeed, distance * this.distanceSpeedPct );
+					
+				}
+				
+				// get speed modifier
+				
+				distanceSpeedMod = Math.min( 1, distance / Math.max( this.distanceSpeed, this.distanceThresholdMax ) );
+				
+				// normal / magnitude to target
+				
+				this.distanceNormal.sub( target.position, this.position ).normalize();
+				this.distanceMagnitude.copy( this.distanceNormal ).multiplyScalar( this.distanceSpeed * distanceSpeedMod );
+				
+				// update position
+				
+				this.position.addSelf( this.distanceMagnitude );
+				
+			}
+			// reset position variables
+			else if ( this.distanceThresholdPassed !== false ) {
+				
+				this.position.copy( target.position );
+				this.distanceSpeed = 0;
+				this.distanceThresholdPassed = false;
+				
+			}
+			
+			// handle gravity body
+			
+			if ( typeof gravityBody === 'undefined' && rigidBody && rigidBody.gravitySource === true ) {
+				
+				gravityBody = rigidBody;
+				
+			}
+			
+			if ( gravityBody ) {
+				
+				gravityMesh = gravityBody.mesh;
+				upReferencePosition = gravityMesh.matrixWorld.getPosition();
+				
+			}
+			else {
+				
+				upReferencePosition = shared.universeGravitySource;
+				
+			}
+			
+			// rotate quaternion and up/forward
+			
+			qToNew = _PhysicsHelper.rotate_relative_to_source ( this.quaternion, this.position, upReferencePosition, this.up, this.forward, 1, true );
 			
 		}
+		
+		// update
+		
+		rotate_update.call( this );
+		zoom_update.call( this );
+		
+		// get camera target rotation
+		
+		rotationTargetNew.copy( this.quaternion );
+		
+		if ( target && target.turn instanceof THREE.Quaternion ) {
+			
+			rotationTargetNew.multiplySelf( target.turn );
+			
+		}
+		
+		// lerp camera rotation to target
+		
+		if ( this.targetNew === true ) {
+			
+			cameraLerpDelta = this.cameraLerpDeltaWhenNew;
+			this.cameraLerpDeltaWhenNew = Math.min( this.cameraLerpDelta, this.cameraLerpDeltaWhenNew + ( this.cameraLerpDelta - this.cameraLerpDeltaWhenNew ) * this.cameraLerpDeltaWhenNewGrow );
+			
+		}
+		
+		_VectorHelper.lerp_normalized( this.rotationTarget, rotationTargetNew, cameraLerpDelta );
+		
+		this.rotationCamera.copy( this.rotationTarget ).multiplySelf( this.rotationOffset );
+		
+		this.camera.quaternion.copy( this.rotationCamera );
 		
 		// adjust position
 		
