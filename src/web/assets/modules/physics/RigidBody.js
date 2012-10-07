@@ -48,6 +48,10 @@
 		// properties
 		
 		_RigidBody.damping = 0.97;
+		_RigidBody.dampingDecay = 0.95;
+		_RigidBody.offsetPct = 0.4;
+		_RigidBody.collisionAngleThresholdMax = Math.PI * 0.5;
+		_RigidBody.gravityCollisionAngleThreshold = Math.PI * 0.35;
 		_RigidBody.lerpDelta = 0.1;
 		_RigidBody.lerpDeltaGravityChange = 0;
 		_RigidBody.gravityBodyRadiusAdditionPct = 1;
@@ -65,15 +69,22 @@
 		_RigidBody.Instance.prototype = {};
 		_RigidBody.Instance.prototype.constructor = _RigidBody.Instance;
 		_RigidBody.Instance.prototype.clone = clone;
+		
 		_RigidBody.Instance.prototype.collider_dimensions = collider_dimensions;
 		_RigidBody.Instance.prototype.collider_dimensions_scaled = collider_dimensions_scaled;
 		_RigidBody.Instance.prototype.collider_radius = collider_radius;
+		
 		_RigidBody.Instance.prototype.bounds_in_direction = bounds_in_direction;
+		
 		_RigidBody.Instance.prototype.find_gravity_body = find_gravity_body;
 		_RigidBody.Instance.prototype.change_gravity_body = change_gravity_body;
 		
 		Object.defineProperty( _RigidBody.Instance.prototype, 'grounded', { 
 			get : function () { return Boolean( this.velocityGravity.collision ) && !this.velocityGravity.moving }
+		});
+		
+		Object.defineProperty( _RigidBody.Instance.prototype, 'sliding', { 
+			get : function () { return this.velocityGravity.sliding || this.velocityMovement.sliding }
 		});
 		
 		Object.defineProperty( _RigidBody.Instance.prototype, 'radiusGravity', { 
@@ -126,6 +137,7 @@
 			radius,
 			radiusAvg,
 			position,
+			offsetPct,
 			gravityBodyRadiusAdditionPct,
 			gravityBodyRadiusAddition;
 		
@@ -137,7 +149,9 @@
 		this.utilVec33GravityBody = new THREE.Vector3();
 		this.utilVec34GravityBody = new THREE.Vector3();
 		this.utilVec31Bounds = new THREE.Vector3();
-		this.utilQ4Bounds = new THREE.Quaternion();
+		this.utilQ1Bounds = new THREE.Quaternion();
+		this.utilQ1Relative= new THREE.Quaternion();
+		this.utilMat41Relative = new THREE.Matrix4();
 		
 		// handle parameters
 		
@@ -325,14 +339,32 @@
 		
 		// velocity trackers
 		
+		offsetPct = parameters.offsetPct || _RigidBody.offsetPct;
+		
 		this.velocityMovement = new VelocityTracker( { 
+			rigidBody: this,
 			damping: parameters.movementDamping,
-			offset: parameters.movementOffset,
-			relativeRotation: this.mesh
+			dampingDecay: parameters.movementDampingDecay,
+			collisionAngleThreshold: parameters.movementCollisionAngleThreshold,
+			relativeTo: this.mesh,
+			offsets: parameters.movementOffsets || [ 
+				new THREE.Vector3( -width * offsetPct, 0, 0 ), // left waist side
+				new THREE.Vector3( width * offsetPct, 0, 0 ), // right waist side
+				new THREE.Vector3( 0, height * offsetPct, 0 ) // near head
+			]
 		} );
+		
 		this.velocityGravity = new VelocityTracker( { 
+			rigidBody: this,
 			damping: parameters.gravityDamping,
-			offset: parameters.gravityOffset
+			dampingDecay: parameters.gravityDampingDecay,
+			collisionAngleThreshold: parameters.gravityCollisionAngleThreshold || _RigidBody.gravityCollisionAngleThreshold,
+			offsets: parameters.gravityOffsets || [ 
+				new THREE.Vector3( -width * offsetPct, 0, -depth * offsetPct ),
+				new THREE.Vector3( width * offsetPct, 0, -depth * offsetPct ),
+				new THREE.Vector3( width * offsetPct, 0, depth * offsetPct ),
+				new THREE.Vector3( -width * offsetPct, 0, depth * offsetPct )
+			]
 		} );
 		
 		// safety net
@@ -378,9 +410,7 @@
 		parameters.dynamic = this.dynamic;
 		parameters.mass = this.mass;
 		parameters.movementDamping = this.velocityMovement.damping.clone();
-		parameters.movementOffset = this.velocityMovement.offset.clone();
 		parameters.gravityDamping = this.velocityGravity.damping.clone();
-		parameters.gravityOffset = this.velocityGravity.offset.clone();
 		
 		return new _RigidBody.Instance( mesh, parameters );
 		
@@ -394,6 +424,10 @@
 	
 	function VelocityTracker ( parameters ) {
 		
+		var i, l,
+			offsets,
+			offset;
+		
 		// handle parameters
 		
 		parameters = parameters || {};
@@ -402,24 +436,142 @@
 		
 		// properties
 		
+		this.rigidBody = parameters.rigidBody;
 		this.force = new THREE.Vector3();
 		this.forceRotated = new THREE.Vector3();
-		this.damping = parameters.damping instanceof THREE.Vector3 ? parameters.damping : new THREE.Vector3();
-		this.offset = parameters.offset instanceof THREE.Vector3 ? parameters.offset : new THREE.Vector3();
-		this.relativeRotation = parameters.relativeRotation;
-		this.moving = false;
-		this.intersection = false;
+		this.forceRotatedLast = new THREE.Vector3();
+		this.damping = new THREE.Vector3( 1, 1, 1 );
+		this.dampingPre = new THREE.Vector3( 1, 1, 1 );
+		this.dampingDecay = parameters.dampingDecay || _RigidBody.dampingDecay;
+		this.offsets = [];
+		this.offsetsRotated = [];
+		this.collisionAngleThreshold = Math.min( parameters.collisionAngleThreshold || _RigidBody.collisionAngleThresholdMax, _RigidBody.collisionAngleThresholdMax );
+		this.relativeTo = parameters.relativeTo;
+		this.relativeToQ = new THREE.Quaternion();
+		this.rotatedRelativeTo = [];
+		this.up = shared.cardinalAxes.up.clone();
+		this.moving = this.intersection = this.collision = this.sliding = false;
 		this.timeWithoutIntersection = 0;
 		
-		if ( main.is_number( parameters.damping ) === true ) {
+		if ( parameters.damping instanceof THREE.Vector3 ) {
 			
-			this.damping.set( parameters.damping, parameters.damping, parameters.damping );
+			this.damping.copy( parameters.damping );
+			
+		}
+		else {
+			
+			this.damping.multiplyScalar( main.is_number( parameters.damping ) ? parameters.damping : _RigidBody.damping );
+			
+		}
+		
+		offsets = parameters.offsets;
+		
+		if ( offsets && offsets.length > 0 ) {
+			
+			for ( i = 0, l = offsets.length; i < l; i++ ) {
+				
+				offset = offsets[ i ];
+				
+				if ( offset instanceof THREE.Vector3 ) {
+					
+					this.offsets.push( offset.clone() );
+					
+				}
+				
+			}
+			
+		}
+		else {
+			
+			this.offsets.push( new THREE.Vector3() );
+			
+		}
+		
+		for ( i = 0, l = this.offsets.length; i < l; i++ ) {
+			
+			this.offsetsRotated.push( this.offsets[ i ].clone() );
 			
 		}
 		
 		this.reset();
 		
 	}
+	
+	VelocityTracker.prototype.update = function ( relativeToQNew ) {
+		
+		var i, l,
+			offsetRotated,
+			rigidBody = this.rigidBody,
+			mesh,
+			scaleMax = 1;
+		
+		// update relative to q
+		
+		if ( relativeToQNew instanceof THREE.Quaternion === false ) {
+			
+			relativeToQNew = retrieve_relative_to_q( this.relativeTo, this.up );
+			
+		}
+		
+		if ( relativeToQNew instanceof THREE.Quaternion ) {
+			
+			this.relativeToQ.copy( relativeToQNew );
+			
+		}
+		
+		// find scale
+		
+		if (  this.rigidBody ) {
+			
+			mesh = this.rigidBody.mesh;
+			
+			if ( mesh instanceof THREE.Object3D ) {
+				
+				scaleMax = Math.max( mesh.scale.x, mesh.scale.y, mesh.scale.z );
+				
+			}
+			
+		}
+		
+		// rotate force and offsets
+		
+		this.forceRotated.copy( rotate_vector3_relative_to( this.force, this.relativeToQ ) );
+		
+		for ( i = 0, l = this.offsets.length; i < l; i++ ) {
+			
+			offsetRotated = this.offsetsRotated[ i ];
+			
+			offsetRotated.copy( rotate_vector3_relative_to( this.offsets[ i ], this.relativeToQ ) );
+			
+			if ( scaleMax !== 1 ) {
+				
+				offsetRotated.multiplyScalar( scaleMax );
+				
+			}
+			
+		}
+		
+	};
+	
+	VelocityTracker.prototype.rotate = function ( rotation ) {
+		
+		var i, l;
+			
+		if ( rotation instanceof THREE.Quaternion || rotation instanceof THREE.Matrix4 ) {
+			
+			// rotate force and offsets
+			
+			rotation.multiplyVector3( this.forceRotated );
+			
+			for ( i = 0, l = this.offsetsRotated.length; i < l; i++ ) {
+				
+				rotation.multiplyVector3( this.offsetsRotated[ i ] );
+				
+			}
+			
+		}
+		
+	};
 	
 	VelocityTracker.prototype.reset = function () {
 		
@@ -491,23 +643,69 @@
 	
 	/*===================================================
     
-	bounds
+	utility
     
     =====================================================*/
 	
+	function retrieve_relative_to_q ( to, up ) {
+		
+		var matrix;
+		
+		if ( to ) {
+			
+			if ( to instanceof THREE.Object3D ) {
+				
+				if ( to.useQuaternion === true ) {
+					
+					to = to.quaternion;
+					
+				}
+				else {
+					
+					matrix = utilMat41Relative.extractRotation( to.matrix );
+					to = utilQ1Relative.setFromRotationMatrix( matrix );
+					
+				}
+				
+			}
+			
+			if ( to instanceof THREE.Vector3 ) {;
+				
+				to = _VectorHelper.q_to_axis( up, to );
+				
+			}
+			
+		}
+		
+		return to;
+		
+	}
+	
+	function rotate_vector3_relative_to ( vec3, to, up ) {
+		
+		var vec3Rotated = utilVec31Rotated.copy( vec3 );
+		
+		if ( to instanceof THREE.Quaternion !== true ) {
+			
+			to = retrieve_relative_to_q( to, up );
+		
+		}
+		
+		if ( to instanceof THREE.Quaternion ) {
+			
+			to.multiplyVector3( vec3Rotated );
+			
+		}
+		
+		return vec3Rotated;
+		
+	}
+	
 	function bounds_in_direction ( direction ) {
 		
-		var bounds,
+		var boundsHalf = this.collider_dimensions_scaled().multiplyScalar( 0.5 ).subSelf( _ObjectHelper.center_offset( this.mesh ) ),
 			localDirection = this.utilVec31Bounds,
-			meshRotation = this.utilQ4Bounds;
-		
-		// copy half of dimensions
-		
-		bounds = this.collider_dimensions_scaled().multiplyScalar( 0.5 );
-		
-		// add center bounds
-		
-		bounds.subSelf( _ObjectHelper.center_offset( this.mesh ) );
+			meshRotation = this.utilQ1Bounds;
 		
 		// get local direction
 		// seems like extra unnecessary work
@@ -521,13 +719,11 @@
 		
 		// set in direction
 		
-		bounds.multiplySelf( localDirection );
+		boundsHalf.multiplySelf( localDirection );
 		
 		// rotate to match mesh
 		
-		bounds = _VectorHelper.rotate_vector3_to_mesh_rotation( this.mesh, bounds );
-		
-		return bounds;
+		return rotate_vector3_relative_to( boundsHalf, this.mesh );
 		
 	}
 	

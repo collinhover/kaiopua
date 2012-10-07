@@ -52,25 +52,6 @@
 		_World.Instance.prototype.hide = hide;
 		_World.Instance.prototype.update = update;
 		
-		Object.defineProperty( _World.Instance.prototype, 'scene', { 
-			get : function () { return this._scene; },
-			set : function ( newScene ) {
-				
-				if ( typeof newScene !== 'undefined' ) {
-					
-					// remove from previous
-					
-					this.hide();
-					
-					// add to new
-					
-					this.show( newScene );
-					
-				}
-				
-			}
-		});
-		
 	}
 	
 	/*===================================================
@@ -97,8 +78,6 @@
     	
     	me.parts = {};
     	
-    	me.addOnShow = [];
-    	
     }
     
     /*===================================================
@@ -107,31 +86,21 @@
 	
 	=====================================================*/
 	
-	function show ( scene ) {
-		
-		this._scene = scene || _Game.scene;
+	function show () {
 		
 		// fog
 		
-		this.scene.fog = this.fog;
+		_Game.scene.fog = this.fog;
 		
 		// add self
 		
-		this.scene.add( this );
-		
-		// TODO, remove following
-		
-		_Game.add_to_scene( this.addOnShow, this.scene );
+		_Game.scene.add( this );
 		
 	}
 	
 	function hide () {
 		
-		this.scene.remove( this );
-		
-		// TODO, remove following
-		
-		_Game.remove_from_scene( this.addOnShow, this.scene );
+		_Game.scene.remove( this );
 		
 	}
 	

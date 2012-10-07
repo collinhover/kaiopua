@@ -16,8 +16,7 @@
 		_MathHelper,
 		_VectorHelper,
 		_ObjectHelper,
-		_PhysicsHelper,
-		scaleSpeedExp = Math.log( 1.5 );
+		_PhysicsHelper;
 	
 	/*===================================================
     
@@ -68,9 +67,7 @@
 		
 		_Physics.Instance.prototype.add = add;
 		_Physics.Instance.prototype.remove = remove;
-		_Physics.Instance.prototype.modify_bodies = modify_bodies;
 		_Physics.Instance.prototype.update = update;
-		_Physics.Instance.prototype.handle_velocity = handle_velocity;
 		
 	}
 	
@@ -98,7 +95,11 @@
 		this.utilVec33Update = new THREE.Vector3();
 		this.utilVec34Update = new THREE.Vector3();
 		this.utilVec35Update = new THREE.Vector3();
+		this.utilVec31Apply = new THREE.Vector3();
 		this.utilVec31Velocity = new THREE.Vector3();
+		this.utilVec32Velocity = new THREE.Vector3();
+		this.utilVec33Velocity = new THREE.Vector3();
+		this.utilQ1Velocity = new THREE.Quaternion();
 		
 		// octree
 		
@@ -122,13 +123,13 @@
 	
 	function add ( object ) {
 		
-		this.modify_bodies( object, true );
+		modify_bodies.call( this, object, true );
 		
 	}
 	
 	function remove( object ) {
 		
-		this.modify_bodies( object );
+		modify_bodies.call( this, object );
 		
 	}
 	
@@ -161,6 +162,10 @@
 				// if adding
 				
 				if ( adding === true ) {
+					
+					// snap rotation on next update
+					
+					rigidBody.rotateSnapOnNextUpdate = true;
 					
 					// bodies
 					
@@ -264,7 +269,7 @@
 					
 					child = object.children[ i ];
 					
-					this.modify_bodies( child, adding );
+					modify_bodies.call( this, child, adding );
 					
 				}
 				
@@ -289,9 +294,8 @@
 			gravityOrigin = this.utilVec31Update,
 			gravityMagnitude = this.utilVec32Update,
 			gravityUp = this.utilVec33Update,
+			lerpDelta,
 			velocityGravity,
-			velocityGravityForceUpDir = this.utilVec34Update,
-			velocityGravityForceUpDirRot = this.utilVec35Update,
 			velocityMovement,
 			safetynet;
 		
@@ -333,33 +337,41 @@
 				
 			}
 			
-			gravityMagnitude.multiplyScalar( timeDeltaMod );
-			
-			// rotate to stand on source
-			
-			_PhysicsHelper.rotate_relative_to_source( mesh.quaternion, mesh.position, gravityOrigin, rigidBody.axes.up, rigidBody.axes.forward, rigidBody.lerpDelta, rigidBody );
-			
-			// movement velocity
-			
-			this.handle_velocity( rigidBody, velocityMovement );
-			
-			// find up direction
-			
-			gravityUp.sub( mesh.position, gravityOrigin ).normalize();
-			
 			// add non rotated gravity to gravity velocity
+			
+			gravityMagnitude.multiplyScalar( timeDeltaMod );
 			
 			velocityGravity.force.addSelf( gravityMagnitude );
 			
-			velocityGravity.relativeRotation = gravityUp;
+			// rotate to stand on source
 			
-			velocityGravityForceUpDir.copy( velocityGravity.force ).negate().normalize();
+			if ( rigidBody.rotateSnapOnNextUpdate === true ) {
+				
+				lerpDelta = 1;
+				rigidBody.rotateSnapOnNextUpdate = false;
+				
+			}
+			else {
+				
+				lerpDelta = rigidBody.lerpDelta;
+				
+			}
 			
-			velocityGravityForceUpDirRot = _VectorHelper.rotate_vector3_relative_to( velocityGravity.relativeRotation, velocityGravityForceUpDir, velocityGravityForceUpDirRot );
+			_PhysicsHelper.rotate_relative_to_source( mesh.quaternion, mesh.position, gravityOrigin, rigidBody.axes.up, rigidBody.axes.forward, lerpDelta, rigidBody );
+			
+			// movement velocity
+			
+			handle_velocity.call( this, rigidBody, velocityMovement );
+			
+			// find up direction and set relative rotation of gravity
+			
+			gravityUp.sub( mesh.position, gravityOrigin ).normalize();
+			
+			velocityGravity.relativeTo = gravityUp;
 			
 			// gravity velocity
 			
-			this.handle_velocity( rigidBody, velocityGravity );
+			handle_velocity.call( this, rigidBody, velocityGravity );
 			
 			// update gravity body
 			
@@ -368,113 +380,6 @@
 			// post physics
 			// TODO: correct safety net for octree and non-infinite rays
 			
-			/*
-			
-			// get velocity collisions
-			
-			velocityGravityCollision = velocityGravity.collision;
-			velocityMovementCollision = velocityMovement.collision;
-			
-			// get velocity collision rigid bodies
-			
-			if ( velocityGravityCollision ) {
-				velocityGravityCollisionRigidBody = velocityGravityCollision.object.rigidBody;
-			}
-			if ( velocityMovementCollision ) {
-				velocityMovementCollisionRigidBody = velocityMovementCollision.object.rigidBody;
-			}
-			
-			// get distance to current gravity body
-			
-			if ( gravityBody instanceof _RigidBody.Instance ) {
-				
-				gravityBodyDistance = gravityBodyDifference.sub( mesh.position, gravityMesh.position ).length();
-				
-			}
-			else {
-				
-				gravityBodyDistance = Number.MAX_VALUE;
-			
-			}
-			
-			// if rigidBody is not safe
-			if ( rigidBody.safe === false ) {
-				
-				// rescue rigidBody and set back to last safe
-				
-				mesh.position.copy( safetynet.position );
-				
-				if ( mesh.useQuaternion === true ) {
-					
-					mesh.quaternion.copy( safetynet.quaternion );
-					
-				}
-				else {
-					
-					mesh.matrix.setRotationFromQuaternion( safetynet.quaternion );
-					
-				}
-				
-				velocityGravity.reset();
-				velocityMovement.reset();
-				
-				rigidBody.safe = true;
-				
-				// safety net end
-					
-				rigidBody.onSafetyNetEnd.dispatch();
-				
-				shared.signals.physicssafetynetend.dispatch( rigidBody );
-				
-			}		
-			// if velocity gravity force is moving towards source
-			else if ( velocityGravityForceUpDirRot.equals( gravityUp ) ) {
-				
-				// if no intersection
-				if ( gravityBodyDistance < rigidBody.radius * 0.5 && !velocityGravityCollision ) {
-					console.log(' SAFETY NET: ', gravityBodyDistance, velocityGravityCollision );
-					// set rigidBody to unsafe, but do not reset to safe position immediately
-					// wait until next update to allow dispatched signals to be handled first
-					
-					rigidBody.safe = false;
-					
-					// safety net start
-					
-					if ( rigidBody.onSafetyNetStarted ) {
-						
-						rigidBody.onSafetyNetStarted.dispatch();
-						
-					}
-					
-					shared.signals.physicssafetynetstart.dispatch( rigidBody );
-					
-				}
-				// rigidBody is safe
-				else {
-					
-					velocityGravity.timeWithoutIntersection = velocityGravity.updatesWithoutIntersection = 0;
-					
-					rigidBody.safe = true;
-					
-					// copy last safe position and rotation into rigidBody
-					
-					safetynet.position.copy( mesh.position );
-					
-					if ( mesh.useQuaternion === true ) {
-						
-						safetynet.quaternion.copy( mesh.quaternion );
-						
-					}
-					else {
-						
-						safetynet.quaternion.setFromRotationMatrix( mesh.matrix );
-						
-					}
-					
-				}
-				
-			}
-			*/
 		}
 		
 	}
@@ -489,22 +394,40 @@
 		
 		var mesh = rigidBody.mesh,
 			position = mesh.position,
-			scale = mesh.scale,
-			scaleModded = this.utilVec31Velocity.copy( scale ),
-			velocityForce = velocity.force,
-			velocityForceRotated = velocity.forceRotated,
-			velocityForceRotatedLength,
-			velocityForceScalar,
-			velocityOffset = velocity.offset,
-			velocityDamping = velocity.damping,
-			relativeRotation = velocity.relativeRotation,
+			force = velocity.force,
+			forceRotated = velocity.forceRotated,
+			forceLength,
+			forceScalar,
+			damping = velocity.damping,
+			dampingPre = velocity.dampingPre,
 			boundingRadius,
 			intersection,
-			intersectionDist;
+			intersectionAlt,
+			intersectionDouble,
+			angle,
+			angleInverted,
+			normalOfIntersected,
+			direction = this.utilVec31Velocity,
+			axisInitial = this.utilVec32Velocity,
+			axisDown = this.utilVec33Velocity,
+			angleFixCollisionQ,
+			moveForceRotated,
+			clear;
 		
-		if ( rigidBody.dynamic !== true || velocityForce.isZero() === true ) {
+		// make velocity relative
+		
+		velocity.update();
+		
+		// pre damp
+		
+		force.multiplySelf( dampingPre );
+		
+		// if moving / movable
+		
+		if ( rigidBody.dynamic !== true || force.isZero() === true ) {
 			
 			velocity.moving = false;
+			force.set( 0, 0, 0 );
 			
 			return;
 			
@@ -515,67 +438,211 @@
 			
 		}
 		
-		// if velocity is relative to rotation, else will just copy force into rotated
+		// get length
 		
-		velocityForceRotated = _VectorHelper.rotate_vector3_relative_to( relativeRotation, velocityForce, velocityForceRotated );
-		
-		// scale velocity
-		
-		scaleModded.x = Math.pow( scaleModded.x, scaleSpeedExp );
-		scaleModded.y = Math.pow( scaleModded.y, scaleSpeedExp );
-		scaleModded.z = Math.pow( scaleModded.z, scaleSpeedExp );
-		
-		velocityForceRotated.multiplySelf( scaleModded );
-		
-		// get rotated length
-		
-		velocityForceRotatedLength = velocityForceRotated.length();
+		forceLength = force.length();
 		
 		// get bounding radius
 		//boundingRadius = rigidBody.radius;
 		
 		// get bounding radius in direction of velocity
 		// more accurate than plain radius, but about 4x more cost
-		boundingRadius = rigidBody.bounds_in_direction( velocityForceRotated ).length();
+		boundingRadius = rigidBody.bounds_in_direction( forceRotated ).length();
 		
-		// rotate offset if needed
-		
-		if ( velocityOffset.length() > 0 ) {
-			
-			velocityOffset = _VectorHelper.rotate_vector3_to_mesh_rotation( mesh, velocityOffset );
-			
-		}
-		
-		// get intersection
+		// get intersection, and allow a longer search for movement velocity
 		
 		intersection = _RayHelper.raycast( {
 			octree: this.octree,
 			origin: position,
-			direction: velocityForceRotated,
-			offset: velocityOffset,
-			far: velocityForceRotatedLength + boundingRadius,
+			direction: forceRotated,
+			offsets: velocity.offsetsRotated,
+			far: forceLength + ( velocity === rigidBody.velocityMovement ? rigidBody.radius : boundingRadius ),
 			ignore: mesh
 		} );
 		
-		// modify velocity based on intersection distances to avoid passing through or into objects
+		// velocity primary application
+		
+		clear = apply_velocity_affect.call( this, position, velocity, intersection, forceLength, boundingRadius );
+		
+		// gravity offsets may allow character to walk up steep walls
+		// check intersection normal vs normal of velocity, and compare angle between to velocity.collisionAngleThreshold
+		
+		if ( intersection && velocity.collisionAngleThreshold < _RigidBody.collisionAngleThresholdMax ) {
+			
+			// reset force rotated to before primary application
+			
+			forceRotated.copy( velocity.forceRotatedLast );
+			
+			direction.copy( forceRotated ).normalize();
+			
+			// normal is local to object intersected, so rotate normal accordingly
+			
+			normalOfIntersected = intersection.normal;
+			intersection.object.matrixWorld.rotateAxis( normalOfIntersected );
+			
+			// the perfect collision is an intersection normal direction opposite of the velocity direction
+			
+			angle = _VectorHelper.angle_between_vectors( direction, normalOfIntersected );
+			angleInverted = ( Math.PI - angle );
+			
+			// but we also know that if the angle is above the max collision angle, it is likely on the back side
+			
+			if ( angleInverted > _RigidBody.collisionAngleThresholdMax ) {
+				
+				angleInverted = angle - _RigidBody.collisionAngleThresholdMax;
+				
+			}
+			
+			if ( angleInverted >= velocity.collisionAngleThreshold ) {
+				
+				// find axis parallel to intersected and in general direction of velocity
+				
+				axisInitial.copy( _VectorHelper.axis_between_vectors( direction, normalOfIntersected ) );
+				axisDown.copy( _VectorHelper.axis_between_vectors( normalOfIntersected, axisInitial ) );
+				angleFixCollisionQ = _VectorHelper.q_to_axis( direction, axisDown );
+				
+				if ( angleFixCollisionQ instanceof THREE.Quaternion ) {
+					
+					// do not clear force
+					
+					clear = false;
+					
+					// pre damp movement force, if movement force rotated and normal of intersected are in opposite directions ( dot < 0 )
+					// this should allow characters to continue to walk over small objects with bad angles
+					
+					moveForceRotated = rigidBody.velocityMovement.forceRotated;
+					
+					if ( moveForceRotated.dot( normalOfIntersected ) < 0 ) {
+						
+						rigidBody.velocityMovement.dampingPre.multiplyScalar( rigidBody.velocityMovement.dampingDecay );
+						
+						// if this velocity and movement velocity intersecting something, assume a large object with bad angle
+						
+						intersectionDouble = rigidBody.velocityMovement.intersection && intersection;
+						
+						if ( intersectionDouble ) {
+							
+							rigidBody.velocityMovement.dampingPre.multiplyScalar( 0 );
+							
+						}
+						
+					}
+					// revert movement pre damping
+					else {
+						
+						rigidBody.velocityMovement.dampingPre.set( 1, 1, 1 );
+						
+					}
+					
+					// rotate velocity with new fixed rotation
+					
+					velocity.rotate( angleFixCollisionQ );
+					
+					// redo raycast with new fixed rotation of velocity force
+					
+					intersectionAlt = _RayHelper.raycast( {
+						octree: this.octree,
+						origin: position,
+						direction: forceRotated,
+						offsets: velocity.offsetsRotated,
+						far: forceLength + boundingRadius,
+						ignore: mesh
+					} );
+					
+					// secondary velocity application
+					
+					apply_velocity.call( this, position, velocity, intersectionAlt, forceLength, boundingRadius );
+					
+				}
+				
+			}
+			
+		}
+		
+		// damp velocity
+		
+		if ( clear === true ) {
+			
+			velocity.force.set( 0, 0, 0 );
+			
+		}
+		else {
+			
+			force.multiplySelf( damping );
+			
+		}
+		
+		// sliding
+		
+		if ( angleFixCollisionQ instanceof THREE.Quaternion && intersectionDouble !== true ) {
+			
+			velocity.sliding = true;
+			
+		}
+		else if ( intersection ) {
+			
+			velocity.sliding = false;
+			
+		}
+		// revert movement pre damping
+		
+		if ( velocity !== rigidBody.velocityMovement && angleFixCollisionQ instanceof THREE.Quaternion !== true ) {
+			
+			rigidBody.velocityMovement.dampingPre.set( 1, 1, 1 );
+			
+		}
+		
+	}
+	
+	function apply_velocity ( position, velocity, intersection, forceLength, boundingRadius ) {
+		
+		var intersectionToBoundsDist;
+		
+		velocity.forceRotatedLast.copy( velocity.forceRotated );
+		
+		if ( intersection ) {
+			
+			// modify velocity based on intersection distances to avoid passing through or into objects
+			
+			intersectionToBoundsDist = intersection.distance - boundingRadius;
+			
+			if ( intersectionToBoundsDist - forceLength <= 0 ) {
+				
+				velocity.forceRotated.multiplyScalar( intersectionToBoundsDist /  forceLength );
+				
+			}
+			
+		}
+		
+		// add velocity to position
+		
+		position.addSelf( velocity.forceRotated );
+		
+	}
+	
+	function apply_velocity_affect ( position, velocity, intersection, forceLength, boundingRadius ) {
+		
+		var intersectionToBoundsDist,
+			clear;
+		
+		velocity.forceRotatedLast.copy( velocity.forceRotated );
 		
 		if ( intersection ) {
 			
 			velocity.intersection = intersection;
 			
-			intersectionDist = intersection.distance;
+			// modify velocity based on intersection distances to avoid passing through or into objects
 			
-			// set the rotated velocity to be no more than intersection distance
+			intersectionToBoundsDist = intersection.distance - boundingRadius;
 			
-			if ( intersectionDist - velocityForceRotatedLength <= boundingRadius ) {
+			if ( intersectionToBoundsDist - forceLength <= 0 ) {
 				
-				velocityForceScalar = ( intersectionDist - boundingRadius ) / velocityForceRotatedLength;
-				
-				velocityForceRotated.multiplyScalar( velocityForceScalar );
-				
-				velocity.moving = false;
+				velocity.forceRotated.multiplyScalar( intersectionToBoundsDist /  forceLength );
 				
 				velocity.collision = intersection;
+				velocity.moving = false;
+				
+				clear = true;
 				
 			}
 			
@@ -584,26 +651,15 @@
 			
 			velocity.intersection = false;
 			velocity.collision = false;
-		
+			
 		}
 		
 		// add velocity to position
 		
-		position.addSelf( velocityForceRotated );
+		position.addSelf( velocity.forceRotated );
 		
-		// damp velocity
+		return clear;
 		
-		velocityForce.multiplySelf( velocityDamping );
-		
-		// if velocity low enough, set zero
-		
-		if ( velocityForce.length() < 0.01 ) {
-			velocityForce.multiplyScalar( 0 );
-		}
-		
-		// return intersection
-		
-		return intersection;
 	}
 	
 } ( KAIOPUA ) );

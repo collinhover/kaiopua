@@ -141,8 +141,6 @@
 			
 			init_character();
 			
-			init_cameracontrols();
-			
 			init_actions();
 			
 			init_keybindings();
@@ -196,18 +194,6 @@
 	
 	/*===================================================
     
-    camera
-    
-    =====================================================*/
-	
-	function init_cameracontrols () {
-		
-		cameraControls = new _CameraControls.Instance( _Game.camera, character );
-		
-	}
-	
-	/*===================================================
-    
     actions
     
     =====================================================*/
@@ -215,39 +201,6 @@
 	function init_actions () {
 		
 		actions = new _Actions.Instance();
-		
-		// add actions
-		
-		// pointer
-		
-		actions.add( 'pointer', {
-			eventCallbacks: {
-				/*drag: function ( parameters ) {
-					
-					// start rotating camera if character is not acting
-					
-					if ( character.actions.is_active( 'pointer' ) !== true ) {
-						
-						cameraControls.rotate( parameters.event );
-						
-					}
-					
-				},
-				dragend: function ( parameters ) {
-					
-					// stop camera rotate
-					
-					cameraControls.rotate( undefined, true );
-					
-				},*/
-				wheel: function ( parameters ) {
-					
-					cameraControls.zoom( parameters.event );
-					
-				}
-			},
-			deactivateCallbacks: 'dragend'
-		} );
 		
 		// wasd / arrows
 		
@@ -823,9 +776,9 @@
 		
 		if ( showing === false ) {
 			
-			character.show( _Game.scene );
+			_Game.scene.add( character );
 			
-			cameraControls.camera = _Game.camera;
+			_Game.cameraControls.target = character;
 			
 			showing = true;
 			
@@ -843,7 +796,7 @@
 			
 			disable();
 			
-			character.hide();
+			_Game.scene.remove( character );
 			
 			showing = false;
 			
@@ -856,10 +809,6 @@
 		// character
 		
 		character.update( timeDelta, timeDeltaMod );
-		
-		// update camera
-		
-		cameraControls.update( timeDelta );
 		
 		// selection material
 		

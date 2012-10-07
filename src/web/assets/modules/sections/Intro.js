@@ -17,12 +17,7 @@
 		_Player,
         _ready = false,
 		waitingToShow = false,
-		camera,
-        scene,
-		sceneBG,
 		world,
-		addOnShow = [],
-		addBGOnShow = [],
 		skybox,
 		ambient,
 		light;
@@ -105,38 +100,21 @@
 			
 			// camera
 			
-			camera = _Game.camera;
-			
-			camera.position.set(0, 0, 4000);
-			
-			camera.lookAt( new THREE.Vector3(0, 0, 0) );
-			
-			// scene
-			
-			scene = _Game.scene;
-			
-			sceneBG = _Game.sceneBG;
+			_Game.cameraControls.reset();
+			_Game.cameraControls.enabled = true;
+			_Game.cameraControls.controllable = true;
 			
 			// add world
 			
-			world.show( scene );
-			
-			// add items
-			
-			_Game.add_to_scene( addOnShow, scene );
-			
-			_Game.add_to_scene( addBGOnShow, sceneBG );
+			world.show();
 			
 			// start player
+			
+			_Player.character.position.set( 35, 2200, 300 );
 			
 			_Player.show();
 			
 			_Player.enable();
-			
-			_Player.character.position.set( 35, 2000, 300 );
-			_Player.character.quaternion.set( 0, -1, -0.25, 0 );
-			
-			//_Player.cameraMode = 'freelook';
 			
 			// signals
 			
@@ -176,12 +154,6 @@
 			// hide world
 			
 			world.hide();
-			
-			// remove added items
-			
-			_Game.remove_from_scene( addOnShow, scene );
-			
-			_Game.remove_from_scene( addBGOnShow, sceneBG );
 			
 		}
 		else {

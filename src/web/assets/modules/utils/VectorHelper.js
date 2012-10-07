@@ -43,6 +43,7 @@
 		
 		// utility
 		
+		utilVec31Rotated = new THREE.Vector3();
 		utilVec31Axis = new THREE.Vector3();
 		utilVec31Distance = new THREE.Vector3();
 		utilQ1Axis = new THREE.Quaternion();
@@ -50,9 +51,8 @@
 		// functions
 		
 		_VectorHelper.clamp = clamp;
+		_VectorHelper.different = different;
 		_VectorHelper.distance_to = distance_to;
-		_VectorHelper.rotate_vector3_relative_to = rotate_vector3_relative_to;
-		_VectorHelper.rotate_vector3_to_mesh_rotation = rotate_vector3_to_mesh_rotation;
 		_VectorHelper.degree_to_rad = degree_to_rad;
 		_VectorHelper.angle_between_vectors = angle_between_vectors;
 		_VectorHelper.signed_angle_between_coplanar_vectors = signed_angle_between_coplanar_vectors;
@@ -82,6 +82,16 @@
 		
 	}
 	
+	function different ( va, vb ) {
+		
+		if ( va.x !== vb.x || va.y !== vb.y || va.z !== vb.z || ( va.hasOwnProperty( 'w' ) && va.w !== vb.w ) ) {
+			return true;
+		}
+		
+		return false;
+		
+	}
+	
 	/*===================================================
     
     distance
@@ -99,56 +109,6 @@
     rotation
     
     =====================================================*/
-	
-	function rotate_vector3_to_mesh_rotation ( mesh, vec3, rotatedVec3 ) {
-		
-		var rotation;
-		
-		if ( mesh.useQuaternion === true ) {
-			
-			rotation = mesh.quaternion;
-			
-		}
-		else {
-			
-			rotation = mesh.matrix;
-			
-		}
-		
-		return rotate_vector3_relative_to( rotation, vec3, rotatedVec3 );
-		
-	}
-	
-	function rotate_vector3_relative_to ( rotation, vec3, rotatedVec3 ) {
-		
-		if ( rotatedVec3 instanceof THREE.Vector3 ) {
-			rotatedVec3.copy( vec3 );
-		}
-		else {
-			rotatedVec3 = vec3.clone();
-		}
-		
-		if ( rotation instanceof THREE.Quaternion || rotation instanceof THREE.Matrix4 ) {
-			
-			rotation.multiplyVector3( rotatedVec3 );
-			
-		}
-		else if ( rotation instanceof THREE.Vector3 ) {
-			
-			rotatedVec3.x = rotation.x * vec3.x + rotation.x * vec3.y + rotation.x * vec3.z;
-			rotatedVec3.y = rotation.y * vec3.x + rotation.y * vec3.y + rotation.y * vec3.z;
-			rotatedVec3.z = rotation.z * vec3.x + rotation.z * vec3.y + rotation.z * vec3.z;
-			
-		}
-		else if ( rotation instanceof THREE.Object3D ) {
-			
-			rotatedVec3 = rotate_vector3_to_mesh_rotation( rotation, vec3, rotatedVec3 );
-			
-		}
-		
-		return rotatedVec3;
-		
-	}
 	
 	function degree_to_rad ( v ) {
 		
@@ -169,11 +129,6 @@
 	}
 	
 	function signed_angle_between_coplanar_vectors ( vFrom, vTo, vNormal ) {
-		
-		/*var sina = |Va x Vb| / ( |Va| * |Vb| );
-			cosa = (Va . Vb) / ( |Va| * |Vb| );
-
-		angle = atan2( sina, cosa );*/
 		
 		var angle = angle_between_vectors( vFrom, vTo ),
 			sign = vNormal.dot( axis_between_vectors( vFrom, vTo ) );
@@ -201,7 +156,7 @@
 		
 		// check for invalid axes, i.e. axis with all 0
 		
-		if ( axisTo.lengthSq() === 0 || axisFrom.lengthSq() === 0 ) {
+		if ( typeof axisTo === 'undefined' || axisTo.lengthSq() === 0 || axisFrom.lengthSq() === 0 ) {
 			
 			return false;
 			
@@ -209,26 +164,28 @@
 		
 		angle = angle_between_vectors( axisFrom, axisTo );
 		
-		if ( angle !== 0 ) {
+		if ( angle === 0 ) {
 			
-			// axis
-			
-			axis = axis_between_vectors( axisFrom, axisTo );
-			
-			// if new axis is exactly opposite of current
-			// replace new axis with orthonormal axis
-			
-			if ( axis.lengthSq === 0 ) {
-				
-				axis.copy( axisOrthonormal && axisOrthonormal.lengthSq() > 0 ? axisOrthonormal : get_orthonormal_vectors( axisFrom, true ) );
-				
-			}
-			
-			// rotation change
-			
-			return qToA.setFromAxisAngle( axis, angle );
+			return false;
 		
 		}
+		
+		// axis
+		
+		axis = axis_between_vectors( axisFrom, axisTo );
+		
+		// if new axis is exactly opposite of current
+		// replace new axis with orthonormal axis
+		
+		if ( axis.lengthSq() === 0 ) {
+			
+			axis.copy( axisOrthonormal && axisOrthonormal.lengthSq() > 0 ? axisOrthonormal : get_orthonormal_vectors( axisFrom, true ) );
+			
+		}
+		
+		// rotation change
+		
+		return qToA.setFromAxisAngle( axis, angle );
 		
 	}
 	

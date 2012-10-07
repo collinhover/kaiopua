@@ -17,9 +17,6 @@
 		_ObjectMaker,
         ready = false,
 		waitingToShow = false,
-        camera,
-        scene,
-		sceneBG,
 		addOnShow = [],
 		addBGOnShow = [],
 		ambientLight,
@@ -131,8 +128,6 @@
 		
 		skybox = _ObjectMaker.make_skybox( shared.pathToTextures + "skybox_world" );
 		
-		addBGOnShow.push( skybox );
-		
 		// water
 		
 		water = new _Water.Instance();
@@ -172,10 +167,6 @@
 				}*/
 			]
 		} );
-		
-		// set items to add on show
-		
-		addOnShow.push( ambientLight, lightSky, water, sky );
 		
 	}
     
@@ -224,19 +215,25 @@
     
     function show ( ) {
 		
+		var ccOptions;
+		
 		if ( ready === true ) {
 			
 			// cameras
 			
-			camera = _Game.camera;
-			camera.position.copy( camPositionBase );
-			camera.quaternion.copy( camRotationBaseQ );
 			
-			// scene
+			// TODO: modify camera controls without modifying the original values, and add a reset() method to camera controls
 			
-			scene = _Game.scene;
+			ccOptions = {};
+			ccOptions.boundRadiusMod = ccOptions.boundRadiusModMin = ccOptions.boundRadiusModMax = 0.75;
+			ccOptions.rotationMaxX = ccOptions.rotationMinX = Math.PI * 0.035;
+			ccOptions.positionBaseY = 750;
 			
-			sceneBG = _Game.sceneBG;
+			_Game.cameraControls.modify( ccOptions );
+			
+			_Game.cameraControls.target = water;
+			_Game.cameraControls.enabled = true;
+			_Game.cameraControls.controllable = true;
 			
 			// environment
 			
@@ -246,9 +243,11 @@
 			
 			// add items
 			
-			_Game.add_to_scene( addOnShow, scene );
-			
-			_Game.add_to_scene( addBGOnShow, sceneBG );
+			_Game.scene.add( ambientLight );
+			_Game.scene.add( lightSky );
+			_Game.scene.add( water );
+			_Game.scene.add( sky );
+			_Game.sceneBG.add( skybox );
 			
 			// shared
 			
@@ -292,9 +291,11 @@
 			
 			// remove added items
 			
-			_Game.remove_from_scene( addOnShow, scene );
-			
-			_Game.remove_from_scene( addBGOnShow, sceneBG );
+			_Game.scene.remove( ambientLight );
+			_Game.scene.remove( lightSky );
+			_Game.scene.remove( water );
+			_Game.scene.remove( sky );
+			_Game.sceneBG.remove( skybox );
 			
 		}
 		else {
@@ -329,14 +330,14 @@
 		
 		camRotationOffsetQ.setFromEuler( camRotationOffset ).normalize();
         
-		camera.quaternion.multiply( camRotationOffsetQ, camRotationBaseQ );
+		_Game.camera.quaternion.multiply( camRotationOffsetQ, camRotationBaseQ );
 		
 		camPositionOffset.copy( camPositionBase );
 		camPositionOffsetRot.y = camRotationOffset.y;
 		camPositionOffsetRot.z = -Math.PI * 0.01;
 		camRotationOffsetQ.setFromEuler( camPositionOffsetRot ).normalize();
 		camRotationOffsetQ.multiplyVector3( camPositionOffset );
-		camera.position.copy( camPositionOffset );
+		_Game.camera.position.copy( camPositionOffset );
 		
     }
 	

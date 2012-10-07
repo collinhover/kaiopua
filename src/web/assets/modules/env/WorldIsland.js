@@ -422,11 +422,11 @@
 		
 		=====================================================*/
 		
-		function show ( scene ) {
+		function show () {
 			
 			// proto
 			
-			_World.Instance.prototype.show.call( me, scene );
+			_World.Instance.prototype.show.call( me );
 			
 			// skybox
 			

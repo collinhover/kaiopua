@@ -13,6 +13,7 @@
 		_Game = {},
 		_ErrorHandler,
 		_Scene,
+		_CameraControls,
 		_UIQueue,
 		_MathHelper,
 		_RayHelper,
@@ -25,12 +26,9 @@
         renderPasses,
 		scene,
 		sceneBG,
-		sceneDefault,
-		sceneBGDefault,
 		camera,
 		cameraBG,
-		cameraDefault,
-		cameraBGDefault,
+		cameraControls,
 		physics,
 		menus = {},
         currentSection, 
@@ -62,6 +60,7 @@
 		assetsCore = [
 			"assets/modules/core/Scene.js",
 			"assets/modules/core/Model.js",
+			"assets/modules/core/CameraControls.js",
 			"assets/modules/physics/Physics.js",
 			"assets/modules/physics/RigidBody.js",
 			"assets/modules/ui/UIQueue.js",
@@ -78,7 +77,6 @@
         assetsGame = [
 			"assets/modules/utils/ObjectMaker.js",
 			"assets/modules/core/Player.js",
-			"assets/modules/core/CameraControls.js",
 			"assets/modules/core/Actions.js",
 			"assets/modules/ui/Messenger.js",
 			"assets/modules/characters/Character.js",
@@ -180,9 +178,6 @@
     _Game.resume = resume;
     _Game.pause = pause;
 	
-	_Game.add_to_scene = add_to_scene;
-	_Game.remove_from_scene = remove_from_scene;
-	
 	_Game.get_pointer_intersection = get_pointer_intersection;
 	
 	// getters and setters
@@ -196,23 +191,23 @@
 	});
 	
 	Object.defineProperty(_Game, 'scene', { 
-		get : function () { return scene; },  
-		set : set_scene
+		get : function () { return scene; }
 	});
 	
 	Object.defineProperty(_Game, 'sceneBG', { 
-		get : function () { return sceneBG; },  
-		set : set_scene_bg
+		get : function () { return sceneBG; }
 	});
 	
 	Object.defineProperty(_Game, 'camera', { 
-		get : function () { return camera; },  
-		set : set_camera
+		get : function () { return camera; }
 	});
 	
 	Object.defineProperty(_Game, 'cameraBG', { 
-		get : function () { return cameraBG; },  
-		set : set_camera_bg
+		get : function () { return cameraBG; }
+	});
+	
+	Object.defineProperty(_Game, 'cameraControls', { 
+		get : function () { return cameraControls; }
 	});
 
 	main.asset_register( assetPath, { 
@@ -366,34 +361,39 @@
 		// utility
 		
 		_Scene = main.get_asset_data( "assets/modules/core/Scene.js" );
+		_CameraControls = main.get_asset_data( "assets/modules/core/CameraControls.js" );
 		_UIQueue = main.get_asset_data( "assets/modules/ui/UIQueue.js" );
 		_MathHelper = main.get_asset_data( "assets/modules/utils/MathHelper.js" );
 		
 		// scenes
 		
-		sceneDefault = new _Scene.Instance();
-		sceneBGDefault = new _Scene.Instance();
+		scene= new _Scene.Instance();
+		sceneBG = new _Scene.Instance();
 		
         // fog
 		
-        sceneDefault.fog = undefined;
+        scene.fog = undefined;
 		
 		// physics
 		
-		physics = sceneDefault.physics;
+		physics = scene.physics;
 		
 		// camera
 		
-		cameraDefault = new THREE.PerspectiveCamera(60, shared.gameWidth / shared.gameHeight, 1, 20000);
-		cameraBGDefault = new THREE.PerspectiveCamera(60, shared.gameWidth / shared.gameHeight, 1, 20000);
+		camera = new THREE.PerspectiveCamera(60, shared.gameWidth / shared.gameHeight, 1, 20000);
+		cameraBG = new THREE.PerspectiveCamera(60, shared.gameWidth / shared.gameHeight, 1, 20000);
+		camera.useQuaternion = cameraBG.useQuaternion = true;
 		
-		cameraDefault.useQuaternion = cameraBGDefault.useQuaternion = true;
+		// camera controls
+		
+		cameraControls = new _CameraControls.Instance( camera );
+		//cameraControls.enable();
 		
 		// passes
         
         renderPasses = {
-			bg: new THREE.RenderPass( sceneBGDefault, cameraBGDefault ),
-            env: new THREE.RenderPass( sceneDefault, cameraDefault ),
+			bg: new THREE.RenderPass( sceneBG, cameraBG ),
+            env: new THREE.RenderPass( scene, camera ),
             screen: new THREE.ShaderPass( shaderScreen ),
             focusVignette: new THREE.ShaderPass ( shaderFocusVignette )
         };
@@ -410,10 +410,6 @@
         renderPasses.focusVignette.uniforms[ "vingenettingDarkening" ].value = 0.5;
         renderPasses.focusVignette.uniforms[ "sampleDistance" ].value = 0.1;
         renderPasses.focusVignette.uniforms[ "waveFactor" ].value = 0.3;
-		
-		// set default scene and camera
-		
-		set_default_cameras_scenes();
 		
         // composer
         
@@ -1269,190 +1265,6 @@
 	
 	/*===================================================
     
-    scene functions
-    
-    =====================================================*/
-	
-	function set_scene ( sceneNew ) {
-		
-		var scenePrev = scene;
-		
-		renderPasses.env.scene = scene = sceneNew || sceneDefault;
-		/*
-		if( scene !== scenePrev && typeof camera !== 'undefined') {
-			
-			if ( typeof scenePrev !== 'undefined' ) {
-				scenePrev.remove( camera );
-			}
-			
-			scene.add( camera );
-			
-		}
-		*/
-	}
-	
-	function set_scene_bg ( sceneNew ) {
-		
-		var sceneBGPrev = sceneBG;
-		
-		renderPasses.bg.scene = sceneBG = sceneNew || sceneBGDefault;
-		/*
-		if( sceneBG !== sceneBGPrev && typeof cameraBG !== 'undefined') {
-			
-			if ( typeof sceneBGPrev !== 'undefined' ) {
-				sceneBGPrev.remove( cameraBG );
-			}
-			
-			sceneBG.add( cameraBG );
-			
-		}
-		*/
-	}
-	
-	function add_to_scene ( objects, sceneDefault ) {
-		
-		var i, l,
-			object,
-			object3D,
-			sceneTarget,
-			callback;
-		
-		// handle parameters
-		
-		sceneDefault = sceneDefault || scene;
-		
-		// for each object
-		
-		if ( objects.hasOwnProperty('length') === false ) {
-			objects = [ objects ];
-		}
-		
-		for ( i = 0, l = objects.length; i < l; i ++ ) {
-		
-			object = objects[ i ];
-			
-			callback = object.callbackAdd;
-			
-			sceneTarget = object.sceneTarget || sceneDefault;
-			
-			object3D = object.addTarget || object;
-			
-			// add
-			
-			if ( typeof object3D !== 'undefined' ) {
-				
-				sceneTarget.add( object3D );
-				
-			}
-			
-			// if callback passed
-			
-			if ( typeof callback === 'function' ) {
-				
-				callback.call( this );
-				
-			}
-			
-        }
-		
-	}
-	
-	function remove_from_scene ( objects, sceneDefault ) {
-		
-		var i, l,
-			object,
-			object3D,
-			sceneTarget,
-			callback;
-		
-		// handle parameters
-		
-		sceneDefault = sceneDefault || scene;
-		
-		// for each object
-		
-		if ( objects.hasOwnProperty('length') === false ) {
-			objects = [ objects ];
-		}
-		
-		for ( i = 0, l = objects.length; i < l; i ++ ) {
-		
-			object = objects[ i ];
-			
-			callback = object.callbackRemove;
-			
-			sceneTarget = object.sceneTarget || sceneDefault;
-			
-			object3D = object.addTarget || object;
-			
-			// remove
-			
-			if ( typeof object3D !== 'undefined' ) {
-				
-				sceneTarget.remove( object3D );
-				
-			}
-			
-			// if callback passed
-			
-			if ( typeof callback === 'function' ) {
-				
-				callback.call( this );
-				
-			}
-			
-        }
-		
-	}
-	
-	/*===================================================
-    
-    camera functions
-    
-    =====================================================*/
-	
-	function set_camera ( cameraNew ) {
-		
-		var cameraPrev = camera;
-		
-		if ( typeof cameraPrev !== 'undefined' && typeof scene !== 'undefined' ) {
-			
-			//scene.remove( cameraPrev );
-			
-		}
-		
-		renderPasses.env.camera = camera = cameraNew || cameraDefault;
-		
-		if ( typeof scene !== 'undefined' ) {
-			
-			//scene.add( camera );
-			
-		}
-		
-	}
-	
-	function set_camera_bg ( cameraNew ) {
-		
-		var cameraBGPrev = cameraBG;
-		
-		if ( typeof cameraBGPrev !== 'undefined' && typeof sceneBG !== 'undefined' ) {
-			
-			//sceneBG.remove( cameraBGPrev );
-			
-		}
-		
-		renderPasses.bg.camera = cameraBG = cameraNew || cameraBGDefault;
-		
-		if ( typeof sceneBG !== 'undefined' ) {
-			
-			//sceneBG.add( cameraBG );
-			
-		}
-		
-	}
-	
-	/*===================================================
-    
     pointer functions
     
     =====================================================*/
@@ -1479,16 +1291,6 @@
     section functions
     
     =====================================================*/
-	
-	function set_default_cameras_scenes () {
-		
-		set_scene();
-		set_scene_bg();
-		
-		set_camera();
-		set_camera_bg();
-		
-	}
 
     function set_section ( section, callback ) {
 		
@@ -1548,10 +1350,6 @@
         // no current section
 		
         currentSection = undefined;
-		
-		// default scene and camera
-		
-		set_default_cameras_scenes();
 		
 		// set started
 		
@@ -1843,10 +1641,6 @@
 			
 			shared.signals.onGameUpdated.dispatch( timeDelta, timeDeltaMod );
 			
-			// have camera bg mimic camera rotation
-			
-			cameraBG.quaternion.copy( camera.quaternion );
-			
 			// finish frame
 			
 			render();
@@ -1856,6 +1650,10 @@
     }
 	
 	function render() {
+		
+		cameraControls.update();
+		
+		cameraBG.quaternion.copy( camera.quaternion );
 		
 		renderer.setViewport( 0, 0, shared.gameWidth, shared.gameHeight );
 		
