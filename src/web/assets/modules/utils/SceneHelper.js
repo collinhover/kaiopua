@@ -38,6 +38,7 @@
 		_SceneHelper.extract_children_from_objects = extract_children_from_objects;
 		_SceneHelper.extract_parents_from_objects = extract_parents_from_objects;
 		_SceneHelper.extract_parent_root = extract_parent_root;
+		_SceneHelper.has_parent = has_parent;
 		
 	}
 	
@@ -47,7 +48,7 @@
     
     =====================================================*/
 	
-	function extract_children_from_objects ( objects, cascade ) {
+	function extract_children_from_objects ( objects, cascade, ignore ) {
 		
 		var i, l,
 			object;
@@ -57,7 +58,7 @@
 		
 		for ( i = 0, l = objects.length; i < l; i++ ) {
 			
-			cascade = extract_child_cascade( objects[ i ], cascade );
+			extract_child_cascade( objects[ i ], cascade, ignore );
 			
 		}
 		
@@ -65,26 +66,24 @@
 		
 	}
 	
-	function extract_child_cascade ( object, cascade ) {
+	function extract_child_cascade ( object, cascade, ignore ) {
 		
 		var i, l,
 			children;
 			
-		if ( typeof object !== 'undefined' && typeof object.children !== 'undefined' ) {
+		if ( typeof ignore === 'undefined' || main.index_of_value( ignore, object ) === -1 ) {
 			
 			children = object.children;
 			
-			cascade = cascade.concat( children );
+			Array.prototype.push.apply( cascade, children );
 			
 			for ( i = 0, l = children.length; i < l; i++ ) {
 				
-				cascade = extract_child_cascade( children[ i ], cascade );
+				extract_child_cascade( children[ i ], cascade, ignore );
 				
 			}
 			
 		}
-		
-		return cascade;
 		
 	}
 	
@@ -97,7 +96,7 @@
 		
 		for ( i = 0, l = objects.length; i < l; i++ ) {
 			
-			cascade = extract_parent_cascade( objects[ i ], cascade );
+			extract_parent_cascade( objects[ i ], cascade );
 			
 		}
 		
@@ -115,8 +114,6 @@
 			
 		}
 		
-		return cascade;
-		
 	}
 	
 	function extract_parent_root ( object ) {
@@ -128,6 +125,24 @@
 		}
 		
 		return object;
+		
+	}
+	
+	function has_parent ( object, parent ) {
+		
+		while( object ) {
+			
+			if ( object === parent ) {
+				
+				return true;
+				
+			}
+			
+			object = object.parent;
+			
+		}
+		
+		return false;
 		
 	}
 	

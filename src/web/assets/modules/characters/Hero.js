@@ -80,8 +80,8 @@
 		parameters.movement.moveSpeed = 3;
 		parameters.movement.moveSpeedBack = 1;
 		parameters.movement.moveRunThreshold = parameters.movement.moveSpeed;
-		parameters.movement.jumpTimeMax = 100;
-		parameters.movement.jumpAnimationTime = 1000;
+		parameters.movement.jumpTimeMax = 200;
+		parameters.movement.jumpMoveSpeedMod = 0;
 		
 		// prototype constructor
 		

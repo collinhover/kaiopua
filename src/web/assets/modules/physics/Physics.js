@@ -392,17 +392,21 @@
 	
 	function handle_velocity ( rigidBody, velocity ) {
 		
-		var mesh = rigidBody.mesh,
+		var forGravity = velocity == rigidBody.velocityGravity,
+			mesh = rigidBody.mesh,
 			position = mesh.position,
 			force = velocity.force,
 			forceRotated = velocity.forceRotated,
+			forceRotatedLast = velocity.forceRotatedLast,
 			forceLength,
 			forceScalar,
 			damping = velocity.damping,
 			dampingPre = velocity.dampingPre,
 			boundingRadius,
 			intersection,
+			intersectionParameters,
 			intersectionAlt,
+			intersectionJump,
 			intersectionDouble,
 			angle,
 			angleInverted,
@@ -451,14 +455,42 @@
 		
 		// get intersection, and allow a longer search for movement velocity
 		
-		intersection = _RayHelper.raycast( {
+		intersectionParameters = {
 			octree: this.octree,
 			origin: position,
 			direction: forceRotated,
 			offsets: velocity.offsetsRotated,
 			far: forceLength + ( velocity === rigidBody.velocityMovement ? rigidBody.radius : boundingRadius ),
 			ignore: mesh
-		} );
+		};
+		
+		intersection = _RayHelper.raycast( intersectionParameters );
+		
+		// jumping needs a pre-application check in opposite direction of velocity to ensure the intersection application does not force rigid body through ground
+		
+		if ( forGravity && intersection && mesh.jumping === true ) {
+			
+			// reverse force
+			
+			forceRotated.multiplyScalar( -1 );
+			
+			intersectionJump = _RayHelper.raycast( intersectionParameters );
+			
+			// clear force
+			
+			if ( intersectionJump ) {
+				
+				forceRotated.multiplyScalar( 0 );
+				
+			}
+			// revert force, jump is safe
+			else {
+				
+				forceRotated.multiplyScalar( -1 );
+				
+			}
+			
+		}
 		
 		// velocity primary application
 		
@@ -471,7 +503,7 @@
 			
 			// reset force rotated to before primary application
 			
-			forceRotated.copy( velocity.forceRotatedLast );
+			forceRotated.copy( forceRotatedLast );
 			
 			direction.copy( forceRotated ).normalize();
 			
@@ -480,35 +512,18 @@
 			normalOfIntersected = intersection.normal;
 			intersection.object.matrixWorld.rotateAxis( normalOfIntersected );
 			
+			// invert the angle between velocity direction and normal of intersected
 			// the perfect collision is an intersection normal direction opposite of the velocity direction
 			
 			angle = _VectorHelper.angle_between_vectors( direction, normalOfIntersected );
 			angleInverted = ( Math.PI - angle );
 			
-			// but we also know that if the angle is above the max collision angle, it is likely on the back side
-			
-			if ( angleInverted > _RigidBody.collisionAngleThresholdMax ) {
-				
-				angleInverted = angle - _RigidBody.collisionAngleThresholdMax;
-				
-			}
-			
 			if ( angleInverted >= velocity.collisionAngleThreshold ) {
 				
-				// find axis parallel to intersected and in general direction of velocity
+				// pre damp movement force, if movement force rotated and normal of intersected are in opposite directions ( dot < 0 )
+				// this should allow characters to continue to walk over small objects with bad angles
 				
-				axisInitial.copy( _VectorHelper.axis_between_vectors( direction, normalOfIntersected ) );
-				axisDown.copy( _VectorHelper.axis_between_vectors( normalOfIntersected, axisInitial ) );
-				angleFixCollisionQ = _VectorHelper.q_to_axis( direction, axisDown );
-				
-				if ( angleFixCollisionQ instanceof THREE.Quaternion ) {
-					
-					// do not clear force
-					
-					clear = false;
-					
-					// pre damp movement force, if movement force rotated and normal of intersected are in opposite directions ( dot < 0 )
-					// this should allow characters to continue to walk over small objects with bad angles
+				if ( velocity !== rigidBody.velocityMovement ) {
 					
 					moveForceRotated = rigidBody.velocityMovement.forceRotated;
 					
@@ -534,24 +549,37 @@
 						
 					}
 					
-					// rotate velocity with new fixed rotation
+				}
+				
+				// if inverted angle is below max
+				
+				if ( angleInverted < _RigidBody.collisionAngleThresholdMax ) {
 					
-					velocity.rotate( angleFixCollisionQ );
+					// find axis perpendicular to normal of intersected and in general direction of velocity
 					
-					// redo raycast with new fixed rotation of velocity force
+					axisInitial.copy( _VectorHelper.axis_between_vectors( direction, normalOfIntersected ) );
+					axisDown.copy( _VectorHelper.axis_between_vectors( normalOfIntersected, axisInitial ) );
+					angleFixCollisionQ = _VectorHelper.q_to_axis( direction, axisDown );
 					
-					intersectionAlt = _RayHelper.raycast( {
-						octree: this.octree,
-						origin: position,
-						direction: forceRotated,
-						offsets: velocity.offsetsRotated,
-						far: forceLength + boundingRadius,
-						ignore: mesh
-					} );
-					
-					// secondary velocity application
-					
-					apply_velocity.call( this, position, velocity, intersectionAlt, forceLength, boundingRadius );
+					if ( angleFixCollisionQ instanceof THREE.Quaternion ) {
+						
+						// do not clear force
+						
+						clear = false;
+						
+						// rotate velocity with new fixed rotation
+						
+						velocity.rotate( angleFixCollisionQ );
+						
+						// redo raycast with new fixed rotation of velocity force
+						
+						intersectionAlt = _RayHelper.raycast( intersectionParameters );
+						
+						// secondary velocity application
+						
+						apply_velocity.call( this, position, velocity, intersectionAlt, forceLength, boundingRadius );
+						
+					}
 					
 				}
 				
@@ -559,22 +587,23 @@
 			
 		}
 		
-		// damp velocity
+		// gravity velocity extras
 		
-		if ( clear === true ) {
+		if ( forGravity ) {
 			
-			velocity.force.set( 0, 0, 0 );
+			// revert movement pre damping
 			
-		}
-		else {
-			
-			force.multiplySelf( damping );
+			if ( angleFixCollisionQ instanceof THREE.Quaternion !== true ) {
+				
+				rigidBody.velocityMovement.dampingPre.set( 1, 1, 1 );
+				
+			}
 			
 		}
 		
 		// sliding
 		
-		if ( angleFixCollisionQ instanceof THREE.Quaternion && intersectionDouble !== true ) {
+		if ( angleFixCollisionQ instanceof THREE.Quaternion && intersectionDouble !== true && !intersectionAlt ) {
 			
 			velocity.sliding = true;
 			
@@ -584,11 +613,17 @@
 			velocity.sliding = false;
 			
 		}
-		// revert movement pre damping
 		
-		if ( velocity !== rigidBody.velocityMovement && angleFixCollisionQ instanceof THREE.Quaternion !== true ) {
+		// damp velocity
+		
+		if ( clear === true ) {
 			
-			rigidBody.velocityMovement.dampingPre.set( 1, 1, 1 );
+			force.set( 0, 0, 0 );
+			
+		}
+		else {
+			
+			force.multiplySelf( damping );
 			
 		}
 		

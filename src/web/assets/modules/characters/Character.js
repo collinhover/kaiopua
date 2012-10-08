@@ -185,7 +185,9 @@
 		jump = this.movement.jump = {};
 		jump.speedStart = parametersMovement.jumpSpeedStart || move.speed * ( 4 / 3 );
 		jump.speedEnd = parametersMovement.jumpSpeedEnd || 0;
+		jump.moveSpeedMod = parametersMovement.jumpMoveSpeedMod || 0.5;
 		jump.timeTotal = 0;
+		jump.timeMin = parametersMovement.jumpTimeMin || 100;
 		jump.timeMax = parametersMovement.jumpTimeMax || 100;
 		jump.timeAfterNotGrounded = 0;
 		jump.timeAfterNotGroundedMax = 125;
@@ -196,6 +198,7 @@
 		jump.endAnimationTime = parametersMovement.jumpEndAnimationTime || move.morphClearTime;
 		jump.ready = true;
 		jump.active = false;
+		jump.holding = false;
 		
 		// state
 		state = this.movement.state = {};
@@ -266,7 +269,7 @@
 		
 		if ( state.left === 1 || state.right === 1 ) {
 			
-			rotateFacingDirection.x = state.left - state.right;
+			rotateFacingDirection.x = state.right === 1 ? -state.right : state.left;
 			
 			if ( forwardBack !== true ) {
 				
@@ -343,6 +346,7 @@
 	function stop_jumping () {
 		
 		this.movement.jump.active = false;
+		this.movement.jump.holding = false;
 		
 	}
 	
@@ -461,7 +465,7 @@
 		
 		// update rotation angles
 		
-		rotateTurnAngleDelta = ( state.left - state.right ) * rotate.turnSpeed;
+		rotateTurnAngleDelta = ( state.right === 1 ? -state.right : state.left ) * rotate.turnSpeed;
 		rotateFacingAngleDelta = _VectorHelper.signed_angle_between_coplanar_vectors( rotateFacingDirectionLast, rotateFacingDirection, rotateAxis ) * rotateLerpDelta;
 		
 		// if moving
@@ -537,7 +541,7 @@
 			}
 			else if ( jump.active === true ) {
 				
-				moveVec.z *= ( moveSpeed + jumpSpeedStart ) * 0.5;
+				moveVec.z *= moveSpeed + jumpSpeedStart * jump.moveSpeedMod;
 				
 			}
 			else {
@@ -575,12 +579,20 @@
 				
 				jump.starting = true;
 				
+				jump.holding = true;
+				
 			}
-			else if ( jump.active === true && jump.timeTotal < jumpTimeMax ) {
+			else if ( jump.holding === true && jump.active === true && jump.timeTotal < jumpTimeMax ) {
 				
 				// count delay
 				
 				jump.startDelayTime += timeDelta;
+				
+				if ( state.up === 0 && jump.timeTotal >= jump.timeMin ) {
+					
+					jump.holding = false;
+					
+				}
 				
 				// do jump after delay
 				
