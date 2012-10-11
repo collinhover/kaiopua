@@ -41,6 +41,7 @@
 		utilVec31PointTriangle,
 		utilVec32PointTriangle,
 		utilVec33PointTriangle,
+		utilVec31Sphere,
 		utilVec31Triangle,
 		utilVec32Triangle,
 		utilVec33Triangle;
@@ -104,6 +105,7 @@
 		utilVec31PointTriangle = new THREE.Vector3();
 		utilVec32PointTriangle = new THREE.Vector3();
 		utilVec33PointTriangle = new THREE.Vector3();
+		utilVec31Sphere = new THREE.Vector3();
 		utilVec31Triangle = new THREE.Vector3();
 		utilVec32Triangle = new THREE.Vector3();
 		utilVec33Triangle = new THREE.Vector3();
@@ -118,6 +120,7 @@
 		_RayHelper.MeshCollider = MeshCollider;
 		_RayHelper.ObjectColliderOBB = ObjectColliderOBB;
 		
+		_RayHelper.extract_collider = extract_collider;
 		_RayHelper.localize_ray = localize_ray;
 		
 		_RayHelper.raycast = raycast;
@@ -204,26 +207,27 @@
 	
 	=====================================================*/
 	 
-	function Collider () {
+	function Collider ( object ) {
 		
+		this.object = object;
 		this.normal = new THREE.Vector3();
 		
 	}
 
-	function PlaneCollider ( point, normal ) {
+	function PlaneCollider ( object, point, normal ) {
 		
-		Collider.call( this );
+		Collider.call( this, object );
 
 		this.point = point;
-		this.normal = normal;
+		this.normal.copy( normal );
 
 	}
 	PlaneCollider.prototype = new Collider();
 	PlaneCollider.prototype.constructor = PlaneCollider;
 
-	function SphereCollider ( center, radius ) {
+	function SphereCollider ( object, center, radius ) {
 		
-		Collider.call( this );
+		Collider.call( this, object );
 
 		this.center = center;
 		this.radius = radius;
@@ -233,9 +237,9 @@
 	SphereCollider.prototype = new Collider();
 	SphereCollider.prototype.constructor = SphereCollider;
 
-	function BoxCollider ( min, max ) {
+	function BoxCollider ( object, min, max ) {
 		
-		Collider.call( this );
+		Collider.call( this, object );
 
 		this.min = min;
 		this.max = max;
@@ -269,7 +273,7 @@
 		
 		// proto
 		
-		BoxCollider.call( this, min, max );
+		BoxCollider.call( this, object, min, max );
 		
 		// add object position
 		
@@ -302,11 +306,7 @@
 		
 		// proto
 		
-		BoxCollider.call( this, min, max );
-		
-		// store object
-		
-		this.object = object;
+		BoxCollider.call( this, object, min, max );
 
 	}
 	ObjectColliderOBB.prototype = new BoxCollider();
@@ -314,52 +314,50 @@
 
 	function MeshCollider ( object, box ) {
 		
-		Collider.call( this );
-
-		this.object = object;
+		Collider.call( this, object );
+		
 		this.box = box || new ObjectColliderOBB( this.object );
 		
 	}
 	MeshCollider.prototype = new Collider();
 	MeshCollider.prototype.constructor = MeshCollider;
 	
+	function extract_collider( source ) {
+		
+		// collider
+		if ( source instanceof Collider ) {
+			
+			return source;
+			
+		}
+		// octree object
+		if ( source.object && source.object.rigidBody && ( typeof source.faces === 'undefined' || source.faces.length === 0 ) ) {
+			
+			return source.object.rigidBody.collider;
+			
+		}
+		// object 3d
+		else if ( source.rigidBody ) {
+			
+			return source.rigidBody.collider;
+			
+		}
+		// rigid body
+		else if ( source.collider ) {
+			
+			return source.collider;
+			
+		}
+		
+		return source;
+		
+	}
+	
 	/*===================================================
     
     raycasting
     
     =====================================================*/
-	
-	function face_bounding_radius ( object, face ) {
-		
-		var geometry = object instanceof THREE.Mesh ? object.geometry : object,
-			vertices = geometry.vertices,
-			centroid = face.centroid,
-			va = vertices[ face.a ], vb = vertices[ face.b ], vc = vertices[ face.c ], vd,
-			centroidToVert = new THREE.Vector3(),
-			radius;
-		
-		// handle face type
-		
-		if ( face instanceof THREE.Face4 ) {
-			
-			vd = vertices[ face.d ];
-			
-			centroid.add( va, vb ).addSelf( vc ).addSelf( vd ).divideScalar( 4 );
-			
-			radius = Math.max( centroidToVert.sub( centroid, va ).length(), centroidToVert.sub( centroid, vb ).length(), centroidToVert.sub( centroid, vc ).length(), centroidToVert.sub( centroid, vd ).length() );
-			
-		}
-		else {
-			
-			centroid.add( va, vb ).addSelf( vc ).divideScalar( 3 );
-			
-			radius = Math.max( centroidToVert.sub( centroid, va ).length(), centroidToVert.sub( centroid, vb ).length(), centroidToVert.sub( centroid, vc ).length() );
-			
-		}
-		
-		return radius;
-		
-	}
 	
 	function raycast ( parameters ) {
 		
@@ -630,31 +628,18 @@
 			collider;
 		
 		for ( i = 0, l = colliders.length; i < l; i++ ) {
-
-			collider = colliders[ i ];
+			
+			//console.log( ' > raycast collider, BEFORE: ', colliders[ i ],  ' + AFTER: ', extract_collider( colliders[ i ] ) );
+			collider = extract_collider( colliders[ i ] );
 			
 			// ray cast collider
 			
-			intersection = raycast_collider( ray, collider );
+			intersection = raycast_collider( ray, collider  );
 			
 			if ( intersection.distance < Number.MAX_VALUE ) {
 				
-				// redo raycast for any mesh collider with dynamic box
+				intersections.push( intersection );
 				
-				if ( collider instanceof MeshCollider && collider.box ) {
-					
-					intersection = raycast_mesh( ray, collider );
-					
-				}
-				
-				// store
-				
-				if ( intersection.distance < Number.MAX_VALUE ) {
-					
-					intersections.push( intersection );
-					
-				}
-
 			}
 
 		}
@@ -664,6 +649,8 @@
 	}
 
 	function raycast_collider ( ray, collider ) {
+		
+		var intersection;
 		
 		// cast by type
 		
@@ -682,9 +669,17 @@
 			return raycast_box( ray, collider );
 			
 		}
-		else if ( collider instanceof MeshCollider && collider.box ) {
+		else if ( collider instanceof MeshCollider ) {
 			
-			return raycast_box( ray, collider.box );
+			intersection = raycast_box( ray, collider.box );
+			
+			if ( intersection.distance < Number.MAX_VALUE ) {
+				
+				intersection = raycast_mesh( ray, collider );
+				
+			}
+			
+			return intersection;
 			
 		}
 		else {
@@ -702,7 +697,9 @@
 			ds,
 			intersection = {
 				object: collider.object || collider,
-				distance: Number.MAX_VALUE
+				distance: Number.MAX_VALUE,
+				normal: new THREE.Vector3(),
+				point: new THREE.Vector3()
 			};
 
 		if( t < 0 ) {
@@ -712,6 +709,8 @@
 			if( ds > 0 ) {
 				
 				intersection.distance = ds;
+				intersection.normal.copy( collider.normal );
+				intersection.point.copy( r.direction ).multiplyScalar( intersection.distance ).addSelf( r.origin );
 				
 				return intersection;
 				
@@ -725,22 +724,30 @@
 
 	function raycast_sphere ( r, collider ) {
 
-		var e = collider.center.clone().subSelf( r.origin ),
+		var difference = utilVec31Sphere.sub( collider.center, r.origin ),
+			diffLengthSq = difference.lengthSq(),
 			a,
 			t,
+			distance,
 			intersection = {
 				object: collider.object || collider,
-				distance: Number.MAX_VALUE
+				distance: Number.MAX_VALUE,
+				normal: new THREE.Vector3(),
+				point: new THREE.Vector3()
 			};
 		
-		if ( e.lengthSq() < collider.radiusSq ) {
+		// inside
+		
+		if ( diffLengthSq < collider.radiusSq ) {
 			
-			intersection.distance = -1;
+			// TODO: distance and normal to closest side
+			//intersection.distance = -1;
+			//intersection.normal.set( 0, yn, 0);
 			
 			return intersection;
 		}
 		
-		a = e.dot( r.direction.clone() );
+		a = difference.dot( r.direction.clone() );
 		
 		if ( a <= 0 ) {
 			
@@ -748,18 +755,26 @@
 			
 		}
 
-		t = collider.radiusSq - ( e.lengthSq() - a * a );
+		t = collider.radiusSq - ( diffLengthSq - a * a );
 		
 		if ( t >= 0 ) {
 		
-			intersection.distance = Math.abs( a ) - Math.sqrt( t );
+			distance = Math.abs( a ) - Math.sqrt( t );
+			
+			if ( distance <= r.far ) {
+				
+				intersection.distance = distance;
+				intersection.normal.copy( difference ).multiplyScalar( -1 ).normalize();
+				intersection.point.copy( r.direction ).multiplyScalar( intersection.distance ).addSelf( r.origin );
+				
+			}
 			
 		}
 
 		return intersection;
 
 	}
-
+	
 	function raycast_box ( ray, collider ) {
 		
 		var object = collider.object || collider,
@@ -768,6 +783,7 @@
 			abMax = utilVec32Box.copy( collider.max ),
 			origin = rt.origin,
 			direction = rt.direction,
+			far = rt.far,
 			scale,
 			xt = 0, yt = 0, zt = 0,
 			xn = 0, yn = 0, zn = 0,
@@ -777,7 +793,8 @@
 			intersection = {
 				object: object,
 				distance: Number.MAX_VALUE,
-				normal: new THREE.Vector3()
+				normal: new THREE.Vector3(),
+				point: new THREE.Vector3()
 			};
 		
 		// account for object
@@ -791,55 +808,83 @@
 			
 		}
 		
+		// x
+		
 		if( origin.x < abMin.x ) {
 			
 			xt = abMin.x - origin.x;
 			xt /= direction.x;
+			if ( xt > far ) return intersection;
 			ins = false;
 			xn = -1;
 			
-		} else if( origin.x > abMax.x ) {
+		}
+		else if ( origin.x > abMax.x ) {
 			
 			xt = abMax.x - origin.x;
 			xt /= direction.x;
+			if ( xt > far ) return intersection;
 			ins = false;
 			xn = 1;
 			
 		}
 		
+		// y
+		
 		if( origin.y < abMin.y ) {
 			
 			yt = abMin.y - origin.y;
 			yt /= direction.y;
+			if ( yt > far ) return intersection;
 			ins = false;
 			yn = -1;
 			
-		} else if( origin.y > abMax.y ) {
+		}
+		else if( origin.y > abMax.y ) {
 			
 			yt = abMax.y - origin.y;
 			yt /= direction.y;
+			if ( yt > far ) return intersection;
 			ins = false;
 			yn = 1;
 			
 		}
 		
+		// z
+		
 		if( origin.z < abMin.z ) {
 			
 			zt = abMin.z - origin.z;
 			zt /= direction.z;
+			if ( zt > far ) return intersection;
 			ins = false;
 			zn = -1;
 			
-		} else if( origin.z > abMax.z ) {
+		}
+		else if( origin.z > abMax.z ) {
 			
 			zt = abMax.z - origin.z;
 			zt /= direction.z;
+			if ( zt > far ) return intersection;
 			ins = false;
 			zn = 1;
 			
 		}
 		
-		if( ins ) return -1;
+		// inside
+		
+		if( ins ) {
+			
+			// TODO: distance and normal to closest side
+			//intersection.distance = -1;
+			//intersection.normal.set( 0, yn, 0);
+			intersection.point.sub( abMax, abMin );
+			
+			return intersection;
+			
+		}
+		
+		// find side
 		
 		which = 0;
 		t = xt;
@@ -858,13 +903,17 @@
 			
 		}
 		
+		// find normal and point
+		
 		if( which === 0 ) {
 			
 			var y = origin.y + direction.y * t;
 			if ( y < abMin.y || y > abMax.y ) return intersection;
 			var z = origin.z + direction.z * t;
 			if ( z < abMin.z || z > abMax.z ) return intersection;
+			
 			intersection.normal.set( xn, 0, 0 );
+			intersection.point.set( origin.x + direction.x * t, y, z );
 			
 		}
 		else if ( which === 1 ) {
@@ -873,7 +922,9 @@
 			if ( x < abMin.x || x > abMax.x ) return intersection;
 			var z = origin.z + direction.z * t;
 			if ( z < abMin.z || z > abMax.z ) return intersection;
+			
 			intersection.normal.set( 0, yn, 0) ;
+			intersection.point.set( x, origin.y + direction.y * t, z );
 			
 		}
 		else if ( which === 2 ) {
@@ -882,7 +933,9 @@
 			if ( x < abMin.x || x > abMax.x ) return intersection;
 			var y = origin.y + direction.y * t;
 			if ( y < abMin.y || y > abMax.y ) return intersection;
+			
 			intersection.normal.set( 0, 0, zn );
+			intersection.point.set( x, y, origin.z + direction.z * t );
 			
 		}
 		
@@ -1086,118 +1139,5 @@
 		return { distance: distance, point: point, normal: normal };
 
 	}
-	
-	/*
-	function raycast_triangle ( ray, p0, p1, p2, mind, n, object ) {
-		
-		var e1 = utilVec31Triangle,
-			e2 = utilVec32Triangle;
-		
-		n.set( 0, 0, 0 );
-
-		// do not crash on quads, fail instead
-
-		e1.sub( p1, p0 );
-		e2.sub( p2, p1 );
-		n.cross( e1, e2 )
-
-		var dot = n.dot( ray.direction );
-		if ( !( dot < 0 ) ) {
-			
-			if ( object.material.side === THREE.DoubleSide || object.material.side === THREE.BackSide ) {
-			
-				n.multiplyScalar (-1.0);
-				dot *= -1.0;
-			
-			} else {
-				
-				return Number.MAX_VALUE;
-			
-			}
-		
-		}
-
-		var d = n.dot( p0 );
-		var t = d - n.dot( ray.origin );
-
-		if ( !( t <= 0 ) ) return Number.MAX_VALUE;
-		if ( !( t >= dot * mind ) ) return Number.MAX_VALUE;
-
-		t = t / dot;
-
-		var p = utilVec33Triangle.copy( ray.direction ).multiplyScalar( t ).addSelf( ray.origin ),
-			u0, u1, u2, v0, v1, v2;
-
-		if ( Math.abs( n.x ) > Math.abs( n.y ) ) {
-
-			if ( Math.abs( n.x ) > Math.abs( n.z ) ) {
-
-				u0 = p.y  - p0.y;
-				u1 = p1.y - p0.y;
-				u2 = p2.y - p0.y;
-
-				v0 = p.z  - p0.z;
-				v1 = p1.z - p0.z;
-				v2 = p2.z - p0.z;
-
-			} else {
-
-				u0 = p.x  - p0.x;
-				u1 = p1.x - p0.x;
-				u2 = p2.x - p0.x;
-
-				v0 = p.y  - p0.y;
-				v1 = p1.y - p0.y;
-				v2 = p2.y - p0.y;
-
-			}
-
-		} else {
-
-			if( Math.abs( n.y ) > Math.abs( n.z ) ) {
-
-				u0 = p.x  - p0.x;
-				u1 = p1.x - p0.x;
-				u2 = p2.x - p0.x;
-
-				v0 = p.z  - p0.z;
-				v1 = p1.z - p0.z;
-				v2 = p2.z - p0.z;
-
-			} else {
-
-				u0 = p.x  - p0.x;
-				u1 = p1.x - p0.x;
-				u2 = p2.x - p0.x;
-
-				v0 = p.y  - p0.y;
-				v1 = p1.y - p0.y;
-				v2 = p2.y - p0.y;
-
-			}
-
-		}
-
-		var temp = u1 * v2 - v1 * u2;
-		if( !(temp != 0) ) return Number.MAX_VALUE;
-		//console.log("temp: " + temp);
-		temp = 1 / temp;
-
-		var alpha = ( u0 * v2 - v0 * u2 ) * temp;
-		if( !(alpha >= 0) ) return Number.MAX_VALUE;
-		//console.log("alpha: " + alpha);
-
-		var beta = ( u1 * v0 - v1 * u0 ) * temp;
-		if( !(beta >= 0) ) return Number.MAX_VALUE;
-		//console.log("beta: " + beta);
-
-		var gamma = 1 - alpha - beta;
-		if( !(gamma >= 0) ) return Number.MAX_VALUE;
-		//console.log("gamma: " + gamma);
-
-		return t;
-
-	}
-	*/
 	
 } (KAIOPUA) );

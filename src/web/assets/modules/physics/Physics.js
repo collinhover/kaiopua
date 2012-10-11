@@ -12,10 +12,10 @@
 		assetPath = "assets/modules/physics/Physics.js",
 		_Physics = {},
 		_RigidBody,
+		_Obstacle,
 		_RayHelper,
 		_MathHelper,
 		_VectorHelper,
-		_ObjectHelper,
 		_PhysicsHelper;
 	
 	/*===================================================
@@ -28,10 +28,10 @@
 		data: _Physics,
 		requirements: [
 			"assets/modules/physics/RigidBody.js",
+			"assets/modules/physics/Obstacle.js",
 			"assets/modules/utils/MathHelper.js",
 			"assets/modules/utils/VectorHelper.js",
 			"assets/modules/utils/RayHelper.js",
-			"assets/modules/utils/ObjectHelper.js",
 			"assets/modules/utils/PhysicsHelper.js",
 			"js/three/ThreeOctree.min.js"
 		],
@@ -45,19 +45,15 @@
     
     =====================================================*/
 	
-	function init_internal ( rb, mh, vh, rh, oh, ph ) {
+	function init_internal ( rb, ob, mh, vh, rh, ph ) {
 		console.log('internal physics');
 		
 		_RigidBody = rb;
+		_Obstacle = ob;
 		_MathHelper = mh;
 		_VectorHelper = vh;
 		_RayHelper = rh;
-		_ObjectHelper = oh;
 		_PhysicsHelper = ph;
-		
-		// properties
-		
-		_Physics.timeWithoutIntersectionThreshold = 500;
 		
 		// instance
 		
@@ -107,11 +103,11 @@
 		
 		// properties
 		
-		this.timeWithoutIntersectionThreshold = main.is_number( parameters.timeWithoutIntersectionThreshold ) ? parameters.timeWithoutIntersectionThreshold : _Physics.timeWithoutIntersectionThreshold;
-		
 		this.bodies = [];
 		this.bodiesGravity = [];
 		this.bodiesDynamic = [];
+		
+		this.obstacles = [];
 		
 	}
 	
@@ -141,137 +137,122 @@
 			index,
 			child;
 		
-		if ( typeof object !== 'undefined' ) {
+		if ( typeof object !== 'undefined' && object.rigidBody instanceof _RigidBody.Instance ) {
 			
-			if ( typeof object.rigidBody !== 'undefined' ) {
+			rigidBody = object.rigidBody;
+			collider = rigidBody.collider;
+			
+			// zero out velocities
+			
+			rigidBody.velocityMovement.reset();
+			rigidBody.velocityGravity.reset();
+			
+			// get indices
+			
+			index = main.index_of_value( this.bodies, rigidBody );
+			
+			// if adding
+			
+			if ( adding === true ) {
 				
-				rigidBody = object.rigidBody;
+				// snap rotation on next update
 				
-				collider = rigidBody.collider;
+				rigidBody.rotateSnapOnNextUpdate = true;
 				
-				// zero out velocities
+				// bodies
 				
-				rigidBody.velocityMovement.force.set( 0, 0, 0 );
-				
-				rigidBody.velocityGravity.force.set( 0, 0, 0 );
-				
-				// get indices
-				
-				index = main.index_of_value( this.bodies, rigidBody );
-				
-				// if adding
-				
-				if ( adding === true ) {
+				if ( index === -1 ) {
 					
-					// snap rotation on next update
-					
-					rigidBody.rotateSnapOnNextUpdate = true;
-					
-					// bodies
-					
-					if ( index === -1 ) {
-						
-						this.bodies.push( rigidBody );
-						
-					}
-					
-					// gravity bodies
-					
-					if ( rigidBody.gravitySource === true ) {
-					
-						index = main.index_of_value( this.bodiesGravity, rigidBody );
-						
-						if ( index === -1 ) {
-							
-							this.bodiesGravity.push( rigidBody );
-							
-							rigidBody.mesh.morphs.play( 'idle', { loop: true, startDelay: true } );
-							
-						}
-						
-					}
-					
-					// dynamic body
-					
-					if ( rigidBody.dynamic === true ) {
-						
-						index = main.index_of_value( this.bodiesDynamic, rigidBody );
-						
-						if ( index === -1 ) {
-							
-							this.bodiesDynamic.push( rigidBody );
-							
-						}
-						
-					}
-					// static colliders in octree and split by faces if collider is mesh
-					else {
-						
-						this.octree.add( object, collider instanceof _RayHelper.MeshCollider ? true : false );
-						
-					}
+					this.bodies.push( rigidBody );
 					
 				}
-				// default to remove
+				
+				// gravity bodies
+				
+				if ( rigidBody.gravitySource === true ) {
+					
+					main.array_cautious_add( this.bodiesGravity, rigidBody );
+					rigidBody.mesh.morphs.play( 'idle', { loop: true, startDelay: true } );
+					
+				}
+				
+				// dynamic body
+				
+				if ( rigidBody.dynamic === true ) {
+					
+					main.array_cautious_add( this.bodiesDynamic, rigidBody );
+					
+				}
+				// static colliders in octree and split by faces if collider is mesh
 				else {
 					
-					// bodies
+					this.octree.add( object, collider instanceof _RayHelper.MeshCollider ? true : false );
 					
-					if ( index !== -1 ) {
-						
-						this.bodies.splice( index, 1 );
-						
-					}
+				}
+				
+				// obstacle
+				
+				if ( object instanceof _Obstacle.Instance ) {
 					
-					// gravity bodies
+					main.array_cautious_add( this.obstacles, object );
 					
-					if ( rigidBody.gravitySource === true ) {
+				}
+				
+			}
+			// default to remove
+			else {
+				
+				// bodies
+				
+				if ( index !== -1 ) {
 					
-						index = main.index_of_value( this.bodiesGravity, rigidBody );
-						
-						if ( index === -1 ) {
-							
-							this.bodiesGravity.splice( index, 1 );
-							
-						}
-						
-					}
+					this.bodies.splice( index, 1 );
 					
-					// dynamic colliders
+				}
+				
+				// gravity bodies
+				
+				if ( rigidBody.gravitySource === true ) {
 					
-					if ( rigidBody.dynamic === true ) {
-						
-						index = main.index_of_value( this.bodiesDynamic, rigidBody );
-						
-						if ( index !== -1 ) {
-							
-							this.bodiesDynamic.splice( index, 1 );
-							
-						}
-						
-					}
-					// static colliders in octree
-					else {
-						
-						this.octree.remove( object );
-						
-					}
+					main.array_cautious_remove( this.bodiesGravity, rigidBody );
+					
+				}
+				
+				// dynamic colliders
+				
+				if ( rigidBody.dynamic === true ) {
+					
+					main.array_cautious_remove( this.bodiesDynamic, rigidBody );
+					
+				}
+				// static colliders in octree
+				else {
+					
+					this.octree.remove( object );
+					
+				}
+				
+				// obstacle
+				
+				if ( object instanceof _Obstacle.Instance ) {
+					
+					main.array_cautious_remove( this.obstacles, object );
 					
 				}
 				
 			}
 			
-			// search for physics in children
+		}
+		
+		// search for physics in children
+		
+		if ( typeof object.children !== 'undefined' ) {
 			
-			if ( typeof object.children !== 'undefined' ) {
+			for ( i = 0, l = object.children.length; i < l; i++ ) {
 				
-				for ( i = 0, l = object.children.length; i < l; i++ ) {
-					
-					child = object.children[ i ];
-					
-					modify_bodies.call( this, child, adding );
-					
-				}
+				child = object.children[ i ];
+				
+				modify_bodies.call( this, child, adding );
 				
 			}
 			
@@ -296,8 +277,7 @@
 			gravityUp = this.utilVec33Update,
 			lerpDelta,
 			velocityGravity,
-			velocityMovement,
-			safetynet;
+			velocityMovement;
 		
 		// dynamic bodies
 		
@@ -312,8 +292,6 @@
 			velocityGravity = rigidBody.velocityGravity;
 			
 			velocityMovement = rigidBody.velocityMovement;
-			
-			safetynet = rigidBody.safetynet;
 			
 			gravityBody = rigidBody.gravityBody;
 			
@@ -341,7 +319,7 @@
 			
 			gravityMagnitude.multiplyScalar( timeDeltaMod );
 			
-			velocityGravity.force.addSelf( gravityMagnitude );
+			velocityGravity.forceDelta.addSelf( gravityMagnitude );
 			
 			// rotate to stand on source
 			
@@ -377,16 +355,13 @@
 			
 			rigidBody.find_gravity_body( this.bodiesGravity, timeDelta );
 			
-			// post physics
-			// TODO: correct safety net for octree and non-infinite rays
-			
 		}
 		
 	}
 	
 	/*===================================================
     
-    velocity functions
+    velocity
     
     =====================================================*/
 	
@@ -397,7 +372,6 @@
 			position = mesh.position,
 			force = velocity.force,
 			forceRotated = velocity.forceRotated,
-			forceRotatedLast = velocity.forceRotatedLast,
 			forceLength,
 			forceScalar,
 			damping = velocity.damping,
@@ -416,22 +390,18 @@
 			axisDown = this.utilVec33Velocity,
 			angleFixCollisionQ,
 			moveForceRotated,
+			obstacle,
 			clear;
 		
-		// make velocity relative
+		// update velocity
 		
 		velocity.update();
-		
-		// pre damp
-		
-		force.multiplySelf( dampingPre );
 		
 		// if moving / movable
 		
 		if ( rigidBody.dynamic !== true || force.isZero() === true ) {
 			
-			velocity.moving = false;
-			force.set( 0, 0, 0 );
+			velocity.reset();
 			
 			return;
 			
@@ -480,7 +450,7 @@
 			
 			if ( intersectionJump ) {
 				
-				forceRotated.multiplyScalar( 0 );
+				forceRotated.set( 0, 0, 0 );
 				
 			}
 			// revert force, jump is safe
@@ -494,16 +464,12 @@
 		
 		// velocity primary application
 		
-		clear = apply_velocity_affect.call( this, position, velocity, intersection, forceLength, boundingRadius );
+		clear = apply_velocity.call( this, position, velocity, intersection, forceLength, boundingRadius, true );
 		
 		// gravity offsets may allow character to walk up steep walls
 		// check intersection normal vs normal of velocity, and compare angle between to velocity.collisionAngleThreshold
 		
 		if ( intersection && velocity.collisionAngleThreshold < _RigidBody.collisionAngleThresholdMax ) {
-			
-			// reset force rotated to before primary application
-			
-			forceRotated.copy( forceRotatedLast );
 			
 			direction.copy( forceRotated ).normalize();
 			
@@ -579,11 +545,42 @@
 						
 						apply_velocity.call( this, position, velocity, intersectionAlt, forceLength, boundingRadius );
 						
+						// revert rotation back to original
+						
+						velocity.rotate( angleFixCollisionQ.inverse() );
+						
 					}
 					
 				}
 				
 			}
+			
+		}
+		
+		// obstacles
+		
+		if ( velocity.collision ) {
+			
+			obstacle = velocity.collision.object;
+			
+		}
+		
+		// if any collision object found or when not for gravity velocity
+		// gravity should retain obstacle until another collision found
+		// movement should shed obstacle as soon as not colliding with that obstacle
+		
+		if ( ( obstacle || forGravity !== true ) && velocity.obstacle instanceof _Obstacle.Instance && velocity.obstacle !== obstacle ) {
+			
+			velocity.obstacle.unaffect( mesh );
+			delete velocity.obstacle;
+			
+		}
+		
+		if ( obstacle instanceof _Obstacle.Instance ) {
+			
+			velocity.obstacle = obstacle;
+			
+			obstacle.affect( mesh );
 			
 		}
 		
@@ -618,22 +615,24 @@
 		
 		if ( clear === true ) {
 			
-			force.set( 0, 0, 0 );
+			velocity.reset();
 			
 		}
 		else {
 			
 			force.multiplySelf( damping );
+			forceRotated.multiplySelf( damping );
 			
 		}
 		
 	}
 	
-	function apply_velocity ( position, velocity, intersection, forceLength, boundingRadius ) {
+	function apply_velocity ( position, velocity, intersection, forceLength, boundingRadius, record ) {
 		
-		var intersectionToBoundsDist;
+		var intersectionToBoundsDist,
+			colliding;
 		
-		velocity.forceRotatedLast.copy( velocity.forceRotated );
+		velocity.forceApplied.copy( velocity.forceRotated );
 		
 		if ( intersection ) {
 			
@@ -643,7 +642,9 @@
 			
 			if ( intersectionToBoundsDist - forceLength <= 0 ) {
 				
-				velocity.forceRotated.multiplyScalar( intersectionToBoundsDist /  forceLength );
+				velocity.forceApplied.multiplyScalar( intersectionToBoundsDist /  forceLength );
+				
+				colliding = true;
 				
 			}
 			
@@ -651,49 +652,29 @@
 		
 		// add velocity to position
 		
-		position.addSelf( velocity.forceRotated );
+		position.addSelf( velocity.forceApplied );
 		
-	}
-	
-	function apply_velocity_affect ( position, velocity, intersection, forceLength, boundingRadius ) {
+		// record
 		
-		var intersectionToBoundsDist,
-			clear;
-		
-		velocity.forceRotatedLast.copy( velocity.forceRotated );
-		
-		if ( intersection ) {
+		if ( record === true ) {
 			
 			velocity.intersection = intersection;
 			
-			// modify velocity based on intersection distances to avoid passing through or into objects
-			
-			intersectionToBoundsDist = intersection.distance - boundingRadius;
-			
-			if ( intersectionToBoundsDist - forceLength <= 0 ) {
-				
-				velocity.forceRotated.multiplyScalar( intersectionToBoundsDist /  forceLength );
+			if ( colliding === true ) {
 				
 				velocity.collision = intersection;
 				velocity.moving = false;
 				
-				clear = true;
+			}
+			else {
+				
+				velocity.collision = false;
 				
 			}
 			
-		}
-		else {
-			
-			velocity.intersection = false;
-			velocity.collision = false;
+			return colliding;
 			
 		}
-		
-		// add velocity to position
-		
-		position.addSelf( velocity.forceRotated );
-		
-		return clear;
 		
 	}
 	

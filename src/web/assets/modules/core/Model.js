@@ -139,8 +139,6 @@
 	
 	function Model ( parameters ) {
 		
-		objectCount++;
-		
 		var i, l,
 			geometry,
 			materials,
@@ -152,6 +150,10 @@
 		// handle parameters
 		
 		parameters = parameters || {};
+		
+		// id
+		
+		this.id = objectCount++;
 		
 		// geometry
 		
@@ -317,10 +319,6 @@
 			this.rigidBody = new _RigidBody.Instance( this, parameters.physics );
 			
 		}
-		
-		// id
-		
-		this.id = parameters.id || this.id;
 		
 	}
 	

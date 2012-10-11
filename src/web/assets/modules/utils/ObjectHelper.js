@@ -156,6 +156,9 @@
 		_ObjectHelper.object_follow_object = object_follow_object;
 		_ObjectHelper.object_orbit_source = object_orbit_source;
 		
+		_ObjectHelper.temporary_change = temporary_change;
+		_ObjectHelper.revert_change = revert_change;
+		
 	}
 	
 	/*===================================================
@@ -1313,6 +1316,144 @@
 			// add offset position
 			
 			oPos.addSelf( oOffsetPos );
+			
+		}
+		
+	}
+	
+	/*===================================================
+    
+    temporary changes
+    
+    =====================================================*/
+	
+	function temporary_change ( object, parameters ) {
+		
+		var stack = object.changeStack = object.changeStack || [],
+			changedProperties = object.changedProperties = object.changedProperties || {},
+			changedBy,
+			layer = {id: Math.random()},
+			property,
+			value,
+			changed;
+		
+		for ( property in parameters ) {
+			
+			if ( parameters.hasOwnProperty( property ) && property !== 'id' ) {
+				
+				value = parameters[ property ];
+				
+				// retain current value
+				
+				layer[ property ] = object[ property ];
+				
+				// assign new
+				
+				object[ property ] = value;
+				
+				changedBy = changedProperties[ property ] = changedProperties[ property ] || [];
+				changedBy.push( layer );
+				
+				changed = true;
+				
+			}
+			
+		}
+		
+		if ( changed === true ) {
+			
+			stack.push( layer );
+			
+			return layer;
+			
+		}
+		
+	}
+	
+	function revert_change ( object, layer, override ) {
+		
+		var i,
+			stack = object.changeStack,
+			changedProperties = object.changedProperties,
+			changedBy,
+			index = -1,
+			indexChangedBy,
+			property,
+			value;
+		
+		if ( typeof stack !== 'undefined' && typeof changedProperties !== 'undefined' ) {
+			
+			// true signals to revert all
+			
+			if ( layer === true ) {
+				
+				for ( i = stack.length - 1; i >= 0; i-- ) {
+					
+					revert_change( object, i, true );
+					
+				}
+				
+			}
+			else {
+				
+				if ( main.is_number( layer ) ) {
+					
+					index = layer;
+					
+				}
+				else if ( typeof layer !== 'undefined' ) {
+					
+					index = main.last_index_of_value( stack, layer );
+					
+				}
+				else {
+					
+					index = stack.length - 1;
+					
+				}
+				
+				if ( index !== -1 ) {
+					
+					layer = stack[ index ];
+					
+					for ( property in layer ) {
+						
+						if ( layer.hasOwnProperty( property ) && property !== 'id' ) {
+							
+							// find out where this layer is in terms of changing property
+							
+							changedBy = changedProperties[ property ];
+							indexChangedBy = override === true ? changedBy.length - 1 : main.last_index_of_value( changedBy, layer );
+							
+							// revert value when layer is last that made a change
+							
+							if ( indexChangedBy !== -1 ) {
+								
+								if ( indexChangedBy === changedBy.length - 1 ) {
+									
+									object[ property ] = layer[ property ];
+									
+								}
+								// else change layer above's revert values to layer below this one
+								else {
+									
+									changedBy[ indexChangedBy + 1 ][ property ] = changedBy[ Math.max( indexChangedBy - 1, 0 ) ][ property ];
+									
+								}
+								
+								changedBy.splice( indexChangedBy, 1 );
+								
+							}
+							
+						}
+						
+					}
+					
+					stack.splice( index, 1 );
+					
+				}
+				
+			}
 			
 		}
 		

@@ -51,6 +51,8 @@
 		// functions
 		
 		_VectorHelper.clamp = clamp;
+		_VectorHelper.clamp_scalar = clamp_scalar;
+		_VectorHelper.clamp_length = clamp_length;
 		_VectorHelper.different = different;
 		_VectorHelper.distance_to = distance_to;
 		_VectorHelper.degree_to_rad = degree_to_rad;
@@ -77,6 +79,33 @@
 		v.x = _MathHelper.clamp( v.x, vmin.x, vmax.x );
 		v.y = _MathHelper.clamp( v.y, vmin.y, vmax.y );
 		v.z = _MathHelper.clamp( v.z, vmin.z, vmax.z );
+		
+		return v;
+		
+	}
+	
+	function clamp_scalar ( v, scalarMin, scalarMax ) {
+		
+		v.x = _MathHelper.clamp( v.x, scalarMin, scalarMax );
+		v.y = _MathHelper.clamp( v.y, scalarMin, scalarMax );
+		v.z = _MathHelper.clamp( v.z, scalarMin, scalarMax );
+		
+		return v;
+		
+	}
+	
+	function clamp_length ( v, lengthMax ) {
+		
+		var length = v.length(),
+			scalar;
+		
+		if ( length > lengthMax ) {
+			
+			scalar = lengthMax / length;
+			
+			v.multiplyScalar( scalar );
+			
+		}
 		
 		return v;
 		

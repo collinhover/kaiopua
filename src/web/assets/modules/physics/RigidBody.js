@@ -123,8 +123,6 @@
 	
 	function RigidBody ( mesh, parameters ) {
 		
-		bodyCount++;
-		
 		var i, l,
 			geometry,
 			vertices,
@@ -162,7 +160,7 @@
 		
 		parameters = parameters || {};
 		
-		this.id = bodyCount;
+		this.id = bodyCount++;
 		
 		this.mesh = mesh;
 		
@@ -237,12 +235,12 @@
 			
 			radius = Math.max( width, height, depth ) * 0.5;
 			
-			this.collider = new _RayHelper.SphereCollider( position, radius );
+			this.collider = new _RayHelper.SphereCollider( this.mesh, position, radius );
 			
 		}
 		else if ( bodyType === 'plane' ) {
 			
-			this.collider = new _RayHelper.PlaneCollider( position, parameters.normal || new THREE.Vector3( 0, 0, 1 ) );
+			this.collider = new _RayHelper.PlaneCollider( this.mesh, position, parameters.normal || new THREE.Vector3( 0, 0, 1 ) );
 			
 		}
 		// default box
@@ -348,6 +346,7 @@
 		
 		this.velocityMovement = new VelocityTracker( { 
 			rigidBody: this,
+			forceLengthMax: parameters.movementForceLengthMax,
 			damping: parameters.movementDamping,
 			dampingDecay: parameters.movementDampingDecay,
 			collisionAngleThreshold: parameters.movementCollisionAngleThreshold,
@@ -355,14 +354,13 @@
 			offsets: parameters.movementOffsets || [ 
 				new THREE.Vector3( -width * offsetPct, 0, 0 ), // left waist side
 				new THREE.Vector3( width * offsetPct, 0, 0 ), // right waist side
-				new THREE.Vector3( 0, height * offsetPct, 0 ), // near head
-				//new THREE.Vector3( -width * offsetPct, height * offsetPct, 0 ), // near head
-				//new THREE.Vector3( width * offsetPct, height * offsetPct, 0 ) // near head
+				new THREE.Vector3( 0, height * offsetPct, 0 ) // near head
 			]
 		} );
 		
 		this.velocityGravity = new VelocityTracker( { 
 			rigidBody: this,
+			forceLengthMax: parameters.gravityForceLengthMax,
 			damping: parameters.gravityDamping,
 			dampingDecay: parameters.gravityDampingDecay,
 			collisionAngleThreshold: parameters.gravityCollisionAngleThreshold || _RigidBody.gravityCollisionAngleThreshold,
@@ -446,8 +444,11 @@
 		this.rigidBody = parameters.rigidBody;
 		this.force = new THREE.Vector3();
 		this.forceRotated = new THREE.Vector3();
-		this.forceRotatedLast = new THREE.Vector3();
+		this.forceApplied = new THREE.Vector3();
 		this.forceRecentMax = new THREE.Vector3();
+		this.forceDelta = new THREE.Vector3();
+		this.forceLengthMax = parameters.forceLengthMax || Number.MAX_VALUE;
+		this.speedDelta = new THREE.Vector3( 1, 1, 1 );
 		this.damping = new THREE.Vector3( 1, 1, 1 );
 		this.dampingPre = new THREE.Vector3( 1, 1, 1 );
 		this.dampingDecay = parameters.dampingDecay || _RigidBody.dampingDecay;
@@ -527,7 +528,26 @@
 			
 		}
 		
-		// find scale
+		// force delta
+		
+		this.forceDelta.multiplySelf( this.speedDelta );
+		
+		// add delta to forces
+		
+		this.force.addSelf( this.forceDelta );
+		this.forceDelta.copy( rotate_vector3_relative_to( this.forceDelta, this.relativeToQ ) );
+		this.forceRotated.addSelf( this.forceDelta );
+		
+		// check forces against max
+		
+		if ( this.forceLengthMax < Number.MAX_VALUE ) {
+			
+			_VectorHelper.clamp_length( this.force, this.forceLengthMax );
+			_VectorHelper.clamp_length( this.forceRotated, this.forceLengthMax );
+			
+		}
+		
+		// rotate offsets
 		
 		if (  this.rigidBody ) {
 			
@@ -540,10 +560,6 @@
 			}
 			
 		}
-		
-		// rotate force and offsets
-		
-		this.forceRotated.copy( rotate_vector3_relative_to( this.force, this.relativeToQ ) );
 		
 		for ( i = 0, l = this.offsets.length; i < l; i++ ) {
 			
@@ -558,6 +574,15 @@
 			}
 			
 		}
+		
+		// clear delta
+		
+		this.forceDelta.set( 0, 0, 0 );
+		
+		// pre damp
+		
+		this.force.multiplySelf( this.dampingPre );
+		this.forceRotated.multiplySelf( this.dampingPre );
 		
 	};
 	
@@ -584,6 +609,7 @@
 	VelocityTracker.prototype.reset = function () {
 		
 		this.force.set( 0, 0, 0 );
+		this.forceRotated.set( 0, 0, 0 );
 		
 		this.moving = false;
 		
@@ -872,11 +898,8 @@
 				
 				meshPosition = mesh.matrixWorld.getPosition();
 				
-				mesh.quaternion.multiplyVector3( velocityGravity.forceRotated.copy( velocityGravity.forceRecentMax ) );
-				mesh.quaternion.multiplyVector3( velocityMovement.forceRotated.copy( velocityMovement.forceRecentMax ) );
-				
-				velocityGravityRotatedProjected.copy( velocityGravity.forceRotated ).multiplyScalar( this.gravityBodyChangeGravityProjectionMod );
-				velocityMovementRotatedProjected.copy( velocityMovement.forceRotated ).multiplyScalar( this.gravityBodyChangeMovementProjectionMod );
+				mesh.quaternion.multiplyVector3( velocityGravityRotatedProjected.copy( velocityGravity.forceRecentMax ).multiplyScalar( this.gravityBodyChangeGravityProjectionMod ) );
+				mesh.quaternion.multiplyVector3( velocityMovementRotatedProjected.copy( velocityMovement.forceRecentMax ).multiplyScalar( this.gravityBodyChangeMovementProjectionMod ) );
 				
 				meshPositionProjected.copy( meshPosition ).addSelf( velocityGravityRotatedProjected ).addSelf( velocityMovementRotatedProjected );
 				

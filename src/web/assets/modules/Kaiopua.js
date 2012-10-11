@@ -256,8 +256,10 @@ var KAIOPUA = (function (main) {
 		
 		main.ensure_array = ensure_array;
 		main.ensure_not_array = ensure_not_array;
-		main.modify_array = modify_array;
+		main.array_cautious_add = array_cautious_add;
+		main.array_cautious_remove = array_cautious_remove;
 		main.index_of_value = index_of_value;
+		main.last_index_of_value = last_index_of_value;
 		main.index_of_values = index_of_values;
 		main.index_of_property = index_of_property;
 		main.index_of_properties = index_of_properties;
@@ -582,52 +584,83 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function modify_array( target, elements, remove ) {
+	function array_cautious_add ( target, elements ) {
 		
 		var i, l,
 			element,
 			index;
 		
-		if ( typeof target !== 'undefined' && typeof elements !== 'undefined' && typeof forEach === 'function' ) {
+		target = ensure_array( target );
+		elements = ensure_array( elements );
+		
+		// for each element
+		
+		for ( i = 0, l = elements.length; i < l; i++ ) {
 			
-			elements = ensure_array( elements );
+			element = elements[ i ];
 			
-			// for each element
+			index = index_of_value( target, element );
 			
-			for ( i = 0, l = elements.length; i < l; i++ ) {
+			if ( index === -1 ) {
 				
-				element = elements[ i ];
-				
-				index = index_of_value( target, element );
-				
-				if ( remove === true ) {
-					
-					if ( index !== -1 ) {
-						
-						target.splice( index, 1 );
-						
-					}
-					
-				}
-				else {
-					
-					if ( index === -1 ) {
-						
-						target.push( element );
-						
-					}
-					
-				}
+				target.push( element );
 				
 			}
 			
 		}
+		
+		return target;
+		
+	}
+	
+	function array_cautious_remove ( target, elements ) {
+		
+		var i, l,
+			element,
+			index;
+		
+		target = ensure_array( target );
+		elements = ensure_array( elements );
+		
+		// for each element
+		
+		for ( i = 0, l = elements.length; i < l; i++ ) {
+			
+			element = elements[ i ];
+			
+			index = index_of_value( target, element );
+			
+			if ( index !== -1 ) {
+				
+				target.splice( index, 1 );
+				
+			}
+			
+		}
+		
+		return target;
 		
 	}
 	
 	function index_of_value( array, value ) {
 		
 		for ( var i = 0, l = array.length; i < l; i++ ) {
+			
+			if ( value === array[ i ] ) {
+				
+				return i;
+				
+			}
+			
+		}
+		
+		return -1;
+		
+	}
+	
+	function last_index_of_value( array, value ) {
+		
+		for ( var i = array.length - 1; i >= 0; i-- ) {
 			
 			if ( value === array[ i ] ) {
 				
