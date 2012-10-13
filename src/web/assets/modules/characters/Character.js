@@ -27,7 +27,6 @@
 	main.asset_register( assetPath, { 
 		data: _Character,
 		requirements: [
-			"assets/modules/core/Game.js",
 			"assets/modules/core/Model.js",
 			"assets/modules/core/Actions.js",
 			"assets/modules/utils/MathHelper.js",
@@ -44,16 +43,61 @@
     
     =====================================================*/
 	
-	function init_internal ( g, m, ac, mh, vh, oh ) {
+	function init_internal ( m, ac, mh, vh, oh ) {
 		console.log('internal Character', _Character);
 		// modules
 		
-		_Game = g;
 		_Model = m;
 		_Actions = ac;
 		_MathHelper = mh;
 		_VectorHelper = vh;
 		_ObjectHelper = oh;
+		
+		// properties
+		
+		_Character.options = {
+			stats: {
+				healthMax: 100,
+				invulnerabilityDuration: 500,
+				respawnOnDeath: false,
+				respawnDelay: 0
+			},
+			movement: {
+				move: {
+					speed: 3,
+					runThreshold: 0
+				},
+				rotate: {
+					lerpDelta: 1,
+					turnSpeed: 0.025
+				},
+				jump: {
+					speedStart: 4,
+					speedEnd: 0,
+					airControl: 0.1,
+					moveDamping: 0.99,
+					moveSpeedMod: 0.5,
+					durationMin: 100,
+					duration: 100,
+					startDelay: 125
+				}
+			},
+			animation: {
+				durations: {
+					walk: 750,
+					run: 500,
+					idle: 3000,
+					jump: 1000,
+					jumpStart: 125,
+					jumpEnd: 125,
+					death: 1000,
+					decay: 500,
+					decayDelay: 500,
+					clear: 125,
+					clearSolo: 125
+				}
+			}
+		};
 		
 		// character instance
 		
@@ -61,27 +105,25 @@
 		_Character.Instance.prototype = new _Model.Instance();
 		_Character.Instance.prototype.constructor = _Character.Instance;
 		
+		_Character.Instance.prototype.hurt = hurt;
+		_Character.Instance.prototype.die = die;
+		_Character.Instance.prototype.decay = decay;
+		_Character.Instance.prototype.respawn = respawn;
+		
 		_Character.Instance.prototype.move_state_change = move_state_change;
 		_Character.Instance.prototype.rotate_by_direction = rotate_by_direction;
 		_Character.Instance.prototype.rotate_by_angle = rotate_by_angle;
 		_Character.Instance.prototype.stop_jumping = stop_jumping;
-		_Character.Instance.prototype.morph_cycle = morph_cycle;
 		
 		_Character.Instance.prototype.update = update;
 		
-		Object.defineProperty( _Character.Instance.prototype, 'scene', { 
-			get : function () { return this._scene; },
-			set : function ( newScene ) {
+		Object.defineProperty( _Character.Instance.prototype, 'health', { 
+			get : function () { return this.state.health; },
+			set: function ( health ) {
 				
-				if ( typeof newScene !== 'undefined' ) {
+				if ( main.is_number( health ) ) {
 					
-					// remove from previous
-					
-					this.hide();
-					
-					// add to new
-					
-					this.show( newScene );
+					this.state.health = _MathHelper.clamp( health, 0, this.options.stats.healthMax );
 					
 				}
 				
@@ -89,23 +131,23 @@
 		});
 		
 		Object.defineProperty( _Character.Instance.prototype, 'moving', { 
-			get : function () { return this.movement.state.moving; }
+			get : function () { return this.state.moving; }
 		});
 		
 		Object.defineProperty( _Character.Instance.prototype, 'movingHorizontal', { 
-			get : function () { return this.movement.state.movingHorizontal; }
+			get : function () { return this.state.movingHorizontal; }
 		});
 		
 		Object.defineProperty( _Character.Instance.prototype, 'jumping', { 
-			get : function () { return this.movement.jump.active; }
+			get : function () { return this.options.movement.jump.active; }
 		});
 		
 		Object.defineProperty( _Character.Instance.prototype, 'turn', { 
-			get : function () { return this.movement.rotate.turn; }
+			get : function () { return this.options.movement.rotate.turn; }
 		});
 		
 		Object.defineProperty( _Character.Instance.prototype, 'facing', { 
-			get : function () { return this.movement.rotate.facing; }
+			get : function () { return this.options.movement.rotate.facing; }
 		});
 		
 	}
@@ -120,76 +162,55 @@
 	
 	function Character ( parameters ) {
 		
-		var parametersModel,
-			parametersMovement,
-			movement,
+		var movement,
 			move,
 			rotate,
 			jump,
-			state;
+			state,
+			animation,
+			durations;
 		
 		// handle parameters
 		
 		parameters = parameters || {};
 		
-		parametersModel = parameters.model || {};
+		// options
 		
-		parametersMovement = parameters.movement || {};
+		this.options = $.extend( true, this.options || {}, _Character.options, parameters.options );
 		
-		// movement
-		
-		movement = this.movement = {};
+		stats = this.options.stats;
+		movement = this.options.movement;
 		
 		// move
 		
-		move = movement.move = {};
-		move.speed = main.is_number( parametersMovement.moveSpeed ) ? parametersMovement.moveSpeed : 3;
-		move.runThreshold = main.is_number( parametersMovement.moveRunThreshold ) ? parametersMovement.moveRunThreshold : 0;
-		move.walkAnimationTime = main.is_number( parametersMovement.moveWalkAnimationTime ) ? parametersMovement.moveWalkAnimationTime : 750;
-		move.runAnimationTime = main.is_number( parametersMovement.moveRunAnimationTime ) ? parametersMovement.moveRunAnimationTime : 500;
-		move.idleAnimationTime = main.is_number( parametersMovement.moveIdleAnimationTime ) ? parametersMovement.moveIdleAnimationTime : 3000;
-		move.morphClearTime = main.is_number( parametersMovement.moveCycleClearTime ) ? parametersMovement.moveCycleClearTime : 125;
-		move.animationChangeTimeThreshold = main.is_number( parametersMovement.animationChangeTimeThreshold ) ? parametersMovement.animationChangeTimeThreshold : 0;
-		move.animationChangeTimeTotal = move.animationChangeTimeThreshold;
+		move = movement.move;
 		move.direction = new THREE.Vector3();
 		
 		// rotate
-		rotate = this.movement.rotate = {};
-		rotate.lerpDelta = main.is_number( parametersMovement.rotateLerpDelta ) ? parametersMovement.rotateLerpDelta : 1;
+		rotate = movement.rotate;
 		rotate.facingDirection = new THREE.Vector3( 0, 0, 1 );
 		rotate.facingDirectionLast = rotate.facingDirection.clone();
 		rotate.facing = new THREE.Quaternion();
 		rotate.facingAngle = 0;
 		rotate.turn = new THREE.Quaternion();
 		rotate.turnAngle = 0;
-		rotate.turnSpeed = main.is_number( parametersMovement.rotateTurnSpeed ) ? parametersMovement.rotateTurnSpeed : 0.025;
 		rotate.axis = new THREE.Vector3( 0, 1, 0 );
 		rotate.delta = new THREE.Quaternion();
 		rotate.vector = new THREE.Quaternion();
 		
 		// jump
-		jump = this.movement.jump = {};
-		jump.speedStart = main.is_number( parametersMovement.jumpSpeedStart ) ? parametersMovement.jumpSpeedStart : move.speed * ( 4 / 3 );
-		jump.speedEnd = main.is_number( parametersMovement.jumpSpeedEnd ) ? parametersMovement.jumpSpeedEnd : 0;
-		jump.airControl = main.is_number( parametersMovement.jumpAirControl ) ? parametersMovement.jumpAirControl : 0.1;
-		jump.moveDamping = main.is_number( parametersMovement.jumpMoveDamping ) ? parametersMovement.jumpMoveDamping : 0.99;
-		jump.moveSpeedMod = main.is_number( parametersMovement.jumpMoveSpeedMod ) ? parametersMovement.jumpMoveSpeedMod : 0.5;
-		jump.timeTotal = 0;
-		jump.timeMin = main.is_number( parametersMovement.jumpTimeMin ) ? parametersMovement.jumpTimeMin : 100;
-		jump.timeMax = main.is_number( parametersMovement.jumpTimeMax ) ? parametersMovement.jumpTimeMax : 100;
+		jump = movement.jump;
+		jump.time = 0;
 		jump.timeAfterNotGrounded = 0;
 		jump.timeAfterNotGroundedMax = 125;
-		jump.startDelay = main.is_number( parametersMovement.jumpStartDelay ) ? parametersMovement.jumpStartDelay : 125;
 		jump.startDelayTime = 0;
-		jump.animationTime = main.is_number( parametersMovement.jumpAnimationTime ) ? parametersMovement.jumpAnimationTime : 1000;
-		jump.startAnimationTime = main.is_number( parametersMovement.jumpStartAnimationTime ) ? parametersMovement.jumpStartAnimationTime : jump.startDelay;
-		jump.endAnimationTime = main.is_number( parametersMovement.jumpEndAnimationTime ) ? parametersMovement.jumpEndAnimationTime : move.morphClearTime;
 		jump.ready = true;
 		jump.active = false;
 		jump.holding = false;
 		
 		// state
-		state = this.movement.state = {};
+		
+		state = this.state = {};
 		state.up = 0;
 		state.down = 0;
 		state.left = 0;
@@ -199,21 +220,25 @@
 		state.moving = false;
 		state.movingHorizontal = false;
 		state.movingBack = false;
-		state.moveType = '';
+		state.invulnerable = false;
+		state.invulnerableTime = 0;
+		state.dead = false;
+		state.decaying = false;
+		state.health = stats.healthMax;
 		
 		// physics
 		
-		if ( typeof parametersModel.physics !== 'undefined' ) {
+		if ( typeof parameters.physics !== 'undefined' ) {
 			
-			parametersModel.physics.dynamic = true;
-			parametersModel.physics.movementDamping = main.is_number( parametersModel.physics.movementDamping ) ? parametersModel.physics.movementDamping : 0.5;
-			parametersModel.physics.movementForceLengthMax = main.is_number( parametersModel.physics.movementForceLengthMax ) ? parametersModel.physics.movementForceLengthMax : shared.universeGravityMagnitude.length() * 20;
+			parameters.physics.dynamic = true;
+			parameters.physics.movementDamping = main.is_number( parameters.physics.movementDamping ) ? parameters.physics.movementDamping : 0.5;
+			parameters.physics.movementForceLengthMax = main.is_number( parameters.physics.movementForceLengthMax ) ? parameters.physics.movementForceLengthMax : shared.universeGravityMagnitude.length() * 20;
 			
 		}
 		
 		// prototype constructor
 		
-		_Model.Instance.call( this, parametersModel );
+		_Model.Instance.call( this, parameters );
 		
 		// properties
 		
@@ -232,14 +257,126 @@
 	
 	/*===================================================
 	
+	health
+	
+	=====================================================*/
+	
+	function hurt ( damage ) {
+		
+		var state = this.state,
+			stats = this.options.stats;
+		
+		if ( state.invulnerable !== true ) {
+			
+			this.health -= damage;
+			
+			if ( stats.health === 0 ) {
+				
+				this.die();
+				
+			}
+			else {
+			
+				// small period of invulnerability after being hurt, handled by update
+				
+				state.invulnerable = true;
+				
+			}
+			
+		}
+		
+	}
+	
+	function die () {
+		
+		var state = this.state,
+			animation = this.options.animation,
+			durations = animation.durations;
+		
+		if ( state.invulnerable !== true ) {
+			
+			this.health = 0;
+			
+			state.dead = true;
+			
+			// TODO: better morph cycling
+			/*
+			this.morphs.play( 'die', {
+				duration: durations.death,
+				solo: true,
+				durationClear: durations.clearSolo,
+				callback: $.proxy( this.decay, this )
+			} );
+			*/
+		}
+		
+	}
+	
+	function decay () {
+		
+		var state = this.state,
+			stats = this.options.stats,
+			animation = this.options.animation,
+			durations = animation.durations;
+		
+		if ( state.dead === true ) {
+			
+			state.decaying = true;
+			/*
+			this.morphs.play( 'decay', {
+				duration: durations.decay,
+				delay: durations.decayDelay,
+				solo: true,
+				durationClear: durations.clearSolo
+			} );
+			*/
+			
+			
+			
+			// TODO: tween opacity to 0
+			
+			
+			
+			// TODO: respawn callback from opacity tween
+			
+			if ( stats.respawnOnDeath === true ) {
+				
+				//pDecay.callback = $.proxy( this.respawn, this );
+				
+			}
+			
+		}
+		
+	}
+	
+	function respawn ( parent, location ) {
+		
+		var state = this.state;
+		
+		state.dead = state.decaying = false;
+		state.invulnerable = true;
+		
+		
+		
+		// TODO: add to parent, use default if not provided
+		
+		
+		// TODO: send to location, use default if not provided
+		
+		
+		
+	}
+	
+	/*===================================================
+	
 	move
 	
 	=====================================================*/
 	
 	function move_state_change ( propertyName, stop ) {
 		
-		var movement = this.movement,
-			state = movement.state,
+		var movement = this.options.movement,
+			state = this.state,
 			rotate = movement.rotate,
 			rotateFacingDirection = rotate.facingDirection,
 			forwardBack;
@@ -296,7 +433,7 @@
 	
 	function rotate_by_direction ( dx, dy, dz ) {
 		
-		var rotate = this.movement.rotate;
+		var rotate = this.options.movement.rotate;
 		
 		// update direction
 		
@@ -322,7 +459,7 @@
 	
 	function rotate_by_angle ( rotateAngleDelta ) {
 		
-		var rotate = this.movement.rotate,
+		var rotate = this.options.movement.rotate,
 			rotateAxis = rotate.axis,
 			rotateDelta = rotate.delta,
 			rotateAngleTarget = _MathHelper.degree_between_180( rotate.facingAngle + rotateAngleDelta ),
@@ -347,44 +484,8 @@
 	
 	function stop_jumping () {
 		
-		this.movement.jump.active = false;
-		this.movement.jump.holding = false;
-		
-	}
-	
-	/*===================================================
-	
-	morph cycling
-	
-	=====================================================*/
-	
-	function morph_cycle ( timeDelta, cycleType, duration, loop, reverse ) {
-		
-		var morphs = this.morphs,
-			movement = this.movement,
-			move = movement.move,
-			state = movement.state;
-		
-		if ( state.moveType !== cycleType ) {
-			
-			if ( move.animationChangeTimeTotal < move.animationChangeTimeThreshold ) {
-				
-				move.animationChangeTimeTotal += timeDelta;
-				
-			}
-			else {
-				
-				move.animationChangeTimeTotal = 0;
-				
-				morphs.clear( state.moveType, move.morphClearTime );
-				
-				state.moveType = cycleType;
-				
-			}
-			
-		}
-		
-		morphs.play( state.moveType, { duration: duration, loop: loop, reverse: reverse } );
+		this.options.movement.jump.active = false;
+		this.options.movement.jump.holding = false;
 		
 	}
 	
@@ -398,11 +499,15 @@
 		
 		var rigidBody = this.rigidBody,
 			morphs = this.morphs,
-			movement = this.movement,
+			state = this.state,
+			options = this.options,
+			stats = options.stats,
+			movement = options.movement,
 			move = movement.move,
 			rotate = movement.rotate,
 			jump = movement.jump,
-			state = movement.state,
+			animation = options.animation,
+			durations = animation.durations,
 			moveDir = move.direction,
 			moveSpeed = move.speed * timeDeltaMod,
 			rotateTurnAngleDelta,
@@ -418,8 +523,8 @@
 			jumpSpeedEnd,
 			jumpAirControl,
 			jumpMoveDamping,
-			jumpTimeTotal,
-			jumpTimeMax,
+			jumpTime,
+			jumpDuration,
 			jumpTimeRatio,
 			jumpTimeAfterNotGroundedMax,
 			jumpStartDelay,
@@ -434,6 +539,21 @@
 			dragCoefficient,
 			terminalVelocity,
 			playSpeedModifier;
+		
+		// check stats
+		
+		if ( state.invulnerable === true ) {
+			
+			state.invulnerableTime += timeDelta;
+			
+			if ( state.invulnerableTime >= stats.invulnerabilityDuration ) {
+				
+				state.invulnerableTime = 0;
+				state.invulnerable = false;
+				
+			}
+			
+		}
 		
 		// set moving
 				
@@ -513,8 +633,8 @@
 			
 			// properties
 			
-			jumpTimeTotal = jump.timeTotal;
-			jumpTimeMax = jump.timeMax;
+			jumpTime = jump.time;
+			jumpDuration = jump.duration;
 			jumpTimeAfterNotGroundedMax = jump.timeAfterNotGroundedMax;
 			jumpStartDelay = jump.startDelay;
 			jumpSpeedStart = jump.speedStart * timeDeltaMod;
@@ -541,13 +661,13 @@
 				
 				jump.ready = false;
 				
-				this.morph_cycle( timeDelta, 'jump', jump.animationTime, true );
+				morphs.play( 'jump', { duration: durations.jump, loop: true, solo: true, durationClear: durations.clearSolo } );
 				
 			}
 			// do jump
 			else if ( state.up !== 0 && ( ( grounded === true && sliding === false ) || jump.timeAfterNotGrounded < jumpTimeAfterNotGroundedMax ) && jump.ready === true ) {
 				
-				jump.timeTotal = 0;
+				jump.time = 0;
 				
 				jump.startDelayTime = 0;
 				
@@ -560,13 +680,13 @@
 				jump.holding = true;
 				
 			}
-			else if ( jump.holding === true && jump.active === true && jump.timeTotal < jumpTimeMax ) {
+			else if ( jump.holding === true && jump.active === true && jump.time < jumpDuration ) {
 				
 				// count delay
 				
 				jump.startDelayTime += timeDelta;
 				
-				if ( state.up === 0 && jump.timeTotal >= jump.timeMin ) {
+				if ( state.up === 0 && jump.time >= jump.durationMin ) {
 					
 					jump.holding = false;
 					
@@ -595,15 +715,15 @@
 					
 					// play jump
 					
-					this.morph_cycle ( timeDelta, 'jump', jump.animationTime, true );
+					morphs.play( 'jump', { duration: durations.jump, loop: true, solo: true, durationClear: durations.clearSolo } );
 					
 					// properties
 					
-					jumpTimeRatio = jumpTimeTotal / jumpTimeMax;
+					jumpTimeRatio = jumpTime / jumpDuration;
 					
 					// update time total
 					
-					jump.timeTotal += timeDelta;
+					jump.time += timeDelta;
 					
 					// add speed to gravity velocity delta
 					
@@ -614,7 +734,7 @@
 					
 					// play jump start
 					
-					morphs.play( 'jump_start', { duration: jump.startAnimationTime, loop: false, callback: function () { morphs.clear( 'jump_start' ); } } );
+					morphs.play( 'jump_start', { duration: durations.jumpStart, loop: false, solo: true, durationClear: durations.clearSolo, callback: function () { morphs.clear( 'jump_start' ); } } );
 					
 				}
 				
@@ -629,10 +749,10 @@
 					
 					if ( jump.timeAfterNotGrounded >= jumpTimeAfterNotGroundedMax ) {
 						
-						morphs.clear( 'jump', move.morphClearTime );
-					
-						morphs.play( 'jump_end', { duration: jump.endAnimationTime, loop: false, callback: function () { morphs.clear( 'jump_end', move.morphClearTime ); } } );
-					
+						morphs.clear( 'jump', durations.clear );
+						
+						morphs.play( 'jump_end', { duration: durations.jumpEnd, loop: false, callback: function () { morphs.clear( 'jump_end', durations.clear ); } } );
+						
 					}
 					
 				}
@@ -702,12 +822,12 @@
 					
 					if ( velocityMovementForceLength >= move.runThreshold ) {
 						
-						this.morph_cycle ( timeDelta, 'run', move.runAnimationTime * playSpeedModifier, true, state.movingBack );
+						this.morphs.play( 'run', { duration: durations.run * playSpeedModifier, loop: true, solo: true, durationClear: durations.clearSolo, reverse: state.movingBack } );
 						
 					}
 					else {
 						
-						this.morph_cycle ( timeDelta, 'walk', move.walkAnimationTime * playSpeedModifier, true, state.movingBack );
+						this.morphs.play( 'walk', { duration: durations.walk * playSpeedModifier, loop: true, solo: true, durationClear: durations.clearSolo, reverse: state.movingBack } );
 						
 					}
 					
@@ -715,7 +835,7 @@
 				// idle cycle
 				else {
 					
-					this.morph_cycle ( timeDelta, 'idle', move.idleAnimationTime, true, false );
+					this.morphs.play( 'idle', { duration: durations.idle, loop: true, solo: true, durationClear: durations.clearSolo, reverse: false } );
 					
 				}
 				

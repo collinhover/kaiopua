@@ -12,7 +12,6 @@
 		assetPath = "assets/modules/characters/Hero.js",
 		_Hero = {},
 		_Character,
-		_Game,
 		_Planting;
 	
 	/*===================================================
@@ -25,7 +24,6 @@
 		data: _Hero,
 		requirements: [
 			"assets/modules/characters/Character.js",
-			"assets/modules/core/Game.js",
 			"assets/modules/farming/Planting.js"
 		],
 		callbacksOnReqs: init_internal,
@@ -38,12 +36,31 @@
     
     =====================================================*/
 	
-	function init_internal( c, g, pl ) {
+	function init_internal( c, pl ) {
 		console.log('internal hero', _Hero);
 		
+		// utility
+		
 		_Character = c;
-		_Game = g;
 		_Planting = pl;
+		
+		// properties
+		
+		_Hero.options = {
+			movement: {
+				move: {
+					speed: 3
+				},
+				jump: {
+					speed: 3,
+					duration: 200,
+					startDelay: 125,
+					moveSpeedMod: 0
+				}
+			}
+		};
+		
+		// instance
 		
 		_Hero.Instance = Hero;
 		_Hero.Instance.prototype = new _Character.Instance();
@@ -67,19 +84,14 @@
 		
 		parameters.name = 'Hero';
 		
-		parameters.model = parameters.modelInfo || {};
-		parameters.model.geometry = main.get_asset_data( "assets/models/Hero.js" );
-		parameters.model.material = new THREE.MeshLambertMaterial( { color: 0xFFF7E0, ambient: 0xFFF7E0, vertexColors: THREE.VertexColors } );
-		parameters.model.shading = THREE.SmoothShading;
+		parameters.geometry = main.get_asset_data( "assets/models/Hero.js" );
+		parameters.material = new THREE.MeshLambertMaterial( { color: 0xFFF7E0, ambient: 0xFFF7E0, vertexColors: THREE.VertexColors } );
 		
-		parameters.model.physics = parameters.model.physics || {};
-		parameters.model.physics.bodyType = 'capsule';
-		parameters.model.physics.movementDamping = 0.5;
+		parameters.physics = parameters.physics || {};
+		parameters.physics.bodyType = 'capsule';
+		parameters.physics.movementDamping = 0.5;
 		
-		parameters.movement = parameters.movement || {};
-		parameters.movement.moveSpeed = 3;
-		parameters.movement.jumpTimeMax = 200;
-		parameters.movement.jumpMoveSpeedMod = 0;
+		parameters.options = $.extend( true, {}, _Hero.options, parameters.options );
 		
 		// prototype constructor
 		

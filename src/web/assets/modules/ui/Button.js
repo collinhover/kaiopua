@@ -149,7 +149,7 @@
 		
 		// data
 		
-		this.data = main.ensure_array( parameters.data );
+		this.data = main.to_array( parameters.data );
 		
 		// callback
         
@@ -224,7 +224,7 @@
 		
 		if ( typeof this.callback !== 'undefined' && this.enabled === true && this.hidden !== true && this.isVisible === true ) {
 			
-			this.callback.apply( this.context || window, main.ensure_array( this.data ) );
+			this.callback.apply( this.context || window, main.to_array( this.data ) );
 			
 		}
 		

@@ -81,7 +81,7 @@
 	});
 	
 	Object.defineProperty(_Player, 'moving', { 
-		get : function () { return character.movement.state.moving; }
+		get : function () { return character.state.moving; }
 	});
 	
 	main.asset_register( assetPath, { 

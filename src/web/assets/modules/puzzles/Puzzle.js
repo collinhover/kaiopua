@@ -164,8 +164,8 @@
 		
 		this.numGridModules = this.grid.modules.length;
 		this.numElementsMin = main.is_number( parameters.numElementsMin ) && parameters.numElementsMin > 0 ? parameters.numElementsMin : this.numGridModules;
-		this.shapesEnabled = main.ensure_array( parameters.shapesEnabled );
-		this.shapesDisabled = main.ensure_array( parameters.shapesDisabled );
+		this.shapesEnabled = main.to_array( parameters.shapesEnabled );
+		this.shapesDisabled = main.to_array( parameters.shapesDisabled );
 		this.shapes = [];
 		this.numShapesRequired = main.is_number( parameters.numShapesRequired ) && parameters.numShapesRequired > 0 ? parameters.numShapesRequired : 1;
 		if ( this.shapesEnabled.length > 0 && this.numShapesRequired > this.shapesEnabled.length ) {

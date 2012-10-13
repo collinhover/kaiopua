@@ -394,8 +394,8 @@
 		parameters = parameters || {};
 		
 		offsets = parameters.offsets || [ offsetNone ];
-		objects = main.ensure_array( parameters.objects ).slice( 0 );
-		colliders = main.ensure_array( parameters.colliders ).slice( 0 );
+		objects = main.to_array( parameters.objects ).slice( 0 );
+		colliders = main.to_array( parameters.colliders ).slice( 0 );
 		octree = parameters.octree;
 		hierarchySearch = parameters.hierarchySearch;
 		hierarchyIntersect = parameters.hierarchyIntersect;
@@ -975,7 +975,7 @@
 		
 		if ( collider.faces ) {
 			
-			faces = main.ensure_array( collider.faces );
+			faces = main.to_array( collider.faces );
 			
 		}
 		

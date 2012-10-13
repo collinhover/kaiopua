@@ -386,7 +386,7 @@
 		
 		// camera controls
 		
-		cameraControls = new _CameraControls.Instance( camera );
+		cameraControls = new _CameraControls.Instance( { camera: camera } );
 		//cameraControls.enable();
 		
 		// passes

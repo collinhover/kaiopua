@@ -936,7 +936,7 @@
 			group,
 			index;
 		
-		childParentPairs = main.ensure_array( childParentPairs );
+		childParentPairs = main.to_array( childParentPairs );
 		
 		for ( i = 0, l = childParentPairs.length; i < l; i++ ) {
 			
@@ -999,7 +999,7 @@
 		
 		if ( _GUI.groups.hasOwnProperty( groupName ) ) {
 					
-			uielements = main.ensure_array( uielements );
+			uielements = main.to_array( uielements );
 			
 			for ( i = 0, l = uielements.length; i < l; i++ ) {
 				
@@ -1058,7 +1058,7 @@
 			group,
 			uielement;
 		
-		groupsNames = main.ensure_array( groupsNames );
+		groupsNames = main.to_array( groupsNames );
 		
 		// if no group names passed, default to all groups
 		

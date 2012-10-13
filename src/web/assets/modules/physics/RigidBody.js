@@ -869,7 +869,7 @@
 			
 		}
 		// else if not grounded and no movement property or is jumping ( i.e. characters must jump to trigger gravity change to avoid unexpected shift )
-		else if ( this.grounded === false && ( typeof mesh.movement === 'undefined' || mesh.jumping === true ) ) {
+		else if ( this.grounded === false && ( typeof mesh.jumping === 'undefined' || mesh.jumping === true ) ) {
 			
 			// record maximum force values
 			
@@ -1146,7 +1146,7 @@
 				
 				// stop all morphs
 				
-				this.mesh.morphs.stopAll();
+				this.mesh.morphs.stop_all();
 				
 			}
 			

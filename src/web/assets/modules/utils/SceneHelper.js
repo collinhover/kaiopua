@@ -53,8 +53,8 @@
 		var i, l,
 			object;
 		
-		objects = main.ensure_array( objects );
-		cascade = main.ensure_array( cascade );
+		objects = main.to_array( objects );
+		cascade = main.to_array( cascade );
 		
 		for ( i = 0, l = objects.length; i < l; i++ ) {
 			
@@ -91,8 +91,8 @@
 		
 		var i, l;
 		
-		objects = main.ensure_array( objects );
-		cascade = main.ensure_array( cascade );
+		objects = main.to_array( objects );
+		cascade = main.to_array( cascade );
 		
 		for ( i = 0, l = objects.length; i < l; i++ ) {
 			

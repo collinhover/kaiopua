@@ -484,7 +484,7 @@
 		
 		// handle parameters
 		
-		modulesExcluding = main.ensure_array( modulesExcluding );
+		modulesExcluding = main.to_array( modulesExcluding );
 		
 		// for each module
 		
@@ -514,7 +514,7 @@
 		
 		if ( typeof modules !== 'undefined' ) {
 			
-			modules = main.ensure_array( modules );
+			modules = main.to_array( modules );
 			
 			// for each module
 			
@@ -665,11 +665,11 @@
 		
 		// handle arguments
 		
-		searchVertices = main.ensure_array( searchVertices );
+		searchVertices = main.to_array( searchVertices );
 		
-		modulesExcluding = main.ensure_array( modulesExcluding );
+		modulesExcluding = main.to_array( modulesExcluding );
 		
-		modulesMatching = main.ensure_array( modulesMatching );
+		modulesMatching = main.to_array( modulesMatching );
 		
 		// find search matrix world
 		

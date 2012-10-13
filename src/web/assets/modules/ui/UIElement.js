@@ -1704,9 +1704,9 @@
 			index,
 			childrenMinusExcluded = [];
 		
-		children = main.ensure_array( children || this.children );
+		children = main.to_array( children || this.children );
 		
-		excluding = main.ensure_array( excluding );
+		excluding = main.to_array( excluding );
 		
 		for ( i = 0, l = children.length; i < l; i++ ) {
 			
@@ -1730,7 +1730,7 @@
 			child,
 			showing = [];
 		
-		children = main.ensure_array( children || this.children );
+		children = main.to_array( children || this.children );
 		
 		for ( i = 0, l = children.length; i < l; i++ ) {
 			
@@ -1754,7 +1754,7 @@
 			child,
 			hidden = [];
 		
-		children = main.ensure_array( children || this.children );
+		children = main.to_array( children || this.children );
 		
 		for ( i = 0, l = children.length; i < l; i++ ) {
 			

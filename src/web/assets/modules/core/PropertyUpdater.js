@@ -142,7 +142,7 @@
 		
 		// add
 		
-		updaters = main.ensure_array( updaters );
+		updaters = main.to_array( updaters );
 		
 		for ( i = 0, l = updaters.length; i < l; i++ ) {
 			
@@ -189,7 +189,7 @@
 		
 		if ( typeof updaters !== 'undefined' ) {
 			
-			updaters = main.ensure_array( updaters );
+			updaters = main.to_array( updaters );
 			
 			for ( i = 0, l = updaters.length; i < l; i++ ) {
 				

@@ -14,6 +14,7 @@
 		_Game,
 		_Water,
         _Sky,
+		_ObjectHelper,
 		_ObjectMaker,
         ready = false,
 		waitingToShow = false,
@@ -62,6 +63,7 @@
 			"assets/modules/core/Game.js",
 			"assets/modules/env/Sky.js",
 			"assets/modules/env/Water.js",
+			"assets/modules/utils/ObjectHelper.js",
 			"assets/modules/utils/ObjectMaker.js",
 			"assets/textures/skybox_world_posx.jpg",
             "assets/textures/skybox_world_negx.jpg",
@@ -80,13 +82,14 @@
     
     =====================================================*/
     
-    function init_internal ( g, s, w, om ) {
+    function init_internal ( g, s, w, oh, om ) {
 		
 		if ( ready !== true ) {
 			console.log('internal launcher');
 			_Game = g;
 			_Sky = s;
 			_Water = w;
+			_ObjectHelper = oh;
 			_ObjectMaker = om;
 			
 			init_environment();
@@ -229,7 +232,8 @@
 			ccOptions.rotationMaxX = ccOptions.rotationMinX = Math.PI * 0.035;
 			ccOptions.positionBaseY = 750;
 			
-			_Game.cameraControls.modify( ccOptions );
+			//_Game.cameraControls.modify( ccOptions );
+			_ObjectHelper.temporary_change( _Game.cameraControls.options, ccOptions );
 			
 			_Game.cameraControls.target = water;
 			_Game.cameraControls.enabled = true;
@@ -272,7 +276,7 @@
 		
 		waitingToShow = false;
 		
-		water.morphs.stopAll();
+		water.morphs.stop_all();
 		
 		sky.animate( { stop: true } );
 		

@@ -79,7 +79,7 @@
 		}
 		else {
 			
-			namesList = main.ensure_array( names );
+			namesList = main.to_array( names );
 			
 		}
 		
@@ -239,7 +239,7 @@
 				
 				// ensure is array
 				
-				this.eventCallbacks[ eventName ] = main.ensure_array( this.eventCallbacks[ eventName ] );
+				this.eventCallbacks[ eventName ] = main.to_array( this.eventCallbacks[ eventName ] );
 				
 				// check deactivateCallbacks
 				if ( deactivateCallbacks ) {
@@ -277,7 +277,7 @@
 					
 					// ensure is array
 					
-					this.deactivateCallbacks[ eventName ] = main.ensure_array( this.deactivateCallbacks[ eventName ] );
+					this.deactivateCallbacks[ eventName ] = main.to_array( this.deactivateCallbacks[ eventName ] );
 					
 				}
 				

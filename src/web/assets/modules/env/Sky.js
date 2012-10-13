@@ -67,6 +67,7 @@
 		_Sky.cloudDistanceFromSurfaceMin = 1000;
 		_Sky.cloudDistanceFromSurfaceMax = 3000;
 		_Sky.cloudRangeWander = 200;
+		_Sky.cloudAnimationDuration = 3000;
 		_Sky.zonePolar = {
 			min: 0,
 			max: Math.PI
@@ -135,6 +136,7 @@
 		this.cloudDistanceFromSurfaceMin = main.is_number( parameters.cloudDistanceFromSurfaceMin ) ? parameters.cloudDistanceFromSurfaceMin : _Sky.cloudDistanceFromSurfaceMin;
 		this.cloudDistanceFromSurfaceMax = main.is_number( parameters.cloudDistanceFromSurfaceMax ) ? parameters.cloudDistanceFromSurfaceMax : _Sky.cloudDistanceFromSurfaceMax;
 		this.cloudRangeWander = main.is_number( parameters.cloudRangeWander ) ? parameters.cloudRangeWander : _Sky.cloudRangeWander;
+		this.cloudAnimationDuration = main.is_number( parameters.cloudAnimationDuration ) ? parameters.cloudAnimationDuration : _Sky.cloudAnimationDuration;
 		this.cloudsGeometry = parameters.cloudsGeometry || _Sky.cloudsGeometry;
 		this.bounds = parameters.bounds || { min: new THREE.Vector3(), max: new THREE.Vector3() };
 		this.layout = parameters.layout;
@@ -447,22 +449,20 @@
 		
 		parameters = parameters || {};
 		
-		stop = typeof parameters.stop === 'boolean' ? parameters.stop : false;
-		
 		// clouds
 		
 		for ( i = 0, l = this.clouds.length; i < l; i++ ) {
 			
 			cloud = this.clouds[ i ];
 			
-			if ( stop === true ) {
+			if ( parameters.stop === true ) {
 				
-				cloud.morphs.stopAll();
+				cloud.morphs.stop_all();
 				
 			}
 			else {
 				
-				cloud.morphs.play( 'idle', { loop: true, startDelay: true } );
+				cloud.morphs.play( 'idle', { duration: this.cloudAnimationDuration, loop: true, startDelay: true } );
 				
 			}
 			

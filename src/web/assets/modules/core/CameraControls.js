@@ -49,12 +49,43 @@
 		_VectorHelper = vh;
 		_PhysicsHelper = ph;
 		
+		// properties
+		
+		_CameraControls.options = {
+			cameraLerpDeltaWhenNewGrow: 0.02,
+			positionBaseX: 0,
+			positionBaseY: 0,
+			positionBaseZ: 0,
+			positionBaseSpeed: 0.1,
+			positionOffsetSpeed: 0.1,
+			positionOffsetSpeedWhenNew: 0.05,
+			boundRadiusBase: 500,
+			boundRadiusModMin: 1.25,
+			boundRadiusModMax: 3,
+			boundRadiusModSpeed: 0.001,
+			boundRadiusPctMin: 0.25,
+			boundRadiusPctMax: 1,
+			rotationMaxX: Math.PI * 0.5, // not using quaternions, so above 0.5 on X will appear to reverse y rotation
+			rotationMinX: -Math.PI * 0.5,
+			rotationMaxY: Math.PI,
+			rotationMinY: -Math.PI,
+			rotationSpeed: 0.1,
+			rotationSpeedDelta: 0.001,
+			rotationReturnDecay: 0.8,
+			rotationDeltaDecay: 0.8,
+			distanceThresholdMin: 1,
+			distanceThresholdPct: 0.35,
+			distanceSpeedPctMax: 0.25,
+			distanceSpeedPctMin: 0.01,
+			distanceSpeedPctAlphaGrow: 0.025,
+			distanceSpeedPctAlphaShrink: 0.1,
+			distanceSpeedPctWhenNew: 0,
+			distanceSpeedPctWhenNewGrow: 0.0005
+		};
+		
 		// instance
 		
 		_CameraControls.Instance = CameraControls;
-		
-		_CameraControls.Instance.prototype.modify = modify;
-		_CameraControls.Instance.prototype.reset = reset;
 		
 		_CameraControls.Instance.prototype.rotate = rotate;
 		_CameraControls.Instance.prototype.zoom = zoom;
@@ -140,7 +171,9 @@
     
     =====================================================*/
 	
-	function CameraControls ( camera, target, parameters ) {
+	function CameraControls ( parameters ) {
+		
+		parameters = parameters || {};
 		
 		// utility
 		
@@ -148,6 +181,12 @@
 		this.utilVec32Update = new THREE.Vector3();
 		this.utilQ31Update = new THREE.Quaternion();
 		this.utilQ32Update = new THREE.Quaternion();
+		
+		// options
+		
+		this.options = $.extend( true, this.options || {}, _CameraControls.options, parameters.options );
+		
+		// properties
 		
 		this.position = new THREE.Vector3();
 		
@@ -178,48 +217,6 @@
 		this.distanceNormal = new THREE.Vector3();
 		this.distanceMagnitude = new THREE.Vector3();
 		
-		// options
-		
-		this.defaults = {};
-		
-		this.defaults.cameraLerpDeltaWhenNewGrow = 0.02;
-		
-		this.defaults.positionBaseX = 0;
-		this.defaults.positionBaseY = 0;
-		this.defaults.positionBaseZ = 0;
-		this.defaults.positionBaseSpeed = 0.1;
-		this.defaults.positionOffsetSpeed = 0.1;
-		this.defaults.positionOffsetSpeedWhenNew = 0.05;
-		this.defaults.boundRadiusBase = 500;
-		this.defaults.boundRadiusModMin = 1.25;
-		this.defaults.boundRadiusModMax = 3;
-		this.defaults.boundRadiusModSpeed = 0.001;
-		this.defaults.boundRadiusPctMin = 0.25;
-		this.defaults.boundRadiusPctMax = 1;
-		
-		this.defaults.rotationMaxX = Math.PI * 0.5; // not using quaternions, so above 0.5 on X will appear to reverse y rotation
-		this.defaults.rotationMinX= -Math.PI * 0.5;
-		this.defaults.rotationMaxY = Math.PI;
-		this.defaults.rotationMinY = -Math.PI;
-		this.defaults.rotationSpeed = 0.1;
-		this.defaults.rotationSpeedDelta = 0.001;
-		this.defaults.rotationReturnDecay = 0.8;
-		this.defaults.rotationDeltaDecay = 0.8;
-		
-		this.defaults.distanceThresholdMin = 1;
-		this.defaults.distanceThresholdPct = 0.35;
-		this.defaults.distanceSpeedPctMax = 0.25;
-		this.defaults.distanceSpeedPctMin = 0.01;
-		this.defaults.distanceSpeedPctAlphaGrow = 0.025;
-		this.defaults.distanceSpeedPctAlphaShrink = 0.1;
-		this.defaults.distanceSpeedPctWhenNew = 0;
-		this.defaults.distanceSpeedPctWhenNewGrow = 0.0005;
-		
-		this.reset();
-		this.modify( parameters );
-		
-		// properties
-		
 		this.cameraLerpDelta = 0.1;
 		this.cameraLerpDeltaWhenNew = 0;
 		this.distanceThresholdPassed = false;
@@ -230,31 +227,11 @@
 		this.boundRadiusPct = this.options.boundRadiusPctMax;
 		this.boundRadiusMod = this.options.boundRadiusModMax;
 		
-		this.camera = camera;
-		this.target = this.targetLast = target;
+		this.camera = parameters.camera;
+		this.target = this.targetLast = parameters.target;
 		
 		this.enabled = false;
 		this.controllable = false;
-		
-	}
-	
-	/*===================================================
-	
-	options
-	
-	=====================================================*/
-	
-	function modify ( parameters ) {
-		
-		parameters = parameters || {};
-		
-		this.options = $.extend( this.options || {}, parameters );
-		
-	}
-	
-	function reset () {
-		
-		this.options = $.extend( {}, this.defaults );
 		
 	}
 	
@@ -318,9 +295,9 @@
 				
 				// rotation axis
 				
-				if ( target.movement && target.movement.rotate ) {
+				if ( target.options && target.options.movement && target.options.movement.rotate ) {
 					
-					targetRotateAxis = target.movement.rotate.axis;
+					targetRotateAxis = target.options.movement.rotate.axis;
 					
 				}
 				else if ( target.rigidBody ) {

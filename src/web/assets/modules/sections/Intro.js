@@ -12,9 +12,10 @@
 		assetPath = "assets/modules/sections/Intro.js",
 		intro = {},
 		_Game,
-		_Model,
 		_WorldIsland,
 		_Player,
+		_Model,
+		_ObjectHelper,
         _ready = false,
 		waitingToShow = false,
 		world,
@@ -41,7 +42,8 @@
 			"assets/modules/core/Game.js",
 			"assets/modules/env/WorldIsland.js",
 			"assets/modules/core/Player.js",
-			"assets/modules/core/Model.js"
+			"assets/modules/core/Model.js",
+			"assets/modules/utils/ObjectHelper.js"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -53,7 +55,7 @@
     
     =====================================================*/
 	
-	function init_internal ( g, w, p, m ) {
+	function init_internal ( g, w, p, m, oh ) {
 		console.log('internal intro');
 		if ( _ready !== true ) {
 			
@@ -63,6 +65,7 @@
 			_WorldIsland = w;
 			_Player = p;
 			_Model = m;
+			_ObjectHelper = oh;
 			
 			// environment
 			
@@ -100,7 +103,7 @@
 			
 			// camera
 			
-			_Game.cameraControls.reset();
+			_ObjectHelper.revert_change( _Game.cameraControls.options, true );
 			_Game.cameraControls.enabled = true;
 			_Game.cameraControls.controllable = true;
 			

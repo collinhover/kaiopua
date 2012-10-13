@@ -132,7 +132,7 @@
 			
 			if ( typeof object.morphs !== 'undefined' ) {
 				
-				object.morphs.stop();
+				object.morphs.stop_all();
 				
 			}
 			

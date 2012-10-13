@@ -99,7 +99,11 @@
 				bodyType: 'mesh',
 				gravitySource: true
 			},
-			morphDurationBase: 5000
+			options: {
+				morphs: {
+					duration: 5000
+				}
+			}
         });
 		
 		me.parts.body.quaternion.setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), -Math.PI * 0.4 );
@@ -143,7 +147,11 @@
 				bodyType: 'mesh',
 				gravitySource: true
 			},
-			morphDurationBase: 6000
+			options: {
+				morphs: {
+					duration: 6000
+				}
+			}
         });
 		
 		me.parts.sun.position.set( 0, 4000, 0 );
@@ -170,7 +178,11 @@
 					gravitySource: true,
 					radiusGravityAddition: 300
 				},
-				morphDurationBase: 1000
+				options: {
+					morphs: {
+						duration: 1000
+					}
+				}
 			},
 			layout: [
 				{ position: new THREE.Vector3( 119, 2604, 990 ), scale: 0.85 },
@@ -450,7 +462,7 @@
 			
 			// morphs
 			
-			me.parts.waterRing.morphs.stopAll();
+			me.parts.waterRing.morphs.stop_all();
 			
 		}
     	

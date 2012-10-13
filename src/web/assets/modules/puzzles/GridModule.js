@@ -262,9 +262,9 @@
 		
 		// for each id
 		
-		ids = main.ensure_array( ids );
+		ids = main.to_array( ids );
 		
-		activates = main.ensure_array( activates );
+		activates = main.to_array( activates );
 		
 		for ( i = 0, l = ids.length, k = activates.length; i < l; i++ ) {
 			
@@ -538,7 +538,7 @@
 		
 		// handle connected
 		
-		connected = main.ensure_array( connected );
+		connected = main.to_array( connected );
 		
 		// if should recalculate
 		
@@ -666,7 +666,7 @@
 				
 				// check ids
 				
-				ids = main.ensure_array( ids );
+				ids = main.to_array( ids );
 				
 				// store for each id
 				
