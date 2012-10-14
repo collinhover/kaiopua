@@ -179,6 +179,16 @@
 		
 	}
 	
+	
+	function character_spawned () {
+		
+		main.cameraControls.target = undefined;
+		main.cameraControls.target = character;
+		
+		allow_control();
+		
+	}
+	
 	function character_on_safety_net () {
 		
 		_Messenger.show_message( { 
@@ -772,17 +782,18 @@
 		
 	}
 	
-	function show () {
+	function show ( parent, location ) {
 		
 		if ( showing === false ) {
 			
-			_Game.scene.add( character );
+			character.onDead.add( remove_control );
+			character.onRespawned.add( character_spawned );
+			
+			character.respawn( parent, location );
 			
 			_Game.cameraControls.target = character;
 			
 			showing = true;
-			
-			allow_control();
 			
 		}
 		
@@ -795,6 +806,9 @@
 			remove_control();
 			
 			disable();
+			
+			character.onDead.remove( remove_control );
+			character.onRespawned.remove( character_spawned );
 			
 			_Game.scene.remove( character );
 			

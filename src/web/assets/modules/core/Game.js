@@ -46,7 +46,7 @@
 		],
         assetsSetup = [
             "js/three/three.min.js",
-			"js/Tween.js",
+			"js/Tween.custom.min.js",
         ],
 		assetsSetupExtras = [
 			"js/three/ThreeOctree.min.js",

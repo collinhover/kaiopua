@@ -58,9 +58,10 @@
 		_Character.options = {
 			stats: {
 				healthMax: 100,
-				invulnerabilityDuration: 500,
-				respawnOnDeath: false,
-				respawnDelay: 0
+				invulnerabilityDuration: 1000,
+				invulnerabilityOpacityPulses: 3,
+				invulnerabilityOpacityMin: 0.5,
+				respawnOnDeath: false
 			},
 			movement: {
 				move: {
@@ -93,6 +94,7 @@
 					death: 1000,
 					decay: 500,
 					decayDelay: 500,
+					spawn: 1000,
 					clear: 125,
 					clearSolo: 125
 				}
@@ -105,9 +107,13 @@
 		_Character.Instance.prototype = new _Model.Instance();
 		_Character.Instance.prototype.constructor = _Character.Instance;
 		
+		_Character.Instance.prototype.reset = reset;
+		
 		_Character.Instance.prototype.hurt = hurt;
 		_Character.Instance.prototype.die = die;
 		_Character.Instance.prototype.decay = decay;
+		
+		_Character.Instance.prototype.set_spawn = set_spawn;
 		_Character.Instance.prototype.respawn = respawn;
 		
 		_Character.Instance.prototype.move_state_change = move_state_change;
@@ -124,6 +130,56 @@
 				if ( main.is_number( health ) ) {
 					
 					this.state.health = _MathHelper.clamp( health, 0, this.options.stats.healthMax );
+					
+				}
+				
+			}
+		});
+		
+		Object.defineProperty( _Character.Instance.prototype, 'invulnerable', { 
+			get : function () { return this.state.invulnerable; },
+			set: function ( invulnerable ) {
+				
+				var me = this,
+					state = this.state,
+					stats = this.options.stats,
+					durationPerTween = stats.invulnerabilityDuration / ( stats.invulnerabilityOpacityPulses * 2 ),
+					tweenShow,
+					tweenHide;
+				
+				state.invulnerable = invulnerable;
+				state.invulnerableTime = 0;
+				
+				// pulse opacity
+				
+				if ( state.invulnerable === true ) {
+					console.log( this, ' is now invulnerable!' );
+					this.material.transparent = true;
+					
+					tweenShow = _ObjectHelper.tween( this.material, { opacity: 1 }, {
+						start: false,
+						time: durationPerTween
+					} );
+					
+					tweenHide = _ObjectHelper.tween( this.material, { opacity: stats.invulnerabilityOpacityMin }, {
+						start: false,
+						time: durationPerTween
+					} );
+					
+					tweenHide.chain( tweenShow.chain( tweenHide ) ).start();
+					
+				}
+				// tween opacity back to normal
+				else {
+					
+					_ObjectHelper.tween( this.material, { opacity: 1 }, {
+						time: durationPerTween,
+						onComplete: function () {
+							
+							me.material.transparent = false;
+							
+						}
+					} );
 					
 				}
 				
@@ -208,24 +264,6 @@
 		jump.active = false;
 		jump.holding = false;
 		
-		// state
-		
-		state = this.state = {};
-		state.up = 0;
-		state.down = 0;
-		state.left = 0;
-		state.right = 0;
-		state.forward = 0;
-		state.back = 0;
-		state.moving = false;
-		state.movingHorizontal = false;
-		state.movingBack = false;
-		state.invulnerable = false;
-		state.invulnerableTime = 0;
-		state.dead = false;
-		state.decaying = false;
-		state.health = stats.healthMax;
-		
 		// physics
 		
 		if ( typeof parameters.physics !== 'undefined' ) {
@@ -243,6 +281,7 @@
 		// properties
 		
 		this.name = parameters.name || characterName;
+		this.state = {};
 		this.targeting = {
 			
 			targets: [],
@@ -252,6 +291,36 @@
 		};
 		
 		this.actions = new _Actions.Instance();
+		
+		this.onHurt = new signals.Signal();
+		this.onDead = new signals.Signal();
+		this.onRespawned = new signals.Signal();
+		
+		this.reset();
+		
+	}
+	
+	function reset () {
+		
+		var state;
+		
+		state = this.state;
+		state.up = 0;
+		state.down = 0;
+		state.left = 0;
+		state.right = 0;
+		state.forward = 0;
+		state.back = 0;
+		state.moving = false;
+		state.movingHorizontal = false;
+		state.movingBack = false;
+		state.invulnerable = false;
+		state.invulnerableTime = 0;
+		state.dead = false;
+		state.decaying = false;
+		state.health = stats.healthMax;
+		
+		this.morphs.clear_all();
 		
 	}
 	
@@ -265,12 +334,14 @@
 		
 		var state = this.state,
 			stats = this.options.stats;
-		
-		if ( state.invulnerable !== true ) {
+		console.log( this, ' trying to hurt for ', damage, ', invulnerable? ', state.invulnerable );
+		if ( state.invulnerable !== true && state.dead !== true ) {
 			
 			this.health -= damage;
 			
-			if ( stats.health === 0 ) {
+			this.onHurt.dispatch();
+			console.log( ' > hurt for ', damage, ' new hp = ', this.health );
+			if ( state.health === 0 ) {
 				
 				this.die();
 				
@@ -279,7 +350,7 @@
 			
 				// small period of invulnerability after being hurt, handled by update
 				
-				state.invulnerable = true;
+				this.invulnerable = true;
 				
 			}
 			
@@ -298,16 +369,16 @@
 			this.health = 0;
 			
 			state.dead = true;
-			
-			// TODO: better morph cycling
-			/*
+			console.log( this, ' DEAD ' );
 			this.morphs.play( 'die', {
 				duration: durations.death,
 				solo: true,
 				durationClear: durations.clearSolo,
 				callback: $.proxy( this.decay, this )
 			} );
-			*/
+			
+			this.onDead.dispatch();
+			
 		}
 		
 	}
@@ -317,53 +388,103 @@
 		var state = this.state,
 			stats = this.options.stats,
 			animation = this.options.animation,
-			durations = animation.durations;
+			durations = animation.durations,
+			me = this;
 		
 		if ( state.dead === true ) {
 			
 			state.decaying = true;
-			/*
+			console.log( this, ' decaying... ' );
 			this.morphs.play( 'decay', {
 				duration: durations.decay,
 				delay: durations.decayDelay,
 				solo: true,
 				durationClear: durations.clearSolo
 			} );
-			*/
 			
+			// opacity to 0
 			
+			this.material.transparent = true;
 			
-			// TODO: tween opacity to 0
-			
-			
-			
-			// TODO: respawn callback from opacity tween
-			
-			if ( stats.respawnOnDeath === true ) {
-				
-				//pDecay.callback = $.proxy( this.respawn, this );
-				
-			}
+			_ObjectHelper.tween( this.material, { opacity: 0 }, { 
+				time: durations.decay,
+				delay: durations.decayDelay,
+				onComplete: function () {
+					
+					if ( me.parent instanceof THREE.Object3D ) {
+						
+						me.parent.remove( me );
+						
+					}
+					
+					me.material.transparent = false;
+					me.material.opacity = 1;
+					me.morphs.clear_all();
+					
+					if ( stats.respawnOnDeath === true ) {
+						
+						me.respawn();
+						
+					}
+					
+				}
+			} );
 			
 		}
 		
 	}
 	
-	function respawn ( parent, location ) {
+	/*===================================================
+	
+	spawning
+	
+	=====================================================*/
+	
+	function set_spawn ( parent, location ) {
 		
 		var state = this.state;
 		
-		state.dead = state.decaying = false;
-		state.invulnerable = true;
+		state.spawnParent = parent;
+		state.spawnLocation = location;
 		
+	}
+	
+	function respawn ( parent, location ) {
 		
+		var state = this.state,
+			animation = this.options.animation,
+			durations = animation.durations,
+			me = this;
 		
-		// TODO: add to parent, use default if not provided
+		this.reset();
 		
+		if ( parent instanceof THREE.Object3D ) {
+			
+			this.set_spawn( parent, location );
+			
+		}
 		
-		// TODO: send to location, use default if not provided
-		
-		
+		if ( state.spawnParent instanceof THREE.Object3D ) {
+			
+			this.material.transparent = true;
+			this.material.opacity = 0;
+			
+			// add and position
+			
+			state.spawnParent.add( this );
+			
+			if ( state.spawnLocation instanceof THREE.Vector3 ) {
+				
+				this.position.copy( state.spawnLocation );
+				
+			}
+			console.log( this, ' respawned! ' );
+			
+			this.onRespawned.dispatch();
+			
+			this.invulnerable = true;
+			
+		}
 		
 	}
 	
@@ -548,8 +669,7 @@
 			
 			if ( state.invulnerableTime >= stats.invulnerabilityDuration ) {
 				
-				state.invulnerableTime = 0;
-				state.invulnerable = false;
+				this.invulnerable = false;
 				
 			}
 			

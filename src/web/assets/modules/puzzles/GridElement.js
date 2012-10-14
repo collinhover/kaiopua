@@ -121,7 +121,6 @@
 		// properties
 		
 		this.id = gridElementCount++;
-		this.utilVec31Grow = new THREE.Vector3();
 		this.utilQ1Rotate = new THREE.Quaternion();
 		this.rotationAngle = this.rotationAngleLayout = 0;
 		this.timeGrow = main.is_number( parameters.timeGrow ) ? parameters.timeGrow : _GridElement.timeGrow;
@@ -514,16 +513,11 @@
 						
 						layoutModule.occupant = model;
 						
-						// set core scale to 0
-						
-						model.core.scale.set( 0, 0, 0 );
-						
 						// grow core
 						
-						model.core.tween_properties( {
+						_ObjectHelper.tween( model.core.scale.set( 0, 0, 0 ), new THREE.Vector3( 1, 1, 1 ), { 
 							time: this.timeGrow,
-							easing: TWEEN.Easing.Back.EaseOut,
-							scale: this.utilVec31Grow.set( 1, 1, 1 )
+							easing: TWEEN.Easing.Back.EaseOut
 						} );
 						
 					}

@@ -111,10 +111,17 @@
 			get : function () { return this._target; },
 			set : function ( target ) {
 				
+				this.targetLast = this._target;
 				this._target = target;
 				
 				this.boundRadius = this._target instanceof THREE.Object3D ? this._target.boundRadius : this.options.boundRadiusBase;
 				this.boundRadiusPct = _MathHelper.clamp( this.boundRadius / this.options.boundRadiusBase, this.options.boundRadiusPctMin, this.options.boundRadiusPctMax );
+				
+				if ( this._target !== this.targetLast ) {
+					
+					this.targetTransitioned = false;
+					
+				}
 				
 			}
 		});
@@ -228,7 +235,7 @@
 		this.boundRadiusMod = this.options.boundRadiusModMax;
 		
 		this.camera = parameters.camera;
-		this.target = this.targetLast = parameters.target;
+		this.target = parameters.target;
 		
 		this.enabled = false;
 		this.controllable = false;
@@ -389,6 +396,16 @@
 		
 		if ( this.enabled === true ) {
 			
+			// first time target is new
+			
+			if ( this.targetNew !== true && this.targetTransitioned !== true  ) {
+				
+				this.targetNew = true;
+				this.distanceSpeedPctWhenNew = 0;
+				this.cameraLerpDeltaWhenNew = 0;
+				
+			}
+			
 			// handle target
 			
 			if ( target instanceof THREE.Object3D !== true ) {
@@ -411,15 +428,6 @@
 					
 				}
 				*/
-				// first time target is new
-				
-				if ( this.targetNew !== true && target !== this.targetLast ) {
-					
-					this.targetNew = true;
-					this.distanceSpeedPctWhenNew = 0;
-					this.cameraLerpDeltaWhenNew = 0;
-					
-				}
 				
 				// get distance to target position
 				
@@ -428,7 +436,7 @@
 				if ( this.targetNew === true && distance - this.options.distanceThresholdMin <= this.distanceThresholdMax ) {
 					
 					this.targetNew = false;
-					this.targetLast = target;
+					this.targetTransitioned = true;
 					this.distanceThresholdPassed = true;
 					
 				}

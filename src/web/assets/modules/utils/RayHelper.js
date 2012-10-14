@@ -441,6 +441,11 @@
 			ray.far = parameters.far;
 			
 		}
+		else {
+			
+			ray.far = Number.MAX_VALUE;
+			
+		}
 		
 		// for each offset
 		

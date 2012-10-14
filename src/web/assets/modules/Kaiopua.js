@@ -260,8 +260,10 @@ var KAIOPUA = (function (main) {
 		main.array_cautious_remove = array_cautious_remove;
 		main.index_of_value = index_of_value;
 		main.last_index_of_value = last_index_of_value;
+		main.indices_of_value = indices_of_value;
 		main.index_of_values = index_of_values;
 		main.index_of_property = index_of_property;
+		main.indices_of_property = indices_of_property;
 		main.index_of_properties = index_of_properties;
 		
 		main.css_property_supported = css_property_supported;
@@ -588,7 +590,8 @@ var KAIOPUA = (function (main) {
 		
 		var i, l,
 			element,
-			index;
+			index,
+			added = false;
 		
 		target = to_array( target );
 		elements = to_array( elements );
@@ -605,11 +608,13 @@ var KAIOPUA = (function (main) {
 				
 				target.push( element );
 				
+				added = true;
+				
 			}
 			
 		}
 		
-		return target;
+		return added;
 		
 	}
 	
@@ -617,7 +622,8 @@ var KAIOPUA = (function (main) {
 		
 		var i, l,
 			element,
-			index;
+			index,
+			removed = false;
 		
 		target = to_array( target );
 		elements = to_array( elements );
@@ -634,11 +640,13 @@ var KAIOPUA = (function (main) {
 				
 				target.splice( index, 1 );
 				
+				removed = true;
+				
 			}
 			
 		}
 		
-		return target;
+		return removed;
 		
 	}
 	
@@ -674,11 +682,29 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
+	function indices_of_value( array, value ) {
+		
+		var indices = [];
+		
+		for ( var i = 0, l = array.length; i < l; i++ ) {
+			
+			if ( value === array[ i ] ) {
+				
+				indices.push( i );
+				
+			}
+			
+		}
+		
+		return indices;
+		
+	}
+	
 	function index_of_values( array, values ) {
 		
 		for ( var i = 0, l = array.length; i < l; i++ ) {
 			
-			if ( index_of( values, array[ i ] ) !== -1 ) {
+			if ( index_of_value( values, array[ i ] ) !== -1 ) {
 				
 				return i;
 				
@@ -703,6 +729,24 @@ var KAIOPUA = (function (main) {
 		}
 		
 		return -1;
+		
+	}
+	
+	function indices_of_property( array, property, value ) {
+		
+		var indices = [];
+		
+		for ( var i = 0, l = array.length; i < l; i++ ) {
+			
+			if ( value === array[ i ][ property ] ) {
+				
+				indices.push( i );
+				
+			}
+			
+		}
+		
+		return indices;
 		
 	}
 	

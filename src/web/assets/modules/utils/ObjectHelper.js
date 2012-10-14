@@ -159,6 +159,9 @@
 		_ObjectHelper.temporary_change = temporary_change;
 		_ObjectHelper.revert_change = revert_change;
 		
+		_ObjectHelper.tween = tween;
+		_ObjectHelper.tween_stop = tween_stop;
+		
 	}
 	
 	/*===================================================
@@ -1450,6 +1453,85 @@
 					}
 					
 					stack.splice( index, 1 );
+					
+				}
+				
+			}
+			
+		}
+		
+	}
+	
+	/*===================================================
+    
+	tween
+    
+    =====================================================*/
+	
+	function tween ( object, to, parameters ) {
+		
+		var i, l,
+			properties = [],
+			property;
+		
+		parameters = parameters || {};
+		
+		tween_stop( object, to );
+		
+		tween = new TWEEN.Tween( object )
+			.to( to, parameters.time )
+			.easing( parameters.easing || TWEEN.Easing.Quadratic.InOut )
+			.delay( parameters.delay || 0 )
+			.onStart( parameters.onStart )
+			.onStop( parameters.onStop )
+			.onUpdate( parameters.onUpdate )
+			.onComplete( parameters.onComplete );
+		
+		if ( parameters.start !== false ) {
+			
+			tween.start();
+			
+		}
+			
+		return tween;
+		
+	}
+	
+	function tween_stop ( object, to ) {
+		
+		var i,
+			tweens = TWEEN.getAll(),
+			tween,
+			tweenObject,
+			tweenTarget,
+			property;
+		
+		for ( i = tweens.length - 1; i >= 0; i-- ) {
+			
+			tween = tweens[ i ];
+			tweenObject = tween.getObject();
+			
+			if ( object === tweenObject ) {
+				
+				if ( typeof to !== 'undefined' ) {
+					
+					tweenTarget = tween.getTarget();
+					
+					for ( property in to ) {
+						
+						if ( to.hasOwnProperty( property ) && tweenTarget && tweenTarget.hasOwnProperty( property ) ) {
+							
+							tween.stop();
+							break;
+							
+						}
+						
+					}
+					
+				}
+				else {
+					
+					tween.stop();
 					
 				}
 				

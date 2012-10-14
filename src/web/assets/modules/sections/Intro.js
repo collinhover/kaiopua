@@ -105,7 +105,7 @@
 			
 			_ObjectHelper.revert_change( _Game.cameraControls.options, true );
 			_Game.cameraControls.enabled = true;
-			_Game.cameraControls.controllable = true;
+			_Game.cameraControls.controllable = false;
 			
 			// add world
 			
@@ -113,10 +113,7 @@
 			
 			// start player
 			
-			_Player.character.position.set( 35, 2200, 300 );
-			
-			_Player.show();
-			
+			_Player.show( _Game.scene, new THREE.Vector3( 35, 2200, 300 ) );
 			_Player.enable();
 			
 			// signals
@@ -151,7 +148,6 @@
 			// stop player
 			
 			_Player.disable();
-			
 			_Player.hide();
 			
 			// hide world
