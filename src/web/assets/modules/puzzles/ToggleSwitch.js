@@ -41,7 +41,9 @@
 		
 		// properties
 		
-		_ToggleSwitch.switchTime = 1000;
+		_ToggleSwitch.options = {
+			interactive: true
+		}
 		
 		// functions
 		
@@ -71,6 +73,8 @@
 		
 		parameters = parameters || {};
 		
+		parameters.options = $.extend( true, {}, _ToggleSwitch.options, parameters.options );
+		
 		parameters.physics = parameters.physics || {
 			bodyType: 'mesh'
 		};
@@ -85,7 +89,6 @@
 		
 		this.target = parameters.target;
 		this.stateInitial = typeof parameters.state === 'boolean' ? parameters.state : false;
-		this.switchTime = main.is_number( parameters.switchTime ) ? parameters.switchTime : _ToggleSwitch.switchTime;
 		
 		// signal
 		
@@ -131,12 +134,12 @@
 		
 		if ( this.state === true ) {
 			
-			this.morphs.play( 'off', { duration: this.switchTime, callback: $.proxy( off, this ) } );
+			this.morphs.play( 'off', { duration: this.options.morphs.duration, callback: $.proxy( off, this ) } );
 			
 		}
 		else {
 			
-			this.morphs.play( 'on', { duration: this.switchTime, callback: $.proxy( on, this ) } );
+			this.morphs.play( 'on', { duration: this.options.morphs.duration, callback: $.proxy( on, this ) } );
 			
 		}
 		

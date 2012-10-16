@@ -133,7 +133,7 @@
     
     =====================================================*/
 	
-	function localize_ray ( ray, object, i ) {
+	function localize_ray ( ray, object ) {
 		
 		var scale,
 			matrixObj,
@@ -149,18 +149,19 @@
 		
 		if ( object instanceof THREE.Mesh ) {
 			
-			scale = object.scale,
-			matrixObj = object.matrixWorld,
+			matrixObj = object.matrixWorld;
+			/*
+			scale = object.scale;
 			
 			// get copy of object world matrix without scale applied
 			// matrix with scale does not seem to invert correctly
 			
 			matrixObjCopy.extractPosition( matrixObj );
 			matrixObjCopy.extractRotation( matrixObj );
-			
+			*/
 			// invert copy
 			
-			mt.getInverse( matrixObjCopy );
+			mt.getInverse( matrixObj );//matrixObjCopy );
 			
 			mt.multiplyVector3( rt.origin );
 			mt.rotateAxis( rt.direction );
@@ -363,6 +364,7 @@
 		
 		var i, l,
 			j, k,
+			l, m,
 			ray = utilRay1Casting,
 			origin = utilVec31Casting,
 			offsetNone = utilVec32Casting,
@@ -379,14 +381,13 @@
 			pointer,
 			pointerPosition = utilVec33Casting,
 			projector = utilProjector1Casting,
-			octree,
+			octrees,
 			hierarchySearch,
 			hierarchyIntersect,
 			intersections = [],
 			childIntersections,
 			intersectionPotential,
 			intersectedObject,
-			intersectionDistance = Number.MAX_VALUE,
 			intersection;
 		
 		// handle parameters
@@ -396,7 +397,7 @@
 		offsets = parameters.offsets || [ offsetNone ];
 		objects = main.to_array( parameters.objects ).slice( 0 );
 		colliders = main.to_array( parameters.colliders ).slice( 0 );
-		octree = parameters.octree;
+		octrees = main.to_array( parameters.octrees );
 		hierarchySearch = parameters.hierarchySearch;
 		hierarchyIntersect = parameters.hierarchyIntersect;
 		camera = parameters.camera;
@@ -476,17 +477,17 @@
 					// else raycast children and add reference to ancestor
 					else {
 						
-						for ( i = 0, l = offsetObjects.length; i < l; i++ ) {
+						for ( j = 0, k = offsetObjects.length; j < k; j++ ) {
 							
-							object = offsetObjects[ i ];
+							object = offsetObjects[ j ];
 							
 							children = _SceneHelper.extract_children_from_objects( object );
 							
 							childIntersections = raycast_objects( ray, children );
 							
-							for ( j = 0, k = childIntersections.length; j < k; j++ ) {
+							for ( l = 0, m = childIntersections.length; l < m; l++ ) {
 								
-								childIntersections[ j ].ancestor = object;
+								childIntersections[ l ].ancestor = object;
 								
 							}
 							
@@ -508,9 +509,9 @@
 			
 			offsetColliders = colliders.slice( 0 );
 			
-			if ( typeof octree !== 'undefined' ) {
+			for ( j = 0, k = octrees.length; j < k; j++ ) {
 				
-				offsetColliders = offsetColliders.concat( octree.search( ray.origin, ray.far, true, ray.direction ) );
+				offsetColliders = offsetColliders.concat( octrees[ j ].search( ray.origin, ray.far, true, ray.direction ) );
 				
 			}
 			
@@ -634,7 +635,7 @@
 		
 		for ( i = 0, l = colliders.length; i < l; i++ ) {
 			
-			//console.log( ' > raycast collider, BEFORE: ', colliders[ i ],  ' + AFTER: ', extract_collider( colliders[ i ] ) );
+			//console.log( ' > raycast collider, ray ', ray.far, ' BEFORE: ', colliders[ i ],  ' + AFTER: ', extract_collider( colliders[ i ] ) );
 			collider = extract_collider( colliders[ i ] );
 			
 			// ray cast collider
@@ -913,7 +914,7 @@
 		if( which === 0 ) {
 			
 			var y = origin.y + direction.y * t;
-			if ( y < abMin.y || y > abMax.y ) return intersection;
+			if ( y < abMin.y || y > abMax.y )  return intersection;
 			var z = origin.z + direction.z * t;
 			if ( z < abMin.z || z > abMax.z ) return intersection;
 			

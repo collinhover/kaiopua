@@ -169,36 +169,15 @@
 		
 		character = new _Hero.Instance();
 		
-		// add handler for physics safety net
-		
-		if ( character.rigidBody ) {
-			
-			character.rigidBody.onSafetyNetStarted.add( character_on_safety_net, this );
-			
-		}
-		
 	}
 	
 	
 	function character_spawned () {
 		
-		main.cameraControls.target = undefined;
-		main.cameraControls.target = character;
+		_Game.cameraControls.target = undefined;
+		_Game.cameraControls.target = character;
 		
 		allow_control();
-		
-	}
-	
-	function character_on_safety_net () {
-		
-		_Messenger.show_message( { 
-			image: shared.pathToIcons + 'alertcircle_64.png',
-			title: "Well, this is embarrassing!",
-			body: "Our physics broke, but we'll do our best to drop you off at your last safe location.",
-			priority: true,
-			confirmRequired: true,
-			uiGameDimmerOpacity: 1
-		} );
 		
 	}
 	
@@ -287,6 +266,35 @@
 					}
 					else {
 						_Game.pause();
+					}
+					
+				}
+			}
+		} );
+		
+		
+		
+		
+		// TODO: keep mouse over in player but add general selecting to character
+		
+		actions.add( 'pointer', {
+			eventCallbacks: {
+				mousemove: function () {
+					
+					var target = _Game.get_pointer_intersection( {
+						interactives: true,
+						objectOnly: true
+					} );
+					console.log( 'player pointer move, target?', target );
+					if ( target ) {
+						
+						shared.domElements.$game.css( 'cursor', 'pointer' );
+						
+					}
+					else {
+						
+						shared.domElements.$game.css( 'cursor', 'auto' );
+						
 					}
 					
 				}
@@ -387,6 +395,7 @@
 		
 		// signals
 		
+		shared.signals.onGamePointerMoved.add( trigger_key );
 		shared.signals.onGamePointerTapped.add( trigger_key );
 		shared.signals.onGamePointerDoubleTapped.add( trigger_key );
 		shared.signals.onGamePointerHeld.add( trigger_key );
@@ -408,6 +417,7 @@
 		
 		// signals
 		
+		shared.signals.onGamePointerMoved.remove( trigger_key );
 		shared.signals.onGamePointerTapped.remove( trigger_key );
 		shared.signals.onGamePointerDoubleTapped.remove( trigger_key );
 		shared.signals.onGamePointerHeld.remove( trigger_key );
@@ -450,7 +460,7 @@
 		
 		// special cases for pointer / mouse
 		
-		if ( type === 'tap' || type === 'doubletap' || type === 'hold' || type === 'dragstart' || type === 'drag' || type === 'dragend' ) {
+		if ( type === 'tap' || type === 'doubletap' || type === 'hold' || type === 'dragstart' || type === 'drag' || type === 'dragend' || type === 'mousemove' ) {
 			
 			keyName = 'pointer';
 			state = type;
@@ -547,7 +557,7 @@
 		
 		// if a selection was made
 		
-		if ( typeof selectedModel !== 'undefined' && selectedModel.targetable === true ) {
+		if ( typeof selectedModel !== 'undefined' && selectedModel.interactive === true ) {
 			
 			// todo
 			// special selection cases

@@ -426,7 +426,7 @@
 		// get intersection, and allow a longer search for movement velocity
 		
 		intersectionParameters = {
-			octree: this.octree,
+			octrees: this.octree,
 			origin: position,
 			direction: forceRotated,
 			offsets: velocity.offsetsRotated,

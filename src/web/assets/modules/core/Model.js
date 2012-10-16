@@ -14,6 +14,7 @@
 		_Model = {},
 		_Morphs,
 		_RigidBody,
+		_SceneHelper,
 		_ObjectHelper,
 		objectCount = 0;
 	
@@ -28,6 +29,7 @@
 		requirements: [
 			"assets/modules/core/Morphs.js",
 			"assets/modules/physics/RigidBody.js",
+			"assets/modules/utils/SceneHelper.js",
 			"assets/modules/utils/ObjectHelper.js"
 		], 
 		callbacksOnReqs: init_internal,
@@ -40,15 +42,17 @@
     
     =====================================================*/
 	
-	function init_internal ( m, rb, oh ) {
+	function init_internal ( m, rb, sh, oh ) {
 		console.log('internal model', _Model);
 		_Morphs = m;
 		_RigidBody = rb;
+		_SceneHelper = sh;
 		_ObjectHelper = oh;
 		
 		// properties
 		
 		_Model.options = {
+			interactive: false,
 			morphs: {
 				duration: 1000
 			}
@@ -61,7 +65,38 @@
 		_Model.Instance.prototype.constructor = _Model.Instance;
 		_Model.Instance.prototype.clone = clone;
 		
-		// catch geometry changes
+		Object.defineProperty( _Model.Instance.prototype, 'interactive', { 
+			get : function () { return this.options.interactive; },
+			set: function ( interactive ) {
+				
+				var scene;
+				
+				// when interactive state changes, add or remove this from scene's interactive list
+				
+				if ( this.options.interactive !== interactive ) {
+					
+					this.options.interactive = interactive;
+					scene = _SceneHelper.extract_parent_root( this );
+					
+					if ( scene instanceof THREE.Object3D && scene.hasOwnProperty( 'add_interactive' ) ) {
+						
+						if ( this.options.interactive === true ) {
+							
+							scene.add_interactive( this );
+							
+						}
+						else {
+							
+							scene.remove_interactive( this );
+							
+						}
+						
+					}
+					
+				}
+				
+			}
+		} );
 		
 		Object.defineProperty( _Model.Instance.prototype, 'gravityBody', { 
 			get : function () { return this.rigidBody ? this.rigidBody.gravityBody : false; }
@@ -282,9 +317,6 @@
 		this.castShadow = typeof parameters.castShadow === 'boolean' ? parameters.castShadow : false;
 		this.receiveShadow = typeof parameters.receiveShadow === 'boolean' ? parameters.receiveShadow : false;
 		
-		this.targetable = typeof parameters.targetable === 'boolean' ? parameters.targetable : false;
-		this.interactive = typeof parameters.interactive === 'boolean' ? parameters.interactive : false;
-		
 		// adjustments
 		
 		if ( parameters.center === true ) {
@@ -337,6 +369,8 @@
 		}
 		
 		if ( c instanceof _Model.Instance ) {
+			
+			c.options = $.extend( true, {}, this.options );
 			
 			// geometry
 			
@@ -392,6 +426,12 @@
 			
 			c.frustumCulled = this.frustumCulled;
 			
+			if ( this.hasOwnProperty( 'rigidBody' ) ) {
+				
+				c.rigidBody = this.rigidBody.clone( c );
+				
+			}
+			
 			// children
 			
 			for ( i = 0, l = children.length; i < l; i++ ) {
@@ -410,17 +450,6 @@
 				}
 				
 				c.add( cChild );
-				
-			}
-			
-			// model properties
-			
-			c.targetable = this.targetable;
-			c.interactive = this.interactive;
-			
-			if ( this.hasOwnProperty( 'rigidBody' ) ) {
-				
-				c.rigidBody = this.rigidBody.clone( c );
 				
 			}
 			

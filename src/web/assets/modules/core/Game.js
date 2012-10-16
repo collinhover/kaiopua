@@ -316,6 +316,7 @@
 		shared.signals.onGameStarted = new signals.Signal();
 		shared.signals.onGameStopped = new signals.Signal();
 		
+		shared.signals.onGamePointerMoved = new signals.Signal();
 		shared.signals.onGamePointerTapped = new signals.Signal();
 		shared.signals.onGamePointerDoubleTapped = new signals.Signal();
 		shared.signals.onGamePointerHeld = new signals.Signal();
@@ -934,6 +935,7 @@
 		// events
 		
 		shared.domElements.$game
+			.on( 'mousemove', $.throttle( shared.throttleTimeShort, on_pointer_moved ) )
 			.on( 'tap', on_pointer_tapped )
 			.on( 'doubletap', on_pointer_doubletapped )
 			.on( 'hold', on_pointer_held )
@@ -1069,6 +1071,16 @@
     event functions
     
     =====================================================*/
+	
+	function on_pointer_moved ( e ) {
+		
+		var pointer;
+		
+		pointer = main.reposition_pointer( e );
+		
+		shared.signals.onGamePointerMoved.dispatch( e, pointer );
+		
+	}
 	
 	function on_pointer_tapped ( e ) {
 		
@@ -1279,6 +1291,13 @@
 		
 		parameters.pointer = parameters.pointer || main.get_pointer();
 		parameters.camera = parameters.camera || camera;
+		
+		if ( parameters.interactives === true ) {
+			
+			parameters.objects = ( parameters.objects || [] ).concat( scene.interactivesDynamic );
+			parameters.octrees = ( parameters.octrees || [] ).concat( scene.interactivesOctree );
+			
+		}
 		
 		// intersection
 		

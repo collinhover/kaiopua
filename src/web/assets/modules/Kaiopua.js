@@ -1262,7 +1262,13 @@ var KAIOPUA = (function (main) {
 		var pointer = main.get_pointer( e ),
 			position;
 		
-		if ( e && e.position ) {
+		if ( e ) {
+			
+			if ( !( e.position && e.position.x && e.position.y ) ) {
+				
+				e.position = { x: e.pageX, y: e.pageY };
+				
+			}
 			
 			position = e.position;
 			
