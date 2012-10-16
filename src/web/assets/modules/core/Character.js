@@ -9,7 +9,7 @@
 (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "assets/modules/characters/Character.js",
+		assetPath = "assets/modules/core/Character.js",
 		_Character = {},
 		_Model,
 		_Actions,
@@ -230,6 +230,20 @@
 		
 		parameters = parameters || {};
 		
+		// physics
+		
+		if ( typeof parameters.physics !== 'undefined' ) {
+			
+			parameters.physics.dynamic = true;
+			parameters.physics.movementDamping = main.is_number( parameters.physics.movementDamping ) ? parameters.physics.movementDamping : 0.5;
+			parameters.physics.movementForceLengthMax = main.is_number( parameters.physics.movementForceLengthMax ) ? parameters.physics.movementForceLengthMax : shared.universeGravityMagnitude.length() * 20;
+			
+		}
+		
+		// prototype constructor
+		
+		_Model.Instance.call( this, parameters );
+		
 		// options
 		
 		this.options = $.extend( true, this.options || {}, _Character.options, parameters.options );
@@ -264,24 +278,11 @@
 		jump.active = false;
 		jump.holding = false;
 		
-		// physics
-		
-		if ( typeof parameters.physics !== 'undefined' ) {
-			
-			parameters.physics.dynamic = true;
-			parameters.physics.movementDamping = main.is_number( parameters.physics.movementDamping ) ? parameters.physics.movementDamping : 0.5;
-			parameters.physics.movementForceLengthMax = main.is_number( parameters.physics.movementForceLengthMax ) ? parameters.physics.movementForceLengthMax : shared.universeGravityMagnitude.length() * 20;
-			
-		}
-		
-		// prototype constructor
-		
-		_Model.Instance.call( this, parameters );
-		
 		// properties
 		
 		this.name = parameters.name || characterName;
 		this.state = {};
+		
 		this.targeting = {
 			
 			targets: [],

@@ -12,24 +12,12 @@
 		assetPath = "assets/modules/core/Player.js",
         _Player = {},
 		_Game,
-		_CameraControls,
-		_Hero,
-		_GridElementLibrary,
-		_Messenger,
-		_ObjectHelper,
+		_Character,
+		_Planting,
 		_MathHelper,
 		_KeyHelper,
-		ready = false,
-		enabled = false,
-		showing = false,
-		cameraControls,
-		actionsMap,
-		keybindings,
-		keybindingsDefault,
-		actions,
-		character,
-		following = [],
-		selecting;
+		_SceneHelper,
+		_ObjectHelper;
 	
 	/*===================================================
     
@@ -37,65 +25,16 @@
     
     =====================================================*/
 	
-	_Player.enable = enable;
-	_Player.disable = disable;
-	_Player.show = show;
-	_Player.hide = hide;
-	_Player.allow_control = allow_control;
-	_Player.remove_control = remove_control;
-	_Player.select = select;
-	_Player.deselect = deselect;
-	
-	// getters and setters
-	
-	Object.defineProperty(_Player, 'enabled', { 
-		get : function () { return enabled; },
-		set : function ( val ) { 
-			if ( val === true ) {
-				enable();
-			}
-			else {
-				disable();
-			}
-		}
-	});
-	
-	Object.defineProperty(_Player, 'cameraControls', { 
-		get : function () { return cameraControls; }
-	});
-	
-	Object.defineProperty(_Player, 'camera', { 
-		get : function () { return cameraControls.camera; }
-	});
-	
-	Object.defineProperty(_Player, 'actions', { 
-		get : function () { return actions; }
-	});
-	
-	Object.defineProperty(_Player, 'character', { 
-		get : function () { return character; }
-	});
-	
-	Object.defineProperty(_Player, 'scene', { 
-		get : function () { return character.scene; }
-	});
-	
-	Object.defineProperty(_Player, 'moving', { 
-		get : function () { return character.state.moving; }
-	});
-	
 	main.asset_register( assetPath, { 
 		data: _Player,
 		requirements: [
 			"assets/modules/core/Game.js",
-			"assets/modules/core/CameraControls.js",
-			"assets/modules/core/Actions.js",
-			"assets/modules/characters/Hero.js",
-			"assets/modules/puzzles/GridElementLibrary.js",
-			"assets/modules/ui/Messenger.js",
-			"assets/modules/utils/ObjectHelper.js",
+			"assets/modules/core/Character.js",
+			"assets/modules/farming/Planting.js",
 			"assets/modules/utils/MathHelper.js",
-			"assets/modules/utils/KeyHelper.js"
+			"assets/modules/utils/KeyHelper.js",
+			"assets/modules/utils/SceneHelper.js",
+			"assets/modules/utils/ObjectHelper.js",
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -107,135 +46,199 @@
     
     =====================================================*/
 	
-	function init_internal ( g, cc, ac, h, ges, msg, oh, mh, kh ) {
+	function init_internal ( g, c, pl, mh, kh, sh, oh ) {
 		console.log('internal player');
 		
-		if ( ready !== true ) {
-			
-			// assets
-			
-			_Game = g;
-			_CameraControls = cc;
-			_Actions = ac;
-			_Hero = h;
-			_GridElementLibrary = ges;
-			_Messenger = msg;
-			_ObjectHelper = oh;
-			_MathHelper = mh;
-			_KeyHelper = kh;
-			
-			// selecting
-			
-			selecting = {};
-			
-			selecting.opacityMin = 0.2;
-			selecting.opacityMax = 0.6;
-			selecting.opacityStart = selecting.opacityMin;
-			selecting.opacityTarget = selecting.opacityMax;
-			selecting.opacityCycleTime = 0;
-			selecting.opacityCycleTimeMax = 500;
-			
-			selecting.material = new THREE.MeshBasicMaterial( { color: 0xffffff, transparent: true, opacity: selecting.opacityStart, blending: THREE.AdditiveAlphaBlending } );
-			
-			// initialization
-			
-			init_character();
-			
-			init_actions();
-			
-			init_keybindings();
-			
-			init_controls();
-			
-			// signals
-			
-			shared.signals.onGamePaused.add( pause );
-			
-			ready = true;
-			
-		}
+		// assets
 		
-	}
-    
-    /*===================================================
-    
-    character
-    
-    =====================================================*/
-	
-	function init_character () {
+		_Game = g;
+		_Character = c;
+		_Planting = pl;
+		_MathHelper = mh;
+		_KeyHelper = kh;
+		_SceneHelper = sh;
+		_ObjectHelper = oh;
 		
-		// create character
+		// properties
 		
-		character = new _Hero.Instance();
+		_Player.options = {
+			stats: {
+				respawnOnDeath: true
+			},
+			movement: {
+				move: {
+					speed: 3
+				},
+				jump: {
+					speed: 3,
+					duration: 200,
+					startDelay: 125,
+					moveSpeedMod: 0
+				}
+			}
+		};
 		
-	}
-	
-	
-	function character_spawned () {
+		// instance
 		
-		_Game.cameraControls.target = undefined;
-		_Game.cameraControls.target = character;
+		_Player.Instance = Player;
+		_Player.Instance.prototype = new _Character.Instance();
+		_Player.Instance.prototype.constructor = _Player.Instance;
+		_Player.Instance.prototype.supr = _Character.Instance.prototype;
 		
-		allow_control();
+		_Player.Instance.prototype.die = die;
+		_Player.Instance.prototype.respawn = respawn;
+		
+		_Player.Instance.prototype.set_keybindings = set_keybindings;
+		_Player.Instance.prototype.allow_control = allow_control;
+		_Player.Instance.prototype.remove_control = remove_control;
+		_Player.Instance.prototype.trigger_key = trigger_key;
+		
+		_Player.Instance.prototype.select = select;
+		_Player.Instance.prototype.deselect = deselect;
+		
+		_Player.Instance.prototype.enable = enable;
+		_Player.Instance.prototype.disable = disable;
+		
+		Object.defineProperty( _Player.Instance.prototype, 'parent', { 
+			get : function () { return this._parent; },
+			set: function ( parent ) {
+				
+				var scene;
+				
+				this._parent = parent;
+				
+				if ( this._parent instanceof THREE.Object3D ) {
+					
+					scene = _SceneHelper.extract_parent_root( this );
+					
+					if ( scene instanceof THREE.Scene !== true ) {
+						
+						this.disable();
+						
+					}
+					
+				}
+				
+			}
+		});
 		
 	}
 	
 	/*===================================================
     
-    actions
+    instance
     
     =====================================================*/
 	
-	function init_actions () {
+    function Player ( parameters ) {
 		
-		actions = new _Actions.Instance();
+		var me = this,
+			kb;
+		
+		parameters = parameters || {};
+		
+		parameters.name = 'Hero';
+		
+		parameters.geometry = main.get_asset_data( "assets/models/Hero.js" );
+		parameters.material = new THREE.MeshLambertMaterial( { color: 0xFFF7E0, ambient: 0xFFF7E0, vertexColors: THREE.VertexColors } );
+		
+		parameters.physics = parameters.physics || {};
+		parameters.physics.bodyType = 'capsule';
+		parameters.physics.movementDamping = 0.5;
+		
+		_Character.Instance.call( this, parameters );
+		
+		// options
+		
+		this.options = $.extend( true, this.options || {}, _Player.options, parameters.options );
+		
+		// default keybindings
+		
+		kb = this.keybindingsDefault = {};
+		
+		// pointer
+		
+		kb[ 'pointer' ] = 'pointer';
 		
 		// wasd / arrows
 		
-		actions.add( 'w up_arrow', {
+		kb[ 'w' ] = kb[ 'up_arrow' ] = 'w';
+		kb[ 's' ] = kb[ 'down_arrow' ] = 's';
+		kb[ 'a' ] = kb[ 'left_arrow' ] = 'a';
+		kb[ 'd' ] = kb[ 'right_arrow' ] = 'd';
+		
+		// qe
+		
+		kb[ 'q' ] = 'q';
+		kb[ 'e' ] = 'e';
+		
+		// numbers
+		
+		kb[ '1' ] = '1';
+		kb[ '2' ] = '2';
+		kb[ '3' ] = '3';
+		kb[ '4' ] = '4';
+		kb[ '5' ] = '5';
+		kb[ '6' ] = '6';
+		
+		// misc
+		
+		kb[ 'escape' ] = 'escape'
+		kb[ 'space' ] = 'space';
+		
+		// set list of keys that are always available
+		
+		kb.alwaysAvailable = ['escape'];
+		
+		this.set_keybindings( kb );
+		
+		// actions
+		
+		// wasd / arrows
+		
+		this.actions.add( 'w up_arrow', {
 			eventCallbacks: {
 				down: function () {
-					character.move_state_change( 'forward' );
+					me.move_state_change( 'forward' );
 				},
 				up: function () {
-					character.move_state_change( 'forward', true );
+					me.move_state_change( 'forward', true );
 				}
 			},
 			deactivateCallbacks: 'up'
 		} );
 		
-		actions.add( 's down_arrow', {
+		this.actions.add( 's down_arrow', {
 			eventCallbacks: {
 				down: function () {
-					character.move_state_change( 'back' );
+					me.move_state_change( 'back' );
 				},
 				up: function () {
-					character.move_state_change( 'back', true );
+					me.move_state_change( 'back', true );
 				}
 			},
 			deactivateCallbacks: 'up'
 		} );
 		
-		actions.add( 'a left_arrow', {
+		this.actions.add( 'a left_arrow', {
 			eventCallbacks: {
 				down: function () {
-					character.move_state_change( 'left' );
+					me.move_state_change( 'left' );
 				},
 				up: function () {
-					character.move_state_change( 'left', true );
+					me.move_state_change( 'left', true );
 				}
 			},
 			deactivateCallbacks: 'up'
 		} );
 		
-		actions.add( 'd right_arrow', {
+		this.actions.add( 'd right_arrow', {
 			eventCallbacks: {
 				down: function () {
-					character.move_state_change( 'right' );
+					me.move_state_change( 'right' );
 				},
 				up: function () {
-					character.move_state_change( 'right', true );
+					me.move_state_change( 'right', true );
 				}
 			},
 			deactivateCallbacks: 'up'
@@ -243,13 +246,13 @@
 		
 		// jump
 		
-		actions.add( 'space', {
+		this.actions.add( 'space', {
 			eventCallbacks: {
 				down: function () {
-					character.move_state_change( 'up' );
+					me.move_state_change( 'up' );
 				},
 				up: function () {
-					character.move_state_change( 'up', true );
+					me.move_state_change( 'up', true );
 				}
 			},
 			deactivateCallbacks: 'up'
@@ -257,15 +260,19 @@
 		
 		// misc
 		
-		actions.add( 'escape', {
+		this.actions.add( 'escape', {
 			eventCallbacks: {
 				up: function () {
 					
 					if ( _Game.paused === true ) {
+						
 						_Game.resume();
+						
 					}
 					else {
+						
 						_Game.pause();
+						
 					}
 					
 				}
@@ -273,11 +280,9 @@
 		} );
 		
 		
-		
-		
 		// TODO: keep mouse over in player but add general selecting to character
 		
-		actions.add( 'pointer', {
+		this.actions.add( 'pointer', {
 			eventCallbacks: {
 				mousemove: function () {
 					
@@ -301,6 +306,58 @@
 			}
 		} );
 		
+		// planting
+		/*
+		this.planting = new _Planting.Instance( {
+			affectUI: true
+		} );
+		
+		this.actions.add( 'pointer', {
+			eventCallbacks: {
+				tap: [ $.proxy( this.planting.select_puzzle, this.planting ), $.proxy( this.planting.select_plant, this.planting ) ],
+				hold: $.proxy( this.planting.activate_puzzle, this.planting ),
+				dragstart: $.proxy( this.planting.activate_plant, this.planting ),
+				drag: $.proxy( this.planting.step, this.planting ),
+				dragend: $.proxy( this.planting.complete, this.planting ),
+				doubletap: $.proxy( this.planting.delete_plant, this.planting )
+			},
+			deactivateCallbacks: $.proxy( this.planting.stop, this.planting ),
+			activeCheck: function () {
+				return me.planting.started;
+			}
+		} );
+		*/
+	}
+	
+	/*===================================================
+    
+    die
+    
+    =====================================================*/
+	
+	function die () {
+		
+		_Player.Instance.prototype.supr.die.apply( this, arguments );
+		
+		this.remove_control();
+		
+	}
+	
+	/*===================================================
+    
+    respawn
+    
+    =====================================================*/
+	
+	function respawn () {
+		
+		_Player.Instance.prototype.supr.respawn.apply( this, arguments );
+		
+		_Game.cameraControls.target = undefined;
+		_Game.cameraControls.target = this;
+		
+		this.enable();
+		
 	}
 	
 	/*===================================================
@@ -309,71 +366,9 @@
     
     =====================================================*/
 	
-	function init_keybindings () {
+	function set_keybindings ( keybindings ) {
 		
-		var map = keybindingsDefault = {};
-		
-		// default keybindings
-		
-		// pointer
-		
-		map[ 'pointer' ] = 'pointer';
-		
-		// wasd / arrows
-		
-		map[ 'w' ] = map[ 'up_arrow' ] = 'w';
-		map[ 's' ] = map[ 'down_arrow' ] = 's';
-		map[ 'a' ] = map[ 'left_arrow' ] = 'a';
-		map[ 'd' ] = map[ 'right_arrow' ] = 'd';
-		
-		// qe
-		
-		map[ 'q' ] = 'q';
-		map[ 'e' ] = 'e';
-		
-		// numbers
-		
-		map[ '1' ] = '1';
-		map[ '2' ] = '2';
-		map[ '3' ] = '3';
-		map[ '4' ] = '4';
-		map[ '5' ] = '5';
-		map[ '6' ] = '6';
-		
-		// misc
-		
-		map[ 'escape' ] = 'escape'
-		map[ 'space' ] = 'space';
-		
-		// set list of keys that are always available
-		
-		map.alwaysAvailable = ['escape'];
-		
-		// set default as current
-		
-		set_keybindings( map );
-		
-	}
-	
-	function set_keybindings ( map ) {
-		
-		var key;
-		
-		// reset keybindings
-		
-		keybindings = {};
-		
-		// set all new keybindings in map
-		
-		for ( key in map ) {
-			
-			if ( map.hasOwnProperty( key ) === true ) {
-				
-				keybindings[ key ] = map[ key ];
-				
-			}
-			
-		}
+		this.keybindings = $.extend( true, this.keybindings || {}, keybindings );
 		
 	}
 	
@@ -383,63 +378,49 @@
     
     =====================================================*/
 	
-	function init_controls () {
-		
-		// start control immediately
-		
-		allow_control();
-		
-	}
-	
 	function allow_control () {
 		
 		// signals
 		
-		shared.signals.onGamePointerMoved.add( trigger_key );
-		shared.signals.onGamePointerTapped.add( trigger_key );
-		shared.signals.onGamePointerDoubleTapped.add( trigger_key );
-		shared.signals.onGamePointerHeld.add( trigger_key );
-		shared.signals.onGamePointerDragStarted.add( trigger_key );
-		shared.signals.onGamePointerDragged.add( trigger_key );
-		shared.signals.onGamePointerDragEnded.add( trigger_key );
-		shared.signals.onGamePointerWheel.add( trigger_key );
+		shared.signals.onGamePointerMoved.add( trigger_key, this );
+		shared.signals.onGamePointerTapped.add( trigger_key, this );
+		shared.signals.onGamePointerDoubleTapped.add( trigger_key, this );
+		shared.signals.onGamePointerHeld.add( trigger_key, this );
+		shared.signals.onGamePointerDragStarted.add( trigger_key, this );
+		shared.signals.onGamePointerDragged.add( trigger_key, this );
+		shared.signals.onGamePointerDragEnded.add( trigger_key, this );
+		shared.signals.onGamePointerWheel.add( trigger_key, this );
 		
-		shared.signals.onKeyPressed.add( trigger_key );
-		shared.signals.onKeyReleased.add( trigger_key );
+		shared.signals.onKeyPressed.add( trigger_key, this );
+		shared.signals.onKeyReleased.add( trigger_key, this );
 		
 	}
 	
 	function remove_control () {
 		
-		// clear keys
-		
-		actions.clear_active();
-		
 		// signals
 		
-		shared.signals.onGamePointerMoved.remove( trigger_key );
-		shared.signals.onGamePointerTapped.remove( trigger_key );
-		shared.signals.onGamePointerDoubleTapped.remove( trigger_key );
-		shared.signals.onGamePointerHeld.remove( trigger_key );
-		shared.signals.onGamePointerDragStarted.remove( trigger_key );
-		shared.signals.onGamePointerDragged.remove( trigger_key );
-		shared.signals.onGamePointerDragEnded.remove( trigger_key );
-		shared.signals.onGamePointerWheel.remove( trigger_key );
+		shared.signals.onGamePointerMoved.remove( trigger_key, this );
+		shared.signals.onGamePointerTapped.remove( trigger_key, this );
+		shared.signals.onGamePointerDoubleTapped.remove( trigger_key, this );
+		shared.signals.onGamePointerHeld.remove( trigger_key, this );
+		shared.signals.onGamePointerDragStarted.remove( trigger_key, this );
+		shared.signals.onGamePointerDragged.remove( trigger_key, this );
+		shared.signals.onGamePointerDragEnded.remove( trigger_key, this );
+		shared.signals.onGamePointerWheel.remove( trigger_key, this );
 		
-		shared.signals.onKeyPressed.remove( trigger_key );
-		shared.signals.onKeyReleased.remove( trigger_key );
+		shared.signals.onKeyPressed.remove( trigger_key, this );
+		shared.signals.onKeyReleased.remove( trigger_key, this );
+		
+		// clear keys
+		
+		this.actions.clear_active();
 		
 	}
 	
-	/*===================================================
-    
-    actions
-    
-    =====================================================*/
-	
 	function trigger_key ( e ) {
 		
-		var kbMap = keybindings,
+		var kbMap = this.keybindings,
 			keyCode,
 			keyName,
 			keyNameActual,
@@ -491,20 +472,16 @@
 		
 		isAlwaysAvailable = main.index_of_value( kbMap.alwaysAvailable, keyNameActual ) !== -1;
 		
-		if ( enabled === true || isAlwaysAvailable ) {
+		if ( this.state.enabled === true || isAlwaysAvailable ) {
 			
 			parameters = {
 				event: e,
 				allowDefault: isAlwaysAvailable || _Game.paused
 			};
 			
-			// perform character action
-			
-			character.actions.execute( keyNameActual, state, parameters );
-			
 			// perform action
 			
-			actions.execute( keyNameActual, state, parameters );
+			this.actions.execute( keyNameActual, state, parameters );
 			
 		}
 		
@@ -743,100 +720,41 @@
 	
 	/*===================================================
     
-    custom functions
+    enable / disable
     
     =====================================================*/
 	
-	function pause () {
-		
-		disable();
-		
-		shared.signals.onGameResumed.add( resume );
-		
-	}
-	
-	function resume () {
-			
-		shared.signals.onGameResumed.remove( resume );
-		
-		enable();
-		
-	}
-	
 	function enable () {
 		
-		if ( _Game.started === true && enabled !== true ) {
-			
-			enabled = true;
-			
-			shared.signals.onGameUpdated.add( update );
+		this.state.enabled = true;
 		
-		}
+		this.allow_control();
+		
+		shared.signals.onGameUpdated.add( this.update, this );
 		
 	}
 	
 	function disable () {
 		
-		// set enabled state
+		shared.signals.onGameUpdated.remove( this.update, this );
 		
-		enabled = false;
+		this.remove_control();
 		
-		// clear actions
-		
-		actions.clear_active();
-		character.actions.clear_active();
-		
-		// pause updating
-		
-		shared.signals.onGameUpdated.remove( update );
+		this.state.enabled = false;
 		
 	}
 	
-	function show ( parent, location ) {
-		
-		if ( showing === false ) {
-			
-			character.onDead.add( remove_control );
-			character.onRespawned.add( character_spawned );
-			
-			character.respawn( parent, location );
-			
-			_Game.cameraControls.target = character;
-			
-			showing = true;
-			
-		}
-		
-	}
-	
-	function hide () {
-		
-		if ( showing === true ) {
-			
-			remove_control();
-			
-			disable();
-			
-			character.onDead.remove( remove_control );
-			character.onRespawned.remove( character_spawned );
-			
-			_Game.scene.remove( character );
-			
-			showing = false;
-			
-		}
-		
-	}
+	/*===================================================
+    
+    update
+    
+    =====================================================*/
 	
 	function update ( timeDelta, timeDeltaMod ) {
 		
-		// character
+		_Player.Instance.prototype.supr.update.apply( this, arguments );
 		
-		character.update( timeDelta, timeDeltaMod );
-		
-		// selection material
-		
-		update_selections( timeDelta );
+		// TODO: update selected?
 		
 	}
 	

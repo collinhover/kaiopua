@@ -18,6 +18,7 @@
 		_ObjectHelper,
         _ready = false,
 		waitingToShow = false,
+		player,
 		world,
 		skybox,
 		ambient,
@@ -111,15 +112,15 @@
 			
 			world.show();
 			
-			// start player
+			// TODO: player created in main or game, not in intro
 			
-			_Player.show( _Game.scene, new THREE.Vector3( 35, 2200, 300 ) );
-			_Player.enable();
+			player = new _Player.Instance();
+			player.respawn( _Game.scene, new THREE.Vector3( 35, 2200, 300 ) );
+			player.enable();
 			
 			// signals
 			
 			shared.signals.onWindowResized.add( resize );
-			
 			shared.signals.onGameUpdated.add( update );
 			
 		}
@@ -145,10 +146,7 @@
 		
 		if ( _ready === true ) {
 			
-			// stop player
-			
-			_Player.disable();
-			_Player.hide();
+			_Game.scene.remove( player );
 			
 			// hide world
 			
