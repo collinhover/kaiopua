@@ -14,6 +14,7 @@ var KAIOPUA = (function (main) {
 	
 	shared.pointers = [];
 	shared.originLink = window.location.pathname.toString();
+	
 	shared.pathToIcons = 'img/';
 	shared.pathToAssets = 'asset/';
 	shared.pathToModels = shared.pathToAssets + 'model/';

@@ -51,6 +51,7 @@
 		_Model.options = {
 			interactive: false,
 			dynamic: false,
+			intersectable: true,
 			morphs: {
 				duration: 1000
 			}
@@ -69,6 +70,28 @@
 		
 		Object.defineProperty( _Model.Instance.prototype, 'dynamic', { 
 			get : function () { return this.options.dynamic || ( this.rigidBody && this.rigidBody.dynamic ); }
+		} );
+		
+		Object.defineProperty( _Model.Instance.prototype, 'intersectable', { 
+			get : function () { return this.options.intersectable; },
+			set : function ( intersectable ) {
+				
+				if( this.options.intersectable !== intersectable ) {
+					
+					this.options.intersectable = intersectable;
+					
+					// when in scene, remove from parent and add again to account for intersectable change
+					
+					if ( this.parent instanceof THREE.Object3D ) {
+						
+						this.parent.remove( this );
+						this.parent.add( this );
+					
+					}
+					
+				}
+				
+			}
 		} );
 		
 		Object.defineProperty( _Model.Instance.prototype, 'gravityBody', { 

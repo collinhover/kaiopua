@@ -46,6 +46,10 @@
 		
 		// properties
 		
+		_Water.options = {
+			intersectable: false
+		};
+		
 		_Water.wavesTexture = new THREE.Texture( wavesImage );
 		_Water.wavesTexture.needsUpdate = true;
 		
@@ -324,6 +328,8 @@
 		parameters.material = wavesMaterial;
 		
 		_Model.Instance.call( this, parameters );
+		
+		this.options = $.extend( true, this.options || {}, _Water.options, parameters.options );
 		
     }
     

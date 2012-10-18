@@ -98,14 +98,18 @@
 		
 		if ( object instanceof _Model.Instance ) {
 			
-			if ( object.dynamic !== true ) {
+			if ( object.intersectable === true ) {
 				
-				this.octree.add( object, true );
-				
-			}
-			else {
-				
-				main.array_cautious_add( this.dynamics, object );
+				if ( object.dynamic !== true ) {
+					
+					this.octree.add( object, true );
+					
+				}
+				else {
+					
+					main.array_cautious_add( this.dynamics, object );
+					
+				}
 				
 			}
 			
@@ -137,23 +141,27 @@
 				
 			}
 			
-			if ( object.dynamic !== true ) {
+			if ( object.intersectable === true ) {
 				
-				this.octree.remove( object );
+				if ( object.dynamic !== true ) {
+					
+					this.octree.remove( object );
+					
+				}
+				else {
+					
+					main.array_cautious_remove( this.dynamics, object );
+					
+				}
 				
 			}
-			else {
 				
-				main.array_cautious_remove( this.dynamics, object );
-				
-			}
-			
 			if ( object.rigidBody instanceof _RigidBody.Instance ) {
 				
 				this.physics.remove( object );
 				
 			}
-		
+			
 		}
 		
 	}

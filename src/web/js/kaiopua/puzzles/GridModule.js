@@ -127,7 +127,7 @@
 		});
 		
 		Object.defineProperty( _GridModule.Instance.prototype, 'occupied', { 
-			get: function () { return this.get_state_active( 'occupied' ); }//typeof this.occupant !== 'undefined'; }
+			get: function () { return this.get_state_active( 'occupied' ); }
 		});
 		
 		Object.defineProperty( _GridModule.Instance.prototype, 'active', { 

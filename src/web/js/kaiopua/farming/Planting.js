@@ -518,7 +518,7 @@
 				plant = _RayHelper.raycast( {
 					pointer: this.pointer,
 					camera: main.camera,
-					objects: main.scene.dynamics,
+					objects: this.puzzle.occupants,//main.scene.dynamics,
 					octrees: main.scene.octree,
 					objectOnly: true
 				} );
@@ -583,7 +583,7 @@
 		toggleSwitch = _RayHelper.raycast( {
 			pointer: main.get_pointer( parameters.event ),
 			camera: main.camera,
-			objects: main.scene.dynamics,
+			objects: _Puzzle.allToggleSwitches,//main.scene.dynamics,
 			octrees: main.scene.octree,
 			objectOnly: true
 		} );
@@ -774,13 +774,12 @@
 					
 				}
 				
-				// find if any planting objects under pointer
+				// find if any module under pointer
 				
 				targetObject = _RayHelper.raycast( {
 					pointer: this.pointer,
 					camera: main.camera,
-					objects: main.scene.dynamics,
-					octrees: main.scene.octree,
+					objects: this.puzzle.grid.modules,
 					objectOnly: true
 				} );
 				
@@ -839,8 +838,7 @@
 			targetObject = _RayHelper.raycast( {
 				pointer: this.pointer,
 				camera: main.camera,
-				objects: main.scene.dynamics,
-				octrees: main.scene.octree,
+				objects: this.puzzle.grid.modules,
 				objectOnly: true
 			} );
 			

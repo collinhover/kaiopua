@@ -38,6 +38,12 @@
 		console.log('internal grid model', _GridModel);
 		_Model = m;
 		
+		// properties
+		
+		_GridModel.options = {
+			intersectable: false
+		};
+		
 		// instance
 		
 		_GridModel.Instance = GridModel;
@@ -69,6 +75,8 @@
 		// proto
 		
 		_Model.Instance.call( this, parameters.container );
+		
+		this.options = $.extend( true, this.options || {}, _GridModel.options, parameters.options );
 		
 		// core
 		

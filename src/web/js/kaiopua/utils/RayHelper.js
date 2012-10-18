@@ -394,7 +394,7 @@
 		
 		parameters = parameters || {};
 		
-		offsets = parameters.offsets || [ offsetNone ];
+		offsets = main.is_array( parameters.offsets ) && parameters.offsets.length > 0 ? parameters.offsets : [ offsetNone ];
 		objects = main.to_array( parameters.objects ).slice( 0 );
 		colliders = main.to_array( parameters.colliders ).slice( 0 );
 		octrees = main.to_array( parameters.octrees );

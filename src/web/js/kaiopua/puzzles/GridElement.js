@@ -981,6 +981,9 @@
 					
 					// add
 					
+					// TODO: why is adding model so performance heavy?
+					console.log( 'main scene octree contains model? ', main.index_of_value( main.scene.octree.objects, model ), ' module contains model? ', testLayoutModule.children.indexOf( model ) );
+					
 					testLayoutModule.add( model );
 					testLayoutModule.show_state( 'occupied', success );
 					
