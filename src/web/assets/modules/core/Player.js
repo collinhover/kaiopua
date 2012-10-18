@@ -70,7 +70,7 @@
 					speed: 3
 				},
 				jump: {
-					speed: 3,
+					speedStart: 3,
 					duration: 200,
 					startDelay: 125,
 					moveSpeedMod: 0
@@ -87,14 +87,12 @@
 		
 		_Player.Instance.prototype.die = die;
 		_Player.Instance.prototype.respawn = respawn;
+		_Player.Instance.prototype.select = select;
 		
 		_Player.Instance.prototype.set_keybindings = set_keybindings;
 		_Player.Instance.prototype.allow_control = allow_control;
 		_Player.Instance.prototype.remove_control = remove_control;
 		_Player.Instance.prototype.trigger_key = trigger_key;
-		
-		_Player.Instance.prototype.select = select;
-		_Player.Instance.prototype.deselect = deselect;
 		
 		_Player.Instance.prototype.enable = enable;
 		_Player.Instance.prototype.disable = disable;
@@ -122,6 +120,17 @@
 			}
 		});
 		
+		Object.defineProperty( _Player.Instance.prototype, 'target', { 
+			get : function () { return this._target; },
+			set: function ( target ) {
+				
+				this._target = target;
+				
+				// TODO: update UI to reflect target change
+				
+			}
+		});
+		
 	}
 	
 	/*===================================================
@@ -139,7 +148,7 @@
 		
 		parameters.name = 'Hero';
 		
-		parameters.geometry = main.get_asset_data( "assets/models/Hero.js" );
+		parameters.geometry = main.get_asset_data( "assets/models/Hero.js" ) || new THREE.CubeGeometry( 50, 100, 50 );
 		parameters.material = new THREE.MeshLambertMaterial( { color: 0xFFF7E0, ambient: 0xFFF7E0, vertexColors: THREE.VertexColors } );
 		
 		parameters.physics = parameters.physics || {};
@@ -279,19 +288,19 @@
 			}
 		} );
 		
-		
-		// TODO: keep mouse over in player but add general selecting to character
+		// selection
 		
 		this.actions.add( 'pointer', {
 			eventCallbacks: {
 				mousemove: function () {
 					
 					var target = _Game.get_pointer_intersection( {
-						interactives: true,
 						objectOnly: true
 					} );
-					console.log( 'player pointer move, target?', target );
-					if ( target ) {
+					
+					// cursor change on mouse over interactive
+					
+					if ( target instanceof THREE.Object3D && target.interactive === true ) {
 						
 						shared.domElements.$game.css( 'cursor', 'pointer' );
 						
@@ -302,19 +311,38 @@
 						
 					}
 					
-				}
+				},
+				tap: $.proxy( this.select, this )
+			}
+		} );
+		
+		// camera rotating
+		
+		this.actions.add( 'pointer', {
+			eventCallbacks: {
+				dragstart: $.proxy( _Game.cameraControls.rotate_start, _Game.cameraControls ),
+				drag: $.proxy( _Game.cameraControls.rotate, _Game.cameraControls  ),
+				dragend: $.proxy( _Game.cameraControls.rotate_stop, _Game.cameraControls  ),
+			},
+			activeCheck: function () {
+				return _Game.cameraControls.rotating;
+			},
+			options: {
+				priority: 1,
+				silencing: true
 			}
 		} );
 		
 		// planting
-		/*
+		
 		this.planting = new _Planting.Instance( {
 			affectUI: true
 		} );
 		
 		this.actions.add( 'pointer', {
 			eventCallbacks: {
-				tap: [ $.proxy( this.planting.select_puzzle, this.planting ), $.proxy( this.planting.select_plant, this.planting ) ],
+				// TODO: replace tap planting select with general select
+				//tap: [ $.proxy( this.planting.select_puzzle, this.planting ), $.proxy( this.planting.select_plant, this.planting ) ],
 				hold: $.proxy( this.planting.activate_puzzle, this.planting ),
 				dragstart: $.proxy( this.planting.activate_plant, this.planting ),
 				drag: $.proxy( this.planting.step, this.planting ),
@@ -324,9 +352,13 @@
 			deactivateCallbacks: $.proxy( this.planting.stop, this.planting ),
 			activeCheck: function () {
 				return me.planting.started;
+			},
+			options: {
+				priority: 2,
+				silencing: true
 			}
 		} );
-		*/
+		
 	}
 	
 	/*===================================================
@@ -355,8 +387,47 @@
 		
 		_Game.cameraControls.target = undefined;
 		_Game.cameraControls.target = this;
+		_Game.cameraControls.rotateTarget = true;
 		
 		this.enable();
+		
+	}
+	
+	/*===================================================
+    
+    selection
+    
+    =====================================================*/
+	
+	function select ( parameters ) {
+	
+		var target;
+		
+		parameters = parameters || {};
+		
+		// find target
+		
+		if ( parameters instanceof THREE.Object3D ) {
+			
+			target = parameters;
+			
+		}
+		else if ( parameters.target instanceof THREE.Object3D ) {
+			
+			target = parameters.target;
+			
+		}
+		else {
+			
+			parameters.objectOnly = true;
+		
+			target = _Game.get_pointer_intersection( parameters );
+			
+		}
+		
+		// update target
+		
+		_Player.Instance.prototype.supr.select.call( this, target );
 		
 	}
 	
@@ -482,237 +553,6 @@
 			// perform action
 			
 			this.actions.execute( keyNameActual, state, parameters );
-			
-		}
-		
-	}
-	
-	/*===================================================
-    
-    selection functions
-    
-    =====================================================*/
-	
-	function select ( parameters ) {
-		
-		var selectedMesh,
-			selectedModel,
-			targetsNum = 0,
-			targetsNumMax,
-			pointer,
-			character,
-			targeting,
-			targets,
-			targetsToRemove,
-			materialIndex;
-		
-		// handle parameters
-		
-		parameters = parameters || {};
-		
-		pointer = parameters.pointer = parameters.pointer || main.get_pointer( parameters );
-		
-		character = parameters.character || character;
-		
-		targetsNumMax = parameters.targetsNumMax || 1;
-		
-		targeting = character.targeting;
-		
-		targets = targeting.targets;
-		
-		targetsToRemove = targeting.targetsToRemove;
-		
-		// select
-			
-		selectedModel = _Game.get_pointer_intersection( {
-			pointer: pointer,
-			// TODO: objects
-			hierarchySearch: true,
-			hierarchyIntersect: true,
-			objectOnly: true
-		} );
-		
-		// if a selection was made
-		
-		if ( typeof selectedModel !== 'undefined' && selectedModel.interactive === true ) {
-			
-			// todo
-			// special selection cases
-			
-			// add selected to character targets
-			// unless already selected, then add to removal list
-			
-			if ( main.index_of_value( targets, selectedModel ) === -1 ) {
-				
-				// check current length of targets
-				// if at or over max num targets, remove earliest
-				
-				if ( targets.length >= targetsNumMax ) {
-					
-					targetsToRemove.push( targets[ 0 ] );
-					
-					deselect( parameters );
-					
-				}
-				
-				targets.push( selectedModel );
-				/*
-				 * TODO: fix for single material case
-				selectedMesh = selectedModel.mesh;
-				
-				materialIndex = main.index_of_value( selectedMesh.material, selecting.material );
-				
-				if ( materialIndex === -1 ) {
-					
-					selectedMesh.material.push( selecting.material );
-					
-				}
-				*/
-			}
-			else {
-				
-				targetsToRemove.push( selectedModel );
-				
-			}
-			
-			// update num targets
-			
-			targetsNum = targets.length;
-			
-			// set selected as current selection
-			
-			targeting.targetCurrent = selectedModel;
-			
-		}
-		// else deselect all
-		else {
-			
-			if ( targets.length > 0 ) {
-				
-				targeting.targetsToRemove = targetsToRemove.concat( targets );
-				
-				deselect( parameters );
-				
-			}
-			
-		}
-		
-		return targetsNum;
-	}
-	
-	function deselect ( parameters ) {
-		
-		var i, l,
-			character,
-			targeting,
-			targets,
-			targetsToRemove,
-			targetIndex,
-			targetModel,
-			targetMesh,
-			materialIndex;
-		
-		// handle parameters
-		
-		parameters = parameters || {};
-		
-		character = parameters.character || character;
-		
-		targeting = character.targeting;
-		
-		targets = targeting.targets;
-		
-		targetsToRemove = targeting.targetsToRemove;
-		
-		// for each target to remove
-		
-		for ( i = targetsToRemove.length - 1, l = 0; i >= l; i -= 1 ) {
-			
-			targetModel = targetsToRemove[ i ];
-			
-			targetMesh = targetModel;//.mesh;
-			
-			// find in targets and remove
-			
-			targetIndex = main.index_of_value( targets, targetModel );
-			
-			if ( targetIndex !== -1 ) {
-				
-				targets.splice( targetIndex, 1 );
-				
-			}
-			
-			/* TODO: fix for no multimaterials
-			// remove selecting material
-			
-			materialIndex = main.index_of_value( targetMesh.material, selecting.material );
-			
-			if ( materialIndex !== -1 ) {
-				
-				targetMesh.material.splice( materialIndex, 1 );
-				
-			}
-			*/
-			
-			// remove from targetsToRemove
-			
-			targetsToRemove.splice( i, 1 );
-			
-		}
-		
-	}
-	
-	function update_selections ( timeDelta ) {
-		
-		var material = selecting.material,
-			opacityMax = selecting.opacityMax,
-			opacityMin = selecting.opacityMin,
-			opacityStart = selecting.opacityStart,
-			opacityTarget = selecting.opacityTarget,
-			opacityTargetLast,
-			opacityDelta = opacityTarget - opacityStart,
-			opacityCycleTime,
-			opacityCycleTimeMax = selecting.opacityCycleTimeMax;
-		
-		// update time
-		
-		selecting.opacityCycleTime += timeDelta;
-		
-		if ( selecting.opacityCycleTime >= opacityCycleTimeMax ) {
-			
-			material.opacity = opacityTarget;
-			
-			selecting.opacityCycleTime = 0;
-			
-			// update start and target
-			
-			opacityTargetLast = opacityTarget;
-			
-			selecting.opacityTarget = opacityStart;
-			
-			selecting.opacityStart = opacityTargetLast;
-			
-		}
-		else {
-		
-			opacityCycleTime = selecting.opacityCycleTime;
-			
-			// quadratic easing
-			
-			opacityCycleTime /= opacityCycleTimeMax * 0.5;
-			
-			if ( opacityCycleTime < 1 ) {
-				
-				material.opacity = opacityDelta * 0.5 * opacityCycleTime * opacityCycleTime + opacityStart;
-				
-			}
-			else {
-				
-				opacityCycleTime--;
-				
-				material.opacity = -opacityDelta * 0.5 * ( opacityCycleTime * ( opacityCycleTime - 2 ) - 1 ) + opacityStart;
-				
-			}
 			
 		}
 		

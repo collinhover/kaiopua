@@ -1073,7 +1073,7 @@
 		
 		// if is new module
 		
-		if ( this.module !== module ) {
+		if ( typeof module === 'undefined' || ( module instanceof _GridModule.Instance && this.module !== module ) ) {
 			console.log(' > PLANTING: change MODULE: ', module);
 			
 			// store new module

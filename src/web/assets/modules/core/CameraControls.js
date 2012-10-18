@@ -11,9 +11,9 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/core/CameraControls.js",
 		_CameraControls = {},
-		_ObjectHelper,
 		_MathHelper,
 		_VectorHelper,
+		_ObjectHelper,
 		_PhysicsHelper;
 	
 	/*===================================================
@@ -25,9 +25,9 @@
 	main.asset_register( assetPath, { 
 		data: _CameraControls,
 		requirements: [
-			"assets/modules/utils/ObjectHelper.js",
 			"assets/modules/utils/MathHelper.js",
 			"assets/modules/utils/VectorHelper.js",
+			"assets/modules/utils/ObjectHelper.js",
 			"assets/modules/utils/PhysicsHelper.js"
 		],
 		callbacksOnReqs: init_internal,
@@ -40,13 +40,13 @@
     
     =====================================================*/
 	
-	function init_internal ( oh, mh, vh, ph ) {
+	function init_internal ( mh, vh, oh, ph ) {
 		console.log('internal cameracontrols');
 		// assets
 		
-		_ObjectHelper = oh;
 		_MathHelper = mh;
 		_VectorHelper = vh;
+		_ObjectHelper = oh;
 		_PhysicsHelper = ph;
 		
 		// properties
@@ -87,8 +87,12 @@
 		
 		_CameraControls.Instance = CameraControls;
 		
+		_CameraControls.Instance.prototype.rotate_start = rotate_start;
 		_CameraControls.Instance.prototype.rotate = rotate;
+		_CameraControls.Instance.prototype.rotate_stop = rotate_stop;
+		
 		_CameraControls.Instance.prototype.zoom = zoom;
+		
 		_CameraControls.Instance.prototype.update = update;
 		
 		Object.defineProperty( _CameraControls.Instance.prototype, 'camera', { 
@@ -152,17 +156,17 @@
 				
 				if ( this._controllable === true ) {
 					
-					shared.signals.onGamePointerDragStarted.add( rotate_start, this );
+					shared.signals.onGamePointerDragStarted.add( this.rotate_start, this );
 					shared.signals.onGamePointerDragged.add( this.rotate, this );
-					shared.signals.onGamePointerDragEnded.add( rotate_stop, this );
+					shared.signals.onGamePointerDragEnded.add( this.rotate_stop, this );
 					shared.signals.onGamePointerWheel.add( this.zoom, this );
 					
 				}
 				else {
 					
-					shared.signals.onGamePointerDragStarted.remove( rotate_start, this );
+					shared.signals.onGamePointerDragStarted.remove( this.rotate_start, this );
 					shared.signals.onGamePointerDragged.remove( this.rotate, this );
-					shared.signals.onGamePointerDragEnded.remove( rotate_stop, this );
+					shared.signals.onGamePointerDragEnded.remove( this.rotate_stop, this );
 					shared.signals.onGamePointerWheel.remove( this.zoom, this );
 					
 				}
@@ -254,6 +258,8 @@
 			sign,
 			angleSign,
 			angleDiff;
+		
+		pointer = pointer || main.get_pointer( e );
 		
 		this.rotationDelta.set( -pointer.deltaY * this.options.rotationSpeedDelta, -pointer.deltaX * this.options.rotationSpeedDelta, 0 )
 		this.rotationDeltaTotal.addSelf( this.rotationDelta );

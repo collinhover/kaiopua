@@ -1286,17 +1286,15 @@
 		
 		// handle parameters
 		
+		// TODO: remove the need for this function entirely
+		
 		parameters = parameters || {};
 		
-		parameters.pointer = parameters.pointer || main.get_pointer();
+		parameters.pointer = parameters.pointer || main.get_pointer( parameters );
 		parameters.camera = parameters.camera || camera;
 		
-		if ( parameters.interactives === true ) {
-			
-			parameters.objects = ( parameters.objects || [] ).concat( scene.interactivesDynamic );
-			parameters.octrees = ( parameters.octrees || [] ).concat( scene.interactivesOctree );
-			
-		}
+		parameters.objects = ( parameters.objects || [] ).concat( scene.dynamics );
+		parameters.octrees = ( parameters.octrees || [] ).concat( scene.octree );
 		
 		// intersection
 		

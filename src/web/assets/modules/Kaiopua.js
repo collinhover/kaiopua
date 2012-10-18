@@ -110,6 +110,7 @@ var KAIOPUA = (function (main) {
 		shared.timeDeltaModDec = Math.pow( 10, 2 );
 		shared.pointerWheelSpeed = 120;
 		shared.pointerHoldPositionShift = 10;
+        shared.pointerTimeDeltaThreshold = shared.timeDeltaExpected * 0.5;
 		shared.throttleTimeShort = shared.timeDeltaExpected * 3;
 		shared.throttleTimeMedium = 100;
 		shared.throttleTimeLong = 250;
@@ -1248,6 +1249,7 @@ var KAIOPUA = (function (main) {
 			pointer.y = pointer.ly = shared.screenHeight * 0.5;
 			pointer.deltaX = pointer.deltaY = pointer.angle = pointer.distance = pointer.distanceX = pointer.distanceY = 0;
 			pointer.direction = 'none';
+			pointer.timeStamp = Date.now();
 		
 		}
 		
@@ -1260,38 +1262,62 @@ var KAIOPUA = (function (main) {
 		shared.timeSinceInteraction = 0;
 		
 		var pointer = main.get_pointer( e ),
-			position;
+			position,
+			d,
+			b,
+			timeChange;
 		
 		if ( e ) {
 			
-			if ( !( e.position && e.position.x && e.position.y ) ) {
+			e.timeStamp = e.timeStamp || Date.now();
+			timeChange = e.timeStamp - pointer.timeStamp;
+			
+			if ( timeChange >= shared.pointerTimeDeltaThreshold ) {
 				
-				e.position = { x: e.pageX, y: e.pageY };
+				pointer.timeStamp = e.timeStamp;
+				
+				// handle postion
+				
+				position = e.position;
+				
+				if ( is_array( position ) && position[ pointer.id ] ) {
+					
+					position = position[ pointer.id ];
+					
+				}
+				
+				if ( typeof position === 'undefined' || is_number( position.x ) !== true || is_number( position.y ) !== true ) {
+					
+					d = document;
+					b = d.body;
+					
+					position = {
+						x: e.pageX || e.clientX + ( d && d.scrollLeft || b && b.scrollLeft || 0 ) - ( d && d.clientLeft || b && b.clientLeft || 0 ),
+						y: e.pageY || e.clientY + ( d && d.scrollTop || b && b.scrollTop || 0 ) - ( d && d.clientTop || b && b.clientTop || 0 )
+					 };
+					
+				}
+				
+				if ( pointer.x !== position.x || pointer.y !== position.y ) {
+					
+					pointer.lx = pointer.x;
+					pointer.ly = pointer.y;
+					
+					pointer.x = position.x;
+					pointer.y = position.y;
+					
+					pointer.deltaX = pointer.x - pointer.lx;
+					pointer.deltaY = pointer.y - pointer.ly;
+					
+					pointer.angle = e.angle || 0;
+					pointer.distance = e.distance || 0;
+					pointer.distanceX = e.distanceX || 0;
+					pointer.distanceY = e.distanceY || 0;
+					pointer.direction = e.direction || 'none';
+					
+				}
 				
 			}
-			
-			position = e.position;
-			
-			if ( is_array( position ) && position[ pointer.id ] ) {
-				
-				position = position[ pointer.id ];
-				
-			}
-			
-			pointer.lx = pointer.x;
-			pointer.ly = pointer.y;
-			
-			pointer.x = position.x;
-			pointer.y = position.y;
-			
-			pointer.deltaX = pointer.x - pointer.lx;
-			pointer.deltaY = pointer.y - pointer.ly;
-			
-			pointer.angle = e.angle || 0;
-			pointer.distance = e.distance || 0;
-			pointer.distanceX = e.distanceX || 0;
-			pointer.distanceY = e.distanceY || 0;
-			pointer.direction = e.direction || 'none';
 			
 		}
 		

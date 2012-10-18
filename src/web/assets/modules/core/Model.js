@@ -14,7 +14,6 @@
 		_Model = {},
 		_Morphs,
 		_RigidBody,
-		_SceneHelper,
 		_ObjectHelper,
 		objectCount = 0;
 	
@@ -29,7 +28,6 @@
 		requirements: [
 			"assets/modules/core/Morphs.js",
 			"assets/modules/physics/RigidBody.js",
-			"assets/modules/utils/SceneHelper.js",
 			"assets/modules/utils/ObjectHelper.js"
 		], 
 		callbacksOnReqs: init_internal,
@@ -42,17 +40,17 @@
     
     =====================================================*/
 	
-	function init_internal ( m, rb, sh, oh ) {
+	function init_internal ( m, rb, oh ) {
 		console.log('internal model', _Model);
 		_Morphs = m;
 		_RigidBody = rb;
-		_SceneHelper = sh;
 		_ObjectHelper = oh;
 		
 		// properties
 		
 		_Model.options = {
 			interactive: false,
+			dynamic: false,
 			morphs: {
 				duration: 1000
 			}
@@ -66,36 +64,11 @@
 		_Model.Instance.prototype.clone = clone;
 		
 		Object.defineProperty( _Model.Instance.prototype, 'interactive', { 
-			get : function () { return this.options.interactive; },
-			set: function ( interactive ) {
-				
-				var scene;
-				
-				// when interactive state changes, add or remove this from scene's interactive list
-				
-				if ( this.options.interactive !== interactive ) {
-					
-					this.options.interactive = interactive;
-					scene = _SceneHelper.extract_parent_root( this );
-					
-					if ( scene instanceof THREE.Object3D && scene.hasOwnProperty( 'add_interactive' ) ) {
-						
-						if ( this.options.interactive === true ) {
-							
-							scene.add_interactive( this );
-							
-						}
-						else {
-							
-							scene.remove_interactive( this );
-							
-						}
-						
-					}
-					
-				}
-				
-			}
+			get : function () { return this.options.interactive; }
+		} );
+		
+		Object.defineProperty( _Model.Instance.prototype, 'dynamic', { 
+			get : function () { return this.options.dynamic || ( this.rigidBody && this.rigidBody.dynamic ); }
 		} );
 		
 		Object.defineProperty( _Model.Instance.prototype, 'gravityBody', { 

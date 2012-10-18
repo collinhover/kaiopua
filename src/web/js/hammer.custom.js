@@ -399,8 +399,8 @@ var HAMMER = ( function ( main ) {
 				body = doc.body;
 
 			return [{
-				x: event.pageX || event.clientX + ( doc && doc.scrollLeft || body && body.scrollLeft || 0 ) - ( doc && doc.clientLeft || body && doc.clientLeft || 0 ),
-				y: event.pageY || event.clientY + ( doc && doc.scrollTop || body && body.scrollTop || 0 ) - ( doc && doc.clientTop || body && doc.clientTop || 0 )
+				x: event.pageX || event.clientX + ( doc && doc.scrollLeft || body && body.scrollLeft || 0 ) - ( doc && doc.clientLeft || body && body.clientLeft || 0 ),
+				y: event.pageY || event.clientY + ( doc && doc.scrollTop || body && body.scrollTop || 0 ) - ( doc && doc.clientTop || body && body.clientTop || 0 )
 			}];
 		}
 		// multitouch, return array with positions
@@ -699,6 +699,10 @@ var HAMMER = ( function ( main ) {
 		// move
 		if ( type === _event_name_move ) {
 			
+			// don't allow mobile to drag window
+			
+			event.preventDefault();
+			
 			if ( _mousedown === true ) {
 				
 				// event properties
@@ -712,10 +716,6 @@ var HAMMER = ( function ( main ) {
 				}
 				
 			}
-			
-			// don't allow mobile to drag window
-			
-			event.preventDefault();
 			
 		}
 		// end

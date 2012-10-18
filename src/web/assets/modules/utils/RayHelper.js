@@ -517,7 +517,9 @@
 			
 			if ( offsetColliders.length > 0 ) {
 				
-				// raycast_colliders is about 25% slower but supports casting non-planar quads
+				// TODO: improve performance of raycast_colliders
+				// raycast_colliders supports casting non-planar quads
+				// but is about 25 - 40% slower than alternative, which should not be the case just because of non-planar quads 
 				
 				intersections = intersections.concat( raycast_colliders( ray, offsetColliders ) );
 				//intersections = intersections.concat( ray.intersectOctreeObjects( offsetColliders ) );

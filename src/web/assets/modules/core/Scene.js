@@ -11,7 +11,6 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/core/Scene.js",
 		_Scene = {},
-		_SceneHelper,
 		_Model,
 		_Morphs,
 		_Physics,
@@ -26,7 +25,6 @@
 	main.asset_register( assetPath, {
 		data: _Scene,
 		requirements: [
-			"assets/modules/utils/SceneHelper.js",
 			"assets/modules/core/Model.js",
 			'assets/modules/core/Morphs.js',
 			'assets/modules/physics/Physics.js',
@@ -42,12 +40,11 @@
     
     =====================================================*/
 	
-	function init_internal ( sh, mdl, mph, physx, rb ) {
+	function init_internal ( mdl, mph, physx, rb ) {
 		console.log('internal scene', _Scene);
 		
 		// utility
 		
-		_SceneHelper = sh;
 		_Model = mdl;
 		_Morphs = mph;
 		_Physics = physx;
@@ -60,15 +57,8 @@
 		_Scene.Instance.prototype.constructor = _Scene.Instance;
 		_Scene.Instance.prototype.supr = THREE.Scene.prototype;
 		
-		_Scene.Instance.prototype.add_interactive = add_interactive;
-		_Scene.Instance.prototype.remove_interactive = remove_interactive;
-		
 		_Scene.Instance.prototype.__addObject = __addObject;
 		_Scene.Instance.prototype.__removeObject = __removeObject;
-		
-		Object.defineProperty( _Model.Instance.prototype, 'interactivesStatic', { 
-			get : function () { return this.interactivesOctree.objects; }
-		} );
 		
 	}
 	
@@ -88,13 +78,10 @@
 		
 		THREE.Scene.call( this );
 		
-		// targets
+		// properties
 		
-		this.interactivesDynamic = [];
-		this.interactivesOctree = new THREE.Octree();
-		
-		// physics
-		
+		this.dynamics = [];
+		this.octree = new THREE.Octree();
 		this.physics = new _Physics.Instance();
 		
 	}
@@ -109,11 +96,24 @@
 		
 		_Scene.Instance.prototype.supr.__addObject.call( this, object );
 		
-		this.add_interactive( object );
-		
-		if ( object.rigidBody instanceof _RigidBody.Instance ) {
+		if ( object instanceof _Model.Instance ) {
 			
-			this.physics.add( object );
+			if ( object.dynamic !== true ) {
+				
+				this.octree.add( object, true );
+				
+			}
+			else {
+				
+				main.array_cautious_add( this.dynamics, object );
+				
+			}
+			
+			if ( object.rigidBody instanceof _RigidBody.Instance ) {
+				
+				this.physics.add( object );
+				
+			}
 			
 		}
 		
@@ -129,62 +129,31 @@
 		
 		_Scene.Instance.prototype.supr.__removeObject.call( this, object );
 		
-		if ( object.morphs instanceof _Morphs.Instance ) {
+		if ( object instanceof _Model.Instance ) {
 			
-			object.morphs.stop_all();
-			
-		}
-		
-		this.remove_interactive( object );
-		
-		if ( object.rigidBody instanceof _RigidBody.Instance ) {
-			
-			this.physics.remove( object );
-			
-		}
-		
-	}
-	
-	/*===================================================
-    
-    targets
-    
-    =====================================================*/
-	
-	function add_interactive ( object ) {
-		
-		if ( object.interactive === true ) {
-			
-			if ( object.rigidBody instanceof _RigidBody.Instance !== true || object.rigidBody.dynamic !== true ) {
+			if ( object.morphs instanceof _Morphs.Instance ) {
 				
-				this.interactivesOctree.add( object );
+				object.morphs.stop_all();
+				
+			}
+			
+			if ( object.dynamic !== true ) {
+				
+				this.octree.remove( object );
 				
 			}
 			else {
 				
-				main.array_cautious_add( this.interactivesDynamic, object );
+				main.array_cautious_remove( this.dynamics, object );
 				
 			}
 			
-		}
-	
-	}
-	
-	function remove_interactive ( object ) {
+			if ( object.rigidBody instanceof _RigidBody.Instance ) {
+				
+				this.physics.remove( object );
+				
+			}
 		
-		if ( object.interactive === true ) {
-			
-			if ( object.rigidBody instanceof _RigidBody.Instance !== true || object.rigidBody.dynamic !== true ) {
-				
-				this.interactivesOctree.remove( object );
-				
-			}
-			else {
-				
-				main.array_cautious_remove( this.interactivesDynamic, object );
-				
-			}
-			
 		}
 		
 	}

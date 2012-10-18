@@ -10,7 +10,13 @@
     
     var shared = main.shared = main.shared || {},
 		assetPath = "assets/modules/core/Actions.js",
-		_Actions = {};
+		_Actions = {},
+		actionCount = 0,
+		actionOptions = {
+			priority: 0,
+			blocking: false,
+			silencing: false
+		};
 	
 	/*===================================================
     
@@ -62,7 +68,7 @@
 	
 	/*===================================================
     
-    names
+    utility
     
     =====================================================*/
 	
@@ -87,47 +93,59 @@
 		
 	}
 	
+	function sort_priority ( a, b ) {
+		
+		return b.options.priority - a.options.priority;
+		
+	}
+	
 	/*===================================================
     
     add / remove
     
     =====================================================*/
 	
-	function add ( names, parameters ) {
+	function add ( names, parameters, clean ) {
 		
 		var i, l,
 			namesList = handle_names( names ),
 			name,
+			nameActions,
 			action;
 		
 		// remove all previous actions at names
 		
-		this.remove( namesList );
+		if ( clean === true ) {
 			
-		// create new action
-		
-		action = new Action( parameters );
+			this.remove( namesList );
+			
+		}
 		
 		// for each name
 		
 		for ( i = 0, l = namesList.length; i < l; i++ ) {
 			
 			name = namesList[ i ];
+			nameActions = this.map[ name ] = this.map[ name ] || [];
 			
-			// store new action
+			action = new Action( parameters );
 			
-			this.map[ name ] = action;
-			this.actionNames.push( name );
+			nameActions.push( action );
+			nameActions.sort( sort_priority );
+			
+			main.array_cautious_add( this.actionNames, name );
 			
 		}
-		
 	}
 	
 	function remove ( names ) {
 		
 		var i, l,
+			j, k,
 			namesList = handle_names( names ),
 			name,
+			nameActions,
+			action,
 			index;
 		
 		// for each name
@@ -138,21 +156,20 @@
 			
 			if ( this.map.hasOwnProperty( name ) ) {
 				
-				// deactivate action
+				nameActions = this.map[ name ];
 				
-				this.map[ name ].deactivate();
+				// deactivate each action
 				
-				// delete action from map
-				
-				delete this.map[ name ];
-				
-				index = main.index_of_value( this.actionNames, name );
-				
-				if ( index !== -1 ) {
+				for ( j = 0, k = nameActions.length; j < k; j++ ) {
 					
-					this.actionNames.splice( name, 1 );
+					action = nameActions[ j ];
+					
+					action.deactivate();
 					
 				}
+				
+				delete this.map[ name ];
+				main.array_cautious_remove( this.actionNames, name );
 				
 			}
 			
@@ -168,11 +185,28 @@
 	
 	function execute ( name, eventName, parameters ) {
 		
-		// if action exists
+		var i, l,
+			nameActions,
+			action,
+			executable;
 		
 		if ( this.map.hasOwnProperty( name ) ) {
 			
-			this.map[ name].execute( eventName, parameters );
+			nameActions = this.map[ name];
+			
+			for ( i = 0, l = nameActions.length; i < l; i++ ) {
+				
+				action = nameActions[ i ];
+				
+				executable = action.execute( eventName, parameters );
+				
+				if ( ( action.options.silencing === true || ( executable === true && action.options.blocking === true ) ) && action.active === true ) {
+					
+					break;
+					
+				}
+				
+			}
 		
 		}
 		
@@ -192,13 +226,21 @@
 	
 	function clear_active () {
 		
-		var i, l;
+		var i, l,
+			j, k,
+			nameActions;
 		
 		// for each action name
 		
 		for ( i = 0, l = this.actionNames.length; i < l; i++ ) {
 			
-			this.map[ this.actionNames[ i ] ].deactivate();
+			nameActions = this.map[ this.actionNames[ i ] ];
+			
+			for ( j = 0, k = nameActions.length; j < k; j++ ) {
+				
+				nameActions[ j ].deactivate();
+				
+			}
 			
 		}
 		
@@ -220,8 +262,13 @@
 		
 		parameters = parameters || {};
 		
+		// options
+		
+		this.options = $.extend( true, {}, actionOptions, parameters.options );
+		
 		// properties
 		
+		this.id = actionCount++;
 		this.eventCallbacks = parameters.eventCallbacks || {};
 		
 		deactivateCallbacks = parameters.deactivateCallbacks;
@@ -292,26 +339,14 @@
 		execute: function ( eventName, parameters ) {
 			
 			var i, l,
-				event,
-				eventCallbacks;
+				eventCallbacks,
+				executable = this.eventCallbacks.hasOwnProperty( eventName );
 			
-			// handle parameters
-			
-			parameters = parameters || {};
-			
-			event = parameters.event;
-			
-			// if eventName exists
-			
-			if ( this.eventCallbacks.hasOwnProperty( eventName ) ) {
+			if ( executable ) {
 				
-				// store eventName
+				parameters = parameters || {};
 				
-				if ( main.index_of_value( this.eventsActive, eventName ) === -1 ) {
-					
-					this.eventsActive.push( eventName );
-					
-				}
+				main.array_cautious_add( this.eventsActive, eventName );
 				
 				// execute each eventCallback
 				
@@ -323,15 +358,17 @@
 					
 				}
 				
+				// if event passed
+				
+				if ( parameters.event && parameters.allowDefault !== true ) {
+					
+					parameters.event.preventDefault();
+					
+				}
+				
 			}
 			
-			// if event passed
-			
-			if ( event && parameters.allowDefault !== true ) {
-				
-				event.preventDefault();
-				
-			}
+			return executable;
 			
 		},
 		
