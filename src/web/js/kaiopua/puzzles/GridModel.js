@@ -41,7 +41,7 @@
 		// properties
 		
 		_GridModel.options = {
-			intersectable: false
+			//intersectable: false
 		};
 		
 		// instance
@@ -68,15 +68,16 @@
 		parameters = parameters || {};
 		
 		gridElement = parameters.gridElement;
-		parameters.container = parameters.container || gridElement.container;
+		parameters.container = parameters.container || ( gridElement ? gridElement.container : {} );
 		parameters.material = parameters.material || gridElement.material;
 		parameters.geometry = parameters.geometry || gridElement.geometry;
+		
+		parameters.options = $.extend( true, {}, _GridModel.options, parameters.options );
+		parameters.container.options = $.extend( true, {}, _GridModel.options, parameters.container.options );
 		
 		// proto
 		
 		_Model.Instance.call( this, parameters.container );
-		
-		this.options = $.extend( true, this.options || {}, _GridModel.options, parameters.options );
 		
 		// core
 		

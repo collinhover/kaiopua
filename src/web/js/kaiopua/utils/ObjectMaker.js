@@ -102,7 +102,10 @@
 		instance = new _Model.Instance( {
             geometry: new THREE.CubeGeometry( 100, 100, 100 ),
 			material: material,
-			shading: THREE.SmoothShading
+			shading: THREE.SmoothShading,
+			options: {
+				intersectable: false
+			}
         }, instance );
         
         return instance;

@@ -357,11 +357,16 @@
 	
 	function zoom ( e ) {
 		
-		var eo = e.originalEvent || e,
-			wheelDelta = eo.wheelDelta;
-		
-		this.boundRadiusMod -= wheelDelta * ( this.options.boundRadiusModSpeed / this.boundRadiusPct );
-		
+		if ( e ) {
+			
+			e = e.event ? e.event : e;
+			
+			var eo = e.originalEvent || e,
+				wheelDelta = eo.wheelDelta;
+			
+			this.boundRadiusMod -= wheelDelta * ( this.options.boundRadiusModSpeed / this.boundRadiusPct );
+			
+		}
 	}
 	
 	function zoom_update() {

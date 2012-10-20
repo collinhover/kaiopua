@@ -437,7 +437,7 @@
 			}
 			else {
 				
-				module.occupant = undefined;
+				module.set_occupant();
 				
 			}
 			

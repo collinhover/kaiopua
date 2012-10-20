@@ -452,6 +452,8 @@
 				
 				model.parent.remove( model );
 				
+				model.set_intersectable( false, true );
+				
 			}
 			
 		}
@@ -512,7 +514,9 @@
 						model = this.modelsCurrent[ modelCount ];
 						modelCount++;
 						
-						layoutModule.occupant = model;
+						model.set_intersectable( true, true );
+						
+						layoutModule.set_occupant( model );
 						
 						// grow core
 						
@@ -539,7 +543,7 @@
 			
 			if ( layoutModule instanceof _GridModule.Instance ) {
 				
-				layoutModule.occupant = undefined;
+				layoutModule.set_occupant();
 				
 			}
 			
@@ -763,14 +767,9 @@
 			
 		if ( this.testModule !== testModule ) {
 			
-			/*// if no new test module add to current module
-			if ( testModule instanceof _GridModule.Instance !== true && this.hasModule ) {
-				
-				add_models.call( this );
-				
-			}
 			// remove models from current module
-			else */if ( this.testModule !== this.module ) {
+			
+			if ( this.testModule !== this.module ) {
 				
 				remove_models.call( this, this.models );
 				
@@ -979,10 +978,7 @@
 					model = this.models[ modelCount ];
 					modelCount++;
 					
-					// add
-					
-					// TODO: why is adding model so performance heavy?
-					console.log( 'main scene octree contains model? ', main.index_of_value( main.scene.octree.objects, model ), ' module contains model? ', testLayoutModule.children.indexOf( model ) );
+					model.set_intersectable( false, true );
 					
 					testLayoutModule.add( model );
 					testLayoutModule.show_state( 'occupied', success );

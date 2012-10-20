@@ -45,7 +45,6 @@
 		
 		_MorphAnimator.options = {
 			duration: 1000,
-			durationPerFrameMin: shared.timeDeltaExpected || 1000 / 60,
 			durationClear: 125,
 			direction: 1,
 			interpolationDirection: 1,
@@ -103,14 +102,36 @@
 		
 		this.frameLast = main.is_number( this.frameLast ) ? this.frameLast : -1;
 		
-		if ( this.options.direction === -1 ) {
+		if ( this.cleared !== true && main.is_number( this.frame ) ) {
 			
-			this.frame = this.map.length - 1;
+			if ( this.options.direction === -1 ) {
+				
+				if ( this.frame < 0 ) {
+					
+					this.frame = this.map.length - 1;
+					
+				}
+				
+			}
+			else if ( this.frame >= this.map.length ) {
+				
+				this.frame = 0;
+				
+			}
 			
 		}
 		else {
 			
-			this.frame = 0;
+			if ( this.options.direction === -1 ) {
+				
+				this.frame = this.map.length - 1;
+				
+			}
+			else {
+				
+				this.frame = 0;
+				
+			}
 			
 		}
 		
@@ -136,10 +157,11 @@
 		
 	}
 	
-	function change ( parameters ) {
+	function change ( changes ) {
 		
-		var changes = $.extend( {}, parameters ),
-			duration,
+		changes = changes || {};
+		
+		var duration,
 			durationNew = changes.duration,
 			timeFromStart,
 			cyclePct,
@@ -150,7 +172,7 @@
 		
 		// duration
 		
-		if ( main.is_number( durationNew ) && this.durationOriginal !== durationNew && ( changes.duration / this.map.length ) > _MorphAnimator.options.durationPerFrameMin ) {
+		if ( main.is_number( durationNew ) && this.durationOriginal !== durationNew ) {
 			
 			duration = this.options.duration;
 			timeFromStart = this.time - this.timeStart;
@@ -170,6 +192,8 @@
 			framePct = this.frameTimeDelta / frameDuration;
 			
 			this.frameTimeDelta = frameDurationNew * framePct;
+			
+			this.durationOriginal = durationNew;
 			
 		}
 		
@@ -197,21 +221,25 @@
 	
 	function play ( parameters ) {
 		
-		this.change( parameters );
+		if ( this.clearing === true ) {
+			
+			this.clearing = false;
+			
+			this.recycle();
+			
+		}
 		
-		this.clearing = false;
+		this.change( parameters );
 		
 		// solo
 		
-		if ( this.options.solo === true ) {
+		if ( this.options.solo === true && this.morphs.animatingNames.length > 1 ) {
 			
 			this.morphs.clear_all( { duration: this.options.durationClear }, this.name );
 			
 		}
 		
 		if ( this.animating !== true && typeof this.startTimeoutHandle === 'undefined' && typeof this.loopTimeoutHandle === 'undefined' ) {
-			
-			this.durationOriginal = this.options.duration;
 			
 			// prepare
 			
@@ -270,6 +298,23 @@
 			
 		}
 		else {
+			
+			// one time callback
+			
+			if ( typeof this.options.oneComplete === 'function' ) {
+				
+				this.options.onceComplete();
+				delete this.options.oneComplete;
+				
+			}
+			
+			// callback
+			
+			if ( typeof this.options.onComplete === 'function' ) {
+				
+				this.options.onComplete();
+				
+			}
 			
 			// properties
 			
@@ -362,6 +407,8 @@
 		
 		var duration;
 		
+		clear_delays.call( this );
+		
 		if ( this.cleared !== true ) {
 			
 			parameters = parameters || {};
@@ -371,12 +418,10 @@
 			
 			if ( main.is_number( duration ) && duration > 0 ) {
 				
-				// if not already clearing over duration
-				
 				if ( this.clearing !== true || this.options.duration !== duration ) {
 					
-					this.options.duration = duration;
 					this.clearing = true;
+					this.change( parameters );
 					
 					this.recycle().resume();
 					
@@ -386,6 +431,23 @@
 			else {
 				
 				this.reset();
+				
+				// one time callback
+				
+				if ( typeof this.options.oneClear === 'function' ) {
+					
+					this.options.oneClear();
+					delete this.options.oneClear;
+					
+				}
+				
+				// callback
+				
+				if ( typeof this.options.onClear === 'function' ) {
+					
+					this.options.onClear();
+					
+				}
 				
 			}
 			
@@ -401,6 +463,7 @@
 			mesh = this.morphs.mesh,
 			influences = mesh.morphTargetInfluences,
 			map = this.map;
+		
 		this.stop().prepare();
 			
 		for ( i = 0, l = map.length; i < l; i ++ ) {
@@ -410,6 +473,8 @@
 		}
 		
 		this.cleared = true;
+		
+		this.morphs.remove( this.name );
 		
 		return this;
 		
@@ -620,4 +685,4 @@
 		
 	}
 		
-} ( KAIOPUA ) );
+} (KAIOPUA) );

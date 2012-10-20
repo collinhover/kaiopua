@@ -14,6 +14,7 @@
 		_Model = {},
 		_Morphs,
 		_RigidBody,
+		_SceneHelper,
 		_ObjectHelper,
 		objectCount = 0;
 	
@@ -28,6 +29,7 @@
 		requirements: [
 			"js/kaiopua/core/Morphs.js",
 			"js/kaiopua/physics/RigidBody.js",
+			"js/kaiopua/utils/SceneHelper.js",
 			"js/kaiopua/utils/ObjectHelper.js"
 		], 
 		callbacksOnReqs: init_internal,
@@ -40,10 +42,11 @@
     
     =====================================================*/
 	
-	function init_internal ( m, rb, oh ) {
+	function init_internal ( m, rb, sh, oh ) {
 		console.log('internal model', _Model);
 		_Morphs = m;
 		_RigidBody = rb;
+		_SceneHelper = sh;
 		_ObjectHelper = oh;
 		
 		// properties
@@ -64,6 +67,8 @@
 		_Model.Instance.prototype.constructor = _Model.Instance;
 		_Model.Instance.prototype.clone = clone;
 		
+		_Model.Instance.prototype.set_intersectable = set_intersectable;
+		
 		Object.defineProperty( _Model.Instance.prototype, 'interactive', { 
 			get : function () { return this.options.interactive; }
 		} );
@@ -73,25 +78,7 @@
 		} );
 		
 		Object.defineProperty( _Model.Instance.prototype, 'intersectable', { 
-			get : function () { return this.options.intersectable; },
-			set : function ( intersectable ) {
-				
-				if( this.options.intersectable !== intersectable ) {
-					
-					this.options.intersectable = intersectable;
-					
-					// when in scene, remove from parent and add again to account for intersectable change
-					
-					if ( this.parent instanceof THREE.Object3D ) {
-						
-						this.parent.remove( this );
-						this.parent.add( this );
-					
-					}
-					
-				}
-				
-			}
+			get : function () { return this.options.intersectable; }
 		} );
 		
 		Object.defineProperty( _Model.Instance.prototype, 'gravityBody', { 
@@ -452,6 +439,72 @@
 		}
 		
 		return c;
+		
+	}
+	
+	/*===================================================
+	
+	intersectable
+	
+	=====================================================*/
+	
+	function set_intersectable ( intersectable, cascade ) {
+		
+		var i, l,
+			intersectablePrev = this.options.intersectable,
+			child,
+			parent;
+		
+		// when in scene, remove from parent and add again to account for intersectable change
+		
+		if( intersectablePrev !== intersectable ) {
+			
+			parent = this.parent;
+			
+			if ( parent instanceof THREE.Object3D ) {
+				
+				parent.remove( this );
+				
+			}
+			
+		}
+		
+		// modify value
+		
+		this.options.intersectable = intersectable;
+		
+		if ( cascade === true ) {
+			
+			// get all descendants first, as not all may be instanceof Model
+			
+			children = _SceneHelper.extract_children_from_objects( this );
+			
+			for ( i = 0, l = children.length; i < l; i++ ) {
+				
+				child = this.children[ i ];
+				
+				if ( child instanceof Model ) {
+					
+					child.options.intersectable = intersectable;
+					
+				}
+				else {
+					
+					child.intersectable = intersectable;
+					
+				}
+				
+			}
+			
+		}
+		
+		// add back again if removed
+		
+		if ( parent instanceof THREE.Object3D ) {
+			
+			parent.add( this );
+		
+		}
 		
 	}
     

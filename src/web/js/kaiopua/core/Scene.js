@@ -111,11 +111,11 @@
 					
 				}
 				
-			}
-			
-			if ( object.rigidBody instanceof _RigidBody.Instance ) {
-				
-				this.physics.add( object );
+				if ( object.rigidBody instanceof _RigidBody.Instance ) {
+					
+					this.physics.add( object );
+					
+				}
 				
 			}
 			
@@ -154,11 +154,11 @@
 					
 				}
 				
-			}
-				
-			if ( object.rigidBody instanceof _RigidBody.Instance ) {
-				
-				this.physics.remove( object );
+				if ( object.rigidBody instanceof _RigidBody.Instance ) {
+					
+					this.physics.remove( object );
+					
+				}
 				
 			}
 			

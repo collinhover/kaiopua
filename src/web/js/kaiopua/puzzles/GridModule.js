@@ -122,8 +122,7 @@
 		});
 		
 		Object.defineProperty( _GridModule.Instance.prototype, 'occupant', { 
-			get: function () { return this._occupant; },
-			set: function ( occupant ) { this.set_occupant( occupant ); }
+			get: function () { return this._occupant; }
 		});
 		
 		Object.defineProperty( _GridModule.Instance.prototype, 'occupied', { 
@@ -233,7 +232,7 @@
 		
 		// clear occupant
 		
-		this.occupant = undefined;
+		this.set_occupant();
 		
 	}
 	

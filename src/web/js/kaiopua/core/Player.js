@@ -155,11 +155,9 @@
 		parameters.physics.bodyType = 'capsule';
 		parameters.physics.movementDamping = 0.5;
 		
+		parameters.options = $.extend( true, {}, _Player.options, parameters.options );
+		
 		_Character.Instance.call( this, parameters );
-		
-		// options
-		
-		this.options = $.extend( true, this.options || {}, _Player.options, parameters.options );
 		
 		// default keybindings
 		
@@ -330,6 +328,7 @@
 				dragstart: $.proxy( main.cameraControls.rotate_start, main.cameraControls ),
 				drag: $.proxy( main.cameraControls.rotate, main.cameraControls  ),
 				dragend: $.proxy( main.cameraControls.rotate_stop, main.cameraControls  ),
+				wheel: $.proxy( main.cameraControls.zoom, main.cameraControls  )
 			},
 			activeCheck: function () {
 				return main.cameraControls.rotating;
@@ -467,17 +466,17 @@
 		
 		// signals
 		
-		shared.signals.onGamePointerMoved.add( trigger_key, this );
-		shared.signals.onGamePointerTapped.add( trigger_key, this );
-		shared.signals.onGamePointerDoubleTapped.add( trigger_key, this );
-		shared.signals.onGamePointerHeld.add( trigger_key, this );
-		shared.signals.onGamePointerDragStarted.add( trigger_key, this );
-		shared.signals.onGamePointerDragged.add( trigger_key, this );
-		shared.signals.onGamePointerDragEnded.add( trigger_key, this );
-		shared.signals.onGamePointerWheel.add( trigger_key, this );
+		shared.signals.onGamePointerMoved.add( this.trigger_key, this );
+		shared.signals.onGamePointerTapped.add( this.trigger_key, this );
+		shared.signals.onGamePointerDoubleTapped.add( this.trigger_key, this );
+		shared.signals.onGamePointerHeld.add( this.trigger_key, this );
+		shared.signals.onGamePointerDragStarted.add( this.trigger_key, this );
+		shared.signals.onGamePointerDragged.add( this.trigger_key, this );
+		shared.signals.onGamePointerDragEnded.add( this.trigger_key, this );
+		shared.signals.onGamePointerWheel.add( this.trigger_key, this );
 		
-		shared.signals.onKeyPressed.add( trigger_key, this );
-		shared.signals.onKeyReleased.add( trigger_key, this );
+		shared.signals.onKeyPressed.add( this.trigger_key, this );
+		shared.signals.onKeyReleased.add( this.trigger_key, this );
 		
 	}
 	
@@ -485,17 +484,17 @@
 		
 		// signals
 		
-		shared.signals.onGamePointerMoved.remove( trigger_key, this );
-		shared.signals.onGamePointerTapped.remove( trigger_key, this );
-		shared.signals.onGamePointerDoubleTapped.remove( trigger_key, this );
-		shared.signals.onGamePointerHeld.remove( trigger_key, this );
-		shared.signals.onGamePointerDragStarted.remove( trigger_key, this );
-		shared.signals.onGamePointerDragged.remove( trigger_key, this );
-		shared.signals.onGamePointerDragEnded.remove( trigger_key, this );
-		shared.signals.onGamePointerWheel.remove( trigger_key, this );
+		shared.signals.onGamePointerMoved.remove( this.trigger_key, this );
+		shared.signals.onGamePointerTapped.remove( this.trigger_key, this );
+		shared.signals.onGamePointerDoubleTapped.remove( this.trigger_key, this );
+		shared.signals.onGamePointerHeld.remove( this.trigger_key, this );
+		shared.signals.onGamePointerDragStarted.remove( this.trigger_key, this );
+		shared.signals.onGamePointerDragged.remove( this.trigger_key, this );
+		shared.signals.onGamePointerDragEnded.remove( this.trigger_key, this );
+		shared.signals.onGamePointerWheel.remove( this.trigger_key, this );
 		
-		shared.signals.onKeyPressed.remove( trigger_key, this );
-		shared.signals.onKeyReleased.remove( trigger_key, this );
+		shared.signals.onKeyPressed.remove( this.trigger_key, this );
+		shared.signals.onKeyReleased.remove( this.trigger_key, this );
 		
 		// clear keys
 		

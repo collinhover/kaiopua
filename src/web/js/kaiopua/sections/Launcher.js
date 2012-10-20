@@ -138,7 +138,11 @@
 		
 		sky = new _Sky.Instance( {
 			numClouds: 30,
-			cloudParameters: {},
+			cloudParameters: {
+				options: {
+					intersectable: false
+				}
+			},
 			cloudScaleMax: 8,
 			cloudOpacityByDistance: 1,
 			cloudBoundRadius: 5000,

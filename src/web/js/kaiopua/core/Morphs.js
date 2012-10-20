@@ -59,6 +59,7 @@
 		_Morphs.Instance.prototype.stop_all = stop_all;
 		_Morphs.Instance.prototype.clear = clear;
 		_Morphs.Instance.prototype.clear_all = clear_all;
+		_Morphs.Instance.prototype.remove = remove;
 		
 		_Morphs.Instance.prototype.stabilize = stabilize;
 		
@@ -140,6 +141,7 @@
 		
 		this.animators = {};
 		this.animatorNames = [];
+		this.animatingNames = [];
 		
 		this.stabilize();
 		
@@ -160,6 +162,7 @@
 			map,
 			animators,
 			animatorNames,
+			animatingNames,
 			animator,
 			index = main.index_of_value( names, name );
 		
@@ -168,6 +171,7 @@
 			maps = this.maps;
 			animators = this.animators;
 			animatorNames = this.animatorNames;
+			animatingNames = this.animatingNames;
 			
 			name = names[ index ];
 			map = maps[ name ];
@@ -179,6 +183,8 @@
 				animatorNames.push( name );
 				
 			}
+			
+			main.array_cautious_add( animatingNames, name );
 			
 			animator = animators[ name ];
 			
@@ -220,18 +226,22 @@
 	function stop_all ( parameters, except ) {
 		
 		var i, l,
-			animatorNames = this.animatorNames,
+			animatingNames = this.animatingNames,
 			name;
-			
-		except = main.to_array( except );
 		
-		for ( i = 0, l = animatorNames.length; i < l; i++ ) {
-			
-			name = animatorNames[ i ];
-			
-			if ( main.index_of_value( except, name ) === -1 ) {
+		if ( animatingNames.length > 0 ) {
 				
-				this.stop( name, parameters );
+			except = main.to_array( except );
+			
+			for ( i = 0, l = animatingNames.length; i < l; i++ ) {
+				
+				name = animatingNames[ i ];
+				
+				if ( main.index_of_value( except, name ) === -1 ) {
+					
+					this.stop( name, parameters );
+					
+				}
 				
 			}
 			
@@ -265,24 +275,34 @@
 	function clear_all ( parameters, except ) {
 		
 		var i, l,
-			animatorNames = this.animatorNames,
+			animatingNames = this.animatingNames,
 			name;
-			
-		except = main.to_array( except );
 		
-		for ( i = 0, l = animatorNames.length; i < l; i++ ) {
-			
-			name = animatorNames[ i ];
-			
-			if ( main.index_of_value( except, name ) === -1 ) {
+		if ( animatingNames.length > 0 ) {
 				
-				this.clear( name, parameters );
+			except = main.to_array( except );
+			
+			for ( i = 0, l = animatingNames.length; i < l; i++ ) {
+				
+				name = animatingNames[ i ];
+				
+				if ( main.index_of_value( except, name ) === -1 ) {
+					
+					this.clear( name, parameters );
+					
+				}
 				
 			}
 			
 		}
 		
 		return this;
+		
+	}
+	
+	function remove ( name ) {
+		
+		main.array_cautious_remove( this.animatingNames, name );
 		
 	}
 	
@@ -389,6 +409,12 @@
 	function sort_map ( a, b ) {
 		
 		return a.number - b.number;
+		
+	}
+	
+	function remove_animator ( animator ) {
+		
+		
 		
 	}
 	

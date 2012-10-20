@@ -232,6 +232,7 @@
 		// handle parameters
 		
 		parameters = parameters || {};
+		parameters.options = $.extend( true, {}, _Character.options, parameters.options );
 		
 		// physics
 		
@@ -246,10 +247,6 @@
 		// prototype constructor
 		
 		_Model.Instance.call( this, parameters );
-		
-		// options
-		
-		this.options = $.extend( true, this.options || {}, _Character.options, parameters.options );
 		
 		stats = this.options.stats;
 		movement = this.options.movement;

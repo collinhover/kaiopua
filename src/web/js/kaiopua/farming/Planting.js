@@ -803,19 +803,7 @@
 				
 				// show last test between plant and module
 				
-				
-				
-				
-				
-				
-				
-				// TODO: why is show_last_modules_tested destroying performance?
-				
 				this.plant.show_last_modules_tested();
-				
-				
-				
-				
 				
 			}
 		

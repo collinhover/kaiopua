@@ -12,12 +12,10 @@
 		assetPath = "js/kaiopua/sections/Intro.js",
 		intro = {},
 		_WorldIsland,
-		_Player,
 		_Model,
 		_ObjectHelper,
         _ready = false,
 		waitingToShow = false,
-		player,
 		world,
 		skybox,
 		ambient,
@@ -40,7 +38,6 @@
 		data: intro,
 		requirements: [
 			"js/kaiopua/env/WorldIsland.js",
-			"js/kaiopua/core/Player.js",
 			"js/kaiopua/core/Model.js",
 			"js/kaiopua/utils/ObjectHelper.js"
 		],
@@ -54,14 +51,13 @@
     
     =====================================================*/
 	
-	function init_internal ( w, p, m, oh ) {
+	function init_internal ( w, m, oh ) {
 		console.log('internal intro');
 		if ( _ready !== true ) {
 			
 			// assets
 			
 			_WorldIsland = w;
-			_Player = p;
 			_Model = m;
 			_ObjectHelper = oh;
 			
@@ -99,23 +95,14 @@
 		
 		if ( _ready === true ) {
 			
-			// camera
-			
 			_ObjectHelper.revert_change( main.cameraControls.options, true );
 			main.cameraControls.enabled = true;
 			main.cameraControls.controllable = false;
 			
-			// add world
-			
 			world.show();
 			
-			// TODO: player created in main or game, not in intro
-			
-			player = new _Player.Instance();
-			player.respawn( main.scene, new THREE.Vector3( 35, 2200, 300 ) );
-			player.enable();
-			
-			// signals
+			main.player.respawn( main.scene, new THREE.Vector3( 35, 2200, 300 ) );
+			main.player.enable();
 			
 			shared.signals.onWindowResized.add( resize );
 			shared.signals.onGameUpdated.add( update );
@@ -143,9 +130,7 @@
 		
 		if ( _ready === true ) {
 			
-			main.scene.remove( player );
-			
-			// hide world
+			main.scene.remove( main.player );
 			
 			world.hide();
 			

@@ -56,6 +56,10 @@
 		
 		// properties
 		
+		_Sky.options = {
+			intersectable: false
+		}
+		
 		_Sky.numClouds = 10;
 		_Sky.cloudInitAxis = new THREE.Vector3( 0, 1, 0 );
 		_Sky.cloudInitAngle = 0;
@@ -115,6 +119,7 @@
 		// handle parameters
 		
 		parameters = parameters || {};
+		parameters.options = $.extend( true, {}, _Sky.options, parameters.options );
 		
 		// prototype constructor
 		
