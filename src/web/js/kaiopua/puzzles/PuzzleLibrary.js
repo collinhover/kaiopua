@@ -24,7 +24,15 @@
 		data: _PuzzleLibrary,
 		requirements: [
 			"js/kaiopua/puzzles/Puzzle.js",
-			"js/kaiopua/farming/Dirt.js"
+			"js/kaiopua/farming/Dirt.js",
+			{ path: "asset/model/Puzzle_Tutorial.js", type: 'model' },
+			{ path: "asset/model/Puzzle_Tutorial_Grid.js", type: 'model' },
+			{ path: "asset/model/Puzzle_Tutorial_Toggle.js", type: 'model' },
+			{ path: "asset/model/Puzzle_Rolling_Hills.js", type: 'model' },
+			{ path: "asset/model/Puzzle_Rolling_Hills_Grid.js", type: 'model' },
+			{ path: "asset/model/Puzzle_Rolling_Hills_Toggle.js", type: 'model' },
+			{ path: "asset/model/Puzzle_Basics_Abilities.js", type: 'model' },
+			{ path: "asset/model/Puzzle_Basics_Abilities_Grid.js", type: 'model' }
 		],
 		callbacksOnReqs: init_internal,
 		wait: true

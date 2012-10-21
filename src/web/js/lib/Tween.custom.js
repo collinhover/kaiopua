@@ -119,27 +119,35 @@ TWEEN.Tween = function ( object ) {
 		
 		_startTime = time !== undefined ? time : Date.now();
 		_startTime += _delayTime;
-
-		for ( var property in _valuesEnd ) {
-
+		
+		var keys = Object.keys( _valuesEnd );
+		
+		for ( var i = 0, l = keys.length; i < l; i++ ) {
+			
+			var property = keys[ i ];
+			
 			// This prevents the engine from interpolating null values
-			if ( _valuesEnd.hasOwnProperty( property ) !== true || _object[ property ] === null ) {
+			
+			if ( _object[ property ] === null ) {
 
 				continue;
 
 			}
-
+			
+			var valueEnd = _valuesEnd[ property ];
+			
 			// check if an Array was provided as property value
-			if ( _valuesEnd[ property ] instanceof Array ) {
+			if ( valueEnd instanceof Array ) {
 
-				if ( _valuesEnd[ property ].length === 0 ) {
-
+				if ( valueEnd.length === 0 ) {
+					
 					continue;
-
+					
 				}
 
 				// create a local copy of the Array with the start value at the front
-				_valuesEnd[ property ] = [ _object[ property ] ].concat( _valuesEnd[ property ] );
+				
+				_valuesEnd[ property ] = [ _object[ property ] ].concat( valueEnd );
 
 			}
 

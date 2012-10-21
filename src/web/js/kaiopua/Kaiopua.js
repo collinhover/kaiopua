@@ -34,6 +34,8 @@ var KAIOPUA = (function (main) {
 	shared.throttleTimeLong = 250;
 	shared.focused = true;
 	
+	shared.fadeBetweenSections = true;
+	
 	shared.domFadeTime = 500;
 	shared.domCollapseTime = 500;
 	shared.domScrollTime = 500;
@@ -46,27 +48,20 @@ var KAIOPUA = (function (main) {
 		_ErrorHandler,
 		_Scene,
 		_CameraControls,
-		_World,
+		_UI,
 		_UIQueue,
-		_MathHelper,
-		_RayHelper,
-		_Messenger,
 		_Player,
-        renderer, 
-        renderTarget,
+		_Launcher,
+		_Intro,
 		renderComposer,
         renderPasses,
 		setup = false,
 		ready = false,
 		started = false,
         paused = false,
-		pausedWithoutControl = false,
 		pausedByFocusLoss = false,
-        currentSection, 
-        previousSection,
 		transitionTime = 500,
 		navStartDelayTime = 500,
-		sectionChangePauseTime = 500,
         libsPrimaryList = [
             "js/lib/RequestAnimationFrame.js",
             "js/lib/RequestInterval.js",
@@ -104,17 +99,8 @@ var KAIOPUA = (function (main) {
 		assetsGameCore = [
 			"js/kaiopua/core/Scene.js",
 			"js/kaiopua/core/CameraControls.js",
-			"js/kaiopua/env/World.js",
-			"js/kaiopua/ui/UIQueue.js",
-			"js/kaiopua/utils/MathHelper.js",
-			"js/kaiopua/utils/RayHelper.js",
-			"js/kaiopua/core/Model.js",
-			"js/kaiopua/physics/Physics.js",
-			"js/kaiopua/physics/RigidBody.js",
-			"js/kaiopua/utils/VectorHelper.js",
-			"js/kaiopua/utils/SceneHelper.js",
-			"js/kaiopua/utils/ObjectHelper.js",
-			"js/kaiopua/utils/PhysicsHelper.js"
+			"js/kaiopua/ui/UI.js",
+			"js/kaiopua/ui/UIQueue.js"
 		],
         assetsGameLauncher = [
             "js/kaiopua/sections/Launcher.js"
@@ -122,72 +108,7 @@ var KAIOPUA = (function (main) {
         assetsGameExtras = [
 			"js/kaiopua/sections/Intro.js",
 			"js/kaiopua/core/Player.js",
-			"js/kaiopua/core/Actions.js",
-			"js/kaiopua/core/Character.js",
-			"js/kaiopua/env/World.js",
-			"js/kaiopua/env/WorldIsland.js",
-			"js/kaiopua/env/Water.js",
-			"js/kaiopua/env/Sky.js",
-			"js/kaiopua/puzzles/Puzzle.js",
-			"js/kaiopua/puzzles/PuzzleLibrary.js",
-			"js/kaiopua/puzzles/Grid.js",
-			"js/kaiopua/puzzles/GridModule.js",
-			"js/kaiopua/puzzles/GridModuleState.js",
-			"js/kaiopua/puzzles/GridModel.js",
-			"js/kaiopua/puzzles/GridElement.js",
-			"js/kaiopua/puzzles/GridElementLibrary.js",
-			"js/kaiopua/farming/Planting.js",
-			"js/kaiopua/farming/Dirt.js",
-			"js/kaiopua/utils/ObjectMaker.js",
-            { path: "asset/model/Whale.js", type: 'model' },
-			{ path: "asset/model/Hero.js", type: 'model' },
-			{ path: "asset/model/Sun.js", type: 'model' },
-			{ path: "asset/model/Cloud_001.js", type: 'model' },
-			{ path: "asset/model/Cloud_002.js", type: 'model' },
-			{ path: "asset/model/Hut.js", type: 'model' },
-			{ path: "asset/model/Hut_Hill.js", type: 'model' },
-			{ path: "asset/model/Hut_Steps.js", type: 'model' },
-			{ path: "asset/model/Bed.js", type: 'model' },
-			{ path: "asset/model/Banana_Leaf_Door.js", type: 'model' },
-			{ path: "asset/model/Surfboard.js", type: 'model' },
-			{ path: "asset/model/Grass_Clump_001.js", type: 'model' },
-			{ path: "asset/model/Grass_Clump_002.js", type: 'model' },
-			{ path: "asset/model/Grass_Line_001.js", type: 'model' },
-			{ path: "asset/model/Grass_Line_002.js", type: 'model' },
-			{ path: "asset/model/Palm_Tree.js", type: 'model' },
-			{ path: "asset/model/Palm_Trees.js", type: 'model' },
-			{ path: "asset/model/Kukui_Tree.js", type: 'model' },
-			{ path: "asset/model/Kukui_Trees.js", type: 'model' },
-			{ path: "asset/model/Plant_Dirt_Mound.js", type: 'model' },
-			{ path: "asset/model/Plant_Seed.js", type: 'model' },
-			{ path: "asset/model/Plant_Taro.js", type: 'model' },
-			{ path: "asset/model/Plant_Pineapple.js", type: 'model' },
-			{ path: "asset/model/Plant_Rock.js", type: 'model' },
-			{ path: "asset/model/Plant_Rock_Purple.js", type: 'model' },
-			{ path: "asset/model/Plant_Rock_Blue.js", type: 'model' },
-			{ path: "asset/model/Volcano_Large.js", type: 'model' },
-			{ path: "asset/model/Volcano_Small.js", type: 'model' },
-			{ path: "asset/model/Volcano_Rocks_001.js", type: 'model' },
-			{ path: "asset/model/Volcano_Rocks_002.js", type: 'model' },
-			{ path: "asset/model/Volcano_Rocks_003.js", type: 'model' },
-			{ path: "asset/model/Volcano_Rocks_004.js", type: 'model' },
-			{ path: "asset/model/Volcano_Rocks_005.js", type: 'model' },
-			{ path: "asset/model/Puzzle_Tutorial.js", type: 'model' },
-			{ path: "asset/model/Puzzle_Tutorial_Grid.js", type: 'model' },
-			{ path: "asset/model/Puzzle_Tutorial_Toggle.js", type: 'model' },
-			{ path: "asset/model/Puzzle_Rolling_Hills.js", type: 'model' },
-			{ path: "asset/model/Puzzle_Rolling_Hills_Grid.js", type: 'model' },
-			{ path: "asset/model/Puzzle_Rolling_Hills_Toggle.js", type: 'model' },
-			{ path: "asset/model/Puzzle_Basics_Abilities.js", type: 'model' },
-			{ path: "asset/model/Puzzle_Basics_Abilities_Grid.js", type: 'model' },
-			"asset/texture/skybox_world_posx.jpg",
-            "asset/texture/skybox_world_negx.jpg",
-			"asset/texture/skybox_world_posy.jpg",
-            "asset/texture/skybox_world_negy.jpg",
-			"asset/texture/skybox_world_posz.jpg",
-            "asset/texture/skybox_world_negz.jpg",
-            "asset/texture/water_world_512.png",
-            "asset/texture/dirt_128.jpg"
+			{ path: "asset/model/Hero.js", type: 'model' }
         ];
 	
 	/*===================================================
@@ -204,20 +125,19 @@ var KAIOPUA = (function (main) {
     
     function init () {
 		
-		shared.domElements = {};
+		shared.domElements = shared.domElements || {};
+		shared.domElements.$game = $('#game');
 		shared.domElements.$statusInactive = $( '#statusInactive' );
 		shared.domElements.$statusActive = $( '#statusActive' );
 		shared.domElements.$statusItems = $('.status-item');
 		
-		shared.supports = {};
+		shared.supports = shared.supports || {};
 		shared.supports.pointerEvents = css_property_supported( 'pointer-events' );
        
         shared.signals = {
 			
 			onFocusLost: new signals.Signal(),
 			onFocusGained: new signals.Signal(),
-			
-			onScrolled: new signals.Signal(),
     
             onKeyPressed : new signals.Signal(),
             onKeyReleased : new signals.Signal(),
@@ -263,6 +183,32 @@ var KAIOPUA = (function (main) {
 			.on( 'resize', $.throttle( shared.throttleTimeLong, on_window_resized ) );
 		
 		window.onerror = on_error;
+		
+		// pause / resume on focus
+		
+		shared.signals.onFocusLost.add( function () {
+			
+			if ( paused !== true ) {
+				
+				pausedByFocusLoss = true;
+			
+			}
+			
+			pause( true );
+			
+		} );
+		
+		shared.signals.onFocusGained.add( function () {
+			
+			if ( pausedByFocusLoss === true ) {
+				
+				pausedByFocusLoss = false;
+				
+				resume();
+				
+			}
+			
+		} );
 	
 		// loader
 		
@@ -367,8 +313,6 @@ var KAIOPUA = (function (main) {
 		main.start = start;
 		main.resume = resume;
 		main.pause = pause;
-		
-		main.get_pointer_intersection = get_pointer_intersection;
 		
 		// getters and setters
 		
@@ -511,16 +455,12 @@ var KAIOPUA = (function (main) {
 		
 		// renderer
 		
-        renderer = new THREE.WebGLRenderer( { clearColor: 0x000000, clearAlpha: 0, maxLights: 4 } );
-        renderer.setSize( shared.gameWidth, shared.gameHeight );
-        renderer.autoClear = false;
+        shared.renderer = new THREE.WebGLRenderer( { clearColor: 0x000000, clearAlpha: 0, maxLights: 4 } );
+        shared.renderer.setSize( shared.gameWidth, shared.gameHeight );
+        shared.renderer.autoClear = false;
 		
         // render target
-        renderTarget = new THREE.WebGLRenderTarget( shared.gameWidth, shared.gameHeight, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter } );
-        
-        // share renderer
-        shared.renderer = renderer;
-        shared.renderTarget = renderTarget;
+        shared.renderTarget = new THREE.WebGLRenderTarget( shared.gameWidth, shared.gameHeight, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter } );
 		
     }
 	
@@ -530,47 +470,43 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
     
-    function init_setup ( sc, cc, w, uiq, mh, rh ) {
+    function init_setup ( sc, cc, ui, uiq ) {
 		console.log('GAME: setup');
 		// utility
 		
 		_Scene = sc;
 		_CameraControls = cc;
-		_World = w;
+		_UI = ui;
 		_UIQueue = uiq;
-		_MathHelper = mh;
-		_RayHelper = rh;
 		
 		// scenes
 		
-		main.scene = new _Scene.Instance();
-		main.sceneBG = new _Scene.Instance();
+		shared.scene = new _Scene.Instance();
+		shared.sceneBG = new _Scene.Instance();
 		
         // fog
 		
-        main.scene.fog = undefined;
+        shared.scene.fog = undefined;
 		
 		// physics
 		
-		main.physics = main.scene.physics;
+		main.physics = shared.scene.physics;
 		
 		// camera
 		
-		main.camera = new THREE.PerspectiveCamera(60, shared.gameWidth / shared.gameHeight, 1, 20000);
-		main.cameraBG = new THREE.PerspectiveCamera(60, shared.gameWidth / shared.gameHeight, 1, 20000);
-		main.camera.useQuaternion = main.cameraBG.useQuaternion = true;
+		shared.camera = new THREE.PerspectiveCamera(60, shared.gameWidth / shared.gameHeight, 1, 20000);
+		shared.cameraBG = new THREE.PerspectiveCamera(60, shared.gameWidth / shared.gameHeight, 1, 20000);
+		shared.camera.useQuaternion = shared.cameraBG.useQuaternion = true;
 		
 		// camera controls
 		
-		main.cameraControls = new _CameraControls.Instance( { camera: main.camera, target: main.world } );
-		main.cameraControls.enabled = true;
-		main.cameraControls.controllable = true;
+		shared.cameraControls = new _CameraControls.Instance( { camera: shared.camera } );
 		
 		// passes
         
         renderPasses = {
-			bg: new THREE.RenderPass( main.sceneBG, main.cameraBG ),
-            env: new THREE.RenderPass( main.scene, main.camera ),
+			bg: new THREE.RenderPass( shared.sceneBG, shared.cameraBG ),
+            env: new THREE.RenderPass( shared.scene, shared.camera ),
             screen: new THREE.ShaderPass( THREE.ShaderExtras[ "screen" ] )
         };
 		
@@ -579,520 +515,15 @@ var KAIOPUA = (function (main) {
 		
         // composer
 		
-		renderComposer = new THREE.EffectComposer( renderer, renderTarget );
+		renderComposer = new THREE.EffectComposer( shared.renderer, shared.renderTarget );
 		
 		renderComposer.addPass( renderPasses.bg );
 		renderComposer.addPass( renderPasses.env );
 		renderComposer.addPass( renderPasses.screen );
 		
-		// ui
-		
-		init_ui();
-		
-		setup = true;
-		
-		// resize once
-		
-		on_window_resized();
-		
-    }
-	
-	/*===================================================
-    
-    init ui
-    
-    =====================================================*/
-	
-	function init_ui () {
-		
-		shared.domElements = shared.domElements || {};
-		
-		shared.domElements.cloneables = shared.domElements.cloneables || {};
-		
-		shared.domElements.cloneables.$reward = $( '<div class="reward"><button class="btn btn-large btn-circle-large"><img src="" class="iconk-giant reward-icon"></button><p class="reward-name"></p><p><small class="reward-type"></small></p></div>' );
-		
-		shared.domElements.$game = $('#game');
-		shared.domElements.$uiGameDimmer = $('#uiGameDimmer');
-		shared.domElements.$uiBlocker = $('#uiBlocker');
-		shared.domElements.$ui = $('#ui');
-		shared.domElements.$uiHeader = $( '#uiHeader' );
-		shared.domElements.$uiBody = $( '#uiBody' );
-		shared.domElements.$uiInGame = $( '#uiInGame' );
-		shared.domElements.$uiOutGame = $( '#uiOutGame' );
-		
-		shared.domElements.$dropdowns = $( '.dropdown' );
-		
-        shared.domElements.$tabToggles = $( '.tab-toggles' ).find( '[href^="#"]' ).not( '.tab-toggle-empty' );
-		
-		shared.domElements.$stickied = $( ".is-sticky" );
-		
-		shared.domElements.$actionsActive = $( '#actionsActive' );
-		shared.domElements.$actionsInactive = $( '#actionsInactive' );
-		shared.domElements.$actionItems = $('.action-item');
-		shared.domElements.$pauseMessage = $('#pauseMessage');
-		
-		shared.domElements.$menus = shared.domElements.$uiOutGame.find( '.menu' );
-		shared.domElements.$menuDefault = $();
-		shared.domElements.$menusInner = $();
-		shared.domElements.$menuToggles = $();
-		shared.domElements.$menuToggleDefault = $();
-		shared.domElements.$menuActive = $( '#menuActive' );
-		shared.domElements.$menuInactive = $( '#menuInactive' );
-		shared.domElements.$menuFarming = $('#menuFarming');
-		shared.domElements.$menuOptions = $('#menuOptions');
-		
-		shared.domElements.$navbars = $( '.navbar, .subnavbar' );
-		shared.domElements.$navMenus = $('#navMenus');
-		shared.domElements.$navMenusButtons = shared.domElements.$navMenus.find( ".nav li a" );
-		shared.domElements.$navStart = $( '#navStart' );
-		
-		// major buttons
-		
-		shared.domElements.$buttonGamePause = $('#buttonGamePause');
-		shared.domElements.$buttonsGamePause = $('.game-pause');
-		shared.domElements.$buttonGameResume = $('#buttonGameResume');
-		shared.domElements.$buttonsGameResume = $('.game-resume');
-		shared.domElements.$menuFarmingToggle = $('a[href="#menuFarming"]');
-		
-		// ui menus
-		
-		shared.domElements.$tools = $('#puzzleTools');
-		
-		shared.domElements.$puzzle = $('#puzzle');
-		shared.domElements.$puzzleActive = $( "#puzzleActive" );
-		shared.domElements.$puzzleActiveWarning = $( "#puzzleActiveWarning" );
-		shared.domElements.$puzzleActiveStarted = $( "#puzzleActiveStarted" );
-		shared.domElements.$puzzleActiveStartedPlan = $( "#puzzleActiveStartedPlan" );
-		shared.domElements.$puzzleActiveStartedPlanReady = $( "#puzzleActiveStartedPlanReady" );
-		shared.domElements.$puzzleActiveName = $( ".puzzle-active-name" );
-		shared.domElements.$puzzleActiveScoreBar = $( "#puzzleActiveScoreBar" );
-		shared.domElements.$puzzleActiveElementCount = $( ".puzzle-active-elementCount" );
-		shared.domElements.$puzzleActiveNumElementsMin = $( ".puzzle-active-numElementsMin" );
-		shared.domElements.$puzzleActiveShapesCounter = $( "#puzzleActiveShapesCounter" );
-		shared.domElements.$puzzleActiveNumShapesChosen = $( ".puzzle-active-numShapesChosen" );
-		shared.domElements.$puzzleActiveNumShapesRequired = $( ".puzzle-active-numShapesRequired" );
-		shared.domElements.$puzzleActiveShapes = $( "#puzzleActiveShapes" );
-		shared.domElements.$puzzleActiveShapesRequiredWarning = $( "#puzzleActiveShapesRequiredWarning" );
-		shared.domElements.$puzzleActiveShapesPicker = $( "#puzzleActiveShapesPicker" );
-		shared.domElements.$puzzleActiveStatusIcons = $( ".puzzle-statusIcon" );
-		shared.domElements.$puzzleActiveCompletionIcons = $( ".puzzle-completionIcon" );
-		shared.domElements.$puzzleActiveStatusText = $( "#puzzleActiveStatusText" );
-		shared.domElements.$puzzleActiveCompletionText = $( "#puzzleActiveCompletionText" );
-		shared.domElements.$puzzleActiveReady = $( "#puzzleActiveReady" );
-		shared.domElements.$puzzleActiveMap = $( "#puzzleActiveMap" );
-		shared.domElements.$puzzleActiveRewards = $( "#puzzleActiveRewards" );
-		
-		shared.domElements.$score = $( "#score" );
-		shared.domElements.$scorePuzzleName = $( ".score-puzzle-name" );
-		shared.domElements.$scoreTitle = $( "#scoreTitle" );
-		shared.domElements.$scoreElementCount = $( ".score-element-count" );
-		shared.domElements.$scoreElementCountGoal = $( ".score-element-count-goal" );
-		shared.domElements.$scoreBar = $( "#scoreBar" );
-		shared.domElements.$scorePoor = $( "#scorePoor" );
-		shared.domElements.$scoreGood = $( "#scoreGood" );
-		shared.domElements.$scorePerfect = $( "#scorePerfect" );
-		shared.domElements.$scorePct = $( ".score-pct" );
-		shared.domElements.$scoreRewards = $( "#scoreRewards" );
-		shared.domElements.$rewardsPoor = $( "#rewardsPoor" );
-		shared.domElements.$rewardsGood = $( "#rewardsGood" );
-		shared.domElements.$rewardsPerfect = $( "#rewardsPerfect" );
-		shared.domElements.$rewardsPoorList = shared.domElements.$rewardsPoor.find( ".reward-list" );
-		shared.domElements.$rewardsGoodList = shared.domElements.$rewardsGood.find( ".reward-list" );
-		shared.domElements.$rewardsPerfectList = shared.domElements.$rewardsPerfect.find( ".reward-list" );
-		shared.domElements.$scoreHint = $( "#scoreHint" );
-		
-		shared.domElements.$plant = $('#plant');
-		shared.domElements.$plantActive = $("#plantActive");
-		shared.domElements.$plantActiveWarning = $("#plantActiveWarning");
-		shared.domElements.$plantActivePortrait = $("#plantActivePortrait");
-		shared.domElements.$plantActiveShape = $("#plantActiveShape");
-		shared.domElements.$plantActiveShapeIcon = $("#plantActiveShapeIcon");
-		shared.domElements.$plantActiveSkin = $("#plantActiveSkin");
-		shared.domElements.$plantActiveSkinIcon = $("#plantActiveSkinIcon");
-		
-		shared.domElements.$collection = $('#collection');
-		
-		// set all images to not draggable
-		
-		if ( Modernizr.draganddrop ) {
-			
-			$( 'img' ).attr( 'draggable', false );
-			
-		}
-		
-		// all links that point to a location in page
-		
-		$( 'a[href^="#"]' ).each( function () {
-			
-			var $element = $( this ),
-				$section = $( $element.data( 'section' ) ),
-				$target = $( $element.attr( 'href' ) );
-			
-			// remove click
-			
-			$element.attr( 'onclick', 'return false;' );
-			
-			// if has section or target, prioritize section over target
-			
-			if ( $section.length > 0 || $target.length > 0 ) {
-				
-				$element.on( 'tap', function () {
-					
-					( $section[0] || $target[0] ).scrollIntoView( true );
-					
-				} );
-				
-			}
-				
-		} );
-		
-		// handle disabled items only if pointer-events are not supported
-		
-		if ( shared.supports.pointerEvents === false ) {
-			
-			main.dom_ignore_pointer( $(".ignore-pointer, .disabled"), true );
-			
-		}
-		
-		// primary action items
-		
-		shared.domElements.$actionItems.each( function () {
-			
-			var $item = $( this );
-			
-			if ( $item.parent().is( shared.domElements.$actionsActive ) && $item.is( '.hidden, .collapsed' ) ) {
-				
-				shared.domElements.$actionsInactive.append( $item );
-				
-			}
-			
-		} ).on('show.active', function () {
-			
-			shared.domElements.$actionsActive.append( this );
-			
-		})
-		.on('hidden.active', function () {
-			
-			shared.domElements.$actionsInactive.append( this );
-			
-		});
-		
-		// for all drop downs
-		
-		shared.domElements.$dropdowns.each( function () {
-			
-			var $dropdown = $( this );
-			
-			// close when drop down item is selected
-			
-			$dropdown.find( '.dropdown-menu a' ).each( function () {
-				
-				var $button = $( this );
-				
-				$button.on( 'tap', function () {
-						
-						$button.parent().removeClass( 'active' );
-						
-						$dropdown.removeClass('open');
-						
-					} );
-				
-			} );
-			
-		} );
-		
-		// for each navbar
-		
-		shared.domElements.$navbars.each( function () {
-			
-			var $navbar = $( this ),
-				$buttonCollapse = $navbar.find( '[data-toggle="collapse"]' ),
-				$navCollapse = $navbar.find( '.nav-collapse' );
-			
-			// if has collapsable
-			
-			if ( $buttonCollapse.length > 0 && $navCollapse.length > 0 ) {
-				
-				$navCollapse.find( 'a' ).each( function () {
-					
-					var $button = $( this );
-					
-					$button.on( 'tap', function () {
-							
-							if( $buttonCollapse.is( '.collapsed' ) !== true ) {
-								
-								$buttonCollapse.trigger( 'click' );
-								
-							}
-							
-						} );
-					
-				} );
-				
-			}
-			
-		} );
-		
-		// sticky elements
-		
-		shared.domElements.$stickied.each( function () {
-			
-			var $stickied = $( this ),
-				$relative = $( $stickied.data( "relative" ) ),
-				$target = $( $stickied.data( "target" ) );
-			
-			// if relative empty, assume uiHeader
-			
-			if ( $relative.length === 0 ) {
-				
-				$relative = shared.domElements.$uiHeader;
-				
-			}
-			
-			// if target empty, assume uiOutGame
-			
-			if ( $target.length === 0 ) {
-				
-				$target = shared.domElements.$uiOutGame;
-				
-			}
-			
-			$stickied.removeClass( 'is-sticky' ).sticky( {
-				
-				topSpacing: function () {
-					
-					return $relative.offset().top + $relative.outerHeight( true );
-					
-				},
-				scrollTarget: $target,
-				handlePosition: false
-				
-			} );
-			
-		} );
-		
-		// for each menu
-		
-		shared.domElements.$menus.each( function () {
-			
-			var $menu = $( this ),
-				$inner = $menu.find( '.menu-inner' ),
-				$toggle = shared.domElements.$navMenusButtons.filter( '[href="#' + $menu.attr( 'id' ) + '"]' ),
-				activate,
-				deactivate,
-				first,
-				last,
-				open,
-				close,
-				toggle;
-			
-			$menu.data( '$inner', $inner );
-			$menu.data( '$toggle', $toggle );
-			$menu.data( 'scrollTop', 0 );
-			
-			shared.domElements.$menusInner = shared.domElements.$menusInner.add( $inner );
-			
-			// functions
-			
-			activate = function () {
-				
-				pause( false, true );
-				
-				if ( $toggle.length > 0 ) {
-					
-					$toggle.closest( 'li' ).addClass( 'active' );
-						
-				}
-				
-				$menu.addClass( 'active' );
-				
-				main.dom_fade( {
-					element: $menu,
-					opacity: 1
-				} );
-				
-				// resize and scroll to last location for this tab
-				
-				$( window ).trigger( 'resize' );
-				
-				shared.domElements.$uiOutGame.scrollTop( $menu.data( 'scrollTop' ) );
-				
-			};
-			
-			deactivate = function () {
-				
-				// store scroll position
-				
-				$menu.data( 'scrollTop', shared.domElements.$uiOutGame.scrollTop() );
-				
-				if ( $toggle.length > 0 ) {
-					
-					$toggle.closest( 'li' ).removeClass( 'active' );
-					
-				}
-				
-				$menu.removeClass( 'active' );
-				
-				main.dom_fade( {
-					element: $menu,
-					time: 0
-				} );
-				
-			};
-			
-			first = function () {
-				
-				pause( false, true );
-				
-			};
-			
-			last = function () {
-				
-				main.dom_fade( {
-					element: shared.domElements.$uiOutGame
-				} );
-				
-				resume();
-				
-			};
-			
-			open = function () {
-				
-				_UIQueue.add( {
-						element: $menu,
-						container: shared.domElements.$uiOutGame,
-						activate: activate,
-						deactivate: deactivate,
-						first: first,
-						last: last
-					} );
-				
-			};
-			
-			close = function () {
-				
-				_UIQueue.remove( $menu );
-				
-			};
-			
-			toggle = function () {
-				
-				if ( $menu.is( '.active' ) === true ) {
-					
-					$menu.trigger( 'close' );
-					
-				}
-				else {
-					
-					$menu.trigger( 'open' );
-					
-				}
-				
-			};
-			
-			$menu.on( 'open', open )
-				.on( 'close', close )
-				.on( 'toggle', toggle );
-			
-			// attach events to toggle when present
-			
-			if ( $toggle.length > 0 ) {
-				
-				$toggle.data( '$menu', $menu );
-				
-				shared.domElements.$menuToggles = shared.domElements.$menuToggles.add( $toggle );
-				
-				// events
-				
-				$toggle.on( 'tap',  toggle );
-				
-			}
-			
-			// find default menu
-			
-			if ( shared.domElements.$menuDefault.length === 0 && $menu.is( '.active' ) === true ) {
-				
-				shared.domElements.$menuDefault = $menu;
-				shared.domElements.$menuToggleDefault = $toggle;
-				
-				deactivate();
-				
-			}
-			
-		} );
-		
-		// for each tab toggle
-		
-		 shared.domElements.$tabToggles.each( function () {
-			
-			var $toggle = $( this ),
-				$tab = $( $toggle.attr( 'href' ) );
-				
-				$toggle.data( '$tab', $tab );
-				
-				// make toggle-able
-				
-				$toggle.on( 'tap', function ( e ) {
-					
-					if ( $tab.is( '.active' ) === true ) {
-						
-						$toggle.trigger( 'showing' );
-						
-					}
-					else {
-						
-						$toggle.tab('show');
-						
-					}
-					
-				} )
-				.on( 'shown', function () {
-					
-					$toggle.trigger( 'showing' );
-					
-				} );
-			
-		} );
-		
-		// pause / resume
-		
-		shared.domElements.$buttonsGamePause.on( 'tap', pause );
-		shared.domElements.$buttonsGameResume.on( 'tap', resume );
-		
-		// pause / resume on focus
-		
-		shared.signals.onFocusLost.add( function () {
-			
-			if ( paused !== true ) {
-				
-				pausedByFocusLoss = true;
-				
-				main.dom_collapse( {
-					element: shared.domElements.$pauseMessage,
-					show: true
-				} );
-			
-			}
-			
-			pause( true );
-			
-		} );
-		
-		shared.signals.onFocusGained.add( function () {
-			
-			if ( pausedByFocusLoss === true ) {
-				
-				pausedByFocusLoss = false;
-				
-				resume();
-				
-			}
-			
-		} );
-		
 		// add renderer to display
 		
-		shared.domElements.$game.prepend( renderer.domElement );
+		shared.domElements.$game.prepend( shared.renderer.domElement );
 		
 		// events
 		
@@ -1106,25 +537,14 @@ var KAIOPUA = (function (main) {
 			.on( 'dragend', on_pointer_dragended )
 			.on( 'mousewheel DOMMouseScroll', on_pointer_wheel )
 			.on( 'contextmenu', on_context_menu );
-			
-		shared.domElements.$uiOutGame
-			.on( 'scroll scrollstop', $.throttle( shared.throttleTimeLong, on_scrolled ) );
 		
-		// hide uiOutGame
+		setup = true;
 		
-		main.dom_fade( {
-			element: shared.domElements.$uiOutGame,
-			time: 0
-		} );
+		// resize once
 		
-		// show menus nav
+		on_window_resized();
 		
-		main.dom_fade( {
-			element: shared.domElements.$navMenus,
-			opacity: 1
-		} );
-		
-	}
+    }
 	
 	/*===================================================
     
@@ -1152,9 +572,10 @@ var KAIOPUA = (function (main) {
 		_Intro = intro;
 		_Player = p;
 		
-		main.player = new _Player.Instance();
-		
-		// ui
+		shared.player = new _Player.Instance( {
+			geometry: "asset/model/Hero.js"
+		} );
+		shared.player.controllable = true;
 		
 		$( '#buttonStart' ).on( 'tap', start );
 		$( '#buttonExitGame' ).on( 'tap', stop );
@@ -1182,26 +603,29 @@ var KAIOPUA = (function (main) {
 
     function set_section ( section, callback ) {
 		
-		var hadPreviousSection = false,
+		var fadeBetweenSections = shared.fadeBetweenSections,
+			hadPreviousSection = false,
 			newSectionCallback = function () {
 				
-				if ( typeof previousSection !== 'undefined' ) {
+				if ( typeof shared.sectionLast !== 'undefined' ) {
 					
-					previousSection.remove();
+					shared.sectionLast.remove();
 					
 				}
 				
-				section.resize( shared.gameWidth, shared.gameHeight );
-				
                 section.show();
 				
-                currentSection = section;
+                shared.section = section;
 				
 				// hide blocker
 				
-				main.dom_fade( {
-					element: shared.domElements.$uiBlocker
-				} );
+				if ( fadeBetweenSections !== false ) {
+					
+					main.dom_fade( {
+						element: shared.domElements.$uiBlocker
+					} );
+					
+				}
 				
 				resume();
 				
@@ -1218,26 +642,30 @@ var KAIOPUA = (function (main) {
 		pause( true );
 		
         // hide current section
-        if (typeof currentSection !== 'undefined') {
+        if (typeof shared.section !== 'undefined') {
 			
 			hadPreviousSection = true;
             
-            previousSection = currentSection;
+            shared.sectionLast = shared.section;
             
-            previousSection.hide();
+            shared.sectionLast.hide();
 			
 			// block ui
             
-			main.dom_fade( {
-				element: shared.domElements.$uiBlocker,
-				opacity: 1
-			} );
+			if ( fadeBetweenSections !== false ) {
+				
+				main.dom_fade( {
+					element: shared.domElements.$uiBlocker,
+					opacity: 1
+				} );
+				
+			}
             
         }
 		
         // no current section
 		
-        currentSection = undefined;
+        shared.section = undefined;
 		
 		// set started
 		
@@ -1248,11 +676,11 @@ var KAIOPUA = (function (main) {
 		}
         
         // start and show new section
-        if (typeof section !== 'undefined') {
+        if ( typeof section !== 'undefined' ) {
 			
             // wait for blocker to finish fading in
 			
-			if ( hadPreviousSection === true ) {
+			if ( fadeBetweenSections !== false && hadPreviousSection === true ) {
 				
 				window.requestTimeout( function () {
 					
@@ -1345,68 +773,8 @@ var KAIOPUA = (function (main) {
         if (paused === false) {
             console.log('GAME: PAUSE');
             paused = true;
-			pausedWithoutControl = preventDefault;
-			
-			// hide pause button
-			
-			main.dom_fade( {
-				element: shared.domElements.$buttonGamePause,
-				time: 0
-			} );
-			
-			// pause priority
-			
-			if ( pausedWithoutControl === true ) {
-				
-				// block ui
-				
-				main.dom_fade( {
-					element: shared.domElements.$uiBlocker,
-					opacity: 0.9
-				} );
-				
-			}
-			else {
-				
-				// uiGameDimmer
-				
-				main.dom_fade( {
-					element: shared.domElements.$uiGameDimmer,
-					opacity: 0.9
-				} );
-				
-				// swap to default menu
-				
-				if ( preventMenuChange !== true && shared.domElements.$menuToggleDefault.length > 0 ) {
-					
-					shared.domElements.$menuToggleDefault.trigger( 'tap' );
-					
-				}
-				
-				// show resume button
-				
-				main.dom_fade( {
-					element: shared.domElements.$buttonGameResume,
-					opacity: 1
-				} );
-				
-				// add listener for click on uiGameDimmer
-				
-				shared.domElements.$uiGameDimmer.on( 'tap.resume', resume );
-				
-			}
-			
-			// when started
-			
-			if ( started === true ) {
-				
-				
-				
-			}
-			
-			// signal
             
-            shared.signals.onGamePaused.dispatch();
+            shared.signals.onGamePaused.dispatch( preventDefault, preventMenuChange );
 			
 			// render once to ensure user is not surprised when resuming
 			
@@ -1418,54 +786,10 @@ var KAIOPUA = (function (main) {
     
     function resume () {
 		
-        if ( paused === true && _ErrorHandler.errorState !== true && ( typeof _Messenger === 'undefined' || _Messenger.active !== true ) ) {
+        if ( paused === true && _ErrorHandler.errorState !== true ) {
 			console.log('GAME: RESUME');
 			
-			// hide resume button
-			
-			main.dom_fade( {
-				element: shared.domElements.$buttonGameResume,
-				time: 0
-			} );
-			
-			// hide pause message
-			
-			main.dom_collapse( {
-				element: shared.domElements.$pauseMessage
-			} );
-			
-			// unblock ui
-			
-			main.dom_fade( {
-				element: shared.domElements.$uiBlocker
-			} );
-			
-			_UIQueue.clear( shared.domElements.$uiOutGame );
-			
-			// uiGameDimmer
-			
-			shared.domElements.$uiGameDimmer.off( '.resume' );
-			main.dom_fade( {
-				element: shared.domElements.$uiGameDimmer
-			} );
-			
-			// show pause button
-			
-			main.dom_fade( {
-				element: shared.domElements.$buttonGamePause,
-				opacity: 1
-			} );
-			
-			// when started
-			
-			if ( started === true ) {
-				
-				
-				
-			}
-			
 			paused = false;
-			pausedWithoutControl = false;
 			
 			shared.signals.onGameResumed.dispatch();
             
@@ -1539,13 +863,13 @@ var KAIOPUA = (function (main) {
 		
 		if ( setup === true ) {
 			
-			main.cameraControls.update();
+			shared.cameraControls.update();
 			
-			main.cameraBG.quaternion.copy( main.camera.quaternion );
+			shared.cameraBG.quaternion.copy( shared.camera.quaternion );
 			
-			renderer.setViewport( 0, 0, shared.gameWidth, shared.gameHeight );
+			shared.renderer.setViewport( 0, 0, shared.gameWidth, shared.gameHeight );
 			
-			renderer.clear();
+			shared.renderer.clear();
 			
 			renderComposer.render();
 			
@@ -2008,26 +1332,6 @@ var KAIOPUA = (function (main) {
 		
 	}
 	
-	function get_pointer_intersection ( parameters ) {
-		
-		var intersection;
-		
-		// handle parameters
-		
-		parameters = parameters || {};
-		
-		parameters.pointer = parameters.pointer || main.get_pointer();
-		parameters.camera = parameters.camera || main.camera;
-		
-		parameters.objects = ( parameters.objects || [] ).concat( main.scene.dynamics );
-		parameters.octrees = ( parameters.octrees || [] ).concat( main.scene.octree );
-		
-		// intersection
-		
-		return _RayHelper.raycast( parameters );
-		
-	}
-	
 	/*===================================================
     
     event functions
@@ -2119,12 +1423,6 @@ var KAIOPUA = (function (main) {
 		
     }
 	
-	function on_scrolled ( e ) {
-		
-		shared.signals.onScrolled.dispatch( $( window ).scrollLeft(), $( window ).scrollTop() );
-		
-	}
-	
 	function on_context_menu ( e ) {
 		
 		// disable right click menu while in game
@@ -2197,15 +1495,15 @@ var KAIOPUA = (function (main) {
 			gameWidth = shared.gameWidth = shared.domElements.$game.width();
 			gameHeight = shared.gameHeight = shared.domElements.$game.height();
 			
-			renderer.setSize( gameWidth, gameHeight );
-			renderTarget.width = gameWidth;
-			renderTarget.height = gameHeight;
+			shared.renderer.setSize( gameWidth, gameHeight );
+			shared.renderTarget.width = gameWidth;
+			shared.renderTarget.height = gameHeight;
 			
-			main.cameraBG.aspect = main.camera.aspect = gameWidth / gameHeight;
-			main.camera.updateProjectionMatrix();
-			main.cameraBG.updateProjectionMatrix();
+			shared.cameraBG.aspect = shared.camera.aspect = gameWidth / gameHeight;
+			shared.camera.updateProjectionMatrix();
+			shared.cameraBG.updateProjectionMatrix();
 			
-			renderComposer.reset( renderTarget );
+			renderComposer.reset( shared.renderTarget );
 			
 			// re-render
 			

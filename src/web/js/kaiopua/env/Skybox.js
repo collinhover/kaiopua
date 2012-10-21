@@ -1,7 +1,7 @@
 /*
  *
- * ObjectMaker.js
- * Handles generation of misc objects.
+ * Skybox.js
+ * Skybox instance.
  *
  * @author Collin Hover / http://collinhover.com/
  *
@@ -9,8 +9,8 @@
 (function (main) {
     
     var shared = main.shared = main.shared || {},
-		assetPath = "js/kaiopua/utils/ObjectMaker.js",
-		_ObjectMaker = {},
+		assetPath = "js/kaiopua/env/Skybox.js",
+		_Skybox = {},
 		_Model;
     
     /*===================================================
@@ -19,10 +19,8 @@
     
     =====================================================*/
 	
-    _ObjectMaker.make_skybox = make_skybox;
-	
 	main.asset_register( assetPath, { 
-		data: _ObjectMaker,
+		data: _Skybox,
 		requirements: [
 			"js/kaiopua/core/Model.js"
 		],
@@ -37,30 +35,27 @@
     =====================================================*/
 	
 	function init_internal ( m ) {
-		console.log('internal objectmaker');
+		console.log('internal Skybox');
 		_Model = m;
+		
+		_Skybox.Instance = Skybox;
+		_Skybox.Instance.prototype = new _Model.Instance();
+		_Skybox.Instance.prototype.constructor = _Skybox.Instance;
 		
 	}
 
     /*===================================================
     
-    maker functions
+    instance
     
     =====================================================*/
     
-    // generates a skybox from array of images
-    
-    function make_skybox ( imagesAssetPath, mapping, instance ) {
+    function Skybox ( imagesAssetPath, mapping ) {
 		
-		var textureCube,
+		var ap = imagesAssetPath,
+			textureCube,
 			shader,
 			material;
-		
-		instance = instance || {};
-		
-		// get images from assets
-		
-		ap = imagesAssetPath;
 		
 		// cube texture
 		
@@ -97,18 +92,13 @@
 			side: THREE.BackSide
 		} );
 		
-		// instance
+		// proto
 		
-		instance = new _Model.Instance( {
+		_Model.Instance.call( this, {
             geometry: new THREE.CubeGeometry( 100, 100, 100 ),
 			material: material,
-			shading: THREE.SmoothShading,
-			options: {
-				intersectable: false
-			}
-        }, instance );
-        
-        return instance;
+			shading: THREE.SmoothShading
+        } );
         
     }
     

@@ -13,8 +13,8 @@
 		_Launcher = {},
 		_Water,
         _Sky,
+		_Skybox,
 		_ObjectHelper,
-		_ObjectMaker,
         ready = false,
 		waitingToShow = false,
 		addOnShow = [],
@@ -54,21 +54,20 @@
     _Launcher.hide = hide;
     _Launcher.remove = remove;
     _Launcher.update = update;
-	_Launcher.resize = resize;
 	
 	main.asset_register( assetPath, { 
 		data: _Launcher,
 		requirements: [
 			"js/kaiopua/env/Sky.js",
+			"js/kaiopua/env/Skybox.js",
 			"js/kaiopua/env/Water.js",
 			"js/kaiopua/utils/ObjectHelper.js",
-			"js/kaiopua/utils/ObjectMaker.js",
-			"asset/texture/skybox_world_posx.jpg",
-            "asset/texture/skybox_world_negx.jpg",
-			"asset/texture/skybox_world_posy.jpg",
-            "asset/texture/skybox_world_negy.jpg",
-			"asset/texture/skybox_world_posz.jpg",
-            "asset/texture/skybox_world_negz.jpg"
+			shared.pathToTextures + "skybox_world_posx.jpg",
+            shared.pathToTextures + "skybox_world_negx.jpg",
+			shared.pathToTextures + "skybox_world_posy.jpg",
+            shared.pathToTextures + "skybox_world_negy.jpg",
+			shared.pathToTextures + "skybox_world_posz.jpg",
+            shared.pathToTextures + "skybox_world_negz.jpg"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -80,15 +79,15 @@
     
     =====================================================*/
     
-    function init_internal ( s, w, oh, om ) {
+    function init_internal ( s, sb, w, oh ) {
 		
 		if ( ready !== true ) {
 			console.log('internal launcher');
 			
 			_Sky = s;
+			_Skybox = sb;
 			_Water = w;
 			_ObjectHelper = oh;
-			_ObjectMaker = om;
 			
 			init_environment();
 			
@@ -127,7 +126,7 @@
 		
 		// skybox
 		
-		skybox = _ObjectMaker.make_skybox( shared.pathToTextures + "skybox_world" );
+		skybox = new _Skybox.Instance( shared.pathToTextures + "skybox_world" );
 		
 		// water
 		
@@ -234,12 +233,12 @@
 			ccOptions.rotationMaxX = ccOptions.rotationMinX = Math.PI * 0.035;
 			ccOptions.positionBaseY = 750;
 			
-			//main.cameraControls.modify( ccOptions );
-			_ObjectHelper.temporary_change( main.cameraControls.options, ccOptions );
+			//shared.cameraControls.modify( ccOptions );
+			_ObjectHelper.temporary_change( shared.cameraControls.options, ccOptions );
 			
-			main.cameraControls.target = water;
-			main.cameraControls.enabled = true;
-			main.cameraControls.controllable = true;
+			shared.cameraControls.target = water;
+			shared.cameraControls.enabled = true;
+			shared.cameraControls.controllable = true;
 			
 			// environment
 			
@@ -249,11 +248,11 @@
 			
 			// add items
 			
-			main.scene.add( ambientLight );
-			main.scene.add( lightSky );
-			main.scene.add( water );
-			main.scene.add( sky );
-			main.sceneBG.add( skybox );
+			shared.scene.add( ambientLight );
+			shared.scene.add( lightSky );
+			shared.scene.add( water );
+			shared.scene.add( sky );
+			shared.sceneBG.add( skybox );
 			
 			// shared
 			
@@ -297,11 +296,11 @@
 			
 			// remove added items
 			
-			main.scene.remove( ambientLight );
-			main.scene.remove( lightSky );
-			main.scene.remove( water );
-			main.scene.remove( sky );
-			main.sceneBG.remove( skybox );
+			shared.scene.remove( ambientLight );
+			shared.scene.remove( lightSky );
+			shared.scene.remove( water );
+			shared.scene.remove( sky );
+			shared.sceneBG.remove( skybox );
 			
 		}
 		else {
@@ -336,19 +335,15 @@
 		
 		camRotationOffsetQ.setFromEuler( camRotationOffset ).normalize();
         
-		main.camera.quaternion.multiply( camRotationOffsetQ, camRotationBaseQ );
+		shared.camera.quaternion.multiply( camRotationOffsetQ, camRotationBaseQ );
 		
 		camPositionOffset.copy( camPositionBase );
 		camPositionOffsetRot.y = camRotationOffset.y;
 		camPositionOffsetRot.z = -Math.PI * 0.01;
 		camRotationOffsetQ.setFromEuler( camPositionOffsetRot ).normalize();
 		camRotationOffsetQ.multiplyVector3( camPositionOffset );
-		main.camera.position.copy( camPositionOffset );
+		shared.camera.position.copy( camPositionOffset );
 		
     }
-	
-	function resize () {
-		
-	}
     
 } ( KAIOPUA ) );

@@ -41,7 +41,7 @@
 		// properties
 		
 		_GridModel.options = {
-			//intersectable: false
+			intersectable: false
 		};
 		
 		// instance

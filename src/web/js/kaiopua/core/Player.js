@@ -90,12 +90,7 @@
 		_Player.Instance.prototype.select = select;
 		
 		_Player.Instance.prototype.set_keybindings = set_keybindings;
-		_Player.Instance.prototype.allow_control = allow_control;
-		_Player.Instance.prototype.remove_control = remove_control;
 		_Player.Instance.prototype.trigger_key = trigger_key;
-		
-		_Player.Instance.prototype.enable = enable;
-		_Player.Instance.prototype.disable = disable;
 		
 		Object.defineProperty( _Player.Instance.prototype, 'parent', { 
 			get : function () { return this._parent; },
@@ -111,7 +106,83 @@
 					
 					if ( scene instanceof THREE.Scene !== true ) {
 						
-						this.disable();
+						this.enabled = false;
+						
+					}
+					
+				}
+				
+			}
+		});
+		
+		Object.defineProperty( _Player.Instance.prototype, 'enabled', { 
+			get : function () { return this.state.enabled; },
+			set : function ( enabled ) {
+				
+				var last = this.state.enabled;
+				
+				this.state.enabled = enabled;
+				
+				if ( this.state.enabled !== last ) {
+					
+					if ( this.state.enabled === true ) {
+						
+						shared.signals.onGameUpdated.add( this.update, this );
+						
+					}
+					else {
+						
+						shared.signals.onGameUpdated.remove( this.update, this );
+						
+					}
+					
+				}
+				
+			}
+		} );
+		
+		Object.defineProperty( _Player.Instance.prototype, 'controllable', { 
+			get : function () { return this.state.controllable; },
+			set : function ( controllable ) {
+				
+				var last = this.state.controllable;
+				
+				this.state.controllable = controllable;
+				
+				if ( this.state.controllable !== last ) {
+					
+					if ( this.state.controllable === true ) {
+						
+						shared.signals.onGamePointerMoved.add( this.trigger_key, this );
+						shared.signals.onGamePointerTapped.add( this.trigger_key, this );
+						shared.signals.onGamePointerDoubleTapped.add( this.trigger_key, this );
+						shared.signals.onGamePointerHeld.add( this.trigger_key, this );
+						shared.signals.onGamePointerDragStarted.add( this.trigger_key, this );
+						shared.signals.onGamePointerDragged.add( this.trigger_key, this );
+						shared.signals.onGamePointerDragEnded.add( this.trigger_key, this );
+						shared.signals.onGamePointerWheel.add( this.trigger_key, this );
+						
+						shared.signals.onKeyPressed.add( this.trigger_key, this );
+						shared.signals.onKeyReleased.add( this.trigger_key, this );
+						
+					}
+					else {
+						
+						shared.signals.onGamePointerMoved.remove( this.trigger_key, this );
+						shared.signals.onGamePointerTapped.remove( this.trigger_key, this );
+						shared.signals.onGamePointerDoubleTapped.remove( this.trigger_key, this );
+						shared.signals.onGamePointerHeld.remove( this.trigger_key, this );
+						shared.signals.onGamePointerDragStarted.remove( this.trigger_key, this );
+						shared.signals.onGamePointerDragged.remove( this.trigger_key, this );
+						shared.signals.onGamePointerDragEnded.remove( this.trigger_key, this );
+						shared.signals.onGamePointerWheel.remove( this.trigger_key, this );
+						
+						shared.signals.onKeyPressed.remove( this.trigger_key, this );
+						shared.signals.onKeyReleased.remove( this.trigger_key, this );
+						
+						// clear keys
+						
+						this.actions.clear_active();
 						
 					}
 					
@@ -148,8 +219,8 @@
 		
 		parameters.name = 'Hero';
 		
-		parameters.geometry = main.get_asset_data( "asset/model/Hero.js" ) || new THREE.CubeGeometry( 50, 100, 50 );
-		parameters.material = new THREE.MeshLambertMaterial( { color: 0xFFF7E0, ambient: 0xFFF7E0, vertexColors: THREE.VertexColors } );
+		parameters.geometry = parameters.geometry || new THREE.CubeGeometry( 50, 100, 50 );
+		parameters.material = parameters.material || new THREE.MeshLambertMaterial( { color: 0xFFF7E0, ambient: 0xFFF7E0, vertexColors: THREE.VertexColors } );
 		
 		parameters.physics = parameters.physics || {};
 		parameters.physics.bodyType = 'capsule';
@@ -297,9 +368,9 @@
 					var e = parameters.event,
 						target = _RayHelper.raycast( {
 							pointer: main.get_pointer( e ),
-							camera: main.camera,
-							objects: main.scene.dynamics,
-							octrees: main.scene.octree,
+							camera: shared.camera,
+							objects: shared.scene.dynamics,
+							octrees: shared.scene.octree,
 							objectOnly: true
 						} );
 						
@@ -325,13 +396,13 @@
 		
 		this.actions.add( 'pointer', {
 			eventCallbacks: {
-				dragstart: $.proxy( main.cameraControls.rotate_start, main.cameraControls ),
-				drag: $.proxy( main.cameraControls.rotate, main.cameraControls  ),
-				dragend: $.proxy( main.cameraControls.rotate_stop, main.cameraControls  ),
-				wheel: $.proxy( main.cameraControls.zoom, main.cameraControls  )
+				dragstart: $.proxy( shared.cameraControls.rotate_start, shared.cameraControls ),
+				drag: $.proxy( shared.cameraControls.rotate, shared.cameraControls  ),
+				dragend: $.proxy( shared.cameraControls.rotate_stop, shared.cameraControls  ),
+				wheel: $.proxy( shared.cameraControls.zoom, shared.cameraControls  )
 			},
 			activeCheck: function () {
-				return main.cameraControls.rotating;
+				return shared.cameraControls.rotating;
 			},
 			options: {
 				priority: 1,
@@ -377,7 +448,7 @@
 		
 		_Player.Instance.prototype.supr.die.apply( this, arguments );
 		
-		this.remove_control();
+		this.controllable = false;
 		
 	}
 	
@@ -391,11 +462,12 @@
 		
 		_Player.Instance.prototype.supr.respawn.apply( this, arguments );
 		
-		main.cameraControls.target = undefined;
-		main.cameraControls.target = this;
-		main.cameraControls.rotateTarget = true;
+		shared.cameraControls.target = undefined;
+		shared.cameraControls.target = this;
+		shared.cameraControls.rotateTarget = true;
 		
-		this.enable();
+		this.enabled = true;
+		this.controllable = true;
 		
 	}
 	
@@ -430,9 +502,9 @@
 			
 			target = _RayHelper.raycast( {
 				pointer: main.get_pointer( e ),
-				camera: main.camera,
-				objects: main.scene.dynamics,
-				octrees: main.scene.octree,
+				camera: shared.camera,
+				objects: shared.scene.dynamics,
+				octrees: shared.scene.octree,
 				objectOnly: true
 			} );
 			
@@ -453,52 +525,6 @@
 	function set_keybindings ( keybindings ) {
 		
 		this.keybindings = $.extend( true, this.keybindings || {}, keybindings );
-		
-	}
-	
-	/*===================================================
-    
-    controls
-    
-    =====================================================*/
-	
-	function allow_control () {
-		
-		// signals
-		
-		shared.signals.onGamePointerMoved.add( this.trigger_key, this );
-		shared.signals.onGamePointerTapped.add( this.trigger_key, this );
-		shared.signals.onGamePointerDoubleTapped.add( this.trigger_key, this );
-		shared.signals.onGamePointerHeld.add( this.trigger_key, this );
-		shared.signals.onGamePointerDragStarted.add( this.trigger_key, this );
-		shared.signals.onGamePointerDragged.add( this.trigger_key, this );
-		shared.signals.onGamePointerDragEnded.add( this.trigger_key, this );
-		shared.signals.onGamePointerWheel.add( this.trigger_key, this );
-		
-		shared.signals.onKeyPressed.add( this.trigger_key, this );
-		shared.signals.onKeyReleased.add( this.trigger_key, this );
-		
-	}
-	
-	function remove_control () {
-		
-		// signals
-		
-		shared.signals.onGamePointerMoved.remove( this.trigger_key, this );
-		shared.signals.onGamePointerTapped.remove( this.trigger_key, this );
-		shared.signals.onGamePointerDoubleTapped.remove( this.trigger_key, this );
-		shared.signals.onGamePointerHeld.remove( this.trigger_key, this );
-		shared.signals.onGamePointerDragStarted.remove( this.trigger_key, this );
-		shared.signals.onGamePointerDragged.remove( this.trigger_key, this );
-		shared.signals.onGamePointerDragEnded.remove( this.trigger_key, this );
-		shared.signals.onGamePointerWheel.remove( this.trigger_key, this );
-		
-		shared.signals.onKeyPressed.remove( this.trigger_key, this );
-		shared.signals.onKeyReleased.remove( this.trigger_key, this );
-		
-		// clear keys
-		
-		this.actions.clear_active();
 		
 	}
 	
@@ -568,32 +594,6 @@
 			this.actions.execute( keyNameActual, state, parameters );
 			
 		}
-		
-	}
-	
-	/*===================================================
-    
-    enable / disable
-    
-    =====================================================*/
-	
-	function enable () {
-		
-		this.state.enabled = true;
-		
-		this.allow_control();
-		
-		shared.signals.onGameUpdated.add( this.update, this );
-		
-	}
-	
-	function disable () {
-		
-		shared.signals.onGameUpdated.remove( this.update, this );
-		
-		this.remove_control();
-		
-		this.state.enabled = false;
 		
 	}
 	

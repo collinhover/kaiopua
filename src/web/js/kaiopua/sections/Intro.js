@@ -1,7 +1,7 @@
 /*
  *
  * Intro.js
- * Handles introduction to story and teaching user basic game mechanics.
+ * Introduction section.
  *
  * @author Collin Hover / http://collinhover.com/
  *
@@ -10,9 +10,9 @@
     
     var shared = main.shared = main.shared || {},
 		assetPath = "js/kaiopua/sections/Intro.js",
-		intro = {},
+		_Intro = {},
 		_WorldIsland,
-		_Model,
+		_Skybox,
 		_ObjectHelper,
         _ready = false,
 		waitingToShow = false,
@@ -27,19 +27,23 @@
     
     =====================================================*/
     
-    intro.show = show;
-    intro.hide = hide;
-    intro.remove = remove;
-    intro.update = update;
-    intro.resize = resize;
-    intro.domElement = function () {};
+    _Intro.show = show;
+    _Intro.hide = hide;
+    _Intro.remove = remove;
+    _Intro.update = update;
 	
 	main.asset_register( assetPath, { 
-		data: intro,
+		data: _Intro,
 		requirements: [
 			"js/kaiopua/env/WorldIsland.js",
-			"js/kaiopua/core/Model.js",
-			"js/kaiopua/utils/ObjectHelper.js"
+			"js/kaiopua/env/Skybox.js",
+			"js/kaiopua/utils/ObjectHelper.js",
+			shared.pathToTextures + "skybox_world_posx.jpg",
+            shared.pathToTextures + "skybox_world_negx.jpg",
+			shared.pathToTextures + "skybox_world_posy.jpg",
+            shared.pathToTextures + "skybox_world_negy.jpg",
+			shared.pathToTextures + "skybox_world_posz.jpg",
+            shared.pathToTextures + "skybox_world_negz.jpg"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -51,14 +55,14 @@
     
     =====================================================*/
 	
-	function init_internal ( w, m, oh ) {
-		console.log('internal intro');
+	function init_internal ( w, sb, oh ) {
+		console.log('internal intro', _Intro);
 		if ( _ready !== true ) {
 			
 			// assets
 			
 			_WorldIsland = w;
-			_Model = m;
+			_Skybox = sb;
 			_ObjectHelper = oh;
 			
 			// environment
@@ -83,6 +87,8 @@
 		
 		world = new _WorldIsland.Instance();
 		
+		skybox = new _Skybox.Instance( shared.pathToTextures + "skybox_world" );
+		
     }
     
     /*===================================================
@@ -95,16 +101,15 @@
 		
 		if ( _ready === true ) {
 			
-			_ObjectHelper.revert_change( main.cameraControls.options, true );
-			main.cameraControls.enabled = true;
-			main.cameraControls.controllable = false;
-			
+			shared.sceneBG.add( skybox );
 			world.show();
 			
-			main.player.respawn( main.scene, new THREE.Vector3( 35, 2200, 300 ) );
-			main.player.enable();
+			shared.player.respawn( shared.scene, new THREE.Vector3( 35, 2200, 300 ) );
 			
-			shared.signals.onWindowResized.add( resize );
+			_ObjectHelper.revert_change( shared.cameraControls.options, true );
+			shared.cameraControls.enabled = true;
+			shared.cameraControls.controllable = false;
+			
 			shared.signals.onGameUpdated.add( update );
 			
 		}
@@ -119,8 +124,6 @@
 	function hide () {
 		
 		waitingToShow = false;
-		
-		shared.signals.onWindowResized.remove( resize );
         
         shared.signals.onGameUpdated.remove( update );
 		
@@ -130,9 +133,11 @@
 		
 		if ( _ready === true ) {
 			
-			main.scene.remove( main.player );
+			shared.scene.remove( shared.player );
 			
 			world.hide();
+			
+			shared.sceneBG.remove( skybox );
 			
 		}
 		else {
@@ -145,10 +150,6 @@
     
     function update () {
 		
-    }
-    
-    function resize ( W, H ) {
-        
     }
     
 } ( KAIOPUA ) );

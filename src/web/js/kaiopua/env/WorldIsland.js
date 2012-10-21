@@ -16,7 +16,6 @@
 		_PuzzleLibrary,
 		_Water,
 		_Sky,
-		_ObjectMaker,
 		_PhysicsHelper;
 	
 	/*===================================================
@@ -32,8 +31,31 @@
 			"js/kaiopua/core/Model.js",
 			"js/kaiopua/env/Water.js",
 			"js/kaiopua/env/Sky.js",
-			"js/kaiopua/utils/ObjectMaker.js",
-			"js/kaiopua/utils/PhysicsHelper.js"
+			"js/kaiopua/utils/PhysicsHelper.js",
+            { path: "asset/model/Whale.js", type: 'model' },
+			{ path: "asset/model/Sun.js", type: 'model' },
+			{ path: "asset/model/Hut.js", type: 'model' },
+			{ path: "asset/model/Hut_Hill.js", type: 'model' },
+			{ path: "asset/model/Hut_Steps.js", type: 'model' },
+			{ path: "asset/model/Bed.js", type: 'model' },
+			{ path: "asset/model/Banana_Leaf_Door.js", type: 'model' },
+			{ path: "asset/model/Surfboard.js", type: 'model' },
+			{ path: "asset/model/Grass_Clump_001.js", type: 'model' },
+			{ path: "asset/model/Grass_Clump_002.js", type: 'model' },
+			{ path: "asset/model/Grass_Line_001.js", type: 'model' },
+			{ path: "asset/model/Grass_Line_002.js", type: 'model' },
+			{ path: "asset/model/Palm_Tree.js", type: 'model' },
+			{ path: "asset/model/Palm_Trees.js", type: 'model' },
+			{ path: "asset/model/Kukui_Tree.js", type: 'model' },
+			{ path: "asset/model/Kukui_Trees.js", type: 'model' },
+			{ path: "asset/model/Volcano_Large.js", type: 'model' },
+			{ path: "asset/model/Volcano_Small.js", type: 'model' },
+			{ path: "asset/model/Volcano_Rocks_001.js", type: 'model' },
+			{ path: "asset/model/Volcano_Rocks_002.js", type: 'model' },
+			{ path: "asset/model/Volcano_Rocks_003.js", type: 'model' },
+			{ path: "asset/model/Volcano_Rocks_004.js", type: 'model' },
+			{ path: "asset/model/Volcano_Rocks_005.js", type: 'model' },
+            shared.pathToTextures + "water_world_512.png"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -45,7 +67,7 @@
     
     =====================================================*/
 	
-	function init_internal ( world, m, w, sky, om, ph ) {
+	function init_internal ( world, m, w, sky, ph ) {
 		console.log('internal world island');
 		
 		// assets
@@ -54,7 +76,6 @@
 		_Model = m;
 		_Water = w;
 		_Sky = sky;
-		_ObjectMaker = om;
 		_PhysicsHelper = ph;
 		
 		_WorldIsland.Instance = WorldIsland;
@@ -122,10 +143,6 @@
 		environment
 		
 		=====================================================*/
-		
-		// skybox
-		
-		me.parts.skybox = _ObjectMaker.make_skybox( shared.pathToTextures + "skybox_world" );
 		
 		// water
 		
@@ -376,16 +393,16 @@
 		// kukui trees
 		
 		me.parts.kukuiTrees = new _Model.Instance({
-            geometry: main.get_asset_data("asset/model/Kukui_Trees.js"),
-        });
+			geometry: "asset/model/Kukui_Trees.js",
+		});
 		
 		me.parts.trees.add( me.parts.kukuiTrees );
 		
 		// palm trees
 		
 		me.parts.palmTrees = new _Model.Instance({
-            geometry: main.get_asset_data("asset/model/Palm_Trees.js"),
-        });
+			geometry: "asset/model/Palm_Trees.js",
+		});
 		
 		me.parts.trees.add( me.parts.palmTrees );
 		
@@ -437,10 +454,6 @@
 			
 			_World.Instance.prototype.show.call( me );
 			
-			// skybox
-			
-			main.sceneBG.add( me.parts.skybox );
-			
 			// morph animations
 			
 			me.parts.waterRing.morphs.play( 'waves', { duration: 4000, loop: true } );
@@ -452,14 +465,6 @@
 			// proto
 			
 			_World.Instance.prototype.hide.call( me );
-			
-			// skybox
-			
-			main.sceneBG.remove( me.parts.skybox );
-			
-			// morphs
-			
-			me.parts.waterRing.morphs.stop_all();
 			
 		}
     	

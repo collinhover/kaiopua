@@ -472,7 +472,6 @@
 				
 			}
 			console.log( this, ' respawned! ' );
-			
 			this.onRespawned.dispatch();
 			
 			this.invulnerable = true;

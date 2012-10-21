@@ -94,9 +94,13 @@
 	
 	function __addObject ( object ) {
 		
+		var objectsCount = this.__objects.length;
+		
 		_Scene.Instance.prototype.supr.__addObject.call( this, object );
 		
-		if ( object instanceof _Model.Instance ) {
+		// when object actually added
+		
+		if ( this.__objects.length !== objectsCount && object instanceof _Model.Instance ) {
 			
 			if ( object.intersectable === true ) {
 				
@@ -131,9 +135,13 @@
 	
 	function __removeObject ( object ) {
 		
+		var objectsCount = this.__objects.length;
+		
 		_Scene.Instance.prototype.supr.__removeObject.call( this, object );
 		
-		if ( object instanceof _Model.Instance ) {
+		// when object actually removed
+		
+		if ( this.__objects.length !== objectsCount && object instanceof _Model.Instance ) {
 			
 			if ( object.morphs instanceof _Morphs.Instance ) {
 				

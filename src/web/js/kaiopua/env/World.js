@@ -87,17 +87,17 @@
 		
 		// fog
 		
-		main.scene.fog = this.fog;
+		shared.scene.fog = this.fog;
 		
 		// add self
 		
-		main.scene.add( this );
+		shared.scene.add( this );
 		
 	}
 	
 	function hide () {
 		
-		main.scene.remove( this );
+		shared.scene.remove( this );
 		
 	}
 	

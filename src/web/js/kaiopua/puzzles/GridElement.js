@@ -338,29 +338,6 @@
 			layout = $M( [
 				[ _GridElement.NODE_SELF ]
 			] );
-			/*
-			this.layout = $M( [
-				[ 0, 0, 0 ],
-				[ 0, 1, 0 ],
-				[ 0, 0, 0 ]
-			] );
-			*/
-			/*
-			this.layout = $M( [
-				[ 0, 1, 1, 0, 0 ],
-				[ 0, 0, 0, 1, 0 ],
-				[ 0, 0, 1, 0, 0 ],
-				[ 0, 0, 1, 0, 0 ],
-				[ 0, 0, 0, 0, 0 ]
-			] );
-			*/
-			/*
-			this.layout = $M( [
-				[ Math.round( Math.random() ), Math.round( Math.random() ), Math.round( Math.random() ) ],
-				[ Math.round( Math.random() ), Math.round( Math.random() ), Math.round( Math.random() ) ],
-				[ Math.round( Math.random() ), Math.round( Math.random() ), Math.round( Math.random() ) ]
-			] );
-			*/
 			
 		}
 		
@@ -413,7 +390,7 @@
 		
 	}
 	
-	function add_models ( models ) {
+	function occupy_modules_temporary ( models ) {
 		
 		var modelCount = 0,
 			model;
@@ -437,7 +414,7 @@
 		
 	}
 	
-	function remove_models ( models ) {
+	function unoccupy_modules_temporary ( models ) {
 		
 		var i, l,
 			model;
@@ -501,7 +478,7 @@
 			// if does not match current models
 			
 			if ( this.modelsCurrent !== models || this._dirtyModule === true ) {
-				console.log( this, ' OCCUPY modules' );
+				
 				this.modelsCurrent = models;
 				this._dirtyModule = false;
 				
@@ -755,8 +732,7 @@
 	
 	function test_occupy_module ( testModule, show, occupy, testLayout ) {
 		
-		var success = 0,
-			dimensions,
+		var dimensions,
 			rows,
 			cols,
 			center,
@@ -771,7 +747,7 @@
 			
 			if ( this.testModule !== this.module ) {
 				
-				remove_models.call( this, this.models );
+				unoccupy_modules_temporary.call( this, this.models );
 				
 			}
 			
@@ -787,7 +763,7 @@
 			
 			this.testModule = testModule;
 			this.testModules = undefined;
-			this.testSuccess = false;
+			this.testSuccess = this.testSuccessLast = undefined;
 			
 		}
 		
@@ -808,8 +784,8 @@
 			
 			// get recursive test results
 			
-			success = test_spread( this.testModule, testLayout, testResults, spreadRecord, center.row, center.col, rows, cols, this.testModules );
-			this.testSuccess = Boolean( success );
+			this.testSuccessLast = this.testSuccess;
+			this.testSuccess = Boolean( test_spread( this.testModule, testLayout, testResults, spreadRecord, center.row, center.col, rows, cols, this.testModules ) );
 			
 			// show test results of occupy
 			
@@ -818,7 +794,7 @@
 				this.show_last_modules_tested();
 				
 			}
-			else {
+			else if ( this.testSuccess !== this.testSuccessLast ) {
 				
 				this._dirtyModuleTest = true;
 				

@@ -22,7 +22,14 @@
 	main.asset_register( assetPath, { 
 		data: _GridElementLibrary,
 		requirements: [
-			"js/kaiopua/puzzles/GridElement.js"
+			"js/kaiopua/puzzles/GridElement.js",
+			{ path: "asset/model/Plant_Dirt_Mound.js", type: 'model' },
+			{ path: "asset/model/Plant_Seed.js", type: 'model' },
+			{ path: "asset/model/Plant_Taro.js", type: 'model' },
+			{ path: "asset/model/Plant_Pineapple.js", type: 'model' },
+			{ path: "asset/model/Plant_Rock.js", type: 'model' },
+			{ path: "asset/model/Plant_Rock_Purple.js", type: 'model' },
+			{ path: "asset/model/Plant_Rock_Blue.js", type: 'model' }
 		],
 		callbacksOnReqs: init_internal,
 		wait: true

@@ -517,9 +517,9 @@
 				
 				plant = _RayHelper.raycast( {
 					pointer: this.pointer,
-					camera: main.camera,
-					objects: this.puzzle.occupants,//main.scene.dynamics,
-					octrees: main.scene.octree,
+					camera: shared.camera,
+					objects: this.puzzle.occupants,//shared.scene.dynamics,
+					octrees: shared.scene.octree,
 					objectOnly: true
 				} );
 				
@@ -582,9 +582,9 @@
 		
 		toggleSwitch = _RayHelper.raycast( {
 			pointer: main.get_pointer( parameters.event ),
-			camera: main.camera,
-			objects: _Puzzle.allToggleSwitches,//main.scene.dynamics,
-			octrees: main.scene.octree,
+			camera: shared.camera,
+			objects: _Puzzle.allToggleSwitches,//shared.scene.dynamics,
+			octrees: shared.scene.octree,
 			objectOnly: true
 		} );
 		
@@ -685,9 +685,9 @@
 				
 				plant = _RayHelper.raycast( {
 					pointer: this.pointer,
-					camera: main.camera,
-					objects: main.scene.dynamics,
-					octrees: main.scene.octree,
+					camera: shared.camera,
+					objects: shared.scene.dynamics,
+					octrees: shared.scene.octree,
 					objectOnly: true
 				} );
 				
@@ -778,7 +778,7 @@
 				
 				targetObject = _RayHelper.raycast( {
 					pointer: this.pointer,
-					camera: main.camera,
+					camera: shared.camera,
 					objects: this.puzzle.grid.modules,
 					objectOnly: true
 				} );
@@ -825,7 +825,7 @@
 					
 			targetObject = _RayHelper.raycast( {
 				pointer: this.pointer,
-				camera: main.camera,
+				camera: shared.camera,
 				objects: this.puzzle.grid.modules,
 				objectOnly: true
 			} );
@@ -1049,13 +1049,13 @@
 			
 			this.module = module;
 			
-		}
-		
-		// test module
-		
-		if ( this.plant instanceof _GridElement.Instance ) {
+			// test module
 			
-			this.plant.test_occupy_module_smart( module );
+			if ( this.plant instanceof _GridElement.Instance ) {
+				
+				this.plant.test_occupy_module_smart( module );
+				
+			}
 			
 		}
 		
@@ -1203,7 +1203,7 @@
 			r = this.rotation = {};
 			
 			position.copy( this.module.matrixWorld.getPosition() );
-			position = projector.projectVector( position, main.camera );
+			position = projector.projectVector( position, shared.camera );
 			
 			r.x0 = ( ( position.x + 1 ) * shared.screenWidth ) * 0.5;
 			r.y0 = ( ( -position.y + 1 ) * shared.screenHeight ) * 0.5;

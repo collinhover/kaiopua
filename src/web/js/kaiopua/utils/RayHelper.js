@@ -362,14 +362,14 @@
 	
 	function raycast ( parameters ) {
 		
-		var i, l,
-			j, k,
-			l, m,
+		var i, il,
+			j, jl,
+			k, kl,
 			ray = utilRay1Casting,
 			origin = utilVec31Casting,
-			offsetNone = utilVec32Casting,
 			offsets,
 			offset,
+			offsetNone = utilVec32Casting,
 			offsetColliders,
 			offsetObjects,
 			ignore,
@@ -450,11 +450,12 @@
 		
 		// for each offset
 		
-		for ( i = 0, l = offsets.length; i < l; i++ ) {
+		for ( i = 0, il = offsets.length; i < il; i++ ) {
 			
 			// offset ray
 			
 			offset = offsets[ i ];
+			
 			ray.origin.copy( origin ).addSelf( offset );
 			
 			// objects
@@ -477,7 +478,7 @@
 					// else raycast children and add reference to ancestor
 					else {
 						
-						for ( j = 0, k = offsetObjects.length; j < k; j++ ) {
+						for ( j = 0, jl = offsetObjects.length; j < jl; j++ ) {
 							
 							object = offsetObjects[ j ];
 							
@@ -485,9 +486,9 @@
 							
 							childIntersections = raycast_objects( ray, children );
 							
-							for ( l = 0, m = childIntersections.length; l < m; l++ ) {
+							for ( k = 0, kl = childIntersections.length; k < kl; k++ ) {
 								
-								childIntersections[ l ].ancestor = object;
+								childIntersections[ k ].ancestor = object;
 								
 							}
 							
@@ -509,7 +510,7 @@
 			
 			offsetColliders = colliders.slice( 0 );
 			
-			for ( j = 0, k = octrees.length; j < k; j++ ) {
+			for ( j = 0, jl = octrees.length; j < jl; j++ ) {
 				
 				offsetColliders = offsetColliders.concat( octrees[ j ].search( ray.origin, ray.far, true, ray.direction ) );
 				
@@ -546,7 +547,7 @@
 			
 			if ( main.is_array( ignore ) ) {
 				
-				for ( i = 0, l = intersections.length; i < l; i++ ) {
+				for ( i = 0, il = intersections.length; i < il; i++ ) {
 					
 					intersectionPotential = intersections[ i ];
 					
