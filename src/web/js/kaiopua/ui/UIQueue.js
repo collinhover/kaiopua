@@ -166,8 +166,7 @@
 	
 	function remove ( parameters ) {
 		
-		var i, l,
-			element ,
+		var element,
 			item,
 			priority,
 			queue,

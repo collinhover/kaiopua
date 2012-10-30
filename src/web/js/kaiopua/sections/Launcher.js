@@ -11,6 +11,7 @@
     var shared = main.shared = main.shared || {},
 		assetPath = "js/kaiopua/sections/Launcher.js",
 		_Launcher = {},
+		_Player,
 		_Water,
         _Sky,
 		_Skybox,
@@ -58,16 +59,18 @@
 	main.asset_register( assetPath, { 
 		data: _Launcher,
 		requirements: [
+			"js/kaiopua/core/Player.js",
 			"js/kaiopua/env/Sky.js",
 			"js/kaiopua/env/Skybox.js",
 			"js/kaiopua/env/Water.js",
 			"js/kaiopua/utils/ObjectHelper.js",
-			shared.pathToTextures + "skybox_world_posx.jpg",
-            shared.pathToTextures + "skybox_world_negx.jpg",
-			shared.pathToTextures + "skybox_world_posy.jpg",
-            shared.pathToTextures + "skybox_world_negy.jpg",
-			shared.pathToTextures + "skybox_world_posz.jpg",
-            shared.pathToTextures + "skybox_world_negz.jpg"
+            { path: shared.pathToAsset + "hero.js", type: 'model' },
+			shared.pathToAsset + "skybox_world_posx.jpg",
+            shared.pathToAsset + "skybox_world_negx.jpg",
+			shared.pathToAsset + "skybox_world_posy.jpg",
+            shared.pathToAsset + "skybox_world_negy.jpg",
+			shared.pathToAsset + "skybox_world_posz.jpg",
+            shared.pathToAsset + "skybox_world_negz.jpg"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -79,15 +82,21 @@
     
     =====================================================*/
     
-    function init_internal ( s, sb, w, oh ) {
+    function init_internal ( pl, s, sb, w, oh, heroGeometry ) {
 		
 		if ( ready !== true ) {
 			console.log('internal launcher');
 			
+			_Player = pl;
 			_Sky = s;
 			_Skybox = sb;
 			_Water = w;
 			_ObjectHelper = oh;
+			
+			shared.player = new _Player.Instance( {
+				geometry: heroGeometry
+			} );
+			shared.player.controllable = true;
 			
 			init_environment();
 			
@@ -126,7 +135,7 @@
 		
 		// skybox
 		
-		skybox = new _Skybox.Instance( shared.pathToTextures + "skybox_world" );
+		skybox = new _Skybox.Instance( shared.pathToAsset + "skybox_world" );
 		
 		// water
 		

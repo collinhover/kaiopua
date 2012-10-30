@@ -65,7 +65,7 @@
 		
 		// properties
 		
-		this.affected = [];
+		this.affecting = [];
 		
 	}
 	
@@ -77,13 +77,41 @@
 	
 	function affect ( object ) {
 		
-		return main.array_cautious_add( this.affected, object );
+		var affected,
+			index;
+		
+		index = main.index_of_property( this.affecting, 'object', object );
+		
+		if ( index === -1 ) {
+			
+			affected = {
+				object: object
+			};
+			
+			this.affecting.push( affected );
+			
+		}
+		else {
+			
+			affected = this.affecting[ index ];
+			
+		}
+		
+		return affected;
 		
 	}
 	
 	function unaffect ( object ) {
 		
-		return main.array_cautious_remove( this.affected, object );
+		var index;
+		
+		index = main.index_of_property( this.affecting, 'object', object );
+		
+		if ( index !== -1 ) {
+			
+			return this.affecting.splice( index, 1 )[ 0 ];
+			
+		}
 		
 	}
 	

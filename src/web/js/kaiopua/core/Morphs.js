@@ -155,8 +155,7 @@
 	
 	function play ( name, parameters ) {
 		
-		var i, l,
-			names = this.names,
+		var names = this.names,
 			name,
 			maps,
 			map,
@@ -192,9 +191,19 @@
 			
 			
 		}
-		else if ( parameters && typeof parameters.callback === 'function' ) {
+		else if ( parameters ) {
 			
-			parameters.callback();
+			if ( parameters.solo === true ) {
+				
+				this.clear_all( { duration: parameters.durationClear } );
+				
+			}
+			
+			if ( typeof parameters.callback === 'function' ) {
+				
+				parameters.callback();
+				
+			}
 			
 		}
 		

@@ -23,8 +23,8 @@
 		data: _Cloud,
 		requirements: [
 			"js/kaiopua/core/Model.js",
-			{ path: "asset/model/Cloud_001.js", type: 'model' },
-			{ path: "asset/model/Cloud_002.js", type: 'model' }
+			{ path: shared.pathToAsset + "Cloud_001.js", type: 'model' },
+			{ path: shared.pathToAsset + "Cloud_002.js", type: 'model' }
 		],
 		callbacksOnReqs: init_internal,
 		wait: true

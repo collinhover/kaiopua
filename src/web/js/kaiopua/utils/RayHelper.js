@@ -44,7 +44,8 @@
 		utilVec31Sphere,
 		utilVec31Triangle,
 		utilVec32Triangle,
-		utilVec33Triangle;
+		utilVec33Triangle,
+		utilVec34Triangle;
     
     /*===================================================
     
@@ -135,8 +136,7 @@
 	
 	function localize_ray ( ray, object ) {
 		
-		var scale,
-			matrixObj,
+		var matrixObj,
 			matrixObjCopy = utilMat41Localize,
 			mt = utilMat42Localize,
 			rt = utilRay1Localize;
@@ -150,18 +150,16 @@
 		if ( object instanceof THREE.Mesh ) {
 			
 			matrixObj = object.matrixWorld;
-			/*
-			scale = object.scale;
 			
 			// get copy of object world matrix without scale applied
 			// matrix with scale does not seem to invert correctly
 			
 			matrixObjCopy.extractPosition( matrixObj );
 			matrixObjCopy.extractRotation( matrixObj );
-			*/
+			
 			// invert copy
 			
-			mt.getInverse( matrixObj );//matrixObjCopy );
+			mt.getInverse( matrixObjCopy );
 			
 			mt.multiplyVector3( rt.origin );
 			mt.rotateAxis( rt.direction );
@@ -638,7 +636,6 @@
 		
 		for ( i = 0, l = colliders.length; i < l; i++ ) {
 			
-			//console.log( ' > raycast collider, ray ', ray.far, ' BEFORE: ', colliders[ i ],  ' + AFTER: ', extract_collider( colliders[ i ] ) );
 			collider = extract_collider( colliders[ i ] );
 			
 			// ray cast collider

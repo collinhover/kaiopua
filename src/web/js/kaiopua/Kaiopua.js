@@ -16,9 +16,7 @@ var KAIOPUA = (function (main) {
 	shared.originLink = window.location.pathname.toString();
 	
 	shared.pathToIcons = 'img/';
-	shared.pathToAssets = 'asset/';
-	shared.pathToModels = shared.pathToAssets + 'model/';
-	shared.pathToTextures = shared.pathToAssets + 'texture/';
+	shared.pathToAsset = 'asset/';
 	
 	shared.frameRateMax = 60;
 	shared.frameRateMin = 20;
@@ -106,9 +104,7 @@ var KAIOPUA = (function (main) {
             "js/kaiopua/sections/Launcher.js"
         ],
         assetsGameExtras = [
-			"js/kaiopua/sections/Intro.js",
-			"js/kaiopua/core/Player.js",
-			{ path: "asset/model/Hero.js", type: 'model' }
+			"js/kaiopua/sections/Intro.js"
         ];
 	
 	/*===================================================
@@ -566,16 +562,10 @@ var KAIOPUA = (function (main) {
     
     =====================================================*/
     
-    function init_ready ( intro, p ) {
+    function init_ready ( intro ) {
 		console.log('GAME: ready');
 		
 		_Intro = intro;
-		_Player = p;
-		
-		shared.player = new _Player.Instance( {
-			geometry: "asset/model/Hero.js"
-		} );
-		shared.player.controllable = true;
 		
 		$( '#buttonStart' ).on( 'tap', start );
 		$( '#buttonExitGame' ).on( 'tap', stop );
@@ -2652,7 +2642,8 @@ var KAIOPUA = (function (main) {
 	
 	function asset_path_cascade( path ) {
 		
-		var cascade,
+		var i, l,
+			cascade,
 			part,
 			dotIndex;
 		

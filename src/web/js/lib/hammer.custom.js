@@ -45,6 +45,7 @@ var HAMMER = ( function ( main ) {
 		_event_name_move = _has_touch ? 'touchmove' : 'mousemove',
 		_event_name_end = _has_touch ? 'touchend' : 'mouseup',
 		_event_name_cancel = _has_touch ? 'touchcancel' : '',
+		_mousedown = false,
 		_hammer_count = 0,
 		_hammering = false,
 		_hammer_instances = [],
@@ -691,17 +692,12 @@ var HAMMER = ( function ( main ) {
 	 */
 	function on_step ( event ) {
 		
-		var i, il,
-			type = event.type,
+		var type = event.type,
 			index,
 			dragging;
 		
 		// move
 		if ( type === _event_name_move ) {
-			
-			// don't allow mobile to drag window
-			
-			event.preventDefault();
 			
 			if ( _mousedown === true ) {
 				
@@ -716,6 +712,10 @@ var HAMMER = ( function ( main ) {
 				}
 				
 			}
+			
+			// don't allow mobile to drag window
+			
+			event.preventDefault();
 			
 		}
 		// end

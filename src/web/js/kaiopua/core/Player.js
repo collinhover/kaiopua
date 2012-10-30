@@ -12,7 +12,6 @@
 		assetPath = "js/kaiopua/core/Player.js",
         _Player = {},
 		_Character,
-		_Planting,
 		_MathHelper,
 		_KeyHelper,
 		_SceneHelper,
@@ -29,7 +28,6 @@
 		data: _Player,
 		requirements: [
 			"js/kaiopua/core/Character.js",
-			"js/kaiopua/farming/Planting.js",
 			"js/kaiopua/utils/MathHelper.js",
 			"js/kaiopua/utils/KeyHelper.js",
 			"js/kaiopua/utils/SceneHelper.js",
@@ -46,13 +44,12 @@
     
     =====================================================*/
 	
-	function init_internal ( c, pl, mh, kh, sh, oh, rh ) {
+	function init_internal ( c, mh, kh, sh, oh, rh ) {
 		console.log('internal player');
 		
 		// assets
 		
 		_Character = c;
-		_Planting = pl;
 		_MathHelper = mh;
 		_KeyHelper = kh;
 		_SceneHelper = sh;
@@ -220,7 +217,7 @@
 		parameters.name = 'Hero';
 		
 		parameters.geometry = parameters.geometry || new THREE.CubeGeometry( 50, 100, 50 );
-		parameters.material = parameters.material || new THREE.MeshLambertMaterial( { color: 0xFFF7E0, ambient: 0xFFF7E0, vertexColors: THREE.VertexColors } );
+		parameters.center = true;
 		
 		parameters.physics = parameters.physics || {};
 		parameters.physics.bodyType = 'capsule';
@@ -410,32 +407,6 @@
 			}
 		} );
 		
-		// planting
-		
-		this.planting = new _Planting.Instance( {
-			affectUI: true
-		} );
-		
-		this.actions.add( 'pointer', {
-			eventCallbacks: {
-				// TODO: replace tap planting select with general select
-				//tap: [ $.proxy( this.planting.select_puzzle, this.planting ), $.proxy( this.planting.select_plant, this.planting ) ],
-				hold: $.proxy( this.planting.activate_puzzle, this.planting ),
-				dragstart: $.proxy( this.planting.activate_plant, this.planting ),
-				drag: $.proxy( this.planting.step, this.planting ),
-				dragend: $.proxy( this.planting.complete, this.planting ),
-				doubletap: $.proxy( this.planting.delete_plant, this.planting )
-			},
-			deactivateCallbacks: $.proxy( this.planting.stop, this.planting ),
-			activeCheck: function () {
-				return me.planting.started;
-			},
-			options: {
-				priority: 2,
-				silencing: true
-			}
-		} );
-		
 	}
 	
 	/*===================================================
@@ -584,14 +555,12 @@
 		
 		if ( this.state.enabled === true || isAlwaysAvailable ) {
 			
-			parameters = {
-				event: e,
-				allowDefault: isAlwaysAvailable || main.paused
-			};
-			
 			// perform action
 			
-			this.actions.execute( keyNameActual, state, parameters );
+			this.actions.execute( keyNameActual, state, {
+				event: e,
+				allowDefault: isAlwaysAvailable || main.paused
+			} );
 			
 		}
 		

@@ -12,9 +12,12 @@
 		assetPath = "js/kaiopua/utils/VectorHelper.js",
 		_VectorHelper = {},
 		_MathHelper,
+		utilVec31Rotated,
 		utilVec31Axis,
 		utilVec31Distance,
-		utilQ1Axis;
+		utilQ1Axis,
+		utilQ1Relative,
+		utilMat41Relative;
     
     /*===================================================
     
@@ -47,6 +50,8 @@
 		utilVec31Axis = new THREE.Vector3();
 		utilVec31Distance = new THREE.Vector3();
 		utilQ1Axis = new THREE.Quaternion();
+		utilQ1Relative= new THREE.Quaternion();
+		utilMat41Relative = new THREE.Matrix4();
 		
 		// functions
 		
@@ -56,6 +61,8 @@
 		_VectorHelper.different = different;
 		_VectorHelper.distance_to = distance_to;
 		_VectorHelper.degree_to_rad = degree_to_rad;
+		_VectorHelper.rotate_relative_to = rotate_relative_to;
+		_VectorHelper.retrieve_relative_to = retrieve_relative_to;
 		_VectorHelper.angle_between_vectors = angle_between_vectors;
 		_VectorHelper.signed_angle_between_coplanar_vectors = signed_angle_between_coplanar_vectors;
 		_VectorHelper.axis_between_vectors = axis_between_vectors;
@@ -149,6 +156,60 @@
 		
 	}
 	
+	function rotate_relative_to ( vec3, to, up ) {
+		
+		var vec3Rotated = utilVec31Rotated.copy( vec3 );
+		
+		if ( to instanceof THREE.Quaternion !== true ) {
+			
+			to = retrieve_relative_to( to, up );
+		
+		}
+		
+		if ( to instanceof THREE.Quaternion ) {
+			
+			to.multiplyVector3( vec3Rotated );
+			
+		}
+		
+		return vec3Rotated;
+		
+	}
+	
+	function retrieve_relative_to ( to, up ) {
+		
+		var matrix;
+		
+		if ( to ) {
+			
+			if ( to instanceof THREE.Object3D ) {
+				
+				if ( to.useQuaternion === true ) {
+					
+					to = to.quaternion;
+					
+				}
+				else {
+					
+					matrix = utilMat41Relative.extractRotation( to.matrix );
+					to = utilQ1Relative.setFromRotationMatrix( matrix );
+					
+				}
+				
+			}
+			
+			if ( to instanceof THREE.Vector3 ) {
+				
+				to = q_to_axis( up, to );
+				
+			}
+			
+		}
+		
+		return to;
+		
+	}
+	
 	function angle_between_vectors ( vFrom, vTo ) {
 		
 		var dist = _MathHelper.clamp( vFrom.dot( vTo ), -1, 1 );
@@ -228,8 +289,7 @@
 		
 		// returns 2 orthographic ( perpendicular ) vectors to the first
 		
-		var i,
-			min = 0,
+		var min = 0,
 			minAxis,
 			v1absx = Math.abs( v1.x ),
 			v1absy = Math.abs( v1.y ),

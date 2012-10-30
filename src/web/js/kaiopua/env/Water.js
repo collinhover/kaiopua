@@ -25,7 +25,7 @@
 		requirements: [
 			"js/kaiopua/core/Model.js",
 			"js/kaiopua/utils/ObjectHelper.js",
-			shared.pathToTextures + "water_512.png"
+			shared.pathToAsset + "water_512.png"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true

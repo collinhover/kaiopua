@@ -16,6 +16,7 @@
 		_RayHelper,
 		_MathHelper,
 		_VectorHelper,
+		_ObjectHelper,
 		_PhysicsHelper;
 	
 	/*===================================================
@@ -32,6 +33,7 @@
 			"js/kaiopua/utils/MathHelper.js",
 			"js/kaiopua/utils/VectorHelper.js",
 			"js/kaiopua/utils/RayHelper.js",
+			"js/kaiopua/utils/ObjectHelper.js",
 			"js/kaiopua/utils/PhysicsHelper.js",
 			"js/lib/three/ThreeOctree.min.js"
 		],
@@ -45,7 +47,7 @@
     
     =====================================================*/
 	
-	function init_internal ( rb, ob, mh, vh, rh, ph ) {
+	function init_internal ( rb, ob, mh, vh, rh, oh, ph ) {
 		console.log('internal physics');
 		
 		_RigidBody = rb;
@@ -53,6 +55,7 @@
 		_MathHelper = mh;
 		_VectorHelper = vh;
 		_RayHelper = rh;
+		_ObjectHelper = oh;
 		_PhysicsHelper = ph;
 		
 		// instance
@@ -89,12 +92,11 @@
 		this.utilVec31Update = new THREE.Vector3();
 		this.utilVec32Update = new THREE.Vector3();
 		this.utilVec33Update = new THREE.Vector3();
-		this.utilVec34Update = new THREE.Vector3();
-		this.utilVec35Update = new THREE.Vector3();
 		this.utilVec31Apply = new THREE.Vector3();
 		this.utilVec31Velocity = new THREE.Vector3();
 		this.utilVec32Velocity = new THREE.Vector3();
 		this.utilVec33Velocity = new THREE.Vector3();
+		this.utilVec34Velocity = new THREE.Vector3();
 		this.utilQ1Velocity = new THREE.Quaternion();
 		
 		// octree
@@ -272,6 +274,8 @@
 			j, k,
 			rigidBody,
 			mesh,
+			gravityBody,
+			gravityMesh,
 			gravityOrigin = this.utilVec31Update,
 			gravityMagnitude = this.utilVec32Update,
 			gravityUp = this.utilVec33Update,
@@ -382,12 +386,12 @@
 			intersectionAlt,
 			intersectionJump,
 			intersectionDouble,
-			angle,
-			angleInverted,
-			normalOfIntersected,
 			direction = this.utilVec31Velocity,
 			axisInitial = this.utilVec32Velocity,
 			axisDown = this.utilVec33Velocity,
+			angle,
+			angleInverted,
+			normalOfIntersected = this.utilVec34Velocity,
 			angleFixCollisionQ,
 			moveForceRotated,
 			obstacle,
@@ -399,9 +403,9 @@
 		
 		// if moving / movable
 		
-		if ( rigidBody.dynamic !== true || force.isZero() === true ) {
+		if ( rigidBody.dynamic !== true || forceRotated.isZero() === true ) {
 			
-			velocity.reset();
+			velocity.clear();
 			
 			return;
 			
@@ -414,7 +418,7 @@
 		
 		// get length
 		
-		forceLength = force.length();
+		forceLength = forceRotated.length();
 		
 		// get bounding radius
 		//boundingRadius = rigidBody.radius;
@@ -436,27 +440,31 @@
 		
 		intersection = _RayHelper.raycast( intersectionParameters );
 		
-		// jumping needs a pre-application check in opposite direction of velocity to ensure the intersection application does not force rigid body through ground
-		
-		if ( forGravity && intersection && mesh.jumping === true ) {
+		if ( forGravity && intersection ) {
 			
-			// reverse force
+			// jumping needs a pre-application check in opposite direction of velocity to ensure the intersection application does not force rigid body through ground
 			
-			forceRotated.multiplyScalar( -1 );
-			
-			intersectionJump = _RayHelper.raycast( intersectionParameters );
-			
-			// clear force
-			
-			if ( intersectionJump ) {
+			if ( mesh.jumping === true ) {
 				
-				forceRotated.set( 0, 0, 0 );
-				
-			}
-			// revert force, jump is safe
-			else {
+				// reverse force
 				
 				forceRotated.multiplyScalar( -1 );
+				
+				intersectionJump = _RayHelper.raycast( intersectionParameters );
+				
+				// clear force
+				
+				if ( intersectionJump ) {
+					
+					forceRotated.set( 0, 0, 0 );
+					
+				}
+				// revert force, jump is safe
+				else {
+					
+					forceRotated.multiplyScalar( -1 );
+					
+				}
 				
 			}
 			
@@ -467,15 +475,15 @@
 		clear = apply_velocity.call( this, position, velocity, intersection, forceLength, boundingRadius, true );
 		
 		// gravity offsets may allow character to walk up steep walls
-		// check intersection normal vs normal of velocity, and compare angle between to velocity.collisionAngleThreshold
+		// check intersection normal vs normal of velocity, and compare angle between to velocity.options.collisionAngleThreshold
 		
-		if ( intersection && velocity.collisionAngleThreshold < _RigidBody.collisionAngleThresholdMax ) {
+		if ( intersection && velocity.options.collisionAngleThreshold < velocity.options.collisionAngleThresholdMax ) {
 			
 			direction.copy( forceRotated ).normalize();
 			
 			// normal is local to object intersected, so rotate normal accordingly
 			
-			normalOfIntersected = intersection.normal;
+			normalOfIntersected.copy( intersection.normal );
 			intersection.object.matrixWorld.rotateAxis( normalOfIntersected );
 			
 			// invert the angle between velocity direction and normal of intersected
@@ -484,7 +492,7 @@
 			angle = _VectorHelper.angle_between_vectors( direction, normalOfIntersected );
 			angleInverted = ( Math.PI - angle );
 			
-			if ( angleInverted >= velocity.collisionAngleThreshold ) {
+			if ( angleInverted >= velocity.options.collisionAngleThreshold ) {
 				
 				// pre damp movement force, if movement force rotated and normal of intersected are in opposite directions ( dot < 0 )
 				// this should allow characters to continue to walk over small objects with bad angles
@@ -495,7 +503,7 @@
 					
 					if ( moveForceRotated.dot( normalOfIntersected ) < 0 ) {
 						
-						rigidBody.velocityMovement.dampingPre.multiplyScalar( rigidBody.velocityMovement.dampingDecay );
+						rigidBody.velocityMovement.dampingPre.multiplyScalar( rigidBody.velocityMovement.options.dampingDecay );
 						
 						// if this velocity and movement velocity intersecting something, assume a large object with bad angle
 						
@@ -511,7 +519,7 @@
 					// revert movement pre damping
 					else {
 						
-						rigidBody.velocityMovement.dampingPre.set( 1, 1, 1 );
+						_VectorHelper.clamp_scalar( rigidBody.velocityMovement.dampingPre.addScalar( 1 - rigidBody.velocityMovement.options.dampingDecay ), 0, 1 );
 						
 					}
 					
@@ -519,7 +527,7 @@
 				
 				// if inverted angle is below max
 				
-				if ( angleInverted < _RigidBody.collisionAngleThresholdMax ) {
+				if ( angleInverted < velocity.options.collisionAngleThresholdMax ) {
 					
 					// find axis perpendicular to normal of intersected and in general direction of velocity
 					
@@ -580,7 +588,7 @@
 			
 			velocity.obstacle = obstacle;
 			
-			obstacle.affect( mesh );
+			obstacle.affect( mesh, { velocity: velocity } );
 			
 		}
 		
@@ -592,12 +600,11 @@
 			
 			if ( angleFixCollisionQ instanceof THREE.Quaternion !== true ) {
 				
-				rigidBody.velocityMovement.dampingPre.set( 1, 1, 1 );
+				_VectorHelper.clamp_scalar( rigidBody.velocityMovement.dampingPre.addScalar( 1 - rigidBody.velocityMovement.options.dampingDecay ), 0, 1 );
 				
 			}
 			
 		}
-		
 		// sliding
 		
 		if ( angleFixCollisionQ instanceof THREE.Quaternion && intersectionDouble !== true && !intersectionAlt ) {
@@ -615,7 +622,7 @@
 		
 		if ( clear === true ) {
 			
-			velocity.reset();
+			velocity.clear();
 			
 		}
 		else {

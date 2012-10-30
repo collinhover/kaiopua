@@ -38,12 +38,12 @@
 			"js/kaiopua/env/WorldIsland.js",
 			"js/kaiopua/env/Skybox.js",
 			"js/kaiopua/utils/ObjectHelper.js",
-			shared.pathToTextures + "skybox_world_posx.jpg",
-            shared.pathToTextures + "skybox_world_negx.jpg",
-			shared.pathToTextures + "skybox_world_posy.jpg",
-            shared.pathToTextures + "skybox_world_negy.jpg",
-			shared.pathToTextures + "skybox_world_posz.jpg",
-            shared.pathToTextures + "skybox_world_negz.jpg"
+			shared.pathToAsset + "skybox_world_posx.jpg",
+            shared.pathToAsset + "skybox_world_negx.jpg",
+			shared.pathToAsset + "skybox_world_posy.jpg",
+            shared.pathToAsset + "skybox_world_negy.jpg",
+			shared.pathToAsset + "skybox_world_posz.jpg",
+            shared.pathToAsset + "skybox_world_negz.jpg"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -87,7 +87,7 @@
 		
 		world = new _WorldIsland.Instance();
 		
-		skybox = new _Skybox.Instance( shared.pathToTextures + "skybox_world" );
+		skybox = new _Skybox.Instance( shared.pathToAsset + "skybox_world" );
 		
     }
     

@@ -96,11 +96,11 @@ var KAIOPUA = (function (main) {
         // shared
         shared.pointers = [];
         shared.originLink = window.location.pathname.toString();
-		shared.pathToAssets = 'asset/';
-		shared.pathToModules = shared.pathToAssets + 'modules/';
-		shared.pathToModels = shared.pathToAssets + 'model/';
-		shared.pathToIcons = shared.pathToAssets + 'icons/';
-		shared.pathToTextures = shared.pathToAssets + 'texture/';
+		shared.pathToAsset = 'asset/';
+		shared.pathToModules = shared.pathToAsset + 'modules/';
+		shared.pathToModels = shared.pathToAsset + 'model/';
+		shared.pathToIcons = shared.pathToAsset + 'icons/';
+		shared.pathToAsset = shared.pathToAsset + 'texture/';
         
         shared.frameRateMax = 60;
         shared.frameRateMin = 20;

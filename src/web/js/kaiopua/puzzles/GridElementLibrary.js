@@ -23,13 +23,13 @@
 		data: _GridElementLibrary,
 		requirements: [
 			"js/kaiopua/puzzles/GridElement.js",
-			{ path: "asset/model/Plant_Dirt_Mound.js", type: 'model' },
-			{ path: "asset/model/Plant_Seed.js", type: 'model' },
-			{ path: "asset/model/Plant_Taro.js", type: 'model' },
-			{ path: "asset/model/Plant_Pineapple.js", type: 'model' },
-			{ path: "asset/model/Plant_Rock.js", type: 'model' },
-			{ path: "asset/model/Plant_Rock_Purple.js", type: 'model' },
-			{ path: "asset/model/Plant_Rock_Blue.js", type: 'model' }
+			{ path: shared.pathToAsset + "Plant_Dirt_Mound.js", type: 'model' },
+			{ path: shared.pathToAsset + "Plant_Seed.js", type: 'model' },
+			{ path: shared.pathToAsset + "Plant_Taro.js", type: 'model' },
+			{ path: shared.pathToAsset + "Plant_Pineapple.js", type: 'model' },
+			{ path: shared.pathToAsset + "Plant_Rock.js", type: 'model' },
+			{ path: shared.pathToAsset + "Plant_Rock_Purple.js", type: 'model' },
+			{ path: shared.pathToAsset + "Plant_Rock_Blue.js", type: 'model' }
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -182,22 +182,22 @@
 		
 		_GridElementLibrary.skins[ 'taro' ] = {
 			container: {
-				geometry: 'asset/model/Plant_Dirt_Mound.js'
+				geometry: shared.pathToAsset + 'Plant_Dirt_Mound.js'
 			},
 			customizations: {
-				geometry: 'asset/model/Plant_Taro.js'
+				geometry: shared.pathToAsset + 'Plant_Taro.js'
 			}
 		};
 		
 		_GridElementLibrary.skins[ 'pineapple' ] = {
 			customizations: {
-				geometry: 'asset/model/Plant_Pineapple.js'
+				geometry: shared.pathToAsset + 'Plant_Pineapple.js'
 			}
 		};
 		
 		_GridElementLibrary.skins[ 'rock' ] = {
 			customizations: {
-				geometry: 'asset/model/Plant_Rock.js'
+				geometry: shared.pathToAsset + 'Plant_Rock.js'
 			}
 		};
 		
@@ -214,7 +214,7 @@
 				// properties
 				
 				data.skin = skin;
-				data.geometry = data.geometry || 'asset/model/Plant_Seed.js';
+				data.geometry = data.geometry || shared.pathToAsset + 'Plant_Seed.js';
 				
 				// store name in list
 				

@@ -23,7 +23,7 @@
 		data: _Dirt,
 		requirements: [
 			"js/kaiopua/puzzles/GridModule.js",
-			shared.pathToTextures + 'dirt_128.jpg'
+			shared.pathToAsset + 'dirt_128.jpg'
 		],
 		callbacksOnReqs: init_internal,
 		wait: true

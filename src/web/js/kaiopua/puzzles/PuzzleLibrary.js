@@ -25,14 +25,14 @@
 		requirements: [
 			"js/kaiopua/puzzles/Puzzle.js",
 			"js/kaiopua/farming/Dirt.js",
-			{ path: "asset/model/Puzzle_Tutorial.js", type: 'model' },
-			{ path: "asset/model/Puzzle_Tutorial_Grid.js", type: 'model' },
-			{ path: "asset/model/Puzzle_Tutorial_Toggle.js", type: 'model' },
-			{ path: "asset/model/Puzzle_Rolling_Hills.js", type: 'model' },
-			{ path: "asset/model/Puzzle_Rolling_Hills_Grid.js", type: 'model' },
-			{ path: "asset/model/Puzzle_Rolling_Hills_Toggle.js", type: 'model' },
-			{ path: "asset/model/Puzzle_Basics_Abilities.js", type: 'model' },
-			{ path: "asset/model/Puzzle_Basics_Abilities_Grid.js", type: 'model' }
+			{ path: shared.pathToAsset + "Puzzle_Tutorial.js", type: 'model' },
+			{ path: shared.pathToAsset + "Puzzle_Tutorial_Grid.js", type: 'model' },
+			{ path: shared.pathToAsset + "Puzzle_Tutorial_Toggle.js", type: 'model' },
+			{ path: shared.pathToAsset + "Puzzle_Rolling_Hills.js", type: 'model' },
+			{ path: shared.pathToAsset + "Puzzle_Rolling_Hills_Grid.js", type: 'model' },
+			{ path: shared.pathToAsset + "Puzzle_Rolling_Hills_Toggle.js", type: 'model' },
+			{ path: shared.pathToAsset + "Puzzle_Basics_Abilities.js", type: 'model' },
+			{ path: shared.pathToAsset + "Puzzle_Basics_Abilities_Grid.js", type: 'model' }
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -61,15 +61,15 @@
 		Object.defineProperty(_PuzzleLibrary.puzzles, 'tutorial', { 
 			value : {
 				name: 'Tutorial',
-				geometry: "asset/model/Puzzle_Tutorial.js",
+				geometry: shared.pathToAsset + "Puzzle_Tutorial.js",
 				physics: {
 					bodyType: 'mesh'
 				},
 				grid: {
-					modulesGeometry: "asset/model/Puzzle_Tutorial_Grid.js",
+					modulesGeometry: shared.pathToAsset + "Puzzle_Tutorial_Grid.js",
 					moduleInstance: _Dirt.Instance
 				},
-				toggleSwitch: "asset/model/Puzzle_Tutorial_Toggle.js",
+				toggleSwitch: shared.pathToAsset + "Puzzle_Tutorial_Toggle.js",
 				numElementsMin: 6,
 				numShapesRequired: 2,
 				hints: [
@@ -98,12 +98,12 @@
 		Object.defineProperty(_PuzzleLibrary.puzzles, 'abilities', { 
 			value : {
 				name: 'Abilities',
-				geometry: "asset/model/Puzzle_Basics_Abilities.js",
+				geometry: shared.pathToAsset + "Puzzle_Basics_Abilities.js",
 				physics: {
 					bodyType: 'mesh'
 				},
 				grid: {
-					modulesGeometry: "asset/model/Puzzle_Basics_Abilities_Grid.js",
+					modulesGeometry: shared.pathToAsset + "Puzzle_Basics_Abilities_Grid.js",
 					moduleInstance: _Dirt.Instance
 				},
 				numElementsMin: 10,
@@ -130,15 +130,15 @@
 		Object.defineProperty(_PuzzleLibrary.puzzles, 'rollinghills', { 
 			value : {
 				name: 'Rolling Hills',
-				geometry: "asset/model/Puzzle_Rolling_Hills.js",
+				geometry: shared.pathToAsset + "Puzzle_Rolling_Hills.js",
 				physics: {
 					bodyType: 'mesh'
 				},
 				grid: {
-					modulesGeometry: "asset/model/Puzzle_Rolling_Hills_Grid.js",
+					modulesGeometry: shared.pathToAsset + "Puzzle_Rolling_Hills_Grid.js",
 					moduleInstance: _Dirt.Instance
 				},
-				toggleSwitch: "asset/model/Puzzle_Rolling_Hills_Toggle.js",
+				toggleSwitch: shared.pathToAsset + "Puzzle_Rolling_Hills_Toggle.js",
 				numElementsMin: 13,
 				numShapesRequired: 3,
 				hints: [

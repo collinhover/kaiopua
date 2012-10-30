@@ -32,30 +32,30 @@
 			"js/kaiopua/env/Water.js",
 			"js/kaiopua/env/Sky.js",
 			"js/kaiopua/utils/PhysicsHelper.js",
-            { path: "asset/model/Whale.js", type: 'model' },
-			{ path: "asset/model/Sun.js", type: 'model' },
-			{ path: "asset/model/Hut.js", type: 'model' },
-			{ path: "asset/model/Hut_Hill.js", type: 'model' },
-			{ path: "asset/model/Hut_Steps.js", type: 'model' },
-			{ path: "asset/model/Bed.js", type: 'model' },
-			{ path: "asset/model/Banana_Leaf_Door.js", type: 'model' },
-			{ path: "asset/model/Surfboard.js", type: 'model' },
-			{ path: "asset/model/Grass_Clump_001.js", type: 'model' },
-			{ path: "asset/model/Grass_Clump_002.js", type: 'model' },
-			{ path: "asset/model/Grass_Line_001.js", type: 'model' },
-			{ path: "asset/model/Grass_Line_002.js", type: 'model' },
-			{ path: "asset/model/Palm_Tree.js", type: 'model' },
-			{ path: "asset/model/Palm_Trees.js", type: 'model' },
-			{ path: "asset/model/Kukui_Tree.js", type: 'model' },
-			{ path: "asset/model/Kukui_Trees.js", type: 'model' },
-			{ path: "asset/model/Volcano_Large.js", type: 'model' },
-			{ path: "asset/model/Volcano_Small.js", type: 'model' },
-			{ path: "asset/model/Volcano_Rocks_001.js", type: 'model' },
-			{ path: "asset/model/Volcano_Rocks_002.js", type: 'model' },
-			{ path: "asset/model/Volcano_Rocks_003.js", type: 'model' },
-			{ path: "asset/model/Volcano_Rocks_004.js", type: 'model' },
-			{ path: "asset/model/Volcano_Rocks_005.js", type: 'model' },
-            shared.pathToTextures + "water_world_512.png"
+            { path: shared.pathToAsset + "Whale.js", type: 'model' },
+			{ path: shared.pathToAsset + "Sun.js", type: 'model' },
+			{ path: shared.pathToAsset + "Hut.js", type: 'model' },
+			{ path: shared.pathToAsset + "Hut_Hill.js", type: 'model' },
+			{ path: shared.pathToAsset + "Hut_Steps.js", type: 'model' },
+			{ path: shared.pathToAsset + "Bed.js", type: 'model' },
+			{ path: shared.pathToAsset + "Banana_Leaf_Door.js", type: 'model' },
+			{ path: shared.pathToAsset + "Surfboard.js", type: 'model' },
+			{ path: shared.pathToAsset + "Grass_Clump_001.js", type: 'model' },
+			{ path: shared.pathToAsset + "Grass_Clump_002.js", type: 'model' },
+			{ path: shared.pathToAsset + "Grass_Line_001.js", type: 'model' },
+			{ path: shared.pathToAsset + "Grass_Line_002.js", type: 'model' },
+			{ path: shared.pathToAsset + "Palm_Tree.js", type: 'model' },
+			{ path: shared.pathToAsset + "Palm_Trees.js", type: 'model' },
+			{ path: shared.pathToAsset + "Kukui_Tree.js", type: 'model' },
+			{ path: shared.pathToAsset + "Kukui_Trees.js", type: 'model' },
+			{ path: shared.pathToAsset + "Volcano_Large.js", type: 'model' },
+			{ path: shared.pathToAsset + "Volcano_Small.js", type: 'model' },
+			{ path: shared.pathToAsset + "Volcano_Rocks_001.js", type: 'model' },
+			{ path: shared.pathToAsset + "Volcano_Rocks_002.js", type: 'model' },
+			{ path: shared.pathToAsset + "Volcano_Rocks_003.js", type: 'model' },
+			{ path: shared.pathToAsset + "Volcano_Rocks_004.js", type: 'model' },
+			{ path: shared.pathToAsset + "Volcano_Rocks_005.js", type: 'model' },
+            shared.pathToAsset + "water_world_512.png"
 		],
 		callbacksOnReqs: init_internal,
 		wait: true
@@ -112,7 +112,7 @@
 		// body
 		
     	me.parts.body = new _Model.Instance({
-            geometry: main.get_asset_data("asset/model/Whale.js"),
+            geometry: main.get_asset_data(shared.pathToAsset + "Whale.js"),
 			physics: {
 				bodyType: 'mesh',
 				gravitySource: true
@@ -147,7 +147,7 @@
 		// water
 		
 		me.parts.waterRing = new _Water.Instance( { 
-			wavesTexture: shared.pathToTextures + "water_world_512.png"
+			wavesTexture: shared.pathToAsset + "water_world_512.png"
 		} );
 		
 		me.add( me.parts.waterRing );
@@ -155,7 +155,7 @@
 		// sun/moon
 		
 		me.parts.sun = new _Model.Instance({
-            geometry: main.get_asset_data("asset/model/Sun.js"),
+            geometry: main.get_asset_data(shared.pathToAsset + "Sun.js"),
 			material: new THREE.MeshBasicMaterial( { shading: THREE.NoShading, vertexColors: THREE.VertexColors } ),
 			physics: {
 				bodyType: 'mesh',
@@ -242,7 +242,7 @@
 		// hill for home
 		
 		me.parts.hill = new _Model.Instance({
-            geometry: main.get_asset_data("asset/model/Hut_Hill.js"),
+            geometry: main.get_asset_data(shared.pathToAsset + "Hut_Hill.js"),
 			physics: {
 				bodyType: 'mesh'
 			},
@@ -254,7 +254,7 @@
 		// steps
 		
 		me.parts.steps = new _Model.Instance({
-            geometry: main.get_asset_data("asset/model/Hut_Steps.js"),
+            geometry: main.get_asset_data(shared.pathToAsset + "Hut_Steps.js"),
 			physics: {
 				bodyType: 'mesh'
 			},
@@ -266,7 +266,7 @@
 		// hut
 		
 		me.parts.hut = new _Model.Instance({
-            geometry: main.get_asset_data("asset/model/Hut.js"),
+            geometry: main.get_asset_data(shared.pathToAsset + "Hut.js"),
 			physics: {
 				bodyType: 'mesh'
 			},
@@ -278,7 +278,7 @@
 		// banana leaf door
 		
 		me.parts.bananaLeafDoor = new _Model.Instance({
-            geometry: main.get_asset_data("asset/model/Banana_Leaf_Door.js"),
+            geometry: main.get_asset_data(shared.pathToAsset + "Banana_Leaf_Door.js"),
 			center: true,
 			side: THREE.DoubleSide
         });
@@ -288,7 +288,7 @@
 		// surfboard
 		
 		me.parts.surfboard = new _Model.Instance({
-            geometry: main.get_asset_data("asset/model/Surfboard.js"),
+            geometry: main.get_asset_data(shared.pathToAsset + "Surfboard.js"),
 			center: true
         });
 		
@@ -307,7 +307,7 @@
 		// volcano large
 		
 		me.parts.volcanoLarge = new _Model.Instance({
-            geometry: main.get_asset_data("asset/model/Volcano_Large.js"),
+            geometry: main.get_asset_data(shared.pathToAsset + "Volcano_Large.js"),
 			physics: {
 				bodyType: 'mesh'
 			},
@@ -319,7 +319,7 @@
 		// volcano small
 		
 		me.parts.volcanoSmall = new _Model.Instance({
-            geometry: main.get_asset_data("asset/model/Volcano_Small.js"),
+            geometry: main.get_asset_data(shared.pathToAsset + "Volcano_Small.js"),
 			physics: {
 				bodyType: 'mesh'
 			},
@@ -331,7 +331,7 @@
 		// volcano rocks
 		
 		me.parts.volcanoRocks001 = new _Model.Instance({
-            geometry: main.get_asset_data("asset/model/Volcano_Rocks_001.js"),
+            geometry: main.get_asset_data(shared.pathToAsset + "Volcano_Rocks_001.js"),
 			physics: {
 				bodyType: 'mesh'
 			},
@@ -341,7 +341,7 @@
 		me.parts.volcano.add( me.parts.volcanoRocks001 );
 		
 		me.parts.volcanoRocks002 = new _Model.Instance({
-            geometry: main.get_asset_data("asset/model/Volcano_Rocks_002.js"),
+            geometry: main.get_asset_data(shared.pathToAsset + "Volcano_Rocks_002.js"),
 			physics: {
 				bodyType: 'mesh'
 			},
@@ -351,7 +351,7 @@
 		me.parts.volcano.add( me.parts.volcanoRocks002 );
 		
 		me.parts.volcanoRocks003 = new _Model.Instance({
-            geometry: main.get_asset_data("asset/model/Volcano_Rocks_003.js"),
+            geometry: main.get_asset_data(shared.pathToAsset + "Volcano_Rocks_003.js"),
 			physics: {
 				bodyType: 'mesh'
 			},
@@ -361,7 +361,7 @@
 		me.parts.volcano.add( me.parts.volcanoRocks003 );
 		
 		me.parts.volcanoRocks004 = new _Model.Instance({
-            geometry: main.get_asset_data("asset/model/Volcano_Rocks_004.js"),
+            geometry: main.get_asset_data(shared.pathToAsset + "Volcano_Rocks_004.js"),
 			physics: {
 				bodyType: 'mesh'
 			},
@@ -371,7 +371,7 @@
 		me.parts.volcano.add( me.parts.volcanoRocks004 );
 		
 		me.parts.volcanoRocks005 = new _Model.Instance({
-            geometry: main.get_asset_data("asset/model/Volcano_Rocks_005.js"),
+            geometry: main.get_asset_data(shared.pathToAsset + "Volcano_Rocks_005.js"),
 			physics: {
 				bodyType: 'mesh'
 			},
@@ -393,7 +393,7 @@
 		// kukui trees
 		
 		me.parts.kukuiTrees = new _Model.Instance({
-			geometry: "asset/model/Kukui_Trees.js",
+			geometry: shared.pathToAsset + "Kukui_Trees.js",
 		});
 		
 		me.parts.trees.add( me.parts.kukuiTrees );
@@ -401,7 +401,7 @@
 		// palm trees
 		
 		me.parts.palmTrees = new _Model.Instance({
-			geometry: "asset/model/Palm_Trees.js",
+			geometry: shared.pathToAsset + "Palm_Trees.js",
 		});
 		
 		me.parts.trees.add( me.parts.palmTrees );

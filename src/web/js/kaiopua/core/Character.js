@@ -161,12 +161,12 @@
 					
 					tweenShow = _ObjectHelper.tween( this.material, { opacity: 1 }, {
 						start: false,
-						time: durationPerTween
+						duration: durationPerTween
 					} );
 					
 					tweenHide = _ObjectHelper.tween( this.material, { opacity: stats.invulnerabilityOpacityMin }, {
 						start: false,
-						time: durationPerTween
+						duration: durationPerTween
 					} );
 					
 					tweenHide.chain( tweenShow.chain( tweenHide ) ).start();
@@ -176,7 +176,7 @@
 				else {
 					
 					_ObjectHelper.tween( this.material, { opacity: 1 }, {
-						time: durationPerTween,
+						duration: durationPerTween,
 						onComplete: function () {
 							
 							me.material.transparent = false;
@@ -328,7 +328,7 @@
 		var state = this.state,
 			stats = this.options.stats;
 		console.log( this, ' trying to hurt for ', damage, ', invulnerable? ', state.invulnerable );
-		if ( state.invulnerable !== true && state.dead !== true ) {
+		if ( state.invulnerable !== true && state.dead !== true && main.is_number( damage ) && damage > 0 ) {
 			
 			this.health -= damage;
 			
@@ -346,6 +346,8 @@
 				this.invulnerable = true;
 				
 			}
+			
+			return true;
 			
 		}
 		
@@ -400,7 +402,7 @@
 			this.material.transparent = true;
 			
 			_ObjectHelper.tween( this.material, { opacity: 0 }, { 
-				time: durations.decay,
+				duration: durations.decay,
 				delay: durations.decayDelay,
 				onComplete: function () {
 					
@@ -670,7 +672,7 @@
 			velocityGravityForceDelta,
 			velocityMovement,
 			velocityMovementForceDelta,
-			velocityMovementForceLength,
+			velocityMovementForceRotatedLength,
 			velocityMovementDamping,
 			dragCoefficient,
 			terminalVelocity,
@@ -778,7 +780,6 @@
 			jumpMoveDamping = jump.moveDamping;
 			
 			velocityMovement = rigidBody.velocityMovement;
-			velocityMovementForce = velocityMovement.force;
 			velocityMovementForceDelta = velocityMovement.forceDelta;
 			velocityGravity = rigidBody.velocityGravity;
 			velocityGravityForceDelta = velocityGravity.forceDelta;
@@ -789,6 +790,28 @@
 			sliding = rigidBody.sliding;
 			
 			jump.timeAfterNotGrounded += timeDelta;
+			
+			// air control
+			
+			if ( grounded === false && jump.timeAfterNotGrounded >= jumpTimeAfterNotGroundedMax ) {
+				
+				if ( typeof jump.movementChangeLayer === 'undefined' ) {
+					
+					jump.movementChangeLayer = _ObjectHelper.temporary_change( velocityMovement, {
+						damping: new THREE.Vector3(  jumpMoveDamping, jumpMoveDamping, jumpMoveDamping ),
+						speedDelta: new THREE.Vector3(  jumpAirControl, jumpAirControl, jumpAirControl )
+					} );
+					
+				}
+				
+			}
+			else if ( typeof jump.movementChangeLayer !== 'undefined' ) {
+				
+				_ObjectHelper.revert_change( velocityMovement, jump.movementChangeLayer );
+				
+				jump.movementChangeLayer = undefined;
+				
+			}
 			
 			// if falling but not jumping
 			
@@ -841,11 +864,6 @@
 						
 						velocityGravity.reset();
 						
-						jump.movementChangeLayer = _ObjectHelper.temporary_change( velocityMovement, {
-							damping: new THREE.Vector3(  jumpMoveDamping, jumpMoveDamping, jumpMoveDamping ),
-							speedDelta: new THREE.Vector3(  jumpAirControl, jumpAirControl, jumpAirControl )
-						} );
-						
 					}
 					
 					// play jump
@@ -878,8 +896,6 @@
 				
 				if ( grounded === true && jump.active !== false ) {
 					
-					_ObjectHelper.revert_change( velocityMovement, jump.movementChangeLayer );
-					
 					this.stop_jumping();
 					
 					if ( jump.timeAfterNotGrounded >= jumpTimeAfterNotGroundedMax ) {
@@ -904,50 +920,54 @@
 			
 			// movement
 			
-			velocityMovementForceDelta.copy( moveDir );
-			
-			if ( state.movingHorizontal && jump.active === true ) {
+			if ( sliding !== true ) {
 				
-				velocityMovementForceDelta.z += jumpSpeedStart * jump.moveSpeedMod;
+				moveDir.multiplyScalar( moveSpeed );
+				
+				if ( state.movingHorizontal && jump.active === true ) {
+					
+					moveDir.z += jumpSpeedStart * jump.moveSpeedMod;
+					
+				}
+				
+				velocityMovementForceDelta.addSelf( moveDir );
+				
+				// moving backwards?
+				
+				if ( moveDir.z < 0 ) {
+					
+					state.movingBack = true;
+					
+				}
+				else if ( moveDir.z > 0 ) {
+					
+					state.movingBack = false;
+					
+				}
 				
 			}
-			
-			velocityMovementForceDelta.multiplyScalar( moveSpeed );
-			
-			// moving backwards?
-			
-			if ( velocityMovementForceDelta.z < 0 ) {
-				
-				state.movingBack = true;
-				
-			}
-			else if ( velocityMovementForceDelta.z > 0 ) {
-				
-				state.movingBack = false;
-				
-			}
-			
-			// get movement force
-			
-			velocityMovementForceLength = velocityMovement.force.length() / timeDeltaMod;
 			
 			// walk/run/idle
 			
 			if ( jump.active === false && grounded === true ) {
 				
+				// get movement force
+				
+				velocityMovementForceRotatedLength = velocityMovement.forceRotated.length() / timeDeltaMod;
+				
 				// walk / run cycles
 				
-				if ( velocityMovementForceLength > 0 || sliding === true ) {
+				if ( velocityMovementForceRotatedLength > 0 || sliding === true ) {
 					
 					// get approximate terminal velocity based on acceleration (moveVec) and damping
 					// helps morphs play faster if character is moving faster, or slower if moving slower
-					// TODO: move equation into physics module
+					// TODO: account for really low damping (0.95+)
 					
 					velocityMovementDamping = velocityMovement.damping.z;
 					dragCoefficient = ( 0.33758 * Math.pow( velocityMovementDamping, 2 ) ) + ( -0.67116 * velocityMovementDamping ) + 0.33419;
 					
 					terminalVelocity = Math.round( Math.sqrt( ( 2 * Math.abs( velocityMovement.force.z * 0.5 ) ) / dragCoefficient ) ) * 0.5;
-					playSpeedModifier = terminalVelocity / Math.round( velocityMovementForceLength );
+					playSpeedModifier = terminalVelocity / Math.round( velocityMovementForceRotatedLength );
 					
 					if ( main.is_number( playSpeedModifier ) !== true ) {
 						
@@ -955,7 +975,7 @@
 						
 					}
 					
-					if ( velocityMovementForceLength >= move.runThreshold ) {
+					if ( velocityMovementForceRotatedLength >= move.runThreshold ) {
 						
 						this.morphs.play( 'run', { duration: durations.run * playSpeedModifier, loop: true, solo: true, durationClear: durations.clearSolo, reverse: state.movingBack } );
 						
