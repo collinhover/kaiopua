@@ -496,9 +496,8 @@
 						layoutModule.set_occupant( model );
 						
 						// grow core
-						
 						_ObjectHelper.tween( model.core.scale.set( 0, 0, 0 ), new THREE.Vector3( 1, 1, 1 ), { 
-							time: this.timeGrow,
+							duration: this.timeGrow,
 							easing: TWEEN.Easing.Back.EaseOut
 						} );
 						

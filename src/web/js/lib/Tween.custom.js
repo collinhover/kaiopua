@@ -52,18 +52,19 @@ var TWEEN = TWEEN || ( function () {
 
 		},
 
-		update: function ( time ) {
+		update: function ( time, timeJump ) {
 
 			var i,
 				tweens = _tweens,
-				tween,
-				time = time !== undefined ? time : Date.now();
+				tween;
+				
+			time = time !== undefined ? time : Date.now();
 			
 			for ( i = tweens.length - 1; i >= 0; i-- ) {
 				
 				tween =  tweens[ i ];
 				
-				if ( tween.update( time ) !== true ) {
+				if ( tween.update( time, timeJump ) !== true ) {
 					
 					// it is possible to have remove happen at end of update but before this remove
 					// so for stability we need an extra index search
@@ -235,13 +236,20 @@ TWEEN.Tween = function ( object ) {
 
 	};
 
-	this.update = function ( time ) {
+	this.update = function ( time, timeJump ) {
+		
+		if ( timeJump ) {
+			
+			_startTime += timeJump;
+			
+		}
 		
 		if ( time < _startTime ) {
 
 			return true;
 
 		}
+		
 		var elapsed = ( time - _startTime ) / _duration;
 		elapsed = elapsed > 1 ? 1 : elapsed;
 

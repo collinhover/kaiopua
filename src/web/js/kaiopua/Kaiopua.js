@@ -58,6 +58,9 @@ var KAIOPUA = (function (main) {
 		started = false,
         paused = false,
 		pausedByFocusLoss = false,
+		pausedAt = 0,
+		resumedAt = 0,
+		pausedDuration = 0,
 		transitionTime = 500,
 		navStartDelayTime = 500,
         libsPrimaryList = [
@@ -763,7 +766,8 @@ var KAIOPUA = (function (main) {
         if (paused === false) {
             console.log('GAME: PAUSE');
             paused = true;
-            
+            pausedAt = shared.time;
+			
             shared.signals.onGamePaused.dispatch( preventDefault, preventMenuChange );
 			
 			// render once to ensure user is not surprised when resuming
@@ -780,6 +784,12 @@ var KAIOPUA = (function (main) {
 			console.log('GAME: RESUME');
 			
 			paused = false;
+            resumedAt = shared.time;
+			pausedDuration = resumedAt - pausedAt;
+			
+			// tween update to account for time jump
+			
+			TWEEN.update( resumedAt, pausedDuration );
 			
 			shared.signals.onGameResumed.dispatch();
             
@@ -825,7 +835,7 @@ var KAIOPUA = (function (main) {
 		
 		if ( paused !== true && setup === true ) {
 			
-			TWEEN.update();
+			TWEEN.update( shared.time );
 			
 			if ( main.physics ) {
 				

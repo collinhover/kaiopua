@@ -12,6 +12,7 @@
 		assetPath = "js/kaiopua/core/Player.js",
         _Player = {},
 		_Character,
+		_Planting,
 		_MathHelper,
 		_KeyHelper,
 		_SceneHelper,
@@ -28,6 +29,7 @@
 		data: _Player,
 		requirements: [
 			"js/kaiopua/core/Character.js",
+			"js/kaiopua/farming/Planting.js",
 			"js/kaiopua/utils/MathHelper.js",
 			"js/kaiopua/utils/KeyHelper.js",
 			"js/kaiopua/utils/SceneHelper.js",
@@ -44,12 +46,13 @@
     
     =====================================================*/
 	
-	function init_internal ( c, mh, kh, sh, oh, rh ) {
+	function init_internal ( c, p, mh, kh, sh, oh, rh ) {
 		console.log('internal player');
 		
 		// assets
 		
 		_Character = c;
+		_Planting = p;
 		_MathHelper = mh;
 		_KeyHelper = kh;
 		_SceneHelper = sh;
@@ -403,6 +406,32 @@
 			},
 			options: {
 				priority: 1,
+				silencing: true
+			}
+		} );
+		
+		// planting
+
+		this.planting = new _Planting.Instance( {
+			affectUI: true
+		} );
+
+		this.actions.add( 'pointer', {
+			eventCallbacks: {
+				// TODO: replace tap planting select with general select
+				//tap: [ $.proxy( this.planting.select_puzzle, this.planting ), $.proxy( this.planting.select_plant, this.planting ) ],
+				hold: $.proxy( this.planting.activate_puzzle, this.planting ),
+				dragstart: $.proxy( this.planting.activate_plant, this.planting ),
+				drag: $.proxy( this.planting.step, this.planting ),
+				dragend: $.proxy( this.planting.complete, this.planting ),
+				doubletap: $.proxy( this.planting.delete_plant, this.planting )
+			},
+			deactivateCallbacks: $.proxy( this.planting.stop, this.planting ),
+			activeCheck: function () {
+				return me.planting.started;
+			},
+			options: {
+				priority: 2,
 				silencing: true
 			}
 		} );
