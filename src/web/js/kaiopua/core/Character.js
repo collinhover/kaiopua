@@ -518,7 +518,6 @@
 			rotate = movement.rotate,
 			rotateFacingDirection = rotate.facingDirection,
 			forwardBack;
-		
 		// handle state property
 		
 		if ( state.hasOwnProperty( propertyName ) ) {
@@ -715,7 +714,7 @@
 			state.moving = false;
 			
 		}
-		
+
 		// update movement
 		
 		moveDir.z = state.movingHorizontal ? 1 : 0;
@@ -724,7 +723,6 @@
 		
 		rotateTurnAngleDelta = ( state.right === 1 ? -state.right : state.left ) * rotate.turnSpeed;
 		rotateFacingAngleDelta = _VectorHelper.signed_angle_between_coplanar_vectors( rotateFacingDirectionLast, rotateFacingDirection, rotateAxis ) * rotateLerpDelta;
-		
 		// if moving
 		
 		if ( state.movingHorizontal === true ) {
@@ -747,7 +745,10 @@
 			// rotate by direction angle change
 			
 			if ( rotateFacingAngleDelta !== 0 ) {
-				
+
+        //maybe need to convert to degrees..
+        rotateFacingAngleDelta = rotateFacingAngleDelta * Math.PI /180; 
+
 				rotateFacingAngleTarget = _MathHelper.degree_between_180( rotate.facingAngle + rotateFacingAngleDelta );
 				rotateFacingAngleDeltaShortest = _MathHelper.shortest_rotation_between_angles( rotate.facingAngle, rotateFacingAngleTarget );
 				rotateDelta.setFromAxisAngle( rotateAxis, rotateFacingAngleDeltaShortest );

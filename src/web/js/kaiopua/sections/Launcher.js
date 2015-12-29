@@ -64,7 +64,7 @@
 			"js/kaiopua/env/Skybox.js",
 			"js/kaiopua/env/Water.js",
 			"js/kaiopua/utils/ObjectHelper.js",
-            { path: shared.pathToAsset + "hero.js", type: 'model' },
+            { path: shared.pathToAsset + "Hero.js", type: 'model' },
 			shared.pathToAsset + "skybox_world_posx.jpg",
             shared.pathToAsset + "skybox_world_negx.jpg",
 			shared.pathToAsset + "skybox_world_posy.jpg",
